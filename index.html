@@ -80,16 +80,23 @@
 
         <template id="podcastCardTemplate">
           <article class="podcast-card">
+            <div class="card-media">
+              <img class="podcast-image" alt="" loading="lazy" />
+            </div>
+
             <div class="card-rank">
               <p class="placement-label">Placering</p>
               <p class="placement"></p>
             </div>
+
             <div class="card-top">
               <p class="genre"></p>
               <p class="rating"></p>
             </div>
+
             <h2 class="title"></h2>
             <p class="host"></p>
+
             <dl class="meta">
               <div>
                 <dt>Udgiver</dt>
@@ -104,6 +111,7 @@
                 <dd class="episodes"></dd>
               </div>
             </dl>
+
             <div class="card-footer">
               <button class="podcast-link" type="button">Åbn link</button>
             </div>
