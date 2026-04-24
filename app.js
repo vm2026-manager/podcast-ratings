@@ -151,6 +151,8 @@ function updateSummary(count, total) {
 
 function createCard(podcast) {
   const fragment = cardTemplate.content.cloneNode(true);
+  const imageWrapper = fragment.querySelector(".card-media");
+  const image = fragment.querySelector(".podcast-image");
 
   fragment.querySelector(".placement").textContent = `#${formatText(
     podcast["Placering"],
@@ -175,8 +177,20 @@ function createCard(podcast) {
     podcast["Antal afsnit"]
   );
 
+  const imageUrl = formatText(podcast["Billedlink"], "");
+
+  if (imageUrl) {
+    image.src = imageUrl;
+    image.alt = `Cover til ${formatText(podcast["Titel"], "podcast")}`;
+    image.addEventListener("error", () => {
+      imageWrapper.remove();
+    });
+  } else {
+    imageWrapper.remove();
+  }
+
   const linkButton = fragment.querySelector(".podcast-link");
-  const link = isBlank(podcast["Link"]) ? "" : String(podcast["Link"]).trim();
+  const link = formatText(podcast["Link"], "");
 
   if (link) {
     linkButton.addEventListener("click", () => {
