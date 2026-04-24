@@ -194,6 +194,22 @@ main {
   position: relative;
 }
 
+.card-media {
+  overflow: hidden;
+  aspect-ratio: 16 / 9;
+  border-radius: 20px;
+  border: 1px solid rgba(55, 35, 22, 0.08);
+  background:
+    linear-gradient(135deg, rgba(140, 47, 27, 0.08), rgba(194, 138, 44, 0.14));
+}
+
+.podcast-image {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
 .podcast-card:hover {
   transform: translateY(-4px);
   box-shadow: 0 30px 70px rgba(42, 25, 15, 0.14);
