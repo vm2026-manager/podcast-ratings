@@ -5,9 +5,11 @@ const genreFilter = document.querySelector("#genreFilter");
 const publisherFilter = document.querySelector("#publisherFilter");
 const sortSelect = document.querySelector("#sortSelect");
 const cardTemplate = document.querySelector("#podcastCardTemplate");
-const appScript = document.querySelector('script[src$="app.js"]');
 
 let podcasts = [];
+
+const DATA_URL =
+  "https://docs.google.com/spreadsheets/d/e/2PACX-1vQRBWQdj-WDNN3l9yxIMCCu_O2dYfP7modSODcYgJRoQDG3GYsu83W_wIFyijPx6v8l-W011zrFyOdq/pub?gid=0&single=true&output=csv";
 
 const collator = new Intl.Collator("da", {
   sensitivity: "base",
@@ -73,6 +75,139 @@ function populateFilterOptions(select, values, allLabel) {
     option.value = value;
     option.textContent = value;
     select.appendChild(option);
+  });
+}
+
+function parseCsvRow(row) {
+  const values = [];
+  let currentValue = "";
+  let insideQuotes = false;
+
+  for (let index = 0; index < row.length; index += 1) {
+    const character = row[index];
+    const nextCharacter = row[index + 1];
+
+    if (character === '"') {
+      if (insideQuotes && nextCharacter === '"') {
+        currentValue += '"';
+        index += 1;
+      } else {
+        insideQuotes = !insideQuotes;
+      }
+    } else if (character === "," && !insideQuotes) {
+      values.push(currentValue);
+      currentValue = "";
+    } else {
+      currentValue += character;
+    }
+  }
+
+  values.push(currentValue);
+  return values;
+}
+
+function parseCsv(text) {
+  const normalized = text.replace(/\r\n/g, "\n").replace(/\r/g, "\n");
+  const rows = [];
+  let currentRow = "";
+  let insideQuotes = false;
+
+  for (let index = 0; index < normalized.length; index += 1) {
+    const character = normalized[index];
+    const nextCharacter = normalized[index + 1];
+
+    if (character === '"') {
+      if (insideQuotes && nextCharacter === '"') {
+        currentRow += '"';
+        index += 1;
+      } else {
+        insideQuotes = !insideQuotes;
+        currentRow += character;
+      }
+    } else if (character === "\n" && !insideQuotes) {
+      rows.push(parseCsvRow(currentRow));
+      currentRow = "";
+    } else {
+      currentRow += character;
+    }
+  }
+
+  if (currentRow) {
+    rows.push(parseCsvRow(currentRow));
+  }
+
+  return rows.filter((row) => row.some((cell) => !isBlank(cell)));
+}
+
+function sanitizeHeader(header) {
+  return String(header)
+    .trim()
+    .toLocaleLowerCase("da")
+    .replace(/\s+/g, " ");
+}
+
+function normalizePodcastRow(rawPodcast) {
+  return {
+    "Placering": rawPodcast["Placering"] ?? "",
+    "Titel": rawPodcast["Titel"] ?? "",
+    "Vært": rawPodcast["Vært"] ?? "",
+    "Vurdering (1-10)":
+      rawPodcast["Vurdering (1-10)"] ??
+      rawPodcast["Vuring (1-10)"] ??
+      "",
+    "Genre": rawPodcast["Genre"] ?? "",
+    "Udgiver": rawPodcast["Udgiver"] ?? "",
+    "Antal afsnit": rawPodcast["Antal afsnit"] ?? "",
+    "Årstal afspillet": rawPodcast["Årstal afspillet"] ?? "",
+    "Link": rawPodcast["Link"] ?? "",
+    "Afgivet vurdering": rawPodcast["Afgivet vurdering"] ?? "",
+    "Billedlink": rawPodcast["Billedlink"] ?? ""
+  };
+}
+
+function mapCsvToPodcasts(csvText) {
+  const rows = parseCsv(csvText);
+
+  if (rows.length < 2) {
+    throw new Error("CSV-filen indeholder ikke nok rækker.");
+  }
+
+  const [headerRow, ...dataRows] = rows;
+  const normalizedHeaders = headerRow.map((header) => sanitizeHeader(header));
+  const headerIndexes = new Map();
+
+  normalizedHeaders.forEach((header, index) => {
+    headerIndexes.set(header, index);
+  });
+
+  const aliases = {
+    placering: "Placering",
+    titel: "Titel",
+    vært: "Vært",
+    "vurdering (1-10)": "Vurdering (1-10)",
+    "vuring (1-10)": "Vuring (1-10)",
+    genre: "Genre",
+    udgiver: "Udgiver",
+    "antal afsnit": "Antal afsnit",
+    "årstal afspillet": "Årstal afspillet",
+    link: "Link",
+    "afgivet vurdering": "Afgivet vurdering",
+    billedlink: "Billedlink"
+  };
+
+  return dataRows.map((row) => {
+    const rawPodcast = {};
+
+    Object.entries(aliases).forEach(([normalizedHeader, targetKey]) => {
+      const headerIndex = headerIndexes.has(normalizedHeader)
+        ? headerIndexes.get(normalizedHeader)
+        : -1;
+
+      rawPodcast[targetKey] =
+        headerIndex >= 0 ? String(row[headerIndex] ?? "").trim() : "";
+    });
+
+    return normalizePodcastRow(rawPodcast);
   });
 }
 
@@ -228,20 +363,6 @@ function populateFilters(items) {
   populateFilterOptions(publisherFilter, publishers, "Alle udgivere");
 }
 
-function getDataUrl() {
-  const scriptSource = appScript?.src;
-
-  if (scriptSource) {
-    return new URL("data/podcasts.json", scriptSource).href;
-  }
-
-  const pageUrl = window.location.href.endsWith("/")
-    ? window.location.href
-    : `${window.location.href}/`;
-
-  return new URL("data/podcasts.json", pageUrl).href;
-}
-
 function showLoadError(message) {
   resultsText.textContent = "Podcasts kunne ikke indlæses.";
   podcastGrid.innerHTML = `<div class="empty-state">${message}</div>`;
@@ -273,25 +394,26 @@ function renderPodcasts() {
 
 async function loadPodcasts() {
   try {
-    const response = await fetch(getDataUrl(), {
+    const response = await fetch(DATA_URL, {
       cache: "no-store"
     });
 
     if (!response.ok) {
-      throw new Error(`Kunne ikke hente datafilen (${response.status}).`);
+      throw new Error(`Kunne ikke hente Google Sheets-data (${response.status}).`);
     }
 
-    podcasts = await response.json();
+    const csvText = await response.text();
+    podcasts = mapCsvToPodcasts(csvText);
 
     if (!Array.isArray(podcasts)) {
-      throw new Error("Datafilen har ikke det forventede JSON-format.");
+      throw new Error("Data fra Google Sheets har ikke det forventede format.");
     }
 
     populateFilters(podcasts);
     renderPodcasts();
   } catch (error) {
     showLoadError(
-      "Data kunne ikke indlæses. Tjek at `data/podcasts.json` ligger i projektet, og at GitHub Pages er publiceret fra den rigtige mappe."
+      "Data kunne ikke indlæses fra Google Sheets. Tjek at arket er publiceret som CSV, og at kolonnerne stadig matcher siden."
     );
     console.error(error);
   }
