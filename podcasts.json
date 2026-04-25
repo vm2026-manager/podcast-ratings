@@ -1,57 +1,147 @@
-const SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQRBWQdj-WDNN3l9yxIMCCu_O2dYfP7modSODcYgJRoQDG3GYsu83W_wIFyijPx6v8l-W011zrFyOdq/pub?gid=0&single=true&output=csv";
-
-async function loadPodcastData() {
-  const response = await fetch(SHEET_CSV_URL);
-  const csvText = await response.text();
-  return parseCsv(csvText);
-}
-
-function parseCsv(csvText) {
-  const rows = [];
-  const lines = csvText.trim().split(/\r?\n/);
-
-  if (!lines.length) return rows;
-
-  const headers = splitCsvLine(lines[0]);
-
-  for (let i = 1; i < lines.length; i++) {
-    const values = splitCsvLine(lines[i]);
-    const row = {};
-
-    headers.forEach((header, index) => {
-      row[header.trim()] = (values[index] || "").trim();
-    });
-
-    rows.push(row);
-  }
-
-  return rows;
-}
-
-function splitCsvLine(line) {
-  const result = [];
-  let current = "";
-  let inQuotes = false;
-
-  for (let i = 0; i < line.length; i++) {
-    const char = line[i];
-    const next = line[i + 1];
-
-    if (char === '"') {
-      if (inQuotes && next === '"') {
-        current += '"';
-        i++;
-      } else {
-        inQuotes = !inQuotes;
-      }
-    } else if (char === "," && !inQuotes) {
-      result.push(current);
-      current = "";
-    } else {
-      current += char;
-    }
-  }
-
-  result.push(current);
-  return result;
-}
+[
+  {
+    "Placering": "1",
+    "Titel": "Kvinden med den tunge kuffert",
+    "Vært": "Krister Moltzen",
+    "Vurdering (1-10)": "9,5",
+    "Genre": "True Crime",
+    "Udgiver": "Third Ear",
+    "Antal afsnit": "7",
+    "Årstal afspillet": "2017",
+    "Link": "https://thirdear.dk/kuffert/",
+    "Afgivet vurdering": "",
+    "Billedlink": "https://covers.storytel.com/jpg-640/0402018086166.07397673-b212-44ce-a111-31a925075bd9?optimize=high&quality=70&width=600"
+  },
+  {
+    "Placering": "2",
+    "Titel": "Robert og Thetanerne",
+    "Vært": "Krister Moltzen",
+    "Vurdering (1-10)": "9,1",
+    "Genre": "True Crime",
+    "Udgiver": "Third Ear",
+    "Antal afsnit": "3",
+    "Årstal afspillet": "2017",
+    "Link": "https://thirdear.dk/robert/",
+    "Afgivet vurdering": "",
+    "Billedlink": "https://thirdear.dk/robert/"
+  },
+  {
+    "Placering": "3",
+    "Titel": "Kapret",
+    "Vært": "Emil Midé Erichsen, Rane Mohr Hjorhöy & Marie Mohr Hjorhöy",
+    "Vurdering (1-10)": "8,8",
+    "Genre": "True crime",
+    "Udgiver": "DR",
+    "Antal afsnit": "6",
+    "Årstal afspillet": "2025",
+    "Link": "https://www.dr.dk/lyd/p1/kapret-3041426318000",
+    "Afgivet vurdering": "09-02-2026",
+    "Billedlink": "https://www.dr.dk/lyd/p1/kapret-3041426318000"
+  },
+  {
+    "Placering": "4",
+    "Titel": "Operation pellegrino",
+    "Vært": "Frederik Kulager og Krister Moltzen",
+    "Vurdering (1-10)": "8,8",
+    "Genre": "True crime",
+    "Udgiver": "Third ear/Zetland",
+    "Antal afsnit": "6",
+    "Årstal afspillet": "2025",
+    "Link": "https://www.zetland.dk/historie/s8D34NZJ-aOZj67pz-be97a",
+    "Afgivet vurdering": "31-07-2025",
+    "Billedlink": "https://www.zetland.dk/historie/s8D34NZJ-aOZj67pz-be97a"
+  },
+  {
+    "Placering": "5",
+    "Titel": "Charles Manson",
+    "Vært": "Kristoffer Lind",
+    "Vurdering (1-10)": "8,8",
+    "Genre": "True Crime",
+    "Udgiver": "R4dio",
+    "Antal afsnit": "8",
+    "Årstal afspillet": "2023",
+    "Link": "https://www.radio4.dk/program/krimiland/",
+    "Afgivet vurdering": "",
+    "Billedlink": "https://www.radio4.dk/program/krimiland/"
+  },
+  {
+    "Placering": "6",
+    "Titel": "Fire patroner på lommen",
+    "Vært": "Rane Willerslev",
+    "Vurdering (1-10)": "8,8",
+    "Genre": "Historie",
+    "Udgiver": "P1",
+    "Antal afsnit": "5",
+    "Årstal afspillet": "2020",
+    "Link": "https://www.dr.dk/lyd/p1/fire-patroner-pa-lommen",
+    "Afgivet vurdering": "",
+    "Billedlink": "https://www.dr.dk/lyd/p1/fire-patroner-pa-lommen"
+  },
+  {
+    "Placering": "7",
+    "Titel": "Man kan aldrig vide",
+    "Vært": "Morten Narvedsen",
+    "Vurdering (1-10)": "8,8",
+    "Genre": "True Crime",
+    "Udgiver": "Radio 24syv/Podimo",
+    "Antal afsnit": "20",
+    "Årstal afspillet": "2017",
+    "Link": "https://www.listennotes.com/da/podcasts/man-kan-aldrig-vide-radio24syv-aDomZW2UMdc/",
+    "Afgivet vurdering": "",
+    "Billedlink": "https://www.listennotes.com/da/podcasts/man-kan-aldrig-vide-radio24syv-aDomZW2UMdc/"
+  },
+  {
+    "Placering": "8",
+    "Titel": "Det, vi taler om",
+    "Vært": "Ditte Okman",
+    "Vurdering (1-10)": "8,7",
+    "Genre": "Sladder",
+    "Udgiver": "Radio llll",
+    "Antal afsnit": "Fredage",
+    "Årstal afspillet": "2017-",
+    "Link": "https://www.bt.dk/detvitalerom",
+    "Afgivet vurdering": "",
+    "Billedlink": "https://www.bt.dk/detvitalerom"
+  },
+  {
+    "Placering": "9",
+    "Titel": "Bedraget",
+    "Vært": "Jørn Stjerneklar og Helle Maj",
+    "Vurdering (1-10)": "8,7",
+    "Genre": "True crime",
+    "Udgiver": "Mayday Press",
+    "Antal afsnit": "4",
+    "Årstal afspillet": "2025",
+    "Link": "",
+    "Afgivet vurdering": "13-08-2025",
+    "Billedlink": "https://podcasts.apple.com/dk/podcast/bedraget-l%C3%B8gnens-anatomi/id1827240760"
+  },
+  {
+    "Placering": "10",
+    "Titel": "Den forunderlige Dr. Kavousi",
+    "Vært": "Mathias Blædel, Christian Stemann & Mikkel Jensen",
+    "Vurdering (1-10)": "8,7",
+    "Genre": "Svindel",
+    "Udgiver": "Frihedsbrevet",
+    "Antal afsnit": "4",
+    "Årstal afspillet": "2023",
+    "Link": "https://frihedsbrevet.dk/podcasts/den-forunderlige-dr-kavousi/",
+    "Afgivet vurdering": "",
+    "Billedlink": "https://frihedsbrevet.dk/podcasts/den-forunderlige-dr-kavousi/"
+  },
+  {
+    "Placering": "11",
+    "Titel": "Kvinden med den Tunge Kuffert: Det Sidste Kapitel",
+    "Vært": "Krister Moltzen og Tim Henman",
+    "Vurdering (1-10)": "8,7",
+    "Genre": "True Crime",
+    "Udgiver": "Third Ear",
+    "Antal afsnit": "5",
+    "Årstal afspillet": "2023",
+    "Link": "https://thirdear.dk/sidstekapitel/",
+    "Afgivet vurdering": "",
+    "Billedlink": "https://thirdear.dk/sidstekapitel/"
+  },
+  {
+    "Placering": "12",
+    "Titel
