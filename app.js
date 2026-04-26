@@ -37,7 +37,11 @@ function parseRating(value) {
     return Number.NEGATIVE_INFINITY;
   }
 
-  const normalized = String(value).replace(",", ".").trim();
+  const normalized = String(value)
+    .replace(/\s+/g, "")
+    .replace(",", ".")
+    .trim();
+
   const numeric = Number.parseFloat(normalized);
 
   return Number.isNaN(numeric) ? Number.NEGATIVE_INFINITY : numeric;
@@ -81,6 +85,12 @@ function populateFilterOptions(select, values, allLabel) {
 function detectDelimiter(headerLine) {
   const semicolonCount = (headerLine.match(/;/g) || []).length;
   const commaCount = (headerLine.match(/,/g) || []).length;
+  const tabCount = (headerLine.match(/\t/g) || []).length;
+
+  if (tabCount > semicolonCount && tabCount > commaCount) {
+    return "\t";
+  }
+
   return semicolonCount > commaCount ? ";" : ",";
 }
 
@@ -109,11 +119,11 @@ function parseCsvRow(row, delimiter) {
   }
 
   values.push(currentValue);
-  return values;
+  return values.map((value) => String(value ?? "").trim());
 }
 
 function parseCsv(text) {
-  const normalized = text.replace(/\r\n/g, "\n").replace(/\r/g, "\n");
+  const normalized = text.replace(/^\uFEFF/, "").replace(/\r\n/g, "\n").replace(/\r/g, "\n");
   const firstLine = normalized.split("\n")[0] || "";
   const delimiter = detectDelimiter(firstLine);
 
@@ -131,7 +141,6 @@ function parseCsv(text) {
         index += 1;
       } else {
         insideQuotes = !insideQuotes;
-        currentRow += character;
       }
     } else if (character === "\n" && !insideQuotes) {
       rows.push(parseCsvRow(currentRow, delimiter));
@@ -149,32 +158,47 @@ function parseCsv(text) {
 }
 
 function sanitizeHeader(header) {
-  return String(header)
+  return String(header ?? "")
+    .replace(/^\uFEFF/, "")
     .trim()
     .toLocaleLowerCase("da")
     .replace(/\s+/g, " ");
 }
 
+function firstNonBlank(...values) {
+  for (const value of values) {
+    if (!isBlank(value)) {
+      return String(value).trim();
+    }
+  }
+  return "";
+}
+
+function getCell(row, index) {
+  return index >= 0 && index < row.length ? String(row[index] ?? "").trim() : "";
+}
+
 function normalizePodcastRow(rawPodcast) {
   return {
-    "Placering":
-      rawPodcast["Placering"] ??
-      rawPodcast["Placeri"] ??
-      rawPodcast["Placering "] ??
-      "",
-    "Titel": rawPodcast["Titel"] ?? "",
-    "Vært": rawPodcast["Vært"] ?? "",
-    "Vurdering (1-10)":
-      rawPodcast["Vurdering (1-10)"] ??
-      rawPodcast["Vuring (1-10)"] ??
-      "",
-    "Genre": rawPodcast["Genre"] ?? "",
-    "Udgiver": rawPodcast["Udgiver"] ?? "",
-    "Antal afsnit": rawPodcast["Antal afsnit"] ?? "",
-    "Årstal afspillet": rawPodcast["Årstal afspillet"] ?? "",
-    "Link": rawPodcast["Link"] ?? "",
-    "Afgivet vurdering": rawPodcast["Afgivet vurdering"] ?? "",
-    "Billedlink": rawPodcast["Billedlink"] ?? ""
+    "Placering": firstNonBlank(
+      rawPodcast["Placering"],
+      rawPodcast["Placeri"]
+    ),
+    "Titel": firstNonBlank(rawPodcast["Titel"]),
+    "Vært": firstNonBlank(rawPodcast["Vært"]),
+    "Vurdering (1-10)": firstNonBlank(
+      rawPodcast["Vurdering (1-10)"],
+      rawPodcast["Vuring (1-10)"],
+      rawPodcast["Vurdering"],
+      rawPodcast["Rating"]
+    ),
+    "Genre": firstNonBlank(rawPodcast["Genre"]),
+    "Udgiver": firstNonBlank(rawPodcast["Udgiver"]),
+    "Antal afsnit": firstNonBlank(rawPodcast["Antal afsnit"]),
+    "Årstal afspillet": firstNonBlank(rawPodcast["Årstal afspillet"]),
+    "Link": firstNonBlank(rawPodcast["Link"]),
+    "Afgivet vurdering": firstNonBlank(rawPodcast["Afgivet vurdering"]),
+    "Billedlink": firstNonBlank(rawPodcast["Billedlink"])
   };
 }
 
@@ -193,36 +217,90 @@ function mapCsvToPodcasts(csvText) {
     headerIndexes.set(header, index);
   });
 
-  const aliases = {
-    placering: "Placering",
-    placeri: "Placeri",
-    titel: "Titel",
-    vært: "Vært",
-    "vurdering (1-10)": "Vurdering (1-10)",
-    "vuring (1-10)": "Vuring (1-10)",
-    genre: "Genre",
-    udgiver: "Udgiver",
-    "antal afsnit": "Antal afsnit",
-    "årstal afspillet": "Årstal afspillet",
-    link: "Link",
-    "afgivet vurdering": "Afgivet vurdering",
-    billedlink: "Billedlink"
+  const findIndex = (...aliases) => {
+    for (const alias of aliases) {
+      const normalizedAlias = sanitizeHeader(alias);
+      if (headerIndexes.has(normalizedAlias)) {
+        return headerIndexes.get(normalizedAlias);
+      }
+    }
+    return -1;
   };
 
-  return dataRows.map((row) => {
-    const rawPodcast = {};
+  const indexes = {
+    placement: findIndex("Placering", "Placeri"),
+    title: findIndex("Titel"),
+    host: findIndex("Vært", "Vaert"),
+    rating: findIndex("Vurdering (1-10)", "Vuring (1-10)", "Vurdering", "Rating"),
+    genre: findIndex("Genre"),
+    publisher: findIndex("Udgiver"),
+    episodes: findIndex("Antal afsnit"),
+    playedYear: findIndex("Årstal afspillet", "Arstal afspillet"),
+    link: findIndex("Link"),
+    givenRating: findIndex("Afgivet vurdering", "Afgivet vurd"),
+    image: findIndex("Billedlink")
+  };
 
-    Object.entries(aliases).forEach(([normalizedHeader, targetKey]) => {
-      const headerIndex = headerIndexes.has(normalizedHeader)
-        ? headerIndexes.get(normalizedHeader)
-        : -1;
+  return dataRows
+    .map((row) => {
+      const rawPodcast = {
+        "Placering": firstNonBlank(
+          getCell(row, indexes.placement),
+          getCell(row, 0)
+        ),
+        "Placeri": firstNonBlank(
+          getCell(row, indexes.placement),
+          getCell(row, 0)
+        ),
+        "Titel": firstNonBlank(
+          getCell(row, indexes.title),
+          getCell(row, 1)
+        ),
+        "Vært": firstNonBlank(
+          getCell(row, indexes.host),
+          getCell(row, 2)
+        ),
+        "Vurdering (1-10)": firstNonBlank(
+          getCell(row, indexes.rating),
+          getCell(row, 3)
+        ),
+        "Vuring (1-10)": firstNonBlank(
+          getCell(row, indexes.rating),
+          getCell(row, 3)
+        ),
+        "Genre": firstNonBlank(
+          getCell(row, indexes.genre),
+          getCell(row, 4)
+        ),
+        "Udgiver": firstNonBlank(
+          getCell(row, indexes.publisher),
+          getCell(row, 5)
+        ),
+        "Antal afsnit": firstNonBlank(
+          getCell(row, indexes.episodes),
+          getCell(row, 6)
+        ),
+        "Årstal afspillet": firstNonBlank(
+          getCell(row, indexes.playedYear),
+          getCell(row, 7)
+        ),
+        "Link": firstNonBlank(
+          getCell(row, indexes.link),
+          getCell(row, 8)
+        ),
+        "Afgivet vurdering": firstNonBlank(
+          getCell(row, indexes.givenRating),
+          getCell(row, 9)
+        ),
+        "Billedlink": firstNonBlank(
+          getCell(row, indexes.image),
+          getCell(row, 10)
+        )
+      };
 
-      rawPodcast[targetKey] =
-        headerIndex >= 0 ? String(row[headerIndex] ?? "").trim() : "";
-    });
-
-    return normalizePodcastRow(rawPodcast);
-  });
+      return normalizePodcastRow(rawPodcast);
+    })
+    .filter((podcast) => !isBlank(podcast["Titel"]));
 }
 
 function sortPodcasts(items, sortValue) {
@@ -328,7 +406,7 @@ function createCard(podcast) {
 
   const imageUrl = formatText(podcast["Billedlink"], "");
 
-  if (imageUrl) {
+  if (imageUrl && imageWrapper && image) {
     image.src = imageUrl;
     image.alt = `Cover til ${formatText(podcast["Titel"], "podcast")}`;
     image.addEventListener("error", () => {
