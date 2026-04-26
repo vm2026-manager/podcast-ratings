@@ -9,7 +9,7 @@ const cardTemplate = document.querySelector("#podcastCardTemplate");
 let podcasts = [];
 
 const DATA_URL =
-  "https://docs.google.com/spreadsheets/d/e/2PACX-1vQRBWQdj-WDNN3l9yxIMCCu_O2dYfP7modSODcYgJRoQDG3GYsu83W_wIFyijPx6v8l-W011zrFyOdq/pub?gid=0&single=true&output=csv";
+  "https://docs.google.com/spreadsheets/d/e/2PACX-1vQRBWQdj-WDNN3l9yxIMCCu_O2dYfP7modSODcYgJRoQDG3GYsu83W_wIFyijPx6v8l-W011zrFyOdq/gviz/tq?tqx=out:json&sheet=Ark1";
 
 const collator = new Intl.Collator("da", {
   sensitivity: "base",
@@ -100,107 +100,6 @@ function populateFilterOptions(select, values, allLabel) {
   });
 }
 
-function detectDelimiterFromLine(line) {
-  const counts = {
-    ",": (line.match(/,/g) || []).length,
-    ";": (line.match(/;/g) || []).length,
-    "\t": (line.match(/\t/g) || []).length
-  };
-
-  let best = ",";
-  let bestCount = counts[best];
-
-  Object.entries(counts).forEach(([delimiter, count]) => {
-    if (count > bestCount) {
-      best = delimiter;
-      bestCount = count;
-    }
-  });
-
-  return best;
-}
-
-function parseDelimitedRow(row, delimiter) {
-  const values = [];
-  let currentValue = "";
-  let insideQuotes = false;
-
-  for (let index = 0; index < row.length; index += 1) {
-    const character = row[index];
-    const nextCharacter = row[index + 1];
-
-    if (character === '"') {
-      if (insideQuotes && nextCharacter === '"') {
-        currentValue += '"';
-        index += 1;
-      } else {
-        insideQuotes = !insideQuotes;
-      }
-    } else if (character === delimiter && !insideQuotes) {
-      values.push(currentValue);
-      currentValue = "";
-    } else {
-      currentValue += character;
-    }
-  }
-
-  values.push(currentValue);
-
-  return values.map((value) =>
-    String(value ?? "")
-      .replace(/^\uFEFF/, "")
-      .trim()
-  );
-}
-
-function splitLinesRespectingQuotes(text) {
-  const rows = [];
-  let currentRow = "";
-  let insideQuotes = false;
-
-  for (let index = 0; index < text.length; index += 1) {
-    const character = text[index];
-    const nextCharacter = text[index + 1];
-
-    if (character === '"') {
-      if (insideQuotes && nextCharacter === '"') {
-        currentRow += '""';
-        index += 1;
-      } else {
-        insideQuotes = !insideQuotes;
-        currentRow += character;
-      }
-    } else if (character === "\n" && !insideQuotes) {
-      rows.push(currentRow);
-      currentRow = "";
-    } else {
-      currentRow += character;
-    }
-  }
-
-  if (currentRow) {
-    rows.push(currentRow);
-  }
-
-  return rows.filter((row) => row.trim() !== "");
-}
-
-function parseCsv(text) {
-  const normalized = String(text ?? "")
-    .replace(/^\uFEFF/, "")
-    .replace(/\r\n/g, "\n")
-    .replace(/\r/g, "\n");
-
-  const lines = splitLinesRespectingQuotes(normalized);
-
-  if (lines.length === 0) {
-    return [];
-  }
-
-  const delimiter = detectDelimiterFromLine(lines[0]);
-  return lines.map((line) => parseDelimitedRow(line, delimiter));
-}
-
 function sanitizeHeader(header) {
   return String(header ?? "")
     .replace(/^\uFEFF/, "")
@@ -209,26 +108,16 @@ function sanitizeHeader(header) {
     .replace(/\s+/g, " ");
 }
 
-function getCell(row, index) {
-  return index >= 0 && index < row.length ? String(row[index] ?? "").trim() : "";
-}
-
-function findHeaderIndex(headerIndexes, ...aliases) {
-  for (const alias of aliases) {
-    const normalizedAlias = sanitizeHeader(alias);
-    if (headerIndexes.has(normalizedAlias)) {
-      return headerIndexes.get(normalizedAlias);
-    }
-  }
-  return -1;
-}
-
 function normalizePodcastRow(rawPodcast) {
   return {
     "Placering": firstNonBlank(rawPodcast["Placering"]),
     "Titel": firstNonBlank(rawPodcast["Titel"]),
     "Vært": firstNonBlank(rawPodcast["Vært"], rawPodcast["Vaert"]),
-    "Vuring (1-10)": firstNonBlank(rawPodcast["Vuring (1-10)"], rawPodcast["Vurdering (1-10)"], rawPodcast["Vurdering"]),
+    "Vuring (1-10)": firstNonBlank(
+      rawPodcast["Vuring (1-10)"],
+      rawPodcast["Vurdering (1-10)"],
+      rawPodcast["Vurdering"]
+    ),
     "Genre": firstNonBlank(rawPodcast["Genre"]),
     "Udgiver": firstNonBlank(rawPodcast["Udgiver"]),
     "Antal afsnit": firstNonBlank(rawPodcast["Antal afsnit"]),
@@ -245,61 +134,82 @@ function normalizePodcastRow(rawPodcast) {
   };
 }
 
-function mapCsvToPodcasts(csvText) {
-  const rows = parseCsv(csvText);
+function parseGoogleVisualizationJson(text) {
+  const match = text.match(/google\.visualization\.Query\.setResponse\(([\s\S]+)\);?$/);
 
-  if (rows.length < 2) {
-    throw new Error("CSV-filen indeholder ikke nok rækker.");
+  if (!match) {
+    throw new Error("Kunne ikke læse Google Sheets JSON-svar.");
   }
 
-  const [headerRow, ...dataRows] = rows;
+  return JSON.parse(match[1]);
+}
+
+function extractCellValue(cell) {
+  if (!cell) return "";
+
+  if (typeof cell.f === "string" && cell.f.trim() !== "") {
+    return cell.f.trim();
+  }
+
+  if (cell.v === null || cell.v === undefined) {
+    return "";
+  }
+
+  return String(cell.v).trim();
+}
+
+function mapGoogleSheetToPodcasts(sheetJson) {
+  const table = sheetJson.table;
+  const cols = table.cols || [];
+  const rows = table.rows || [];
+
+  const headers = cols.map((col) => sanitizeHeader(col.label || col.id || ""));
   const headerIndexes = new Map();
 
-  headerRow.forEach((header, index) => {
-    headerIndexes.set(sanitizeHeader(header), index);
+  headers.forEach((header, index) => {
+    headerIndexes.set(header, index);
   });
 
-  const indexes = {
-    placement: findHeaderIndex(headerIndexes, "Placering"),
-    title: findHeaderIndex(headerIndexes, "Titel"),
-    host: findHeaderIndex(headerIndexes, "Vært", "Vaert"),
-    rating: findHeaderIndex(
-      headerIndexes,
-      "Vuring (1-10)",
-      "Vurdering (1-10)",
-      "Vurdering"
-    ),
-    genre: findHeaderIndex(headerIndexes, "Genre"),
-    publisher: findHeaderIndex(headerIndexes, "Udgiver"),
-    episodes: findHeaderIndex(headerIndexes, "Antal afsnit"),
-    playedYear: findHeaderIndex(
-      headerIndexes,
-      "Årstal afspillet",
-      "Arstal afspillet"
-    ),
-    link: findHeaderIndex(headerIndexes, "Link"),
-    givenRating: findHeaderIndex(
-      headerIndexes,
-      "Afgivet vurdering",
-      "Afgivet vurd"
-    ),
-    image: findHeaderIndex(headerIndexes, "Billedlink")
+  const findIndex = (...aliases) => {
+    for (const alias of aliases) {
+      const normalizedAlias = sanitizeHeader(alias);
+      if (headerIndexes.has(normalizedAlias)) {
+        return headerIndexes.get(normalizedAlias);
+      }
+    }
+    return -1;
   };
 
-  return dataRows
+  const indexes = {
+    placement: findIndex("Placering"),
+    title: findIndex("Titel"),
+    host: findIndex("Vært", "Vaert"),
+    rating: findIndex("Vuring (1-10)", "Vurdering (1-10)", "Vurdering"),
+    genre: findIndex("Genre"),
+    publisher: findIndex("Udgiver"),
+    episodes: findIndex("Antal afsnit"),
+    playedYear: findIndex("Årstal afspillet", "Arstal afspillet"),
+    link: findIndex("Link"),
+    givenRating: findIndex("Afgivet vurdering", "Afgivet vurd"),
+    image: findIndex("Billedlink")
+  };
+
+  return rows
     .map((row) => {
+      const cells = row.c || [];
+
       const rawPodcast = {
-        "Placering": getCell(row, indexes.placement),
-        "Titel": getCell(row, indexes.title),
-        "Vært": getCell(row, indexes.host),
-        "Vuring (1-10)": getCell(row, indexes.rating),
-        "Genre": getCell(row, indexes.genre),
-        "Udgiver": getCell(row, indexes.publisher),
-        "Antal afsnit": getCell(row, indexes.episodes),
-        "Årstal afspillet": getCell(row, indexes.playedYear),
-        "Link": getCell(row, indexes.link),
-        "Afgivet vurdering": getCell(row, indexes.givenRating),
-        "Billedlink": getCell(row, indexes.image)
+        "Placering": extractCellValue(cells[indexes.placement]),
+        "Titel": extractCellValue(cells[indexes.title]),
+        "Vært": extractCellValue(cells[indexes.host]),
+        "Vuring (1-10)": extractCellValue(cells[indexes.rating]),
+        "Genre": extractCellValue(cells[indexes.genre]),
+        "Udgiver": extractCellValue(cells[indexes.publisher]),
+        "Antal afsnit": extractCellValue(cells[indexes.episodes]),
+        "Årstal afspillet": extractCellValue(cells[indexes.playedYear]),
+        "Link": extractCellValue(cells[indexes.link]),
+        "Afgivet vurdering": extractCellValue(cells[indexes.givenRating]),
+        "Billedlink": extractCellValue(cells[indexes.image])
       };
 
       return normalizePodcastRow(rawPodcast);
@@ -496,8 +406,9 @@ async function loadPodcasts() {
       throw new Error(`Kunne ikke hente Google Sheets-data (${response.status}).`);
     }
 
-    const csvText = await response.text();
-    podcasts = mapCsvToPodcasts(csvText);
+    const rawText = await response.text();
+    const sheetJson = parseGoogleVisualizationJson(rawText);
+    podcasts = mapGoogleSheetToPodcasts(sheetJson);
 
     if (!Array.isArray(podcasts) || podcasts.length === 0) {
       throw new Error("Data fra Google Sheets har ikke det forventede format.");
@@ -507,7 +418,7 @@ async function loadPodcasts() {
     renderPodcasts();
   } catch (error) {
     showLoadError(
-      "Data kunne ikke indlæses fra Google Sheets. Tjek at arket er publiceret som CSV, og at kolonnerne stadig matcher siden."
+      "Data kunne ikke indlæses fra Google Sheets. Tjek at arket er publiceret, og at fanen hedder Ark1."
     );
     console.error(error);
   }
