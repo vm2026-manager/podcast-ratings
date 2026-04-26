@@ -17,7 +17,7 @@ const collator = new Intl.Collator("da", {
 });
 
 function normalizeText(value) {
-  return String(value).toLocaleLowerCase("da");
+  return String(value ?? "").toLocaleLowerCase("da").trim();
 }
 
 function isBlank(value) {
@@ -26,16 +26,6 @@ function isBlank(value) {
 
 function formatText(value, fallback = "Ikke angivet") {
   return isBlank(value) ? fallback : String(value).trim();
-}
-
-function formatRating(rating) {
-  const numeric = parseRating(rating);
-
-  if (numeric === Number.NEGATIVE_INFINITY) {
-    return "Ikke vurderet";
-  }
-
-  return numeric.toFixed(1).replace(".", ",") + " / 10";
 }
 
 function parseRating(value) {
@@ -53,8 +43,18 @@ function parseRating(value) {
   return Number.isNaN(numeric) ? Number.NEGATIVE_INFINITY : numeric;
 }
 
+function formatRating(rating) {
+  const numeric = parseRating(rating);
+
+  if (numeric === Number.NEGATIVE_INFINITY) {
+    return "Ikke vurderet";
+  }
+
+  return numeric.toFixed(1).replace(".", ",") + " / 10";
+}
+
 function parsePlacement(value) {
-  const numeric = Number.parseInt(String(value).trim(), 10);
+  const numeric = Number.parseInt(String(value ?? "").trim(), 10);
   return Number.isNaN(numeric) ? Number.POSITIVE_INFINITY : numeric;
 }
 
@@ -78,7 +78,13 @@ function populateFilterOptions(select, values, allLabel) {
   });
 }
 
-function parseCsvRow(row) {
+function detectDelimiter(headerLine) {
+  const semicolonCount = (headerLine.match(/;/g) || []).length;
+  const commaCount = (headerLine.match(/,/g) || []).length;
+  return semicolonCount > commaCount ? ";" : ",";
+}
+
+function parseCsvRow(row, delimiter) {
   const values = [];
   let currentValue = "";
   let insideQuotes = false;
@@ -94,7 +100,7 @@ function parseCsvRow(row) {
       } else {
         insideQuotes = !insideQuotes;
       }
-    } else if (character === "," && !insideQuotes) {
+    } else if (character === delimiter && !insideQuotes) {
       values.push(currentValue);
       currentValue = "";
     } else {
@@ -108,6 +114,9 @@ function parseCsvRow(row) {
 
 function parseCsv(text) {
   const normalized = text.replace(/\r\n/g, "\n").replace(/\r/g, "\n");
+  const firstLine = normalized.split("\n")[0] || "";
+  const delimiter = detectDelimiter(firstLine);
+
   const rows = [];
   let currentRow = "";
   let insideQuotes = false;
@@ -125,7 +134,7 @@ function parseCsv(text) {
         currentRow += character;
       }
     } else if (character === "\n" && !insideQuotes) {
-      rows.push(parseCsvRow(currentRow));
+      rows.push(parseCsvRow(currentRow, delimiter));
       currentRow = "";
     } else {
       currentRow += character;
@@ -133,7 +142,7 @@ function parseCsv(text) {
   }
 
   if (currentRow) {
-    rows.push(parseCsvRow(currentRow));
+    rows.push(parseCsvRow(currentRow, delimiter));
   }
 
   return rows.filter((row) => row.some((cell) => !isBlank(cell)));
@@ -148,7 +157,11 @@ function sanitizeHeader(header) {
 
 function normalizePodcastRow(rawPodcast) {
   return {
-    "Placering": rawPodcast["Placering"] ?? "",
+    "Placering":
+      rawPodcast["Placering"] ??
+      rawPodcast["Placeri"] ??
+      rawPodcast["Placering "] ??
+      "",
     "Titel": rawPodcast["Titel"] ?? "",
     "Vært": rawPodcast["Vært"] ?? "",
     "Vurdering (1-10)":
@@ -182,6 +195,7 @@ function mapCsvToPodcasts(csvText) {
 
   const aliases = {
     placering: "Placering",
+    placeri: "Placeri",
     titel: "Titel",
     vært: "Vært",
     "vurdering (1-10)": "Vurdering (1-10)",
@@ -320,7 +334,7 @@ function createCard(podcast) {
     image.addEventListener("error", () => {
       imageWrapper.remove();
     });
-  } else {
+  } else if (imageWrapper) {
     imageWrapper.remove();
   }
 
@@ -405,7 +419,7 @@ async function loadPodcasts() {
     const csvText = await response.text();
     podcasts = mapCsvToPodcasts(csvText);
 
-    if (!Array.isArray(podcasts)) {
+    if (!Array.isArray(podcasts) || podcasts.length === 0) {
       throw new Error("Data fra Google Sheets har ikke det forventede format.");
     }
 
