@@ -222,6 +222,38 @@ function findHeaderIndex(headerIndexes, ...aliases) {
   return -1;
 }
 
+function maybeRepairShiftedRow(row, expectedColumns) {
+  if (row.length === expectedColumns) {
+    return row;
+  }
+
+  const repaired = [...row];
+
+  if (
+    repaired.length === expectedColumns + 1 &&
+    /^\d+$/.test(cleanNumericText(repaired[3])) &&
+    /^\d+$/.test(cleanNumericText(repaired[4]))
+  ) {
+    repaired.splice(3, 2, `${cleanNumericText(repaired[3])},${cleanNumericText(repaired[4])}`);
+    return repaired;
+  }
+
+  if (repaired.length > expectedColumns + 1) {
+    const firstFourLookRight =
+      /^\d+$/.test(cleanNumericText(repaired[0])) &&
+      !isBlank(repaired[1]) &&
+      !isBlank(repaired[2]) &&
+      /^\d+$/.test(cleanNumericText(repaired[3])) &&
+      /^\d+$/.test(cleanNumericText(repaired[4]));
+
+    if (firstFourLookRight) {
+      repaired.splice(3, 2, `${cleanNumericText(repaired[3])},${cleanNumericText(repaired[4])}`);
+    }
+  }
+
+  return repaired;
+}
+
 function normalizePodcastRow(rawPodcast) {
   return {
     "Placering": firstNonBlank(rawPodcast["Placering"], rawPodcast["Placeri"]),
@@ -245,7 +277,12 @@ function normalizePodcastRow(rawPodcast) {
       rawPodcast["Afgivet vurdering"],
       rawPodcast["Afgivet vurd"]
     ),
-    "Billedlink": firstNonBlank(rawPodcast["Billedlink"])
+    "Billedlink": firstNonBlank(
+      rawPodcast["Billedlink"],
+      rawPodcast["Billede"],
+      rawPodcast["Cover"],
+      rawPodcast["Coverlink"]
+    )
   };
 }
 
@@ -288,11 +325,19 @@ function mapCsvToPodcasts(csvText) {
       "Afgivet vurdering",
       "Afgivet vurd"
     ),
-    image: findHeaderIndex(headerIndexes, "Billedlink")
+    image: findHeaderIndex(
+      headerIndexes,
+      "Billedlink",
+      "Billede",
+      "Cover",
+      "Coverlink"
+    )
   };
 
   return dataRows
-    .map((row) => {
+    .map((originalRow) => {
+      const row = maybeRepairShiftedRow([...originalRow], headerRow.length);
+
       const rawPodcast = {
         "Placering": firstNonBlank(getCell(row, indexes.placement), getCell(row, 0)),
         "Placeri": firstNonBlank(getCell(row, indexes.placement), getCell(row, 0)),
@@ -306,7 +351,11 @@ function mapCsvToPodcasts(csvText) {
         "Årstal afspillet": firstNonBlank(getCell(row, indexes.playedYear), getCell(row, 7)),
         "Link": firstNonBlank(getCell(row, indexes.link), getCell(row, 8)),
         "Afgivet vurdering": firstNonBlank(getCell(row, indexes.givenRating), getCell(row, 9)),
-        "Billedlink": firstNonBlank(getCell(row, indexes.image), getCell(row, 10))
+        "Billedlink": firstNonBlank(
+          getCell(row, indexes.image),
+          getCell(row, 10),
+          getCell(row, 11)
+        )
       };
 
       return normalizePodcastRow(rawPodcast);
@@ -384,7 +433,7 @@ function filterPodcasts(items, query) {
 
 function updateSummary(count, total) {
   const noun = count === 1 ? "podcast" : "podcasts";
-  resultsText.textContent = `Viser ${count} ${noun} podcasts ud af ${total}.`;
+  resultsText.textContent = `Viser ${count} ${noun} ud af ${total}.`;
 }
 
 function createCard(podcast) {
@@ -420,11 +469,15 @@ function createCard(podcast) {
   if (imageUrl && imageWrapper && image) {
     image.src = imageUrl;
     image.alt = `Cover til ${formatText(podcast["Titel"], "podcast")}`;
+    image.style.display = "";
+    imageWrapper.style.display = "";
+
     image.addEventListener("error", () => {
-      imageWrapper.remove();
+      image.style.display = "none";
+      imageWrapper.style.display = "none";
     });
   } else if (imageWrapper) {
-    imageWrapper.remove();
+    imageWrapper.style.display = "none";
   }
 
   const linkButton = fragment.querySelector(".podcast-link");
