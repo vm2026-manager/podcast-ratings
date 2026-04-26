@@ -9,7 +9,7 @@ const cardTemplate = document.querySelector("#podcastCardTemplate");
 let podcasts = [];
 
 const DATA_URL =
-  "https://docs.google.com/spreadsheets/d/1V21y9uMx_fGethrT47hILWczgK_ZSNRfksSKWuR69ss/gviz/tq?tqx=out:json&gid=0";
+  "https://docs.google.com/spreadsheets/d/1V21y9uMx_fGethrT47hILWczgK_ZSNRfksSKWuR69ss/export?format=csv&gid=0";
 
 const collator = new Intl.Collator("da", {
   sensitivity: "base",
@@ -108,32 +108,68 @@ function sanitizeHeader(header) {
     .replace(/\s+/g, " ");
 }
 
-function parseGoogleVisualizationJson(text) {
-  const match = text.match(/google\.visualization\.Query\.setResponse\(([\s\S]+)\);?$/);
+function parseCsv(text) {
+  const rows = [];
+  let row = [];
+  let value = "";
+  let insideQuotes = false;
 
-  if (!match) {
-    throw new Error("Kunne ikke læse Google Sheets JSON-svar.");
+  const normalized = String(text ?? "")
+    .replace(/^\uFEFF/, "")
+    .replace(/\r\n/g, "\n")
+    .replace(/\r/g, "\n");
+
+  for (let i = 0; i < normalized.length; i += 1) {
+    const char = normalized[i];
+    const next = normalized[i + 1];
+
+    if (char === '"') {
+      if (insideQuotes && next === '"') {
+        value += '"';
+        i += 1;
+      } else {
+        insideQuotes = !insideQuotes;
+      }
+      continue;
+    }
+
+    if (char === "," && !insideQuotes) {
+      row.push(value.trim());
+      value = "";
+      continue;
+    }
+
+    if (char === "\n" && !insideQuotes) {
+      row.push(value.trim());
+      rows.push(row);
+      row = [];
+      value = "";
+      continue;
+    }
+
+    value += char;
   }
 
-  return JSON.parse(match[1]);
+  row.push(value.trim());
+  rows.push(row);
+
+  return rows.filter((currentRow) =>
+    currentRow.some((cell) => !isBlank(cell))
+  );
 }
 
-function extractCellValue(cell) {
-  if (!cell) return "";
-
-  if (cell.v === null || cell.v === undefined) {
-    return "";
+function findHeaderIndex(headerIndexes, ...aliases) {
+  for (const alias of aliases) {
+    const normalizedAlias = sanitizeHeader(alias);
+    if (headerIndexes.has(normalizedAlias)) {
+      return headerIndexes.get(normalizedAlias);
+    }
   }
+  return -1;
+}
 
-  if (typeof cell.v === "string") {
-    return cell.v.trim();
-  }
-
-  if (typeof cell.v === "number") {
-    return String(cell.v).replace(".", ",");
-  }
-
-  return String(cell.v).trim();
+function getCell(row, index) {
+  return index >= 0 && index < row.length ? String(row[index] ?? "").trim() : "";
 }
 
 function normalizePodcastRow(rawPodcast) {
@@ -162,58 +198,61 @@ function normalizePodcastRow(rawPodcast) {
   };
 }
 
-function mapGoogleSheetToPodcasts(sheetJson) {
-  const table = sheetJson.table;
-  const cols = table.cols || [];
-  const rows = table.rows || [];
+function mapCsvToPodcasts(csvText) {
+  const rows = parseCsv(csvText);
 
-  const headers = cols.map((col) => sanitizeHeader(col.label || col.id || ""));
+  if (rows.length < 2) {
+    throw new Error("CSV-filen indeholder ikke nok rækker.");
+  }
+
+  const [headerRow, ...dataRows] = rows;
   const headerIndexes = new Map();
 
-  headers.forEach((header, index) => {
-    headerIndexes.set(header, index);
+  headerRow.forEach((header, index) => {
+    headerIndexes.set(sanitizeHeader(header), index);
   });
 
-  const findIndex = (...aliases) => {
-    for (const alias of aliases) {
-      const normalizedAlias = sanitizeHeader(alias);
-      if (headerIndexes.has(normalizedAlias)) {
-        return headerIndexes.get(normalizedAlias);
-      }
-    }
-    return -1;
-  };
-
   const indexes = {
-    placement: findIndex("Placering"),
-    title: findIndex("Titel"),
-    host: findIndex("Vært", "Vaert"),
-    rating: findIndex("Vuring (1-10)", "Vurdering (1-10)", "Vurdering"),
-    genre: findIndex("Genre"),
-    publisher: findIndex("Udgiver"),
-    episodes: findIndex("Antal afsnit"),
-    playedYear: findIndex("Årstal afspillet", "Arstal afspillet"),
-    link: findIndex("Link"),
-    givenRating: findIndex("Afgivet vurdering", "Afgivet vurd"),
-    image: findIndex("Billedlink")
+    placement: findHeaderIndex(headerIndexes, "Placering"),
+    title: findHeaderIndex(headerIndexes, "Titel"),
+    host: findHeaderIndex(headerIndexes, "Vært", "Vaert"),
+    rating: findHeaderIndex(
+      headerIndexes,
+      "Vuring (1-10)",
+      "Vurdering (1-10)",
+      "Vurdering"
+    ),
+    genre: findHeaderIndex(headerIndexes, "Genre"),
+    publisher: findHeaderIndex(headerIndexes, "Udgiver"),
+    episodes: findHeaderIndex(headerIndexes, "Antal afsnit"),
+    playedYear: findHeaderIndex(
+      headerIndexes,
+      "Årstal afspillet",
+      "Arstal afspillet"
+    ),
+    link: findHeaderIndex(headerIndexes, "Link"),
+    givenRating: findHeaderIndex(
+      headerIndexes,
+      "Afgivet vurdering",
+      "Afgivet vurd"
+    ),
+    image: findHeaderIndex(headerIndexes, "Billedlink")
   };
 
-  return rows
+  return dataRows
     .map((row) => {
-      const cells = row.c || [];
-
       const rawPodcast = {
-        "Placering": extractCellValue(cells[indexes.placement]),
-        "Titel": extractCellValue(cells[indexes.title]),
-        "Vært": extractCellValue(cells[indexes.host]),
-        "Vuring (1-10)": extractCellValue(cells[indexes.rating]),
-        "Genre": extractCellValue(cells[indexes.genre]),
-        "Udgiver": extractCellValue(cells[indexes.publisher]),
-        "Antal afsnit": extractCellValue(cells[indexes.episodes]),
-        "Årstal afspillet": extractCellValue(cells[indexes.playedYear]),
-        "Link": extractCellValue(cells[indexes.link]),
-        "Afgivet vurdering": extractCellValue(cells[indexes.givenRating]),
-        "Billedlink": extractCellValue(cells[indexes.image])
+        "Placering": getCell(row, indexes.placement),
+        "Titel": getCell(row, indexes.title),
+        "Vært": getCell(row, indexes.host),
+        "Vuring (1-10)": getCell(row, indexes.rating),
+        "Genre": getCell(row, indexes.genre),
+        "Udgiver": getCell(row, indexes.publisher),
+        "Antal afsnit": getCell(row, indexes.episodes),
+        "Årstal afspillet": getCell(row, indexes.playedYear),
+        "Link": getCell(row, indexes.link),
+        "Afgivet vurdering": getCell(row, indexes.givenRating),
+        "Billedlink": getCell(row, indexes.image)
       };
 
       return normalizePodcastRow(rawPodcast);
@@ -410,9 +449,8 @@ async function loadPodcasts() {
       throw new Error(`Kunne ikke hente Google Sheets-data (${response.status}).`);
     }
 
-    const rawText = await response.text();
-    const sheetJson = parseGoogleVisualizationJson(rawText);
-    podcasts = mapGoogleSheetToPodcasts(sheetJson);
+    const csvText = await response.text();
+    podcasts = mapCsvToPodcasts(csvText);
 
     if (!Array.isArray(podcasts) || podcasts.length === 0) {
       throw new Error("Data fra Google Sheets har ikke det forventede format.");
@@ -422,7 +460,7 @@ async function loadPodcasts() {
     renderPodcasts();
   } catch (error) {
     showLoadError(
-      "Data kunne ikke indlæses fra Google Sheets. Tjek at arket er publiceret, og at fanen hedder Ark1."
+      "Data kunne ikke indlæses fra Google Sheets. Tjek at arket er delt som læser, og at gid=0 er korrekt."
     );
     console.error(error);
   }
