@@ -9,7 +9,7 @@ const cardTemplate = document.querySelector("#podcastCardTemplate");
 let podcasts = [];
 
 const DATA_URL =
-  "https://docs.google.com/spreadsheets/d/1V21y9uMx_fGethrT47hILWczgK_ZSNRfksSKWuR69ss/export?format=csv&gid=0";
+  "https://docs.google.com/spreadsheets/d/e/2PACX-1vQRBWQdj-WDNN3l9yxIMCCu_O2dYfP7modSODcYgJRoQDG3GYsu83W_wIFyijPx6v8l-W011zrFyOdq/pub?gid=0&single=true&output=csv";
 
 const collator = new Intl.Collator("da", {
   sensitivity: "base",
@@ -40,33 +40,26 @@ function firstNonBlank(...values) {
 function cleanNumericText(value) {
   return String(value ?? "")
     .replace(/^\uFEFF/, "")
-    .replace(/["']/g, "")
     .replace(/\u00A0/g, " ")
+    .replace(/["']/g, "")
     .trim();
 }
 
 function parseRating(value) {
-  if (typeof value === "number") {
-    return value;
-  }
-
-  if (isBlank(value)) {
-    return Number.NEGATIVE_INFINITY;
-  }
+  if (typeof value === "number") return value;
+  if (isBlank(value)) return Number.NEGATIVE_INFINITY;
 
   const cleaned = cleanNumericText(value);
   const match = cleaned.match(/-?\d+(?:[.,]\d+)?/);
 
-  if (!match) {
-    return Number.NEGATIVE_INFINITY;
-  }
+  if (!match) return Number.NEGATIVE_INFINITY;
 
   const numeric = Number.parseFloat(match[0].replace(",", "."));
   return Number.isNaN(numeric) ? Number.NEGATIVE_INFINITY : numeric;
 }
 
-function formatRating(rating) {
-  const numeric = parseRating(rating);
+function formatRating(value) {
+  const numeric = parseRating(value);
 
   if (numeric === Number.NEGATIVE_INFINITY) {
     return "Ikke vurderet";
@@ -81,9 +74,7 @@ function parsePlacement(value) {
 }
 
 function parsePlayedYear(value) {
-  if (isBlank(value)) {
-    return Number.NEGATIVE_INFINITY;
-  }
+  if (isBlank(value)) return Number.NEGATIVE_INFINITY;
 
   const match = cleanNumericText(value).match(/\d{4}/);
   return match ? Number.parseInt(match[0], 10) : Number.NEGATIVE_INFINITY;
@@ -134,13 +125,13 @@ function parseCsv(text) {
     }
 
     if (char === "," && !insideQuotes) {
-      row.push(value.trim());
+      row.push(value);
       value = "";
       continue;
     }
 
     if (char === "\n" && !insideQuotes) {
-      row.push(value.trim());
+      row.push(value);
       rows.push(row);
       row = [];
       value = "";
@@ -150,12 +141,12 @@ function parseCsv(text) {
     value += char;
   }
 
-  row.push(value.trim());
+  row.push(value);
   rows.push(row);
 
-  return rows.filter((currentRow) =>
-    currentRow.some((cell) => !isBlank(cell))
-  );
+  return rows
+    .map((currentRow) => currentRow.map((cell) => String(cell ?? "").trim()))
+    .filter((currentRow) => currentRow.some((cell) => !isBlank(cell)));
 }
 
 function findHeaderIndex(headerIndexes, ...aliases) {
@@ -460,7 +451,7 @@ async function loadPodcasts() {
     renderPodcasts();
   } catch (error) {
     showLoadError(
-      "Data kunne ikke indlæses fra Google Sheets. Tjek at arket er delt som læser, og at gid=0 er korrekt."
+      "Data kunne ikke indlæses fra Google Sheets. Tjek at arket fortsat er publiceret som CSV."
     );
     console.error(error);
   }
