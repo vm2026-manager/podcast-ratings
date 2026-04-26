@@ -1,138 +1,447 @@
-<!DOCTYPE html>
-<html lang="da">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Mine Podcastfavoritter</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Manrope:wght@400;500;600;700;800&display=swap"
-      rel="stylesheet"
-    />
-    <link rel="stylesheet" href="style.css" />
-  </head>
-  <body>
-    <div class="page-shell">
-      <header class="hero">
-        <p class="eyebrow">Personlig rangliste</p>
-        <h1>Mine podcastfavoritter</h1>
-        <p class="intro">
-          En kurateret oversigt over podcasts, jeg faktisk har lyttet til,
-          rangeret, gemt og vendt tilbage til. Brug søgning, filtre og
-          sortering til at udforske listen.
-        </p>
+:root {
+  --bg: #e8dccb;
+  --panel: #f7f2eb;
+  --panel-2: #fbf8f4;
+  --text: #1f1815;
+  --muted: #7c7269;
+  --line: #dfd3c4;
+  --accent: #9f4b24;
+  --accent-soft: #eed8c9;
+  --shadow: 0 14px 32px rgba(66, 41, 20, 0.08);
+  --radius-xl: 28px;
+  --radius-lg: 20px;
+  --radius-md: 16px;
+  --radius-sm: 12px;
+}
 
-        <div class="hero-note">
-          <span>Sorteres som standard efter placering</span>
-          <span>Filtrer på genre og udgiver</span>
-        </div>
-      </header>
+* {
+  box-sizing: border-box;
+}
 
-      <main>
-        <section class="recent-section">
-          <div class="section-header">
-            <div>
-              <h2>Senest bedømte podcasts</h2>
-              <p>De nyeste vurderinger fra arket.</p>
-            </div>
-            <div class="section-chip" id="recentSummary">
-              Viser de 6 seneste bedømmelser
-            </div>
-          </div>
+html,
+body {
+  margin: 0;
+  padding: 0;
+  background:
+    radial-gradient(circle at top center, rgba(255, 255, 255, 0.55), transparent 28%),
+    var(--bg);
+  color: var(--text);
+  font-family: "Manrope", sans-serif;
+}
 
-          <div id="recentGrid" class="recent-grid"></div>
-        </section>
+body {
+  min-height: 100vh;
+}
 
-        <section class="controls" aria-label="Søgning og sortering">
-          <label class="search-field">
-            <span>Søg</span>
-            <input
-              type="search"
-              id="searchInput"
-              placeholder="Søg efter titel eller vært"
-            />
-          </label>
+img {
+  display: block;
+  max-width: 100%;
+}
 
-          <label class="sort-field">
-            <span>Sorter efter</span>
-            <select id="sortSelect">
-              <option value="placement-asc">Placering, lavest først</option>
-              <option value="placement-desc">Placering, højest først</option>
-              <option value="rating-desc">Vurdering, højest først</option>
-              <option value="rating-asc">Vurdering, lavest først</option>
-              <option value="title-asc">Titel, A-Å</option>
-              <option value="title-desc">Titel, Å-A</option>
-            </select>
-          </label>
-        </section>
+button,
+input,
+select {
+  font: inherit;
+}
 
-        <section class="genre-nav" aria-label="Genrer">
-          <div class="genre-nav-header">
-            <h2>Genrer</h2>
-          </div>
-          <div id="genreChips" class="genre-chips"></div>
-        </section>
+.page-shell {
+  width: min(1280px, calc(100% - 32px));
+  margin: 16px auto 32px;
+}
 
-        <section class="summary" aria-live="polite">
-          <p id="resultsText">Indlæser podcasts...</p>
-        </section>
+.hero,
+.recent-section,
+.controls,
+.genre-nav {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.64), rgba(250, 243, 237, 0.92));
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow);
+}
 
-        <section
-          id="podcastGrid"
-          class="podcast-grid"
-          aria-label="Podcastoversigt"
-        ></section>
+.hero {
+  padding: 36px 38px;
+  margin-bottom: 14px;
+}
 
-        <template id="recentCardTemplate">
-          <article class="recent-card">
-            <div class="recent-cover-wrap">
-              <img class="recent-cover" alt="" loading="lazy" />
-            </div>
-            <div class="recent-body">
-              <h3 class="recent-title"></h3>
-              <p class="recent-host"></p>
-              <div class="recent-meta">
-                <span class="recent-rating"></span>
-                <span class="recent-date"></span>
-              </div>
-            </div>
-          </article>
-        </template>
+.eyebrow {
+  margin: 0 0 12px;
+  font-size: 0.82rem;
+  font-weight: 800;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
 
-        <template id="podcastCardTemplate">
-          <article class="podcast-card">
-            <div class="rank-badge"></div>
+.hero h1 {
+  margin: 0 0 14px;
+  font-family: "Fraunces", serif;
+  font-size: clamp(2.9rem, 6vw, 5.2rem);
+  line-height: 0.95;
+  letter-spacing: -0.04em;
+}
 
-            <div class="card-topline">
-              <span class="card-rating"></span>
-            </div>
+.intro {
+  margin: 0;
+  max-width: 760px;
+  font-size: 1.04rem;
+  line-height: 1.65;
+  color: var(--muted);
+}
 
-            <div class="card-layout">
-              <div class="cover-wrap">
-                <img class="podcast-image" alt="" loading="lazy" />
-              </div>
+.hero-note {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 24px;
+}
 
-              <div class="card-content">
-                <h3 class="title"></h3>
-                <p class="host"></p>
+.hero-note span,
+.section-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 42px;
+  padding: 0 18px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.65);
+  color: #685d55;
+  font-size: 0.94rem;
+  font-weight: 700;
+}
 
-                <div class="meta-inline">
-                  <span class="publisher"></span>
-                  <span class="genre"></span>
-                  <span class="episodes"></span>
-                </div>
+.recent-section {
+  padding: 18px 18px 20px;
+  margin-bottom: 14px;
+}
 
-                <div class="card-footer">
-                  <button class="podcast-link" type="button">Åbn link</button>
-                </div>
-              </div>
-            </div>
-          </article>
-        </template>
-      </main>
-    </div>
+.section-header,
+.genre-nav-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 18px;
+  margin-bottom: 14px;
+}
 
-    <script src="app.js" defer></script>
-  </body>
-</html>
+.section-header h2,
+.genre-nav-header h2 {
+  margin: 0;
+  font-family: "Fraunces", serif;
+  font-size: clamp(1.6rem, 3vw, 2.2rem);
+  line-height: 1.1;
+}
+
+.section-header p {
+  margin: 6px 0 0;
+  color: var(--muted);
+}
+
+.recent-grid {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.recent-card {
+  display: flex;
+  gap: 12px;
+  padding: 12px;
+  background: rgba(255, 255, 255, 0.62);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  min-height: 146px;
+}
+
+.recent-cover-wrap {
+  flex: 0 0 96px;
+  width: 96px;
+}
+
+.recent-cover {
+  width: 96px;
+  height: 96px;
+  object-fit: cover;
+  border-radius: var(--radius-sm);
+  background: #eadfd4;
+}
+
+.recent-body {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.recent-title {
+  margin: 0 0 4px;
+  font-size: 1rem;
+  line-height: 1.25;
+}
+
+.recent-host {
+  margin: 0 0 10px;
+  font-size: 0.9rem;
+  line-height: 1.35;
+  color: var(--muted);
+}
+
+.recent-meta {
+  margin-top: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.recent-rating,
+.card-rating {
+  display: inline-flex;
+  align-items: center;
+  align-self: flex-start;
+  min-height: 32px;
+  padding: 0 12px;
+  border-radius: 999px;
+  background: var(--accent-soft);
+  color: #8e431e;
+  font-weight: 800;
+  font-size: 0.92rem;
+}
+
+.recent-date {
+  color: var(--muted);
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+
+.controls {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(280px, 0.64fr);
+  gap: 16px;
+  padding: 18px;
+  margin-bottom: 14px;
+}
+
+.search-field,
+.sort-field {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.search-field span,
+.sort-field span {
+  font-size: 0.95rem;
+  font-weight: 800;
+}
+
+.search-field input,
+.sort-field select {
+  width: 100%;
+  min-height: 54px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  background: rgba(255, 255, 255, 0.68);
+  color: var(--text);
+  padding: 0 16px;
+  outline: none;
+}
+
+.genre-nav {
+  padding: 16px 18px 20px;
+  margin-bottom: 16px;
+}
+
+.genre-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.genre-chip {
+  min-height: 42px;
+  padding: 0 18px;
+  border-radius: 999px;
+  border: 1px solid #ccb39f;
+  background: transparent;
+  color: #7c4b2b;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.genre-chip.active {
+  background: var(--accent);
+  color: #fff;
+  border-color: var(--accent);
+}
+
+.summary {
+  margin: 0 0 14px;
+}
+
+.summary p {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 700;
+  color: #5d534a;
+}
+
+.podcast-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.podcast-card {
+  position: relative;
+  padding: 16px;
+  background: rgba(255, 255, 255, 0.72);
+  border: 1px solid var(--line);
+  border-radius: 24px;
+  box-shadow: var(--shadow);
+  min-height: 250px;
+}
+
+.rank-badge {
+  position: absolute;
+  top: 14px;
+  left: 14px;
+  width: 32px;
+  height: 32px;
+  border-radius: 999px;
+  background: #efe7de;
+  color: #5f544b;
+  font-size: 0.9rem;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.card-topline {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 14px;
+}
+
+.card-layout {
+  display: grid;
+  grid-template-columns: 112px minmax(0, 1fr);
+  gap: 16px;
+  align-items: start;
+}
+
+.cover-wrap {
+  width: 112px;
+  height: 122px;
+  border-radius: 16px;
+  overflow: hidden;
+  background: #eadfd4;
+}
+
+.podcast-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.card-content {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  min-height: 122px;
+}
+
+.title {
+  margin: 2px 0 8px;
+  font-family: "Fraunces", serif;
+  font-size: 1.18rem;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+}
+
+.host {
+  margin: 0 0 16px;
+  color: var(--muted);
+  line-height: 1.45;
+}
+
+.meta-inline {
+  margin-top: auto;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  color: #776c63;
+  font-size: 0.88rem;
+  font-weight: 700;
+}
+
+.meta-inline span {
+  display: inline-flex;
+  align-items: center;
+  min-height: 30px;
+  padding: 0 10px;
+  border-radius: 999px;
+  background: rgba(239, 231, 222, 0.95);
+}
+
+.card-footer {
+  margin-top: 16px;
+}
+
+.podcast-link {
+  min-height: 40px;
+  border: 0;
+  border-radius: 12px;
+  background: #1e1713;
+  color: #fff;
+  padding: 0 16px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.empty-state {
+  padding: 22px 18px;
+  border: 1px dashed var(--line);
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.45);
+  color: #6f655d;
+  font-weight: 700;
+}
+
+@media (max-width: 1180px) {
+  .recent-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .podcast-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 860px) {
+  .page-shell {
+    width: min(100% - 18px, 100%);
+  }
+
+  .hero {
+    padding: 26px 20px;
+  }
+
+  .controls {
+    grid-template-columns: 1fr;
+  }
+
+  .recent-grid,
+  .podcast-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .card-layout {
+    grid-template-columns: 96px minmax(0, 1fr);
+  }
+
+  .cover-wrap {
+    width: 96px;
+    height: 108px;
+  }
+}
