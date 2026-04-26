@@ -79,7 +79,7 @@ function formatRating(value) {
     return "Ikke vurderet";
   }
 
-  return numeric.toFixed(1).replace(".", ",") + " / 10";
+  return `${numeric.toFixed(1).replace(".", ",")} / 10`;
 }
 
 function parsePlacement(value) {
@@ -333,7 +333,9 @@ function filterPodcasts(items, query) {
           .includes(normalizeText(query));
 
     const matchesGenre =
-      activeGenre === "Alle" ? true : normalizeText(podcast.Genre) === normalizeText(activeGenre);
+      activeGenre === "Alle"
+        ? true
+        : normalizeText(podcast.Genre) === normalizeText(activeGenre);
 
     return matchesQuery && matchesGenre;
   });
@@ -424,11 +426,11 @@ function renderRecentRated() {
 
 function createCard(podcast) {
   const fragment = cardTemplate.content.cloneNode(true);
-  const rankBadge = fragment.querySelector(".rank-badge");
+  const placementValue = fragment.querySelector(".placement-value");
   const coverWrap = fragment.querySelector(".cover-wrap");
   const image = fragment.querySelector(".podcast-image");
 
-  rankBadge.textContent = formatText(podcast.Placering, "–");
+  placementValue.textContent = `#${formatText(podcast.Placering, "–")}`;
 
   fragment.querySelector(".card-rating").textContent = formatRating(
     podcast["Vuring (1-10)"]
