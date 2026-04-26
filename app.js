@@ -9,7 +9,7 @@ const cardTemplate = document.querySelector("#podcastCardTemplate");
 let podcasts = [];
 
 const DATA_URL =
-  "https://docs.google.com/spreadsheets/d/e/2PACX-1vQRBWQdj-WDNN3l9yxIMCCu_O2dYfP7modSODcYgJRoQDG3GYsu83W_wIFyijPx6v8l-W011zrFyOdq/gviz/tq?tqx=out:json&sheet=Ark1";
+  "https://docs.google.com/spreadsheets/d/1ABCDEF1234567890EXAMPLE/gviz/tq?tqx=out:json&gid=0";
 
 const collator = new Intl.Collator("da", {
   sensitivity: "base",
