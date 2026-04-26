@@ -108,6 +108,34 @@ function sanitizeHeader(header) {
     .replace(/\s+/g, " ");
 }
 
+function parseGoogleVisualizationJson(text) {
+  const match = text.match(/google\.visualization\.Query\.setResponse\(([\s\S]+)\);?$/);
+
+  if (!match) {
+    throw new Error("Kunne ikke læse Google Sheets JSON-svar.");
+  }
+
+  return JSON.parse(match[1]);
+}
+
+function extractCellValue(cell) {
+  if (!cell) return "";
+
+  if (cell.v === null || cell.v === undefined) {
+    return "";
+  }
+
+  if (typeof cell.v === "string") {
+    return cell.v.trim();
+  }
+
+  if (typeof cell.v === "number") {
+    return String(cell.v).replace(".", ",");
+  }
+
+  return String(cell.v).trim();
+}
+
 function normalizePodcastRow(rawPodcast) {
   return {
     "Placering": firstNonBlank(rawPodcast["Placering"]),
@@ -132,30 +160,6 @@ function normalizePodcastRow(rawPodcast) {
     ),
     "Billedlink": firstNonBlank(rawPodcast["Billedlink"])
   };
-}
-
-function parseGoogleVisualizationJson(text) {
-  const match = text.match(/google\.visualization\.Query\.setResponse\(([\s\S]+)\);?$/);
-
-  if (!match) {
-    throw new Error("Kunne ikke læse Google Sheets JSON-svar.");
-  }
-
-  return JSON.parse(match[1]);
-}
-
-function extractCellValue(cell) {
-  if (!cell) return "";
-
-  if (typeof cell.f === "string" && cell.f.trim() !== "") {
-    return cell.f.trim();
-  }
-
-  if (cell.v === null || cell.v === undefined) {
-    return "";
-  }
-
-  return String(cell.v).trim();
 }
 
 function mapGoogleSheetToPodcasts(sheetJson) {
