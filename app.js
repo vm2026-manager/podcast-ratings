@@ -164,10 +164,11 @@ function splitLinesRespectingQuotes(text) {
 
     if (character === '"') {
       if (insideQuotes && nextCharacter === '"') {
-        currentRow += '"';
+        currentRow += '""';
         index += 1;
       } else {
         insideQuotes = !insideQuotes;
+        currentRow += character;
       }
     } else if (character === "\n" && !insideQuotes) {
       rows.push(currentRow);
@@ -222,49 +223,12 @@ function findHeaderIndex(headerIndexes, ...aliases) {
   return -1;
 }
 
-function maybeRepairShiftedRow(row, expectedColumns) {
-  if (row.length === expectedColumns) {
-    return row;
-  }
-
-  const repaired = [...row];
-
-  if (
-    repaired.length === expectedColumns + 1 &&
-    /^\d+$/.test(cleanNumericText(repaired[3])) &&
-    /^\d+$/.test(cleanNumericText(repaired[4]))
-  ) {
-    repaired.splice(3, 2, `${cleanNumericText(repaired[3])},${cleanNumericText(repaired[4])}`);
-    return repaired;
-  }
-
-  if (repaired.length > expectedColumns + 1) {
-    const firstFourLookRight =
-      /^\d+$/.test(cleanNumericText(repaired[0])) &&
-      !isBlank(repaired[1]) &&
-      !isBlank(repaired[2]) &&
-      /^\d+$/.test(cleanNumericText(repaired[3])) &&
-      /^\d+$/.test(cleanNumericText(repaired[4]));
-
-    if (firstFourLookRight) {
-      repaired.splice(3, 2, `${cleanNumericText(repaired[3])},${cleanNumericText(repaired[4])}`);
-    }
-  }
-
-  return repaired;
-}
-
 function normalizePodcastRow(rawPodcast) {
   return {
-    "Placering": firstNonBlank(rawPodcast["Placering"], rawPodcast["Placeri"]),
+    "Placering": firstNonBlank(rawPodcast["Placering"]),
     "Titel": firstNonBlank(rawPodcast["Titel"]),
     "Vært": firstNonBlank(rawPodcast["Vært"], rawPodcast["Vaert"]),
-    "Vurdering (1-10)": firstNonBlank(
-      rawPodcast["Vurdering (1-10)"],
-      rawPodcast["Vuring (1-10)"],
-      rawPodcast["Vurdering"],
-      rawPodcast["Rating"]
-    ),
+    "Vuring (1-10)": firstNonBlank(rawPodcast["Vuring (1-10)"], rawPodcast["Vurdering (1-10)"], rawPodcast["Vurdering"]),
     "Genre": firstNonBlank(rawPodcast["Genre"]),
     "Udgiver": firstNonBlank(rawPodcast["Udgiver"]),
     "Antal afsnit": firstNonBlank(rawPodcast["Antal afsnit"]),
@@ -277,12 +241,7 @@ function normalizePodcastRow(rawPodcast) {
       rawPodcast["Afgivet vurdering"],
       rawPodcast["Afgivet vurd"]
     ),
-    "Billedlink": firstNonBlank(
-      rawPodcast["Billedlink"],
-      rawPodcast["Billede"],
-      rawPodcast["Cover"],
-      rawPodcast["Coverlink"]
-    )
+    "Billedlink": firstNonBlank(rawPodcast["Billedlink"])
   };
 }
 
@@ -301,15 +260,14 @@ function mapCsvToPodcasts(csvText) {
   });
 
   const indexes = {
-    placement: findHeaderIndex(headerIndexes, "Placering", "Placeri"),
+    placement: findHeaderIndex(headerIndexes, "Placering"),
     title: findHeaderIndex(headerIndexes, "Titel"),
     host: findHeaderIndex(headerIndexes, "Vært", "Vaert"),
     rating: findHeaderIndex(
       headerIndexes,
-      "Vurdering (1-10)",
       "Vuring (1-10)",
-      "Vurdering",
-      "Rating"
+      "Vurdering (1-10)",
+      "Vurdering"
     ),
     genre: findHeaderIndex(headerIndexes, "Genre"),
     publisher: findHeaderIndex(headerIndexes, "Udgiver"),
@@ -325,37 +283,23 @@ function mapCsvToPodcasts(csvText) {
       "Afgivet vurdering",
       "Afgivet vurd"
     ),
-    image: findHeaderIndex(
-      headerIndexes,
-      "Billedlink",
-      "Billede",
-      "Cover",
-      "Coverlink"
-    )
+    image: findHeaderIndex(headerIndexes, "Billedlink")
   };
 
   return dataRows
-    .map((originalRow) => {
-      const row = maybeRepairShiftedRow([...originalRow], headerRow.length);
-
+    .map((row) => {
       const rawPodcast = {
-        "Placering": firstNonBlank(getCell(row, indexes.placement), getCell(row, 0)),
-        "Placeri": firstNonBlank(getCell(row, indexes.placement), getCell(row, 0)),
-        "Titel": firstNonBlank(getCell(row, indexes.title), getCell(row, 1)),
-        "Vært": firstNonBlank(getCell(row, indexes.host), getCell(row, 2)),
-        "Vurdering (1-10)": firstNonBlank(getCell(row, indexes.rating), getCell(row, 3)),
-        "Vuring (1-10)": firstNonBlank(getCell(row, indexes.rating), getCell(row, 3)),
-        "Genre": firstNonBlank(getCell(row, indexes.genre), getCell(row, 4)),
-        "Udgiver": firstNonBlank(getCell(row, indexes.publisher), getCell(row, 5)),
-        "Antal afsnit": firstNonBlank(getCell(row, indexes.episodes), getCell(row, 6)),
-        "Årstal afspillet": firstNonBlank(getCell(row, indexes.playedYear), getCell(row, 7)),
-        "Link": firstNonBlank(getCell(row, indexes.link), getCell(row, 8)),
-        "Afgivet vurdering": firstNonBlank(getCell(row, indexes.givenRating), getCell(row, 9)),
-        "Billedlink": firstNonBlank(
-          getCell(row, indexes.image),
-          getCell(row, 10),
-          getCell(row, 11)
-        )
+        "Placering": getCell(row, indexes.placement),
+        "Titel": getCell(row, indexes.title),
+        "Vært": getCell(row, indexes.host),
+        "Vuring (1-10)": getCell(row, indexes.rating),
+        "Genre": getCell(row, indexes.genre),
+        "Udgiver": getCell(row, indexes.publisher),
+        "Antal afsnit": getCell(row, indexes.episodes),
+        "Årstal afspillet": getCell(row, indexes.playedYear),
+        "Link": getCell(row, indexes.link),
+        "Afgivet vurdering": getCell(row, indexes.givenRating),
+        "Billedlink": getCell(row, indexes.image)
       };
 
       return normalizePodcastRow(rawPodcast);
@@ -375,16 +319,10 @@ function sortPodcasts(items, sortValue) {
         return parsePlacement(a["Placering"]) - parsePlacement(b["Placering"]);
 
       case "rating-asc":
-        return (
-          parseRating(a["Vurdering (1-10)"]) -
-          parseRating(b["Vurdering (1-10)"])
-        );
+        return parseRating(a["Vuring (1-10)"]) - parseRating(b["Vuring (1-10)"]);
 
       case "rating-desc":
-        return (
-          parseRating(b["Vurdering (1-10)"]) -
-          parseRating(a["Vurdering (1-10)"])
-        );
+        return parseRating(b["Vuring (1-10)"]) - parseRating(a["Vuring (1-10)"]);
 
       case "title-desc":
         return collator.compare(b["Titel"], a["Titel"]);
@@ -447,7 +385,7 @@ function createCard(podcast) {
   )}`;
   fragment.querySelector(".genre").textContent = formatText(podcast["Genre"]);
   fragment.querySelector(".rating").textContent = formatRating(
-    podcast["Vurdering (1-10)"]
+    podcast["Vuring (1-10)"]
   );
   fragment.querySelector(".title").textContent = formatText(podcast["Titel"]);
   fragment.querySelector(".host").textContent = formatText(
