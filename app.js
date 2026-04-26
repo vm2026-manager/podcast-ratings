@@ -28,6 +28,23 @@ function formatText(value, fallback = "Ikke angivet") {
   return isBlank(value) ? fallback : String(value).trim();
 }
 
+function firstNonBlank(...values) {
+  for (const value of values) {
+    if (!isBlank(value)) {
+      return String(value).trim();
+    }
+  }
+  return "";
+}
+
+function cleanNumericText(value) {
+  return String(value ?? "")
+    .replace(/^\uFEFF/, "")
+    .replace(/["']/g, "")
+    .replace(/\u00A0/g, " ")
+    .trim();
+}
+
 function parseRating(value) {
   if (typeof value === "number") {
     return value;
@@ -37,13 +54,14 @@ function parseRating(value) {
     return Number.NEGATIVE_INFINITY;
   }
 
-  const normalized = String(value)
-    .replace(/\s+/g, "")
-    .replace(",", ".")
-    .trim();
+  const cleaned = cleanNumericText(value);
+  const match = cleaned.match(/-?\d+(?:[.,]\d+)?/);
 
-  const numeric = Number.parseFloat(normalized);
+  if (!match) {
+    return Number.NEGATIVE_INFINITY;
+  }
 
+  const numeric = Number.parseFloat(match[0].replace(",", "."));
   return Number.isNaN(numeric) ? Number.NEGATIVE_INFINITY : numeric;
 }
 
@@ -58,7 +76,7 @@ function formatRating(rating) {
 }
 
 function parsePlacement(value) {
-  const numeric = Number.parseInt(String(value ?? "").trim(), 10);
+  const numeric = Number.parseInt(cleanNumericText(value), 10);
   return Number.isNaN(numeric) ? Number.POSITIVE_INFINITY : numeric;
 }
 
@@ -67,7 +85,7 @@ function parsePlayedYear(value) {
     return Number.NEGATIVE_INFINITY;
   }
 
-  const match = String(value).match(/\d{4}/);
+  const match = cleanNumericText(value).match(/\d{4}/);
   return match ? Number.parseInt(match[0], 10) : Number.NEGATIVE_INFINITY;
 }
 
@@ -82,19 +100,27 @@ function populateFilterOptions(select, values, allLabel) {
   });
 }
 
-function detectDelimiter(headerLine) {
-  const semicolonCount = (headerLine.match(/;/g) || []).length;
-  const commaCount = (headerLine.match(/,/g) || []).length;
-  const tabCount = (headerLine.match(/\t/g) || []).length;
+function detectDelimiterFromLine(line) {
+  const counts = {
+    ",": (line.match(/,/g) || []).length,
+    ";": (line.match(/;/g) || []).length,
+    "\t": (line.match(/\t/g) || []).length
+  };
 
-  if (tabCount > semicolonCount && tabCount > commaCount) {
-    return "\t";
-  }
+  let best = ",";
+  let bestCount = counts[best];
 
-  return semicolonCount > commaCount ? ";" : ",";
+  Object.entries(counts).forEach(([delimiter, count]) => {
+    if (count > bestCount) {
+      best = delimiter;
+      bestCount = count;
+    }
+  });
+
+  return best;
 }
 
-function parseCsvRow(row, delimiter) {
+function parseDelimitedRow(row, delimiter) {
   const values = [];
   let currentValue = "";
   let insideQuotes = false;
@@ -119,21 +145,22 @@ function parseCsvRow(row, delimiter) {
   }
 
   values.push(currentValue);
-  return values.map((value) => String(value ?? "").trim());
+
+  return values.map((value) =>
+    String(value ?? "")
+      .replace(/^\uFEFF/, "")
+      .trim()
+  );
 }
 
-function parseCsv(text) {
-  const normalized = text.replace(/^\uFEFF/, "").replace(/\r\n/g, "\n").replace(/\r/g, "\n");
-  const firstLine = normalized.split("\n")[0] || "";
-  const delimiter = detectDelimiter(firstLine);
-
+function splitLinesRespectingQuotes(text) {
   const rows = [];
   let currentRow = "";
   let insideQuotes = false;
 
-  for (let index = 0; index < normalized.length; index += 1) {
-    const character = normalized[index];
-    const nextCharacter = normalized[index + 1];
+  for (let index = 0; index < text.length; index += 1) {
+    const character = text[index];
+    const nextCharacter = text[index + 1];
 
     if (character === '"') {
       if (insideQuotes && nextCharacter === '"') {
@@ -143,7 +170,7 @@ function parseCsv(text) {
         insideQuotes = !insideQuotes;
       }
     } else if (character === "\n" && !insideQuotes) {
-      rows.push(parseCsvRow(currentRow, delimiter));
+      rows.push(currentRow);
       currentRow = "";
     } else {
       currentRow += character;
@@ -151,10 +178,26 @@ function parseCsv(text) {
   }
 
   if (currentRow) {
-    rows.push(parseCsvRow(currentRow, delimiter));
+    rows.push(currentRow);
   }
 
-  return rows.filter((row) => row.some((cell) => !isBlank(cell)));
+  return rows.filter((row) => row.trim() !== "");
+}
+
+function parseCsv(text) {
+  const normalized = String(text ?? "")
+    .replace(/^\uFEFF/, "")
+    .replace(/\r\n/g, "\n")
+    .replace(/\r/g, "\n");
+
+  const lines = splitLinesRespectingQuotes(normalized);
+
+  if (lines.length === 0) {
+    return [];
+  }
+
+  const delimiter = detectDelimiterFromLine(lines[0]);
+  return lines.map((line) => parseDelimitedRow(line, delimiter));
 }
 
 function sanitizeHeader(header) {
@@ -165,27 +208,25 @@ function sanitizeHeader(header) {
     .replace(/\s+/g, " ");
 }
 
-function firstNonBlank(...values) {
-  for (const value of values) {
-    if (!isBlank(value)) {
-      return String(value).trim();
-    }
-  }
-  return "";
-}
-
 function getCell(row, index) {
   return index >= 0 && index < row.length ? String(row[index] ?? "").trim() : "";
 }
 
+function findHeaderIndex(headerIndexes, ...aliases) {
+  for (const alias of aliases) {
+    const normalizedAlias = sanitizeHeader(alias);
+    if (headerIndexes.has(normalizedAlias)) {
+      return headerIndexes.get(normalizedAlias);
+    }
+  }
+  return -1;
+}
+
 function normalizePodcastRow(rawPodcast) {
   return {
-    "Placering": firstNonBlank(
-      rawPodcast["Placering"],
-      rawPodcast["Placeri"]
-    ),
+    "Placering": firstNonBlank(rawPodcast["Placering"], rawPodcast["Placeri"]),
     "Titel": firstNonBlank(rawPodcast["Titel"]),
-    "Vært": firstNonBlank(rawPodcast["Vært"]),
+    "Vært": firstNonBlank(rawPodcast["Vært"], rawPodcast["Vaert"]),
     "Vurdering (1-10)": firstNonBlank(
       rawPodcast["Vurdering (1-10)"],
       rawPodcast["Vuring (1-10)"],
@@ -195,9 +236,15 @@ function normalizePodcastRow(rawPodcast) {
     "Genre": firstNonBlank(rawPodcast["Genre"]),
     "Udgiver": firstNonBlank(rawPodcast["Udgiver"]),
     "Antal afsnit": firstNonBlank(rawPodcast["Antal afsnit"]),
-    "Årstal afspillet": firstNonBlank(rawPodcast["Årstal afspillet"]),
+    "Årstal afspillet": firstNonBlank(
+      rawPodcast["Årstal afspillet"],
+      rawPodcast["Arstal afspillet"]
+    ),
     "Link": firstNonBlank(rawPodcast["Link"]),
-    "Afgivet vurdering": firstNonBlank(rawPodcast["Afgivet vurdering"]),
+    "Afgivet vurdering": firstNonBlank(
+      rawPodcast["Afgivet vurdering"],
+      rawPodcast["Afgivet vurd"]
+    ),
     "Billedlink": firstNonBlank(rawPodcast["Billedlink"])
   };
 }
@@ -210,92 +257,56 @@ function mapCsvToPodcasts(csvText) {
   }
 
   const [headerRow, ...dataRows] = rows;
-  const normalizedHeaders = headerRow.map((header) => sanitizeHeader(header));
   const headerIndexes = new Map();
 
-  normalizedHeaders.forEach((header, index) => {
-    headerIndexes.set(header, index);
+  headerRow.forEach((header, index) => {
+    headerIndexes.set(sanitizeHeader(header), index);
   });
 
-  const findIndex = (...aliases) => {
-    for (const alias of aliases) {
-      const normalizedAlias = sanitizeHeader(alias);
-      if (headerIndexes.has(normalizedAlias)) {
-        return headerIndexes.get(normalizedAlias);
-      }
-    }
-    return -1;
-  };
-
   const indexes = {
-    placement: findIndex("Placering", "Placeri"),
-    title: findIndex("Titel"),
-    host: findIndex("Vært", "Vaert"),
-    rating: findIndex("Vurdering (1-10)", "Vuring (1-10)", "Vurdering", "Rating"),
-    genre: findIndex("Genre"),
-    publisher: findIndex("Udgiver"),
-    episodes: findIndex("Antal afsnit"),
-    playedYear: findIndex("Årstal afspillet", "Arstal afspillet"),
-    link: findIndex("Link"),
-    givenRating: findIndex("Afgivet vurdering", "Afgivet vurd"),
-    image: findIndex("Billedlink")
+    placement: findHeaderIndex(headerIndexes, "Placering", "Placeri"),
+    title: findHeaderIndex(headerIndexes, "Titel"),
+    host: findHeaderIndex(headerIndexes, "Vært", "Vaert"),
+    rating: findHeaderIndex(
+      headerIndexes,
+      "Vurdering (1-10)",
+      "Vuring (1-10)",
+      "Vurdering",
+      "Rating"
+    ),
+    genre: findHeaderIndex(headerIndexes, "Genre"),
+    publisher: findHeaderIndex(headerIndexes, "Udgiver"),
+    episodes: findHeaderIndex(headerIndexes, "Antal afsnit"),
+    playedYear: findHeaderIndex(
+      headerIndexes,
+      "Årstal afspillet",
+      "Arstal afspillet"
+    ),
+    link: findHeaderIndex(headerIndexes, "Link"),
+    givenRating: findHeaderIndex(
+      headerIndexes,
+      "Afgivet vurdering",
+      "Afgivet vurd"
+    ),
+    image: findHeaderIndex(headerIndexes, "Billedlink")
   };
 
   return dataRows
     .map((row) => {
       const rawPodcast = {
-        "Placering": firstNonBlank(
-          getCell(row, indexes.placement),
-          getCell(row, 0)
-        ),
-        "Placeri": firstNonBlank(
-          getCell(row, indexes.placement),
-          getCell(row, 0)
-        ),
-        "Titel": firstNonBlank(
-          getCell(row, indexes.title),
-          getCell(row, 1)
-        ),
-        "Vært": firstNonBlank(
-          getCell(row, indexes.host),
-          getCell(row, 2)
-        ),
-        "Vurdering (1-10)": firstNonBlank(
-          getCell(row, indexes.rating),
-          getCell(row, 3)
-        ),
-        "Vuring (1-10)": firstNonBlank(
-          getCell(row, indexes.rating),
-          getCell(row, 3)
-        ),
-        "Genre": firstNonBlank(
-          getCell(row, indexes.genre),
-          getCell(row, 4)
-        ),
-        "Udgiver": firstNonBlank(
-          getCell(row, indexes.publisher),
-          getCell(row, 5)
-        ),
-        "Antal afsnit": firstNonBlank(
-          getCell(row, indexes.episodes),
-          getCell(row, 6)
-        ),
-        "Årstal afspillet": firstNonBlank(
-          getCell(row, indexes.playedYear),
-          getCell(row, 7)
-        ),
-        "Link": firstNonBlank(
-          getCell(row, indexes.link),
-          getCell(row, 8)
-        ),
-        "Afgivet vurdering": firstNonBlank(
-          getCell(row, indexes.givenRating),
-          getCell(row, 9)
-        ),
-        "Billedlink": firstNonBlank(
-          getCell(row, indexes.image),
-          getCell(row, 10)
-        )
+        "Placering": firstNonBlank(getCell(row, indexes.placement), getCell(row, 0)),
+        "Placeri": firstNonBlank(getCell(row, indexes.placement), getCell(row, 0)),
+        "Titel": firstNonBlank(getCell(row, indexes.title), getCell(row, 1)),
+        "Vært": firstNonBlank(getCell(row, indexes.host), getCell(row, 2)),
+        "Vurdering (1-10)": firstNonBlank(getCell(row, indexes.rating), getCell(row, 3)),
+        "Vuring (1-10)": firstNonBlank(getCell(row, indexes.rating), getCell(row, 3)),
+        "Genre": firstNonBlank(getCell(row, indexes.genre), getCell(row, 4)),
+        "Udgiver": firstNonBlank(getCell(row, indexes.publisher), getCell(row, 5)),
+        "Antal afsnit": firstNonBlank(getCell(row, indexes.episodes), getCell(row, 6)),
+        "Årstal afspillet": firstNonBlank(getCell(row, indexes.playedYear), getCell(row, 7)),
+        "Link": firstNonBlank(getCell(row, indexes.link), getCell(row, 8)),
+        "Afgivet vurdering": firstNonBlank(getCell(row, indexes.givenRating), getCell(row, 9)),
+        "Billedlink": firstNonBlank(getCell(row, indexes.image), getCell(row, 10))
       };
 
       return normalizePodcastRow(rawPodcast);
@@ -373,7 +384,7 @@ function filterPodcasts(items, query) {
 
 function updateSummary(count, total) {
   const noun = count === 1 ? "podcast" : "podcasts";
-  resultsText.textContent = `Viser ${count} ${noun} ud af ${total}.`;
+  resultsText.textContent = `Viser ${count} ${noun} podcasts ud af ${total}.`;
 }
 
 function createCard(podcast) {
@@ -390,10 +401,10 @@ function createCard(podcast) {
     podcast["Vurdering (1-10)"]
   );
   fragment.querySelector(".title").textContent = formatText(podcast["Titel"]);
-
-  const hostText = formatText(podcast["Vært"], "Vært ikke angivet");
-  fragment.querySelector(".host").textContent = hostText;
-
+  fragment.querySelector(".host").textContent = formatText(
+    podcast["Vært"],
+    "Vært ikke angivet"
+  );
   fragment.querySelector(".publisher").textContent = formatText(
     podcast["Udgiver"]
   );
