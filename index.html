@@ -15,17 +15,30 @@
   <body>
     <div class="page-shell">
       <header class="hero">
-        <p class="eyebrow">Personlig rangliste</p>
-        <h1>Mine podcastfavoritter</h1>
-        <p class="intro">
-          En kurateret oversigt over podcasts, jeg faktisk har lyttet til,
-          rangeret, gemt og vendt tilbage til. Brug søgning, filtre og
-          sortering til at udforske listen.
-        </p>
+        <div class="hero-copy">
+          <p class="eyebrow">Personlig rangliste</p>
+          <h1>Mine podcastfavoritter</h1>
+          <p class="intro">
+            Velkommen til din personlige rangliste over podcasts, du har lyttet
+            til og bedømt. Her får du et samlet overblik over dine favoritter
+            — sorteret og klar til næste lyt.
+          </p>
 
-        <div class="hero-note">
-          <span>Sorteres som standard efter placering</span>
-          <span>Filtrer på genre og udgiver</span>
+          <div class="hero-note">
+            <span>Sorteres som standard efter placering</span>
+            <span>Filtrer på genre og udgiver</span>
+          </div>
+        </div>
+
+        <div class="hero-art" aria-hidden="true">
+          <div class="hero-art-circle"></div>
+          <div class="hero-art-object hero-book"></div>
+          <div class="hero-art-object hero-book hero-book-small"></div>
+          <div class="hero-art-object hero-cup"></div>
+          <div class="hero-art-object hero-headphones"></div>
+          <div class="hero-leaf leaf-a"></div>
+          <div class="hero-leaf leaf-b"></div>
+          <div class="hero-leaf leaf-c"></div>
         </div>
       </header>
 
@@ -102,13 +115,16 @@
 
         <template id="podcastCardTemplate">
           <article class="podcast-card">
-            <div class="rank-badge"></div>
+            <div class="placement-badge">
+              <span class="placement-label">Placering</span>
+              <span class="placement-value"></span>
+            </div>
 
-            <div class="card-topline">
+            <div class="card-rating-wrap">
               <span class="card-rating"></span>
             </div>
 
-            <div class="card-layout">
+            <div class="card-main">
               <div class="cover-wrap">
                 <img class="podcast-image" alt="" loading="lazy" />
               </div>
