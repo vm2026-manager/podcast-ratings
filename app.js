@@ -341,7 +341,7 @@ function filterPodcasts(items, query) {
   });
 }
 
-function getRecentRatedPodcasts(items, limit = 4) {
+function getRecentRatedPodcasts(items, limit = 3) {
   return [...items]
     .filter((podcast) => parseDateDMY(podcast["Afgivet vurdering"]))
     .sort((a, b) => {
@@ -407,7 +407,7 @@ function createRecentCard(podcast) {
 }
 
 function renderRecentRated() {
-  const recentItems = getRecentRatedPodcasts(podcasts, 4);
+  const recentItems = getRecentRatedPodcasts(podcasts, 3);
   recentGrid.innerHTML = "";
 
   if (recentItems.length === 0) {
