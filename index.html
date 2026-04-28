@@ -10,60 +10,29 @@
       href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Manrope:wght@400;500;600;700;800&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="style.css" />
+    <link rel="stylesheet" href="style.css?v=2" />
   </head>
   <body>
     <div class="page-shell">
-      <header class="hero">
-        <div class="hero-copy">
-          <p class="eyebrow">Personlig rangliste</p>
-          <h1>Mine podcastfavoritter</h1>
-          <p class="intro">
-            Velkommen til din personlige rangliste over podcasts, du har lyttet
-            til og bedømt. Her får du et samlet overblik over dine favoritter
-            — sorteret og klar til næste lyt.
-          </p>
-
-          <div class="hero-note">
-            <span>Sorteres som standard efter placering</span>
-            <span>Filtrer på genre og udgiver</span>
-          </div>
+      <aside class="sidebar">
+        <div class="sidebar-logo">
+          <div class="logo-mark">P</div>
         </div>
 
-        <div class="hero-art" aria-hidden="true">
-          <div class="hero-art-circle"></div>
-          <div class="hero-art-object hero-book"></div>
-          <div class="hero-art-object hero-book hero-book-small"></div>
-          <div class="hero-art-object hero-cup"></div>
-          <div class="hero-art-object hero-headphones"></div>
-          <div class="hero-leaf leaf-a"></div>
-          <div class="hero-leaf leaf-b"></div>
-          <div class="hero-leaf leaf-c"></div>
-        </div>
-      </header>
-
-      <main>
-        <section class="recent-section">
-          <div class="section-header">
-            <div>
-              <h2>Senest bedømte podcasts</h2>
-              <p>De nyeste vurderinger fra arket.</p>
-            </div>
-            <div class="section-chip" id="recentSummary">
-              Viser de 6 seneste bedømmelser
-            </div>
+        <section class="sidebar-section genre-nav">
+          <div class="genre-nav-header">
+            <h2>Genrer</h2>
           </div>
-
-          <div id="recentGrid" class="recent-grid"></div>
+          <div id="genreChips" class="genre-chips"></div>
         </section>
 
-        <section class="controls" aria-label="Søgning og sortering">
+        <section class="sidebar-section controls controls-sidebar">
           <label class="search-field">
             <span>Søg</span>
             <input
               type="search"
               id="searchInput"
-              placeholder="Søg efter titel eller vært"
+              placeholder="Søg efter titel, vært eller udgiver"
             />
           </label>
 
@@ -72,19 +41,41 @@
             <select id="sortSelect">
               <option value="placement-asc">Placering, lavest først</option>
               <option value="placement-desc">Placering, højest først</option>
-              <option value="rating-desc">Vurdering, højest først</option>
-              <option value="rating-asc">Vurdering, lavest først</option>
-              <option value="title-asc">Titel, A-Å</option>
-              <option value="title-desc">Titel, Å-A</option>
             </select>
           </label>
         </section>
+      </aside>
 
-        <section class="genre-nav" aria-label="Genrer">
-          <div class="genre-nav-header">
-            <h2>Genrer</h2>
+      <main class="main-content">
+        <header class="hero">
+          <div class="hero-copy">
+            <p class="eyebrow">Personlig rangliste</p>
+            <h1>Mine podcastfavoritter</h1>
+            <p class="intro">
+              Velkommen til din personlige rangliste over podcasts, du har
+              lyttet til og bedømt. Her får du et samlet overblik over dine
+              favoritter – sorteret og klar til næste lyt.
+            </p>
+            <div class="hero-note">
+              <span>Sorteret efter placering</span>
+              <span>Filtrer på genre</span>
+            </div>
           </div>
-          <div id="genreChips" class="genre-chips"></div>
+          <div class="hero-art" aria-hidden="true"></div>
+        </header>
+
+        <section class="recent-section" aria-labelledby="recentHeading">
+          <div class="section-header">
+            <div>
+              <h2 id="recentHeading">Senest bedømte podcasts</h2>
+              <p>De nyeste vurderinger fra arket.</p>
+            </div>
+            <span id="recentSummary" class="section-chip">
+              Viser de seneste bedømmelser
+            </span>
+          </div>
+
+          <div id="recentGrid" class="recent-grid"></div>
         </section>
 
         <section class="summary" aria-live="polite">
@@ -102,9 +93,13 @@
             <div class="recent-cover-wrap">
               <img class="recent-cover" alt="" loading="lazy" />
             </div>
+
             <div class="recent-body">
-              <h3 class="recent-title"></h3>
-              <p class="recent-host"></p>
+              <div>
+                <h3 class="recent-title"></h3>
+                <p class="recent-host"></p>
+              </div>
+
               <div class="recent-meta">
                 <span class="recent-rating"></span>
                 <span class="recent-date"></span>
@@ -130,7 +125,7 @@
               </div>
 
               <div class="card-content">
-                <h3 class="title"></h3>
+                <h2 class="title"></h2>
                 <p class="host"></p>
 
                 <div class="meta-inline">
@@ -149,6 +144,6 @@
       </main>
     </div>
 
-    <script src="app.js" defer></script>
+    <script src="app.js?v=2" defer></script>
   </body>
 </html>
