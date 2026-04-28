@@ -20,9 +20,12 @@ const FIXED_GENRES = [
   "Historie",
   "Samfund",
   "Dokumentar",
-  "Kultur",
+  "Politik",
   "Sport",
-  "Humor"
+  "Humor",
+  "Kultur",
+  "Sladder",
+  "Svindel"
 ];
 
 const collator = new Intl.Collator("da", {
@@ -203,15 +206,19 @@ function getCell(row, index) {
 function normalizeGenre(genre) {
   const g = normalizeText(genre);
 
-  if (g.includes("true")) return "True Crime";
+  if (g.includes("true crime")) return "True Crime";
+  if (g.includes("krimi")) return "True Crime";
   if (g.includes("histor")) return "Historie";
-  if (g.includes("polit")) return "Samfund";
   if (g.includes("samfund")) return "Samfund";
-  if (g.includes("nyhe")) return "Samfund";
-  if (g.includes("dok")) return "Dokumentar";
+  if (g.includes("dokumentar")) return "Dokumentar";
+  if (g.includes("polit")) return "Politik";
+  if (g.includes("sport")) return "Sport";
+  if (g.includes("fodbold")) return "Sport";
+  if (g.includes("humor")) return "Humor";
+  if (g.includes("komed")) return "Humor";
   if (g.includes("kultur")) return "Kultur";
-  if (g.includes("sport") || g.includes("fodbold")) return "Sport";
-  if (g.includes("humor") || g.includes("komed")) return "Humor";
+  if (g.includes("sladder")) return "Sladder";
+  if (g.includes("svindel")) return "Svindel";
 
   return formatText(genre, "");
 }
@@ -298,26 +305,11 @@ function sortPodcasts(items, sortValue) {
   const sorted = [...items];
 
   sorted.sort((a, b) => {
-    switch (sortValue) {
-      case "placement-desc":
-        return parsePlacement(b.Placering) - parsePlacement(a.Placering);
-
-      case "placement-asc":
-        return parsePlacement(a.Placering) - parsePlacement(b.Placering);
-
-      case "rating-asc":
-        return parseRating(a["Vuring (1-10)"]) - parseRating(b["Vuring (1-10)"]);
-
-      case "rating-desc":
-        return parseRating(b["Vuring (1-10)"]) - parseRating(a["Vuring (1-10)"]);
-
-      case "title-desc":
-        return collator.compare(b.Titel, a.Titel);
-
-      case "title-asc":
-      default:
-        return collator.compare(a.Titel, b.Titel);
+    if (sortValue === "placement-desc") {
+      return parsePlacement(b.Placering) - parsePlacement(a.Placering);
     }
+
+    return parsePlacement(a.Placering) - parsePlacement(b.Placering);
   });
 
   return sorted;
@@ -327,7 +319,7 @@ function filterPodcasts(items, query) {
   return items.filter((podcast) => {
     const matchesQuery = !query
       ? true
-      : [podcast.Titel, podcast.Vært]
+      : [podcast.Titel, podcast.Vært, podcast.Udgiver]
           .map(normalizeText)
           .join(" ")
           .includes(normalizeText(query));
