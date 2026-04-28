@@ -10,7 +10,7 @@
       href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Manrope:wght@400;500;600;700;800&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="style.css?v=5" />
+    <link rel="stylesheet" href="style.css?v=6" />
   </head>
   <body>
     <div class="page-shell">
@@ -19,15 +19,11 @@
           <div class="logo-mark">P</div>
         </div>
 
-        <section class="sidebar-section sidebar-notes">
-          <div class="sidebar-note-chip">Sorteret efter placering</div>
-          <div class="sidebar-note-chip">Filtrer på genre</div>
-        </section>
-
         <section class="sidebar-section genre-nav">
           <div class="genre-nav-header">
             <h2>Genrer</h2>
           </div>
+          <p class="genre-helper">Filtrer på genre</p>
           <div id="genreChips" class="genre-chips"></div>
         </section>
 
@@ -92,6 +88,10 @@
           <article class="recent-card">
             <div class="recent-cover-wrap">
               <img class="recent-cover" alt="" loading="lazy" />
+              <div class="image-placeholder image-placeholder-small" aria-hidden="true">
+                <span class="image-placeholder-icon">▢</span>
+                <span class="image-placeholder-label">Billede mangler</span>
+              </div>
             </div>
 
             <div class="recent-body">
@@ -122,6 +122,10 @@
             <div class="card-main">
               <div class="cover-wrap">
                 <img class="podcast-image" alt="" loading="lazy" />
+                <div class="image-placeholder" aria-hidden="true">
+                  <span class="image-placeholder-icon">▢</span>
+                  <span class="image-placeholder-label">Billede mangler</span>
+                </div>
               </div>
 
               <div class="card-content">
@@ -144,6 +148,6 @@
       </main>
     </div>
 
-    <script src="app.js?v=5" defer></script>
+    <script src="app.js?v=6" defer></script>
   </body>
 </html>
