@@ -100,3 +100,5 @@ https://brugernavn.github.io/podcast-ratings/
 ## Tilpasning
 
 Du kan løbende udskifte indholdet i `data/podcasts.json`, når du opdaterer dine ratings eller importerer nye rækker fra Google Sheets.
+
+
