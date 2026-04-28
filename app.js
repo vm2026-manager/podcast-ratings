@@ -19,19 +19,12 @@ const FIXED_GENRES = [
   "True Crime",
   "Historie",
   "Samfund",
-  "Dokumentar",
-  "Politik",
   "Sport",
-  "Humor",
-  "Kultur",
-  "Sladder",
-  "Svindel"
+  "Dokumentar",
+  "Viden",
+  "Underholdning",
+  "Sladder"
 ];
-
-const collator = new Intl.Collator("da", {
-  sensitivity: "base",
-  numeric: true
-});
 
 function normalizeText(value) {
   return String(value ?? "").toLocaleLowerCase("da").trim();
@@ -206,19 +199,85 @@ function getCell(row, index) {
 function normalizeGenre(genre) {
   const g = normalizeText(genre);
 
-  if (g.includes("true crime")) return "True Crime";
-  if (g.includes("krimi")) return "True Crime";
-  if (g.includes("histor")) return "Historie";
-  if (g.includes("samfund")) return "Samfund";
-  if (g.includes("dokumentar")) return "Dokumentar";
-  if (g.includes("polit")) return "Politik";
-  if (g.includes("sport")) return "Sport";
-  if (g.includes("fodbold")) return "Sport";
-  if (g.includes("humor")) return "Humor";
-  if (g.includes("komed")) return "Humor";
-  if (g.includes("kultur")) return "Kultur";
-  if (g.includes("sladder")) return "Sladder";
-  if (g.includes("svindel")) return "Svindel";
+  if (
+    g.includes("true crime") ||
+    g.includes("crime") ||
+    g.includes("krimi") ||
+    g.includes("svindel")
+  ) {
+    return "True Crime";
+  }
+
+  if (
+    g.includes("historie") ||
+    g.includes("krig") ||
+    g.includes("kriger / historie")
+  ) {
+    return "Historie";
+  }
+
+  if (
+    g.includes("fodbold") ||
+    g.includes("sport") ||
+    g.includes("cykling") ||
+    g.includes("sport/politik") ||
+    g.includes("fodbold/politik") ||
+    g.includes("fodbold/snak")
+  ) {
+    return "Sport";
+  }
+
+  if (
+    g.includes("dokumentar") ||
+    g.includes("dokimentar") ||
+    g.includes("portræt") ||
+    g.includes("portraet")
+  ) {
+    return "Dokumentar";
+  }
+
+  if (
+    g.includes("viden") ||
+    g.includes("videnskab") ||
+    g.includes("forskning") ||
+    g.includes("sundhed")
+  ) {
+    return "Viden";
+  }
+
+  if (
+    g.includes("sladder") ||
+    g.includes("gossip") ||
+    g.includes("skandaler")
+  ) {
+    return "Sladder";
+  }
+
+  if (
+    g.includes("underholdning") ||
+    g.includes("unholdning") ||
+    g.includes("tv & film") ||
+    g.includes("humor") ||
+    g.includes("drama") ||
+    g.includes("dating") ||
+    g.includes("kærlighed")
+  ) {
+    return "Underholdning";
+  }
+
+  if (
+    g.includes("politik") ||
+    g.includes("samfund") ||
+    g.includes("nyheder") ||
+    g.includes("nyhe") ||
+    g.includes("snakke") ||
+    g.includes("snak") ||
+    g.includes("erhverv") ||
+    g.includes("mediemagasin") ||
+    g.includes("krise")
+  ) {
+    return "Samfund";
+  }
 
   return formatText(genre, "");
 }
