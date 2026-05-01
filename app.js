@@ -230,7 +230,7 @@ function createPlaceholderNode(size = "large") {
   const text =
     size === "small"
       ? "Billede mangler"
-      : "Intet billede<br>tilgængeligt";
+      : "Billede mangler";
 
   wrapper.innerHTML = `
     <div class="media-placeholder__inner">
@@ -389,7 +389,9 @@ function normalizeGenre(raw) {
 function formatEpisodes(value) {
   const cleaned = cleanValue(value);
   if (!cleaned) return "Ukendt antal";
-  return `${cleaned}`;
+  const numeric = cleaned.replace(/[^\d]/g, "");
+  if (numeric) return `${numeric} afsnit`;
+  return cleaned;
 }
 
 function parseRating(value) {
@@ -556,3 +558,5 @@ function escapeHtml(value) {
     .replaceAll('"', "&quot;")
     .replaceAll("'", "&#39;");
 }
+
+Giv nye versioner af alle tre. slut med stylen. du kan godt bare nøjes med ændringer hvis du gerne vil. MEN KUN NÅR DU GIVER KODE I SCROLL DOWN MENUE.
