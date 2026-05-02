@@ -529,6 +529,13 @@ function renderRecentRated() {
   recentGrid.appendChild(fragment);
 }
 
+function createMetaChip(text, type) {
+  const chip = document.createElement("span");
+  chip.className = `podcast-chip podcast-chip--${type}`;
+  chip.textContent = text;
+  return chip;
+}
+
 function createCard(podcast) {
   const fragment = cardTemplate.content.cloneNode(true);
 
@@ -561,17 +568,15 @@ function createCard(podcast) {
   host.textContent = formatText(podcast.Vært, "Vært ikke angivet");
 
   chips.innerHTML = "";
-
-  [
-    formatText(podcast.Udgiver, "Ukendt udgiver"),
-    formatText(podcast.Genre, "Ukendt genre"),
-    formatText(podcast["Antal afsnit"], "Ukendt antal")
-  ].forEach((value) => {
-    const chip = document.createElement("span");
-    chip.className = "podcast-chip";
-    chip.textContent = value;
-    chips.appendChild(chip);
-  });
+  chips.appendChild(
+    createMetaChip(formatText(podcast.Udgiver, "Ukendt udgiver"), "publisher")
+  );
+  chips.appendChild(
+    createMetaChip(formatText(podcast.Genre, "Ukendt genre"), "genre")
+  );
+  chips.appendChild(
+    createMetaChip(formatText(podcast["Antal afsnit"], "Ukendt antal"), "episodes")
+  );
 
   const link = formatText(podcast.Link, "");
 
