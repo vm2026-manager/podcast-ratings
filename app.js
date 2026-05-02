@@ -42,7 +42,7 @@ async function init() {
     renderAll();
   } catch (error) {
     console.error(error);
-    podcastGrid.innerHTML = `<div class="empty-state">Kunne ikke indlæse podcastdata.</div>`;
+    podcastGrid.innerHTML = `<div class="empty-state">Kunne ikke indlæse podcastdata fra Google Sheets.</div>`;
     recentGrid.innerHTML = "";
     if (recentSummary) recentSummary.textContent = "";
     resultsText.textContent = "";
@@ -209,7 +209,7 @@ function getFilteredAndSortedPodcasts() {
 }
 
 function createMediaNode(imageUrl, size = "large") {
-  const cleanedUrl = cleanValue(imageUrl);
+  const cleanedUrl = extractUrl(imageUrl);
 
   if (cleanedUrl) {
     const img = document.createElement("img");
@@ -231,10 +231,7 @@ function createPlaceholderNode(size = "large") {
   const wrapper = document.createElement("div");
   wrapper.className = "media-placeholder";
 
-  const text =
-    size === "small"
-      ? "Billede mangler"
-      : "Billede mangler";
+  const text = size === "small" ? "Billede mangler" : "Billede mangler";
 
   wrapper.innerHTML = `
     <div class="media-placeholder__inner">
@@ -247,41 +244,44 @@ function createPlaceholderNode(size = "large") {
 }
 
 async function loadRows() {
-  try {
-    const response = await fetch(DATA_URL, { cache: "no-store" });
-    if (!response.ok) throw new Error("CSV-kilde kunne ikke indlæses");
-    const csv = await response.text();
-    return parseCsv(csv);
-  } catch (error) {
-    const fallback = await fetch("./podcasts.json", { cache: "no-store" });
-    if (!fallback.ok) throw error;
+  const bustUrl = `${DATA_URL}&t=${Date.now()}`;
+  const response = await fetch(bustUrl, { cache: "no-store" });
 
-    const json = await fallback.json();
-    if (Array.isArray(json)) return json;
-    if (Array.isArray(json.items)) return json.items;
-
-    throw error;
+  if (!response.ok) {
+    throw new Error("CSV-kilde kunne ikke indlæses");
   }
+
+  const csv = await response.text();
+  return parseCsv(csv);
 }
 
 function normalizePodcast(row, index) {
   const placement =
-    toNumber(getField(row, ["Placering", "placering"])) ?? index + 1;
+    toNumber(getField(row, ["Placering", "placering"], 0)) ?? index + 1;
 
-  const title = getField(row, ["Titel", "titel", "title"]) || "";
-  const host =
-    getField(row, ["Vært", "Vaert", "Vært(e)", "Vært/medvirkende", "host"]) || "";
-  const rawGenre = getField(row, ["Genre", "genre"]) || "";
-  const publisher = getField(row, ["Udgiver", "udgiver", "publisher"]) || "";
-  const episodes =
-    getField(row, ["Antal afsnit", "antal afsnit", "episodes"]) || "";
-  const rawRating =
-    getField(row, ["Vuring (1-10)", "Vurdering (1-10)", "Vurdering", "vurdering", "rating"]) || "";
-  const link = getField(row, ["Link", "link"]) || "";
-  const ratedDate =
-    getField(row, ["Afgivet vurdering", "Bedømt", "Dato", "dato"]) || "";
-  const image =
-    getField(row, [
+  const title = getField(row, ["Titel", "titel", "title"], 1) || "";
+  const host = getField(
+    row,
+    ["Vært", "Vaert", "Vært(e)", "Vært/medvirkende", "host"],
+    2
+  ) || "";
+  const rawRating = getField(
+    row,
+    ["Vuring/Vurdering (1-10)", "Vuring (1-10)", "Vurdering (1-10)", "Vurdering", "vurdering", "rating"],
+    3
+  ) || "";
+  const rawGenre = getField(row, ["Genre", "genre"], 4) || "";
+  const publisher = getField(row, ["Udgiver", "udgiver", "publisher"], 5) || "";
+  const episodes = getField(row, ["Antal afsnit", "antal afsnit", "episodes"], 6) || "";
+  const link = getField(row, ["Link", "link"], 8) || "";
+  const ratedDate = getField(
+    row,
+    ["Afgivet vurdering", "Bedømt", "Dato", "dato"],
+    9
+  ) || "";
+  const image = getField(
+    row,
+    [
       "Billedlink / Billedefil",
       "Billedlink/Billedefil",
       "Billedefil",
@@ -292,22 +292,24 @@ function normalizePodcast(row, index) {
       "image",
       "cover",
       "Cover"
-    ]) || "";
+    ],
+    10
+  ) || "";
 
   return {
     placement,
     placementLabel: placement,
-    title: title.trim(),
-    host: host.trim(),
+    title: cleanValue(title),
+    host: cleanValue(host),
     genre: normalizeGenre(rawGenre),
     publisher: cleanValue(publisher) || "Ukendt udgiver",
     episodesLabel: formatEpisodes(episodes),
     ratingValue: parseRating(rawRating),
     ratingLabel: formatRating(rawRating),
-    link: cleanValue(link),
+    link: extractUrl(link),
     ratedDate: formatDate(ratedDate),
     ratedDateSortable: sortableDate(ratedDate),
-    image: cleanValue(image)
+    image: extractUrl(image)
   };
 }
 
@@ -397,14 +399,23 @@ function normalizeGenre(raw) {
 function formatEpisodes(value) {
   const cleaned = cleanValue(value);
   if (!cleaned) return "Ukendt antal";
+
   const numeric = cleaned.replace(/[^\d]/g, "");
   if (numeric) return `${numeric} afsnit`;
+
   return cleaned;
 }
 
 function parseRating(value) {
-  const cleaned = cleanValue(value).replace(",", ".");
-  const number = Number(cleaned);
+  const cleaned = cleanValue(value)
+    .replace(",", ".")
+    .replace("/10", "")
+    .trim();
+
+  const match = cleaned.match(/-?\d+(\.\d+)?/);
+  if (!match) return null;
+
+  const number = Number(match[0]);
   return Number.isFinite(number) ? number : null;
 }
 
@@ -425,14 +436,23 @@ function formatDate(value) {
     return `${day}.${month}.${year}`;
   }
 
+  if (/^\d{4}-\d{2}-\d{2}$/.test(cleaned)) {
+    const [year, month, day] = cleaned.split("-");
+    return `${day}.${month}.${year}`;
+  }
+
+  if (/^\d+(\.\d+)?$/.test(cleaned)) {
+    const serial = Number(cleaned);
+    if (Number.isFinite(serial) && serial > 20000 && serial < 90000) {
+      const jsDate = googleSerialDateToJsDate(serial);
+      if (jsDate) return formatJsDate(jsDate);
+    }
+  }
+
   const parsed = new Date(cleaned);
   if (Number.isNaN(parsed.getTime())) return cleaned;
 
-  const day = String(parsed.getDate()).padStart(2, "0");
-  const month = String(parsed.getMonth() + 1).padStart(2, "0");
-  const year = parsed.getFullYear();
-
-  return `${day}.${month}.${year}`;
+  return formatJsDate(parsed);
 }
 
 function sortableDate(value) {
@@ -449,19 +469,73 @@ function sortableDate(value) {
     return `${year}-${month}-${day}`;
   }
 
+  if (/^\d{4}-\d{2}-\d{2}$/.test(cleaned)) {
+    return cleaned;
+  }
+
+  if (/^\d+(\.\d+)?$/.test(cleaned)) {
+    const serial = Number(cleaned);
+    if (Number.isFinite(serial) && serial > 20000 && serial < 90000) {
+      const jsDate = googleSerialDateToJsDate(serial);
+      if (jsDate) return jsDate.toISOString().slice(0, 10);
+    }
+  }
+
   const parsed = new Date(cleaned);
   if (Number.isNaN(parsed.getTime())) return "";
 
   return parsed.toISOString().slice(0, 10);
 }
 
-function getField(row, keys) {
+function getField(row, keys, fallbackIndex = null) {
   for (const key of keys) {
-    if (row[key] !== undefined && row[key] !== null) {
+    if (row[key] !== undefined && row[key] !== null && String(row[key]).trim() !== "") {
       return String(row[key]).trim();
     }
   }
+
+  if (
+    fallbackIndex !== null &&
+    Array.isArray(row.__values) &&
+    row.__values[fallbackIndex] !== undefined &&
+    row.__values[fallbackIndex] !== null
+  ) {
+    return String(row.__values[fallbackIndex]).trim();
+  }
+
   return "";
+}
+
+function extractUrl(value) {
+  const cleaned = cleanValue(value);
+  if (!cleaned) return "";
+
+  const imageFormulaMatch = cleaned.match(/=IMAGE\("([^"]+)"\)/i);
+  if (imageFormulaMatch) return imageFormulaMatch[1].trim();
+
+  const hyperlinkFormulaMatch = cleaned.match(/=HYPERLINK\("([^"]+)"/i);
+  if (hyperlinkFormulaMatch) return hyperlinkFormulaMatch[1].trim();
+
+  const urlMatch = cleaned.match(/https?:\/\/[^\s",)]+/i);
+  if (urlMatch) return urlMatch[0].trim();
+
+  return cleaned;
+}
+
+function googleSerialDateToJsDate(serial) {
+  const utcDays = Math.floor(serial - 25569);
+  const utcValue = utcDays * 86400;
+  const dateInfo = new Date(utcValue * 1000);
+
+  if (Number.isNaN(dateInfo.getTime())) return null;
+  return dateInfo;
+}
+
+function formatJsDate(date) {
+  const day = String(date.getUTCDate()).padStart(2, "0");
+  const month = String(date.getUTCMonth() + 1).padStart(2, "0");
+  const year = date.getUTCFullYear();
+  return `${day}.${month}.${year}`;
 }
 
 function cleanValue(value) {
@@ -501,7 +575,7 @@ function parseCsv(csvText) {
         inQuotes = !inQuotes;
       }
     } else if ((char === "\n" || char === "\r") && !inQuotes) {
-      if (current) lines.push(current);
+      if (current !== "") lines.push(current);
       current = "";
       if (char === "\r" && next === "\n") i += 1;
     } else {
@@ -509,7 +583,7 @@ function parseCsv(csvText) {
     }
   }
 
-  if (current) lines.push(current);
+  if (current !== "") lines.push(current);
   if (!lines.length) return rows;
 
   const headers = splitCsvLine(lines[0]).map((header) =>
@@ -520,7 +594,7 @@ function parseCsv(csvText) {
     const values = splitCsvLine(lines[i]);
     if (!values.some((value) => String(value).trim())) continue;
 
-    const row = {};
+    const row = { __values: values };
     headers.forEach((header, index) => {
       row[header] = values[index] ?? "";
     });
