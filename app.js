@@ -171,6 +171,9 @@ function renderPodcastGrid(filtered) {
 
     if (podcast.link) {
       link.href = podcast.link;
+      link.removeAttribute("aria-disabled");
+      link.style.pointerEvents = "";
+      link.style.opacity = "";
     } else {
       link.removeAttribute("href");
       link.setAttribute("aria-disabled", "true");
@@ -244,8 +247,9 @@ function createPlaceholderNode(size = "large") {
 }
 
 async function loadRows() {
-  const bustUrl = `${DATA_URL}&t=${Date.now()}`;
-  const response = await fetch(bustUrl, { cache: "no-store" });
+  const response = await fetch(`${DATA_URL}&t=${Date.now()}`, {
+    cache: "no-store"
+  });
 
   if (!response.ok) {
     throw new Error("CSV-kilde kunne ikke indlæses");
@@ -256,45 +260,114 @@ async function loadRows() {
 }
 
 function normalizePodcast(row, index) {
-  const placement =
-    toNumber(getField(row, ["Placering", "placering"], 0)) ?? index + 1;
+  const values = Array.isArray(row.__values) ? row.__values : [];
+  const hasPlacementColumn = detectPlacementColumn(row, values);
 
-  const title = getField(row, ["Titel", "titel", "title"], 1) || "";
-  const host = getField(
-    row,
-    ["Vært", "Vaert", "Vært(e)", "Vært/medvirkende", "host"],
-    2
-  ) || "";
-  const rawRating = getField(
-    row,
-    ["Vuring/Vurdering (1-10)", "Vuring (1-10)", "Vurdering (1-10)", "Vurdering", "vurdering", "rating"],
-    3
-  ) || "";
-  const rawGenre = getField(row, ["Genre", "genre"], 4) || "";
-  const publisher = getField(row, ["Udgiver", "udgiver", "publisher"], 5) || "";
-  const episodes = getField(row, ["Antal afsnit", "antal afsnit", "episodes"], 6) || "";
-  const link = getField(row, ["Link", "link"], 8) || "";
-  const ratedDate = getField(
-    row,
-    ["Afgivet vurdering", "Bedømt", "Dato", "dato"],
-    9
-  ) || "";
-  const image = getField(
-    row,
-    [
-      "Billedlink / Billedefil",
-      "Billedlink/Billedefil",
-      "Billedefil",
-      "Billedlink",
-      "Billedfil",
-      "Billede",
-      "Image",
-      "image",
-      "cover",
-      "Cover"
-    ],
-    10
-  ) || "";
+  const fallback = hasPlacementColumn
+    ? {
+        placement: 0,
+        title: 1,
+        host: 2,
+        rating: 3,
+        genre: 4,
+        publisher: 5,
+        episodes: 6,
+        yearPlayed: 7,
+        link: 8,
+        ratedDate: 9,
+        image: 10
+      }
+    : {
+        placement: null,
+        title: 0,
+        host: 1,
+        rating: 2,
+        genre: 3,
+        publisher: 4,
+        episodes: 5,
+        yearPlayed: 6,
+        link: 7,
+        ratedDate: 8,
+        image: 9
+      };
+
+  const placement =
+    toNumber(
+      getFieldByAliases(
+        row,
+        ["placering", "ranking", "rank"],
+        fallback.placement
+      )
+    ) ?? index + 1;
+
+  const title =
+    getFieldByAliases(row, ["titel", "title"], fallback.title) || "";
+
+  const host =
+    getFieldByAliases(
+      row,
+      ["vaert", "vært", "vaerte", "værte", "host", "vaertmedvirkende"],
+      fallback.host
+    ) || "";
+
+  const rawRating =
+    getFieldByAliases(
+      row,
+      [
+        "vuringvurdering110",
+        "vuring110",
+        "vurdering110",
+        "vurdering",
+        "rating"
+      ],
+      fallback.rating
+    ) || "";
+
+  const rawGenre =
+    getFieldByAliases(row, ["genre"], fallback.genre) || "";
+
+  const publisher =
+    getFieldByAliases(
+      row,
+      ["udgiver", "publisher"],
+      fallback.publisher
+    ) || "";
+
+  const episodes =
+    getFieldByAliases(
+      row,
+      ["antalafsnit", "episodes"],
+      fallback.episodes
+    ) || "";
+
+  const link =
+    getFieldByAliases(
+      row,
+      ["link", "url"],
+      fallback.link
+    ) || "";
+
+  const ratedDate =
+    getFieldByAliases(
+      row,
+      ["afgivetvurdering", "bedomt", "bedømt", "dato", "date"],
+      fallback.ratedDate
+    ) || "";
+
+  const image =
+    getFieldByAliases(
+      row,
+      [
+        "billedlinkbilledefil",
+        "billedefil",
+        "billedlink",
+        "billedfil",
+        "billede",
+        "image",
+        "cover"
+      ],
+      fallback.image
+    ) || "";
 
   return {
     placement,
@@ -311,6 +384,58 @@ function normalizePodcast(row, index) {
     ratedDateSortable: sortableDate(ratedDate),
     image: extractUrl(image)
   };
+}
+
+function detectPlacementColumn(row, values) {
+  const placementByHeader = getFieldByAliases(
+    row,
+    ["placering", "ranking", "rank"],
+    null
+  );
+
+  if (placementByHeader) return true;
+
+  if (!values.length) return false;
+
+  const first = cleanValue(values[0]);
+  const second = cleanValue(values[1]);
+
+  if (toNumber(first) !== null && second) return true;
+
+  return false;
+}
+
+function getFieldByAliases(row, aliases, fallbackIndex = null) {
+  const aliasSet = new Set(aliases.map(normalizeHeader));
+
+  for (const [key, value] of Object.entries(row)) {
+    if (key === "__values") continue;
+    if (!value && value !== 0) continue;
+
+    const normalizedKey = normalizeHeader(key);
+    if (aliasSet.has(normalizedKey) && cleanValue(value) !== "") {
+      return String(value).trim();
+    }
+  }
+
+  if (
+    fallbackIndex !== null &&
+    Array.isArray(row.__values) &&
+    row.__values[fallbackIndex] !== undefined &&
+    row.__values[fallbackIndex] !== null
+  ) {
+    return String(row.__values[fallbackIndex]).trim();
+  }
+
+  return "";
+}
+
+function normalizeHeader(value) {
+  return String(value || "")
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9]/g, "");
 }
 
 function normalizeGenre(raw) {
@@ -487,37 +612,17 @@ function sortableDate(value) {
   return parsed.toISOString().slice(0, 10);
 }
 
-function getField(row, keys, fallbackIndex = null) {
-  for (const key of keys) {
-    if (row[key] !== undefined && row[key] !== null && String(row[key]).trim() !== "") {
-      return String(row[key]).trim();
-    }
-  }
-
-  if (
-    fallbackIndex !== null &&
-    Array.isArray(row.__values) &&
-    row.__values[fallbackIndex] !== undefined &&
-    row.__values[fallbackIndex] !== null
-  ) {
-    return String(row.__values[fallbackIndex]).trim();
-  }
-
-  return "";
-}
-
 function extractUrl(value) {
   const cleaned = cleanValue(value);
   if (!cleaned) return "";
 
-  const imageFormulaMatch = cleaned.match(/=IMAGE\("([^"]+)"\)/i);
-  if (imageFormulaMatch) return imageFormulaMatch[1].trim();
+  const quotedUrl = cleaned.match(/"(https?:\/\/[^"]+)"/i);
+  if (quotedUrl) return quotedUrl[1].trim();
 
-  const hyperlinkFormulaMatch = cleaned.match(/=HYPERLINK\("([^"]+)"/i);
-  if (hyperlinkFormulaMatch) return hyperlinkFormulaMatch[1].trim();
+  const plainUrl = cleaned.match(/https?:\/\/[^\s",)]+/i);
+  if (plainUrl) return plainUrl[0].trim();
 
-  const urlMatch = cleaned.match(/https?:\/\/[^\s",)]+/i);
-  if (urlMatch) return urlMatch[0].trim();
+  if (cleaned.startsWith("data:image/")) return cleaned;
 
   return cleaned;
 }
