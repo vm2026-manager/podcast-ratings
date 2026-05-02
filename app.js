@@ -227,10 +227,7 @@ function createPlaceholderNode(size = "large") {
   const wrapper = document.createElement("div");
   wrapper.className = "media-placeholder";
 
-  const text =
-    size === "small"
-      ? "Billede mangler"
-      : "Billede mangler";
+  const text = size === "small" ? "Billede mangler" : "Billede mangler";
 
   wrapper.innerHTML = `
     <div class="media-placeholder__inner">
@@ -558,5 +555,3 @@ function escapeHtml(value) {
     .replaceAll('"', "&quot;")
     .replaceAll("'", "&#39;");
 }
-
-Giv nye versioner af alle tre. slut med stylen. du kan godt bare nøjes med ændringer hvis du gerne vil. MEN KUN NÅR DU GIVER KODE I SCROLL DOWN MENUE.
