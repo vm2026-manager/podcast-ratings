@@ -581,15 +581,26 @@ function createCard(podcast) {
   const link = formatText(podcast.Link, "");
 
   if (link) {
-    linkButton.addEventListener("click", () => {
+    linkButton.classList.remove("is-hidden");
+    linkButton.disabled = false;
+    linkButton.removeAttribute("tabindex");
+    linkButton.removeAttribute("aria-hidden");
+    linkButton.replaceWith(linkButton.cloneNode(true));
+    const freshLinkButton = fragment.querySelector(".podcast-card__link");
+
+    freshLinkButton.addEventListener("click", () => {
       window.open(link, "_blank", "noreferrer");
     });
-    linkButton.setAttribute(
+
+    freshLinkButton.setAttribute(
       "aria-label",
       `Åbn podcasten ${formatText(podcast.Titel, "podcast")}`
     );
   } else {
-    linkButton.remove();
+    linkButton.classList.add("is-hidden");
+    linkButton.disabled = true;
+    linkButton.setAttribute("tabindex", "-1");
+    linkButton.setAttribute("aria-hidden", "true");
   }
 
   return fragment;
