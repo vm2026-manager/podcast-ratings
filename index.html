@@ -11,119 +11,141 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Playfair+Display:wght@700;800&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Manrope:wght@400;500;600;700;800&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="style.css?v=11" />
-    <script src="app.js?v=11" defer></script>
+    <link rel="stylesheet" href="style.css?v=12" />
+    <script src="app.js?v=12" defer></script>
   </head>
   <body>
     <div class="page-shell">
-      <div class="layout">
-        <aside class="sidebar">
-          <div class="sidebar__inner">
-            <div class="brand-badge">P</div>
+      <aside class="sidebar">
+        <div class="sidebar-logo">
+          <div class="logo-mark">P</div>
+        </div>
 
-            <section class="sidebar-card">
-              <h2 class="sidebar-title">Genre</h2>
-              <p class="sidebar-note">Filtrer på genre</p>
-              <div id="genreChips" class="genre-chips"></div>
-            </section>
-
-            <section class="sidebar-card">
-              <label class="sidebar-label" for="searchInput">Søg</label>
-              <input
-                id="searchInput"
-                class="sidebar-input"
-                type="search"
-                placeholder="Søg efter titel, vært eller udgiver"
-              />
-            </section>
-
-            <section class="sidebar-card">
-              <label class="sidebar-label" for="sortSelect">Sorter efter</label>
-              <select id="sortSelect" class="sidebar-select">
-                <option value="placement-asc">Placering, lavest først</option>
-                <option value="placement-desc">Placering, højest først</option>
-              </select>
-            </section>
+        <section class="sidebar-section genre-nav">
+          <div class="genre-nav-header">
+            <h2>Genre</h2>
           </div>
-        </aside>
+          <p class="genre-helper">Filtrer på genre</p>
+          <div id="genreChips" class="genre-chips"></div>
+        </section>
 
-        <main class="content">
-          <section class="hero-card">
+        <section class="sidebar-section controls-sidebar">
+          <label class="search-field">
+            <span>Søg</span>
+            <input
+              type="search"
+              id="searchInput"
+              placeholder="Søg efter titel, vært eller udgiver"
+            />
+          </label>
+
+          <label class="sort-field">
+            <span>Sorter efter</span>
+            <select id="sortSelect">
+              <option value="placement-asc">Placering, lavest først</option>
+              <option value="placement-desc">Placering, højest først</option>
+            </select>
+          </label>
+        </section>
+      </aside>
+
+      <main class="main-content">
+        <header class="hero">
+          <div class="hero-copy">
             <p class="eyebrow">Personlig rangliste</p>
             <h1>Mine podcastfavoritter</h1>
-            <p class="hero-copy">
+            <p class="intro">
               Mads Asps personlige rangliste over podcasts – udvalgt og delt til
               inspiration for andre lyttere.
             </p>
-          </section>
+          </div>
+        </header>
 
-          <section class="section-card">
-            <div class="section-header">
+        <section class="recent-section" aria-labelledby="recentHeading">
+          <div class="section-header">
+            <div>
+              <h2 id="recentHeading">Senest bedømte podcasts</h2>
+              <p>De nyeste vurderinger</p>
+            </div>
+            <span id="recentSummary" class="section-chip">
+              Viser de seneste bedømmelser
+            </span>
+          </div>
+
+          <div id="recentGrid" class="recent-grid"></div>
+        </section>
+
+        <section class="summary" aria-live="polite">
+          <p id="resultsText">Indlæser podcasts...</p>
+        </section>
+
+        <section
+          id="podcastGrid"
+          class="podcast-grid"
+          aria-label="Podcastoversigt"
+        ></section>
+
+        <template id="recentCardTemplate">
+          <article class="recent-card">
+            <div class="recent-cover-wrap">
+              <img class="recent-cover" alt="" loading="lazy" />
+              <div class="image-placeholder image-placeholder-small" aria-hidden="true">
+                <span class="image-placeholder-icon">▢</span>
+                <span class="image-placeholder-label">Billede mangler</span>
+              </div>
+            </div>
+
+            <div class="recent-body">
               <div>
-                <h2>Senest bedømte podcasts</h2>
-                <p class="section-subtitle">De nyeste vurderinger</p>
+                <h3 class="recent-title"></h3>
+                <p class="recent-host"></p>
               </div>
-              <div id="recentSummary" class="section-pill">
-                Viser de 3 seneste bedømmelser
+
+              <div class="recent-meta">
+                <span class="recent-rating"></span>
+                <span class="recent-date"></span>
+              </div>
+            </div>
+          </article>
+        </template>
+
+        <template id="podcastCardTemplate">
+          <article class="podcast-card podcast-card--enhanced">
+            <div class="podcast-card__placement"></div>
+            <div class="podcast-card__rating"></div>
+
+            <div class="podcast-card__body">
+              <div class="podcast-card__media-column">
+                <div class="podcast-card__media cover-wrap">
+                  <img class="podcast-image" alt="" loading="lazy" />
+                  <div class="image-placeholder" aria-hidden="true">
+                    <span class="image-placeholder-icon">▢</span>
+                    <span class="image-placeholder-label">Billede mangler</span>
+                  </div>
+                </div>
+
+                <button class="podcast-card__link podcast-link" type="button">
+                  Åbn link
+                </button>
+              </div>
+
+              <div class="podcast-card__content">
+                <div class="podcast-card__top">
+                  <h3 class="podcast-card__title title"></h3>
+                  <p class="podcast-card__host host"></p>
+                </div>
               </div>
             </div>
 
-            <div id="recentGrid" class="recent-grid"></div>
-          </section>
-
-          <div class="results-row">
-            <p id="resultsText" class="results-text">Indlæser podcasts...</p>
-          </div>
-
-          <section>
-            <div id="podcastGrid" class="podcast-grid"></div>
-          </section>
-        </main>
-      </div>
+            <div class="podcast-card__footer">
+              <div class="podcast-card__chips"></div>
+            </div>
+          </article>
+        </template>
+      </main>
     </div>
-
-    <template id="recentCardTemplate">
-      <article class="recent-card">
-        <div class="recent-card__media"></div>
-        <div class="recent-card__content">
-          <h3 class="recent-card__title"></h3>
-          <p class="recent-card__host"></p>
-          <div class="recent-card__meta">
-            <span class="recent-card__rating"></span>
-            <span class="recent-card__date"></span>
-          </div>
-        </div>
-      </article>
-    </template>
-
-    <template id="podcastCardTemplate">
-      <article class="podcast-card">
-        <div class="podcast-card__placement"></div>
-        <div class="podcast-card__rating"></div>
-
-        <div class="podcast-card__body">
-          <div class="podcast-card__media-column">
-            <div class="podcast-card__media"></div>
-            <a class="podcast-card__link" target="_blank" rel="noopener noreferrer">
-              Åbn link
-            </a>
-          </div>
-
-          <div class="podcast-card__content">
-            <div class="podcast-card__top">
-              <h3 class="podcast-card__title"></h3>
-              <p class="podcast-card__host"></p>
-            </div>
-          </div>
-        </div>
-
-        <div class="podcast-card__footer">
-          <div class="podcast-card__chips"></div>
-        </div>
-      </article>
-    </template>
   </body>
 </html>
