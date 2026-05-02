@@ -209,11 +209,15 @@ function getFilteredAndSortedPodcasts() {
 }
 
 function createMediaNode(imageUrl, size = "large") {
-  if (imageUrl) {
+  const cleanedUrl = cleanValue(imageUrl);
+
+  if (cleanedUrl) {
     const img = document.createElement("img");
-    img.src = imageUrl;
+    img.src = cleanedUrl;
     img.alt = "";
     img.loading = "lazy";
+    img.decoding = "async";
+    img.referrerPolicy = "no-referrer";
     img.onerror = () => {
       img.replaceWith(createPlaceholderNode(size));
     };
@@ -227,7 +231,10 @@ function createPlaceholderNode(size = "large") {
   const wrapper = document.createElement("div");
   wrapper.className = "media-placeholder";
 
-  const text = size === "small" ? "Billede mangler" : "Billede mangler";
+  const text =
+    size === "small"
+      ? "Billede mangler"
+      : "Billede mangler";
 
   wrapper.innerHTML = `
     <div class="media-placeholder__inner">
@@ -275,12 +282,16 @@ function normalizePodcast(row, index) {
     getField(row, ["Afgivet vurdering", "Bedømt", "Dato", "dato"]) || "";
   const image =
     getField(row, [
+      "Billedlink / Billedefil",
       "Billedlink/Billedefil",
       "Billedefil",
       "Billedlink",
+      "Billedfil",
+      "Billede",
       "Image",
       "image",
-      "cover"
+      "cover",
+      "Cover"
     ]) || "";
 
   return {
