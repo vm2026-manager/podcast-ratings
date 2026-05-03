@@ -553,17 +553,18 @@ select {
 .podcast-card__title {
   margin: 0 0 12px;
   font-family: "Fraunces", serif;
-  font-size: 1.24rem;
-  line-height: 1.12;
+  font-size: 1.2rem;
+  line-height: 1.13;
   letter-spacing: -0.02em;
   display: -webkit-box;
   -webkit-line-clamp: 4;
   -webkit-box-orient: vertical;
   overflow: hidden;
-  overflow-wrap: anywhere;
-  word-break: break-word;
-  hyphens: auto;
-  text-wrap: balance;
+  white-space: normal;
+  word-break: normal;
+  overflow-wrap: normal;
+  hyphens: none;
+  text-wrap: normal;
 }
 
 .podcast-card__host {
@@ -825,8 +826,11 @@ select {
   }
 
   .podcast-card__title {
-    font-size: 1.08rem;
-    line-height: 1.1;
+    font-size: 1.06rem;
+    line-height: 1.12;
+    word-break: normal;
+    overflow-wrap: normal;
+    hyphens: none;
   }
 
   .podcast-card__host {
