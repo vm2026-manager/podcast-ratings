@@ -1,6 +1,8 @@
 const DATA_URL =
   "https://docs.google.com/spreadsheets/d/e/2PACX-1vQRBWQdj-WDNN3l9yxIMCCu_O2dYfP7modSODcYgJRoQDG3GYsu83W_wIFyijPx6v8l-W011zrFyOdq/pub?gid=0&single=true&output=csv";
 
+const JSON_DATA_URL = "data/podcasts.json";
+
 const GENRES = [
   "Alle",
   "True Crime",
@@ -524,17 +526,46 @@ function setupEvents() {
   });
 }
 
+async function loadPodcastObjectsFromJson() {
+  const response = await fetch(`${JSON_DATA_URL}?v=${Date.now()}`, {
+    cache: "no-store",
+  });
+
+  if (!response.ok) {
+    throw new Error("Kunne ikke hente lokal podcasts.json.");
+  }
+
+  const data = await response.json();
+
+  if (!Array.isArray(data.rows)) {
+    throw new Error("podcasts.json har ikke forventet format.");
+  }
+
+  return data.rows;
+}
+
+async function loadPodcastObjectsFromCsv() {
+  const response = await fetch(DATA_URL, { cache: "no-store" });
+
+  if (!response.ok) {
+    throw new Error("Kunne ikke hente Google Sheets-data.");
+  }
+
+  const csv = await response.text();
+  const rows = parseCsv(csv);
+
+  return rowsToObjects(rows);
+}
+
 async function loadPodcasts() {
   try {
-    const response = await fetch(DATA_URL, { cache: "no-store" });
+    let objects;
 
-    if (!response.ok) {
-      throw new Error("Kunne ikke hente Google Sheets-data.");
+    try {
+      objects = await loadPodcastObjectsFromJson();
+    } catch (jsonError) {
+      objects = await loadPodcastObjectsFromCsv();
     }
-
-    const csv = await response.text();
-    const rows = parseCsv(csv);
-    const objects = rowsToObjects(rows);
 
     state.podcasts = objects.map(mapPodcast).filter(isUsefulPodcast);
 
@@ -542,7 +573,7 @@ async function loadPodcasts() {
     render();
   } catch (error) {
     elements.resultsText.textContent =
-      "Kunne ikke indlæse podcasts. Tjek Google Sheets-linket.";
+      "Kunne ikke indlæse podcasts. Tjek data/podcasts.json eller Google Sheets-linket.";
     elements.podcastGrid.innerHTML = "";
   }
 }
