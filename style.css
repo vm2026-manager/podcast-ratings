@@ -660,6 +660,30 @@ select {
   font-weight: 700;
 }
 
+.site-footer {
+  margin: 30px 0 0;
+  padding: 18px 10px 4px;
+  text-align: center;
+  color: #8d837b;
+  font-size: 0.86rem;
+}
+
+.visitor-counter {
+  display: inline-flex;
+  gap: 5px;
+  align-items: center;
+  justify-content: center;
+  padding: 9px 14px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.42);
+  border: 1px solid rgba(223, 211, 196, 0.72);
+}
+
+#goatcounter-visits {
+  font-weight: 800;
+  color: #7b624a;
+}
+
 @media (max-width: 1240px) {
   .page-shell {
     max-width: 100%;
@@ -824,5 +848,11 @@ select {
     line-height: 32px;
     font-size: 0.64rem;
     padding: 0 7px;
+  }
+
+  .visitor-counter {
+    max-width: 100%;
+    flex-wrap: wrap;
+    border-radius: 18px;
   }
 }
