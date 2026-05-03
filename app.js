@@ -374,7 +374,6 @@ function getFilteredPodcasts() {
 
 function setImage(container, image, alt) {
   const img = container.querySelector("img");
-  const wrapper = container;
 
   if (!img) {
     return;
@@ -383,10 +382,10 @@ function setImage(container, image, alt) {
   img.alt = alt || "";
 
   if (image) {
-    wrapper.classList.remove("has-no-image");
+    container.classList.remove("has-no-image");
     img.src = image;
   } else {
-    wrapper.classList.add("has-no-image");
+    container.classList.add("has-no-image");
     img.removeAttribute("src");
   }
 }
@@ -539,14 +538,28 @@ async function loadPodcasts() {
   }
 }
 
-function getGoatCounterPath() {
-  const path = window.location.pathname || "/";
-
-  if (path.endsWith("/")) {
-    return path;
+function normalizeCounterValue(value) {
+  if (value === undefined || value === null || value === "") {
+    return null;
   }
 
-  return `${path}/`;
+  return String(value).trim();
+}
+
+async function tryLoadGoatCounterUrl(url) {
+  const response = await fetch(url, { cache: "no-store" });
+
+  if (!response.ok) {
+    return null;
+  }
+
+  const data = await response.json();
+
+  return (
+    normalizeCounterValue(data.count) ||
+    normalizeCounterValue(data.count_unique) ||
+    normalizeCounterValue(data.total)
+  );
 }
 
 async function loadVisitorCount() {
@@ -556,31 +569,42 @@ async function loadVisitorCount() {
     return;
   }
 
-  const startDate = "2026-05-03";
-  const path = encodeURIComponent(getGoatCounterPath());
-  const url = `https://podcastratings.goatcounter.com/counter/${path}.json?start=${startDate}`;
+  const base = "https://podcastratings.goatcounter.com/counter";
+  const start = "2026-05-03";
+  const paths = [
+    "/podcast-ratings/",
+    "/podcast-ratings/index.html",
+    "TOTAL",
+  ];
 
-  try {
-    const response = await fetch(url, { cache: "no-store" });
+  const urls = paths.flatMap((path) => {
+    const encodedPath = path === "TOTAL" ? "TOTAL" : encodeURIComponent(path);
 
-    if (!response.ok) {
-      throw new Error("GoatCounter svarede ikke.");
+    return [
+      `${base}/${encodedPath}.json?start=${start}`,
+      `${base}/${encodedPath}.json`,
+    ];
+  });
+
+  for (const url of urls) {
+    try {
+      const count = await tryLoadGoatCounterUrl(url);
+
+      if (count !== null) {
+        target.textContent = count;
+        return;
+      }
+    } catch (error) {
+      // Try next URL.
     }
-
-    const data = await response.json();
-    const count = Number(data.count || data.count_unique || data.total || 0);
-
-    if (!Number.isFinite(count) || count <= 0) {
-      target.textContent = "0";
-      return;
-    }
-
-    target.textContent = count.toLocaleString("da-DK");
-  } catch (error) {
-    target.textContent = "ikke tilgængeligt";
   }
+
+  target.textContent = "ikke tilgængeligt";
 }
 
 setupEvents();
 loadPodcasts();
-loadVisitorCount();
+
+window.setTimeout(() => {
+  loadVisitorCount();
+}, 1200);
