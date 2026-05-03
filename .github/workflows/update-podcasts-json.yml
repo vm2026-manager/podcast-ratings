@@ -1,1 +1,33 @@
+name: Update podcasts JSON
 
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "17 * * * *"
+
+permissions:
+  contents: write
+
+jobs:
+  update-podcasts-json:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Build podcasts JSON
+        run: node tools/build-podcasts-json.js
+
+      - name: Commit updated podcasts JSON
+        run: |
+          git config user.name "github-actions"
+          git config user.email "github-actions@github.com"
+          git add data/podcasts.json
+          git diff --cached --quiet || git commit -m "Update podcasts JSON"
+          git push
