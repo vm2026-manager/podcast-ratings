@@ -1,20 +1,7 @@
-const podcastGrid = document.querySelector("#podcastGrid");
-const recentGrid = document.querySelector("#recentGrid");
-const recentSummary = document.querySelector("#recentSummary");
-const resultsText = document.querySelector("#resultsText");
-const searchInput = document.querySelector("#searchInput");
-const sortSelect = document.querySelector("#sortSelect");
-const genreChips = document.querySelector("#genreChips");
-const cardTemplate = document.querySelector("#podcastCardTemplate");
-const recentCardTemplate = document.querySelector("#recentCardTemplate");
-
-let podcasts = [];
-let activeGenre = "Alle";
-
 const DATA_URL =
   "https://docs.google.com/spreadsheets/d/e/2PACX-1vQRBWQdj-WDNN3l9yxIMCCu_O2dYfP7modSODcYgJRoQDG3GYsu83W_wIFyijPx6v8l-W011zrFyOdq/pub?gid=0&single=true&output=csv";
 
-const FIXED_GENRES = [
+const GENRES = [
   "Alle",
   "True Crime",
   "Historie",
@@ -23,644 +10,577 @@ const FIXED_GENRES = [
   "Dokumentar",
   "Viden",
   "Underholdning",
-  "Sladder"
+  "Sladder",
 ];
 
-function normalizeText(value) {
-  return String(value ?? "").toLocaleLowerCase("da").trim();
-}
+const state = {
+  podcasts: [],
+  selectedGenre: "Alle",
+  searchTerm: "",
+  sort: "placement-asc",
+};
 
-function isBlank(value) {
-  return value === null || value === undefined || String(value).trim() === "";
-}
+const elements = {
+  genreChips: document.getElementById("genreChips"),
+  searchInput: document.getElementById("searchInput"),
+  sortSelect: document.getElementById("sortSelect"),
+  resultsText: document.getElementById("resultsText"),
+  podcastGrid: document.getElementById("podcastGrid"),
+  recentGrid: document.getElementById("recentGrid"),
+  recentSummary: document.getElementById("recentSummary"),
+  podcastTemplate: document.getElementById("podcastCardTemplate"),
+  recentTemplate: document.getElementById("recentCardTemplate"),
+};
 
-function formatText(value, fallback = "Ikke angivet") {
-  return isBlank(value) ? fallback : String(value).trim();
-}
-
-function firstNonBlank(...values) {
-  for (const value of values) {
-    if (!isBlank(value)) {
-      return String(value).trim();
-    }
-  }
-  return "";
-}
-
-function cleanNumericText(value) {
-  return String(value ?? "")
-    .replace(/^\uFEFF/, "")
-    .replace(/\u00A0/g, " ")
-    .replace(/["']/g, "")
-    .trim();
-}
-
-function extractUrl(value) {
-  const cleaned = String(value ?? "").trim();
-  if (!cleaned) return "";
-
-  const imageFormulaMatch = cleaned.match(/=IMAGE\("([^"]+)"\)/i);
-  if (imageFormulaMatch) return imageFormulaMatch[1].trim();
-
-  const hyperlinkFormulaMatch = cleaned.match(/=HYPERLINK\("([^"]+)"/i);
-  if (hyperlinkFormulaMatch) return hyperlinkFormulaMatch[1].trim();
-
-  const quotedUrlMatch = cleaned.match(/"(https?:\/\/[^"]+)"/i);
-  if (quotedUrlMatch) return quotedUrlMatch[1].trim();
-
-  const urlMatch = cleaned.match(/https?:\/\/[^\s",)]+/i);
-  if (urlMatch) return urlMatch[0].trim();
-
-  return cleaned;
-}
-
-function parseRating(value) {
-  if (typeof value === "number") return value;
-  if (isBlank(value)) return Number.NEGATIVE_INFINITY;
-
-  const cleaned = cleanNumericText(value);
-  const match = cleaned.match(/-?\d+(?:[.,]\d+)?/);
-
-  if (!match) return Number.NEGATIVE_INFINITY;
-
-  const numeric = Number.parseFloat(match[0].replace(",", "."));
-  return Number.isNaN(numeric) ? Number.NEGATIVE_INFINITY : numeric;
-}
-
-function formatRating(value) {
-  const numeric = parseRating(value);
-
-  if (numeric === Number.NEGATIVE_INFINITY) {
-    return "Ikke vurderet";
-  }
-
-  return `${numeric.toFixed(1).replace(".", ",")} / 10`;
-}
-
-function parsePlacement(value) {
-  const numeric = Number.parseInt(cleanNumericText(value), 10);
-  return Number.isNaN(numeric) ? Number.POSITIVE_INFINITY : numeric;
-}
-
-function parseDateDMY(value) {
-  if (isBlank(value)) return null;
-
-  const cleaned = String(value).trim();
-
-  const matchDash = cleaned.match(/^(\d{2})-(\d{2})-(\d{4})$/);
-  if (matchDash) {
-    const [, dd, mm, yyyy] = matchDash;
-    const date = new Date(Number(yyyy), Number(mm) - 1, Number(dd));
-    return Number.isNaN(date.getTime()) ? null : date;
-  }
-
-  const matchDot = cleaned.match(/^(\d{2})\.(\d{2})\.(\d{4})$/);
-  if (matchDot) {
-    const [, dd, mm, yyyy] = matchDot;
-    const date = new Date(Number(yyyy), Number(mm) - 1, Number(dd));
-    return Number.isNaN(date.getTime()) ? null : date;
-  }
-
-  return null;
-}
-
-function formatDateDMY(dateValue) {
-  const parsed = parseDateDMY(dateValue);
-  if (!parsed) return "";
-
-  const dd = String(parsed.getDate()).padStart(2, "0");
-  const mm = String(parsed.getMonth() + 1).padStart(2, "0");
-  const yyyy = parsed.getFullYear();
-
-  return `${dd}.${mm}.${yyyy}`;
-}
-
-function populateGenreChips() {
-  genreChips.innerHTML = "";
-
-  FIXED_GENRES.forEach((genre) => {
-    const button = document.createElement("button");
-    button.type = "button";
-    button.className = `genre-chip${genre === activeGenre ? " active" : ""}`;
-    button.textContent = genre;
-
-    button.addEventListener("click", () => {
-      activeGenre = genre;
-      populateGenreChips();
-      renderPodcasts();
-    });
-
-    genreChips.appendChild(button);
-  });
-}
-
-function sanitizeHeader(header) {
-  return String(header ?? "")
-    .replace(/^\uFEFF/, "")
+function normalizeKey(value) {
+  return String(value || "")
     .trim()
-    .toLocaleLowerCase("da")
+    .toLowerCase()
+    .replace(/\uFEFF/g, "")
     .replace(/\s+/g, " ");
 }
 
-function parseCsv(text) {
-  const rows = [];
-  let row = [];
-  let value = "";
-  let insideQuotes = false;
+function normalizeText(value) {
+  return String(value || "").trim();
+}
 
-  const normalized = String(text ?? "")
-    .replace(/^\uFEFF/, "")
-    .replace(/\r\n/g, "\n")
-    .replace(/\r/g, "\n");
+function getField(row, candidates) {
+  const keys = Object.keys(row);
+  const normalizedCandidates = candidates.map(normalizeKey);
 
-  for (let i = 0; i < normalized.length; i += 1) {
-    const char = normalized[i];
-    const next = normalized[i + 1];
-
-    if (char === '"') {
-      if (insideQuotes && next === '"') {
-        value += '"';
-        i += 1;
-      } else {
-        insideQuotes = !insideQuotes;
-      }
-      continue;
+  for (const key of keys) {
+    if (normalizedCandidates.includes(normalizeKey(key))) {
+      return normalizeText(row[key]);
     }
-
-    if (char === "," && !insideQuotes) {
-      row.push(value);
-      value = "";
-      continue;
-    }
-
-    if (char === "\n" && !insideQuotes) {
-      row.push(value);
-      rows.push(row);
-      row = [];
-      value = "";
-      continue;
-    }
-
-    value += char;
   }
 
-  row.push(value);
-  rows.push(row);
-
-  return rows
-    .map((currentRow) => currentRow.map((cell) => String(cell ?? "").trim()))
-    .filter((currentRow) => currentRow.some((cell) => !isBlank(cell)));
+  return "";
 }
 
-function findHeaderIndex(headerIndexes, ...aliases) {
-  for (const alias of aliases) {
-    const normalizedAlias = sanitizeHeader(alias);
-    if (headerIndexes.has(normalizedAlias)) {
-      return headerIndexes.get(normalizedAlias);
+function parseNumber(value) {
+  const cleaned = normalizeText(value)
+    .replace(/\./g, "")
+    .replace(",", ".")
+    .replace(/[^\d.-]/g, "");
+
+  const number = Number.parseFloat(cleaned);
+  return Number.isFinite(number) ? number : null;
+}
+
+function formatRating(value) {
+  const rating = parseNumber(value);
+
+  if (rating === null) {
+    return "";
+  }
+
+  return `${rating.toFixed(1).replace(".", ",")} / 10`;
+}
+
+function parsePlacement(value) {
+  const number = parseNumber(value);
+  return number === null ? null : number;
+}
+
+function parseDate(value) {
+  const raw = normalizeText(value);
+
+  if (!raw) {
+    return null;
+  }
+
+  const parts = raw.match(/^(\d{1,2})[-./](\d{1,2})[-./](\d{2,4})$/);
+
+  if (parts) {
+    const day = Number(parts[1]);
+    const month = Number(parts[2]) - 1;
+    const year = Number(parts[3].length === 2 ? `20${parts[3]}` : parts[3]);
+    const date = new Date(year, month, day);
+
+    if (!Number.isNaN(date.getTime())) {
+      return date;
     }
   }
-  return -1;
+
+  const fallback = new Date(raw);
+
+  return Number.isNaN(fallback.getTime()) ? null : fallback;
 }
 
-function getCell(row, index) {
-  return index >= 0 && index < row.length ? String(row[index] ?? "").trim() : "";
+function formatDate(value) {
+  const date = parseDate(value);
+
+  if (!date) {
+    return "";
+  }
+
+  return new Intl.DateTimeFormat("da-DK", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+  }).format(date);
 }
 
-function normalizeGenre(genre) {
-  const g = normalizeText(genre);
+function normalizeGenre(value) {
+  const raw = normalizeText(value).toLowerCase();
+
+  if (!raw) {
+    return "Dokumentar";
+  }
 
   if (
-    g.includes("true crime") ||
-    g.includes("crime") ||
-    g.includes("krimi") ||
-    g.includes("svindel")
+    raw.includes("true") ||
+    raw.includes("crime") ||
+    raw.includes("krimi") ||
+    raw.includes("mord") ||
+    raw.includes("forbryd")
   ) {
     return "True Crime";
   }
 
   if (
-    g.includes("historie") ||
-    g.includes("krig") ||
-    g.includes("kriger / historie")
+    raw.includes("historie") ||
+    raw.includes("historisk") ||
+    raw.includes("fortid")
   ) {
     return "Historie";
   }
 
   if (
-    g.includes("fodbold") ||
-    g.includes("sport") ||
-    g.includes("cykling") ||
-    g.includes("sport/politik") ||
-    g.includes("fodbold/politik") ||
-    g.includes("fodbold/snak")
+    raw.includes("samfund") ||
+    raw.includes("politik") ||
+    raw.includes("nyhed") ||
+    raw.includes("debat") ||
+    raw.includes("aktualitet")
+  ) {
+    return "Samfund";
+  }
+
+  if (
+    raw.includes("sport") ||
+    raw.includes("fodbold") ||
+    raw.includes("superliga") ||
+    raw.includes("bold")
   ) {
     return "Sport";
   }
 
   if (
-    g.includes("dokumentar") ||
-    g.includes("dokimentar") ||
-    g.includes("portræt") ||
-    g.includes("portraet")
-  ) {
-    return "Dokumentar";
-  }
-
-  if (
-    g.includes("viden") ||
-    g.includes("videnskab") ||
-    g.includes("forskning") ||
-    g.includes("sundhed")
+    raw.includes("viden") ||
+    raw.includes("science") ||
+    raw.includes("forskning") ||
+    raw.includes("læring")
   ) {
     return "Viden";
   }
 
   if (
-    g.includes("sladder") ||
-    g.includes("gossip") ||
-    g.includes("skandaler")
-  ) {
-    return "Sladder";
-  }
-
-  if (
-    g.includes("underholdning") ||
-    g.includes("unholdning") ||
-    g.includes("tv & film") ||
-    g.includes("humor") ||
-    g.includes("drama") ||
-    g.includes("dating") ||
-    g.includes("kærlighed")
+    raw.includes("underholdning") ||
+    raw.includes("komedie") ||
+    raw.includes("humor") ||
+    raw.includes("comedy")
   ) {
     return "Underholdning";
   }
 
   if (
-    g.includes("politik") ||
-    g.includes("samfund") ||
-    g.includes("nyheder") ||
-    g.includes("nyhe") ||
-    g.includes("snakke") ||
-    g.includes("snak") ||
-    g.includes("erhverv") ||
-    g.includes("mediemagasin") ||
-    g.includes("krise")
+    raw.includes("sladder") ||
+    raw.includes("kendt") ||
+    raw.includes("celebrity") ||
+    raw.includes("gossip")
   ) {
-    return "Samfund";
+    return "Sladder";
   }
 
-  return formatText(genre, "");
+  return "Dokumentar";
 }
 
-function normalizePodcastRow(rawPodcast) {
-  const cleanedImage = extractUrl(
-    firstNonBlank(
-      rawPodcast["Billedlink"],
-      rawPodcast["Billedefil"],
-      rawPodcast["Billedlink/Billedefil"],
-      rawPodcast["Billedlink / Billedefil"]
-    )
+function parseCsv(text) {
+  const rows = [];
+  let currentRow = [];
+  let currentCell = "";
+  let insideQuotes = false;
+
+  for (let i = 0; i < text.length; i += 1) {
+    const char = text[i];
+    const nextChar = text[i + 1];
+
+    if (char === '"' && insideQuotes && nextChar === '"') {
+      currentCell += '"';
+      i += 1;
+      continue;
+    }
+
+    if (char === '"') {
+      insideQuotes = !insideQuotes;
+      continue;
+    }
+
+    if (char === "," && !insideQuotes) {
+      currentRow.push(currentCell);
+      currentCell = "";
+      continue;
+    }
+
+    if ((char === "\n" || char === "\r") && !insideQuotes) {
+      if (char === "\r" && nextChar === "\n") {
+        i += 1;
+      }
+
+      currentRow.push(currentCell);
+
+      if (currentRow.some((cell) => normalizeText(cell) !== "")) {
+        rows.push(currentRow);
+      }
+
+      currentRow = [];
+      currentCell = "";
+      continue;
+    }
+
+    currentCell += char;
+  }
+
+  currentRow.push(currentCell);
+
+  if (currentRow.some((cell) => normalizeText(cell) !== "")) {
+    rows.push(currentRow);
+  }
+
+  return rows;
+}
+
+function rowsToObjects(rows) {
+  if (!rows.length) {
+    return [];
+  }
+
+  const headers = rows[0].map((header) => normalizeText(header));
+
+  return rows.slice(1).map((row) => {
+    const item = {};
+
+    headers.forEach((header, index) => {
+      item[header] = normalizeText(row[index] || "");
+    });
+
+    return item;
+  });
+}
+
+function mapPodcast(row, index) {
+  const title = getField(row, ["Titel", "Title"]);
+  const host = getField(row, ["Vært", "Vaert", "Host", "Værter"]);
+  const rawRating = getField(row, ["Vuring", "Vurdering", "Rating", "Score"]);
+  const rawGenre = getField(row, ["Genre"]);
+  const publisher = getField(row, ["Udgiver", "Publisher"]);
+  const episodes = getField(row, ["Antal afsnit", "Afsnit", "Episodes"]);
+  const link = getField(row, ["Link", "URL"]);
+  const ratingDate = getField(row, [
+    "Afgivet vurdering",
+    "Dato",
+    "Vurderingsdato",
+    "Bedømt",
+  ]);
+  const image = getField(row, [
+    "Billedlink",
+    "Billedefil",
+    "Billede",
+    "Cover",
+    "Image",
+  ]);
+  const placement = parsePlacement(
+    getField(row, ["Placering", "Rank", "Rangering"])
   );
 
   return {
-    Placering: firstNonBlank(rawPodcast["Placering"]),
-    Titel: firstNonBlank(rawPodcast["Titel"]),
-    Vært: firstNonBlank(rawPodcast["Vært"], rawPodcast["Vaert"]),
-    "Vuring (1-10)": firstNonBlank(
-      rawPodcast["Vuring (1-10)"],
-      rawPodcast["Vuring/Vurdering (1-10)"],
-      rawPodcast["Vurdering (1-10)"],
-      rawPodcast["Vurdering"]
-    ),
-    Genre: normalizeGenre(firstNonBlank(rawPodcast["Genre"])),
-    Udgiver: firstNonBlank(rawPodcast["Udgiver"]),
-    "Antal afsnit": firstNonBlank(rawPodcast["Antal afsnit"]),
-    Link: extractUrl(firstNonBlank(rawPodcast["Link"])),
-    "Afgivet vurdering": firstNonBlank(
-      rawPodcast["Afgivet vurdering"],
-      rawPodcast["Afgivet vurd"]
-    ),
-    Billedlink: cleanedImage
+    id: `${title}-${index}`,
+    title,
+    host,
+    rawRating,
+    ratingValue: parseNumber(rawRating),
+    ratingLabel: formatRating(rawRating),
+    genre: normalizeGenre(rawGenre),
+    publisher,
+    episodes,
+    link,
+    ratingDate,
+    ratingDateObject: parseDate(ratingDate),
+    ratingDateLabel: formatDate(ratingDate),
+    image,
+    placement: placement ?? index + 1,
+    searchText: [
+      title,
+      host,
+      rawGenre,
+      publisher,
+      episodes,
+      link,
+      ratingDate,
+    ]
+      .join(" ")
+      .toLowerCase(),
   };
 }
 
-function mapCsvToPodcasts(csvText) {
-  const rows = parseCsv(csvText);
-
-  if (rows.length < 2) {
-    throw new Error("CSV-filen indeholder ikke nok rækker.");
-  }
-
-  const [headerRow, ...dataRows] = rows;
-  const headerIndexes = new Map();
-
-  headerRow.forEach((header, index) => {
-    headerIndexes.set(sanitizeHeader(header), index);
-  });
-
-  const indexes = {
-    placement: findHeaderIndex(headerIndexes, "Placering"),
-    title: findHeaderIndex(headerIndexes, "Titel"),
-    host: findHeaderIndex(headerIndexes, "Vært", "Vaert"),
-    rating: findHeaderIndex(
-      headerIndexes,
-      "Vuring (1-10)",
-      "Vuring/Vurdering (1-10)",
-      "Vurdering (1-10)",
-      "Vurdering"
-    ),
-    genre: findHeaderIndex(headerIndexes, "Genre"),
-    publisher: findHeaderIndex(headerIndexes, "Udgiver"),
-    episodes: findHeaderIndex(headerIndexes, "Antal afsnit"),
-    link: findHeaderIndex(headerIndexes, "Link"),
-    givenRating: findHeaderIndex(
-      headerIndexes,
-      "Afgivet vurdering",
-      "Afgivet vurd"
-    ),
-    image: findHeaderIndex(
-      headerIndexes,
-      "Billedlink",
-      "Billedefil",
-      "Billedlink/Billedefil",
-      "Billedlink / Billedefil"
-    )
-  };
-
-  return dataRows
-    .map((row) => {
-      const rawPodcast = {
-        Placering: getCell(row, indexes.placement),
-        Titel: getCell(row, indexes.title),
-        Vært: getCell(row, indexes.host),
-        "Vuring (1-10)": getCell(row, indexes.rating),
-        Genre: getCell(row, indexes.genre),
-        Udgiver: getCell(row, indexes.publisher),
-        "Antal afsnit": getCell(row, indexes.episodes),
-        Link: getCell(row, indexes.link),
-        "Afgivet vurdering": getCell(row, indexes.givenRating),
-        Billedlink: getCell(row, indexes.image)
-      };
-
-      return normalizePodcastRow(rawPodcast);
-    })
-    .filter((podcast) => !isBlank(podcast.Titel));
+function isUsefulPodcast(podcast) {
+  return Boolean(podcast.title);
 }
 
-function sortPodcasts(items, sortValue) {
-  const sorted = [...items];
+function createGenreChips() {
+  elements.genreChips.innerHTML = "";
 
-  sorted.sort((a, b) => {
-    if (sortValue === "placement-desc") {
-      return parsePlacement(b.Placering) - parsePlacement(a.Placering);
+  GENRES.forEach((genre) => {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "genre-chip";
+    button.textContent = genre;
+
+    if (genre === state.selectedGenre) {
+      button.classList.add("active");
     }
 
-    return parsePlacement(a.Placering) - parsePlacement(b.Placering);
-  });
+    button.addEventListener("click", () => {
+      state.selectedGenre = genre;
+      createGenreChips();
+      render();
+    });
 
-  return sorted;
-}
-
-function filterPodcasts(items, query) {
-  return items.filter((podcast) => {
-    const matchesQuery = !query
-      ? true
-      : [podcast.Titel, podcast.Vært, podcast.Udgiver]
-          .map(normalizeText)
-          .join(" ")
-          .includes(normalizeText(query));
-
-    const matchesGenre =
-      activeGenre === "Alle"
-        ? true
-        : normalizeText(podcast.Genre) === normalizeText(activeGenre);
-
-    return matchesQuery && matchesGenre;
+    elements.genreChips.appendChild(button);
   });
 }
 
-function getRecentRatedPodcasts(items, limit = 3) {
-  return [...items]
-    .filter((podcast) => parseDateDMY(podcast["Afgivet vurdering"]))
-    .sort((a, b) => {
-      const aDate = parseDateDMY(a["Afgivet vurdering"]);
-      const bDate = parseDateDMY(b["Afgivet vurdering"]);
-      return bDate - aDate;
+function getFilteredPodcasts() {
+  return state.podcasts
+    .filter((podcast) => {
+      if (state.selectedGenre !== "Alle" && podcast.genre !== state.selectedGenre) {
+        return false;
+      }
+
+      if (!state.searchTerm) {
+        return true;
+      }
+
+      return podcast.searchText.includes(state.searchTerm.toLowerCase());
     })
-    .slice(0, limit);
+    .sort((a, b) => {
+      if (state.sort === "placement-desc") {
+        return b.placement - a.placement;
+      }
+
+      return a.placement - b.placement;
+    });
 }
 
-function updateSummary(count, total) {
-  const noun = count === 1 ? "podcast" : "podcasts";
-  resultsText.textContent = `Viser ${count} ${noun} ud af ${total}.`;
-}
+function setImage(container, image, alt) {
+  const img = container.querySelector("img");
+  const wrapper = container;
 
-function applyImageState(wrapper, image, placeholder, imageUrl, altText) {
-  if (!wrapper || !image || !placeholder) return;
+  if (!img) {
+    return;
+  }
 
-  const cleanedUrl = extractUrl(imageUrl);
+  img.alt = alt || "";
 
-  const showPlaceholder = () => {
+  if (image) {
+    wrapper.classList.remove("has-no-image");
+    img.src = image;
+  } else {
     wrapper.classList.add("has-no-image");
-    image.removeAttribute("src");
-    image.alt = "";
-  };
+    img.removeAttribute("src");
+  }
+}
 
-  if (!cleanedUrl) {
-    showPlaceholder();
-    return;
+function renderRecent() {
+  const recent = [...state.podcasts]
+    .filter((podcast) => podcast.ratingDateObject)
+    .sort((a, b) => b.ratingDateObject - a.ratingDateObject)
+    .slice(0, 3);
+
+  elements.recentGrid.innerHTML = "";
+
+  if (elements.recentSummary) {
+    elements.recentSummary.textContent = `Viser de ${recent.length} seneste bedømmelser`;
   }
 
-  wrapper.classList.remove("has-no-image");
-  image.src = cleanedUrl;
-  image.alt = altText;
-  image.referrerPolicy = "no-referrer";
-  image.decoding = "async";
-  image.loading = "lazy";
-  image.addEventListener("error", showPlaceholder, { once: true });
+  recent.forEach((podcast) => {
+    const fragment = elements.recentTemplate.content.cloneNode(true);
+    const card = fragment.querySelector(".recent-card");
+    const cover = fragment.querySelector(".recent-cover-wrap");
+    const title = fragment.querySelector(".recent-title");
+    const host = fragment.querySelector(".recent-host");
+    const rating = fragment.querySelector(".recent-rating");
+    const date = fragment.querySelector(".recent-date");
+
+    setImage(cover, podcast.image, podcast.title);
+
+    title.textContent = podcast.title;
+    host.textContent = podcast.host || podcast.publisher || "";
+    rating.textContent = podcast.ratingLabel || "Ikke vurderet";
+    date.textContent = podcast.ratingDateLabel
+      ? `Bedømt ${podcast.ratingDateLabel}`
+      : "";
+
+    card.addEventListener("click", () => {
+      if (podcast.link) {
+        window.open(podcast.link, "_blank", "noopener,noreferrer");
+      }
+    });
+
+    elements.recentGrid.appendChild(fragment);
+  });
 }
 
-function createRecentCard(podcast) {
-  const fragment = recentCardTemplate.content.cloneNode(true);
-  const coverWrap = fragment.querySelector(".recent-cover-wrap");
-  const cover = fragment.querySelector(".recent-cover");
-  const placeholder = fragment.querySelector(".image-placeholder");
-
-  applyImageState(
-    coverWrap,
-    cover,
-    placeholder,
-    formatText(podcast.Billedlink, ""),
-    `Cover til ${formatText(podcast.Titel, "podcast")}`
-  );
-
-  fragment.querySelector(".recent-title").textContent = formatText(podcast.Titel);
-  fragment.querySelector(".recent-host").textContent = formatText(
-    podcast.Vært,
-    "Vært ikke angivet"
-  );
-  fragment.querySelector(".recent-rating").textContent = formatRating(
-    podcast["Vuring (1-10)"]
-  );
-  fragment.querySelector(".recent-date").textContent = parseDateDMY(
-    podcast["Afgivet vurdering"]
-  )
-    ? `Bedømt ${formatDateDMY(podcast["Afgivet vurdering"])}`
-    : "";
-
-  return fragment;
-}
-
-function renderRecentRated() {
-  const recentItems = getRecentRatedPodcasts(podcasts, 3);
-  recentGrid.innerHTML = "";
-
-  if (recentItems.length === 0) {
-    recentGrid.innerHTML =
-      '<div class="empty-state">Ingen nylige bedømmelser fundet endnu.</div>';
-    recentSummary.textContent = "Ingen datoer fundet endnu";
-    return;
-  }
-
-  recentSummary.textContent = `Viser de ${recentItems.length} seneste bedømmelser`;
-
-  const fragment = document.createDocumentFragment();
-  recentItems.forEach((podcast) => fragment.appendChild(createRecentCard(podcast)));
-  recentGrid.appendChild(fragment);
-}
-
-function createMetaChip(text, type) {
-  const chip = document.createElement("span");
-  chip.className = `podcast-chip podcast-chip--${type}`;
-  chip.textContent = text;
-  return chip;
-}
-
-function createCard(podcast) {
-  const fragment = cardTemplate.content.cloneNode(true);
+function renderPodcastCard(podcast) {
+  const fragment = elements.podcastTemplate.content.cloneNode(true);
 
   const placement = fragment.querySelector(".podcast-card__placement");
   const rating = fragment.querySelector(".podcast-card__rating");
-  const mediaWrap = fragment.querySelector(".podcast-card__media");
-  const image = fragment.querySelector(".podcast-image");
-  const placeholder = fragment.querySelector(".image-placeholder");
+  const media = fragment.querySelector(".podcast-card__media");
   const title = fragment.querySelector(".podcast-card__title");
   const host = fragment.querySelector(".podcast-card__host");
-  const chips = fragment.querySelector(".podcast-card__chips");
   const linkButton = fragment.querySelector(".podcast-card__link");
+  const chips = fragment.querySelector(".podcast-card__chips");
 
   placement.innerHTML = `
-    <span class="placement-value">#${formatText(podcast.Placering, "–")}</span>
+    <span class="placement-value">#${podcast.placement}</span>
     <span class="placement-label">Placering</span>
   `;
 
-  rating.textContent = formatRating(podcast["Vuring (1-10)"]);
+  rating.textContent = podcast.ratingLabel || "Ikke vurderet";
 
-  applyImageState(
-    mediaWrap,
-    image,
-    placeholder,
-    formatText(podcast.Billedlink, ""),
-    `Cover til ${formatText(podcast.Titel, "podcast")}`
-  );
+  setImage(media, podcast.image, podcast.title);
 
-  title.textContent = formatText(podcast.Titel);
-  host.textContent = formatText(podcast.Vært, "Vært ikke angivet");
+  title.textContent = podcast.title;
+  host.textContent = podcast.host || "";
 
-  chips.innerHTML = "";
-  chips.appendChild(
-    createMetaChip(formatText(podcast.Udgiver, "Ukendt udgiver"), "publisher")
-  );
-  chips.appendChild(
-    createMetaChip(formatText(podcast.Genre, "Ukendt genre"), "genre")
-  );
-  chips.appendChild(
-    createMetaChip(formatText(podcast["Antal afsnit"], "Ukendt antal"), "episodes")
-  );
-
-  const link = formatText(podcast.Link, "");
-
-  if (link) {
+  if (podcast.link) {
     linkButton.classList.remove("is-hidden");
-    linkButton.disabled = false;
-    linkButton.removeAttribute("tabindex");
-    linkButton.removeAttribute("aria-hidden");
-    linkButton.replaceWith(linkButton.cloneNode(true));
-    const freshLinkButton = fragment.querySelector(".podcast-card__link");
-
-    freshLinkButton.addEventListener("click", () => {
-      window.open(link, "_blank", "noreferrer");
+    linkButton.addEventListener("click", () => {
+      window.open(podcast.link, "_blank", "noopener,noreferrer");
     });
-
-    freshLinkButton.setAttribute(
-      "aria-label",
-      `Åbn podcasten ${formatText(podcast.Titel, "podcast")}`
-    );
   } else {
     linkButton.classList.add("is-hidden");
-    linkButton.disabled = true;
-    linkButton.setAttribute("tabindex", "-1");
-    linkButton.setAttribute("aria-hidden", "true");
   }
+
+  const publisherChip = document.createElement("span");
+  publisherChip.className = "podcast-chip";
+  publisherChip.textContent = podcast.publisher || "Ukendt";
+
+  const genreChip = document.createElement("span");
+  genreChip.className = "podcast-chip";
+  genreChip.textContent = podcast.genre || "Dokumentar";
+
+  const episodesChip = document.createElement("span");
+  episodesChip.className = "podcast-chip podcast-chip--episodes";
+  episodesChip.textContent = podcast.episodes || "—";
+
+  chips.append(publisherChip, genreChip, episodesChip);
 
   return fragment;
 }
 
-function renderPodcasts() {
-  const query = searchInput.value.trim();
-  const sortValue = sortSelect.value;
-  const filtered = filterPodcasts(podcasts, query);
-  const sorted = sortPodcasts(filtered, sortValue);
+function renderPodcastGrid() {
+  const filtered = getFilteredPodcasts();
 
-  podcastGrid.innerHTML = "";
-  updateSummary(sorted.length, podcasts.length);
+  elements.podcastGrid.innerHTML = "";
 
-  if (sorted.length === 0) {
-    podcastGrid.innerHTML =
-      '<div class="empty-state">Ingen podcasts matcher din søgning. Prøv et andet ord eller vælg en anden genre.</div>';
-    return;
+  if (!filtered.length) {
+    const empty = document.createElement("div");
+    empty.className = "empty-state";
+    empty.textContent = "Ingen podcasts matcher filtreringen.";
+    elements.podcastGrid.appendChild(empty);
+  } else {
+    filtered.forEach((podcast) => {
+      elements.podcastGrid.appendChild(renderPodcastCard(podcast));
+    });
   }
 
-  const fragment = document.createDocumentFragment();
-  sorted.forEach((podcast) => fragment.appendChild(createCard(podcast)));
-  podcastGrid.appendChild(fragment);
+  elements.resultsText.textContent = `Viser ${filtered.length} podcasts ud af ${state.podcasts.length}.`;
 }
 
-function showLoadError(message) {
-  resultsText.textContent = "Podcasts kunne ikke indlæses.";
-  recentGrid.innerHTML = `<div class="empty-state">${message}</div>`;
-  podcastGrid.innerHTML = `<div class="empty-state">${message}</div>`;
+function render() {
+  renderRecent();
+  renderPodcastGrid();
+}
+
+function setupEvents() {
+  elements.searchInput.addEventListener("input", (event) => {
+    state.searchTerm = event.target.value.trim();
+    render();
+  });
+
+  elements.sortSelect.addEventListener("change", (event) => {
+    state.sort = event.target.value;
+    render();
+  });
 }
 
 async function loadPodcasts() {
   try {
-    const response = await fetch(`${DATA_URL}&t=${Date.now()}`, {
-      cache: "no-store"
-    });
+    const response = await fetch(DATA_URL, { cache: "no-store" });
 
     if (!response.ok) {
-      throw new Error(`Kunne ikke hente Google Sheets-data (${response.status}).`);
+      throw new Error("Kunne ikke hente Google Sheets-data.");
     }
 
-    const csvText = await response.text();
-    podcasts = mapCsvToPodcasts(csvText);
+    const csv = await response.text();
+    const rows = parseCsv(csv);
+    const objects = rowsToObjects(rows);
 
-    if (!Array.isArray(podcasts) || podcasts.length === 0) {
-      throw new Error("Data fra Google Sheets har ikke det forventede format.");
-    }
+    state.podcasts = objects.map(mapPodcast).filter(isUsefulPodcast);
 
-    populateGenreChips();
-    renderRecentRated();
-    renderPodcasts();
+    createGenreChips();
+    render();
   } catch (error) {
-    showLoadError(
-      "Data kunne ikke indlæses fra Google Sheets. Tjek at arket fortsat er publiceret som CSV."
-    );
-    console.error(error);
+    elements.resultsText.textContent =
+      "Kunne ikke indlæse podcasts. Tjek Google Sheets-linket.";
+    elements.podcastGrid.innerHTML = "";
   }
 }
 
-searchInput.addEventListener("input", renderPodcasts);
-sortSelect.addEventListener("change", renderPodcasts);
+function getGoatCounterPath() {
+  const path = window.location.pathname || "/";
 
+  if (path.endsWith("/")) {
+    return path;
+  }
+
+  return `${path}/`;
+}
+
+async function loadVisitorCount() {
+  const target = document.getElementById("goatcounter-visits");
+
+  if (!target) {
+    return;
+  }
+
+  const startDate = "2026-05-03";
+  const path = encodeURIComponent(getGoatCounterPath());
+  const url = `https://podcastratings.goatcounter.com/counter/${path}.json?start=${startDate}`;
+
+  try {
+    const response = await fetch(url, { cache: "no-store" });
+
+    if (!response.ok) {
+      throw new Error("GoatCounter svarede ikke.");
+    }
+
+    const data = await response.json();
+    const count = Number(data.count || data.count_unique || data.total || 0);
+
+    if (!Number.isFinite(count) || count <= 0) {
+      target.textContent = "0";
+      return;
+    }
+
+    target.textContent = count.toLocaleString("da-DK");
+  } catch (error) {
+    target.textContent = "ikke tilgængeligt";
+  }
+}
+
+setupEvents();
 loadPodcasts();
+loadVisitorCount();
