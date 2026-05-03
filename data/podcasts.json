@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-05-03T18:04:11.554Z",
+  "generatedAt": "2026-05-03T18:12:30.227Z",
   "source": "https://docs.google.com/spreadsheets/d/e/2PACX-1vQRBWQdj-WDNN3l9yxIMCCu_O2dYfP7modSODcYgJRoQDG3GYsu83W_wIFyijPx6v8l-W011zrFyOdq/pub?gid=0&single=true&output=csv",
   "count": 515,
   "rows": [
@@ -5077,6 +5077,22 @@
     },
     {
       "Placering": "318",
+      "Titel": "Sig det' løgn",
+      "Vært": "Brian Weichardt & Sofie Frøkjær",
+      "Vuring (1-10)": "6,7",
+      "Genre": "Politik",
+      "Udgiver": "Radio llll",
+      "Antal afsnit": "Ugentlig",
+      "Årstal afspillet": "2025",
+      "Link": "https://radio4.dk/podcasts/sig-det-er-loegn",
+      "Afgivet vurdering": "",
+      "Billedlink": "https://radio4data.imgix.net/2025/02/sig_det_loegn_podcastikon.png?width=1000&height=1000&fit=crop",
+      "": "",
+      "Endnu ikke hørt": "",
+      "Nævneværdige episo:": ""
+    },
+    {
+      "Placering": "319",
       "Titel": "Rawtalk",
       "Vært": "Bradley Martyn",
       "Vuring (1-10)": "6,5",
@@ -5092,7 +5108,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "319",
+      "Placering": "320",
       "Titel": "Reality tjek",
       "Vært": "Marlene Weybøll",
       "Vuring (1-10)": "6,5",
@@ -5108,7 +5124,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "320",
+      "Placering": "321",
       "Titel": "B.T. Valgkamp",
       "Vært": "Simon Richard Nielsen",
       "Vuring (1-10)": "6,5",
@@ -5124,7 +5140,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "321",
+      "Placering": "322",
       "Titel": "Patriarkatets raske sønner",
       "Vært": "Per Lysholt",
       "Vuring (1-10)": "6,5",
@@ -5140,7 +5156,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "322",
+      "Placering": "323",
       "Titel": "Den store talentserie",
       "Vært": "Peter Bruchmann, Sebastian Stanbury",
       "Vuring (1-10)": "6,5",
@@ -5156,7 +5172,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "323",
+      "Placering": "324",
       "Titel": "Kærlighedssvindleren i retten",
       "Vært": "Per Lysholt",
       "Vuring (1-10)": "6,5",
@@ -5172,7 +5188,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "324",
+      "Placering": "325",
       "Titel": "Bag om Bachelorette (sæson 2)",
       "Vært": "Mette Sommer",
       "Vuring (1-10)": "6,5",
@@ -5188,7 +5204,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "325",
+      "Placering": "326",
       "Titel": "Pis og paranoia",
       "Vært": "Frederik Kulager & Clara Grunnet",
       "Vuring (1-10)": "6,5",
@@ -5204,7 +5220,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "326",
+      "Placering": "327",
       "Titel": "Dom over Amerika: Karen Read og liget i sneen",
       "Vært": "Lisbeth Liv Carlsen & Signe Frederikke Pedersen",
       "Vuring (1-10)": "6,5",
@@ -5220,7 +5236,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "327",
+      "Placering": "328",
       "Titel": "Dom over Amerika: Johnny Depp vs. Amber Heard",
       "Vært": "Signe Frederikke Pedersen",
       "Vuring (1-10)": "6,5",
@@ -5236,7 +5252,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "328",
+      "Placering": "329",
       "Titel": "Frihedsbrevets Intranet",
       "Vært": "Frihedsbrevet",
       "Vuring (1-10)": "6,5",
@@ -5252,7 +5268,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "329",
+      "Placering": "330",
       "Titel": "Lundin på livstid",
       "Vært": "Janne Aagaard",
       "Vuring (1-10)": "6,5",
@@ -5268,7 +5284,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "330",
+      "Placering": "331",
       "Titel": "Pattaya Cowboys",
       "Vært": "Wilhelm Østergaard and Mikkel Rønnau",
       "Vuring (1-10)": "6,5",
@@ -5284,7 +5300,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "331",
+      "Placering": "332",
       "Titel": "Narkobetjenten sæson 13",
       "Vært": "Pernille Brunse & Rene Dahl Ansen",
       "Vuring (1-10)": "6,5",
@@ -5300,7 +5316,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "332",
+      "Placering": "333",
       "Titel": "Nina og Frederik",
       "Vært": "Susse Wold",
       "Vuring (1-10)": "6,5",
@@ -5316,7 +5332,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "333",
+      "Placering": "334",
       "Titel": "Banderelateret",
       "Vært": "Kristoffer Eriksen & Carsten Norton",
       "Vuring (1-10)": "6,5",
@@ -5332,7 +5348,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "334",
+      "Placering": "335",
       "Titel": "Meldgaard Hardtalk",
       "Vært": "Knud Meldgaard",
       "Vuring (1-10)": "6,5",
@@ -5348,7 +5364,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "335",
+      "Placering": "336",
       "Titel": "F.C Københavns Fanradio",
       "Vært": "",
       "Vuring (1-10)": "6,5",
@@ -5364,7 +5380,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "336",
+      "Placering": "337",
       "Titel": "Primus optimus – Det irrationelle menneske",
       "Vært": "Lasse Rimmer",
       "Vuring (1-10)": "6,5",
@@ -5380,7 +5396,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "337",
+      "Placering": "338",
       "Titel": "Kiggerpigen",
       "Vært": "",
       "Vuring (1-10)": "6,5",
@@ -5396,7 +5412,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "338",
+      "Placering": "339",
       "Titel": "Worms Skat",
       "Vært": "Krister Moltzen",
       "Vuring (1-10)": "6,5",
@@ -5412,7 +5428,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "339",
+      "Placering": "340",
       "Titel": "Magtindsigt - Visbys Verden",
       "Vært": "Rasmus Visby",
       "Vuring (1-10)": "6,5",
@@ -5428,7 +5444,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "340",
+      "Placering": "341",
       "Titel": "Det brændte bordel (sæson 2)",
       "Vært": "Anne Skjerning",
       "Vuring (1-10)": "6,5",
@@ -5444,7 +5460,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "341",
+      "Placering": "342",
       "Titel": "Panser",
       "Vært": "René Dahl Ansen & Peter Graae",
       "Vuring (1-10)": "6,5",
@@ -5460,7 +5476,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "342",
+      "Placering": "343",
       "Titel": "Amdi over alle bjerge",
       "Vært": "Per Lysholt",
       "Vuring (1-10)": "6,5",
@@ -5476,7 +5492,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "343",
+      "Placering": "344",
       "Titel": "Manden med de mange navne",
       "Vært": "Per Lysholt",
       "Vuring (1-10)": "6,5",
@@ -5492,7 +5508,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "344",
+      "Placering": "345",
       "Titel": "Valgguf",
       "Vært": "Martin Nørgaard, Michael \"MC\" Christiansen, Morten Wichmann, Sebastian Kanani & Anton Nørbæk",
       "Vuring (1-10)": "6,5",
@@ -5508,7 +5524,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "345",
+      "Placering": "346",
       "Titel": "Dårlig stemning",
       "Vært": "Adina Ren & Anna Olrik",
       "Vuring (1-10)": "6,5",
@@ -5524,7 +5540,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "346",
+      "Placering": "347",
       "Titel": "Momkind podcast",
       "Vært": "Camille Gudmand Lange",
       "Vuring (1-10)": "6,3",
@@ -5540,7 +5556,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "347",
+      "Placering": "348",
       "Titel": "Dom over Amerika : Menendez-brødrene",
       "Vært": "Signe Frederikke Pedersen & Ruben Toft Sindahl",
       "Vuring (1-10)": "6,3",
@@ -5556,7 +5572,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "348",
+      "Placering": "349",
       "Titel": "Rust i jerntæppet",
       "Vært": "Martin Grønne & Celine Klint",
       "Vuring (1-10)": "6,3",
@@ -5572,7 +5588,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "349",
+      "Placering": "350",
       "Titel": "Narkokysten",
       "Vært": "Frederik Kulager",
       "Vuring (1-10)": "6,3",
@@ -5588,7 +5604,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "350",
+      "Placering": "351",
       "Titel": "Politimorderen Palle Sørensen",
       "Vært": "Per Lysholt",
       "Vuring (1-10)": "6,3",
@@ -5604,7 +5620,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "351",
+      "Placering": "352",
       "Titel": "Bag om bacherlorette (sæson 1)",
       "Vært": "Mette Sommer",
       "Vuring (1-10)": "6,3",
@@ -5620,7 +5636,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "352",
+      "Placering": "353",
       "Titel": "Skud i sneen",
       "Vært": "Cecilie Nielsen",
       "Vuring (1-10)": "6,3",
@@ -5636,7 +5652,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "353",
+      "Placering": "354",
       "Titel": "Sofies valg",
       "Vært": "Sofie Frøkjær",
       "Vuring (1-10)": "6,3",
@@ -5652,7 +5668,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "354",
+      "Placering": "355",
       "Titel": "Den unge falskmønter",
       "Vært": "Per Lysholt & Søren Møgelvang Nielsen",
       "Vuring (1-10)": "6,3",
@@ -5668,7 +5684,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "355",
+      "Placering": "356",
       "Titel": "Katastrofe: Hindenburgluftkatastrofen",
       "Vært": "Kristoffer Lind & Rasmus Dahlberg",
       "Vuring (1-10)": "6,3",
@@ -5684,7 +5700,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "356",
+      "Placering": "357",
       "Titel": "Djævlen i detaljen: Den lollandske mafia",
       "Vært": "Per Lysholt",
       "Vuring (1-10)": "6,3",
@@ -5700,7 +5716,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "357",
+      "Placering": "358",
       "Titel": "Dobbeltmordet - Mordet på Peter Bangs Vej",
       "Vært": "",
       "Vuring (1-10)": "6,3",
@@ -5716,7 +5732,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "358",
+      "Placering": "359",
       "Titel": "Bakspejl: Oliekrisen",
       "Vært": "Martin Grønne",
       "Vuring (1-10)": "6,3",
@@ -5732,7 +5748,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "359",
+      "Placering": "360",
       "Titel": "Kold København",
       "Vært": "Krister Moltzen & Tim Henman",
       "Vuring (1-10)": "6,3",
@@ -5748,7 +5764,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "360",
+      "Placering": "361",
       "Titel": "Djævlen i detaljen: kampklar",
       "Vært": "",
       "Vuring (1-10)": "6,3",
@@ -5764,7 +5780,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "361",
+      "Placering": "362",
       "Titel": "Pornoprogrammet",
       "Vært": "",
       "Vuring (1-10)": "6,3",
@@ -5780,7 +5796,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "362",
+      "Placering": "363",
       "Titel": "Koloni til salg",
       "Vært": "Martin Grønne",
       "Vuring (1-10)": "6,2",
@@ -5796,7 +5812,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "363",
+      "Placering": "364",
       "Titel": "Magten",
       "Vært": "Pia Glud Munksgaard",
       "Vuring (1-10)": "6,2",
@@ -5812,7 +5828,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "364",
+      "Placering": "365",
       "Titel": "Narkobetjenten på gaden (sæson 1)",
       "Vært": "René Dahl Andersen",
       "Vuring (1-10)": "6,2",
@@ -5828,7 +5844,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "365",
+      "Placering": "366",
       "Titel": "Lottomysteriet",
       "Vært": "Alberte Clement Meldal",
       "Vuring (1-10)": "6,2",
@@ -5844,7 +5860,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "366",
+      "Placering": "367",
       "Titel": "Katastrofe: Danmarks Titanic",
       "Vært": "Kristoffer Lind & Rasmus Dahlberg",
       "Vuring (1-10)": "6,2",
@@ -5860,7 +5876,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "367",
+      "Placering": "368",
       "Titel": "Satankulten",
       "Vært": "Minna Grooss",
       "Vuring (1-10)": "6,2",
@@ -5876,7 +5892,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "368",
+      "Placering": "369",
       "Titel": "Mordet i Lillehammer",
       "Vært": "Celine Klint",
       "Vuring (1-10)": "6,2",
@@ -5892,7 +5908,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "369",
+      "Placering": "370",
       "Titel": "Følsom tonser",
       "Vært": "Katrine von Dahle",
       "Vuring (1-10)": "6,2",
@@ -5908,7 +5924,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "370",
+      "Placering": "371",
       "Titel": "Det vildeste dobbeltliv",
       "Vært": "Per Lysholt",
       "Vuring (1-10)": "6,0",
@@ -5924,7 +5940,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "371",
+      "Placering": "372",
       "Titel": "Pusher Street",
       "Vært": "Dan Bjerregaard & Camilla Marie Nielsen",
       "Vuring (1-10)": "6,0",
@@ -5940,7 +5956,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "372",
+      "Placering": "373",
       "Titel": "Fængsel: Claus",
       "Vært": "Wilhelm Østergaard",
       "Vuring (1-10)": "6,0",
@@ -5956,7 +5972,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "373",
+      "Placering": "374",
       "Titel": "Piper alpha eksplosionen",
       "Vært": "Kristoffer Lind & Rasmus Dahlberg",
       "Vuring (1-10)": "6,0",
@@ -5972,7 +5988,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "374",
+      "Placering": "375",
       "Titel": "De lovløse",
       "Vært": "Emil Rothstein-Christensen",
       "Vuring (1-10)": "6,0",
@@ -5988,7 +6004,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "375",
+      "Placering": "376",
       "Titel": "Røverhistorier (sæson 1)",
       "Vært": "Morten Beiter",
       "Vuring (1-10)": "6,0",
@@ -6004,7 +6020,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "376",
+      "Placering": "377",
       "Titel": "Hammers Kaffebar",
       "Vært": "Dan hammer",
       "Vuring (1-10)": "6,0",
@@ -6020,7 +6036,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "377",
+      "Placering": "378",
       "Titel": "Sladderligaen",
       "Vært": "Michel vikkelsø davidsen",
       "Vuring (1-10)": "6,0",
@@ -6036,7 +6052,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "378",
+      "Placering": "379",
       "Titel": "På fersk gerning: fra fodboldstjerne til narkohaj",
       "Vært": "Dan Bjerregaard",
       "Vuring (1-10)": "6,0",
@@ -6052,7 +6068,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "379",
+      "Placering": "380",
       "Titel": "Vi ejer natten",
       "Vært": "Jean Von Baden",
       "Vuring (1-10)": "6,0",
@@ -6068,7 +6084,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "380",
+      "Placering": "381",
       "Titel": "Tragedien i Teater Dubrovka",
       "Vært": "Martin Grønne & Celine Klint",
       "Vuring (1-10)": "6,0",
@@ -6084,7 +6100,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "381",
+      "Placering": "382",
       "Titel": "Lang levetid podcast",
       "Vært": "Emil Thorup",
       "Vuring (1-10)": "5,9",
@@ -6100,7 +6116,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "382",
+      "Placering": "383",
       "Titel": "Diddy - no way out",
       "Vært": "Mads Emil Møller",
       "Vuring (1-10)": "5,9",
@@ -6116,7 +6132,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "383",
+      "Placering": "384",
       "Titel": "Bag politiets afspærring",
       "Vært": "Camilla Marie Nielsen & Dan Bjerregaard",
       "Vuring (1-10)": "5,9",
@@ -6132,7 +6148,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "384",
+      "Placering": "385",
       "Titel": "Rygtetid",
       "Vært": "Oliver Routledge",
       "Vuring (1-10)": "5,9",
@@ -6148,7 +6164,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "385",
+      "Placering": "386",
       "Titel": "En gonzo skifter spor",
       "Vært": "René Fredensborg & Rasmus Bruun",
       "Vuring (1-10)": "5,9",
@@ -6164,7 +6180,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "386",
+      "Placering": "387",
       "Titel": "Bare mellem os",
       "Vært": "Nikita Klæstrup",
       "Vuring (1-10)": "5,9",
@@ -6180,7 +6196,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "387",
+      "Placering": "388",
       "Titel": "Et drab bliver aldrig glemt",
       "Vært": "Per Lysholt",
       "Vuring (1-10)": "5,9",
@@ -6196,7 +6212,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "388",
+      "Placering": "389",
       "Titel": "Giftmorderen fra sønder økse",
       "Vært": "Per Lysholt & Søren Møgelvang Nielsen",
       "Vuring (1-10)": "5,9",
@@ -6212,7 +6228,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "389",
+      "Placering": "390",
       "Titel": "Djævlen i detaljen: Våddragtsmysteriet",
       "Vært": "Per Lysholt",
       "Vuring (1-10)": "5,9",
@@ -6228,7 +6244,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "390",
+      "Placering": "391",
       "Titel": "Varme drenge",
       "Vært": "",
       "Vuring (1-10)": "5,9",
@@ -6244,7 +6260,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "391",
+      "Placering": "392",
       "Titel": "Fart på",
       "Vært": "Martin Svensson",
       "Vuring (1-10)": "5,9",
@@ -6260,7 +6276,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "392",
+      "Placering": "393",
       "Titel": "Avistid",
       "Vært": "Martin Krasnik",
       "Vuring (1-10)": "5,9",
@@ -6276,7 +6292,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "393",
+      "Placering": "394",
       "Titel": "Equinox 1985",
       "Vært": "Tea Lindeburg",
       "Vuring (1-10)": "5,9",
@@ -6292,7 +6308,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "394",
+      "Placering": "395",
       "Titel": "Onde Anna",
       "Vært": "Olga Ravn",
       "Vuring (1-10)": "5,9",
@@ -6308,7 +6324,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "395",
+      "Placering": "396",
       "Titel": "Kampen om historien: Sovjetunionen - Lenin og Stalins danske agent",
       "Vært": "Adam Holm",
       "Vuring (1-10)": "5,9",
@@ -6324,7 +6340,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "396",
+      "Placering": "397",
       "Titel": "Lady Diana",
       "Vært": "Martin grønne",
       "Vuring (1-10)": "5,9",
@@ -6340,7 +6356,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "397",
+      "Placering": "398",
       "Titel": "Copenhagen Narcos",
       "Vært": "",
       "Vuring (1-10)": "5,9",
@@ -6356,7 +6372,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "398",
+      "Placering": "399",
       "Titel": "Morgenoverblikket",
       "Vært": "",
       "Vuring (1-10)": "5,9",
@@ -6372,7 +6388,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "399",
+      "Placering": "400",
       "Titel": "Den dræbende butler",
       "Vært": "Per Lysholt",
       "Vuring (1-10)": "5,9",
@@ -6388,22 +6404,6 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "400",
-      "Titel": "Sig det' løgn",
-      "Vært": "Brian Weichardt",
-      "Vuring (1-10)": "5,7",
-      "Genre": "Politik",
-      "Udgiver": "Radio llll",
-      "Antal afsnit": "Ugentlig",
-      "Årstal afspillet": "2025",
-      "Link": "https://radio4.dk/podcasts/sig-det-er-loegn",
-      "Afgivet vurdering": "",
-      "Billedlink": "",
-      "": "",
-      "Endnu ikke hørt": "",
-      "Nævneværdige episo:": ""
-    },
-    {
       "Placering": "401",
       "Titel": "Skyggesiden",
       "Vært": "Janni Pedersen & Carsten Norton",
@@ -6414,7 +6414,7 @@
       "Årstal afspillet": "2025",
       "Link": "https://podimo.com/dk/shows/skyggesiden-opkald-fra-dodsgangen",
       "Afgivet vurdering": "03-04-2025",
-      "Billedlink": "",
+      "Billedlink": "https://www.nyborgbibliotek.dk/sites/default/files/styles/paragraph_wide/public/2025-08/Skyggesiden.png?h=c673cd1c&itok=6Z4DRK9e",
       "": "",
       "Endnu ikke hørt": "",
       "Nævneværdige episo:": ""
@@ -6430,7 +6430,7 @@
       "Årstal afspillet": "2024",
       "Link": "https://podimo.com/dk/shows/simon-jul-rane-willerslev",
       "Afgivet vurdering": "",
-      "Billedlink": "",
+      "Billedlink": "https://img.podimo.com/images/be870cc2-1de7-4af0-b185-e050ba4ba85f?w=400&h=400&s=m-MPiD2b2VHhyhwwWr506Ma5UK4=",
       "": "",
       "Endnu ikke hørt": "",
       "Nævneværdige episo:": ""
@@ -6597,7 +6597,7 @@
     },
     {
       "Placering": "413",
-      "Titel": "Djævlen i detaljen - Uncover",
+      "Titel": "Uncover",
       "Vært": "Per Lysholt",
       "Vuring (1-10)": "5,6",
       "Genre": "True Crime",
@@ -6638,7 +6638,7 @@
       "Årstal afspillet": "2026",
       "Link": "",
       "Afgivet vurdering": "19-02-2026",
-      "Billedlink": "",
+      "Billedlink": "https://img.podimo.com/images/a63a3a0d-2950-41a0-8095-9bba78a9c814?w=400&h=400&s=Sk7Z6fWGUWADMilsmRSs6BOlpSQ=",
       "": "",
       "Endnu ikke hørt": "",
       "Nævneværdige episo:": ""
@@ -6654,7 +6654,7 @@
       "Årstal afspillet": "2026",
       "Link": "https://podimo.com/dk/shows/spillertruppen",
       "Afgivet vurdering": "19-01-2026",
-      "Billedlink": "",
+      "Billedlink": "https://img.podimo.com/images/5f64a377-ddd5-4d6f-b7d8-50d671ce803d?w=400&h=400&s=Z7ISn8qUoArv1OfqimhISXdH8Z0=",
       "": "",
       "Endnu ikke hørt": "",
       "Nævneværdige episo:": ""
@@ -6686,7 +6686,7 @@
       "Årstal afspillet": "2025",
       "Link": "",
       "Afgivet vurdering": "31-07-2025",
-      "Billedlink": "",
+      "Billedlink": "https://covers.storytel.com/jpg-640/0402020059264.33417113-d090-40be-a925-f5991f6f9b99?optimize=high&quality=70&width=600",
       "": "",
       "Endnu ikke hørt": "",
       "Nævneværdige episo:": ""
@@ -6702,7 +6702,7 @@
       "Årstal afspillet": "2025",
       "Link": "https://www.zetland.dk/historie/so409NXQ-aOPVEK2d-cd8ba",
       "Afgivet vurdering": "16-09-2025",
-      "Billedlink": "",
+      "Billedlink": "https://zetland.imgix.net/4070eb60-4e5a-11ef-afdd-8b9958cc6cc6/Ep2.jpg?fit=crop&crop=focalpoint&auto=format&cs=srgb&fp-x=0.4866898148148148&fp-y=0.4967622571692877&w=3840&q=75",
       "": "",
       "Endnu ikke hørt": "",
       "Nævneværdige episo:": ""
