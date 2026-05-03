@@ -271,7 +271,16 @@ function rowsToObjects(rows) {
 function mapPodcast(row, index) {
   const title = getField(row, ["Titel", "Title"]);
   const host = getField(row, ["Vært", "Vaert", "Host", "Værter"]);
-  const rawRating = getField(row, ["Vuring", "Vurdering", "Rating", "Score"]);
+  const rawRating = getField(row, [
+    "Vuring",
+    "Vuring (1-10)",
+    "Vurdering",
+    "Vurdering (1-10)",
+    "Vuring/Vurdering",
+    "Vuring/Vurdering (1-10)",
+    "Rating",
+    "Score",
+  ]);
   const rawGenre = getField(row, ["Genre"]);
   const publisher = getField(row, ["Udgiver", "Publisher"]);
   const episodes = getField(row, ["Antal afsnit", "Afsnit", "Episodes"]);
@@ -538,73 +547,62 @@ async function loadPodcasts() {
   }
 }
 
-function normalizeCounterValue(value) {
-  if (value === undefined || value === null || value === "") {
-    return null;
-  }
-
-  return String(value).trim();
-}
-
-async function tryLoadGoatCounterUrl(url) {
-  const response = await fetch(url, { cache: "no-store" });
-
-  if (!response.ok) {
-    return null;
-  }
-
-  const data = await response.json();
-
-  return (
-    normalizeCounterValue(data.count) ||
-    normalizeCounterValue(data.count_unique) ||
-    normalizeCounterValue(data.total)
-  );
-}
-
-async function loadVisitorCount() {
+function loadVisitorCount() {
   const target = document.getElementById("goatcounter-visits");
 
   if (!target) {
     return;
   }
 
-  const base = "https://podcastratings.goatcounter.com/counter";
-  const start = "2026-05-03";
-  const paths = [
-    "/podcast-ratings/",
-    "/podcast-ratings/index.html",
-    "TOTAL",
-  ];
+  target.textContent = "indlæser…";
 
-  const urls = paths.flatMap((path) => {
-    const encodedPath = path === "TOTAL" ? "TOTAL" : encodeURIComponent(path);
+  const renderCount = () => {
+    if (
+      window.goatcounter &&
+      typeof window.goatcounter.visit_count === "function"
+    ) {
+      target.textContent = "";
 
-    return [
-      `${base}/${encodedPath}.json?start=${start}`,
-      `${base}/${encodedPath}.json`,
-    ];
-  });
+      window.goatcounter.visit_count({
+        append: "#goatcounter-visits",
+        path: "/podcast-ratings/",
+        type: "html",
+        start: "2026-05-03",
+        attr: {
+          width: "90",
+          height: "24",
+          frameborder: "0",
+          scrolling: "no",
+          title: "Besøgstæller",
+        },
+      });
 
-  for (const url of urls) {
-    try {
-      const count = await tryLoadGoatCounterUrl(url);
-
-      if (count !== null) {
-        target.textContent = count;
-        return;
-      }
-    } catch (error) {
-      // Try next URL.
+      return true;
     }
+
+    return false;
+  };
+
+  if (renderCount()) {
+    return;
   }
 
-  target.textContent = "ikke tilgængeligt";
+  let attempts = 0;
+  const interval = window.setInterval(() => {
+    attempts += 1;
+
+    if (renderCount()) {
+      window.clearInterval(interval);
+      return;
+    }
+
+    if (attempts >= 30) {
+      target.textContent = "ikke tilgængeligt";
+      window.clearInterval(interval);
+    }
+  }, 250);
 }
 
 setupEvents();
 loadPodcasts();
-
-window.setTimeout(() => {
-  loadVisitorCount();
-}, 1200);
+loadVisitorCount();
