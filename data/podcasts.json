@@ -1,7 +1,7 @@
 {
-  "generatedAt": "2026-05-04T15:32:53.704Z",
+  "generatedAt": "2026-05-04T18:20:53.683Z",
   "source": "https://docs.google.com/spreadsheets/d/e/2PACX-1vQRBWQdj-WDNN3l9yxIMCCu_O2dYfP7modSODcYgJRoQDG3GYsu83W_wIFyijPx6v8l-W011zrFyOdq/pub?gid=0&single=true&output=csv",
-  "count": 517,
+  "count": 518,
   "rows": [
     {
       "Placering": "1",
@@ -233,7 +233,7 @@
       "Vært": "Kirsten Birgit & Rasmus Bruun",
       "Vuring (1-10)": "8,5",
       "Genre": "Snakke",
-      "Udgiver": "",
+      "Udgiver": "r8dio",
       "Antal afsnit": "STOPPET",
       "Årstal afspillet": "2022",
       "Link": "https://ciliusbruun.dk/denkortepodcast",
@@ -4798,7 +4798,7 @@
       "Årstal afspillet": "2025",
       "Link": "https://podcasts.apple.com/dk/podcast/voksendating/id1679939984",
       "Afgivet vurdering": "23-03-2025",
-      "Billedlink": "",
+      "Billedlink": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTdyna8YpinO3jAbPWojMCgMpNYDR3izqfLYg&s",
       "": "",
       "Endnu ikke hørt": "",
       "Nævneværdige episo:": ""
@@ -4862,7 +4862,7 @@
       "Årstal afspillet": "2025",
       "Link": "https://podcasts.apple.com/dk/podcast/har-du-h%C3%B8rt%3F-med-nikita-kl%C3%A6strup/id1851213764",
       "Afgivet vurdering": "16-11-2025",
-      "Billedlink": "",
+      "Billedlink": "https://i-viaplay-com.akamaized.net/viaplay-prod/221/568/1762417245-511809038a23db4e19adaddcea11061498b5173b.jpg?width=400&height=600",
       "": "",
       "Endnu ikke hørt": "",
       "Nævneværdige episo:": ""
@@ -4878,7 +4878,7 @@
       "Årstal afspillet": "2024",
       "Link": "https://www.dr.dk/lyd/special-radio/indersiden-med-viktor-fischer-5692248455000",
       "Afgivet vurdering": "",
-      "Billedlink": "",
+      "Billedlink": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQZkGK-pN-l4cQNjcA9pfIvhYrYqwGVZBSFrw&s",
       "": "",
       "Endnu ikke hørt": "",
       "Nævneværdige episo:": ""
@@ -4894,7 +4894,7 @@
       "Årstal afspillet": "2023",
       "Link": "",
       "Afgivet vurdering": "",
-      "Billedlink": "",
+      "Billedlink": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRkON1rcrQa_890PGQ4_b5yM7FhfmAzNmZWlw&s",
       "": "",
       "Endnu ikke hørt": "",
       "Nævneværdige episo:": ""
@@ -4917,16 +4917,16 @@
     },
     {
       "Placering": "308",
-      "Titel": "FodboldFM",
+      "Titel": "Fodbold FM",
       "Vært": "Sebastian Peebles",
-      "Vuring (1-10)": "6,7",
+      "Vuring (1-10)": "6,3",
       "Genre": "Fodbold",
       "Udgiver": "24syv",
       "Antal afsnit": "Mandage",
       "Årstal afspillet": "",
       "Link": "",
       "Afgivet vurdering": "",
-      "Billedlink": "",
+      "Billedlink": "https://www.omnycontent.com/d/programs/1283f5f4-2508-4981-a99f-acb500e64dcf/08d79b7b-5d5a-4643-b3e7-ad0800ae3c34/image.jpg?t=1653025797&size=small",
       "": "",
       "Endnu ikke hørt": "",
       "Nævneværdige episo:": ""
@@ -4990,7 +4990,7 @@
       "Årstal afspillet": "",
       "Link": "",
       "Afgivet vurdering": "",
-      "Billedlink": "",
+      "Billedlink": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRS9yOeKYzF6d4q2tB0hGkF1ubWSVXYkRF7CA&s",
       "": "",
       "Endnu ikke hørt": "",
       "Nævneværdige episo:": ""
@@ -5006,7 +5006,7 @@
       "Årstal afspillet": "",
       "Link": "",
       "Afgivet vurdering": "",
-      "Billedlink": "",
+      "Billedlink": "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wCEAAkGBw8PDw8NDw8PEA0NEA8PDQ8NDw8NDw8NFREWFhURFRUYHSkgGB0lHRUVITEhJSkrLi4uFx80ODMsNyotLisBCgoKDg0OGhAQGi0fHR0tLS0rKy0tLi8vLS0tLS0tLS0rKzEtLS4tLS0uLy0tLSsrLS0tLS0tLS0tKy0tLS4tMf/AABEIAOEA4QMBIgACEQEDEQH/xAAcAAEAAQUBAQAAAAAAAAAAAAAAAQIEBQYHAwj/xABPEAABAwICBQYICQkECwAAAAABAAIDBBEFIQYHEhMxIkFRYXGBFDJSc4KRobIWI1N0krGzwtIzQlRicoOTo8EVF2PRCCQlNDVDVZSiw/D/xAAaAQEAAwEBAQAAAAAAAAAAAAAAAQIDBAUG/8QALREBAAICAQIEBAUFAAAAAAAAAAECAxEEITESMkFRExRhkSIzcbHRBVKBofD/2gAMAwEAAhEDEQA/AM+rmr4Q+aHvOVsrir4Q+ab7zlwQ+Nr5ZeChEUKCIiAiIgIiICIoQSiKEBSoRBKhEUAiIgKVCICIiAihEEooRAREQVK4q+EPmh7zlbq4q+EPmh77laF6+WVuiIoUEREBERAUIiCVCIoBEVtWVbYwSSpiNiupqGxgklajiWl+y4hmdvUsZpHjpeSxpy5ytZJuuzHhiI6vS43C8UeK/wBm1/DSToT4aS9C1NFp8Ovs6/ksPs2z4aS+Snw1l8lamoT4dfY+Sw+zbfhrL5KfDaXyVqSJ8OvsfJYfZtvw3l8lPhvL5K1JE+HX2PksPs234by+SFlsA0odUP2HCx5lzxZzRH/eAVW2OuuzHkcXFXHMxHWHUkUM4BSuB5AiIoFSuKvhD5oe+5W6uKvhD5oe85XjsvXyyt1CIqqCIiCVCIgIiICKCVj66uDQc1aKzI9K2tDAc1ouP42Xktaem9imOYwXXaCtZkfc3K7MeOKvS4nF3+O4511SiLZ6oiIgIiICIiAiIgLOaK/lh3fWsGs5ox+U9Si3Zz8r8qzp8J5IVa8aU8kL2XmT3eAIiKBKuazhD5oe+5WyuavhD5oe85WjsvXyytkRFCgiKEEooRBKpe8BUySALFV1da6vWsyPSvrg0HNabjOK3uAUxfEybgFa5LISV2Y8cQ9Hi8Xf4rIkfcrzRFq9aI0IiICIiAiIgIiICIiAs5o349+xYMLO6O+P6lE9nPy/ypdIoTyR2K5Vlh7uSFeLzbd3gJuoRFUVK4q+EPmh7zlbK5rOEPmm++5WjsvXyytlKhFCgpUISgLZcCpKGSFu+3e+JcCHSljuJtltBajPPZYiurBmtscdezfBljHbc1i30l1t2jFC7jAD+8l/EreXQjDH+NTA/vZx95aZqs0ge6qkoHOJiML5YgSTsPa5oIHQCHE9y6ouqIiH0WCmHLSL/DiP8Q1J+rXBjxogf39T+Ncx1w6JUuHmkko4RDDNvY5AHySXlFnN8cm2W16l3tajrSwTw3C52AXlp7VMNuO8jBuB2tLx3q0S6LY6+HpD5rRAUVnKIiINr1ZaPx4hiLIZ2bymjjklnZdzQ4AbLRdpBHKcDx5l2b+7DBP0Fv8AHqvxrXtQ+C7ulqK9w5VW8Rx35oYr5jtc530QupKsy6cdI8PVp/8Adfgn6C3+PVfjUf3YYJ+gt/j1X41uK5Zr00gmghpqGF5YKzfOncwlrjFHsN3dxzEvz/Z60WtFYjelGmGiuj1NSVRiZTsq2QyGFvhcrpBKBybMMhub8xC4moa0DgAOwWUqzntMT2jQiIioFncA8YdywbVncC4qJ7OXl/ly3/DjkFkFi8OdkFkwvOyd3gpREVBKuavhD5oe+5WyuavhD5oe+5WjsvXyytkRUPeoUS51lazz2VE86xNXVrWlNiqsrFrmI1/EXTEK3jmsDPNdddKaehxuNvrLoupKMyYnNKeEVI/uc+WMD2Ncu5rkGoCmyr5+kwRD0Q5x94LeqzSNsWMU2GOOVVSSys4flWvOyO9rJPoq0voMMeGkQ2VQ4XyPDnCBSoavlfTLBfAK+ppALRxvLocrfEP5TLdgNvRWFXX9feCZ02JNHN4LOeq5fGT3l47wuQK8OS9dSKqKNz3NYwXe9zWMHS9xsB6yFStz1SYOarFYXEXipA6pkvwJAtG36RB9EoiI3OnfNG8LbR0dNRtzFPDHGT5Tw3lO7zc96ya1vS/SEUTsPiBtJXV1PTgZH4ovAeezNov+sFsgVHXAuO/6QdN/w6foNVE4/tCNzfccuxLnGval28Mjk+QqonX6nNcz7wUwrfyy4IiIrOUREQS1Z7BBmFg4xmtiwaLh3KLdnHy51SW4Yccgsu3gsNQjILLxnJefk7vDVoiLMSrisOUPmh77lbEqvEZLCHzI99ytEL18svB8isp51RPOsVVVS1pRRXV1SwFfW8UrqzisJUTXXVWunfx+PvrKJ5rq1cVLnKgrR61a6h3rUVTbOGSS/LVMnqY1rf6FaXrXxd8GkEdSzN9FFSbIHS1z5C3vDyO9dL1R0u6wWj6ZBNMeveTvcPYQuJ6yaneYvXuvk2YMHoMa36wVWO7qt0pD6Uw6rZPDFURkOjnjZLGRzse0OB9RVyudakcb3+HupHH42gfsWvnuH3dGezJzfRXRVDWJ3G2C02wUV+H1VJ+dJHtRHomYQ+M/SaPavlogjIixGRB4g84X2EV80az8E8CxSoa0WiqHGqiysAJCS9o7H7XdZTDLLHq1Rd11FYPuqKaseLPrJSI/m8Y2R63GT2LhkML5HNijG1JK5scbemRxs0eshfUzGxYXh1iQIaCmzPC+wzM95HtUyrijrtxzWxjwlxmFjTdmGPhaD0Tbxkkn1MHorvbHAgEcCAR2FfIdbUPmklneSZJ3ySvN7nbe4uPtJX1bo7Vb6jpZhwlp4X+uMFRK+O25lkVqGtmn3mDVn+G1kv0JGlbesPpjSb/Dq+G1zLSVLW/tGJ1vbZQ0ns+VUUNNwD0qVdxikBAF7RRXRE209aSK5C2nC4LWWNw2kWy0UNrLO9nj8vN4p1C/pWrJRK0gYrxi4by4FaKFKzFvJIqMWms2DzDfferKedeON1Fm03XTtP8AMeuqlGlI3ErOpqetYStq1NZVLC1E110Vq6+Px99ZRUTXVo5ylzl5laPVpWIgUOOV+hSvWki25Yo/lJI4/pPDf6o0fU+ilLuaCih+TpoG94YF8vYxVb6pqZ+O+qJ5B2OkcR7LL6pxGXcUsrxwgge4ehGbfUvkiIWa0dAH1KIb5fRvGqHG/BMUjY42jrh4M/o3hN4ifSy9JfRoXx/HI5jmvabPY5r2Hoe0gg+sBfVmi+LtrqKmrG8J42ucPJkGT29zg4dyiTFPoyi5dr3wTe0sFe0cukeY5OuCUgexwb6yuoqwx7DWVdLUUj/EqYpIiRxG00gOHWDY9yhraNxpwTU5hHhOKskc28dFG6ocebeXDYx63E+gVv2vTGN1QR0TTZ9bINoDjuYiHnu2tgK51L4A+koppZW7M9RPIx1+OxC90Q7tpryO1cz1uYv4Viswabx0jW0rLcNppLnn6TiPRCt6sfLT9WmL6W1VVW9wagdzsjfCf3Ur4/ur5pXf9Rs+1hW754amcdgcQ/7xSUYu7oaolbdrm+UCPWFWoKq6HyHVQbuSSL5KR8f0XFv9F5gLN6a0u6xOvjH5tTKe5x2/vLGQxXV3DedIiiustRUd+ZTR0nUs5SU3UqWtp5nI5PpCuiprLM08S86eFX8TFy3u8yZ2riavcKloVS55lAiIoGqVNQrbSKos2k66Vh/mSLH1dSqNIpeTRddHGf5sq9KtXo8bB0nbFVE11Zvcpe5eZWj06U1ASoREaCzOhVLvsTw+PiDWU7yP1Y3iQ+xhWGW6anqbeYxTn5Fk8vqYW/fRaveHadY1TusJr33sTTvYD1v5I+tfMS+hNdtVu8Ieznnnp4h9PbPsYV89qIXy9xdo1C42HRVGHOPKhd4RCOmJ5s+3Y6xP7YXF1sGgGNigxKmqHG0ZduZz/gyWBJ6gdk+iplWk6l9RIURUdTF6R4o2io6irda0Eb3gcAX/AJo73EL5Rc9ziXPcXPcS57jmXPJu5x7SSV2vX3jGxT01A02NRJvph0wxjkt73lp9FcTVoc+Weuhdo/0fqm8NdD5MsUnc5hb9xcXXT9QVQRX1cPNJSiTvjlaP/aUlXHOrO6IiKrqfO+tWh2MZqzbKYQSjvhY0+1hWEo6VdC1wUP8Ar8EtvylOG97Hn8S1elp0mdQ8Lm5vDeappaZZanhVNPCshFGua93kzO1UUauWhUsavQLnmVUoiKoIiIOS1EyudIHcih+YxfayrFvcsjj55FB8xi+1mXrPpMdNQxJKpREaCIoQSurahcJkdPU1xYRCyIQRPPB8jnXeG9Ng0X/aC9dXtJo6aCCSvdhvhpMu9FZPEHgCRwbtMe63i25l0Wn0twaJjY48Rw1kbAGsZHVUzGNaOADQ6wCiZb0p6sJrnwmWpwv4lrnupaiOocxou4xhj2OIHPYSX7l88g34ZjqX1IdNMJ/6nh//AHlP+JYLETorUOMk0mCukPjPE9Kx7u1zXAlREpvTxTt88KHC4I5jkexZjS+OmZiFW2jMZoxIPBzC8SRFmw3xXAm4vfnWIVmHZ9OauMb8OwymnJvKxu4n6d9Hkb9ose8LZiuE6lNKIaOSppaqaOCCYCdj55GxRiZoDXDacbAluz27K6LpPp7h8VFVSU1dRzVLYX7iOKphke6YizLNaSTYkHsCrLprbdduLazMY8MxWqkBvFC4U8FvIjFnet+2e8LV1OfEkkniTmSeclQ4Gxtxsbdqs5pncpXVNQ+Eymqnry0inbTup2POQfK+RjiG9NhHn2hbLgtFosyKFzjhJmEcRfvp4JSJNkE3D3Gxutsg0nwprQxlfQNaBZrWVMAaB0AA5Ksy1rSIncyzqLEjSbDzwrqQ9lRD/mqxpDQ/plL/AB4v81DT4tPePu1fWlhjpI4KlrSdy5zJLZ7LHAEO7Lj2rRKeFdjON0TrjwumIORG+iI+tYXE6bCjFK6PwQS7DyzdSMadu2Vg0rO8fV5HN4tctpyUvH6baLFGrtjVTG1ewC47S8RIClEVBCIiApUIg4sSspj/AIlB8wi+2mWJWWx/xKD5hF9rMvWfUxHRiVChSgIoUoIUqFKAiIgIoUoCKVICIAFW1qNarqGFGdraRDEsnS06U1OstTQKky87Pn9E00CyUEKiCFX0Mawvd51rbVRRq6jYojavdoXPayqWhVKFKzBERAREQEREHKX01FBlLPJVSfJ0JZHAD11Dw7b9FhHWsljc9CW0IfTVTAaKItfDVxyOY3ey2BY+IB/Pndt78y1dZbH/ABKD5hF9rMvWfV7UVGEjdunppm1MTBtSgMMVRC3htyQ3JDb2G20ltzmRcLGL2o6uSCRs0LyyVhu1wAPaCDk4HgQciFd43TxgxTwN2KerjMkbASRFI1xZLAL52a4C36r2ohjkUIiBERBKKFKApV/FglU6nfWtge6ljNpJmlpaw3A5QvccRzc6mnwSqkp31jIXmljJa+a7Wsa4WuMzmcxwQ6rABejGo1qzmjmj09c98cG72o2GRwkeI+QOJHOe7pRnM+kMZDFdZKmp1etwOZlPBWOa0QVRe2EhwLiWEg3bzcCvengVJl53IzTHRNNAslBEogiV9FGsL2eba20xRq7jYojYvdrVhayqWtVYCBSsgREQEREBFClARQiDj2FQRy1EEUr93DJLGyWThsMc4AnqyXU9bui2H0tDTTQfFzRbungbvC/fQXJIN73tcu2usrkSzGkDiWYfck2oIrXN7fGy8PUPUvWfVxPSWHWVIvhoJ4sxF4b1B9LHtj/wYsSVl8bZuI4KH8+Hbnqs+FXNsgxkdLI2RN7S9EQxCKVCISoREEogVQCI26Zq1njEMeFy23OONxJr+nbY2KOOx5smy99lex0rTgeJ4VtM/wBmS0wdKLEGXaZJPL2bZkA6mhc5Zi9VanaJSBRua+l2WRtdC8G4LXBt+OeZNzxur/D8crYmSRRzubHOXOmbsROEpd4xfdp2r3PHpVUzmiI03XSDCqOnqJ8MNLLu3wwtpJGQxgwuFiaozXu65vtXyy4LYsHo20uKVNFFBHHTw0B3Tgwbx92tvI6Ti4k3vnzLnH9s1skIpZKqZ1OAGiN773aODSeJGXAk8Fl6fSGvsweFzchhjbygSGG2V+fgMzmomXHfm0rbt/3s2HB8IjkpMHeykhlllkqN824iErWbbQXuz8kE/UryPD4Hx4ZMWRPdNUvildu922WPacLFuXDmPUtdpsXq2iNrZ3gREuiDQwbBN7kWHPc36b5q8jxeqNrzvNn7xu0WutJ5QuMvqWVrw4/msWtTE+npHpr+J+/6tjdSQv8A7UiMMLG0zmGF7GbL23Lrkm/UFcNw2DwuaiMbBAym22usNsOAad5tcfzitbZiU53nxp+O/LZM+MFrcrLPL616+GzFuwZHEbIZn4xYDkwu4kdV7LKckK/NY/7f27bnp/uPstoxkF6gIApXM4EoiICKEQEREQIiICIiJcr/ALJimO1SVMRaf+RWPbTVLT5Ofxcg/Wa7taFlMbwCcsotp1PG2OijY581VAxocJZb5hxJ4jMArU1lsfHIoPmEX20y9Z9XuHpFUQUfKheKmtb4k4aRS07vKiDwHSvHM5zQ0HMB1gVhiSSSSSSSSSSSScySTxPWoREbEREQKUCqARAAvRjUY1XUMSMr30QxLfNEsMoZYHGpc5shDohYBwF92WyC7hYizx6S1SngWShpweIB7QCsckbacH+qU4lrTbfWPTXv9WTwOm2p5xEwOjDaizXOLTuQ+w5VibgW4ZnPjex2dkMu1cw093Pa9vLePHBY1pOzwAdn7OFhq9NFs+Ll2Zc9+buWQiLuG06xtcbR5jcLPxajTzOVzq5c18kRP4rTPp6s8IHHbjdDGPEYQXkFuzYEts22e9YDbp71VE9zy4iJubXzENJaNkgsIGXG7b9XTxWIZfLM5cMzl/8AWHqVyHOPFzjY3zcTn0rK2RyzyPp+38MrVscGSAxxjO4IcSQOQLtNsxl1cVjQEBNrXNjxFza6lZWtuWWXJ452IiKrFKhSoQERESIihBKKEQERSg4msrjviUPzGL7WVEXrPqmKRERApChEFQVTURFZe8av6dEUOXKydOslAiLOzysvdfQq8iRFzWYSuWL2aiLGyHoilFVCCiIgIiIlCIiAUREBERBKIiIf/9k=",
       "": "",
       "Endnu ikke hørt": "",
       "Nævneværdige episo:": ""
@@ -5166,7 +5166,7 @@
       "Årstal afspillet": "2025",
       "Link": "https://www.frihedsbrevet.dk/podcast/frihedsbrevets-intranet/",
       "Afgivet vurdering": "09-11-2025",
-      "Billedlink": "",
+      "Billedlink": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcReiZ2KwolVQfBeXkiHLKhyfKDwHp3DXctwtg&s",
       "": "",
       "Endnu ikke hørt": "",
       "Nævneværdige episo:": ""
@@ -5230,7 +5230,7 @@
       "Årstal afspillet": "2023",
       "Link": "",
       "Afgivet vurdering": "",
-      "Billedlink": "",
+      "Billedlink": "https://i.scdn.co/image/ab6765630000ba8afc1061bcdec36e48e73586a3",
       "": "",
       "Endnu ikke hørt": "",
       "Nævneværdige episo:": ""
@@ -8271,6 +8271,22 @@
       "Link": "https://www.dr.dk/lyd/special-radio/djaevlen-i-detaljen/djaevlen-i-detaljen-2026/mafiaen-1-3-albanerne-16122692617",
       "Afgivet vurdering": "",
       "Billedlink": "https://is1-ssl.mzstatic.com/image/thumb/Podcasts221/v4/78/c8/06/78c8065c-b0b1-729c-01d0-522b3fcc998b/mza_486116165445940358.png/1200x1200bf-60.jpg",
+      "": "",
+      "Endnu ikke hørt": "",
+      "Nævneværdige episo:": ""
+    },
+    {
+      "Placering": "518",
+      "Titel": "Munkens efterfølger",
+      "Vært": "Rune Ingemann",
+      "Vuring (1-10)": "",
+      "Genre": "True Crime",
+      "Udgiver": "r8Dio",
+      "Antal afsnit": "2",
+      "Årstal afspillet": "2026",
+      "Link": "https://r8dio.dk/program/munkens-efterfolger",
+      "Afgivet vurdering": "",
+      "Billedlink": "",
       "": "",
       "Endnu ikke hørt": "",
       "Nævneværdige episo:": ""
