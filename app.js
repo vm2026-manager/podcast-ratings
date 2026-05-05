@@ -135,7 +135,8 @@ function normalizeGenre(value) {
     raw.includes("crime") ||
     raw.includes("krimi") ||
     raw.includes("mord") ||
-    raw.includes("forbryd")
+    raw.includes("forbryd") ||
+    raw.includes("svindel")
   ) {
     return "True Crime";
   }
@@ -143,7 +144,8 @@ function normalizeGenre(value) {
   if (
     raw.includes("historie") ||
     raw.includes("historisk") ||
-    raw.includes("fortid")
+    raw.includes("fortid") ||
+    raw.includes("krig")
   ) {
     return "Historie";
   }
@@ -152,8 +154,15 @@ function normalizeGenre(value) {
     raw.includes("samfund") ||
     raw.includes("politik") ||
     raw.includes("nyhed") ||
+    raw.includes("nyhe") ||
     raw.includes("debat") ||
-    raw.includes("aktualitet")
+    raw.includes("aktualitet") ||
+    raw.includes("krise") ||
+    raw.includes("erhverv") ||
+    raw.includes("mediemagasin") ||
+    raw.includes("sundhed") ||
+    raw.includes("skandaler") ||
+    raw.includes("kultur")
   ) {
     return "Samfund";
   }
@@ -162,7 +171,12 @@ function normalizeGenre(value) {
     raw.includes("sport") ||
     raw.includes("fodbold") ||
     raw.includes("superliga") ||
-    raw.includes("bold")
+    raw.includes("bold") ||
+    raw.includes("cykling") ||
+    raw.includes("cykel") ||
+    raw.includes("tour de france") ||
+    raw.includes("giro") ||
+    raw.includes("vuelta")
   ) {
     return "Sport";
   }
@@ -171,27 +185,41 @@ function normalizeGenre(value) {
     raw.includes("viden") ||
     raw.includes("science") ||
     raw.includes("forskning") ||
-    raw.includes("læring")
+    raw.includes("læring") ||
+    raw.includes("videnskab")
   ) {
     return "Viden";
   }
 
   if (
+    raw.includes("sladder") ||
+    raw.includes("gossip")
+  ) {
+    return "Sladder";
+  }
+
+  if (
     raw.includes("underholdning") ||
+    raw.includes("unholdning") ||
     raw.includes("komedie") ||
     raw.includes("humor") ||
-    raw.includes("comedy")
+    raw.includes("comedy") ||
+    raw.includes("snakke") ||
+    raw.includes("snak") ||
+    raw.includes("kærlighed") ||
+    raw.includes("dating")
   ) {
     return "Underholdning";
   }
 
   if (
-    raw.includes("sladder") ||
-    raw.includes("kendt") ||
-    raw.includes("celebrity") ||
-    raw.includes("gossip")
+    raw.includes("dokumentar") ||
+    raw.includes("dokimentar") ||
+    raw.includes("portræt") ||
+    raw.includes("drama") ||
+    raw.includes("tv & film")
   ) {
-    return "Sladder";
+    return "Dokumentar";
   }
 
   return "Dokumentar";
