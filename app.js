@@ -191,10 +191,7 @@ function normalizeGenre(value) {
     return "Viden";
   }
 
-  if (
-    raw.includes("sladder") ||
-    raw.includes("gossip")
-  ) {
+  if (raw.includes("sladder") || raw.includes("gossip")) {
     return "Sladder";
   }
 
@@ -328,6 +325,12 @@ function mapPodcast(row, index) {
     "Cover",
     "Image",
   ]);
+  const description = getField(row, [
+    "Kort beskrivelse",
+    "Kortbeskrivelse",
+    "Beskrivelse",
+    "Description",
+  ]);
   const placement = parsePlacement(
     getField(row, ["Placering", "Rank", "Rangering"])
   );
@@ -347,6 +350,7 @@ function mapPodcast(row, index) {
     ratingDateObject: parseDate(ratingDate),
     ratingDateLabel: formatDate(ratingDate),
     image,
+    description,
     placement: placement ?? index + 1,
     searchText: [
       title,
@@ -356,6 +360,7 @@ function mapPodcast(row, index) {
       episodes,
       link,
       ratingDate,
+      description,
     ]
       .join(" ")
       .toLowerCase(),
@@ -477,6 +482,7 @@ function renderPodcastCard(podcast) {
   const media = fragment.querySelector(".podcast-card__media");
   const title = fragment.querySelector(".podcast-card__title");
   const host = fragment.querySelector(".podcast-card__host");
+  const description = fragment.querySelector(".podcast-card__description");
   const linkButton = fragment.querySelector(".podcast-card__link");
   const chips = fragment.querySelector(".podcast-card__chips");
 
@@ -491,6 +497,7 @@ function renderPodcastCard(podcast) {
 
   title.textContent = podcast.title;
   host.textContent = podcast.host || "";
+  description.textContent = podcast.description || "";
 
   if (podcast.link) {
     linkButton.classList.remove("is-hidden");
