@@ -25,7 +25,7 @@ const state = {
 const elements = {
   genreChips: document.getElementById("genreChips"),
   searchInput: document.getElementById("searchInput"),
-  sortSelect: document.getElementById("sortSelect"),
+  sortToggle: document.getElementById("sortToggle"),
   resultsText: document.getElementById("resultsText"),
   podcastGrid: document.getElementById("podcastGrid"),
   recentGrid: document.getElementById("recentGrid"),
@@ -271,10 +271,7 @@ function normalizePublisher(value) {
     return "r8dio";
   }
 
-  if (
-    compact === "radio24syv" ||
-    compact === "radio24/7"
-  ) {
+  if (compact === "radio24syv" || compact === "radio24/7") {
     return "Radio24syv";
   }
 
@@ -614,6 +611,17 @@ function updateActiveFilterUi() {
   elements.activeFilterBox.classList.remove("is-hidden");
 }
 
+function updateSortToggleUi() {
+  if (!elements.sortToggle) {
+    return;
+  }
+
+  elements.sortToggle.textContent =
+    state.sort === "placement-asc"
+      ? "Placering: lavest først"
+      : "Placering: højest først";
+}
+
 function getResultsText(filtered) {
   const countText = `Viser ${filtered.length} podcasts ud af ${state.podcasts.length}.`;
 
@@ -772,6 +780,7 @@ function renderPodcastGrid() {
 
 function render() {
   updateActiveFilterUi();
+  updateSortToggleUi();
   renderRecent();
   renderPodcastGrid();
 }
@@ -782,10 +791,13 @@ function setupEvents() {
     render();
   });
 
-  elements.sortSelect.addEventListener("change", (event) => {
-    state.sort = event.target.value;
-    render();
-  });
+  if (elements.sortToggle) {
+    elements.sortToggle.addEventListener("click", () => {
+      state.sort =
+        state.sort === "placement-asc" ? "placement-desc" : "placement-asc";
+      render();
+    });
+  }
 
   if (elements.clearFilterButton) {
     elements.clearFilterButton.addEventListener("click", clearActiveFilter);
