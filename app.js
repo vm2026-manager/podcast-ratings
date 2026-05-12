@@ -2,9 +2,7 @@ const DATA_URL =
   "https://docs.google.com/spreadsheets/d/e/2PACX-1vQRBWQdj-WDNN3l9yxIMCCu_O2dYfP7modSODcYgJRoQDG3GYsu83W_wIFyijPx6v8l-W011zrFyOdq/pub?gid=0&single=true&output=csv";
 
 const JSON_DATA_URL = "data/podcasts.json";
-
-const FEATURED_DATA_URL =
-  "https://docs.google.com/spreadsheets/d/e/2PACX-1vQRBWQdj-WDNN3l9yxIMCCu_O2dYfP7modSODcYgJRoQDG3GYsu83W_wIFyijPx6v8l-W011zrFyOdq/gviz/tq?tqx=out:csv&sheet=Udvalgte%20vurderinger";
+const FEATURED_JSON_DATA_URL = "data/featured-reviews.json";
 
 const GENRES = [
   "Alle",
@@ -97,10 +95,19 @@ function getField(row, candidates) {
 }
 
 function parseNumber(value) {
-  const cleaned = normalizeText(value)
-    .replace(/\./g, "")
-    .replace(",", ".")
-    .replace(/[^\d.-]/g, "");
+  const raw = normalizeText(value);
+
+  if (!raw) return null;
+
+  if (typeof value === "number") {
+    return Number.isFinite(value) ? value : null;
+  }
+
+  let cleaned = raw.replace(/[^\d,.\-]/g, "");
+
+  if (cleaned.includes(",")) {
+    cleaned = cleaned.replace(/\./g, "").replace(",", ".");
+  }
 
   const number = Number.parseFloat(cleaned);
   return Number.isFinite(number) ? number : null;
@@ -493,7 +500,7 @@ function mapFeaturedReview(row, index, podcastLookup) {
   const review = getField(row, ["Kort vurdering"]);
   const story = getField(row, ["Historie/sag"]);
   const storytelling = getField(row, ["Fortælling", "Fortaelling"]);
-  const host = getField(row, ["Vært/formidling", "Vaert/formidling"]);
+  const hostFormidling = getField(row, ["Vært/formidling", "Vaert/formidling"]);
   const production = getField(row, ["Produktion"]);
   const relevance = getField(row, ["Aktualitet/relevans", "Aktualitet"]);
   const score = getField(row, ["Samlet score"]);
@@ -522,7 +529,7 @@ function mapFeaturedReview(row, index, podcastLookup) {
     params: [
       { label: "Historie/sag", value: story },
       { label: "Fortælling", value: storytelling },
-      { label: "Vært/formidling", value: host },
+      { label: "Vært/formidling", value: hostFormidling },
       { label: "Produktion", value: production },
       { label: "Aktualitet", value: relevance },
     ],
@@ -947,19 +954,23 @@ async function loadPodcastObjectsFromCsv() {
 
 async function loadFeaturedReviewObjects() {
   try {
-    const response = await fetch(`${FEATURED_DATA_URL}&v=${Date.now()}`, {
+    const response = await fetch(`${FEATURED_JSON_DATA_URL}?v=${Date.now()}`, {
       cache: "no-store",
     });
 
     if (!response.ok) {
-      throw new Error("Kunne ikke hente udvalgte vurderinger.");
+      throw new Error("Kunne ikke hente featured-reviews.json.");
     }
 
-    const csv = await response.text();
-    const rows = parseCsv(csv);
+    const data = await response.json();
 
-    return rowsToObjects(rows);
+    if (!Array.isArray(data.rows)) {
+      throw new Error("featured-reviews.json har ikke forventet format.");
+    }
+
+    return data.rows;
   } catch (error) {
+    console.warn("Udvalgte vurderinger blev ikke indlæst:", error);
     return [];
   }
 }
