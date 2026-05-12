@@ -17,7 +17,7 @@ const GENRES = [
 
 const state = {
   podcasts: [],
-  selectedGenre: "Alle",
+  activeFilter: null,
   searchTerm: "",
   sort: "placement-asc",
 };
@@ -32,6 +32,10 @@ const elements = {
   recentSummary: document.getElementById("recentSummary"),
   podcastTemplate: document.getElementById("podcastCardTemplate"),
   recentTemplate: document.getElementById("recentCardTemplate"),
+  activeFilterBox: document.getElementById("activeFilterBox"),
+  activeFilterText: document.getElementById("activeFilterText"),
+  activeFilterPill: document.getElementById("activeFilterPill"),
+  clearFilterButton: document.getElementById("clearFilterButton"),
 };
 
 function normalizeKey(value) {
@@ -44,6 +48,16 @@ function normalizeKey(value) {
 
 function normalizeText(value) {
   return String(value || "").trim();
+}
+
+function normalizeComparable(value) {
+  return normalizeText(value)
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/&/g, " og ")
+    .replace(/\s+/g, " ")
+    .trim();
 }
 
 function getField(row, candidates) {
@@ -124,7 +138,7 @@ function formatDate(value) {
 }
 
 function normalizeGenre(value) {
-  const raw = normalizeText(value).toLowerCase();
+  const raw = normalizeComparable(value);
 
   if (!raw) {
     return "Dokumentar";
@@ -222,6 +236,135 @@ function normalizeGenre(value) {
   return "Dokumentar";
 }
 
+function normalizePublisher(value) {
+  const original = normalizeText(value);
+
+  if (!original) {
+    return "";
+  }
+
+  const raw = normalizeComparable(original)
+    .replace(/\./g, "")
+    .replace(/\s*\/\s*/g, "/");
+
+  const compact = raw.replace(/\s+/g, "");
+
+  if (
+    raw === "eb" ||
+    raw === "eb+" ||
+    raw === "ekstrabladet" ||
+    raw === "ekstra bladet"
+  ) {
+    return "Ekstra Bladet";
+  }
+
+  if (
+    raw === "radio llll" ||
+    raw === "radio iiii" ||
+    raw === "radio4" ||
+    raw === "radio4 (krimiland)"
+  ) {
+    return "RADIO IIII";
+  }
+
+  if (raw === "r8dio") {
+    return "r8dio";
+  }
+
+  if (
+    compact === "radio24syv" ||
+    compact === "radio24/7"
+  ) {
+    return "Radio24syv";
+  }
+
+  if (compact === "24syv" || compact === "24/syv") {
+    return "24syv";
+  }
+
+  if (raw === "dr" || raw === "dr lyd" || raw === "p1") {
+    return "DR";
+  }
+
+  if (raw === "politikken" || raw === "politiken") {
+    return "Politiken";
+  }
+
+  if (raw === "bold" || raw === "bolddk") {
+    return "Bold.dk";
+  }
+
+  if (raw === "fc købenahvn" || raw === "fc københavn") {
+    return "F.C. København";
+  }
+
+  if (raw === "den uafhængige" || raw === "den uafhaengige") {
+    return "Den Uafhængige";
+  }
+
+  if (raw === "podimo" || raw === "podimo/tv2") {
+    return "Podimo";
+  }
+
+  if (raw === "media o") {
+    return "Mediano";
+  }
+
+  if (raw === "jyllands-posten/politiken" || raw === "jyllands posten/politiken") {
+    return "Jyllands-Posten / Politiken";
+  }
+
+  if (raw === "third ear") {
+    return "Third Ear";
+  }
+
+  if (raw === "third ear/zetland") {
+    return "Third Ear / Zetland";
+  }
+
+  if (raw === "bt") {
+    return "BT";
+  }
+
+  if (raw === "zetland") {
+    return "Zetland";
+  }
+
+  if (raw === "frihedsbrevet") {
+    return "Frihedsbrevet";
+  }
+
+  if (raw === "mediano") {
+    return "Mediano";
+  }
+
+  if (raw === "altinget") {
+    return "Altinget";
+  }
+
+  if (raw === "berlingske") {
+    return "Berlingske";
+  }
+
+  if (raw === "weekendavisen") {
+    return "Weekendavisen";
+  }
+
+  if (raw === "mofibo") {
+    return "Mofibo";
+  }
+
+  if (raw === "saga talks") {
+    return "Saga Talks";
+  }
+
+  if (raw === "loud") {
+    return "Loud";
+  }
+
+  return original;
+}
+
 function parseCsv(text) {
   const rows = [];
   let currentRow = [];
@@ -309,7 +452,7 @@ function mapPodcast(row, index) {
     "Score",
   ]);
   const rawGenre = getField(row, ["Genre"]);
-  const publisher = getField(row, ["Udgiver", "Publisher"]);
+  const rawPublisher = getField(row, ["Udgiver", "Publisher"]);
   const episodes = getField(row, ["Antal afsnit", "Afsnit", "Episodes"]);
   const link = getField(row, ["Link", "URL"]);
   const ratingDate = getField(row, [
@@ -335,6 +478,9 @@ function mapPodcast(row, index) {
     getField(row, ["Placering", "Rank", "Rangering"])
   );
 
+  const genre = normalizeGenre(rawGenre);
+  const publisher = normalizePublisher(rawPublisher);
+
   return {
     id: `${title}-${index}`,
     title,
@@ -342,7 +488,9 @@ function mapPodcast(row, index) {
     rawRating,
     ratingValue: parseNumber(rawRating),
     ratingLabel: formatRating(rawRating),
-    genre: normalizeGenre(rawGenre),
+    rawGenre,
+    genre,
+    rawPublisher,
     publisher,
     episodes,
     link,
@@ -356,6 +504,8 @@ function mapPodcast(row, index) {
       title,
       host,
       rawGenre,
+      genre,
+      rawPublisher,
       publisher,
       episodes,
       link,
@@ -371,6 +521,29 @@ function isUsefulPodcast(podcast) {
   return Boolean(podcast.title);
 }
 
+function isActiveGenre(genre) {
+  if (genre === "Alle") {
+    return !state.activeFilter;
+  }
+
+  return state.activeFilter?.type === "genre" && state.activeFilter.value === genre;
+}
+
+function setActiveFilter(type, value) {
+  if (!type || !value) {
+    state.activeFilter = null;
+  } else {
+    state.activeFilter = { type, value };
+  }
+
+  createGenreChips();
+  render();
+}
+
+function clearActiveFilter() {
+  setActiveFilter(null, null);
+}
+
 function createGenreChips() {
   elements.genreChips.innerHTML = "";
 
@@ -380,14 +553,16 @@ function createGenreChips() {
     button.className = "genre-chip";
     button.textContent = genre;
 
-    if (genre === state.selectedGenre) {
+    if (isActiveGenre(genre)) {
       button.classList.add("active");
     }
 
     button.addEventListener("click", () => {
-      state.selectedGenre = genre;
-      createGenreChips();
-      render();
+      if (genre === "Alle") {
+        clearActiveFilter();
+      } else {
+        setActiveFilter("genre", genre);
+      }
     });
 
     elements.genreChips.appendChild(button);
@@ -397,7 +572,14 @@ function createGenreChips() {
 function getFilteredPodcasts() {
   return state.podcasts
     .filter((podcast) => {
-      if (state.selectedGenre !== "Alle" && podcast.genre !== state.selectedGenre) {
+      if (state.activeFilter?.type === "genre" && podcast.genre !== state.activeFilter.value) {
+        return false;
+      }
+
+      if (
+        state.activeFilter?.type === "publisher" &&
+        podcast.publisher !== state.activeFilter.value
+      ) {
         return false;
       }
 
@@ -414,6 +596,34 @@ function getFilteredPodcasts() {
 
       return a.placement - b.placement;
     });
+}
+
+function updateActiveFilterUi() {
+  if (!elements.activeFilterBox || !elements.activeFilterText) {
+    return;
+  }
+
+  if (!state.activeFilter) {
+    elements.activeFilterBox.classList.add("is-hidden");
+    elements.activeFilterText.textContent = "";
+    return;
+  }
+
+  const label = state.activeFilter.type === "genre" ? "Genre" : "Udgiver";
+  elements.activeFilterText.textContent = `${label}: ${state.activeFilter.value}`;
+  elements.activeFilterBox.classList.remove("is-hidden");
+}
+
+function getResultsText(filtered) {
+  const countText = `Viser ${filtered.length} podcasts ud af ${state.podcasts.length}.`;
+
+  if (!state.activeFilter) {
+    return countText;
+  }
+
+  const label = state.activeFilter.type === "genre" ? "genren" : "udgiveren";
+
+  return `${countText} Filtreret på ${label} ${state.activeFilter.value}.`;
 }
 
 function setImage(container, image, alt) {
@@ -508,13 +718,29 @@ function renderPodcastCard(podcast) {
     linkButton.classList.add("is-hidden");
   }
 
-  const publisherChip = document.createElement("span");
+  const publisherChip = document.createElement("button");
+  publisherChip.type = "button";
   publisherChip.className = "podcast-chip";
   publisherChip.textContent = podcast.publisher || "Ukendt";
+  publisherChip.title = `Vis podcasts fra ${podcast.publisher || "Ukendt"}`;
+  publisherChip.addEventListener("click", () => {
+    if (podcast.publisher) {
+      setActiveFilter("publisher", podcast.publisher);
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+  });
 
-  const genreChip = document.createElement("span");
+  const genreChip = document.createElement("button");
+  genreChip.type = "button";
   genreChip.className = "podcast-chip";
   genreChip.textContent = podcast.genre || "Dokumentar";
+  genreChip.title = `Vis podcasts i genren ${podcast.genre || "Dokumentar"}`;
+  genreChip.addEventListener("click", () => {
+    if (podcast.genre) {
+      setActiveFilter("genre", podcast.genre);
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+  });
 
   const episodesChip = document.createElement("span");
   episodesChip.className = "podcast-chip podcast-chip--episodes";
@@ -541,10 +767,11 @@ function renderPodcastGrid() {
     });
   }
 
-  elements.resultsText.textContent = `Viser ${filtered.length} podcasts ud af ${state.podcasts.length}.`;
+  elements.resultsText.textContent = getResultsText(filtered);
 }
 
 function render() {
+  updateActiveFilterUi();
   renderRecent();
   renderPodcastGrid();
 }
@@ -559,6 +786,14 @@ function setupEvents() {
     state.sort = event.target.value;
     render();
   });
+
+  if (elements.clearFilterButton) {
+    elements.clearFilterButton.addEventListener("click", clearActiveFilter);
+  }
+
+  if (elements.activeFilterPill) {
+    elements.activeFilterPill.addEventListener("click", clearActiveFilter);
+  }
 }
 
 async function loadPodcastObjectsFromJson() {
