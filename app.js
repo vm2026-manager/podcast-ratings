@@ -95,12 +95,18 @@ function getField(row, candidates) {
 }
 
 function parseNumber(value) {
-  const raw = normalizeText(value);
-
-  if (!raw) return null;
+  if (value === null || value === undefined || value === "") {
+    return null;
+  }
 
   if (typeof value === "number") {
     return Number.isFinite(value) ? value : null;
+  }
+
+  const raw = normalizeText(value);
+
+  if (!raw) {
+    return null;
   }
 
   let cleaned = raw.replace(/[^\d,.\-]/g, "");
@@ -500,7 +506,7 @@ function mapFeaturedReview(row, index, podcastLookup) {
   const review = getField(row, ["Kort vurdering"]);
   const story = getField(row, ["Historie/sag"]);
   const storytelling = getField(row, ["Fortælling", "Fortaelling"]);
-  const hostFormidling = getField(row, ["Vært/formidling", "Vaert/formidling"]);
+  const narrator = getField(row, ["Vært/formidling", "Vaert/formidling"]);
   const production = getField(row, ["Produktion"]);
   const relevance = getField(row, ["Aktualitet/relevans", "Aktualitet"]);
   const score = getField(row, ["Samlet score"]);
@@ -527,9 +533,9 @@ function mapFeaturedReview(row, index, podcastLookup) {
     genre: normalizeGenre(autoGenre || matchedPodcast?.genre || ""),
     host: autoHost || matchedPodcast?.host || "",
     params: [
-      { label: "Historie/sag", value: story },
+      { label: "Historie", value: story },
       { label: "Fortælling", value: storytelling },
-      { label: "Vært/formidling", value: hostFormidling },
+      { label: "Fortæller", value: narrator },
       { label: "Produktion", value: production },
       { label: "Aktualitet", value: relevance },
     ],
