@@ -1,11 +1,53 @@
 const fs = require("fs");
 const path = require("path");
+const https = require("https");
 
-const DATA_URL =
-  "https://docs.google.com/spreadsheets/d/e/2PACX-1vQRBWQdj-WDNN3l9yxIMCCu_O2dYfP7modSODcYgJRoQDG3GYsu83W_wIFyijPx6v8l-W011zrFyOdq/pub?gid=0&single=true&output=csv";
+const FEATURED_CSV_URL =
+  "https://docs.google.com/spreadsheets/d/e/2PACX-1vQRBWQdj-WDNN3l9yxIMCCu_O2dYfP7modSODcYgJRoQDG3GYsu83W_wIFyijPx6v8l-W011zrFyOdq/gviz/tq?tqx=out:csv&sheet=Udvalgte%20vurderinger";
 
-function normalizeText(value) {
-  return String(value || "").trim();
+const OUTPUT_PATH = path.join(__dirname, "..", "data", "featured-reviews.json");
+
+function fetchText(url, redirectCount = 0) {
+  return new Promise((resolve, reject) => {
+    if (redirectCount > 5) {
+      reject(new Error("Too many redirects"));
+      return;
+    }
+
+    https
+      .get(url, (res) => {
+        const statusCode = res.statusCode || 0;
+
+        if (
+          [301, 302, 303, 307, 308].includes(statusCode) &&
+          res.headers.location
+        ) {
+          const redirectedUrl = new URL(res.headers.location, url).toString();
+          resolve(fetchText(redirectedUrl, redirectCount + 1));
+          return;
+        }
+
+        if (statusCode < 200 || statusCode >= 300) {
+          reject(new Error(`HTTP ${statusCode}: ${url}`));
+          return;
+        }
+
+        let data = "";
+
+        res.on("data", (chunk) => {
+          data += chunk;
+        });
+
+        res.on("end", () => {
+          resolve(data);
+        });
+      })
+      .on("error", reject);
+  });
+}
+
+function cleanCell(value) {
+  return String(value == null ? "" : value).trim();
 }
 
 function parseCsv(text) {
@@ -42,7 +84,7 @@ function parseCsv(text) {
 
       currentRow.push(currentCell);
 
-      if (currentRow.some((cell) => normalizeText(cell) !== "")) {
+      if (currentRow.some((cell) => cleanCell(cell) !== "")) {
         rows.push(currentRow);
       }
 
@@ -56,7 +98,7 @@ function parseCsv(text) {
 
   currentRow.push(currentCell);
 
-  if (currentRow.some((cell) => normalizeText(cell) !== "")) {
+  if (currentRow.some((cell) => cleanCell(cell) !== "")) {
     rows.push(currentRow);
   }
 
@@ -64,17 +106,15 @@ function parseCsv(text) {
 }
 
 function rowsToObjects(rows) {
-  if (!rows.length) {
-    return [];
-  }
+  if (!rows.length) return [];
 
-  const headers = rows[0].map((header) => normalizeText(header));
+  const headers = rows[0].map(cleanCell);
 
   return rows.slice(1).map((row) => {
     const item = {};
 
     headers.forEach((header, index) => {
-      item[header] = normalizeText(row[index] || "");
+      item[header] = cleanCell(row[index] || "");
     });
 
     return item;
@@ -82,30 +122,25 @@ function rowsToObjects(rows) {
 }
 
 async function main() {
-  const response = await fetch(DATA_URL);
-
-  if (!response.ok) {
-    throw new Error(`Could not fetch Google Sheets CSV. Status: ${response.status}`);
-  }
-
-  const csv = await response.text();
+  const csv = await fetchText(FEATURED_CSV_URL);
   const rows = parseCsv(csv);
   const objects = rowsToObjects(rows);
 
-  const output = {
+  const usefulRows = objects.filter((row) => {
+    return cleanCell(row["Aktiv"]) !== "" && cleanCell(row["Titel"]) !== "";
+  });
+
+  const payload = {
     generatedAt: new Date().toISOString(),
-    source: DATA_URL,
-    count: objects.length,
-    rows: objects,
+    source: FEATURED_CSV_URL,
+    count: usefulRows.length,
+    rows: usefulRows,
   };
 
-  const outputDir = path.join(process.cwd(), "data");
-  const outputPath = path.join(outputDir, "podcasts.json");
+  fs.mkdirSync(path.dirname(OUTPUT_PATH), { recursive: true });
+  fs.writeFileSync(OUTPUT_PATH, JSON.stringify(payload, null, 2), "utf8");
 
-  fs.mkdirSync(outputDir, { recursive: true });
-  fs.writeFileSync(outputPath, `${JSON.stringify(output, null, 2)}\n`, "utf8");
-
-  console.log(`Wrote ${objects.length} podcast rows to ${outputPath}`);
+  console.log(`Wrote ${usefulRows.length} featured reviews to ${OUTPUT_PATH}`);
 }
 
 main().catch((error) => {
