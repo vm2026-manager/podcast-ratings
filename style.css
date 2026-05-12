@@ -81,24 +81,48 @@ select {
 }
 
 .sidebar-logo {
-  padding: 14px 16px;
+  min-height: 78px;
+  padding: 16px 18px;
   display: flex;
-  justify-content: flex-start;
+  align-items: center;
+  gap: 14px;
 }
 
 .logo-mark {
-  width: 50px;
-  height: 50px;
-  border-radius: 999px;
+  width: 46px;
+  height: 46px;
+  border-radius: 12px;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(255, 255, 255, 0.82);
-  border: 1px solid var(--line);
+  background: linear-gradient(180deg, var(--accent), var(--accent-deep));
+  box-shadow: 0 10px 22px rgba(223, 84, 16, 0.22);
   font-family: "Fraunces", serif;
-  font-size: 1.65rem;
+  font-size: 1.55rem;
   font-weight: 700;
-  color: var(--accent-deep);
+  color: #fff;
+  flex: 0 0 auto;
+}
+
+.brand-copy {
+  min-width: 0;
+}
+
+.brand-title {
+  margin: 0;
+  color: var(--text);
+  font-size: 1.03rem;
+  line-height: 1.12;
+  font-weight: 900;
+  letter-spacing: -0.02em;
+}
+
+.brand-subtitle {
+  margin: 3px 0 0;
+  color: #6f655d;
+  font-size: 0.88rem;
+  line-height: 1.2;
+  font-weight: 600;
 }
 
 .sidebar-section,
@@ -209,8 +233,7 @@ select {
   font-weight: 800;
 }
 
-.search-field input,
-.sort-field select {
+.search-field input {
   width: 100%;
   min-height: 48px;
   border: 1px solid var(--line);
@@ -219,6 +242,30 @@ select {
   color: var(--text);
   padding: 0 14px;
   outline: none;
+}
+
+.sort-toggle {
+  width: 100%;
+  min-height: 48px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  background: rgba(255, 255, 255, 0.78);
+  color: var(--text);
+  padding: 0 14px;
+  outline: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  font-weight: 700;
+  text-align: left;
+}
+
+.sort-toggle::after {
+  content: "↕";
+  color: #8a552f;
+  font-weight: 900;
 }
 
 .active-filter-box {
@@ -873,6 +920,26 @@ button.podcast-chip:hover {
 @media (max-width: 540px) {
   .page-shell {
     padding: 0 12px;
+  }
+
+  .sidebar-logo {
+    min-height: 70px;
+    padding: 14px 16px;
+  }
+
+  .logo-mark {
+    width: 42px;
+    height: 42px;
+    border-radius: 11px;
+    font-size: 1.42rem;
+  }
+
+  .brand-title {
+    font-size: 0.98rem;
+  }
+
+  .brand-subtitle {
+    font-size: 0.82rem;
   }
 
   .hero h1 {
