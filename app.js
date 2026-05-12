@@ -3,6 +3,9 @@ const DATA_URL =
 
 const JSON_DATA_URL = "data/podcasts.json";
 
+const FEATURED_DATA_URL =
+  "https://docs.google.com/spreadsheets/d/e/2PACX-1vQRBWQdj-WDNN3l9yxIMCCu_O2dYfP7modSODcYgJRoQDG3GYsu83W_wIFyijPx6v8l-W011zrFyOdq/gviz/tq?tqx=out:csv&sheet=Udvalgte%20vurderinger";
+
 const GENRES = [
   "Alle",
   "True Crime",
@@ -15,8 +18,13 @@ const GENRES = [
   "Sladder",
 ];
 
+const FEATURED_ROTATION_MS = 8000;
+
 const state = {
   podcasts: [],
+  featuredReviews: [],
+  featuredIndex: 0,
+  featuredTimer: null,
   activeFilter: null,
   searchTerm: "",
   sort: "placement-asc",
@@ -36,6 +44,14 @@ const elements = {
   activeFilterText: document.getElementById("activeFilterText"),
   activeFilterPill: document.getElementById("activeFilterPill"),
   clearFilterButton: document.getElementById("clearFilterButton"),
+  featuredPanel: document.getElementById("featuredReviewPanel"),
+  featuredImage: document.getElementById("featuredImage"),
+  featuredTitle: document.getElementById("featuredTitle"),
+  featuredMeta: document.getElementById("featuredMeta"),
+  featuredScore: document.getElementById("featuredScore"),
+  featuredText: document.getElementById("featuredText"),
+  featuredParams: document.getElementById("featuredParams"),
+  featuredDots: document.getElementById("featuredDots"),
 };
 
 function normalizeKey(value) {
@@ -56,6 +72,13 @@ function normalizeComparable(value) {
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "")
     .replace(/&/g, " og ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function normalizeMatchKey(value) {
+  return normalizeComparable(value)
+    .replace(/[^a-z0-9æøå ]/g, " ")
     .replace(/\s+/g, " ")
     .trim();
 }
@@ -119,7 +142,6 @@ function parseDate(value) {
   }
 
   const fallback = new Date(raw);
-
   return Number.isNaN(fallback.getTime()) ? null : fallback;
 }
 
@@ -140,9 +162,7 @@ function formatDate(value) {
 function normalizeGenre(value) {
   const raw = normalizeComparable(value);
 
-  if (!raw) {
-    return "Dokumentar";
-  }
+  if (!raw) return "Dokumentar";
 
   if (
     raw.includes("true") ||
@@ -239,9 +259,7 @@ function normalizeGenre(value) {
 function normalizePublisher(value) {
   const original = normalizeText(value);
 
-  if (!original) {
-    return "";
-  }
+  if (!original) return "";
 
   const raw = normalizeComparable(original)
     .replace(/\./g, "")
@@ -267,9 +285,7 @@ function normalizePublisher(value) {
     return "RADIO IIII";
   }
 
-  if (raw === "r8dio") {
-    return "r8dio";
-  }
+  if (raw === "r8dio") return "r8dio";
 
   if (compact === "radio24syv" || compact === "radio24/7") {
     return "Radio24syv";
@@ -303,61 +319,19 @@ function normalizePublisher(value) {
     return "Podimo";
   }
 
-  if (raw === "media o") {
-    return "Mediano";
-  }
-
-  if (raw === "jyllands-posten/politiken" || raw === "jyllands posten/politiken") {
-    return "Jyllands-Posten / Politiken";
-  }
-
-  if (raw === "third ear") {
-    return "Third Ear";
-  }
-
-  if (raw === "third ear/zetland") {
-    return "Third Ear / Zetland";
-  }
-
-  if (raw === "bt") {
-    return "BT";
-  }
-
-  if (raw === "zetland") {
-    return "Zetland";
-  }
-
-  if (raw === "frihedsbrevet") {
-    return "Frihedsbrevet";
-  }
-
-  if (raw === "mediano") {
-    return "Mediano";
-  }
-
-  if (raw === "altinget") {
-    return "Altinget";
-  }
-
-  if (raw === "berlingske") {
-    return "Berlingske";
-  }
-
-  if (raw === "weekendavisen") {
-    return "Weekendavisen";
-  }
-
-  if (raw === "mofibo") {
-    return "Mofibo";
-  }
-
-  if (raw === "saga talks") {
-    return "Saga Talks";
-  }
-
-  if (raw === "loud") {
-    return "Loud";
-  }
+  if (raw === "media o") return "Mediano";
+  if (raw === "third ear") return "Third Ear";
+  if (raw === "third ear/zetland") return "Third Ear / Zetland";
+  if (raw === "bt") return "BT";
+  if (raw === "zetland") return "Zetland";
+  if (raw === "frihedsbrevet") return "Frihedsbrevet";
+  if (raw === "mediano") return "Mediano";
+  if (raw === "altinget") return "Altinget";
+  if (raw === "berlingske") return "Berlingske";
+  if (raw === "weekendavisen") return "Weekendavisen";
+  if (raw === "mofibo") return "Mofibo";
+  if (raw === "saga talks") return "Saga Talks";
+  if (raw === "loud") return "Loud";
 
   return original;
 }
@@ -418,9 +392,7 @@ function parseCsv(text) {
 }
 
 function rowsToObjects(rows) {
-  if (!rows.length) {
-    return [];
-  }
+  if (!rows.length) return [];
 
   const headers = rows[0].map((header) => normalizeText(header));
 
@@ -514,15 +486,60 @@ function mapPodcast(row, index) {
   };
 }
 
+function mapFeaturedReview(row, index, podcastLookup) {
+  const active = getField(row, ["Aktiv"]);
+  const title = getField(row, ["Titel"]);
+  const matchTitle = getField(row, ["Matchtitel"]) || title;
+  const review = getField(row, ["Kort vurdering"]);
+  const story = getField(row, ["Historie/sag"]);
+  const storytelling = getField(row, ["Fortælling", "Fortaelling"]);
+  const host = getField(row, ["Vært/formidling", "Vaert/formidling"]);
+  const production = getField(row, ["Produktion"]);
+  const relevance = getField(row, ["Aktualitet/relevans", "Aktualitet"]);
+  const score = getField(row, ["Samlet score"]);
+  const displayOrder = parsePlacement(getField(row, ["Visningsrækkefølge"]));
+  const autoPublisher = getField(row, ["Auto-udgiver"]);
+  const autoLink = getField(row, ["Auto-link"]);
+  const autoImage = getField(row, ["Auto-billedlink"]);
+  const autoGenre = getField(row, ["Auto-genre"]);
+  const autoHost = getField(row, ["Auto-vært", "Auto-vaert"]);
+
+  const matchedPodcast = podcastLookup[normalizeMatchKey(matchTitle)] || null;
+
+  return {
+    active,
+    title: title || matchedPodcast?.title || matchTitle,
+    matchTitle,
+    review,
+    score,
+    scoreLabel: formatRating(score),
+    displayOrder: displayOrder ?? index + 1,
+    publisher: normalizePublisher(autoPublisher || matchedPodcast?.publisher || ""),
+    link: autoLink || matchedPodcast?.link || "",
+    image: autoImage || matchedPodcast?.image || "",
+    genre: normalizeGenre(autoGenre || matchedPodcast?.genre || ""),
+    host: autoHost || matchedPodcast?.host || "",
+    params: [
+      { label: "Historie/sag", value: story },
+      { label: "Fortælling", value: storytelling },
+      { label: "Vært/formidling", value: host },
+      { label: "Produktion", value: production },
+      { label: "Aktualitet", value: relevance },
+    ],
+  };
+}
+
 function isUsefulPodcast(podcast) {
   return Boolean(podcast.title);
 }
 
-function isActiveGenre(genre) {
-  if (genre === "Alle") {
-    return !state.activeFilter;
-  }
+function isActiveFeatured(review) {
+  const active = normalizeComparable(review.active);
+  return active === "ja" || active === "yes" || active === "1" || active === "true";
+}
 
+function isActiveGenre(genre) {
+  if (genre === "Alle") return !state.activeFilter;
   return state.activeFilter?.type === "genre" && state.activeFilter.value === genre;
 }
 
@@ -580,25 +597,18 @@ function getFilteredPodcasts() {
         return false;
       }
 
-      if (!state.searchTerm) {
-        return true;
-      }
+      if (!state.searchTerm) return true;
 
       return podcast.searchText.includes(state.searchTerm.toLowerCase());
     })
     .sort((a, b) => {
-      if (state.sort === "placement-desc") {
-        return b.placement - a.placement;
-      }
-
+      if (state.sort === "placement-desc") return b.placement - a.placement;
       return a.placement - b.placement;
     });
 }
 
 function updateActiveFilterUi() {
-  if (!elements.activeFilterBox || !elements.activeFilterText) {
-    return;
-  }
+  if (!elements.activeFilterBox || !elements.activeFilterText) return;
 
   if (!state.activeFilter) {
     elements.activeFilterBox.classList.add("is-hidden");
@@ -612,9 +622,7 @@ function updateActiveFilterUi() {
 }
 
 function updateSortToggleUi() {
-  if (!elements.sortToggle) {
-    return;
-  }
+  if (!elements.sortToggle) return;
 
   elements.sortToggle.textContent =
     state.sort === "placement-asc"
@@ -625,21 +633,15 @@ function updateSortToggleUi() {
 function getResultsText(filtered) {
   const countText = `Viser ${filtered.length} podcasts ud af ${state.podcasts.length}.`;
 
-  if (!state.activeFilter) {
-    return countText;
-  }
+  if (!state.activeFilter) return countText;
 
   const label = state.activeFilter.type === "genre" ? "genren" : "udgiveren";
-
   return `${countText} Filtreret på ${label} ${state.activeFilter.value}.`;
 }
 
 function setImage(container, image, alt) {
   const img = container.querySelector("img");
-
-  if (!img) {
-    return;
-  }
+  if (!img) return;
 
   img.alt = alt || "";
 
@@ -778,11 +780,115 @@ function renderPodcastGrid() {
   elements.resultsText.textContent = getResultsText(filtered);
 }
 
+function renderFeaturedReview() {
+  if (!elements.featuredPanel) return;
+
+  if (!state.featuredReviews.length) {
+    elements.featuredPanel.classList.add("is-hidden");
+    return;
+  }
+
+  const review = state.featuredReviews[state.featuredIndex % state.featuredReviews.length];
+
+  elements.featuredPanel.classList.remove("is-hidden");
+  elements.featuredTitle.textContent = review.title || "";
+  elements.featuredMeta.textContent = [review.publisher, review.genre].filter(Boolean).join(" / ");
+  elements.featuredScore.textContent = review.scoreLabel || formatRating(review.score) || "Ikke vurderet";
+  elements.featuredText.textContent = review.review || "";
+
+  if (review.image) {
+    elements.featuredImage.src = review.image;
+    elements.featuredImage.alt = review.title || "";
+  } else {
+    elements.featuredImage.removeAttribute("src");
+    elements.featuredImage.alt = "";
+  }
+
+  elements.featuredParams.innerHTML = "";
+
+  review.params.forEach((param) => {
+    const rawValue = normalizeText(param.value);
+    if (!rawValue) return;
+
+    const number = parseNumber(rawValue);
+    const row = document.createElement("div");
+    row.className = "featured-param";
+
+    const label = document.createElement("span");
+    label.className = "featured-param-name";
+    label.textContent = param.label;
+
+    if (number === null) {
+      row.classList.add("is-na");
+
+      const value = document.createElement("span");
+      value.className = "featured-param-value";
+      value.textContent = rawValue;
+
+      row.append(label, value);
+    } else {
+      const bar = document.createElement("div");
+      bar.className = "featured-param-bar";
+
+      const fill = document.createElement("span");
+      fill.className = "featured-param-fill";
+      fill.style.width = `${Math.max(0, Math.min(100, number * 10))}%`;
+
+      const value = document.createElement("span");
+      value.className = "featured-param-value";
+      value.textContent = formatRating(rawValue);
+
+      bar.appendChild(fill);
+      row.append(label, bar, value);
+    }
+
+    elements.featuredParams.appendChild(row);
+  });
+
+  elements.featuredDots.innerHTML = "";
+
+  state.featuredReviews.forEach((_, index) => {
+    const dot = document.createElement("button");
+    dot.type = "button";
+    dot.className = "featured-dot";
+
+    if (index === state.featuredIndex) {
+      dot.classList.add("active");
+    }
+
+    dot.addEventListener("click", () => {
+      state.featuredIndex = index;
+      renderFeaturedReview();
+      restartFeaturedRotation();
+    });
+
+    elements.featuredDots.appendChild(dot);
+  });
+}
+
+function startFeaturedRotation() {
+  if (state.featuredTimer) {
+    window.clearInterval(state.featuredTimer);
+  }
+
+  if (state.featuredReviews.length <= 1) return;
+
+  state.featuredTimer = window.setInterval(() => {
+    state.featuredIndex = (state.featuredIndex + 1) % state.featuredReviews.length;
+    renderFeaturedReview();
+  }, FEATURED_ROTATION_MS);
+}
+
+function restartFeaturedRotation() {
+  startFeaturedRotation();
+}
+
 function render() {
   updateActiveFilterUi();
   updateSortToggleUi();
   renderRecent();
   renderPodcastGrid();
+  renderFeaturedReview();
 }
 
 function setupEvents() {
@@ -839,6 +945,36 @@ async function loadPodcastObjectsFromCsv() {
   return rowsToObjects(rows);
 }
 
+async function loadFeaturedReviewObjects() {
+  try {
+    const response = await fetch(`${FEATURED_DATA_URL}&v=${Date.now()}`, {
+      cache: "no-store",
+    });
+
+    if (!response.ok) {
+      throw new Error("Kunne ikke hente udvalgte vurderinger.");
+    }
+
+    const csv = await response.text();
+    const rows = parseCsv(csv);
+
+    return rowsToObjects(rows);
+  } catch (error) {
+    return [];
+  }
+}
+
+function buildPodcastLookup(podcasts) {
+  const lookup = {};
+
+  podcasts.forEach((podcast) => {
+    if (!podcast.title) return;
+    lookup[normalizeMatchKey(podcast.title)] = podcast;
+  });
+
+  return lookup;
+}
+
 async function loadPodcasts() {
   try {
     let objects;
@@ -851,8 +987,19 @@ async function loadPodcasts() {
 
     state.podcasts = objects.map(mapPodcast).filter(isUsefulPodcast);
 
+    const podcastLookup = buildPodcastLookup(state.podcasts);
+    const featuredObjects = await loadFeaturedReviewObjects();
+
+    state.featuredReviews = featuredObjects
+      .map((row, index) => mapFeaturedReview(row, index, podcastLookup))
+      .filter(isActiveFeatured)
+      .sort((a, b) => a.displayOrder - b.displayOrder);
+
+    state.featuredIndex = 0;
+
     createGenreChips();
     render();
+    startFeaturedRotation();
   } catch (error) {
     elements.resultsText.textContent =
       "Kunne ikke indlæse podcasts. Tjek data/podcasts.json eller Google Sheets-linket.";
@@ -863,9 +1010,7 @@ async function loadPodcasts() {
 function loadVisitorCount() {
   const target = document.getElementById("goatcounter-visits");
 
-  if (!target) {
-    return;
-  }
+  if (!target) return;
 
   target.textContent = "indlæser…";
 
@@ -896,9 +1041,7 @@ function loadVisitorCount() {
     return false;
   };
 
-  if (renderCount()) {
-    return;
-  }
+  if (renderCount()) return;
 
   let attempts = 0;
   const interval = window.setInterval(() => {
