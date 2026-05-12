@@ -16,7 +16,7 @@
       rel="stylesheet"
     />
 
-    <link rel="stylesheet" href="style.css?v=25" />
+    <link rel="stylesheet" href="style.css?v=26" />
 
     <script
       data-goatcounter="https://podcastratings.goatcounter.com/count"
@@ -24,7 +24,7 @@
       src="//gc.zgo.at/count.js"
     ></script>
 
-    <script src="app.js?v=25" defer></script>
+    <script src="app.js?v=26" defer></script>
   </head>
 
   <body>
@@ -32,6 +32,10 @@
       <aside class="sidebar">
         <div class="sidebar-logo">
           <div class="logo-mark">P</div>
+          <div class="brand-copy">
+            <p class="brand-title">Podcast Favoritter</p>
+            <p class="brand-subtitle">af Mads Asp</p>
+          </div>
         </div>
 
         <section class="sidebar-section genre-nav">
@@ -52,13 +56,12 @@
             />
           </label>
 
-          <label class="sort-field">
-            <span>Sorter efter</span>
-            <select id="sortSelect">
-              <option value="placement-asc">Placering, lavest først</option>
-              <option value="placement-desc">Placering, højest først</option>
-            </select>
-          </label>
+          <div class="sort-field">
+            <span>Sortering</span>
+            <button id="sortToggle" class="sort-toggle" type="button">
+              Placering: lavest først
+            </button>
+          </div>
 
           <div id="activeFilterBox" class="active-filter-box is-hidden">
             <span class="active-filter-label">Aktivt filter</span>
