@@ -16,7 +16,7 @@
       rel="stylesheet"
     />
 
-    <link rel="stylesheet" href="style.css?v=23" />
+    <link rel="stylesheet" href="style.css?v=25" />
 
     <script
       data-goatcounter="https://podcastratings.goatcounter.com/count"
@@ -24,7 +24,7 @@
       src="//gc.zgo.at/count.js"
     ></script>
 
-    <script src="app.js?v=23" defer></script>
+    <script src="app.js?v=25" defer></script>
   </head>
 
   <body>
@@ -59,6 +59,17 @@
               <option value="placement-desc">Placering, højest først</option>
             </select>
           </label>
+
+          <div id="activeFilterBox" class="active-filter-box is-hidden">
+            <span class="active-filter-label">Aktivt filter</span>
+            <button id="activeFilterPill" class="active-filter-pill" type="button">
+              <span id="activeFilterText"></span>
+              <span aria-hidden="true">×</span>
+            </button>
+            <button id="clearFilterButton" class="clear-filter-button" type="button">
+              Ryd filter
+            </button>
+          </div>
         </section>
       </aside>
 
