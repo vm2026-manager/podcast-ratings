@@ -3,7 +3,7 @@ const path = require("path");
 const https = require("https");
 
 const FEATURED_CSV_URL =
-  "https://docs.google.com/spreadsheets/d/e/2PACX-1vQRBWQdj-WDNN3l9yxIMCCu_O2dYfP7modSODcYgJRoQDG3GYsu83W_wIFyijPx6v8l-W011zrFyOdq/pub?gid=1751899380&single=true&output=csv";
+  "https://docs.google.com/spreadsheets/d/e/2PACX-1vQRBWQdj-WDNN3l9yxIMCCu_O2dYfP7modSODcYgJRoQDG3GYsu83W_wIFyijPx6v8l-W011zrFyOdq/gviz/tq?tqx=out:csv&sheet=Udvalgte%20vurderinger";
 
 const OUTPUT_PATH = path.join(__dirname, "..", "data", "featured-reviews.json");
 
@@ -110,7 +110,9 @@ async function main() {
   const rows = parseCsv(csv);
   const objects = rowsToObjects(rows);
 
-  const usefulRows = objects.filter((row) => cleanCell(row["Titel"]) !== "");
+  const usefulRows = objects.filter((row) => {
+    return cleanCell(row["Aktiv"]) !== "" && cleanCell(row["Titel"]) !== "";
+  });
 
   const payload = {
     generatedAt: new Date().toISOString(),
