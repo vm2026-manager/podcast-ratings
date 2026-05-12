@@ -504,11 +504,21 @@ function mapFeaturedReview(row, index, podcastLookup) {
   const title = getField(row, ["Titel"]);
   const matchTitle = getField(row, ["Matchtitel"]) || title;
   const review = getField(row, ["Kort vurdering"]);
-  const story = getField(row, ["Historie/sag"]);
-  const storytelling = getField(row, ["Fortælling", "Fortaelling"]);
-  const narrator = getField(row, ["Vært/formidling", "Vaert/formidling"]);
-  const production = getField(row, ["Produktion"]);
-  const relevance = getField(row, ["Aktualitet/relevans", "Aktualitet"]);
+
+  const story = getField(row, ["Historie", "Historie/sag"]);
+  const narrator = getField(row, [
+    "Fortæller",
+    "Fortaeller",
+    "Vært/formidling",
+    "Vaert/formidling",
+  ]);
+  const sound = getField(row, ["Lydside", "Produktion"]);
+  const relevance = getField(row, [
+    "Aktualitet",
+    "Aktualitet/relevans",
+    "Relevans",
+  ]);
+
   const score = getField(row, ["Samlet score"]);
   const displayOrder = parsePlacement(getField(row, ["Visningsrækkefølge"]));
   const autoPublisher = getField(row, ["Auto-udgiver"]);
@@ -534,9 +544,8 @@ function mapFeaturedReview(row, index, podcastLookup) {
     host: autoHost || matchedPodcast?.host || "",
     params: [
       { label: "Historie", value: story },
-      { label: "Fortælling", value: storytelling },
       { label: "Fortæller", value: narrator },
-      { label: "Produktion", value: production },
+      { label: "Lydside", value: sound },
       { label: "Aktualitet", value: relevance },
     ],
   };
