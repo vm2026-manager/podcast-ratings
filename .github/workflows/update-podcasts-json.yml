@@ -12,6 +12,9 @@ jobs:
   update-podcasts-json:
     runs-on: ubuntu-latest
 
+    env:
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -19,13 +22,22 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: "20"
+          node-version: "24"
+
+      - name: Show Node version
+        run: node --version
 
       - name: Build podcasts JSON
         run: node tools/build-podcasts-json.js
 
       - name: Build featured reviews JSON
         run: node tools/build-featured-reviews-json.js
+
+      - name: Check generated files
+        run: |
+          test -f data/podcasts.json
+          test -f data/featured-reviews.json
+          node -e "const fs=require('fs'); JSON.parse(fs.readFileSync('data/podcasts.json','utf8')); JSON.parse(fs.readFileSync('data/featured-reviews.json','utf8')); console.log('JSON files are valid')"
 
       - name: Commit updated JSON files
         uses: stefanzweifel/git-auto-commit-action@v5
