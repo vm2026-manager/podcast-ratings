@@ -16,7 +16,7 @@
       rel="stylesheet"
     />
 
-    <link rel="stylesheet" href="style.css?v=34" />
+    <link rel="stylesheet" href="style.css?v=35" />
 
     <script
       data-goatcounter="https://podcastratings.goatcounter.com/count"
@@ -24,7 +24,7 @@
       src="//gc.zgo.at/count.js"
     ></script>
 
-    <script src="app.js?v=33" defer></script>
+    <script src="app.js?v=35" defer></script>
   </head>
 
   <body>
@@ -55,13 +55,6 @@
               placeholder="Søg efter titel, vært eller udgiver"
             />
           </label>
-
-          <div class="sort-field">
-            <span>Sortering</span>
-            <button id="sortToggle" class="sort-toggle" type="button">
-              Placering: lavest først
-            </button>
-          </div>
 
           <div id="activeFilterBox" class="active-filter-box is-hidden">
             <span class="active-filter-label">Aktivt filter</span>
@@ -132,8 +125,15 @@
           <div id="recentGrid" class="recent-grid"></div>
         </section>
 
-        <section class="summary" aria-live="polite">
+        <section class="ranking-toolbar" aria-live="polite">
           <p id="resultsText">Indlæser podcasts...</p>
+
+          <div class="sort-field sort-field--ranking">
+            <span>Sortering</span>
+            <button id="sortToggle" class="sort-toggle" type="button">
+              Placering: lavest først
+            </button>
+          </div>
         </section>
 
         <section
