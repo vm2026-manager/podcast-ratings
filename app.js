@@ -81,6 +81,87 @@ function normalizeMatchKey(value) {
     .trim();
 }
 
+function normalizeSearchValue(value) {
+  return String(value || "")
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/&/g, " og ")
+    .replace(/[^\p{L}\p{N}]+/gu, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function compactSearchValue(value) {
+  return normalizeSearchValue(value).replace(/\s+/g, "");
+}
+
+function expandSearchAliases(value) {
+  const normal = normalizeSearchValue(value);
+  const compact = compactSearchValue(value);
+  const aliases = new Set([normal, compact]);
+
+  const radio24Pattern =
+    normal.includes("radio 24 7") ||
+    normal.includes("radio 24 syv") ||
+    normal.includes("24 7") ||
+    normal.includes("24 syv") ||
+    compact.includes("radio247") ||
+    compact.includes("radio24syv") ||
+    compact.includes("247") ||
+    compact.includes("24syv");
+
+  if (radio24Pattern) {
+    [
+      "radio24syv",
+      "radio 24 syv",
+      "radio 24 7",
+      "radio247",
+      "24syv",
+      "24 syv",
+      "24 7",
+      "247",
+    ].forEach((alias) => aliases.add(alias));
+  }
+
+  const radio4Pattern =
+    normal.includes("radio 4") ||
+    normal.includes("radio fire") ||
+    normal.includes("radio iiii") ||
+    normal.includes("radio llll") ||
+    compact.includes("radio4") ||
+    compact.includes("radioiiii") ||
+    compact.includes("radiollll");
+
+  if (radio4Pattern) {
+    [
+      "radio 4",
+      "radio4",
+      "radio fire",
+      "radio iiii",
+      "radioiiii",
+      "radio llll",
+      "radiollll",
+      "r4dio",
+      "radio iiii krimiland",
+      "radio4 krimiland",
+    ].forEach((alias) => aliases.add(alias));
+  }
+
+  return [...aliases].filter(Boolean).join(" ");
+}
+
+function buildSearchText(parts) {
+  return parts
+    .flatMap((part) => {
+      const value = normalizeText(part);
+      if (!value) return [];
+      return [value, expandSearchAliases(value)];
+    })
+    .join(" ")
+    .toLowerCase();
+}
+
 function getField(row, candidates) {
   const keys = Object.keys(row);
   const normalizedCandidates = candidates.map(normalizeKey);
@@ -482,7 +563,7 @@ function mapPodcast(row, index) {
     image,
     description,
     placement: placement ?? index + 1,
-    searchText: [
+    searchText: buildSearchText([
       title,
       host,
       rawGenre,
@@ -493,9 +574,7 @@ function mapPodcast(row, index) {
       link,
       ratingDate,
       description,
-    ]
-      .join(" ")
-      .toLowerCase(),
+    ]),
   };
 }
 
@@ -621,7 +700,13 @@ function getFilteredPodcasts() {
 
       if (!state.searchTerm) return true;
 
-      return podcast.searchText.includes(state.searchTerm.toLowerCase());
+      const query = expandSearchAliases(state.searchTerm);
+      const queryParts = query
+        .split(" ")
+        .map((part) => part.trim())
+        .filter(Boolean);
+
+      return queryParts.every((part) => podcast.searchText.includes(part));
     })
     .sort((a, b) => {
       if (state.sort === "placement-desc") return b.placement - a.placement;
