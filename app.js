@@ -47,6 +47,7 @@ const elements = {
   featuredTitle: document.getElementById("featuredTitle"),
   featuredMeta: document.getElementById("featuredMeta"),
   featuredScore: document.getElementById("featuredScore"),
+  featuredDate: document.getElementById("featuredDate"),
   featuredText: document.getElementById("featuredText"),
   featuredParams: document.getElementById("featuredParams"),
   featuredDots: document.getElementById("featuredDots"),
@@ -251,6 +252,11 @@ function formatDate(value) {
     month: "2-digit",
     year: "numeric",
   }).format(date);
+}
+
+function formatFeaturedDate(value) {
+  const formatted = formatDate(value);
+  return formatted ? `Anmeldt ${formatted}` : "";
 }
 
 function normalizeGenre(value) {
@@ -599,6 +605,7 @@ function mapFeaturedReview(row, index, podcastLookup) {
   ]);
 
   const score = getField(row, ["Samlet score"]);
+  const reviewDate = getField(row, ["Anmeldelsesdato", "Anmeldelsesdat", "Anmeldt"]);
   const displayOrder = parsePlacement(getField(row, ["Visningsrækkefølge"]));
   const autoPublisher = getField(row, ["Auto-udgiver"]);
   const autoLink = getField(row, ["Auto-link"]);
@@ -615,6 +622,8 @@ function mapFeaturedReview(row, index, podcastLookup) {
     review,
     score,
     scoreLabel: formatRating(score),
+    reviewDate,
+    reviewDateLabel: formatFeaturedDate(reviewDate),
     displayOrder: displayOrder ?? index + 1,
     publisher: normalizePublisher(autoPublisher || matchedPodcast?.publisher || ""),
     link: autoLink || matchedPodcast?.link || "",
@@ -901,6 +910,11 @@ function renderFeaturedReview() {
   elements.featuredTitle.textContent = review.title || "";
   elements.featuredMeta.textContent = [review.publisher, review.genre].filter(Boolean).join(" / ");
   elements.featuredScore.textContent = review.scoreLabel || formatRating(review.score) || "Ikke vurderet";
+
+  if (elements.featuredDate) {
+    elements.featuredDate.textContent = review.reviewDateLabel || "";
+  }
+
   elements.featuredText.textContent = review.review || "";
 
   if (review.image) {
