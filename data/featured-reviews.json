@@ -1,9 +1,9 @@
 {
-  "generatedAt": "2026-05-13T13:20:48.499Z",
+  "generatedAt": "2026-05-13T14:29:11.546Z",
   "source": "https://docs.google.com/spreadsheets/d/e/2PACX-1vQRBWQdj-WDNN3l9yxIMCCu_O2dYfP7modSODcYgJRoQDG3GYsu83W_wIFyijPx6v8l-W011zrFyOdq/pub?gid=1418051000&single=true&output=csv",
   "sheetName": "Udvalgte vurderinger",
   "gid": "1418051000",
-  "count": 2,
+  "count": 3,
   "rows": [
     {
       "Aktiv": "JA",
@@ -17,7 +17,7 @@
       "Aktualitet/relevans": "Ikke relevant",
       "Samlet score": "6,8",
       "Anmeldelsesdato": "12-05-2026",
-      "Visningsrækkefølge": "2",
+      "Visningsrækkefølge": "3",
       "Auto-udgiver": "Heartbeats",
       "Auto-link": "https://podcasts.apple.com/dk/podcast/s19e10-adolphus-greely-den-store-kannibalekspedition/id1519774517?i=1000766161839",
       "Auto-billedlink": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS_0VHr4_BB-Xk2o1s8TXB0yTAltd3PtBOtMEXRY2kzvg&s",
@@ -36,12 +36,31 @@
       "Aktualitet/relevans": "Ikke relevant",
       "Samlet score": "8",
       "Anmeldelsesdato": "12-05-2026",
-      "Visningsrækkefølge": "1",
+      "Visningsrækkefølge": "2",
       "Auto-udgiver": "DR",
-      "Auto-link": "https://www.dr.dk/lyd/p1/bakspejl/bakspejl-2026/karikaturkrisen-11802351203",
+      "Auto-link": "https://www.dr.dk/lyd/special-radio/bakspejl/bakspejl-2021/karikaturkrisen-1-4-selvcensur-11162111041",
       "Auto-billedlink": "https://cachedimages.podchaser.com/256x256/aHR0cHM6Ly9hcGkuZHIuZGsvcG9kY2FzdHMvdjEvaW1hZ2VzL3Vybjpkcjpwb2RjYXN0OmltYWdlOjY3ZTE0ZDZmNjI3M2U4ZmM3MDc3YWE1My5qcGc%3D/aHR0cHM6Ly93d3cucG9kY2hhc2VyLmNvbS9pbWFnZXMvbWlzc2luZy1pbWFnZS5wbmc%3D",
       "Auto-genre": "Historie",
       "Auto-vært": "Martin Grønne"
+    },
+    {
+      "Aktiv": "JA",
+      "Titel": "Morfinbyen",
+      "Matchtitel": "Morfinbyen",
+      "Kort vurdering": "Vigtigt og aktuelt emne om opioidmisbrug i Danmark, men serien forbliver lidt for overfladisk og kommer aldrig helt ind under huden på miljøet. Til gengæld bæres podcasten af sikre fortællere og en solid, stemningsfuld lydside.",
+      "Historie/sag": "5",
+      "Fortælling": "6,7",
+      "Vært/formidling": "6,2",
+      "Produktion": "4",
+      "Aktualitet/relevans": "5,5",
+      "Samlet score": "5,2",
+      "Anmeldelsesdato": "13-05-2026",
+      "Visningsrækkefølge": "1",
+      "Auto-udgiver": "DR",
+      "Auto-link": "https://open.spotify.com/show/1yd6kWvplIjrDwqCezFQBA",
+      "Auto-billedlink": "https://cdn.podimo.com/images/11614209-f6a0-4dcb-9ffe-051131b6661c_400x400.png",
+      "Auto-genre": "Dokumentar",
+      "Auto-vært": "Nicholas Durup Thomsen"
     }
   ]
 }
