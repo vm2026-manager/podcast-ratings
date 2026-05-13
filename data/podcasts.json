@@ -1,7 +1,7 @@
 {
-  "generatedAt": "2026-05-13T10:35:40.875Z",
+  "generatedAt": "2026-05-13T13:20:47.545Z",
   "source": "https://docs.google.com/spreadsheets/d/e/2PACX-1vQRBWQdj-WDNN3l9yxIMCCu_O2dYfP7modSODcYgJRoQDG3GYsu83W_wIFyijPx6v8l-W011zrFyOdq/pub?gid=0&single=true&output=csv",
-  "count": 523,
+  "count": 522,
   "rows": [
     {
       "Placering": "1",
@@ -923,7 +923,7 @@
     },
     {
       "Placering": "55",
-      "Titel": "Narkobetjenten og den kriminelle underverden (Sæson 3)",
+      "Titel": "Narkobetjenten & den kriminelle underverden (Sæson 3)",
       "Vært": "Pernille Brunse & Rene Dahl Ansen",
       "Vuring (1-10)": "8,2",
       "Genre": "True Crime",
@@ -1398,23 +1398,6 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "83",
-      "Titel": "Karikaturkrisen",
-      "Vært": "Martin Grønne",
-      "Vuring (1-10)": "8,0",
-      "Genre": "Historie",
-      "Udgiver": "DR",
-      "Antal afsnit": "4",
-      "Årstal afspillet": "",
-      "Link": "https://www.dr.dk/lyd/special-radio/bakspejl/bakspejl-2021/karikaturkrisen-1-4-selvcensur-11162111041",
-      "Afgivet vurdering": "11-05-2026",
-      "Billedlink": "https://cachedimages.podchaser.com/256x256/aHR0cHM6Ly9hcGkuZHIuZGsvcG9kY2FzdHMvdjEvaW1hZ2VzL3Vybjpkcjpwb2RjYXN0OmltYWdlOjY3ZTE0ZDZmNjI3M2U4ZmM3MDc3YWE1My5qcGc%3D/aHR0cHM6Ly93d3cucG9kY2hhc2VyLmNvbS9pbWFnZXMvbWlzc2luZy1pbWFnZS5wbmc%3D",
-      "Kort beskrivelse": "Om Muhammedtegningerne, krisen de udløste og Danmarks rolle i verdens øjne.",
-      "": "",
-      "Endnu ikke hørt": "",
-      "Nævneværdige episo:": ""
-    },
-    {
       "Placering": "84",
       "Titel": "I hælene på Britta",
       "Vært": "Per Lysholt",
@@ -1484,6 +1467,23 @@
     },
     {
       "Placering": "88",
+      "Titel": "Karikaturkrisen",
+      "Vært": "Martin Grønne",
+      "Vuring (1-10)": "8,0",
+      "Genre": "Historie",
+      "Udgiver": "DR",
+      "Antal afsnit": "4",
+      "Årstal afspillet": "2026",
+      "Link": "https://www.dr.dk/lyd/special-radio/bakspejl/bakspejl-2021/karikaturkrisen-1-4-selvcensur-11162111041",
+      "Afgivet vurdering": "11-05-2026",
+      "Billedlink": "https://cachedimages.podchaser.com/256x256/aHR0cHM6Ly9hcGkuZHIuZGsvcG9kY2FzdHMvdjEvaW1hZ2VzL3Vybjpkcjpwb2RjYXN0OmltYWdlOjY3ZTE0ZDZmNjI3M2U4ZmM3MDc3YWE1My5qcGc%3D/aHR0cHM6Ly93d3cucG9kY2hhc2VyLmNvbS9pbWFnZXMvbWlzc2luZy1pbWFnZS5wbmc%3D",
+      "Kort beskrivelse": "Om Muhammedtegningerne, krisen de udløste og Danmarks rolle i verden.",
+      "": "",
+      "Endnu ikke hørt": "",
+      "Nævneværdige episo:": ""
+    },
+    {
+      "Placering": "89",
       "Titel": "24syv Morgen",
       "Vært": "Asger Juhl, Ida Herskind & Knud Brix",
       "Vuring (1-10)": "7,9",
@@ -1500,7 +1500,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "89",
+      "Placering": "90",
       "Titel": "Genstart",
       "Vært": "Knud Brix, Simon Stefanski, Anna Ingrisch",
       "Vuring (1-10)": "7,9",
@@ -1517,7 +1517,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "90",
+      "Placering": "91",
       "Titel": "Livet ifølge Emil og Thomas",
       "Vært": "Emil Thorup & Thomas Skov",
       "Vuring (1-10)": "7,9",
@@ -1534,7 +1534,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "91",
+      "Placering": "92",
       "Titel": "Q&CO",
       "Vært": "Henrik Qvortrup",
       "Vuring (1-10)": "7,8",
@@ -1551,7 +1551,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "92",
+      "Placering": "93",
       "Titel": "Guld og grønne skove",
       "Vært": "Lars Trier M&ensen",
       "Vuring (1-10)": "7,8",
@@ -1568,7 +1568,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "93",
+      "Placering": "94",
       "Titel": "Brinkmanns Briks",
       "Vært": "Svend Brinkmann",
       "Vuring (1-10)": "7,8",
@@ -1585,7 +1585,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "94",
+      "Placering": "95",
       "Titel": "Adfærd",
       "Vært": "Morten Münster",
       "Vuring (1-10)": "7,8",
@@ -1602,7 +1602,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "95",
+      "Placering": "96",
       "Titel": "Borgen unplugged 2.0",
       "Vært": "Martin Flink & Anders Langballe",
       "Vuring (1-10)": "7,8",
@@ -1619,7 +1619,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "96",
+      "Placering": "97",
       "Titel": "Den sande historie om Ed Gein",
       "Vært": "Kristoffer Lind & Signe Frederikke Pedersen",
       "Vuring (1-10)": "7,8",
@@ -1636,7 +1636,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "97",
+      "Placering": "98",
       "Titel": "FE-kvindens hemmelighed",
       "Vært": "Anna Ingrisch, Trine Maria ilsø",
       "Vuring (1-10)": "7,8",
@@ -1653,7 +1653,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "98",
+      "Placering": "99",
       "Titel": "Jagten på det evige liv",
       "Vært": "Frederik Dirks Gottlieb & Nicklas Brendborg",
       "Vuring (1-10)": "7,8",
@@ -1670,7 +1670,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "99",
+      "Placering": "100",
       "Titel": "Narkobetjenten sæson 14",
       "Vært": "Pernille Brunse & Rene Dahl Ansen",
       "Vuring (1-10)": "7,8",
@@ -1687,7 +1687,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "100",
+      "Placering": "101",
       "Titel": "Gestapos danske mand",
       "Vært": "Per Lysholt",
       "Vuring (1-10)": "7,8",
@@ -1704,7 +1704,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "101",
+      "Placering": "102",
       "Titel": "Det falske match",
       "Vært": "Helle Fuusager",
       "Vuring (1-10)": "7,8",
@@ -1721,7 +1721,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "102",
+      "Placering": "103",
       "Titel": "Kvindefængslet",
       "Vært": "Helle Fuusager",
       "Vuring (1-10)": "7,8",
@@ -1738,7 +1738,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "103",
+      "Placering": "104",
       "Titel": "Revolver",
       "Vært": "Rene Fredensborg",
       "Vuring (1-10)": "7,8",
@@ -1755,7 +1755,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "104",
+      "Placering": "105",
       "Titel": "Hva så?!",
       "Vært": "Christian Fuhlendorff",
       "Vuring (1-10)": "7,8",
@@ -1772,7 +1772,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "105",
+      "Placering": "106",
       "Titel": "Der er brev!",
       "Vært": "Frederikke Stage",
       "Vuring (1-10)": "7,8",
@@ -1789,7 +1789,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "106",
+      "Placering": "107",
       "Titel": "Tabloid",
       "Vært": "Marie Louise Toksvig",
       "Vuring (1-10)": "7,8",
@@ -1806,7 +1806,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "107",
+      "Placering": "108",
       "Titel": "Fodbold FM",
       "Vært": "Steffen Gronemann, Rasmus Dam, Lasse Vøge & Søren Hanghøj",
       "Vuring (1-10)": "7,8",
@@ -1823,7 +1823,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "108",
+      "Placering": "109",
       "Titel": "Ugens Krise",
       "Vært": "Anna Thygense & Lasse",
       "Vuring (1-10)": "7,8",
@@ -1840,7 +1840,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "109",
+      "Placering": "110",
       "Titel": "En Uafhængig Morgen",
       "Vært": "Asger Juhl",
       "Vuring (1-10)": "7,8",
@@ -1857,8 +1857,8 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "110",
-      "Titel": "Narkobetjenten og den kriminelle unverden (Sæson 6)",
+      "Placering": "111",
+      "Titel": "Narkobetjenten og den kriminelle underverden (Sæson 6)",
       "Vært": "Pernille Brunse & Rene Dahl Ansen",
       "Vuring (1-10)": "7,8",
       "Genre": "True Crime",
@@ -1874,7 +1874,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "111",
+      "Placering": "112",
       "Titel": "Troels Bech i en samtale",
       "Vært": "Troels Bech",
       "Vuring (1-10)": "7,8",
@@ -1891,7 +1891,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "112",
+      "Placering": "113",
       "Titel": "Fredagsfrokosten",
       "Vært": "Peter Brüchmann",
       "Vuring (1-10)": "7,8",
@@ -1908,7 +1908,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "113",
+      "Placering": "114",
       "Titel": "Alting haster",
       "Vært": "Theis Ehler Molin & Mathias Mencke",
       "Vuring (1-10)": "7,8",
@@ -1925,7 +1925,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "114",
+      "Placering": "115",
       "Titel": "Den sorte prins",
       "Vært": "Martin Grønne",
       "Vuring (1-10)": "7,8",
@@ -1942,7 +1942,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "115",
+      "Placering": "116",
       "Titel": "Victor Lustig",
       "Vært": "Signe Frederikke Pedersen",
       "Vuring (1-10)": "7,8",
@@ -1959,7 +1959,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "116",
+      "Placering": "117",
       "Titel": "Slotsholmen",
       "Vært": "Thomas Buhl & Pia Glud Munksgaard",
       "Vuring (1-10)": "7,7",
@@ -1976,7 +1976,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "117",
+      "Placering": "118",
       "Titel": "Vi ser på det",
       "Vært": "Mikkel Lind Sorgenfrey",
       "Vuring (1-10)": "7,7",
@@ -1993,7 +1993,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "118",
+      "Placering": "119",
       "Titel": "Tiden",
       "Vært": "Simon Stefanski",
       "Vuring (1-10)": "7,7",
@@ -2010,7 +2010,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "119",
+      "Placering": "120",
       "Titel": "Mediano Transfer",
       "Vært": "Rasmus Monnerup, Sune Blom & Gisle Thorsen",
       "Vuring (1-10)": "7,7",
@@ -2027,7 +2027,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "120",
+      "Placering": "121",
       "Titel": "Der' brev!",
       "Vært": "Emil kondrup",
       "Vuring (1-10)": "7,7",
@@ -2044,7 +2044,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "121",
+      "Placering": "122",
       "Titel": "O.J. Simpson og århundredets retssag",
       "Vært": "Signe Frederikke Pedersen",
       "Vuring (1-10)": "7,7",
@@ -2061,7 +2061,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "122",
+      "Placering": "123",
       "Titel": "Rwanda - verdens hurtigste folkemord",
       "Vært": "Adam Holm & Jørn Stjerneklar",
       "Vuring (1-10)": "7,7",
@@ -2078,7 +2078,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "123",
+      "Placering": "124",
       "Titel": "Transferguru",
       "Vært": "Farzam Abolhosseini & Peter Hjulmand",
       "Vuring (1-10)": "7,7",
@@ -2095,7 +2095,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "124",
+      "Placering": "125",
       "Titel": "Guldfuglen",
       "Vært": "Per Lysholt",
       "Vuring (1-10)": "7,7",
@@ -2112,7 +2112,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "125",
+      "Placering": "126",
       "Titel": "Massemorderen Richard Speck",
       "Vært": "Kristoffer Lind & Signe Frederikke Pedersen",
       "Vuring (1-10)": "7,7",
@@ -2129,7 +2129,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "126",
+      "Placering": "127",
       "Titel": "Kolonien",
       "Vært": "Martin Grønne",
       "Vuring (1-10)": "7,7",
@@ -2146,7 +2146,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "127",
+      "Placering": "128",
       "Titel": "Narkobetjenten (sæson 15)",
       "Vært": "Pernille Brunse & Rene Dahl Ansen",
       "Vuring (1-10)": "7,7",
@@ -2163,7 +2163,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "128",
+      "Placering": "129",
       "Titel": "Danmarks største fangeoprør",
       "Vært": "Per Lysholt",
       "Vuring (1-10)": "7,7",
@@ -2180,7 +2180,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "129",
+      "Placering": "130",
       "Titel": "På flugt fra min stalker",
       "Vært": "Emil Eusebius Olhoff-Jakobsen",
       "Vuring (1-10)": "7,7",
@@ -2197,7 +2197,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "130",
+      "Placering": "131",
       "Titel": "Batman",
       "Vært": "Per Lysholt",
       "Vuring (1-10)": "7,7",
@@ -2214,7 +2214,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "131",
+      "Placering": "132",
       "Titel": "112 for knuste hjerter",
       "Vært": "Maria Jencel",
       "Vuring (1-10)": "7,7",
@@ -2231,7 +2231,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "132",
+      "Placering": "133",
       "Titel": "Prompt",
       "Vært": "Marcel Mirzaei-Fard & Henrik Moltke",
       "Vuring (1-10)": "7,7",
@@ -2248,7 +2248,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "133",
+      "Placering": "134",
       "Titel": "Hooligans",
       "Vært": "Maya Westander & Kristian Kornø",
       "Vuring (1-10)": "7,7",
@@ -2265,7 +2265,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "134",
+      "Placering": "135",
       "Titel": "Et langsomt mord",
       "Vært": "Adrian Adler Petersen",
       "Vuring (1-10)": "7,7",
@@ -2282,7 +2282,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "135",
+      "Placering": "136",
       "Titel": "Ingen kommentarer",
       "Vært": "Brian Weichard, James Niles & Emma Buus",
       "Vuring (1-10)": "7,7",
@@ -2299,7 +2299,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "136",
+      "Placering": "137",
       "Titel": "Lasses Brevkasse",
       "Vært": "Lasse Peter Laursen",
       "Vuring (1-10)": "7,7",
@@ -2316,7 +2316,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "137",
+      "Placering": "138",
       "Titel": "Danske Drabssager",
       "Vært": "Stine Bolther",
       "Vuring (1-10)": "7,7",
@@ -2333,7 +2333,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "138",
+      "Placering": "139",
       "Titel": "Det perfekte offer ll",
       "Vært": "Emil Eusebius Olhoff-Jakobsen",
       "Vuring (1-10)": "7,7",
@@ -2350,7 +2350,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "139",
+      "Placering": "140",
       "Titel": "S-Town",
       "Vært": "Brian Reed",
       "Vuring (1-10)": "7,7",
@@ -2367,7 +2367,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "140",
+      "Placering": "141",
       "Titel": "Spionchefens hemmelighed",
       "Vært": "Asger Juhl",
       "Vuring (1-10)": "7,7",
@@ -2384,7 +2384,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "141",
+      "Placering": "142",
       "Titel": "Breve fra Englene",
       "Vært": "Krister Moltzen",
       "Vuring (1-10)": "7,7",
@@ -2401,7 +2401,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "142",
+      "Placering": "143",
       "Titel": "Én gang psykopat",
       "Vært": "Per Lysholt",
       "Vuring (1-10)": "7,7",
@@ -2418,7 +2418,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "143",
+      "Placering": "144",
       "Titel": "Syv sprøjter med blod",
       "Vært": "Nicholas Durup Thomsen",
       "Vuring (1-10)": "7,7",
@@ -2435,7 +2435,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "144",
+      "Placering": "145",
       "Titel": "Sallys Scientology",
       "Vært": "Mikkel Clausen",
       "Vuring (1-10)": "7,7",
@@ -2452,7 +2452,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "145",
+      "Placering": "146",
       "Titel": "EM-bold",
       "Vært": "Sandro Spasojevic",
       "Vuring (1-10)": "7,7",
@@ -2469,7 +2469,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "146",
+      "Placering": "147",
       "Titel": "Opgøret",
       "Vært": "Puk Damsgaard",
       "Vuring (1-10)": "7,7",
@@ -2486,7 +2486,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "147",
+      "Placering": "148",
       "Titel": "Skåret i stykker",
       "Vært": "Andreas Østergaard",
       "Vuring (1-10)": "7,7",
@@ -2503,7 +2503,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "148",
+      "Placering": "149",
       "Titel": "Whistleblower",
       "Vært": "Rasmus Knudsen & Mads Dall",
       "Vuring (1-10)": "7,7",
@@ -2520,7 +2520,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "149",
+      "Placering": "150",
       "Titel": "Bag vesten",
       "Vært": "Camilla Marie Nielsen & Brian Sandberg",
       "Vuring (1-10)": "7,6",
@@ -2537,7 +2537,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "150",
+      "Placering": "151",
       "Titel": "Partners in crime",
       "Vært": "Jim & Nicoline Latrache-Qvortrup",
       "Vuring (1-10)": "7,6",
@@ -2549,23 +2549,6 @@
       "Afgivet vurdering": "",
       "Billedlink": "https://img.podimo.com/images/33daa3b5-5225-446c-9cc6-2259503bcf9e?h=400&s=JHlHCCtVbo8vh4DYlrQOaVTKjgA%3D&w=400",
       "Kort beskrivelse": "Jim og Nicoline Latrache-Qvortrup taler om forbrydelser, relationer og sager.",
-      "": "",
-      "Endnu ikke hørt": "",
-      "Nævneværdige episo:": ""
-    },
-    {
-      "Placering": "151",
-      "Titel": "Adolphus Greely: Den store kannibalekspedition",
-      "Vært": "Henrik Egede Lassen",
-      "Vuring (1-10)": "6,8",
-      "Genre": "Historie",
-      "Udgiver": "Heartbeats",
-      "Antal afsnit": "1",
-      "Årstal afspillet": "2026",
-      "Link": "https://podcasts.apple.com/dk/podcast/s19e10-adolphus-greely-den-store-kannibalekspedition/id1519774517?i=1000766161839",
-      "Afgivet vurdering": "11-05-2026",
-      "Billedlink": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS_0VHr4_BB-Xk2o1s8TXB0yTAltd3PtBOtMEXRY2kzvg&s",
-      "Kort beskrivelse": "En arktisk ekspedition strandes i isen, og kampen for overlevelse udvikler sig katastrofalt.",
       "": "",
       "Endnu ikke hørt": "",
       "Nævneværdige episo:": ""
@@ -4272,23 +4255,6 @@
     },
     {
       "Placering": "252",
-      "Titel": "Karikaturkrisen",
-      "Vært": "Martin Grønne",
-      "Vuring (1-10)": "7,9",
-      "Genre": "Historie",
-      "Udgiver": "DR",
-      "Antal afsnit": "4",
-      "Årstal afspillet": "2026",
-      "Link": "https://www.dr.dk/lyd/p1/bakspejl/bakspejl-2026/karikaturkrisen-11802351203",
-      "Afgivet vurdering": "11-05-2026",
-      "Billedlink": "https://cachedimages.podchaser.com/256x256/aHR0cHM6Ly9hcGkuZHIuZGsvcG9kY2FzdHMvdjEvaW1hZ2VzL3Vybjpkcjpwb2RjYXN0OmltYWdlOjY3ZTE0ZDZmNjI3M2U4ZmM3MDc3YWE1My5qcGc%3D/aHR0cHM6Ly93d3cucG9kY2hhc2VyLmNvbS9pbWFnZXMvbWlzc2luZy1pbWFnZS5wbmc%3D",
-      "Kort beskrivelse": "Om Muhammedtegningerne, krisen de udløste og Danmarks rolle i verden.",
-      "": "",
-      "Endnu ikke hørt": "",
-      "Nævneværdige episo:": ""
-    },
-    {
-      "Placering": "253",
       "Titel": "#DKpol",
       "Vært": "Esben Schjørring & Jakob Nielsen",
       "Vuring (1-10)": "6,9",
@@ -4305,7 +4271,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "254",
+      "Placering": "253",
       "Titel": "Danskertjek",
       "Vært": "Kenneth Hansen",
       "Vuring (1-10)": "6,9",
@@ -4322,7 +4288,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "255",
+      "Placering": "254",
       "Titel": "Min mor blev ramt af en sekt",
       "Vært": "Per Lysholt",
       "Vuring (1-10)": "6,9",
@@ -4339,7 +4305,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "256",
+      "Placering": "255",
       "Titel": "Narkobetjenten (sæson 12)",
       "Vært": "Rene Dahl Andersen & Pernille Brunse",
       "Vuring (1-10)": "6,9",
@@ -4356,7 +4322,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "257",
+      "Placering": "256",
       "Titel": "Huset færch (sæson 2)",
       "Vært": "Mads Brügger & Carsten Norton",
       "Vuring (1-10)": "6,9",
@@ -4373,7 +4339,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "258",
+      "Placering": "257",
       "Titel": "Døgnet der rystede Danmark",
       "Vært": "",
       "Vuring (1-10)": "6,9",
@@ -4390,7 +4356,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "259",
+      "Placering": "258",
       "Titel": "Jagten på Mrs Chelsea Williams millioner",
       "Vært": "Per lysholt",
       "Vuring (1-10)": "6,9",
@@ -4407,7 +4373,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "260",
+      "Placering": "259",
       "Titel": "Fodbold var værre i 70'erne",
       "Vært": "Dan Hammer, Thomas Pyndt & Sebastian Stanbury",
       "Vuring (1-10)": "6,9",
@@ -4424,7 +4390,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "261",
+      "Placering": "260",
       "Titel": "Narkobetjenten (sæson 10)",
       "Vært": "Rene Dahl Andersen & Pernille Brunse",
       "Vuring (1-10)": "6,9",
@@ -4441,7 +4407,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "262",
+      "Placering": "261",
       "Titel": "Mette og magten",
       "Vært": "Anne Kirstine Cramon",
       "Vuring (1-10)": "6,9",
@@ -4458,7 +4424,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "263",
+      "Placering": "262",
       "Titel": "Det brændte bordel",
       "Vært": "Anne Skjerning",
       "Vuring (1-10)": "6,9",
@@ -4475,7 +4441,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "264",
+      "Placering": "263",
       "Titel": "Gangsteren i Skoven",
       "Vært": "Anna Thaulow",
       "Vuring (1-10)": "6,9",
@@ -4492,7 +4458,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "265",
+      "Placering": "264",
       "Titel": "Partisansøm og skraldebiler i brand",
       "Vært": "Peter Lysholdt",
       "Vuring (1-10)": "6,9",
@@ -4509,7 +4475,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "266",
+      "Placering": "265",
       "Titel": "Mediano Bossword",
       "Vært": "Peter Brüchmann & GIsle Thorsen",
       "Vuring (1-10)": "6,9",
@@ -4526,7 +4492,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "267",
+      "Placering": "266",
       "Titel": "Den charmerende bedrager",
       "Vært": "Per Lysholt",
       "Vuring (1-10)": "6,9",
@@ -4538,6 +4504,23 @@
       "Afgivet vurdering": "07-03-2026",
       "Billedlink": "https://is1-ssl.mzstatic.com/image/thumb/Podcasts221/v4/78/c8/06/78c8065c-b0b1-729c-01d0-522b3fcc998b/mza_486116165445940358.png/1200x1200bf-60.jpg",
       "Kort beskrivelse": "Om en bedrager, der bruger charme, tillid og løgne som våben.",
+      "": "",
+      "Endnu ikke hørt": "",
+      "Nævneværdige episo:": ""
+    },
+    {
+      "Placering": "267",
+      "Titel": "Adolphus Greely: Den store kannibalekspedition",
+      "Vært": "Henrik Egede Lassen",
+      "Vuring (1-10)": "6,8",
+      "Genre": "Historie",
+      "Udgiver": "Heartbeats",
+      "Antal afsnit": "1",
+      "Årstal afspillet": "2026",
+      "Link": "https://podcasts.apple.com/dk/podcast/s19e10-adolphus-greely-den-store-kannibalekspedition/id1519774517?i=1000766161839",
+      "Afgivet vurdering": "11-05-2026",
+      "Billedlink": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS_0VHr4_BB-Xk2o1s8TXB0yTAltd3PtBOtMEXRY2kzvg&s",
+      "Kort beskrivelse": "En arktisk ekspedition strandes i isen, og kampen for overlevelse udvikler sig katastrofalt.",
       "": "",
       "Endnu ikke hørt": "",
       "Nævneværdige episo:": ""
@@ -7859,7 +7842,7 @@
     },
     {
       "Placering": "463",
-      "Titel": "Charles Manson: det glemte mord",
+      "Titel": "Charles Manson: Det glemte mord",
       "Vært": "Kristoffer Lind & Peder Byberg",
       "Vuring (1-10)": "4,7",
       "Genre": "True crime",
@@ -7909,7 +7892,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "",
+      "Placering": "466",
       "Titel": "Ugens transfer suppe",
       "Vært": "",
       "Vuring (1-10)": "4,7",
@@ -8845,17 +8828,17 @@
     },
     {
       "Placering": "521",
-      "Titel": "",
-      "Vært": "",
+      "Titel": "If Books Could Kill",
+      "Vært": "Michael Hobbes & Peter Shamshiri",
       "Vuring (1-10)": "",
-      "Genre": "",
-      "Udgiver": "",
-      "Antal afsnit": "",
-      "Årstal afspillet": "",
-      "Link": "",
+      "Genre": "Samfund",
+      "Udgiver": "Michael Hobbes & Peter Shamshiri",
+      "Antal afsnit": "118",
+      "Årstal afspillet": "2026",
+      "Link": "https://podcasts.apple.com/dk/podcast/if-books-could-kill/id1651876897",
       "Afgivet vurdering": "",
-      "Billedlink": "",
-      "Kort beskrivelse": "",
+      "Billedlink": "https://is1-ssl.mzstatic.com/image/thumb/Podcasts211/v4/07/d7/0f/07d70f4f-27e8-0714-b25f-1b90ebf64a33/mza_1762043274515618931.jpg/1200x1200bb.jpg",
+      "Kort beskrivelse": "Amerikansk podcast, der kritisk og humoristisk gennemgår populære debat- og bestsellerbøger.",
       "": "",
       "Endnu ikke hørt": "",
       "Nævneværdige episo:": ""
