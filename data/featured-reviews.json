@@ -1,43 +1,7 @@
 {
-  "generatedAt": "2026-05-12T00:00:00.000Z",
-  "source": "manual",
-  "count": 2,
-  "rows": [
-    {
-      "Aktiv": "JA",
-      "Titel": "Adolphus Greely: Den store kannibalekspedition",
-      "Matchtitel": "Adolphus Greely: Den store kannibalekspedition",
-      "Kort vurdering": "Spændende, dramatisk og mærkværdig historie om en arktisk katastrofe, hvor overlevelse gradvist bliver vigtigere end moral. Podcasten kunne dog have brugt en stærkere dramaturgisk opbygning og mere stemningsfuld lydproduktion undervejs.",
-      "Historie/sag": "8,1",
-      "Fortælling": "6,7",
-      "Vært/formidling": "6,5",
-      "Produktion": "5,1",
-      "Aktualitet/relevans": "Ikke relevant",
-      "Samlet score": "6,9",
-      "Visningsrækkefølge": "1",
-      "Auto-udgiver": "Heartbeats",
-      "Auto-link": "",
-      "Auto-billedlink": "",
-      "Auto-genre": "Historie",
-      "Auto-vært": "Henrik Egede Lassen"
-    },
-    {
-      "Aktiv": "JA",
-      "Titel": "Karikaturkrisen",
-      "Matchtitel": "Karikaturkrisen",
-      "Kort vurdering": "Skræmmende fortælling om Muhammed-tegningerne, selvcensur og det pres, der fulgte efter. Stærkt emne og god historisk ramme, men den kunne godt have haft mere lydlig nerve.",
-      "Historie/sag": "8,7",
-      "Fortælling": "7,7",
-      "Vært/formidling": "7,5",
-      "Produktion": "7,1",
-      "Aktualitet/relevans": "4",
-      "Samlet score": "7,9",
-      "Visningsrækkefølge": "2",
-      "Auto-udgiver": "DR",
-      "Auto-link": "",
-      "Auto-billedlink": "",
-      "Auto-genre": "Historie",
-      "Auto-vært": "Martin Grønne"
-    }
-  ]
+  "generatedAt": "2026-05-13T10:12:49.135Z",
+  "source": "https://docs.google.com/spreadsheets/d/e/2PACX-1vQRBWQdj-WDNN3l9yxIMCCu_O2dYfP7modSODcYgJRoQDG3GYsu83W_wIFyijPx6v8l-W011zrFyOdq/pub?gid=0&single=true&output=csv",
+  "sheetName": "Udvalgte vurderinger",
+  "count": 0,
+  "rows": []
 }
