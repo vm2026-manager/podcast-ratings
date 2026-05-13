@@ -523,6 +523,7 @@ function mapPodcast(row, index) {
   const rawGenre = getField(row, ["Genre"]);
   const rawPublisher = getField(row, ["Udgiver", "Publisher"]);
   const episodes = getField(row, ["Antal afsnit", "Afsnit", "Episodes"]);
+  const yearPlayed = getField(row, ["Årstal afspillet", "Aarstal afspillet", "År", "Aar"]);
   const link = getField(row, ["Link", "URL"]);
   const ratingDate = getField(row, [
     "Afgivet vurdering",
@@ -562,6 +563,7 @@ function mapPodcast(row, index) {
     rawPublisher,
     publisher,
     episodes,
+    yearPlayed,
     link,
     ratingDate,
     ratingDateObject: parseDate(ratingDate),
@@ -569,6 +571,17 @@ function mapPodcast(row, index) {
     image,
     description,
     placement: placement ?? index + 1,
+    completenessScore: getCompletenessScore({
+      yearPlayed,
+      link,
+      image,
+      description,
+      episodes,
+      publisher,
+      genre,
+      host,
+      ratingDate,
+    }),
     searchText: buildSearchText([
       title,
       host,
@@ -577,11 +590,68 @@ function mapPodcast(row, index) {
       rawPublisher,
       publisher,
       episodes,
+      yearPlayed,
       link,
       ratingDate,
       description,
     ]),
   };
+}
+
+function getCompletenessScore(podcast) {
+  let score = 0;
+
+  if (podcast.yearPlayed) score += 100;
+  if (podcast.link) score += 60;
+  if (podcast.image) score += 50;
+  if (podcast.description) score += 40;
+  if (podcast.episodes) score += 25;
+  if (podcast.publisher) score += 20;
+  if (podcast.genre) score += 15;
+  if (podcast.host) score += 15;
+  if (podcast.ratingDate) score += 10;
+
+  return score;
+}
+
+function deduplicatePodcasts(podcasts) {
+  const grouped = new Map();
+
+  podcasts.forEach((podcast) => {
+    const key = normalizeMatchKey(podcast.title);
+
+    if (!key) return;
+
+    if (!grouped.has(key)) {
+      grouped.set(key, []);
+    }
+
+    grouped.get(key).push(podcast);
+  });
+
+  const result = [];
+
+  grouped.forEach((items) => {
+    if (items.length === 1) {
+      result.push(items[0]);
+      return;
+    }
+
+    const sorted = [...items].sort((a, b) => {
+      if (b.completenessScore !== a.completenessScore) {
+        return b.completenessScore - a.completenessScore;
+      }
+
+      const aPlacement = Number.isFinite(a.placement) ? a.placement : 999999;
+      const bPlacement = Number.isFinite(b.placement) ? b.placement : 999999;
+
+      return aPlacement - bPlacement;
+    });
+
+    result.push(sorted[0]);
+  });
+
+  return result.sort((a, b) => a.placement - b.placement);
 }
 
 function mapFeaturedReview(row, index, podcastLookup) {
@@ -1110,7 +1180,8 @@ async function loadPodcasts() {
       objects = await loadPodcastObjectsFromCsv();
     }
 
-    state.podcasts = objects.map(mapPodcast).filter(isUsefulPodcast);
+    const mappedPodcasts = objects.map(mapPodcast).filter(isUsefulPodcast);
+    state.podcasts = deduplicatePodcasts(mappedPodcasts);
 
     const podcastLookup = buildPodcastLookup(state.podcasts);
     const featuredObjects = await loadFeaturedReviewObjects();
