@@ -48,13 +48,11 @@ select {
 }
 
 .page-shell {
-  width: 100%;
-  max-width: 1390px;
+  width: min(100% - 72px, 1460px);
   margin: 18px auto 40px;
-  padding: 0 16px;
   display: grid;
   grid-template-columns: var(--sidebar-width) minmax(0, 1fr);
-  gap: 24px;
+  gap: 28px;
   align-items: start;
 }
 
@@ -800,7 +798,7 @@ button.podcast-chip:hover {
 }
 
 .featured-meta {
-  margin: 0 0 8px;
+  margin: 0 0 7px;
   color: #6f655d;
   font-size: 0.73rem;
   line-height: 1.28;
@@ -818,6 +816,19 @@ button.podcast-chip:hover {
   font-size: 0.95rem;
   line-height: 1;
   font-weight: 900;
+}
+
+.featured-date {
+  margin: 4px 0 0;
+  color: #9a9088;
+  font-size: 0.58rem;
+  line-height: 1.1;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+}
+
+.featured-date:empty {
+  display: none;
 }
 
 .featured-text {
@@ -900,8 +911,8 @@ button.podcast-chip:hover {
   padding-top: 10px;
   border-top: 1px solid rgba(223, 211, 196, 0.78);
   color: #8d837b;
-  font-size: 0.66rem;
-  line-height: 1.32;
+  font-size: 0.58rem;
+  line-height: 1.25;
   font-weight: 700;
 }
 
@@ -965,7 +976,7 @@ button.podcast-chip:hover {
 
 @media (max-width: 1240px) {
   .page-shell {
-    max-width: 100%;
+    width: min(100% - 32px, 100%);
     grid-template-columns: 1fr;
   }
 
@@ -1051,7 +1062,7 @@ button.podcast-chip:hover {
 
 @media (max-width: 540px) {
   .page-shell {
-    padding: 0 12px;
+    width: min(100% - 24px, 100%);
   }
 
   .sidebar-logo {
