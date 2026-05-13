@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-05-13T10:12:47.418Z",
+  "generatedAt": "2026-05-13T10:30:31.344Z",
   "source": "https://docs.google.com/spreadsheets/d/e/2PACX-1vQRBWQdj-WDNN3l9yxIMCCu_O2dYfP7modSODcYgJRoQDG3GYsu83W_wIFyijPx6v8l-W011zrFyOdq/pub?gid=0&single=true&output=csv",
   "count": 523,
   "rows": [
@@ -7,7 +7,7 @@
       "Placering": "1",
       "Titel": "Kvinden med den tunge kuffert",
       "Vært": "Krister Moltzen",
-      "Vuring (1-10)": "9,4",
+      "Vuring (1-10)": "9,1",
       "Genre": "True Crime",
       "Udgiver": "Third Ear",
       "Antal afsnit": "7",
@@ -24,7 +24,7 @@
       "Placering": "2",
       "Titel": "Kapret",
       "Vært": "Emil Midé Erichsen, Rane Mohr Hjorhöy & Marie Mohr Hjorhöy",
-      "Vuring (1-10)": "8,8",
+      "Vuring (1-10)": "8,9",
       "Genre": "True crime",
       "Udgiver": "DR",
       "Antal afsnit": "6",
@@ -1331,7 +1331,7 @@
     },
     {
       "Placering": "79",
-      "Titel": "Dom over Amerika: Casey Anthony – den mest hadede kvinde i USA",
+      "Titel": "Casey Anthony – den mest hadede kvinde i USA",
       "Vært": "Frederikke Pedersen & Marlene Vejbøl",
       "Vuring (1-10)": "8,0",
       "Genre": "True crime",
@@ -1450,7 +1450,7 @@
     },
     {
       "Placering": "86",
-      "Titel": "Den store illusion: Frank William Abagnale",
+      "Titel": "Frank William Abagnale",
       "Vært": "Kristoffer Lind & Signe Frederikke Pedersen",
       "Vuring (1-10)": "8,0",
       "Genre": "True Crime",
@@ -1943,7 +1943,7 @@
     },
     {
       "Placering": "115",
-      "Titel": "Den store illusion: Victor Lustig",
+      "Titel": "Victor Lustig",
       "Vært": "Signe Frederikke Pedersen",
       "Vuring (1-10)": "7,8",
       "Genre": "True Crime",
@@ -2045,7 +2045,7 @@
     },
     {
       "Placering": "121",
-      "Titel": "Dom over Amerika: O.J. Simpson og århundredets retssag",
+      "Titel": "O.J. Simpson og århundredets retssag",
       "Vært": "Signe Frederikke Pedersen",
       "Vuring (1-10)": "7,7",
       "Genre": "True crime",
@@ -4663,7 +4663,7 @@
     },
     {
       "Placering": "275",
-      "Titel": "Den store illusion: Elizabeth Holmes",
+      "Titel": "Elizabeth Holmes",
       "Vært": "Signe Frederikke Pedersen & Niels Krøjgaard",
       "Vuring (1-10)": "6,8",
       "Genre": "True Crime",
@@ -5071,7 +5071,7 @@
     },
     {
       "Placering": "299",
-      "Titel": "Den store illusion: Charles Ponzi og pyramidesvindlen",
+      "Titel": "Charles Ponzi og pyramidesvindlen",
       "Vært": "Signe Frederikke Pedersen",
       "Vuring (1-10)": "6,7",
       "Genre": "True Crime",
@@ -5462,7 +5462,7 @@
     },
     {
       "Placering": "322",
-      "Titel": "Dom over Amerika: Karen Read og liget i sneen",
+      "Titel": "Amerika: Karen Read og liget i sneen",
       "Vært": "Lisbeth Liv Carlsen & Signe Frederikke Pedersen",
       "Vuring (1-10)": "6,5",
       "Genre": "True crime",
@@ -5479,7 +5479,7 @@
     },
     {
       "Placering": "323",
-      "Titel": "Dom over Amerika: Johnny Depp vs. Amber Heard",
+      "Titel": "Johnny Depp vs. Amber Heard",
       "Vært": "Signe Frederikke Pedersen",
       "Vuring (1-10)": "6,5",
       "Genre": "True crime",
@@ -5488,7 +5488,7 @@
       "Årstal afspillet": "2025",
       "Link": "https://radio4.dk/podcasts/krimiland/dom-over-amerika-1-8-johnny-depp-vs-amber-heard",
       "Afgivet vurdering": "15-10-2025",
-      "Billedlink": "https://radio4data.imgix.net/2025/07/Krimiland_begge_1x1-2-6.png?fit=crop&height=400&width=400",
+      "Billedlink": "https://radio4data.imgix.net/2025/06/Programgrafik_Krimiland_Dom-over-USA.png?width=400&height=400&fit=crop",
       "Kort beskrivelse": "Om Depp-Heard-retssagen, mediecirkusset og kampen om fortællingen.",
       "": "",
       "Endnu ikke hørt": "",
@@ -5819,7 +5819,7 @@
     },
     {
       "Placering": "343",
-      "Titel": "Dom over Amerika : Menendez-brødrene",
+      "Titel": "Menendez-brødrene",
       "Vært": "Signe Frederikke Pedersen & Ruben Toft Sindahl",
       "Vuring (1-10)": "6,3",
       "Genre": "True crime",

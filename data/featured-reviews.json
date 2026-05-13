@@ -1,7 +1,47 @@
 {
-  "generatedAt": "2026-05-13T10:12:49.135Z",
-  "source": "https://docs.google.com/spreadsheets/d/e/2PACX-1vQRBWQdj-WDNN3l9yxIMCCu_O2dYfP7modSODcYgJRoQDG3GYsu83W_wIFyijPx6v8l-W011zrFyOdq/pub?gid=0&single=true&output=csv",
+  "generatedAt": "2026-05-13T10:30:32.182Z",
+  "source": "https://docs.google.com/spreadsheets/d/e/2PACX-1vQRBWQdj-WDNN3l9yxIMCCu_O2dYfP7modSODcYgJRoQDG3GYsu83W_wIFyijPx6v8l-W011zrFyOdq/pub?gid=1418051000&single=true&output=csv",
   "sheetName": "Udvalgte vurderinger",
-  "count": 0,
-  "rows": []
+  "gid": "1418051000",
+  "count": 2,
+  "rows": [
+    {
+      "Aktiv": "JA",
+      "Titel": "Den store kannibalekspedition",
+      "Matchtitel": "Adolphus Greely: Den store kannibalekspedition",
+      "Kort vurdering": "Spændende, dramatisk og mærkværdig historie om en arktisk katastrofe, hvor overlevelse gradvist bliver vigtigere end moral. Podcasten kunne dog have brugt en stærkere dramaturgisk opbygning og mere stemningsfuld lydproduktion undervejs.",
+      "Historie/sag": "8,1",
+      "Fortælling": "6,7",
+      "Vært/formidling": "6,5",
+      "Produktion": "4,2",
+      "Aktualitet/relevans": "Ikke relevant",
+      "Samlet score": "6,8",
+      "Anmeldelsesdato": "12-05-2026",
+      "Visningsrækkefølge": "2",
+      "Auto-udgiver": "Heartbeats",
+      "Auto-link": "https://podcasts.apple.com/dk/podcast/s19e10-adolphus-greely-den-store-kannibalekspedition/id1519774517?i=1000766161839",
+      "Auto-billedlink": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS_0VHr4_BB-Xk2o1s8TXB0yTAltd3PtBOtMEXRY2kzvg&s",
+      "Auto-genre": "Historie",
+      "Auto-vært": "Henrik Egede Lassen"
+    },
+    {
+      "Aktiv": "JA",
+      "Titel": "Karikaturkrisen",
+      "Matchtitel": "Karikaturkrisen",
+      "Kort vurdering": "Skræmmende fortælling, hvor Ahmed Akkari – en af Muhammedkrisens helt centrale personer – ærligt beskriver sin egen rolle i at puste til konflikten og i dag tager kraftigt afstand fra sine handlinger. Især de sidste afsnit giver indblik i, hvordan danske ekstremister aktivt opildnede til konfrontation og vold.",
+      "Historie/sag": "8,7",
+      "Fortælling": "7,7",
+      "Vært/formidling": "7,5",
+      "Produktion": "7,1",
+      "Aktualitet/relevans": "Ikke relevant",
+      "Samlet score": "8",
+      "Anmeldelsesdato": "12-05-2026",
+      "Visningsrækkefølge": "1",
+      "Auto-udgiver": "DR",
+      "Auto-link": "https://www.dr.dk/lyd/p1/bakspejl/bakspejl-2026/karikaturkrisen-11802351203",
+      "Auto-billedlink": "https://cachedimages.podchaser.com/256x256/aHR0cHM6Ly9hcGkuZHIuZGsvcG9kY2FzdHMvdjEvaW1hZ2VzL3Vybjpkcjpwb2RjYXN0OmltYWdlOjY3ZTE0ZDZmNjI3M2U4ZmM3MDc3YWE1My5qcGc%3D/aHR0cHM6Ly93d3cucG9kY2hhc2VyLmNvbS9pbWFnZXMvbWlzc2luZy1pbWFnZS5wbmc%3D",
+      "Auto-genre": "Historie",
+      "Auto-vært": "Martin Grønne"
+    }
+  ]
 }
