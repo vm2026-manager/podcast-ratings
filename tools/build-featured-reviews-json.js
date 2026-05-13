@@ -3,15 +3,53 @@ const path = require("path");
 const https = require("https");
 const zlib = require("zlib");
 
-const FEATURED_CSV_URL =
-  "https://docs.google.com/spreadsheets/d/e/2PACX-1vQRBWQdj-WDNN3l9yxIMCCu_O2dYfP7modSODcYgJRoQDG3GYsu83W_wIFyijPx6v8l-W011zrFyOdq/gviz/tq?tqx=out:csv&sheet=Udvalgte%20vurderinger";
+const PUBLISHED_SHEET_BASE_URL =
+  "https://docs.google.com/spreadsheets/d/e/2PACX-1vQRBWQdj-WDNN3l9yxIMCCu_O2dYfP7modSODcYgJRoQDG3GYsu83W_wIFyijPx6v8l-W011zrFyOdq";
+
+const FEATURED_SHEET_NAME = "Udvalgte vurderinger";
+
+// Hvis automatisk gid-opslag ikke virker, kan gid indsættes her senere.
+// Lad den stå tom først.
+const FEATURED_SHEET_GID = "";
 
 const OUTPUT_PATH = path.join(__dirname, "..", "data", "featured-reviews.json");
+
+function decodeBuffer(buffer, encoding) {
+  return new Promise((resolve, reject) => {
+    const normalizedEncoding = String(encoding || "").toLowerCase();
+
+    if (normalizedEncoding === "gzip") {
+      zlib.gunzip(buffer, (error, decoded) => {
+        if (error) reject(error);
+        else resolve(decoded);
+      });
+      return;
+    }
+
+    if (normalizedEncoding === "deflate") {
+      zlib.inflate(buffer, (error, decoded) => {
+        if (error) reject(error);
+        else resolve(decoded);
+      });
+      return;
+    }
+
+    if (normalizedEncoding === "br") {
+      zlib.brotliDecompress(buffer, (error, decoded) => {
+        if (error) reject(error);
+        else resolve(decoded);
+      });
+      return;
+    }
+
+    resolve(buffer);
+  });
+}
 
 function fetchBuffer(url, redirectCount = 0) {
   return new Promise((resolve, reject) => {
     if (redirectCount > 8) {
-      reject(new Error("Too many redirects while fetching featured reviews CSV."));
+      reject(new Error("Too many redirects while fetching Google Sheets data."));
       return;
     }
 
@@ -20,7 +58,7 @@ function fetchBuffer(url, redirectCount = 0) {
       {
         headers: {
           "User-Agent": "Mozilla/5.0 GitHubActionsPodcastRatings",
-          "Accept": "text/csv,text/plain,*/*",
+          Accept: "text/csv,text/html,text/plain,*/*",
           "Accept-Encoding": "gzip, deflate, br",
         },
       },
@@ -42,70 +80,41 @@ function fetchBuffer(url, redirectCount = 0) {
           chunks.push(chunk);
         });
 
-        res.on("end", () => {
-          const rawBuffer = Buffer.concat(chunks);
-
-          if (statusCode < 200 || statusCode >= 300) {
-            const bodyPreview = rawBuffer.toString("utf8").slice(0, 1000);
-            reject(
-              new Error(
-                [
-                  `Could not fetch featured reviews CSV.`,
-                  `HTTP status: ${statusCode}`,
-                  `URL: ${url}`,
-                  `Response preview: ${bodyPreview}`,
-                ].join("\n")
-              )
+        res.on("end", async () => {
+          try {
+            const rawBuffer = Buffer.concat(chunks);
+            const decodedBuffer = await decodeBuffer(
+              rawBuffer,
+              res.headers["content-encoding"]
             );
-            return;
+
+            if (statusCode < 200 || statusCode >= 300) {
+              const bodyPreview = decodedBuffer.toString("utf8").slice(0, 1200);
+              reject(
+                new Error(
+                  [
+                    "Could not fetch Google Sheets data.",
+                    `HTTP status: ${statusCode}`,
+                    `URL: ${url}`,
+                    `Response preview: ${bodyPreview}`,
+                  ].join("\n")
+                )
+              );
+              return;
+            }
+
+            resolve(decodedBuffer);
+          } catch (error) {
+            reject(error);
           }
-
-          const encoding = String(res.headers["content-encoding"] || "").toLowerCase();
-
-          if (encoding === "gzip") {
-            zlib.gunzip(rawBuffer, (error, decoded) => {
-              if (error) {
-                reject(error);
-                return;
-              }
-
-              resolve(decoded);
-            });
-            return;
-          }
-
-          if (encoding === "deflate") {
-            zlib.inflate(rawBuffer, (error, decoded) => {
-              if (error) {
-                reject(error);
-                return;
-              }
-
-              resolve(decoded);
-            });
-            return;
-          }
-
-          if (encoding === "br") {
-            zlib.brotliDecompress(rawBuffer, (error, decoded) => {
-              if (error) {
-                reject(error);
-                return;
-              }
-
-              resolve(decoded);
-            });
-            return;
-          }
-
-          resolve(rawBuffer);
         });
       }
     );
 
     request.on("error", reject);
+
     request.setTimeout(30000, () => {
-      request.destroy(new Error("Timeout while fetching featured reviews CSV."));
+      request.destroy(new Error("Timeout while fetching Google Sheets data."));
     });
   });
 }
@@ -123,6 +132,130 @@ function normalizeHeader(value) {
   return cleanCell(value)
     .replace(/\uFEFF/g, "")
     .replace(/\s+/g, " ");
+}
+
+function normalizeComparable(value) {
+  return cleanCell(value)
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/&/g, " og ")
+    .replace(/[^a-z0-9æøå ]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function decodeHtmlEntities(value) {
+  return String(value || "")
+    .replace(/&amp;/g, "&")
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    .replace(/&#x27;/g, "'")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">");
+}
+
+function stripTags(value) {
+  return String(value || "").replace(/<[^>]*>/g, " ");
+}
+
+function buildCsvUrlFromGid(gid) {
+  return `${PUBLISHED_SHEET_BASE_URL}/pub?gid=${encodeURIComponent(
+    gid
+  )}&single=true&output=csv`;
+}
+
+function buildPublishedHtmlUrl() {
+  return `${PUBLISHED_SHEET_BASE_URL}/pubhtml`;
+}
+
+function findGidInPublishedHtml(html, wantedSheetName) {
+  const wanted = normalizeComparable(wantedSheetName);
+
+  const anchorRegex =
+    /<a\b[^>]*href=["']([^"']*gid=([0-9]+)[^"']*)["'][^>]*>([\s\S]*?)<\/a>/gi;
+
+  let match;
+
+  while ((match = anchorRegex.exec(html)) !== null) {
+    const gid = match[2];
+    const label = normalizeComparable(decodeHtmlEntities(stripTags(match[3])));
+
+    if (label === wanted || label.includes(wanted) || wanted.includes(label)) {
+      return gid;
+    }
+  }
+
+  const decodedHtml = decodeHtmlEntities(html);
+  const normalizedHtml = normalizeComparable(decodedHtml);
+  const wantedIndex = normalizedHtml.indexOf(wanted);
+
+  if (wantedIndex !== -1) {
+    const originalIndex = decodedHtml
+      .toLowerCase()
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .indexOf(wantedSheetName.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, ""));
+
+    const searchWindow =
+      originalIndex !== -1
+        ? decodedHtml.slice(Math.max(0, originalIndex - 3000), originalIndex + 3000)
+        : decodedHtml;
+
+    const gidNearName =
+      searchWindow.match(/gid=([0-9]+)/i) ||
+      searchWindow.match(/["']gid["']\s*:\s*["']?([0-9]+)/i);
+
+    if (gidNearName && gidNearName[1]) {
+      return gidNearName[1];
+    }
+  }
+
+  const allGids = [...decodedHtml.matchAll(/gid=([0-9]+)/gi)].map(
+    (item) => item[1]
+  );
+
+  const uniqueGids = [...new Set(allGids)];
+
+  if (uniqueGids.length === 1) {
+    return uniqueGids[0];
+  }
+
+  return "";
+}
+
+async function resolveFeaturedCsvUrl() {
+  if (FEATURED_SHEET_GID) {
+    const url = buildCsvUrlFromGid(FEATURED_SHEET_GID);
+    console.log(`Using manually configured gid: ${FEATURED_SHEET_GID}`);
+    console.log(url);
+    return url;
+  }
+
+  const pubHtmlUrl = buildPublishedHtmlUrl();
+
+  console.log("Finding gid for featured reviews sheet...");
+  console.log(pubHtmlUrl);
+
+  const html = await fetchText(pubHtmlUrl);
+  const gid = findGidInPublishedHtml(html, FEATURED_SHEET_NAME);
+
+  if (!gid) {
+    throw new Error(
+      [
+        `Could not find gid for sheet '${FEATURED_SHEET_NAME}'.`,
+        "Open the Google Sheet tab 'Udvalgte vurderinger' and copy the number after gid= in the address bar.",
+        "Then paste it into FEATURED_SHEET_GID in tools/build-featured-reviews-json.js.",
+      ].join("\n")
+    );
+  }
+
+  const csvUrl = buildCsvUrlFromGid(gid);
+
+  console.log(`Found gid for '${FEATURED_SHEET_NAME}': ${gid}`);
+  console.log(csvUrl);
+
+  return csvUrl;
 }
 
 function parseCsv(text) {
@@ -202,10 +335,12 @@ function rowIsUseful(row) {
 }
 
 async function main() {
-  console.log("Fetching featured reviews CSV...");
-  console.log(FEATURED_CSV_URL);
+  const csvUrl = await resolveFeaturedCsvUrl();
 
-  const csv = await fetchText(FEATURED_CSV_URL);
+  console.log("Fetching featured reviews CSV...");
+  console.log(csvUrl);
+
+  const csv = await fetchText(csvUrl);
 
   if (!csv || !csv.trim()) {
     throw new Error("Featured reviews CSV was empty.");
@@ -218,7 +353,11 @@ async function main() {
 
   if (rows.length < 2) {
     throw new Error(
-      "Featured reviews CSV did not contain data rows. Check that the sheet is published and the sheet name is exactly 'Udvalgte vurderinger'."
+      [
+        "Featured reviews CSV did not contain data rows.",
+        "Check that the tab 'Udvalgte vurderinger' is included in the published spreadsheet.",
+        "Also check that the first row contains headers and that at least one row has Aktiv and Titel.",
+      ].join("\n")
     );
   }
 
@@ -227,7 +366,8 @@ async function main() {
 
   const payload = {
     generatedAt: new Date().toISOString(),
-    source: FEATURED_CSV_URL,
+    source: csvUrl,
+    sheetName: FEATURED_SHEET_NAME,
     count: usefulRows.length,
     rows: usefulRows,
   };
