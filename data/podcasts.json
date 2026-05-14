@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-05-14T17:57:53.785Z",
+  "generatedAt": "2026-05-14T19:57:41.655Z",
   "source": "https://docs.google.com/spreadsheets/d/e/2PACX-1vQRBWQdj-WDNN3l9yxIMCCu_O2dYfP7modSODcYgJRoQDG3GYsu83W_wIFyijPx6v8l-W011zrFyOdq/pub?gid=0&single=true&output=csv",
   "count": 522,
   "rows": [
@@ -4663,6 +4663,23 @@
     },
     {
       "Placering": "276",
+      "Titel": "Bøvlede mænd",
+      "Vært": "Rasmus Revsbech & Molly Balsby",
+      "Vuring (1-10)": "6,8",
+      "Genre": "Samfund",
+      "Udgiver": "r8Dio",
+      "Antal afsnit": "2",
+      "Årstal afspillet": "2026",
+      "Link": "https://r8dio.dk/program/boevlede-maend",
+      "Afgivet vurdering": "",
+      "Billedlink": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQCmGLbmBoIp3l5AtSuQnRY2t_CLGzL8jGwFA&s",
+      "Kort beskrivelse": "To værter undersøger moderne mænds usikkerheder, selvforståelse og forhold til maskuline idealer.",
+      "": "",
+      "Endnu ikke hørt": "",
+      "Nævneværdige episo:": ""
+    },
+    {
+      "Placering": "277",
       "Titel": "Kampen om historien",
       "Vært": "Adam Holm",
       "Vuring (1-10)": "6,7",
@@ -4679,7 +4696,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "277",
+      "Placering": "278",
       "Titel": "Klub Mediano: Vi præsenterer Erik Skjærbæk",
       "Vært": "Gisle Thorsen & Thomas Pyndt",
       "Vuring (1-10)": "6,7",
@@ -4696,7 +4713,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "278",
+      "Placering": "279",
       "Titel": "Lyssky",
       "Vært": "Caroline Clante",
       "Vuring (1-10)": "6,7",
@@ -4713,7 +4730,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "279",
+      "Placering": "280",
       "Titel": "Sådan blev han Victor Froholdt",
       "Vært": "Sebastian Stanbury",
       "Vuring (1-10)": "6,7",
@@ -4730,7 +4747,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "280",
+      "Placering": "281",
       "Titel": "Minimax",
       "Vært": "",
       "Vuring (1-10)": "6,7",
@@ -4747,7 +4764,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "281",
+      "Placering": "282",
       "Titel": "Kokain på krogen",
       "Vært": "Rolf Eggert",
       "Vuring (1-10)": "6,7",
@@ -4764,7 +4781,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "282",
+      "Placering": "283",
       "Titel": "1263 dage i et af Sydamerikas hårdeste fængsler",
       "Vært": "Rolf Eggert",
       "Vuring (1-10)": "6,7",
@@ -4781,7 +4798,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "283",
+      "Placering": "284",
       "Titel": "De livsfarlige bånd",
       "Vært": "Kristoffer Eriksen & Louise Dalsgaard",
       "Vuring (1-10)": "6,7",
@@ -4798,7 +4815,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "284",
+      "Placering": "285",
       "Titel": "Guldfuglen er fløjet fra reden",
       "Vært": "Per Lysholt & Marie Louise Toksvig",
       "Vuring (1-10)": "6,7",
@@ -4815,7 +4832,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "285",
+      "Placering": "286",
       "Titel": "Borgerlig tabloid",
       "Vært": "Joachim B. Olsen",
       "Vuring (1-10)": "6,7",
@@ -4832,7 +4849,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "286",
+      "Placering": "287",
       "Titel": "Besættelsen",
       "Vært": "Arne Øland",
       "Vuring (1-10)": "6,7",
@@ -4849,7 +4866,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "287",
+      "Placering": "288",
       "Titel": "Ruths hus",
       "Vært": "Krister Moltzan & Tim Henman",
       "Vuring (1-10)": "6,7",
@@ -4866,7 +4883,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "288",
+      "Placering": "289",
       "Titel": "Bomberne på isen",
       "Vært": "Martin Grønne",
       "Vuring (1-10)": "6,7",
@@ -4883,7 +4900,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "289",
+      "Placering": "290",
       "Titel": "Blodets bånd",
       "Vært": "Mikkel Rønnau",
       "Vuring (1-10)": "6,7",
@@ -4900,7 +4917,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "290",
+      "Placering": "291",
       "Titel": "Mord i Rum Sø",
       "Vært": "Jesper Henriksen & Anders Thorkil Bechgaard",
       "Vuring (1-10)": "6,7",
@@ -4917,7 +4934,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "291",
+      "Placering": "292",
       "Titel": "TelefonJokes med Palle Bo",
       "Vært": "Palle Bo",
       "Vuring (1-10)": "6,7",
@@ -4934,7 +4951,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "292",
+      "Placering": "293",
       "Titel": "Europa rundt med Hebo",
       "Vært": "Jonas Hebo",
       "Vuring (1-10)": "6,7",
@@ -4951,7 +4968,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "293",
+      "Placering": "294",
       "Titel": "Drabssektionen",
       "Vært": "Per Lysholt",
       "Vuring (1-10)": "6,7",
@@ -4968,7 +4985,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "294",
+      "Placering": "295",
       "Titel": "Massakren ved Den Himmelske Freds Plads",
       "Vært": "Martin Grønne",
       "Vuring (1-10)": "6,7",
@@ -4985,7 +5002,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "295",
+      "Placering": "296",
       "Titel": "Dobbeltgænger",
       "Vært": "Krister Moltzen",
       "Vuring (1-10)": "6,7",
@@ -5002,7 +5019,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "296",
+      "Placering": "297",
       "Titel": "LSD-kælderen",
       "Vært": "August Dyrborg & Anne Skjerning",
       "Vuring (1-10)": "6,7",
@@ -5019,7 +5036,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "297",
+      "Placering": "298",
       "Titel": "Mediano Special - sagen om de 15 point,  forsvandt fra inlommen af Den Gamle Dame",
       "Vært": "Karsten Kr&h, Nicklas Degn, Kenneth Hansen",
       "Vuring (1-10)": "6,7",
@@ -5036,7 +5053,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "298",
+      "Placering": "299",
       "Titel": "Enter - Internettets skygge",
       "Vært": "Adina Ren",
       "Vuring (1-10)": "6,7",
@@ -5053,7 +5070,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "299",
+      "Placering": "300",
       "Titel": "Charles Ponzi og pyramidesvindlen",
       "Vært": "Signe Frederikke Pedersen",
       "Vuring (1-10)": "6,7",
@@ -5070,7 +5087,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "300",
+      "Placering": "301",
       "Titel": "Den svindlende enke",
       "Vært": "Per Lysholt",
       "Vuring (1-10)": "6,7",
@@ -5087,7 +5104,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "301",
+      "Placering": "302",
       "Titel": "Voksendating",
       "Vært": "Claudia Novalee & Danica Chlóe",
       "Vuring (1-10)": "6,7",
@@ -5104,7 +5121,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "302",
+      "Placering": "303",
       "Titel": "Pusheren fra provinsen",
       "Vært": "Per Lysholt & Rasmus Udby",
       "Vuring (1-10)": "6,7",
@@ -5121,7 +5138,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "303",
+      "Placering": "304",
       "Titel": "Smørkongens skat",
       "Vært": "Frederik Kulager",
       "Vuring (1-10)": "6,7",
@@ -5138,7 +5155,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "304",
+      "Placering": "305",
       "Titel": "Revselsretten",
       "Vært": "Martin Grønne & Villy Søvndal",
       "Vuring (1-10)": "6,7",
@@ -5155,7 +5172,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "305",
+      "Placering": "306",
       "Titel": "Har du hørt?",
       "Vært": "Nikita Klæstrup",
       "Vuring (1-10)": "6,7",
@@ -5172,7 +5189,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "306",
+      "Placering": "307",
       "Titel": "Indersiden med Viktor Fischer",
       "Vært": "Viktor Fischer",
       "Vuring (1-10)": "6,7",
@@ -5189,7 +5206,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "307",
+      "Placering": "308",
       "Titel": "Katastrofe: Eksplosionen der (måske) ændrede verden",
       "Vært": "Kristoffer Lind & Rasmus Dahlberg",
       "Vuring (1-10)": "6,7",
@@ -5206,7 +5223,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "308",
+      "Placering": "309",
       "Titel": "Single igen (sæson 3)",
       "Vært": "Frida & Boris",
       "Vuring (1-10)": "6,7",
@@ -5223,7 +5240,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "309",
+      "Placering": "310",
       "Titel": "Bandeland (sæson 2)",
       "Vært": "Kristoffer Eriksen",
       "Vuring (1-10)": "6,7",
@@ -5240,7 +5257,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "310",
+      "Placering": "311",
       "Titel": "Guldringens forbandelse",
       "Vært": "Krister Moltzen",
       "Vuring (1-10)": "6,7",
@@ -5257,7 +5274,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "311",
+      "Placering": "312",
       "Titel": "Dødspatruljen kommer",
       "Vært": "Per Lysholt",
       "Vuring (1-10)": "6,7",
@@ -5274,7 +5291,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "312",
+      "Placering": "313",
       "Titel": "Kummefryseren",
       "Vært": "Krister Moltzen",
       "Vuring (1-10)": "6,7",
@@ -5291,7 +5308,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "313",
+      "Placering": "314",
       "Titel": "Bech bag bolden: Landsholdets analytiker: Mounir Akhiat",
       "Vært": "Troels Bech",
       "Vuring (1-10)": "6,7",
@@ -5308,7 +5325,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "314",
+      "Placering": "315",
       "Titel": "Cyberslaverne",
       "Vært": "Thomas F&ht & Sebastian Stryhn Kjeldtoft",
       "Vuring (1-10)": "6,7",
@@ -5325,7 +5342,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "315",
+      "Placering": "316",
       "Titel": "Ugens suppe",
       "Vært": "Oliver Routledge",
       "Vuring (1-10)": "6,6",
@@ -5342,7 +5359,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "316",
+      "Placering": "317",
       "Titel": "Klubhuset",
       "Vært": "Andreas Vidførle & Frederik Ingemann",
       "Vuring (1-10)": "6,5",
@@ -5359,7 +5376,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "317",
+      "Placering": "318",
       "Titel": "Patriarkatets raske sønner",
       "Vært": "Per Lysholt",
       "Vuring (1-10)": "6,5",
@@ -5376,7 +5393,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "318",
+      "Placering": "319",
       "Titel": "Den store talentserie",
       "Vært": "Peter Bruchmann, Sebastian Stanbury",
       "Vuring (1-10)": "6,5",
@@ -5393,7 +5410,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "319",
+      "Placering": "320",
       "Titel": "Kærlighedssvindleren i retten",
       "Vært": "Per Lysholt",
       "Vuring (1-10)": "6,5",
@@ -5410,7 +5427,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "320",
+      "Placering": "321",
       "Titel": "Bag om Bachelorette (sæson 2)",
       "Vært": "Mette Sommer",
       "Vuring (1-10)": "6,5",
@@ -5427,7 +5444,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "321",
+      "Placering": "322",
       "Titel": "Pis og paranoia",
       "Vært": "Frederik Kulager & Clara Grunnet",
       "Vuring (1-10)": "6,5",
@@ -5444,7 +5461,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "322",
+      "Placering": "323",
       "Titel": "Amerika: Karen Read og liget i sneen",
       "Vært": "Lisbeth Liv Carlsen & Signe Frederikke Pedersen",
       "Vuring (1-10)": "6,5",
@@ -5461,7 +5478,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "323",
+      "Placering": "324",
       "Titel": "Johnny Depp vs. Amber Heard",
       "Vært": "Signe Frederikke Pedersen",
       "Vuring (1-10)": "6,5",
@@ -5478,7 +5495,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "324",
+      "Placering": "325",
       "Titel": "Frihedsbrevets Intranet",
       "Vært": "Frihedsbrevet",
       "Vuring (1-10)": "6,5",
@@ -5495,7 +5512,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "325",
+      "Placering": "326",
       "Titel": "Lundin på livstid",
       "Vært": "Janne Aagaard",
       "Vuring (1-10)": "6,5",
@@ -5512,7 +5529,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "326",
+      "Placering": "327",
       "Titel": "Pattaya Cowboys",
       "Vært": "Wilhelm Østergaard and Mikkel Rønnau",
       "Vuring (1-10)": "6,5",
@@ -5529,7 +5546,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "327",
+      "Placering": "328",
       "Titel": "Narkobetjenten (sæson 13)",
       "Vært": "Pernille Brunse & Rene Dahl Ansen",
       "Vuring (1-10)": "6,5",
@@ -5546,7 +5563,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "328",
+      "Placering": "329",
       "Titel": "Nina og Frederik",
       "Vært": "Susse Wold",
       "Vuring (1-10)": "6,5",
@@ -5563,7 +5580,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "329",
+      "Placering": "330",
       "Titel": "Banderelateret",
       "Vært": "Kristoffer Eriksen & Carsten Norton",
       "Vuring (1-10)": "6,5",
@@ -5580,7 +5597,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "330",
+      "Placering": "331",
       "Titel": "Meldgaard Hardtalk",
       "Vært": "Knud Meldgaard",
       "Vuring (1-10)": "6,5",
@@ -5597,7 +5614,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "331",
+      "Placering": "332",
       "Titel": "F.C Københavns Fanradio",
       "Vært": "",
       "Vuring (1-10)": "6,5",
@@ -5614,7 +5631,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "332",
+      "Placering": "333",
       "Titel": "Primus optimus – Det irrationelle menneske",
       "Vært": "Lasse Rimmer",
       "Vuring (1-10)": "6,5",
@@ -5631,7 +5648,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "333",
+      "Placering": "334",
       "Titel": "Kiggerpigen",
       "Vært": "Stine Ellerbæk",
       "Vuring (1-10)": "6,5",
@@ -5648,7 +5665,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "334",
+      "Placering": "335",
       "Titel": "Worms Skat",
       "Vært": "Krister Moltzen",
       "Vuring (1-10)": "6,5",
@@ -5665,7 +5682,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "335",
+      "Placering": "336",
       "Titel": "Magtindsigt - Visbys Verden",
       "Vært": "Rasmus Visby",
       "Vuring (1-10)": "6,5",
@@ -5682,7 +5699,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "336",
+      "Placering": "337",
       "Titel": "Det brændte bordel (sæson 2)",
       "Vært": "Anne Skjerning",
       "Vuring (1-10)": "6,5",
@@ -5699,7 +5716,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "337",
+      "Placering": "338",
       "Titel": "Panser",
       "Vært": "René Dahl Ansen & Peter Graae",
       "Vuring (1-10)": "6,5",
@@ -5716,7 +5733,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "338",
+      "Placering": "339",
       "Titel": "Amdi over alle bjerge",
       "Vært": "Per Lysholt",
       "Vuring (1-10)": "6,5",
@@ -5733,7 +5750,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "339",
+      "Placering": "340",
       "Titel": "Manden med de mange navne",
       "Vært": "Per Lysholt",
       "Vuring (1-10)": "6,5",
@@ -5750,7 +5767,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "340",
+      "Placering": "341",
       "Titel": "Dårlig stemning",
       "Vært": "Adina Ren & Anna Olrik",
       "Vuring (1-10)": "6,5",
@@ -5767,7 +5784,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "341",
+      "Placering": "342",
       "Titel": "B.T. Valgkamp",
       "Vært": "Simon Richard Nielsen",
       "Vuring (1-10)": "6,4",
@@ -5784,7 +5801,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "342",
+      "Placering": "343",
       "Titel": "Fodbold FM",
       "Vært": "Sebastian Peebles",
       "Vuring (1-10)": "6,3",
@@ -5801,7 +5818,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "343",
+      "Placering": "344",
       "Titel": "Menendez-brødrene",
       "Vært": "Signe Frederikke Pedersen & Ruben Toft Sindahl",
       "Vuring (1-10)": "6,3",
@@ -5818,7 +5835,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "344",
+      "Placering": "345",
       "Titel": "Rust i jerntæppet",
       "Vært": "Martin Grønne & Celine Klint",
       "Vuring (1-10)": "6,3",
@@ -5835,7 +5852,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "345",
+      "Placering": "346",
       "Titel": "Narkokysten",
       "Vært": "Frederik Kulager",
       "Vuring (1-10)": "6,3",
@@ -5852,7 +5869,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "346",
+      "Placering": "347",
       "Titel": "Politimorderen Palle Sørensen",
       "Vært": "Per Lysholt",
       "Vuring (1-10)": "6,3",
@@ -5869,7 +5886,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "347",
+      "Placering": "348",
       "Titel": "Bag om bachelorette (sæson 1)",
       "Vært": "Mette Sommer",
       "Vuring (1-10)": "6,3",
@@ -5886,7 +5903,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "348",
+      "Placering": "349",
       "Titel": "Skud i sneen",
       "Vært": "Cecilie Nielsen",
       "Vuring (1-10)": "6,3",
@@ -5903,7 +5920,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "349",
+      "Placering": "350",
       "Titel": "Sofies valg",
       "Vært": "Sofie Frøkjær",
       "Vuring (1-10)": "6,3",
@@ -5920,7 +5937,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "350",
+      "Placering": "351",
       "Titel": "Den unge falskmønter",
       "Vært": "Per Lysholt & Søren Møgelvang Nielsen",
       "Vuring (1-10)": "6,3",
@@ -5937,7 +5954,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "351",
+      "Placering": "352",
       "Titel": "Katastrofe: Hindenburgluftkatastrofen",
       "Vært": "Kristoffer Lind & Rasmus Dahlberg",
       "Vuring (1-10)": "6,3",
@@ -5954,7 +5971,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "352",
+      "Placering": "353",
       "Titel": "Den lollandske mafia",
       "Vært": "Per Lysholt",
       "Vuring (1-10)": "6,3",
@@ -5971,7 +5988,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "353",
+      "Placering": "354",
       "Titel": "Dobbeltmordet - Mordet på Peter Bangs Vej",
       "Vært": "Margaret Lindhardt",
       "Vuring (1-10)": "6,3",
@@ -5988,7 +6005,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "354",
+      "Placering": "355",
       "Titel": "Oliekrisen",
       "Vært": "Martin Grønne",
       "Vuring (1-10)": "6,3",
@@ -6005,7 +6022,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "355",
+      "Placering": "356",
       "Titel": "Kold København",
       "Vært": "Krister Moltzen & Tim Henman",
       "Vuring (1-10)": "6,3",
@@ -6022,7 +6039,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "356",
+      "Placering": "357",
       "Titel": "Kampklar",
       "Vært": "Nicholas Durup Thomsen",
       "Vuring (1-10)": "6,3",
@@ -6039,7 +6056,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "357",
+      "Placering": "358",
       "Titel": "Pornoprogrammet",
       "Vært": "",
       "Vuring (1-10)": "6,3",
@@ -6056,7 +6073,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "358",
+      "Placering": "359",
       "Titel": "Reality tjek",
       "Vært": "Marlene Weybøll",
       "Vuring (1-10)": "6,2",
@@ -6073,7 +6090,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "359",
+      "Placering": "360",
       "Titel": "Koloni til salg",
       "Vært": "Martin Grønne",
       "Vuring (1-10)": "6,2",
@@ -6090,7 +6107,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "360",
+      "Placering": "361",
       "Titel": "Magten",
       "Vært": "Pia Glud Munksgaard",
       "Vuring (1-10)": "6,2",
@@ -6107,7 +6124,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "361",
+      "Placering": "362",
       "Titel": "Narkobetjenten på gaden (sæson 1)",
       "Vært": "René Dahl Andersen",
       "Vuring (1-10)": "6,2",
@@ -6124,7 +6141,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "362",
+      "Placering": "363",
       "Titel": "Lottomysteriet",
       "Vært": "Alberte Clement Meldal",
       "Vuring (1-10)": "6,2",
@@ -6141,7 +6158,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "363",
+      "Placering": "364",
       "Titel": "Katastrofe: Danmarks Titanic",
       "Vært": "Kristoffer Lind & Rasmus Dahlberg",
       "Vuring (1-10)": "6,2",
@@ -6158,7 +6175,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "364",
+      "Placering": "365",
       "Titel": "Satankulten",
       "Vært": "Rikke Mia Skovdal",
       "Vuring (1-10)": "6,2",
@@ -6175,7 +6192,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "365",
+      "Placering": "366",
       "Titel": "Mordet i Lillehammer",
       "Vært": "Celine Klint",
       "Vuring (1-10)": "6,2",
@@ -6192,7 +6209,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "366",
+      "Placering": "367",
       "Titel": "Følsom tonser",
       "Vært": "Katrine von Dahle",
       "Vuring (1-10)": "6,2",
@@ -6209,7 +6226,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "367",
+      "Placering": "368",
       "Titel": "Voxen",
       "Vært": "Sofie Linde & Frida Brygmann",
       "Vuring (1-10)": "6,1",
@@ -6226,7 +6243,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "368",
+      "Placering": "369",
       "Titel": "Rawtalk",
       "Vært": "Bradley Martyn",
       "Vuring (1-10)": "6,1",
@@ -6243,7 +6260,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "369",
+      "Placering": "370",
       "Titel": "Momkind podcast",
       "Vært": "Camille Gudmand Lange",
       "Vuring (1-10)": "6,0",
@@ -6260,7 +6277,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "370",
+      "Placering": "371",
       "Titel": "Swipe. Match. Date.",
       "Vært": "Emil Thorup",
       "Vuring (1-10)": "6,0",
@@ -6277,7 +6294,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "371",
+      "Placering": "372",
       "Titel": "Valgguf",
       "Vært": "Martin Nørgaard, Michael \"MC\" Christiansen, Morten Wichmann, Sebastian Kanani & Anton Nørbæk",
       "Vuring (1-10)": "6,0",
@@ -6294,7 +6311,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "372",
+      "Placering": "373",
       "Titel": "Det vildeste dobbeltliv",
       "Vært": "Per Lysholt",
       "Vuring (1-10)": "6,0",
@@ -6311,7 +6328,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "373",
+      "Placering": "374",
       "Titel": "Pusher Street",
       "Vært": "Dan Bjerregaard & Camilla Marie Nielsen",
       "Vuring (1-10)": "6,0",
@@ -6328,7 +6345,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "374",
+      "Placering": "375",
       "Titel": "Fængsel: Claus",
       "Vært": "Wilhelm Østergaard",
       "Vuring (1-10)": "6,0",
@@ -6345,7 +6362,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "375",
+      "Placering": "376",
       "Titel": "Piper alpha eksplosionen",
       "Vært": "Kristoffer Lind & Rasmus Dahlberg",
       "Vuring (1-10)": "6,0",
@@ -6362,7 +6379,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "376",
+      "Placering": "377",
       "Titel": "De lovløse",
       "Vært": "Emil Rothstein-Christensen",
       "Vuring (1-10)": "6,0",
@@ -6379,7 +6396,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "377",
+      "Placering": "378",
       "Titel": "Røverhistorier (sæson 1)",
       "Vært": "Morten Beiter",
       "Vuring (1-10)": "6,0",
@@ -6396,7 +6413,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "378",
+      "Placering": "379",
       "Titel": "Hammers Kaffebar",
       "Vært": "Dan hammer",
       "Vuring (1-10)": "6,0",
@@ -6413,7 +6430,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "379",
+      "Placering": "380",
       "Titel": "Sladderligaen",
       "Vært": "Michel vikkelsø davidsen",
       "Vuring (1-10)": "6,0",
@@ -6430,7 +6447,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "380",
+      "Placering": "381",
       "Titel": "På fersk gerning: fra fodboldstjerne til narkohaj",
       "Vært": "Dan Bjerregaard",
       "Vuring (1-10)": "6,0",
@@ -6447,7 +6464,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "381",
+      "Placering": "382",
       "Titel": "Vi ejer natten",
       "Vært": "Jean Von Baden",
       "Vuring (1-10)": "6,0",
@@ -6464,7 +6481,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "382",
+      "Placering": "383",
       "Titel": "Tragedien i Teater Dubrovka",
       "Vært": "Martin Grønne & Celine Klint",
       "Vuring (1-10)": "6,0",
@@ -6481,7 +6498,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "383",
+      "Placering": "384",
       "Titel": "Lang levetid podcast",
       "Vært": "Emil Thorup",
       "Vuring (1-10)": "5,9",
@@ -6498,7 +6515,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "384",
+      "Placering": "385",
       "Titel": "Diddy - no way out",
       "Vært": "Mads Emil Møller",
       "Vuring (1-10)": "5,9",
@@ -6515,7 +6532,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "385",
+      "Placering": "386",
       "Titel": "Bag politiets afspærring",
       "Vært": "Camilla Marie Nielsen & Dan Bjerregaard",
       "Vuring (1-10)": "5,9",
@@ -6532,7 +6549,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "386",
+      "Placering": "387",
       "Titel": "Rygtetid",
       "Vært": "Oliver Routledge",
       "Vuring (1-10)": "5,9",
@@ -6549,7 +6566,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "387",
+      "Placering": "388",
       "Titel": "En gonzo skifter spor",
       "Vært": "René Fredensborg & Rasmus Bruun",
       "Vuring (1-10)": "5,9",
@@ -6566,7 +6583,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "388",
+      "Placering": "389",
       "Titel": "Bare mellem os",
       "Vært": "Nikita Klæstrup",
       "Vuring (1-10)": "5,9",
@@ -6583,7 +6600,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "389",
+      "Placering": "390",
       "Titel": "Et drab bliver aldrig glemt",
       "Vært": "Per Lysholt",
       "Vuring (1-10)": "5,9",
@@ -6600,7 +6617,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "390",
+      "Placering": "391",
       "Titel": "Giftmorderen fra sønder økse",
       "Vært": "Per Lysholt & Søren Møgelvang Nielsen",
       "Vuring (1-10)": "5,9",
@@ -6617,7 +6634,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "391",
+      "Placering": "392",
       "Titel": "Våddragtsmysteriet",
       "Vært": "Per Lysholt",
       "Vuring (1-10)": "5,9",
@@ -6634,7 +6651,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "392",
+      "Placering": "393",
       "Titel": "Varme drenge",
       "Vært": "",
       "Vuring (1-10)": "5,9",
@@ -6651,7 +6668,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "393",
+      "Placering": "394",
       "Titel": "Fart på",
       "Vært": "Martin Svensson",
       "Vuring (1-10)": "5,9",
@@ -6668,7 +6685,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "394",
+      "Placering": "395",
       "Titel": "Avistid",
       "Vært": "Martin Krasnik",
       "Vuring (1-10)": "5,9",
@@ -6685,7 +6702,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "395",
+      "Placering": "396",
       "Titel": "Equinox 1985",
       "Vært": "Tea Lindeburg",
       "Vuring (1-10)": "5,9",
@@ -6702,7 +6719,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "396",
+      "Placering": "397",
       "Titel": "Onde Anna",
       "Vært": "Olga Ravn",
       "Vuring (1-10)": "5,9",
@@ -6719,7 +6736,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "397",
+      "Placering": "398",
       "Titel": "Kampen om historien: Sovjetunionen - Lenin og Stalins danske agent",
       "Vært": "Adam Holm",
       "Vuring (1-10)": "5,9",
@@ -6736,7 +6753,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "398",
+      "Placering": "399",
       "Titel": "Lady Diana",
       "Vært": "Martin grønne",
       "Vuring (1-10)": "5,9",
@@ -6753,7 +6770,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "399",
+      "Placering": "400",
       "Titel": "Copenhagen Narcos",
       "Vært": "",
       "Vuring (1-10)": "5,9",
@@ -6770,7 +6787,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "400",
+      "Placering": "401",
       "Titel": "Morgenoverblikket",
       "Vært": "",
       "Vuring (1-10)": "5,9",
@@ -6787,7 +6804,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "401",
+      "Placering": "402",
       "Titel": "Den dræbende butler",
       "Vært": "Per Lysholt",
       "Vuring (1-10)": "5,9",
@@ -6804,7 +6821,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "402",
+      "Placering": "403",
       "Titel": "Lige på sengekanten",
       "Vært": "Kathrine Abrahamsen",
       "Vuring (1-10)": "5,7",
@@ -6821,7 +6838,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "403",
+      "Placering": "404",
       "Titel": "Skyggesiden",
       "Vært": "Janni Pedersen & Carsten Norton",
       "Vuring (1-10)": "5,7",
@@ -6838,7 +6855,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "404",
+      "Placering": "405",
       "Titel": "Historien om alt",
       "Vært": "Simon Jul & Rane Willerslev",
       "Vuring (1-10)": "5,7",
@@ -6855,7 +6872,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "405",
+      "Placering": "406",
       "Titel": "Scandinavian Star - Kampen for at få svar",
       "Vært": "",
       "Vuring (1-10)": "5,7",
@@ -6872,7 +6889,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "406",
+      "Placering": "407",
       "Titel": "Nyt fra Højbjerg",
       "Vært": "Per Lysholt",
       "Vuring (1-10)": "5,7",
@@ -6889,7 +6906,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "407",
+      "Placering": "408",
       "Titel": "Palme-drabet",
       "Vært": "Per Lysholt",
       "Vuring (1-10)": "5,7",
@@ -6906,7 +6923,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "408",
+      "Placering": "409",
       "Titel": "Jan Wiborg-mysteriet",
       "Vært": "Signe Frederikke Pedersen",
       "Vuring (1-10)": "5,7",
@@ -6923,7 +6940,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "409",
+      "Placering": "410",
       "Titel": "Utrolige sekter",
       "Vært": "",
       "Vuring (1-10)": "5,6",
@@ -6940,7 +6957,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "410",
+      "Placering": "411",
       "Titel": "Dømt til sexarbejde",
       "Vært": "Per Lysholt",
       "Vuring (1-10)": "5,6",
@@ -6957,7 +6974,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "411",
+      "Placering": "412",
       "Titel": "4. division",
       "Vært": "Adam Holm",
       "Vuring (1-10)": "5,6",
@@ -6974,7 +6991,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "412",
+      "Placering": "413",
       "Titel": "Kvinden bag et mordkomplot",
       "Vært": "Per Lysholt & Søren Møgelvang Nielsen",
       "Vuring (1-10)": "5,6",
@@ -6991,7 +7008,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "413",
+      "Placering": "414",
       "Titel": "Narkobetjenten (sæson 9)",
       "Vært": "Rene Dahl Andersen & Pernille Brunse",
       "Vuring (1-10)": "5,6",
@@ -7008,7 +7025,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "414",
+      "Placering": "415",
       "Titel": "Her er de 100 ting, mor og far ikke fortæller",
       "Vært": "Merian Garde Gräs & Kaya Anna Hertz",
       "Vuring (1-10)": "5,6",
@@ -7025,7 +7042,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "415",
+      "Placering": "416",
       "Titel": "Uncover",
       "Vært": "Per Lysholt",
       "Vuring (1-10)": "5,6",
@@ -7042,7 +7059,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "416",
+      "Placering": "417",
       "Titel": "Av min krop",
       "Vært": "",
       "Vuring (1-10)": "5,6",
@@ -7059,7 +7076,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "417",
+      "Placering": "418",
       "Titel": "Nedsmeltning med Sisse Sejr",
       "Vært": "Sisse Sejr",
       "Vuring (1-10)": "5,6",
@@ -7076,7 +7093,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "418",
+      "Placering": "419",
       "Titel": "Spillertruppen",
       "Vært": "Kasper Steenbach",
       "Vuring (1-10)": "5,5",
@@ -7093,7 +7110,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "419",
+      "Placering": "420",
       "Titel": "Bernstein cigaretetui (sæson 1)",
       "Vært": "Frederik Cilius & Mikael Bertelsen",
       "Vuring (1-10)": "5,5",
@@ -7110,7 +7127,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "420",
+      "Placering": "421",
       "Titel": "Meget mere",
       "Vært": "Janni Ree",
       "Vuring (1-10)": "5,5",
@@ -7127,7 +7144,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "421",
+      "Placering": "422",
       "Titel": "Det store forsvindingsnummer",
       "Vært": "Ayan Yasin Abdi & Mads Olrik",
       "Vuring (1-10)": "5,5",
@@ -7144,7 +7161,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "422",
+      "Placering": "423",
       "Titel": "Souplesse",
       "Vært": "",
       "Vuring (1-10)": "5,5",
@@ -7161,7 +7178,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "423",
+      "Placering": "424",
       "Titel": "Svindlerne",
       "Vært": "",
       "Vuring (1-10)": "5,5",
@@ -7178,7 +7195,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "424",
+      "Placering": "425",
       "Titel": "Del & Like",
       "Vært": "Christina Vejlø",
       "Vuring (1-10)": "5,5",
@@ -7195,7 +7212,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "425",
+      "Placering": "426",
       "Titel": "P1 Morgen",
       "Vært": "",
       "Vuring (1-10)": "5,5",
@@ -7212,7 +7229,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "426",
+      "Placering": "427",
       "Titel": "Den giftige tvivl",
       "Vært": "Kristoffer Eriksen & Louise Dalsgaard",
       "Vuring (1-10)": "5,5",
@@ -7229,7 +7246,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "427",
+      "Placering": "428",
       "Titel": "Dato",
       "Vært": "Abdel Aziz Mahmoud",
       "Vuring (1-10)": "5,4",
@@ -7246,7 +7263,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "428",
+      "Placering": "429",
       "Titel": "Profeten fra Waco",
       "Vært": "Peder Byberg & Kristoffer Lind",
       "Vuring (1-10)": "5,4",
@@ -7263,7 +7280,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "429",
+      "Placering": "430",
       "Titel": "Millionærklubben",
       "Vært": "",
       "Vuring (1-10)": "5,4",
@@ -7280,7 +7297,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "430",
+      "Placering": "431",
       "Titel": "Ondskab i forklædning",
       "Vært": "Heidi, Dudski & Manja",
       "Vuring (1-10)": "5,4",
@@ -7297,7 +7314,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "431",
+      "Placering": "432",
       "Titel": "Fodbold var bedre i 90'erne",
       "Vært": "Kenneth Hansen, Karsten Kr&h & Sebastian Stanbury",
       "Vuring (1-10)": "5,4",
@@ -7314,7 +7331,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "432",
+      "Placering": "433",
       "Titel": "I hormonernes ånd",
       "Vært": "Anne Nørkjær Bang",
       "Vuring (1-10)": "5,3",
@@ -7331,7 +7348,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "433",
+      "Placering": "434",
       "Titel": "Roskilde-tragedien",
       "Vært": "Bo Norström Weile",
       "Vuring (1-10)": "5,3",
@@ -7348,7 +7365,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "434",
+      "Placering": "435",
       "Titel": "Fanget",
       "Vært": "Camilla Marie Nielsen & Dan Bjerregaard",
       "Vuring (1-10)": "5,3",
@@ -7365,7 +7382,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "435",
+      "Placering": "436",
       "Titel": "Basker",
       "Vært": "Julie Rahbek & Chano Jørgensen",
       "Vuring (1-10)": "5,3",
@@ -7382,7 +7399,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "436",
+      "Placering": "437",
       "Titel": "Mads og A-holdet",
       "Vært": "Mads Steffensen",
       "Vuring (1-10)": "5,3",
@@ -7399,7 +7416,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "437",
+      "Placering": "438",
       "Titel": "Fuhlendorff i fængsel",
       "Vært": "Christian Fuhlendorff",
       "Vuring (1-10)": "5,3",
@@ -7416,7 +7433,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "438",
+      "Placering": "439",
       "Titel": "Valgflæsk",
       "Vært": "Anders Langballe & Knud Brix",
       "Vuring (1-10)": "5,3",
@@ -7433,7 +7450,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "439",
+      "Placering": "440",
       "Titel": "Stjerner og striber",
       "Vært": "Stéphanie Surrugue",
       "Vuring (1-10)": "5,3",
@@ -7450,7 +7467,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "440",
+      "Placering": "441",
       "Titel": "Ingemandsland",
       "Vært": "Krister Moltzen",
       "Vuring (1-10)": "5,3",
@@ -7467,7 +7484,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "441",
+      "Placering": "442",
       "Titel": "Rockerne",
       "Vært": "Martin Hylander",
       "Vuring (1-10)": "5,3",
@@ -7484,7 +7501,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "442",
+      "Placering": "443",
       "Titel": "Mao",
       "Vært": "Emil Rothstein‑Christensen & Nicholas Durup Thomsen",
       "Vuring (1-10)": "5,3",
@@ -7501,7 +7518,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "443",
+      "Placering": "444",
       "Titel": "Peter og Profeterne",
       "Vært": "Peter Falktoft",
       "Vuring (1-10)": "5,3",
@@ -7518,1112 +7535,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "444",
-      "Titel": "En anden tid",
-      "Vært": "Hella Joof, Abdel Aziz Mahmoud & Zelma Lewerissa",
-      "Vuring (1-10)": "5,0",
-      "Genre": "Snakke",
-      "Udgiver": "Podimo",
-      "Antal afsnit": "Ugentlig",
-      "Årstal afspillet": "2025",
-      "Link": "https://podimo.com/dk/shows/en-anden-tid",
-      "Afgivet vurdering": "30-10-2025",
-      "Billedlink": "https://img.podimo.com/images/e7bb14ed-c018-4731-af41-d15e0619be9a?h=400&s=ZJN8507qInzNGP5WF04YBufNmqI%3D&w=400",
-      "Kort beskrivelse": "Hella Joof, Abdel Aziz og Zelma ser på normer fra en anden tid.",
-      "": "",
-      "Endnu ikke hørt": "",
-      "Nævneværdige episo:": ""
-    },
-    {
       "Placering": "445",
-      "Titel": "Bandekrigeren",
-      "Vært": "Per Lysholt",
-      "Vuring (1-10)": "5,0",
-      "Genre": "True crime",
-      "Udgiver": "DR",
-      "Antal afsnit": "2",
-      "Årstal afspillet": "2025",
-      "Link": "https://www.dr.dk/lyd/special-radio/djaevlen-i-detaljen/djaevlen-i-detaljen-2025/bandekrigeren-1-2-kys-mine-foedder-16122592624",
-      "Afgivet vurdering": "12-07-2025",
-      "Billedlink": "https://asset.dr.dk/drlyd/images/urn:dr:radio:image:69aabecd03528d46508d1163?im=AspectCrop%3D%28172%2C172%29%2CxPosition%3D.5%2CyPosition%3D.5%3BResize%3D%28172%2C172%29",
-      "Kort beskrivelse": "Om en bandekriger, volden og vejen ind og ud af miljøet.",
-      "": "",
-      "Endnu ikke hørt": "",
-      "Nævneværdige episo:": ""
-    },
-    {
-      "Placering": "446",
-      "Titel": "Faldskærmskuppet",
-      "Vært": "Liva Manghezi",
-      "Vuring (1-10)": "5,0",
-      "Genre": "True crime",
-      "Udgiver": "DR",
-      "Antal afsnit": "4",
-      "Årstal afspillet": "2025",
-      "Link": "https://www.dr.dk/lyd/pods/kup",
-      "Afgivet vurdering": "22-12-2025",
-      "Billedlink": "https://asset.dr.dk/drlyd/images/urn:dr:radio:image:693c0209ab13616ad983303d?im=AspectCrop%3D%28720%2C720%29%2CxPosition%3D.5%2CyPosition%3D.5%3BResize%3D%28720%2C720%29",
-      "Kort beskrivelse": "Om et spektakulært faldskærmskup og planen bag forbrydelsen.",
-      "": "",
-      "Endnu ikke hørt": "",
-      "Nævneværdige episo:": ""
-    },
-    {
-      "Placering": "447",
-      "Titel": "Katastrofe: Nedskydningen af den iranske Airbus 1988",
-      "Vært": "Kristoffer Lind & Rasmus Dahlberg",
-      "Vuring (1-10)": "5,0",
-      "Genre": "Historie",
-      "Udgiver": "Saga Talks",
-      "Antal afsnit": "1",
-      "Årstal afspillet": "2023",
-      "Link": "",
-      "Afgivet vurdering": "",
-      "Billedlink": "https://covers.storytel.com/jpg-640/9788728362471.607b93c8-af4a-4762-b2cb-2e7497c06ac5?optimize=high&quality=70&width=600",
-      "Kort beskrivelse": "Om nedskydningen af Iran Air 655 og katastrofen i 1988.",
-      "": "",
-      "Endnu ikke hørt": "",
-      "Nævneværdige episo:": ""
-    },
-    {
-      "Placering": "448",
-      "Titel": "Danmarks Største Kriminalsager: Hashsagen fra Isefjorden",
-      "Vært": "",
-      "Vuring (1-10)": "5,0",
-      "Genre": "True Crime",
-      "Udgiver": "Podimo",
-      "Antal afsnit": "3",
-      "Årstal afspillet": "",
-      "Link": "",
-      "Afgivet vurdering": "",
-      "Billedlink": "https://image.bog-ide.dk/3756492-528678-1000-1000/webp/0/1000/3756492-528678-1000-1000.webp",
-      "Kort beskrivelse": "Om hashsagen fra Isefjorden og en af Danmarks store narkosager.",
-      "": "",
-      "Endnu ikke hørt": "",
-      "Nævneværdige episo:": ""
-    },
-    {
-      "Placering": "449",
-      "Titel": "Kennedys kriser",
-      "Vært": "Martin Grønne & Celine Klint",
-      "Vuring (1-10)": "5,0",
-      "Genre": "Historie",
-      "Udgiver": "DR",
-      "Antal afsnit": "3",
-      "Årstal afspillet": "2026",
-      "Link": "https://podcasts.apple.com/dk/podcast/bakspejl/id1536415884?l=da",
-      "Afgivet vurdering": "01-04-2026",
-      "Billedlink": "https://cachedimages.podchaser.com/256x256/aHR0cHM6Ly9hcGkuZHIuZGsvcG9kY2FzdHMvdjEvaW1hZ2VzL3Vybjpkcjpwb2RjYXN0OmltYWdlOjY3ZTE0ZDZmNjI3M2U4ZmM3MDc3YWE1My5qcGc%3D/aHR0cHM6Ly93d3cucG9kY2hhc2VyLmNvbS9pbWFnZXMvbWlzc2luZy1pbWFnZS5wbmc%3D",
-      "Kort beskrivelse": "Om Kennedys kriser, magt, familie og politiske vendepunkter.",
-      "": "",
-      "Endnu ikke hørt": "",
-      "Nævneværdige episo:": ""
-    },
-    {
-      "Placering": "450",
-      "Titel": "Danmarks største kriminalsager: Fangeflugten fra Vridsløselille",
-      "Vært": "Rakkerpak Production",
-      "Vuring (1-10)": "4,9",
-      "Genre": "True Crime",
-      "Udgiver": "Mofibo",
-      "Antal afsnit": "12",
-      "Årstal afspillet": "2026",
-      "Link": "https://mofibo.com/dk/podcasts/danmarks-st%C3%B8rste-kriminalsager-70576",
-      "Afgivet vurdering": "12-04-2026",
-      "Billedlink": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSQbzR6ozylXYiQ9cHF8YA647RPBERkwIWXuA&s",
-      "Kort beskrivelse": "Om fangeflugten fra Vridsløselille og et dramatisk dansk fængselskapitel.",
-      "": "",
-      "Endnu ikke hørt": "",
-      "Nævneværdige episo:": ""
-    },
-    {
-      "Placering": "451",
-      "Titel": "I selskab med Q",
-      "Vært": "Henrik Qvortrup",
-      "Vuring (1-10)": "4,9",
-      "Genre": "Sladder",
-      "Udgiver": "Podimo",
-      "Antal afsnit": "Fredage",
-      "Årstal afspillet": "2025",
-      "Link": "",
-      "Afgivet vurdering": "",
-      "Billedlink": "https://img.podimo.com/images/6c64326a-3e2f-4119-a960-729934c7fd06?w=400&h=400&s=sriCViun6WGXPWbBRe8G3l6EKb4=",
-      "Kort beskrivelse": "Henrik Qvortrup taler politik, medier og magt i selskab med Q.",
-      "": "",
-      "Endnu ikke hørt": "",
-      "Nævneværdige episo:": ""
-    },
-    {
-      "Placering": "452",
-      "Titel": "Rwandas folkemord",
-      "Vært": "Martin Grønne",
-      "Vuring (1-10)": "4,8",
-      "Genre": "True crime",
-      "Udgiver": "DR",
-      "Antal afsnit": "1",
-      "Årstal afspillet": "2025",
-      "Link": "https://www.dr.dk/lyd/special-radio/bakspejl/bakspejl-2021/rwandas-folkemord-11162111004",
-      "Afgivet vurdering": "15-09-2025",
-      "Billedlink": "https://cachedimages.podchaser.com/256x256/aHR0cHM6Ly9hcGkuZHIuZGsvcG9kY2FzdHMvdjEvaW1hZ2VzL3Vybjpkcjpwb2RjYXN0OmltYWdlOjY3ZTE0ZDZmNjI3M2U4ZmM3MDc3YWE1My5qcGc%3D/aHR0cHM6Ly93d3cucG9kY2hhc2VyLmNvbS9pbWFnZXMvbWlzc2luZy1pbWFnZS5wbmc%3D",
-      "Kort beskrivelse": "Om folkemordet i Rwanda og hvordan volden kunne ske så hurtigt.",
-      "": "",
-      "Endnu ikke hørt": "",
-      "Nævneværdige episo:": ""
-    },
-    {
-      "Placering": "453",
-      "Titel": "Det Ku I Godt Ha' Sagt",
-      "Vært": "Magnus Haugaard",
-      "Vuring (1-10)": "4,8",
-      "Genre": "Underholdning",
-      "Udgiver": "Podimo",
-      "Antal afsnit": "Ugentlig",
-      "Årstal afspillet": "2024",
-      "Link": "https://podimo.com/dk/shows/det-ku-i-godt-ha-sagt",
-      "Afgivet vurdering": "",
-      "Billedlink": "https://img.podimo.com/images/41435686-e2ed-4d5b-9a3e-2b38d51ad0f6?w=400&h=400&s=5yOMqChyve-4MrkLpYA14O3b20U=",
-      "Kort beskrivelse": "Magnus Haugaard vender alt det, nogen godt kunne have sagt.",
-      "": "",
-      "Endnu ikke hørt": "",
-      "Nævneværdige episo:": ""
-    },
-    {
-      "Placering": "454",
-      "Titel": "Akavet, Emma",
-      "Vært": "",
-      "Vuring (1-10)": "4,8",
-      "Genre": "snakke",
-      "Udgiver": "",
-      "Antal afsnit": "",
-      "Årstal afspillet": "",
-      "Link": "",
-      "Afgivet vurdering": "",
-      "Billedlink": "https://i.scdn.co/image/ab6765630000ba8ae4c160075eb4f6227f87eedf",
-      "Kort beskrivelse": "Emma taler om akavede situationer, relationer og ungdomsliv.",
-      "": "",
-      "Endnu ikke hørt": "",
-      "Nævneværdige episo:": ""
-    },
-    {
-      "Placering": "455",
-      "Titel": "Hærfører",
-      "Vært": "Adam Holm & Jakob Sørensen",
-      "Vuring (1-10)": "4,8",
-      "Genre": "Kriger / Historie",
-      "Udgiver": "Podimo",
-      "Antal afsnit": "",
-      "Årstal afspillet": "2025",
-      "Link": "https://podimo.com/dk/shows/haerforer",
-      "Afgivet vurdering": "09-02-2026",
-      "Billedlink": "https://img.podimo.com/images/8fe0f9e0-3146-4a41-a1cc-77150cd3d029?w=400&h=400&s=NbxvbyIhwgm-MQS-mRz_brmTQ1k=",
-      "Kort beskrivelse": "Adam Holm og Jakob Sørensen taler krig, ledelse og militærhistorie.",
-      "": "",
-      "Endnu ikke hørt": "",
-      "Nævneværdige episo:": ""
-    },
-    {
-      "Placering": "456",
-      "Titel": "Ministertid",
-      "Vært": "Simon Emil Ammitzbøll-Bille",
-      "Vuring (1-10)": "4,7",
-      "Genre": "politik",
-      "Udgiver": "Altinget",
-      "Antal afsnit": "91",
-      "Årstal afspillet": "2026",
-      "Link": "https://podcasts.apple.com/dk/podcast/ministertid/id1602518696",
-      "Afgivet vurdering": "17-02-2026",
-      "Billedlink": "https://open-images.acast.com/shows/667542a1fcc9a90013533b89/1719213873138-92995d8469133b8384cf9cbd38c65a18.jpeg?height=250",
-      "Kort beskrivelse": "Simon Emil Ammitzbøll-Bille fortæller om livet som minister.",
-      "": "",
-      "Endnu ikke hørt": "",
-      "Nævneværdige episo:": ""
-    },
-    {
-      "Placering": "457",
-      "Titel": "Lyden af København",
-      "Vært": "Third Ear",
-      "Vuring (1-10)": "4,7",
-      "Genre": "Underholdning",
-      "Udgiver": "Københavns museum",
-      "Antal afsnit": "",
-      "Årstal afspillet": "2025",
-      "Link": "https://cphmuseum.kk.dk/om-museet/museets-podcasts/podcastserie-lyden-af-koebenhavn",
-      "Afgivet vurdering": "23-03-2025",
-      "Billedlink": "https://via.ritzau.dk/data/images/public/13561831/14389206/ab4ec41b-0ac7-4300-9d30-fee84ee35899-w_720.png",
-      "Kort beskrivelse": "Third Ear lytter sig ind på København gennem lyd, historier og mennesker.",
-      "": "",
-      "Endnu ikke hørt": "",
-      "Nævneværdige episo:": ""
-    },
-    {
-      "Placering": "458",
-      "Titel": "Fireburn",
-      "Vært": "Martin Grønne",
-      "Vuring (1-10)": "4,7",
-      "Genre": "True crime",
-      "Udgiver": "DR",
-      "Antal afsnit": "2",
-      "Årstal afspillet": "2025",
-      "Link": "https://www.dr.dk/lyd/special-radio/bakspejl/bakspejl-2025/fireburn-1-2-11162511021",
-      "Afgivet vurdering": "15-05-2025",
-      "Billedlink": "https://cachedimages.podchaser.com/256x256/aHR0cHM6Ly9hcGkuZHIuZGsvcG9kY2FzdHMvdjEvaW1hZ2VzL3Vybjpkcjpwb2RjYXN0OmltYWdlOjY3ZTE0ZDZmNjI3M2U4ZmM3MDc3YWE1My5qcGc%3D/aHR0cHM6Ly93d3cucG9kY2hhc2VyLmNvbS9pbWFnZXMvbWlzc2luZy1pbWFnZS5wbmc%3D",
-      "Kort beskrivelse": "Om Fireburn-oprøret og kolonihistorien i Caribien.",
-      "": "",
-      "Endnu ikke hørt": "",
-      "Nævneværdige episo:": ""
-    },
-    {
-      "Placering": "459",
-      "Titel": "Nordsjælland Dreamin'",
-      "Vært": "",
-      "Vuring (1-10)": "4,7",
-      "Genre": "Fodbold",
-      "Udgiver": "",
-      "Antal afsnit": "Ugentlig",
-      "Årstal afspillet": "2025",
-      "Link": "https://fcndreamin.libsyn.com/",
-      "Afgivet vurdering": "22-06-2025",
-      "Billedlink": "https://i.scdn.co/image/ab6765630000ba8a3946f0f57c7bc702f95b7da8",
-      "Kort beskrivelse": "Om FC Nordsjælland, drømme, talentudvikling og Farum-fortællingen.",
-      "": "",
-      "Endnu ikke hørt": "",
-      "Nævneværdige episo:": ""
-    },
-    {
-      "Placering": "460",
-      "Titel": "Casper Elsker Dig",
-      "Vært": "Casper Christensen",
-      "Vuring (1-10)": "4,7",
-      "Genre": "Snakke",
-      "Udgiver": "Podimo",
-      "Antal afsnit": "Ugentlig",
-      "Årstal afspillet": "2025",
-      "Link": "",
-      "Afgivet vurdering": "12-07-2025",
-      "Billedlink": "https://img.podimo.com/images/364591bd-f95b-446a-8117-71f2a18f0a50?w=400&h=400&s=U1wZqJ12IHGMUVfbSMnSci_Enuw=",
-      "Kort beskrivelse": "Casper Christensen taler om kærlighed, liv og sine nærmeste relationer.",
-      "": "",
-      "Endnu ikke hørt": "",
-      "Nævneværdige episo:": ""
-    },
-    {
-      "Placering": "461",
-      "Titel": "Prins Henriks Krig",
-      "Vært": "Frederikke Ingemann & Mads Brügger",
-      "Vuring (1-10)": "4,7",
-      "Genre": "dokumentar",
-      "Udgiver": "Frihedsbrevet",
-      "Antal afsnit": "",
-      "Årstal afspillet": "2025",
-      "Link": "https://podcasts.apple.com/dk/podcast/prins-henriks-krig/id1786337788",
-      "Afgivet vurdering": "02-12-2025",
-      "Billedlink": "https://i.scdn.co/image/ab6765630000ba8a922dca692ad37db52853cb1e",
-      "Kort beskrivelse": "Om Prins Henrik, krig, identitet og de skjulte kapitler i hans liv.",
-      "": "",
-      "Endnu ikke hørt": "",
-      "Nævneværdige episo:": ""
-    },
-    {
-      "Placering": "462",
-      "Titel": "Miraklet i Græsted",
-      "Vært": "Krister Moltzen",
-      "Vuring (1-10)": "4,7",
-      "Genre": "True crime",
-      "Udgiver": "Third Ear",
-      "Antal afsnit": "1",
-      "Årstal afspillet": "2024",
-      "Link": "",
-      "Afgivet vurdering": "",
-      "Billedlink": "https://open-images.acast.com/shows/62a1d88513e14d0011ebc309/1703718092762-ed1d5d9f0bf7a7c47cbbacd3ac99a572.jpeg?height=750",
-      "Kort beskrivelse": "Om et mirakel i Græsted og de mennesker, der troede på det.",
-      "": "",
-      "Endnu ikke hørt": "",
-      "Nævneværdige episo:": ""
-    },
-    {
-      "Placering": "463",
-      "Titel": "Charles Manson: Det glemte mord",
-      "Vært": "Kristoffer Lind & Peder Byberg",
-      "Vuring (1-10)": "4,7",
-      "Genre": "True crime",
-      "Udgiver": "Radio4",
-      "Antal afsnit": "3",
-      "Årstal afspillet": "2024",
-      "Link": "https://radio4.dk/podcasts/krimiland/charles-manson-det-glemte-mord-1-3",
-      "Afgivet vurdering": "",
-      "Billedlink": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTglAe3aGfch_szGBsYmlYEcojPORNeeDoisQ&s",
-      "Kort beskrivelse": "Om Charles Manson, et glemt mord og kultens mørke spor.",
-      "": "",
-      "Endnu ikke hørt": "",
-      "Nævneværdige episo:": ""
-    },
-    {
-      "Placering": "464",
-      "Titel": "Betjentens mareridt",
-      "Vært": "Per Lysholt",
-      "Vuring (1-10)": "4,7",
-      "Genre": "True crime",
-      "Udgiver": "DR",
-      "Antal afsnit": "2",
-      "Årstal afspillet": "2024",
-      "Link": "https://www.dr.dk/lyd/special-radio/djaevlen-i-detaljen/djaevlen-i-detaljen-2024/djaevlen-i-detaljen-betjentens-mareridt-1-2-nu-skal-jeg-doe-16122492639",
-      "Afgivet vurdering": "23-03-2025",
-      "Billedlink": "https://is1-ssl.mzstatic.com/image/thumb/Podcasts221/v4/78/c8/06/78c8065c-b0b1-729c-01d0-522b3fcc998b/mza_486116165445940358.png/1200x1200bf-60.jpg",
-      "Kort beskrivelse": "Om en betjents mareridt og en sag, der sætter politiet under pres.",
-      "": "",
-      "Endnu ikke hørt": "",
-      "Nævneværdige episo:": ""
-    },
-    {
-      "Placering": "465",
-      "Titel": "Om Søndagen Græder Vi",
-      "Vært": "Hella Joof & Marie Tüxen",
-      "Vuring (1-10)": "4,7",
-      "Genre": "Snakke",
-      "Udgiver": "",
-      "Antal afsnit": "Ugentlig",
-      "Årstal afspillet": "",
-      "Link": "",
-      "Afgivet vurdering": "",
-      "Billedlink": "https://img.podimo.com/images/14c1f558-f6c9-4af9-b266-7cb0a3ecbd50?w=400&h=400&s=4-D38-hrvj4DY_4qGo6WNUymklU=",
-      "Kort beskrivelse": "Hella Joof og Marie Tüxen taler om sorg, liv og det svære om søndagen.",
-      "": "",
-      "Endnu ikke hørt": "",
-      "Nævneværdige episo:": ""
-    },
-    {
-      "Placering": "466",
-      "Titel": "Ugens transfer suppe",
-      "Vært": "",
-      "Vuring (1-10)": "4,7",
-      "Genre": "fodbold",
-      "Udgiver": "",
-      "Antal afsnit": "",
-      "Årstal afspillet": "",
-      "Link": "",
-      "Afgivet vurdering": "",
-      "Billedlink": "https://is1-ssl.mzstatic.com/image/thumb/Podcasts221/v4/7e/c9/10/7ec91006-4f0e-fab1-098e-0f75254cfbcf/mza_11239152812765812542.jpg/250x250bb.jpg",
-      "Kort beskrivelse": "Ugens Transfer Suppe vender rygter, handler og fodboldmarkedets drama.",
-      "": "",
-      "Endnu ikke hørt": "",
-      "Nævneværdige episo:": ""
-    },
-    {
-      "Placering": "467",
-      "Titel": "Dobbeltgænger",
-      "Vært": "Fie Dandanell og Line Sand",
-      "Vuring (1-10)": "4,7",
-      "Genre": "dokumentar",
-      "Udgiver": "Zetland",
-      "Antal afsnit": "",
-      "Årstal afspillet": "",
-      "Link": "",
-      "Afgivet vurdering": "31-07-2025",
-      "Billedlink": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSRAHtWhjJh0syt2rYG0IhO-sRQMeATHm-xdg&s",
-      "Kort beskrivelse": "Om dobbeltgængere, identitet og mennesker, der ligner for meget.",
-      "": "",
-      "Endnu ikke hørt": "",
-      "Nævneværdige episo:": ""
-    },
-    {
-      "Placering": "468",
-      "Titel": "Famøse fangeflugter: flugten fra alvatraz",
-      "Vært": "",
-      "Vuring (1-10)": "4,6",
-      "Genre": "True crime",
-      "Udgiver": "Podimo",
-      "Antal afsnit": "",
-      "Årstal afspillet": "",
-      "Link": "",
-      "Afgivet vurdering": "",
-      "Billedlink": "https://img.podimo.com/images/959ee6ea-078c-41cb-a1dc-3ec64a5a60f5?h=400&s=zgl5H0QVL7u3aCA37FNWZrXnw6s%3D&w=400",
-      "Kort beskrivelse": "Om den berømte flugt fra Alcatraz og mysteriet om, hvad der skete.",
-      "": "",
-      "Endnu ikke hørt": "",
-      "Nævneværdige episo:": ""
-    },
-    {
-      "Placering": "469",
-      "Titel": "Virkelighedens Egon Olsen",
-      "Vært": "Per Lysholt",
-      "Vuring (1-10)": "4,5",
-      "Genre": "True crime",
-      "Udgiver": "DR",
-      "Antal afsnit": "3",
-      "Årstal afspillet": "2025",
-      "Link": "https://www.dr.dk/lyd/special-radio/djaevlen-i-detaljen/djaevlen-i-detaljen-2025/virkelighedens-egon-olsen-1-3-en-tyv-er-foedt-16122592614",
-      "Afgivet vurdering": "27-04-2025",
-      "Billedlink": "https://is1-ssl.mzstatic.com/image/thumb/Podcasts221/v4/78/c8/06/78c8065c-b0b1-729c-01d0-522b3fcc998b/mza_486116165445940358.png/1200x1200bf-60.jpg",
-      "Kort beskrivelse": "Om virkelighedens Egon Olsen og et kriminelt liv med list og planer.",
-      "": "",
-      "Endnu ikke hørt": "",
-      "Nævneværdige episo:": ""
-    },
-    {
-      "Placering": "470",
-      "Titel": "Friis’ diplomatpost",
-      "Vært": "Friis Arne Petersen",
-      "Vuring (1-10)": "4,5",
-      "Genre": "Politik",
-      "Udgiver": "Frihedsbrevet",
-      "Antal afsnit": "Ugentlig",
-      "Årstal afspillet": "2025",
-      "Link": "https://podcasts.apple.com/dk/podcast/friis-diplomatpost/id1706073378",
-      "Afgivet vurdering": "09-11-2025",
-      "Billedlink": "https://www.omnycontent.com/d/programs/88c335ba-6520-4de0-97b0-ad3a00d192cf/ac4830c3-707a-401c-bf46-af0a00a480da/image.jpg?t=1726739399&size=Medium",
-      "Kort beskrivelse": "Friis Arne Petersen fortæller om diplomati, magt og livet som udsendt.",
-      "": "",
-      "Endnu ikke hørt": "",
-      "Nævneværdige episo:": ""
-    },
-    {
-      "Placering": "471",
-      "Titel": "Helt væk med Hemmingsen",
-      "Vært": "Anders Hemmingsen",
-      "Vuring (1-10)": "4,5",
-      "Genre": "Unholdning",
-      "Udgiver": "BT",
-      "Antal afsnit": "STOPPET",
-      "Årstal afspillet": "",
-      "Link": "",
-      "Afgivet vurdering": "",
-      "Billedlink": "https://akamai-aptoma-production.bmcdn.dk/users/berlingske/images/83989786.webp?t[strip]=true&t[resize][width]=1440&t[quality]=70&accessToken=738ac1a9fd8e365bc253cb07b91c1be8a8224a907553d24e3fc1cce94bde6a91",
-      "Kort beskrivelse": "Anders Hemmingsen taler humor, virale historier og dansk internetkultur.",
-      "": "",
-      "Endnu ikke hørt": "",
-      "Nævneværdige episo:": ""
-    },
-    {
-      "Placering": "472",
-      "Titel": "Tal til mig",
-      "Vært": "Iben Marie Zeuthen",
-      "Vuring (1-10)": "4,5",
-      "Genre": "Snakke",
-      "Udgiver": "DR",
-      "Antal afsnit": "Ugentlig",
-      "Årstal afspillet": "",
-      "Link": "",
-      "Afgivet vurdering": "",
-      "Billedlink": "https://asset.dr.dk/drlyd/images/urn:dr:radio:image:688fdbc02e199a1c53193c2b?im=AspectCrop%3D%28720%2C720%29%2CxPosition%3D.5%2CyPosition%3D.5%3BResize%3D%28720%2C720%29",
-      "Kort beskrivelse": "Iben Maria Zeuthen taler med mennesker om sprog, samtaler og liv.",
-      "": "",
-      "Endnu ikke hørt": "",
-      "Nævneværdige episo:": ""
-    },
-    {
-      "Placering": "473",
-      "Titel": "Nu snakker vi om det",
-      "Vært": "Malthe Zimakoff, Morten Svane & Daniel Jensen",
-      "Vuring (1-10)": "4,5",
-      "Genre": "Snakke",
-      "Udgiver": "",
-      "Antal afsnit": "Ugentlig",
-      "Årstal afspillet": "",
-      "Link": "",
-      "Afgivet vurdering": "",
-      "Billedlink": "https://img.podimo.com/images/18a7c70b-da8c-4ef0-abf8-7d11ae941da0?w=400&h=400&s=-rlFQBWSSIw7n1ZjvgQUHvXV0gE=",
-      "Kort beskrivelse": "Tre venner taler om det, der fylder i livet, kulturen og hverdagen.",
-      "": "",
-      "Endnu ikke hørt": "",
-      "Nævneværdige episo:": ""
-    },
-    {
-      "Placering": "474",
-      "Titel": "Kampagnesporet",
-      "Vært": "Mads Fuglede & David Trads",
-      "Vuring (1-10)": "4,5",
-      "Genre": "Politik",
-      "Udgiver": "Jyllands-Posten",
-      "Antal afsnit": "",
-      "Årstal afspillet": "2026",
-      "Link": "https://podcasts.apple.com/dk/podcast/kampagnesporet/id1130903371",
-      "Afgivet vurdering": "28-02-2026",
-      "Billedlink": "https://i.scdn.co/image/ab6765630000ba8a392ce0e036793cd73db22ed3",
-      "Kort beskrivelse": "Kampagnesporet følger valgkamp, strategi og politikernes spil.",
-      "": "",
-      "Endnu ikke hørt": "",
-      "Nævneværdige episo:": ""
-    },
-    {
-      "Placering": "475",
-      "Titel": "Single",
-      "Vært": "Lissa Paustian",
-      "Vuring (1-10)": "4,4",
-      "Genre": "Kærlighed",
-      "Udgiver": "Ekstra Bladet",
-      "Antal afsnit": "Ugentlig",
-      "Årstal afspillet": "2026",
-      "Link": "https://podcasts.apple.com/dk/podcast/single/id1856173488",
-      "Afgivet vurdering": "02-02-2026",
-      "Billedlink": "https://open-images.acast.com/shows/667542a1fcc9a90013533b89/1719213873138-92995d8469133b8384cf9cbd38c65a18.jpeg?height=250",
-      "Kort beskrivelse": "Single handler om dating, brud og livet uden fast partner.",
-      "": "",
-      "Endnu ikke hørt": "",
-      "Nævneværdige episo:": ""
-    },
-    {
-      "Placering": "476",
-      "Titel": "Hemmeligheder",
-      "Vært": "Ida-Sophia",
-      "Vuring (1-10)": "4,4",
-      "Genre": "Samfund",
-      "Udgiver": "DR",
-      "Antal afsnit": "27",
-      "Årstal afspillet": "2026",
-      "Link": "https://www.dr.dk/lyd/p3/hemmeligheder-3166337151000",
-      "Afgivet vurdering": "29-05-2025",
-      "Billedlink": "https://asset.dr.dk/drlyd/images/urn:dr:radio:image:69eb229c5779fcda6c4fcfbd?im=AspectCrop%3D%28160%2C160%29%2CxPosition%3D.5%2CyPosition%3D.5%3BResize%3D%28160%2C160%29",
-      "Kort beskrivelse": "Ida-Sophia åbner hemmeligheder, fortællinger og det usagte.",
-      "": "",
-      "Endnu ikke hørt": "",
-      "Nævneværdige episo:": ""
-    },
-    {
-      "Placering": "477",
-      "Titel": "The bachelårette podcast",
-      "Vært": "Chano Jørgensen & Nicolai Lydiksen",
-      "Vuring (1-10)": "4,3",
-      "Genre": "kærlighed",
-      "Udgiver": "",
-      "Antal afsnit": "Ugentlig",
-      "Årstal afspillet": "2025",
-      "Link": "",
-      "Afgivet vurdering": "22-06-2025",
-      "Billedlink": "https://i.scdn.co/image/ab6765630000ba8abeffca2af70e09081096b4f4",
-      "Kort beskrivelse": "The Bachelårette Podcast vender dating, drama og reality med humor.",
-      "": "",
-      "Endnu ikke hørt": "",
-      "Nævneværdige episo:": ""
-    },
-    {
-      "Placering": "478",
-      "Titel": "Hermann Göring",
-      "Vært": "Kristoffer Lind & Signe Frederikke Pedersen",
-      "Vuring (1-10)": "4,3",
-      "Genre": "historie",
-      "Udgiver": "RADIO IIII",
-      "Antal afsnit": "3",
-      "Årstal afspillet": "2025",
-      "Link": "https://radio4.dk/podcasts/krimiland",
-      "Afgivet vurdering": "16-12-2025",
-      "Billedlink": "https://is1-ssl.mzstatic.com/image/thumb/Podcasts221/v4/30/2f/63/302f6386-afe9-1e10-377c-a4ee994d76bb/mza_13508543133229279959.jpg/1200x1200bf-60.jpg",
-      "Kort beskrivelse": "Om Hermann Göring, nazismens top og magten bag Hitlers regime.",
-      "": "",
-      "Endnu ikke hørt": "",
-      "Nævneværdige episo:": ""
-    },
-    {
-      "Placering": "479",
-      "Titel": "Et farligt match",
-      "Vært": "Sille Ugelvig",
-      "Vuring (1-10)": "4,3",
-      "Genre": "True crime",
-      "Udgiver": "DR",
-      "Antal afsnit": "3",
-      "Årstal afspillet": "2024",
-      "Link": "https://www.dr.dk/lyd/p3/under-radaren/et-farligt-match/under-radaren-et-farligt-match-1-3-fuck-han-er-flot-13332496711",
-      "Afgivet vurdering": "",
-      "Billedlink": "https://asset.dr.dk/drlyd/images/urn:dr:radio:image:68553071de5d5eb0ff644c3e?im=AspectCrop%3D%28720%2C720%29%2CxPosition%3D.5%2CyPosition%3D.5%3BResize%3D%28720%2C720%29",
-      "Kort beskrivelse": "Om dating, manipulation og et match, der viser sig farligt.",
-      "": "",
-      "Endnu ikke hørt": "",
-      "Nævneværdige episo:": ""
-    },
-    {
-      "Placering": "480",
-      "Titel": "Casper ringer til Frank",
-      "Vært": "Casper Christinsen & Frank Hvam",
-      "Vuring (1-10)": "4,3",
-      "Genre": "Snakke",
-      "Udgiver": "Podimo",
-      "Antal afsnit": "",
-      "Årstal afspillet": "",
-      "Link": "",
-      "Afgivet vurdering": "",
-      "Billedlink": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQwW8ixO6K04Kal4tUmvZLk0IEBVTRHFLcL0w&s",
-      "Kort beskrivelse": "Casper Christensen og Frank Hvam ringer sammen om liv, humor og venskab.",
-      "": "",
-      "Endnu ikke hørt": "",
-      "Nævneværdige episo:": ""
-    },
-    {
-      "Placering": "481",
-      "Titel": "Hitlers Æselører",
-      "Vært": "Jarl Cordua",
-      "Vuring (1-10)": "4,3",
-      "Genre": "Historie",
-      "Udgiver": "Berlingske",
-      "Antal afsnit": "",
-      "Årstal afspillet": "",
-      "Link": "",
-      "Afgivet vurdering": "",
-      "Billedlink": "https://i.scdn.co/image/ab6765630000ba8a19f600e065b70a29a0979128",
-      "Kort beskrivelse": "Jarl Cordua vender historie, politik og Hitlers spor i samtiden.",
-      "": "",
-      "Endnu ikke hørt": "",
-      "Nævneværdige episo:": ""
-    },
-    {
-      "Placering": "482",
-      "Titel": "Belle fra helvede",
-      "Vært": "Martin Hylander",
-      "Vuring (1-10)": "4,1",
-      "Genre": "True crime",
-      "Udgiver": "",
-      "Antal afsnit": "4",
-      "Årstal afspillet": "2025",
-      "Link": "",
-      "Afgivet vurdering": "23-03-2025",
-      "Billedlink": "https://is1-ssl.mzstatic.com/image/thumb/Podcasts116/v4/9f/c3/ef/9fc3efc7-2290-d060-1fdc-fe87b5b0c89d/mza_705264873883700247.jpg/1200x1200bf-60.jpg",
-      "Kort beskrivelse": "Om Belle Gunness, mordene og kvinden bag et amerikansk mareridt.",
-      "": "",
-      "Endnu ikke hørt": "",
-      "Nævneværdige episo:": ""
-    },
-    {
-      "Placering": "483",
-      "Titel": "Taskforce Nord Stream",
-      "Vært": "Andreas Munk & Frederikke Ingemann",
-      "Vuring (1-10)": "4,1",
-      "Genre": "True Crime",
-      "Udgiver": "Frihedsbrevet",
-      "Antal afsnit": "",
-      "Årstal afspillet": "2025",
-      "Link": "https://frihedsbrevet.dk/podcasts/taskforce-nord-stream/",
-      "Afgivet vurdering": "02-12-2025",
-      "Billedlink": "https://i.scdn.co/image/ab6765630000ba8a7ede1888ccd0dfa3ba164dfa",
-      "Kort beskrivelse": "Frihedsbrevet undersøger Nord Stream, sprængningerne og magtspillet.",
-      "": "",
-      "Endnu ikke hørt": "",
-      "Nævneværdige episo:": ""
-    },
-    {
-      "Placering": "484",
-      "Titel": "Transfermania",
-      "Vært": "Axel Moen",
-      "Vuring (1-10)": "4,1",
-      "Genre": "Fodbold",
-      "Udgiver": "",
-      "Antal afsnit": "STOPPET",
-      "Årstal afspillet": "",
-      "Link": "",
-      "Afgivet vurdering": "",
-      "Billedlink": "https://d3wo5wojvuv7l.cloudfront.net/t_square_limited_480/images.spreaker.com/original/50ac95b1ab850fb1aefc42b7d929448a.jpg",
-      "Kort beskrivelse": "Transfermania vender fodboldhandler, rygter og markedets bevægelser.",
-      "": "",
-      "Endnu ikke hørt": "",
-      "Nævneværdige episo:": ""
-    },
-    {
-      "Placering": "485",
-      "Titel": "Wichmaskinen",
-      "Vært": "Morten Wichman",
-      "Vuring (1-10)": "4,1",
-      "Genre": "Snakke",
-      "Udgiver": "podimo",
-      "Antal afsnit": "",
-      "Årstal afspillet": "",
-      "Link": "",
-      "Afgivet vurdering": "",
-      "Billedlink": "https://img.podimo.com/images/7223b1c2-2fae-4169-b86d-10f738f7e66c?h=400&s=Dhenal93cunW7-dkU3kzUPXXAdg%3D&w=400",
-      "Kort beskrivelse": "Morten Wichmann blander comedy, satire og skæve samfundsobservationer.",
-      "": "",
-      "Endnu ikke hørt": "",
-      "Nævneværdige episo:": ""
-    },
-    {
-      "Placering": "486",
-      "Titel": "Sasha var heroin-luder",
-      "Vært": "Karoline Noer",
-      "Vuring (1-10)": "4,1",
-      "Genre": "true Crime",
-      "Udgiver": "Ekstra Bladet",
-      "Antal afsnit": "1",
-      "Årstal afspillet": "2026",
-      "Link": "https://podcasts.apple.com/dk/podcast/afh%C3%B8rt/id1589788282",
-      "Afgivet vurdering": "09-02-2026",
-      "Billedlink": "https://i.scdn.co/image/ab6765630000ba8a130fd746c9fc3b076ccf507f",
-      "Kort beskrivelse": "Om Sasha, heroin, sexarbejde og livet på kanten.",
-      "": "",
-      "Endnu ikke hørt": "",
-      "Nævneværdige episo:": ""
-    },
-    {
-      "Placering": "487",
-      "Titel": "Djævlen i ozark-bjergene",
-      "Vært": "Kristoffer Lind & Signe Frederikke Pedersen",
-      "Vuring (1-10)": "4,0",
-      "Genre": "True crime",
-      "Udgiver": "Radio llll",
-      "Antal afsnit": "1",
-      "Årstal afspillet": "2025",
-      "Link": "https://radio4.dk/podcasts/krimiland/dj-velen-i-ozark-bjergene",
-      "Afgivet vurdering": "22-06-2025",
-      "Billedlink": "https://radio4data.imgix.net/2025/07/Krimiland_begge_1x1-2-6.png?fit=crop&height=400&width=400",
-      "Kort beskrivelse": "Om forbrydelser i Ozark-bjergene og mørket bag idyllen.",
-      "": "",
-      "Endnu ikke hørt": "",
-      "Nævneværdige episo:": ""
-    },
-    {
-      "Placering": "488",
-      "Titel": "Apartheid",
-      "Vært": "Per Lysholt",
-      "Vuring (1-10)": "4,0",
-      "Genre": "True crime",
-      "Udgiver": "DR",
-      "Antal afsnit": "4",
-      "Årstal afspillet": "2025",
-      "Link": "",
-      "Afgivet vurdering": "08-12-2025",
-      "Billedlink": "https://is1-ssl.mzstatic.com/image/thumb/Podcasts221/v4/78/c8/06/78c8065c-b0b1-729c-01d0-522b3fcc998b/mza_486116165445940358.png/1200x1200bf-60.jpg",
-      "Kort beskrivelse": "Om apartheid, Sydafrika og kampen mod et brutalt system.",
-      "": "",
-      "Endnu ikke hørt": "",
-      "Nævneværdige episo:": ""
-    },
-    {
-      "Placering": "489",
-      "Titel": "Hvad regner du med!?",
-      "Vært": "Anna Bogdanova",
-      "Vuring (1-10)": "4,0",
-      "Genre": "sundhed",
-      "Udgiver": "Acast",
-      "Antal afsnit": "3",
-      "Årstal afspillet": "",
-      "Link": "https://podcasts.apple.com/dk/podcast/hvad-regner-du-med/id1847324803",
-      "Afgivet vurdering": "04-11-2025",
-      "Billedlink": "https://img.podimo.com/images/cd0e9bcb-334c-4bf6-80ee-777fd03dbbcc?h=400&s=JlAmHgPV31MNTWpy00jlVDZAi_s%3D&w=400",
-      "Kort beskrivelse": "Anna Bogdanova taler træning, krop og realistiske forventninger.",
-      "": "",
-      "Endnu ikke hørt": "",
-      "Nævneværdige episo:": ""
-    },
-    {
-      "Placering": "490",
-      "Titel": "Vågn lidt op!",
-      "Vært": "Svala Sigfusardottir",
-      "Vuring (1-10)": "3,9",
-      "Genre": "Snakke",
-      "Udgiver": "Radio llll",
-      "Antal afsnit": "Ugentlig",
-      "Årstal afspillet": "2025",
-      "Link": "https://radio4.dk/podcasts/vaagn-lidt-op",
-      "Afgivet vurdering": "01-07-2025",
-      "Billedlink": "https://radio4data.imgix.net/2025/05/Vaagn_lidt_op_ikongrafik.png?ar=1.56%3A1&crop=top&fit=crop&height=400&width=600",
-      "Kort beskrivelse": "Svala Sigfusardottir giver et kærligt spark til vaner og hverdagsliv.",
-      "": "",
-      "Endnu ikke hørt": "",
-      "Nævneværdige episo:": ""
-    },
-    {
-      "Placering": "491",
-      "Titel": "Fremtidens kriminalitet",
-      "Vært": "Kristoffer Eriksen & David Sausdal",
-      "Vuring (1-10)": "3,9",
-      "Genre": "True Crime",
-      "Udgiver": "Podimo",
-      "Antal afsnit": "Ugentlig",
-      "Årstal afspillet": "2024",
-      "Link": "https://podimo.com/dk/shows/fremtidens-kriminalitet",
-      "Afgivet vurdering": "",
-      "Billedlink": "https://img.podimo.com/images/d5cdc7f1-d76d-4b68-9220-3c2e1b3e8876?h=400&s=HzXV2mgjcCz6ANM4QcyWt6a2U90%3D&w=400",
-      "Kort beskrivelse": "Om fremtidens kriminalitet, teknologi og nye former for forbrydelser.",
-      "": "",
-      "Endnu ikke hørt": "",
-      "Nævneværdige episo:": ""
-    },
-    {
-      "Placering": "492",
-      "Titel": "Dårligdommerne",
-      "Vært": "Jacob Ege Hinchely, Troels Møller & Christopher Leo",
-      "Vuring (1-10)": "3,9",
-      "Genre": "Underholdning",
-      "Udgiver": "Podimo",
-      "Antal afsnit": "",
-      "Årstal afspillet": "",
-      "Link": "",
-      "Afgivet vurdering": "",
-      "Billedlink": "https://migogkbh.dk/wp-content/uploads/2023/05/1d53f45a-8745-467d-91eb-f753be48e468_400x400.png",
-      "Kort beskrivelse": "Dårligdommerne ser dårlige film med humor, kærlighed og hårde domme.",
-      "": "",
-      "Endnu ikke hørt": "",
-      "Nævneværdige episo:": ""
-    },
-    {
-      "Placering": "493",
-      "Titel": "Cand. merc. podcast",
-      "Vært": "",
-      "Vuring (1-10)": "3,6",
-      "Genre": "Underholdning",
-      "Udgiver": "Podimo",
-      "Antal afsnit": "20",
-      "Årstal afspillet": "2025",
-      "Link": "",
-      "Afgivet vurdering": "23-03-2025",
-      "Billedlink": "https://img.podimo.com/images/0f00e11d-5d3b-4287-b10c-665f05d5e384?h=400&s=1lTaeNv-zMsjbovVlmsdHjLuZQY%3D&w=400",
-      "Kort beskrivelse": "Cand.merc.-podcasten taler karriere, studieliv og erhvervsliv.",
-      "": "",
-      "Endnu ikke hørt": "",
-      "Nævneværdige episo:": ""
-    },
-    {
-      "Placering": "494",
-      "Titel": "Ren bold",
-      "Vært": "Thure Sandøe",
-      "Vuring (1-10)": "2,9",
-      "Genre": "Fodbold",
-      "Udgiver": "Bold",
-      "Antal afsnit": "",
-      "Årstal afspillet": "2024",
-      "Link": "",
-      "Afgivet vurdering": "",
-      "Billedlink": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQVBIuEHLlCfFQrCFKyzZIlzh6OYPFB96CWqg&s",
-      "Kort beskrivelse": "Ren Bold vender fodbold, fairplay og spillets store spørgsmål.",
-      "": "",
-      "Endnu ikke hørt": "",
-      "Nævneværdige episo:": ""
-    },
-    {
-      "Placering": "495",
-      "Titel": "Mørkeland",
-      "Vært": "Camilla Bjerregaard Aurvig & Kristine Sofie Bugbee",
-      "Vuring (1-10)": "2,9",
-      "Genre": "True Crime",
-      "Udgiver": "",
-      "Antal afsnit": "Mandage",
-      "Årstal afspillet": "",
-      "Link": "",
-      "Afgivet vurdering": "",
-      "Billedlink": "https://program.bogforum.dk/wp-content/uploads/2025/10/Moerkeland-aspect-ratio-400-400.jpeg",
-      "Kort beskrivelse": "Mørkeland fortæller mørke kriminalsager med fokus på ofre og forløb.",
-      "": "",
-      "Endnu ikke hørt": "",
-      "Nævneværdige episo:": ""
-    },
-    {
-      "Placering": "496",
-      "Titel": "Genvej",
-      "Vært": "Adnan Al-Adhami",
-      "Vuring (1-10)": "2,4",
-      "Genre": "Underholdning",
-      "Udgiver": "DR",
-      "Antal afsnit": "Ugentlig",
-      "Årstal afspillet": "2024",
-      "Link": "https://www.dr.dk/lyd/p3/genvej-5513984425000",
-      "Afgivet vurdering": "",
-      "Billedlink": "https://asset.dr.dk/drlyd/images/urn:dr:radio:image:6926eaf44f22de874eb4a402?im=AspectCrop%3D%28720%2C720%29%2CxPosition%3D.5%2CyPosition%3D.5%3BResize%3D%28720%2C720%29",
-      "Kort beskrivelse": "Genvej giver korte veje ind i aktuelle emner og personer.",
-      "": "",
-      "Endnu ikke hørt": "",
-      "Nævneværdige episo:": ""
-    },
-    {
-      "Placering": "497",
-      "Titel": "Voksenvenner",
-      "Vært": "Jonatan Spang",
-      "Vuring (1-10)": "1,8",
-      "Genre": "Snakke",
-      "Udgiver": "",
-      "Antal afsnit": "",
-      "Årstal afspillet": "",
-      "Link": "",
-      "Afgivet vurdering": "",
-      "Billedlink": "https://img.podimo.com/images/fa2ac35c-f636-4718-bdd9-181c65fe13c7?w=400&h=400&s=E5XaFkPMS74NGREfITW5MF1H83w=",
-      "Kort beskrivelse": "Jonatan Spang taler voksenliv, venskaber og relationer.",
-      "": "",
-      "Endnu ikke hørt": "",
-      "Nævneværdige episo:": ""
-    },
-    {
-      "Placering": "498",
-      "Titel": "I Dinosaurernes Fodspor",
-      "Vært": "Oliver Seppo & Thomas Bugge",
-      "Vuring (1-10)": "1,6",
-      "Genre": "Historie",
-      "Udgiver": "DR",
-      "Antal afsnit": "9",
-      "Årstal afspillet": "",
-      "Link": "",
-      "Afgivet vurdering": "",
-      "Billedlink": "data:image/jpeg;base64,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",
-      "Kort beskrivelse": "Om dinosaurernes verden, fossiler og sporene fra fortidens kæmper.",
-      "": "",
-      "Endnu ikke hørt": "",
-      "Nævneværdige episo:": ""
-    },
-    {
-      "Placering": "499",
-      "Titel": "Den døde narkosmugler",
-      "Vært": "Irene Nørgaard & Milan Højlund Ganesan",
-      "Vuring (1-10)": "",
-      "Genre": "True Crime",
-      "Udgiver": "TV2 Østjylland",
-      "Antal afsnit": "6",
-      "Årstal afspillet": "2026",
-      "Link": "https://open.spotify.com/show/6tEngvvh2QQzvA31L4lOtb",
-      "Afgivet vurdering": "",
-      "Billedlink": "https://covers.storytel.com/jpg-640/0402018191914.488475c4-0890-4358-8d53-c0e5853a0a76?optimize=high&quality=70&width=600",
-      "Kort beskrivelse": "Om en død narkosmugler og sporene i en international sag.",
-      "": "",
-      "Endnu ikke hørt": "",
-      "Nævneværdige episo:": ""
-    },
-    {
-      "Placering": "500",
-      "Titel": "Sidste nedtælling",
-      "Vært": "Simon Kratholm Ankjærgaard & Steffen Jacobsen",
-      "Vuring (1-10)": "",
-      "Genre": "Krig",
-      "Udgiver": "Harmonia / Lindhardt og Ringhof",
-      "Antal afsnit": "4",
-      "Årstal afspillet": "2025",
-      "Link": "https://mofibo.com/dk/podcasts/sidste-nedtælling-107464",
-      "Afgivet vurdering": "",
-      "Billedlink": "https://covers.storytel.com/jpg-640/9788727116471.83572387-712f-43b6-82c1-4be977cbae27?optimize=high&quality=70&width=600",
-      "Kort beskrivelse": "Om nedtælling, kriser og mennesker på kanten af katastrofen.",
-      "": "",
-      "Endnu ikke hørt": "",
-      "Nævneværdige episo:": ""
-    },
-    {
-      "Placering": "501",
-      "Titel": "Dæmonernes Verden",
-      "Vært": "Krister Moltzen",
-      "Vuring (1-10)": "",
-      "Genre": "True Crime",
-      "Udgiver": "Third Ear",
-      "Antal afsnit": "9",
-      "Årstal afspillet": "2025",
-      "Link": "https://thirdear.dk/podcasts/daemonernes-verden/",
-      "Afgivet vurdering": "",
-      "Billedlink": "https://assets.pippa.io/shows/62a1d88513e14d0011ebc309/1773787553506-3c8780a4-6ae6-4cee-819d-0d6adf3aaa36.jpeg",
-      "Kort beskrivelse": "Om mennesker, der tror på dæmoner, og den parallelverden de bliver suget ind i.",
-      "": "",
-      "Endnu ikke hørt": "",
-      "Nævneværdige episo:": ""
-    },
-    {
-      "Placering": "502",
-      "Titel": "Så længe du lever",
-      "Vært": "Nils Thorsen",
-      "Vuring (1-10)": "",
-      "Genre": "sundhed",
-      "Udgiver": "Politiken",
-      "Antal afsnit": "6",
-      "Årstal afspillet": "2025",
-      "Link": "https://podcasts.apple.com/dk/podcast/s%C3%A5-l%C3%A6nge-du-lever/id1845291075",
-      "Afgivet vurdering": "",
-      "Billedlink": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ0vcbnm4D7a8GY_bDCf1U7uZBNRDQ2_7jSgA&s",
-      "Kort beskrivelse": "Nils Thorsen undersøger, hvordan vi kan leve længere, gladere og klogere.",
-      "": "",
-      "Endnu ikke hørt": "",
-      "Nævneværdige episo:": ""
-    },
-    {
-      "Placering": "503",
-      "Titel": "Myrdede Lizzie Borden sin familie med økse?",
-      "Vært": "Kristoffer Lind & Signe Frederikke Pedersen",
-      "Vuring (1-10)": "",
-      "Genre": "True crime",
-      "Udgiver": "Radio4",
-      "Antal afsnit": "3",
-      "Årstal afspillet": "2025",
-      "Link": "https://omny.fm/shows/krimiland",
-      "Afgivet vurdering": "",
-      "Billedlink": "https://is1-ssl.mzstatic.com/image/thumb/Podcasts221/v4/30/2f/63/302f6386-afe9-1e10-377c-a4ee994d76bb/mza_13508543133229279959.jpg/1200x1200bf-60.jpg",
-      "Kort beskrivelse": "Om Lizzie Borden, øksemordene og spørgsmålet om skyld i en berygtet sag.",
-      "": "",
-      "Endnu ikke hørt": "",
-      "Nævneværdige episo:": ""
-    },
-    {
-      "Placering": "504",
-      "Titel": "Drabet på Lumumba",
-      "Vært": "Martin Grønne & Celine Klint",
-      "Vuring (1-10)": "",
-      "Genre": "Historie",
-      "Udgiver": "DR",
-      "Antal afsnit": "2",
-      "Årstal afspillet": "2025",
-      "Link": "https://www.dr.dk/lyd/pods/bakspejl",
-      "Afgivet vurdering": "",
-      "Billedlink": "https://is1-ssl.mzstatic.com/image/thumb/Podcasts221/v4/30/2f/63/302f6386-afe9-1e10-377c-a4ee994d76bb/mza_13508543133229279959.jpg/1200x1200bf-60.jpg",
-      "Kort beskrivelse": "Om drabet på Patrice Lumumba og magtspillet omkring Congos frihedskamp.",
-      "": "",
-      "Endnu ikke hørt": "",
-      "Nævneværdige episo:": ""
-    },
-    {
-      "Placering": "505",
-      "Titel": "Idi Amin",
-      "Vært": "Nicholas Durup Thomsen",
-      "Vuring (1-10)": "",
-      "Genre": "True crime",
-      "Udgiver": "DR",
-      "Antal afsnit": "6",
-      "Årstal afspillet": "2024",
-      "Link": "",
-      "Afgivet vurdering": "",
-      "Billedlink": "https://asset.dr.dk/drlyd/images/urn:dr:radio:image:68909215ab10e7b0b69756c7?im=AspectCrop%3D%28720%2C720%29%2CxPosition%3D.5%2CyPosition%3D.5%3BResize%3D%28720%2C720%29",
-      "Kort beskrivelse": "Om Idi Amin, Ugandas brutale diktator og terroren under hans styre.",
-      "": "",
-      "Endnu ikke hørt": "",
-      "Nævneværdige episo:": ""
-    },
-    {
-      "Placering": "506",
-      "Titel": "The James Brown Mystery",
-      "Vært": "Thomas Lake",
-      "Vuring (1-10)": "",
-      "Genre": "True Crime",
-      "Udgiver": "CNN",
-      "Antal afsnit": "8",
-      "Årstal afspillet": "2026",
-      "Link": "https://podcasts.apple.com/us/podcast/the-james-brown-mystery/id1650257663",
-      "Afgivet vurdering": "",
-      "Billedlink": "https://is1-ssl.mzstatic.com/image/thumb/Podcasts122/v4/32/29/23/32292385-6bcb-79a9-9e46-2c22c5d07372/mza_6838866442135649136.jpg/300x300bb.webp",
-      "Kort beskrivelse": "Om James Browns mystiske død og spørgsmålet om, hvad der egentlig skete.",
-      "": "",
-      "Endnu ikke hørt": "",
-      "Nævneværdige episo:": ""
-    },
-    {
-      "Placering": "507",
-      "Titel": "The Crossbow Killer",
-      "Vært": "Tim Hinman & Meic Parry",
-      "Vuring (1-10)": "",
-      "Genre": "True Crime",
-      "Udgiver": "BBC Radio Wales",
-      "Antal afsnit": "7",
-      "Årstal afspillet": "2026",
-      "Link": "https://podcasts.apple.com/us/podcast/the-crossbow-killer/id1695710879",
-      "Afgivet vurdering": "",
-      "Billedlink": "https://is1-ssl.mzstatic.com/image/thumb/Podcasts126/v4/08/4d/5b/084d5b60-24c2-c9fc-efd4-43cb56e54f99/mza_14843694915532434341.jpg/300x300bb.webp",
-      "Kort beskrivelse": "Om et brutalt walisisk mord med armbrøst og et motiv, der er svært at finde.",
-      "": "",
-      "Endnu ikke hørt": "",
-      "Nævneværdige episo:": ""
-    },
-    {
-      "Placering": "508",
-      "Titel": "Devil in the Desert",
-      "Vært": "Matt Gutman",
-      "Vuring (1-10)": "",
-      "Genre": "True Crime",
-      "Udgiver": "ABC News",
-      "Antal afsnit": "6",
-      "Årstal afspillet": "2026",
-      "Link": "https://podcasts.apple.com/dk/podcast/devil-in-the-desert/id1818132861",
-      "Afgivet vurdering": "",
-      "Billedlink": "https://is1-ssl.mzstatic.com/image/thumb/Podcasts211/v4/a0/d8/c8/a0d8c8fd-81f4-dc58-edb6-b2edbdef94fd/mza_784304221520151471.jpg/300x300bb.webp",
-      "Kort beskrivelse": "Om en død i ørkenen og de mørke spor i en usædvanlig amerikansk sag.",
-      "": "",
-      "Endnu ikke hørt": "",
-      "Nævneværdige episo:": ""
-    },
-    {
-      "Placering": "509",
       "Titel": "Morfinbyen",
       "Vært": "Nicholas Durup Thomsen",
       "Vuring (1-10)": "5,2",
@@ -8640,7 +7552,1112 @@
       "Nævneværdige episo:": ""
     },
     {
+      "Placering": "446",
+      "Titel": "En anden tid",
+      "Vært": "Hella Joof, Abdel Aziz Mahmoud & Zelma Lewerissa",
+      "Vuring (1-10)": "5,0",
+      "Genre": "Snakke",
+      "Udgiver": "Podimo",
+      "Antal afsnit": "Ugentlig",
+      "Årstal afspillet": "2025",
+      "Link": "https://podimo.com/dk/shows/en-anden-tid",
+      "Afgivet vurdering": "30-10-2025",
+      "Billedlink": "https://img.podimo.com/images/e7bb14ed-c018-4731-af41-d15e0619be9a?h=400&s=ZJN8507qInzNGP5WF04YBufNmqI%3D&w=400",
+      "Kort beskrivelse": "Hella Joof, Abdel Aziz og Zelma ser på normer fra en anden tid.",
+      "": "",
+      "Endnu ikke hørt": "",
+      "Nævneværdige episo:": ""
+    },
+    {
+      "Placering": "447",
+      "Titel": "Bandekrigeren",
+      "Vært": "Per Lysholt",
+      "Vuring (1-10)": "5,0",
+      "Genre": "True crime",
+      "Udgiver": "DR",
+      "Antal afsnit": "2",
+      "Årstal afspillet": "2025",
+      "Link": "https://www.dr.dk/lyd/special-radio/djaevlen-i-detaljen/djaevlen-i-detaljen-2025/bandekrigeren-1-2-kys-mine-foedder-16122592624",
+      "Afgivet vurdering": "12-07-2025",
+      "Billedlink": "https://asset.dr.dk/drlyd/images/urn:dr:radio:image:69aabecd03528d46508d1163?im=AspectCrop%3D%28172%2C172%29%2CxPosition%3D.5%2CyPosition%3D.5%3BResize%3D%28172%2C172%29",
+      "Kort beskrivelse": "Om en bandekriger, volden og vejen ind og ud af miljøet.",
+      "": "",
+      "Endnu ikke hørt": "",
+      "Nævneværdige episo:": ""
+    },
+    {
+      "Placering": "448",
+      "Titel": "Faldskærmskuppet",
+      "Vært": "Liva Manghezi",
+      "Vuring (1-10)": "5,0",
+      "Genre": "True crime",
+      "Udgiver": "DR",
+      "Antal afsnit": "4",
+      "Årstal afspillet": "2025",
+      "Link": "https://www.dr.dk/lyd/pods/kup",
+      "Afgivet vurdering": "22-12-2025",
+      "Billedlink": "https://asset.dr.dk/drlyd/images/urn:dr:radio:image:693c0209ab13616ad983303d?im=AspectCrop%3D%28720%2C720%29%2CxPosition%3D.5%2CyPosition%3D.5%3BResize%3D%28720%2C720%29",
+      "Kort beskrivelse": "Om et spektakulært faldskærmskup og planen bag forbrydelsen.",
+      "": "",
+      "Endnu ikke hørt": "",
+      "Nævneværdige episo:": ""
+    },
+    {
+      "Placering": "449",
+      "Titel": "Katastrofe: Nedskydningen af den iranske Airbus 1988",
+      "Vært": "Kristoffer Lind & Rasmus Dahlberg",
+      "Vuring (1-10)": "5,0",
+      "Genre": "Historie",
+      "Udgiver": "Saga Talks",
+      "Antal afsnit": "1",
+      "Årstal afspillet": "2023",
+      "Link": "",
+      "Afgivet vurdering": "",
+      "Billedlink": "https://covers.storytel.com/jpg-640/9788728362471.607b93c8-af4a-4762-b2cb-2e7497c06ac5?optimize=high&quality=70&width=600",
+      "Kort beskrivelse": "Om nedskydningen af Iran Air 655 og katastrofen i 1988.",
+      "": "",
+      "Endnu ikke hørt": "",
+      "Nævneværdige episo:": ""
+    },
+    {
+      "Placering": "450",
+      "Titel": "Danmarks Største Kriminalsager: Hashsagen fra Isefjorden",
+      "Vært": "",
+      "Vuring (1-10)": "5,0",
+      "Genre": "True Crime",
+      "Udgiver": "Podimo",
+      "Antal afsnit": "3",
+      "Årstal afspillet": "",
+      "Link": "",
+      "Afgivet vurdering": "",
+      "Billedlink": "https://image.bog-ide.dk/3756492-528678-1000-1000/webp/0/1000/3756492-528678-1000-1000.webp",
+      "Kort beskrivelse": "Om hashsagen fra Isefjorden og en af Danmarks store narkosager.",
+      "": "",
+      "Endnu ikke hørt": "",
+      "Nævneværdige episo:": ""
+    },
+    {
+      "Placering": "451",
+      "Titel": "Kennedys kriser",
+      "Vært": "Martin Grønne & Celine Klint",
+      "Vuring (1-10)": "5,0",
+      "Genre": "Historie",
+      "Udgiver": "DR",
+      "Antal afsnit": "3",
+      "Årstal afspillet": "2026",
+      "Link": "https://podcasts.apple.com/dk/podcast/bakspejl/id1536415884?l=da",
+      "Afgivet vurdering": "01-04-2026",
+      "Billedlink": "https://cachedimages.podchaser.com/256x256/aHR0cHM6Ly9hcGkuZHIuZGsvcG9kY2FzdHMvdjEvaW1hZ2VzL3Vybjpkcjpwb2RjYXN0OmltYWdlOjY3ZTE0ZDZmNjI3M2U4ZmM3MDc3YWE1My5qcGc%3D/aHR0cHM6Ly93d3cucG9kY2hhc2VyLmNvbS9pbWFnZXMvbWlzc2luZy1pbWFnZS5wbmc%3D",
+      "Kort beskrivelse": "Om Kennedys kriser, magt, familie og politiske vendepunkter.",
+      "": "",
+      "Endnu ikke hørt": "",
+      "Nævneværdige episo:": ""
+    },
+    {
+      "Placering": "452",
+      "Titel": "Danmarks største kriminalsager: Fangeflugten fra Vridsløselille",
+      "Vært": "Rakkerpak Production",
+      "Vuring (1-10)": "4,9",
+      "Genre": "True Crime",
+      "Udgiver": "Mofibo",
+      "Antal afsnit": "12",
+      "Årstal afspillet": "2026",
+      "Link": "https://mofibo.com/dk/podcasts/danmarks-st%C3%B8rste-kriminalsager-70576",
+      "Afgivet vurdering": "12-04-2026",
+      "Billedlink": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSQbzR6ozylXYiQ9cHF8YA647RPBERkwIWXuA&s",
+      "Kort beskrivelse": "Om fangeflugten fra Vridsløselille og et dramatisk dansk fængselskapitel.",
+      "": "",
+      "Endnu ikke hørt": "",
+      "Nævneværdige episo:": ""
+    },
+    {
+      "Placering": "453",
+      "Titel": "I selskab med Q",
+      "Vært": "Henrik Qvortrup",
+      "Vuring (1-10)": "4,9",
+      "Genre": "Sladder",
+      "Udgiver": "Podimo",
+      "Antal afsnit": "Fredage",
+      "Årstal afspillet": "2025",
+      "Link": "",
+      "Afgivet vurdering": "",
+      "Billedlink": "https://img.podimo.com/images/6c64326a-3e2f-4119-a960-729934c7fd06?w=400&h=400&s=sriCViun6WGXPWbBRe8G3l6EKb4=",
+      "Kort beskrivelse": "Henrik Qvortrup taler politik, medier og magt i selskab med Q.",
+      "": "",
+      "Endnu ikke hørt": "",
+      "Nævneværdige episo:": ""
+    },
+    {
+      "Placering": "454",
+      "Titel": "Rwandas folkemord",
+      "Vært": "Martin Grønne",
+      "Vuring (1-10)": "4,8",
+      "Genre": "True crime",
+      "Udgiver": "DR",
+      "Antal afsnit": "1",
+      "Årstal afspillet": "2025",
+      "Link": "https://www.dr.dk/lyd/special-radio/bakspejl/bakspejl-2021/rwandas-folkemord-11162111004",
+      "Afgivet vurdering": "15-09-2025",
+      "Billedlink": "https://cachedimages.podchaser.com/256x256/aHR0cHM6Ly9hcGkuZHIuZGsvcG9kY2FzdHMvdjEvaW1hZ2VzL3Vybjpkcjpwb2RjYXN0OmltYWdlOjY3ZTE0ZDZmNjI3M2U4ZmM3MDc3YWE1My5qcGc%3D/aHR0cHM6Ly93d3cucG9kY2hhc2VyLmNvbS9pbWFnZXMvbWlzc2luZy1pbWFnZS5wbmc%3D",
+      "Kort beskrivelse": "Om folkemordet i Rwanda og hvordan volden kunne ske så hurtigt.",
+      "": "",
+      "Endnu ikke hørt": "",
+      "Nævneværdige episo:": ""
+    },
+    {
+      "Placering": "455",
+      "Titel": "Det Ku I Godt Ha' Sagt",
+      "Vært": "Magnus Haugaard",
+      "Vuring (1-10)": "4,8",
+      "Genre": "Underholdning",
+      "Udgiver": "Podimo",
+      "Antal afsnit": "Ugentlig",
+      "Årstal afspillet": "2024",
+      "Link": "https://podimo.com/dk/shows/det-ku-i-godt-ha-sagt",
+      "Afgivet vurdering": "",
+      "Billedlink": "https://img.podimo.com/images/41435686-e2ed-4d5b-9a3e-2b38d51ad0f6?w=400&h=400&s=5yOMqChyve-4MrkLpYA14O3b20U=",
+      "Kort beskrivelse": "Magnus Haugaard vender alt det, nogen godt kunne have sagt.",
+      "": "",
+      "Endnu ikke hørt": "",
+      "Nævneværdige episo:": ""
+    },
+    {
+      "Placering": "456",
+      "Titel": "Akavet, Emma",
+      "Vært": "",
+      "Vuring (1-10)": "4,8",
+      "Genre": "snakke",
+      "Udgiver": "",
+      "Antal afsnit": "",
+      "Årstal afspillet": "",
+      "Link": "",
+      "Afgivet vurdering": "",
+      "Billedlink": "https://i.scdn.co/image/ab6765630000ba8ae4c160075eb4f6227f87eedf",
+      "Kort beskrivelse": "Emma taler om akavede situationer, relationer og ungdomsliv.",
+      "": "",
+      "Endnu ikke hørt": "",
+      "Nævneværdige episo:": ""
+    },
+    {
+      "Placering": "457",
+      "Titel": "Hærfører",
+      "Vært": "Adam Holm & Jakob Sørensen",
+      "Vuring (1-10)": "4,8",
+      "Genre": "Kriger / Historie",
+      "Udgiver": "Podimo",
+      "Antal afsnit": "",
+      "Årstal afspillet": "2025",
+      "Link": "https://podimo.com/dk/shows/haerforer",
+      "Afgivet vurdering": "09-02-2026",
+      "Billedlink": "https://img.podimo.com/images/8fe0f9e0-3146-4a41-a1cc-77150cd3d029?w=400&h=400&s=NbxvbyIhwgm-MQS-mRz_brmTQ1k=",
+      "Kort beskrivelse": "Adam Holm og Jakob Sørensen taler krig, ledelse og militærhistorie.",
+      "": "",
+      "Endnu ikke hørt": "",
+      "Nævneværdige episo:": ""
+    },
+    {
+      "Placering": "458",
+      "Titel": "Ministertid",
+      "Vært": "Simon Emil Ammitzbøll-Bille",
+      "Vuring (1-10)": "4,7",
+      "Genre": "politik",
+      "Udgiver": "Altinget",
+      "Antal afsnit": "91",
+      "Årstal afspillet": "2026",
+      "Link": "https://podcasts.apple.com/dk/podcast/ministertid/id1602518696",
+      "Afgivet vurdering": "17-02-2026",
+      "Billedlink": "https://open-images.acast.com/shows/667542a1fcc9a90013533b89/1719213873138-92995d8469133b8384cf9cbd38c65a18.jpeg?height=250",
+      "Kort beskrivelse": "Simon Emil Ammitzbøll-Bille fortæller om livet som minister.",
+      "": "",
+      "Endnu ikke hørt": "",
+      "Nævneværdige episo:": ""
+    },
+    {
+      "Placering": "459",
+      "Titel": "Lyden af København",
+      "Vært": "Third Ear",
+      "Vuring (1-10)": "4,7",
+      "Genre": "Underholdning",
+      "Udgiver": "Københavns museum",
+      "Antal afsnit": "",
+      "Årstal afspillet": "2025",
+      "Link": "https://cphmuseum.kk.dk/om-museet/museets-podcasts/podcastserie-lyden-af-koebenhavn",
+      "Afgivet vurdering": "23-03-2025",
+      "Billedlink": "https://via.ritzau.dk/data/images/public/13561831/14389206/ab4ec41b-0ac7-4300-9d30-fee84ee35899-w_720.png",
+      "Kort beskrivelse": "Third Ear lytter sig ind på København gennem lyd, historier og mennesker.",
+      "": "",
+      "Endnu ikke hørt": "",
+      "Nævneværdige episo:": ""
+    },
+    {
+      "Placering": "460",
+      "Titel": "Fireburn",
+      "Vært": "Martin Grønne",
+      "Vuring (1-10)": "4,7",
+      "Genre": "True crime",
+      "Udgiver": "DR",
+      "Antal afsnit": "2",
+      "Årstal afspillet": "2025",
+      "Link": "https://www.dr.dk/lyd/special-radio/bakspejl/bakspejl-2025/fireburn-1-2-11162511021",
+      "Afgivet vurdering": "15-05-2025",
+      "Billedlink": "https://cachedimages.podchaser.com/256x256/aHR0cHM6Ly9hcGkuZHIuZGsvcG9kY2FzdHMvdjEvaW1hZ2VzL3Vybjpkcjpwb2RjYXN0OmltYWdlOjY3ZTE0ZDZmNjI3M2U4ZmM3MDc3YWE1My5qcGc%3D/aHR0cHM6Ly93d3cucG9kY2hhc2VyLmNvbS9pbWFnZXMvbWlzc2luZy1pbWFnZS5wbmc%3D",
+      "Kort beskrivelse": "Om Fireburn-oprøret og kolonihistorien i Caribien.",
+      "": "",
+      "Endnu ikke hørt": "",
+      "Nævneværdige episo:": ""
+    },
+    {
+      "Placering": "461",
+      "Titel": "Nordsjælland Dreamin'",
+      "Vært": "",
+      "Vuring (1-10)": "4,7",
+      "Genre": "Fodbold",
+      "Udgiver": "",
+      "Antal afsnit": "Ugentlig",
+      "Årstal afspillet": "2025",
+      "Link": "https://fcndreamin.libsyn.com/",
+      "Afgivet vurdering": "22-06-2025",
+      "Billedlink": "https://i.scdn.co/image/ab6765630000ba8a3946f0f57c7bc702f95b7da8",
+      "Kort beskrivelse": "Om FC Nordsjælland, drømme, talentudvikling og Farum-fortællingen.",
+      "": "",
+      "Endnu ikke hørt": "",
+      "Nævneværdige episo:": ""
+    },
+    {
+      "Placering": "462",
+      "Titel": "Casper Elsker Dig",
+      "Vært": "Casper Christensen",
+      "Vuring (1-10)": "4,7",
+      "Genre": "Snakke",
+      "Udgiver": "Podimo",
+      "Antal afsnit": "Ugentlig",
+      "Årstal afspillet": "2025",
+      "Link": "",
+      "Afgivet vurdering": "12-07-2025",
+      "Billedlink": "https://img.podimo.com/images/364591bd-f95b-446a-8117-71f2a18f0a50?w=400&h=400&s=U1wZqJ12IHGMUVfbSMnSci_Enuw=",
+      "Kort beskrivelse": "Casper Christensen taler om kærlighed, liv og sine nærmeste relationer.",
+      "": "",
+      "Endnu ikke hørt": "",
+      "Nævneværdige episo:": ""
+    },
+    {
+      "Placering": "463",
+      "Titel": "Prins Henriks Krig",
+      "Vært": "Frederikke Ingemann & Mads Brügger",
+      "Vuring (1-10)": "4,7",
+      "Genre": "dokumentar",
+      "Udgiver": "Frihedsbrevet",
+      "Antal afsnit": "",
+      "Årstal afspillet": "2025",
+      "Link": "https://podcasts.apple.com/dk/podcast/prins-henriks-krig/id1786337788",
+      "Afgivet vurdering": "02-12-2025",
+      "Billedlink": "https://i.scdn.co/image/ab6765630000ba8a922dca692ad37db52853cb1e",
+      "Kort beskrivelse": "Om Prins Henrik, krig, identitet og de skjulte kapitler i hans liv.",
+      "": "",
+      "Endnu ikke hørt": "",
+      "Nævneværdige episo:": ""
+    },
+    {
+      "Placering": "464",
+      "Titel": "Miraklet i Græsted",
+      "Vært": "Krister Moltzen",
+      "Vuring (1-10)": "4,7",
+      "Genre": "True crime",
+      "Udgiver": "Third Ear",
+      "Antal afsnit": "1",
+      "Årstal afspillet": "2024",
+      "Link": "",
+      "Afgivet vurdering": "",
+      "Billedlink": "https://open-images.acast.com/shows/62a1d88513e14d0011ebc309/1703718092762-ed1d5d9f0bf7a7c47cbbacd3ac99a572.jpeg?height=750",
+      "Kort beskrivelse": "Om et mirakel i Græsted og de mennesker, der troede på det.",
+      "": "",
+      "Endnu ikke hørt": "",
+      "Nævneværdige episo:": ""
+    },
+    {
+      "Placering": "465",
+      "Titel": "Charles Manson: Det glemte mord",
+      "Vært": "Kristoffer Lind & Peder Byberg",
+      "Vuring (1-10)": "4,7",
+      "Genre": "True crime",
+      "Udgiver": "Radio4",
+      "Antal afsnit": "3",
+      "Årstal afspillet": "2024",
+      "Link": "https://radio4.dk/podcasts/krimiland/charles-manson-det-glemte-mord-1-3",
+      "Afgivet vurdering": "",
+      "Billedlink": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTglAe3aGfch_szGBsYmlYEcojPORNeeDoisQ&s",
+      "Kort beskrivelse": "Om Charles Manson, et glemt mord og kultens mørke spor.",
+      "": "",
+      "Endnu ikke hørt": "",
+      "Nævneværdige episo:": ""
+    },
+    {
+      "Placering": "466",
+      "Titel": "Betjentens mareridt",
+      "Vært": "Per Lysholt",
+      "Vuring (1-10)": "4,7",
+      "Genre": "True crime",
+      "Udgiver": "DR",
+      "Antal afsnit": "2",
+      "Årstal afspillet": "2024",
+      "Link": "https://www.dr.dk/lyd/special-radio/djaevlen-i-detaljen/djaevlen-i-detaljen-2024/djaevlen-i-detaljen-betjentens-mareridt-1-2-nu-skal-jeg-doe-16122492639",
+      "Afgivet vurdering": "23-03-2025",
+      "Billedlink": "https://is1-ssl.mzstatic.com/image/thumb/Podcasts221/v4/78/c8/06/78c8065c-b0b1-729c-01d0-522b3fcc998b/mza_486116165445940358.png/1200x1200bf-60.jpg",
+      "Kort beskrivelse": "Om en betjents mareridt og en sag, der sætter politiet under pres.",
+      "": "",
+      "Endnu ikke hørt": "",
+      "Nævneværdige episo:": ""
+    },
+    {
+      "Placering": "467",
+      "Titel": "Om Søndagen Græder Vi",
+      "Vært": "Hella Joof & Marie Tüxen",
+      "Vuring (1-10)": "4,7",
+      "Genre": "Snakke",
+      "Udgiver": "",
+      "Antal afsnit": "Ugentlig",
+      "Årstal afspillet": "",
+      "Link": "",
+      "Afgivet vurdering": "",
+      "Billedlink": "https://img.podimo.com/images/14c1f558-f6c9-4af9-b266-7cb0a3ecbd50?w=400&h=400&s=4-D38-hrvj4DY_4qGo6WNUymklU=",
+      "Kort beskrivelse": "Hella Joof og Marie Tüxen taler om sorg, liv og det svære om søndagen.",
+      "": "",
+      "Endnu ikke hørt": "",
+      "Nævneværdige episo:": ""
+    },
+    {
+      "Placering": "468",
+      "Titel": "Ugens transfer suppe",
+      "Vært": "",
+      "Vuring (1-10)": "4,7",
+      "Genre": "fodbold",
+      "Udgiver": "",
+      "Antal afsnit": "",
+      "Årstal afspillet": "",
+      "Link": "",
+      "Afgivet vurdering": "",
+      "Billedlink": "https://is1-ssl.mzstatic.com/image/thumb/Podcasts221/v4/7e/c9/10/7ec91006-4f0e-fab1-098e-0f75254cfbcf/mza_11239152812765812542.jpg/250x250bb.jpg",
+      "Kort beskrivelse": "Ugens Transfer Suppe vender rygter, handler og fodboldmarkedets drama.",
+      "": "",
+      "Endnu ikke hørt": "",
+      "Nævneværdige episo:": ""
+    },
+    {
+      "Placering": "469",
+      "Titel": "Dobbeltgænger",
+      "Vært": "Fie Dandanell og Line Sand",
+      "Vuring (1-10)": "4,7",
+      "Genre": "dokumentar",
+      "Udgiver": "Zetland",
+      "Antal afsnit": "",
+      "Årstal afspillet": "",
+      "Link": "",
+      "Afgivet vurdering": "31-07-2025",
+      "Billedlink": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSRAHtWhjJh0syt2rYG0IhO-sRQMeATHm-xdg&s",
+      "Kort beskrivelse": "Om dobbeltgængere, identitet og mennesker, der ligner for meget.",
+      "": "",
+      "Endnu ikke hørt": "",
+      "Nævneværdige episo:": ""
+    },
+    {
+      "Placering": "470",
+      "Titel": "Famøse fangeflugter: flugten fra alvatraz",
+      "Vært": "",
+      "Vuring (1-10)": "4,6",
+      "Genre": "True crime",
+      "Udgiver": "Podimo",
+      "Antal afsnit": "",
+      "Årstal afspillet": "",
+      "Link": "",
+      "Afgivet vurdering": "",
+      "Billedlink": "https://img.podimo.com/images/959ee6ea-078c-41cb-a1dc-3ec64a5a60f5?h=400&s=zgl5H0QVL7u3aCA37FNWZrXnw6s%3D&w=400",
+      "Kort beskrivelse": "Om den berømte flugt fra Alcatraz og mysteriet om, hvad der skete.",
+      "": "",
+      "Endnu ikke hørt": "",
+      "Nævneværdige episo:": ""
+    },
+    {
+      "Placering": "471",
+      "Titel": "Virkelighedens Egon Olsen",
+      "Vært": "Per Lysholt",
+      "Vuring (1-10)": "4,5",
+      "Genre": "True crime",
+      "Udgiver": "DR",
+      "Antal afsnit": "3",
+      "Årstal afspillet": "2025",
+      "Link": "https://www.dr.dk/lyd/special-radio/djaevlen-i-detaljen/djaevlen-i-detaljen-2025/virkelighedens-egon-olsen-1-3-en-tyv-er-foedt-16122592614",
+      "Afgivet vurdering": "27-04-2025",
+      "Billedlink": "https://is1-ssl.mzstatic.com/image/thumb/Podcasts221/v4/78/c8/06/78c8065c-b0b1-729c-01d0-522b3fcc998b/mza_486116165445940358.png/1200x1200bf-60.jpg",
+      "Kort beskrivelse": "Om virkelighedens Egon Olsen og et kriminelt liv med list og planer.",
+      "": "",
+      "Endnu ikke hørt": "",
+      "Nævneværdige episo:": ""
+    },
+    {
+      "Placering": "472",
+      "Titel": "Friis’ diplomatpost",
+      "Vært": "Friis Arne Petersen",
+      "Vuring (1-10)": "4,5",
+      "Genre": "Politik",
+      "Udgiver": "Frihedsbrevet",
+      "Antal afsnit": "Ugentlig",
+      "Årstal afspillet": "2025",
+      "Link": "https://podcasts.apple.com/dk/podcast/friis-diplomatpost/id1706073378",
+      "Afgivet vurdering": "09-11-2025",
+      "Billedlink": "https://www.omnycontent.com/d/programs/88c335ba-6520-4de0-97b0-ad3a00d192cf/ac4830c3-707a-401c-bf46-af0a00a480da/image.jpg?t=1726739399&size=Medium",
+      "Kort beskrivelse": "Friis Arne Petersen fortæller om diplomati, magt og livet som udsendt.",
+      "": "",
+      "Endnu ikke hørt": "",
+      "Nævneværdige episo:": ""
+    },
+    {
+      "Placering": "473",
+      "Titel": "Helt væk med Hemmingsen",
+      "Vært": "Anders Hemmingsen",
+      "Vuring (1-10)": "4,5",
+      "Genre": "Unholdning",
+      "Udgiver": "BT",
+      "Antal afsnit": "STOPPET",
+      "Årstal afspillet": "",
+      "Link": "",
+      "Afgivet vurdering": "",
+      "Billedlink": "https://akamai-aptoma-production.bmcdn.dk/users/berlingske/images/83989786.webp?t[strip]=true&t[resize][width]=1440&t[quality]=70&accessToken=738ac1a9fd8e365bc253cb07b91c1be8a8224a907553d24e3fc1cce94bde6a91",
+      "Kort beskrivelse": "Anders Hemmingsen taler humor, virale historier og dansk internetkultur.",
+      "": "",
+      "Endnu ikke hørt": "",
+      "Nævneværdige episo:": ""
+    },
+    {
+      "Placering": "474",
+      "Titel": "Tal til mig",
+      "Vært": "Iben Marie Zeuthen",
+      "Vuring (1-10)": "4,5",
+      "Genre": "Snakke",
+      "Udgiver": "DR",
+      "Antal afsnit": "Ugentlig",
+      "Årstal afspillet": "",
+      "Link": "",
+      "Afgivet vurdering": "",
+      "Billedlink": "https://asset.dr.dk/drlyd/images/urn:dr:radio:image:688fdbc02e199a1c53193c2b?im=AspectCrop%3D%28720%2C720%29%2CxPosition%3D.5%2CyPosition%3D.5%3BResize%3D%28720%2C720%29",
+      "Kort beskrivelse": "Iben Maria Zeuthen taler med mennesker om sprog, samtaler og liv.",
+      "": "",
+      "Endnu ikke hørt": "",
+      "Nævneværdige episo:": ""
+    },
+    {
+      "Placering": "475",
+      "Titel": "Nu snakker vi om det",
+      "Vært": "Malthe Zimakoff, Morten Svane & Daniel Jensen",
+      "Vuring (1-10)": "4,5",
+      "Genre": "Snakke",
+      "Udgiver": "",
+      "Antal afsnit": "Ugentlig",
+      "Årstal afspillet": "",
+      "Link": "",
+      "Afgivet vurdering": "",
+      "Billedlink": "https://img.podimo.com/images/18a7c70b-da8c-4ef0-abf8-7d11ae941da0?w=400&h=400&s=-rlFQBWSSIw7n1ZjvgQUHvXV0gE=",
+      "Kort beskrivelse": "Tre venner taler om det, der fylder i livet, kulturen og hverdagen.",
+      "": "",
+      "Endnu ikke hørt": "",
+      "Nævneværdige episo:": ""
+    },
+    {
+      "Placering": "476",
+      "Titel": "Kampagnesporet",
+      "Vært": "Mads Fuglede & David Trads",
+      "Vuring (1-10)": "4,5",
+      "Genre": "Politik",
+      "Udgiver": "Jyllands-Posten",
+      "Antal afsnit": "",
+      "Årstal afspillet": "2026",
+      "Link": "https://podcasts.apple.com/dk/podcast/kampagnesporet/id1130903371",
+      "Afgivet vurdering": "28-02-2026",
+      "Billedlink": "https://i.scdn.co/image/ab6765630000ba8a392ce0e036793cd73db22ed3",
+      "Kort beskrivelse": "Kampagnesporet følger valgkamp, strategi og politikernes spil.",
+      "": "",
+      "Endnu ikke hørt": "",
+      "Nævneværdige episo:": ""
+    },
+    {
+      "Placering": "477",
+      "Titel": "Single",
+      "Vært": "Lissa Paustian",
+      "Vuring (1-10)": "4,4",
+      "Genre": "Kærlighed",
+      "Udgiver": "Ekstra Bladet",
+      "Antal afsnit": "Ugentlig",
+      "Årstal afspillet": "2026",
+      "Link": "https://podcasts.apple.com/dk/podcast/single/id1856173488",
+      "Afgivet vurdering": "02-02-2026",
+      "Billedlink": "https://open-images.acast.com/shows/667542a1fcc9a90013533b89/1719213873138-92995d8469133b8384cf9cbd38c65a18.jpeg?height=250",
+      "Kort beskrivelse": "Single handler om dating, brud og livet uden fast partner.",
+      "": "",
+      "Endnu ikke hørt": "",
+      "Nævneværdige episo:": ""
+    },
+    {
+      "Placering": "478",
+      "Titel": "Hemmeligheder",
+      "Vært": "Ida-Sophia",
+      "Vuring (1-10)": "4,4",
+      "Genre": "Samfund",
+      "Udgiver": "DR",
+      "Antal afsnit": "27",
+      "Årstal afspillet": "2026",
+      "Link": "https://www.dr.dk/lyd/p3/hemmeligheder-3166337151000",
+      "Afgivet vurdering": "29-05-2025",
+      "Billedlink": "https://asset.dr.dk/drlyd/images/urn:dr:radio:image:69eb229c5779fcda6c4fcfbd?im=AspectCrop%3D%28160%2C160%29%2CxPosition%3D.5%2CyPosition%3D.5%3BResize%3D%28160%2C160%29",
+      "Kort beskrivelse": "Ida-Sophia åbner hemmeligheder, fortællinger og det usagte.",
+      "": "",
+      "Endnu ikke hørt": "",
+      "Nævneværdige episo:": ""
+    },
+    {
+      "Placering": "479",
+      "Titel": "The bachelårette podcast",
+      "Vært": "Chano Jørgensen & Nicolai Lydiksen",
+      "Vuring (1-10)": "4,3",
+      "Genre": "kærlighed",
+      "Udgiver": "",
+      "Antal afsnit": "Ugentlig",
+      "Årstal afspillet": "2025",
+      "Link": "",
+      "Afgivet vurdering": "22-06-2025",
+      "Billedlink": "https://i.scdn.co/image/ab6765630000ba8abeffca2af70e09081096b4f4",
+      "Kort beskrivelse": "The Bachelårette Podcast vender dating, drama og reality med humor.",
+      "": "",
+      "Endnu ikke hørt": "",
+      "Nævneværdige episo:": ""
+    },
+    {
+      "Placering": "480",
+      "Titel": "Hermann Göring",
+      "Vært": "Kristoffer Lind & Signe Frederikke Pedersen",
+      "Vuring (1-10)": "4,3",
+      "Genre": "historie",
+      "Udgiver": "RADIO IIII",
+      "Antal afsnit": "3",
+      "Årstal afspillet": "2025",
+      "Link": "https://radio4.dk/podcasts/krimiland",
+      "Afgivet vurdering": "16-12-2025",
+      "Billedlink": "https://is1-ssl.mzstatic.com/image/thumb/Podcasts221/v4/30/2f/63/302f6386-afe9-1e10-377c-a4ee994d76bb/mza_13508543133229279959.jpg/1200x1200bf-60.jpg",
+      "Kort beskrivelse": "Om Hermann Göring, nazismens top og magten bag Hitlers regime.",
+      "": "",
+      "Endnu ikke hørt": "",
+      "Nævneværdige episo:": ""
+    },
+    {
+      "Placering": "481",
+      "Titel": "Et farligt match",
+      "Vært": "Sille Ugelvig",
+      "Vuring (1-10)": "4,3",
+      "Genre": "True crime",
+      "Udgiver": "DR",
+      "Antal afsnit": "3",
+      "Årstal afspillet": "2024",
+      "Link": "https://www.dr.dk/lyd/p3/under-radaren/et-farligt-match/under-radaren-et-farligt-match-1-3-fuck-han-er-flot-13332496711",
+      "Afgivet vurdering": "",
+      "Billedlink": "https://asset.dr.dk/drlyd/images/urn:dr:radio:image:68553071de5d5eb0ff644c3e?im=AspectCrop%3D%28720%2C720%29%2CxPosition%3D.5%2CyPosition%3D.5%3BResize%3D%28720%2C720%29",
+      "Kort beskrivelse": "Om dating, manipulation og et match, der viser sig farligt.",
+      "": "",
+      "Endnu ikke hørt": "",
+      "Nævneværdige episo:": ""
+    },
+    {
+      "Placering": "482",
+      "Titel": "Casper ringer til Frank",
+      "Vært": "Casper Christinsen & Frank Hvam",
+      "Vuring (1-10)": "4,3",
+      "Genre": "Snakke",
+      "Udgiver": "Podimo",
+      "Antal afsnit": "",
+      "Årstal afspillet": "",
+      "Link": "",
+      "Afgivet vurdering": "",
+      "Billedlink": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQwW8ixO6K04Kal4tUmvZLk0IEBVTRHFLcL0w&s",
+      "Kort beskrivelse": "Casper Christensen og Frank Hvam ringer sammen om liv, humor og venskab.",
+      "": "",
+      "Endnu ikke hørt": "",
+      "Nævneværdige episo:": ""
+    },
+    {
+      "Placering": "483",
+      "Titel": "Hitlers Æselører",
+      "Vært": "Jarl Cordua",
+      "Vuring (1-10)": "4,3",
+      "Genre": "Historie",
+      "Udgiver": "Berlingske",
+      "Antal afsnit": "",
+      "Årstal afspillet": "",
+      "Link": "",
+      "Afgivet vurdering": "",
+      "Billedlink": "https://i.scdn.co/image/ab6765630000ba8a19f600e065b70a29a0979128",
+      "Kort beskrivelse": "Jarl Cordua vender historie, politik og Hitlers spor i samtiden.",
+      "": "",
+      "Endnu ikke hørt": "",
+      "Nævneværdige episo:": ""
+    },
+    {
+      "Placering": "484",
+      "Titel": "Belle fra helvede",
+      "Vært": "Martin Hylander",
+      "Vuring (1-10)": "4,1",
+      "Genre": "True crime",
+      "Udgiver": "",
+      "Antal afsnit": "4",
+      "Årstal afspillet": "2025",
+      "Link": "",
+      "Afgivet vurdering": "23-03-2025",
+      "Billedlink": "https://is1-ssl.mzstatic.com/image/thumb/Podcasts116/v4/9f/c3/ef/9fc3efc7-2290-d060-1fdc-fe87b5b0c89d/mza_705264873883700247.jpg/1200x1200bf-60.jpg",
+      "Kort beskrivelse": "Om Belle Gunness, mordene og kvinden bag et amerikansk mareridt.",
+      "": "",
+      "Endnu ikke hørt": "",
+      "Nævneværdige episo:": ""
+    },
+    {
+      "Placering": "485",
+      "Titel": "Taskforce Nord Stream",
+      "Vært": "Andreas Munk & Frederikke Ingemann",
+      "Vuring (1-10)": "4,1",
+      "Genre": "True Crime",
+      "Udgiver": "Frihedsbrevet",
+      "Antal afsnit": "",
+      "Årstal afspillet": "2025",
+      "Link": "https://frihedsbrevet.dk/podcasts/taskforce-nord-stream/",
+      "Afgivet vurdering": "02-12-2025",
+      "Billedlink": "https://i.scdn.co/image/ab6765630000ba8a7ede1888ccd0dfa3ba164dfa",
+      "Kort beskrivelse": "Frihedsbrevet undersøger Nord Stream, sprængningerne og magtspillet.",
+      "": "",
+      "Endnu ikke hørt": "",
+      "Nævneværdige episo:": ""
+    },
+    {
+      "Placering": "486",
+      "Titel": "Transfermania",
+      "Vært": "Axel Moen",
+      "Vuring (1-10)": "4,1",
+      "Genre": "Fodbold",
+      "Udgiver": "",
+      "Antal afsnit": "STOPPET",
+      "Årstal afspillet": "",
+      "Link": "",
+      "Afgivet vurdering": "",
+      "Billedlink": "https://d3wo5wojvuv7l.cloudfront.net/t_square_limited_480/images.spreaker.com/original/50ac95b1ab850fb1aefc42b7d929448a.jpg",
+      "Kort beskrivelse": "Transfermania vender fodboldhandler, rygter og markedets bevægelser.",
+      "": "",
+      "Endnu ikke hørt": "",
+      "Nævneværdige episo:": ""
+    },
+    {
+      "Placering": "487",
+      "Titel": "Wichmaskinen",
+      "Vært": "Morten Wichman",
+      "Vuring (1-10)": "4,1",
+      "Genre": "Snakke",
+      "Udgiver": "podimo",
+      "Antal afsnit": "",
+      "Årstal afspillet": "",
+      "Link": "",
+      "Afgivet vurdering": "",
+      "Billedlink": "https://img.podimo.com/images/7223b1c2-2fae-4169-b86d-10f738f7e66c?h=400&s=Dhenal93cunW7-dkU3kzUPXXAdg%3D&w=400",
+      "Kort beskrivelse": "Morten Wichmann blander comedy, satire og skæve samfundsobservationer.",
+      "": "",
+      "Endnu ikke hørt": "",
+      "Nævneværdige episo:": ""
+    },
+    {
+      "Placering": "488",
+      "Titel": "Sasha var heroin-luder",
+      "Vært": "Karoline Noer",
+      "Vuring (1-10)": "4,1",
+      "Genre": "true Crime",
+      "Udgiver": "Ekstra Bladet",
+      "Antal afsnit": "1",
+      "Årstal afspillet": "2026",
+      "Link": "https://podcasts.apple.com/dk/podcast/afh%C3%B8rt/id1589788282",
+      "Afgivet vurdering": "09-02-2026",
+      "Billedlink": "https://i.scdn.co/image/ab6765630000ba8a130fd746c9fc3b076ccf507f",
+      "Kort beskrivelse": "Om Sasha, heroin, sexarbejde og livet på kanten.",
+      "": "",
+      "Endnu ikke hørt": "",
+      "Nævneværdige episo:": ""
+    },
+    {
+      "Placering": "489",
+      "Titel": "Djævlen i ozark-bjergene",
+      "Vært": "Kristoffer Lind & Signe Frederikke Pedersen",
+      "Vuring (1-10)": "4,0",
+      "Genre": "True crime",
+      "Udgiver": "Radio llll",
+      "Antal afsnit": "1",
+      "Årstal afspillet": "2025",
+      "Link": "https://radio4.dk/podcasts/krimiland/dj-velen-i-ozark-bjergene",
+      "Afgivet vurdering": "22-06-2025",
+      "Billedlink": "https://radio4data.imgix.net/2025/07/Krimiland_begge_1x1-2-6.png?fit=crop&height=400&width=400",
+      "Kort beskrivelse": "Om forbrydelser i Ozark-bjergene og mørket bag idyllen.",
+      "": "",
+      "Endnu ikke hørt": "",
+      "Nævneværdige episo:": ""
+    },
+    {
+      "Placering": "490",
+      "Titel": "Apartheid",
+      "Vært": "Per Lysholt",
+      "Vuring (1-10)": "4,0",
+      "Genre": "True crime",
+      "Udgiver": "DR",
+      "Antal afsnit": "4",
+      "Årstal afspillet": "2025",
+      "Link": "",
+      "Afgivet vurdering": "08-12-2025",
+      "Billedlink": "https://is1-ssl.mzstatic.com/image/thumb/Podcasts221/v4/78/c8/06/78c8065c-b0b1-729c-01d0-522b3fcc998b/mza_486116165445940358.png/1200x1200bf-60.jpg",
+      "Kort beskrivelse": "Om apartheid, Sydafrika og kampen mod et brutalt system.",
+      "": "",
+      "Endnu ikke hørt": "",
+      "Nævneværdige episo:": ""
+    },
+    {
+      "Placering": "491",
+      "Titel": "Hvad regner du med!?",
+      "Vært": "Anna Bogdanova",
+      "Vuring (1-10)": "4,0",
+      "Genre": "sundhed",
+      "Udgiver": "Acast",
+      "Antal afsnit": "3",
+      "Årstal afspillet": "",
+      "Link": "https://podcasts.apple.com/dk/podcast/hvad-regner-du-med/id1847324803",
+      "Afgivet vurdering": "04-11-2025",
+      "Billedlink": "https://img.podimo.com/images/cd0e9bcb-334c-4bf6-80ee-777fd03dbbcc?h=400&s=JlAmHgPV31MNTWpy00jlVDZAi_s%3D&w=400",
+      "Kort beskrivelse": "Anna Bogdanova taler træning, krop og realistiske forventninger.",
+      "": "",
+      "Endnu ikke hørt": "",
+      "Nævneværdige episo:": ""
+    },
+    {
+      "Placering": "492",
+      "Titel": "Vågn lidt op!",
+      "Vært": "Svala Sigfusardottir",
+      "Vuring (1-10)": "3,9",
+      "Genre": "Snakke",
+      "Udgiver": "Radio llll",
+      "Antal afsnit": "Ugentlig",
+      "Årstal afspillet": "2025",
+      "Link": "https://radio4.dk/podcasts/vaagn-lidt-op",
+      "Afgivet vurdering": "01-07-2025",
+      "Billedlink": "https://radio4data.imgix.net/2025/05/Vaagn_lidt_op_ikongrafik.png?ar=1.56%3A1&crop=top&fit=crop&height=400&width=600",
+      "Kort beskrivelse": "Svala Sigfusardottir giver et kærligt spark til vaner og hverdagsliv.",
+      "": "",
+      "Endnu ikke hørt": "",
+      "Nævneværdige episo:": ""
+    },
+    {
+      "Placering": "493",
+      "Titel": "Fremtidens kriminalitet",
+      "Vært": "Kristoffer Eriksen & David Sausdal",
+      "Vuring (1-10)": "3,9",
+      "Genre": "True Crime",
+      "Udgiver": "Podimo",
+      "Antal afsnit": "Ugentlig",
+      "Årstal afspillet": "2024",
+      "Link": "https://podimo.com/dk/shows/fremtidens-kriminalitet",
+      "Afgivet vurdering": "",
+      "Billedlink": "https://img.podimo.com/images/d5cdc7f1-d76d-4b68-9220-3c2e1b3e8876?h=400&s=HzXV2mgjcCz6ANM4QcyWt6a2U90%3D&w=400",
+      "Kort beskrivelse": "Om fremtidens kriminalitet, teknologi og nye former for forbrydelser.",
+      "": "",
+      "Endnu ikke hørt": "",
+      "Nævneværdige episo:": ""
+    },
+    {
+      "Placering": "494",
+      "Titel": "Dårligdommerne",
+      "Vært": "Jacob Ege Hinchely, Troels Møller & Christopher Leo",
+      "Vuring (1-10)": "3,9",
+      "Genre": "Underholdning",
+      "Udgiver": "Podimo",
+      "Antal afsnit": "",
+      "Årstal afspillet": "",
+      "Link": "",
+      "Afgivet vurdering": "",
+      "Billedlink": "https://migogkbh.dk/wp-content/uploads/2023/05/1d53f45a-8745-467d-91eb-f753be48e468_400x400.png",
+      "Kort beskrivelse": "Dårligdommerne ser dårlige film med humor, kærlighed og hårde domme.",
+      "": "",
+      "Endnu ikke hørt": "",
+      "Nævneværdige episo:": ""
+    },
+    {
+      "Placering": "495",
+      "Titel": "Cand. merc. podcast",
+      "Vært": "",
+      "Vuring (1-10)": "3,6",
+      "Genre": "Underholdning",
+      "Udgiver": "Podimo",
+      "Antal afsnit": "20",
+      "Årstal afspillet": "2025",
+      "Link": "",
+      "Afgivet vurdering": "23-03-2025",
+      "Billedlink": "https://img.podimo.com/images/0f00e11d-5d3b-4287-b10c-665f05d5e384?h=400&s=1lTaeNv-zMsjbovVlmsdHjLuZQY%3D&w=400",
+      "Kort beskrivelse": "Cand.merc.-podcasten taler karriere, studieliv og erhvervsliv.",
+      "": "",
+      "Endnu ikke hørt": "",
+      "Nævneværdige episo:": ""
+    },
+    {
+      "Placering": "496",
+      "Titel": "Ren bold",
+      "Vært": "Thure Sandøe",
+      "Vuring (1-10)": "2,9",
+      "Genre": "Fodbold",
+      "Udgiver": "Bold",
+      "Antal afsnit": "",
+      "Årstal afspillet": "2024",
+      "Link": "",
+      "Afgivet vurdering": "",
+      "Billedlink": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQVBIuEHLlCfFQrCFKyzZIlzh6OYPFB96CWqg&s",
+      "Kort beskrivelse": "Ren Bold vender fodbold, fairplay og spillets store spørgsmål.",
+      "": "",
+      "Endnu ikke hørt": "",
+      "Nævneværdige episo:": ""
+    },
+    {
+      "Placering": "497",
+      "Titel": "Mørkeland",
+      "Vært": "Camilla Bjerregaard Aurvig & Kristine Sofie Bugbee",
+      "Vuring (1-10)": "2,9",
+      "Genre": "True Crime",
+      "Udgiver": "",
+      "Antal afsnit": "Mandage",
+      "Årstal afspillet": "",
+      "Link": "",
+      "Afgivet vurdering": "",
+      "Billedlink": "https://program.bogforum.dk/wp-content/uploads/2025/10/Moerkeland-aspect-ratio-400-400.jpeg",
+      "Kort beskrivelse": "Mørkeland fortæller mørke kriminalsager med fokus på ofre og forløb.",
+      "": "",
+      "Endnu ikke hørt": "",
+      "Nævneværdige episo:": ""
+    },
+    {
+      "Placering": "498",
+      "Titel": "Genvej",
+      "Vært": "Adnan Al-Adhami",
+      "Vuring (1-10)": "2,4",
+      "Genre": "Underholdning",
+      "Udgiver": "DR",
+      "Antal afsnit": "Ugentlig",
+      "Årstal afspillet": "2024",
+      "Link": "https://www.dr.dk/lyd/p3/genvej-5513984425000",
+      "Afgivet vurdering": "",
+      "Billedlink": "https://asset.dr.dk/drlyd/images/urn:dr:radio:image:6926eaf44f22de874eb4a402?im=AspectCrop%3D%28720%2C720%29%2CxPosition%3D.5%2CyPosition%3D.5%3BResize%3D%28720%2C720%29",
+      "Kort beskrivelse": "Genvej giver korte veje ind i aktuelle emner og personer.",
+      "": "",
+      "Endnu ikke hørt": "",
+      "Nævneværdige episo:": ""
+    },
+    {
+      "Placering": "499",
+      "Titel": "Voksenvenner",
+      "Vært": "Jonatan Spang",
+      "Vuring (1-10)": "1,8",
+      "Genre": "Snakke",
+      "Udgiver": "",
+      "Antal afsnit": "",
+      "Årstal afspillet": "",
+      "Link": "",
+      "Afgivet vurdering": "",
+      "Billedlink": "https://img.podimo.com/images/fa2ac35c-f636-4718-bdd9-181c65fe13c7?w=400&h=400&s=E5XaFkPMS74NGREfITW5MF1H83w=",
+      "Kort beskrivelse": "Jonatan Spang taler voksenliv, venskaber og relationer.",
+      "": "",
+      "Endnu ikke hørt": "",
+      "Nævneværdige episo:": ""
+    },
+    {
+      "Placering": "500",
+      "Titel": "I Dinosaurernes Fodspor",
+      "Vært": "Oliver Seppo & Thomas Bugge",
+      "Vuring (1-10)": "1,6",
+      "Genre": "Historie",
+      "Udgiver": "DR",
+      "Antal afsnit": "9",
+      "Årstal afspillet": "",
+      "Link": "",
+      "Afgivet vurdering": "",
+      "Billedlink": "data:image/jpeg;base64,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",
+      "Kort beskrivelse": "Om dinosaurernes verden, fossiler og sporene fra fortidens kæmper.",
+      "": "",
+      "Endnu ikke hørt": "",
+      "Nævneværdige episo:": ""
+    },
+    {
+      "Placering": "501",
+      "Titel": "Den døde narkosmugler",
+      "Vært": "Irene Nørgaard & Milan Højlund Ganesan",
+      "Vuring (1-10)": "",
+      "Genre": "True Crime",
+      "Udgiver": "TV2 Østjylland",
+      "Antal afsnit": "6",
+      "Årstal afspillet": "2026",
+      "Link": "https://open.spotify.com/show/6tEngvvh2QQzvA31L4lOtb",
+      "Afgivet vurdering": "",
+      "Billedlink": "https://covers.storytel.com/jpg-640/0402018191914.488475c4-0890-4358-8d53-c0e5853a0a76?optimize=high&quality=70&width=600",
+      "Kort beskrivelse": "Om en død narkosmugler og sporene i en international sag.",
+      "": "",
+      "Endnu ikke hørt": "",
+      "Nævneværdige episo:": ""
+    },
+    {
+      "Placering": "502",
+      "Titel": "Sidste nedtælling",
+      "Vært": "Simon Kratholm Ankjærgaard & Steffen Jacobsen",
+      "Vuring (1-10)": "",
+      "Genre": "Krig",
+      "Udgiver": "Harmonia / Lindhardt og Ringhof",
+      "Antal afsnit": "4",
+      "Årstal afspillet": "2025",
+      "Link": "https://mofibo.com/dk/podcasts/sidste-nedtælling-107464",
+      "Afgivet vurdering": "",
+      "Billedlink": "https://covers.storytel.com/jpg-640/9788727116471.83572387-712f-43b6-82c1-4be977cbae27?optimize=high&quality=70&width=600",
+      "Kort beskrivelse": "Om nedtælling, kriser og mennesker på kanten af katastrofen.",
+      "": "",
+      "Endnu ikke hørt": "",
+      "Nævneværdige episo:": ""
+    },
+    {
+      "Placering": "503",
+      "Titel": "Dæmonernes Verden",
+      "Vært": "Krister Moltzen",
+      "Vuring (1-10)": "",
+      "Genre": "True Crime",
+      "Udgiver": "Third Ear",
+      "Antal afsnit": "9",
+      "Årstal afspillet": "2025",
+      "Link": "https://thirdear.dk/podcasts/daemonernes-verden/",
+      "Afgivet vurdering": "",
+      "Billedlink": "https://assets.pippa.io/shows/62a1d88513e14d0011ebc309/1773787553506-3c8780a4-6ae6-4cee-819d-0d6adf3aaa36.jpeg",
+      "Kort beskrivelse": "Om mennesker, der tror på dæmoner, og den parallelverden de bliver suget ind i.",
+      "": "",
+      "Endnu ikke hørt": "",
+      "Nævneværdige episo:": ""
+    },
+    {
+      "Placering": "504",
+      "Titel": "Så længe du lever",
+      "Vært": "Nils Thorsen",
+      "Vuring (1-10)": "",
+      "Genre": "sundhed",
+      "Udgiver": "Politiken",
+      "Antal afsnit": "6",
+      "Årstal afspillet": "2025",
+      "Link": "https://podcasts.apple.com/dk/podcast/s%C3%A5-l%C3%A6nge-du-lever/id1845291075",
+      "Afgivet vurdering": "",
+      "Billedlink": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ0vcbnm4D7a8GY_bDCf1U7uZBNRDQ2_7jSgA&s",
+      "Kort beskrivelse": "Nils Thorsen undersøger, hvordan vi kan leve længere, gladere og klogere.",
+      "": "",
+      "Endnu ikke hørt": "",
+      "Nævneværdige episo:": ""
+    },
+    {
+      "Placering": "505",
+      "Titel": "Myrdede Lizzie Borden sin familie med økse?",
+      "Vært": "Kristoffer Lind & Signe Frederikke Pedersen",
+      "Vuring (1-10)": "",
+      "Genre": "True crime",
+      "Udgiver": "Radio4",
+      "Antal afsnit": "3",
+      "Årstal afspillet": "2025",
+      "Link": "https://omny.fm/shows/krimiland",
+      "Afgivet vurdering": "",
+      "Billedlink": "https://is1-ssl.mzstatic.com/image/thumb/Podcasts221/v4/30/2f/63/302f6386-afe9-1e10-377c-a4ee994d76bb/mza_13508543133229279959.jpg/1200x1200bf-60.jpg",
+      "Kort beskrivelse": "Om Lizzie Borden, øksemordene og spørgsmålet om skyld i en berygtet sag.",
+      "": "",
+      "Endnu ikke hørt": "",
+      "Nævneværdige episo:": ""
+    },
+    {
+      "Placering": "506",
+      "Titel": "Drabet på Lumumba",
+      "Vært": "Martin Grønne & Celine Klint",
+      "Vuring (1-10)": "",
+      "Genre": "Historie",
+      "Udgiver": "DR",
+      "Antal afsnit": "2",
+      "Årstal afspillet": "2025",
+      "Link": "https://www.dr.dk/lyd/pods/bakspejl",
+      "Afgivet vurdering": "",
+      "Billedlink": "https://is1-ssl.mzstatic.com/image/thumb/Podcasts221/v4/30/2f/63/302f6386-afe9-1e10-377c-a4ee994d76bb/mza_13508543133229279959.jpg/1200x1200bf-60.jpg",
+      "Kort beskrivelse": "Om drabet på Patrice Lumumba og magtspillet omkring Congos frihedskamp.",
+      "": "",
+      "Endnu ikke hørt": "",
+      "Nævneværdige episo:": ""
+    },
+    {
+      "Placering": "507",
+      "Titel": "Idi Amin",
+      "Vært": "Nicholas Durup Thomsen",
+      "Vuring (1-10)": "",
+      "Genre": "True crime",
+      "Udgiver": "DR",
+      "Antal afsnit": "6",
+      "Årstal afspillet": "2024",
+      "Link": "",
+      "Afgivet vurdering": "",
+      "Billedlink": "https://asset.dr.dk/drlyd/images/urn:dr:radio:image:68909215ab10e7b0b69756c7?im=AspectCrop%3D%28720%2C720%29%2CxPosition%3D.5%2CyPosition%3D.5%3BResize%3D%28720%2C720%29",
+      "Kort beskrivelse": "Om Idi Amin, Ugandas brutale diktator og terroren under hans styre.",
+      "": "",
+      "Endnu ikke hørt": "",
+      "Nævneværdige episo:": ""
+    },
+    {
+      "Placering": "508",
+      "Titel": "The James Brown Mystery",
+      "Vært": "Thomas Lake",
+      "Vuring (1-10)": "",
+      "Genre": "True Crime",
+      "Udgiver": "CNN",
+      "Antal afsnit": "8",
+      "Årstal afspillet": "2026",
+      "Link": "https://podcasts.apple.com/us/podcast/the-james-brown-mystery/id1650257663",
+      "Afgivet vurdering": "",
+      "Billedlink": "https://is1-ssl.mzstatic.com/image/thumb/Podcasts122/v4/32/29/23/32292385-6bcb-79a9-9e46-2c22c5d07372/mza_6838866442135649136.jpg/300x300bb.webp",
+      "Kort beskrivelse": "Om James Browns mystiske død og spørgsmålet om, hvad der egentlig skete.",
+      "": "",
+      "Endnu ikke hørt": "",
+      "Nævneværdige episo:": ""
+    },
+    {
+      "Placering": "509",
+      "Titel": "The Crossbow Killer",
+      "Vært": "Tim Hinman & Meic Parry",
+      "Vuring (1-10)": "",
+      "Genre": "True Crime",
+      "Udgiver": "BBC Radio Wales",
+      "Antal afsnit": "7",
+      "Årstal afspillet": "2026",
+      "Link": "https://podcasts.apple.com/us/podcast/the-crossbow-killer/id1695710879",
+      "Afgivet vurdering": "",
+      "Billedlink": "https://is1-ssl.mzstatic.com/image/thumb/Podcasts126/v4/08/4d/5b/084d5b60-24c2-c9fc-efd4-43cb56e54f99/mza_14843694915532434341.jpg/300x300bb.webp",
+      "Kort beskrivelse": "Om et brutalt walisisk mord med armbrøst og et motiv, der er svært at finde.",
+      "": "",
+      "Endnu ikke hørt": "",
+      "Nævneværdige episo:": ""
+    },
+    {
       "Placering": "510",
+      "Titel": "Devil in the Desert",
+      "Vært": "Matt Gutman",
+      "Vuring (1-10)": "",
+      "Genre": "True Crime",
+      "Udgiver": "ABC News",
+      "Antal afsnit": "6",
+      "Årstal afspillet": "2026",
+      "Link": "https://podcasts.apple.com/dk/podcast/devil-in-the-desert/id1818132861",
+      "Afgivet vurdering": "",
+      "Billedlink": "https://is1-ssl.mzstatic.com/image/thumb/Podcasts211/v4/a0/d8/c8/a0d8c8fd-81f4-dc58-edb6-b2edbdef94fd/mza_784304221520151471.jpg/300x300bb.webp",
+      "Kort beskrivelse": "Om en død i ørkenen og de mørke spor i en usædvanlig amerikansk sag.",
+      "": "",
+      "Endnu ikke hørt": "",
+      "Nævneværdige episo:": ""
+    },
+    {
+      "Placering": "511",
       "Titel": "De hjemløse hackere",
       "Vært": "Martin Grønne",
       "Vuring (1-10)": "",
@@ -8657,7 +8674,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "511",
+      "Placering": "512",
       "Titel": "Sidste halvleg",
       "Vært": "Viktor Fischer",
       "Vuring (1-10)": "",
@@ -8674,7 +8691,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "512",
+      "Placering": "513",
       "Titel": "Epstein-filerne",
       "Vært": "Andreas Wentoft & Peter Schwarz",
       "Vuring (1-10)": "",
@@ -8691,7 +8708,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "513",
+      "Placering": "514",
       "Titel": "En iransk revolution",
       "Vært": "Martin Grønne & Celine Klint",
       "Vuring (1-10)": "",
@@ -8708,7 +8725,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "514",
+      "Placering": "515",
       "Titel": "Hanrej i Ribe",
       "Vært": "Harald Toksværd",
       "Vuring (1-10)": "",
@@ -8725,7 +8742,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "515",
+      "Placering": "516",
       "Titel": "I skyggen af EM 1992",
       "Vært": "Martin Grønne & Celine Klint",
       "Vuring (1-10)": "",
@@ -8742,7 +8759,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "516",
+      "Placering": "517",
       "Titel": "Hagekors over Danmark",
       "Vært": "Nicholas Durup Thomsen & Anders Askman",
       "Vuring (1-10)": "",
@@ -8759,7 +8776,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "517",
+      "Placering": "518",
       "Titel": "Taliban",
       "Vært": "Martin Tamm Andersen",
       "Vuring (1-10)": "",
@@ -8776,7 +8793,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "518",
+      "Placering": "519",
       "Titel": "Mafiaen",
       "Vært": "Per Lysholt",
       "Vuring (1-10)": "",
@@ -8793,7 +8810,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "519",
+      "Placering": "520",
       "Titel": "Munkens efterfølger",
       "Vært": "Rune Ingemann",
       "Vuring (1-10)": "",
@@ -8810,7 +8827,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "520",
+      "Placering": "521",
       "Titel": "Voldtægtsmand",
       "Vært": "Kirsten H. Carlsen",
       "Vuring (1-10)": "",
@@ -8827,7 +8844,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "521",
+      "Placering": "522",
       "Titel": "If Books Could Kill",
       "Vært": "Michael Hobbes & Peter Shamshiri",
       "Vuring (1-10)": "",
@@ -8839,23 +8856,6 @@
       "Afgivet vurdering": "",
       "Billedlink": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQZnNOMpU0SOeMt6a4RzN0UthvwepOcFauzVg&s",
       "Kort beskrivelse": "Amerikansk podcast, der kritisk og humoristisk gennemgår populære debat- og bestsellerbøger.",
-      "": "",
-      "Endnu ikke hørt": "",
-      "Nævneværdige episo:": ""
-    },
-    {
-      "Placering": "522",
-      "Titel": "Bøvlede mænd",
-      "Vært": "Rasmus Revsbech & Molly Balsby",
-      "Vuring (1-10)": "6,8",
-      "Genre": "Samfund",
-      "Udgiver": "r8Dio",
-      "Antal afsnit": "2",
-      "Årstal afspillet": "2026",
-      "Link": "https://r8dio.dk/program/bovlede-maend",
-      "Afgivet vurdering": "",
-      "Billedlink": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQCmGLbmBoIp3l5AtSuQnRY2t_CLGzL8jGwFA&s",
-      "Kort beskrivelse": "To værter undersøger moderne mænds usikkerheder, selvforståelse og forhold til maskuline idealer.",
       "": "",
       "Endnu ikke hørt": "",
       "Nævneværdige episo:": ""
