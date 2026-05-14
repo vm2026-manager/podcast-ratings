@@ -1,9 +1,9 @@
 {
-  "generatedAt": "2026-05-14T07:47:00.066Z",
+  "generatedAt": "2026-05-14T08:13:26.772Z",
   "source": "https://docs.google.com/spreadsheets/d/e/2PACX-1vQRBWQdj-WDNN3l9yxIMCCu_O2dYfP7modSODcYgJRoQDG3GYsu83W_wIFyijPx6v8l-W011zrFyOdq/pub?gid=1418051000&single=true&output=csv",
   "sheetName": "Udvalgte vurderinger",
   "gid": "1418051000",
-  "count": 3,
+  "count": 4,
   "rows": [
     {
       "Aktiv": "JA",
@@ -17,7 +17,7 @@
       "Aktualitet/relevans": "Ikke relevant",
       "Samlet score": "6,8",
       "Anmeldelsesdato": "12-05-2026",
-      "Visningsrækkefølge": "3",
+      "Visningsrækkefølge": "4",
       "Auto-udgiver": "Heartbeats",
       "Auto-link": "https://podcasts.apple.com/dk/podcast/s19e10-adolphus-greely-den-store-kannibalekspedition/id1519774517?i=1000766161839",
       "Auto-billedlink": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS_0VHr4_BB-Xk2o1s8TXB0yTAltd3PtBOtMEXRY2kzvg&s",
@@ -36,7 +36,7 @@
       "Aktualitet/relevans": "Ikke relevant",
       "Samlet score": "8",
       "Anmeldelsesdato": "12-05-2026",
-      "Visningsrækkefølge": "2",
+      "Visningsrækkefølge": "3",
       "Auto-udgiver": "DR",
       "Auto-link": "https://www.dr.dk/lyd/special-radio/bakspejl/bakspejl-2021/karikaturkrisen-1-4-selvcensur-11162111041",
       "Auto-billedlink": "https://cachedimages.podchaser.com/256x256/aHR0cHM6Ly9hcGkuZHIuZGsvcG9kY2FzdHMvdjEvaW1hZ2VzL3Vybjpkcjpwb2RjYXN0OmltYWdlOjY3ZTE0ZDZmNjI3M2U4ZmM3MDc3YWE1My5qcGc%3D/aHR0cHM6Ly93d3cucG9kY2hhc2VyLmNvbS9pbWFnZXMvbWlzc2luZy1pbWFnZS5wbmc%3D",
@@ -55,12 +55,31 @@
       "Aktualitet/relevans": "5,5",
       "Samlet score": "5,2",
       "Anmeldelsesdato": "13-05-2026",
-      "Visningsrækkefølge": "1",
+      "Visningsrækkefølge": "2",
       "Auto-udgiver": "DR",
       "Auto-link": "https://open.spotify.com/show/1yd6kWvplIjrDwqCezFQBA",
       "Auto-billedlink": "https://cdn.podimo.com/images/11614209-f6a0-4dcb-9ffe-051131b6661c_400x400.png",
       "Auto-genre": "Dokumentar",
       "Auto-vært": "Nicholas Durup Thomsen"
+    },
+    {
+      "Aktiv": "JA",
+      "Titel": "En virkelig bøvlet, følsom mandemand – med René Fredensborg",
+      "Matchtitel": "Bøvlede mænd",
+      "Kort vurdering": "Podcasten starter som klassisk mandesnak, men udvikler sig hurtigt til noget, der minder mere om en terapitime med René Fredensborg. Han fortæller meget åbent om traumer, fejl og relationer, og det fungerer især godt, fordi han virker ærlig og ikke prøver at skjule sine dårligste sider.",
+      "Historie/sag": "7,2",
+      "Fortælling": "7,5",
+      "Vært/formidling": "5,9",
+      "Produktion": "5",
+      "Aktualitet/relevans": "8,3",
+      "Samlet score": "6,6",
+      "Anmeldelsesdato": "14-05-2026",
+      "Visningsrækkefølge": "1",
+      "Auto-udgiver": "r8Dio",
+      "Auto-link": "https://r8dio.dk/program/bovlede-maend",
+      "Auto-billedlink": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQCmGLbmBoIp3l5AtSuQnRY2t_CLGzL8jGwFA&s",
+      "Auto-genre": "Samfund",
+      "Auto-vært": "Rasmus Revsbech & Molly Balsby"
     }
   ]
 }
