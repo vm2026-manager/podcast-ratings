@@ -113,16 +113,9 @@ function expandSearchAliases(value) {
     compact.includes("24syv");
 
   if (radio24Pattern) {
-    [
-      "radio24syv",
-      "radio 24 syv",
-      "radio 24 7",
-      "radio247",
-      "24syv",
-      "24 syv",
-      "24 7",
-      "247",
-    ].forEach((alias) => aliases.add(alias));
+    ["radio24syv", "radio 24 syv", "radio 24 7", "radio247", "24syv", "24 syv", "24 7", "247"].forEach((alias) =>
+      aliases.add(alias)
+    );
   }
 
   const radio4Pattern =
@@ -135,18 +128,9 @@ function expandSearchAliases(value) {
     compact.includes("radiollll");
 
   if (radio4Pattern) {
-    [
-      "radio 4",
-      "radio4",
-      "radio fire",
-      "radio iiii",
-      "radioiiii",
-      "radio llll",
-      "radiollll",
-      "r4dio",
-      "radio iiii krimiland",
-      "radio4 krimiland",
-    ].forEach((alias) => aliases.add(alias));
+    ["radio 4", "radio4", "radio fire", "radio iiii", "radioiiii", "radio llll", "radiollll", "r4dio", "radio iiii krimiland", "radio4 krimiland"].forEach((alias) =>
+      aliases.add(alias)
+    );
   }
 
   return [...aliases].filter(Boolean).join(" ");
@@ -773,22 +757,37 @@ function renderPodcastReviewCard(podcast, review, key) {
   const body = document.createElement("div");
   body.className = "podcast-card__body";
 
-  const mediaColumn = document.createElement("div");
-  mediaColumn.className = "podcast-card__media-column";
+  const head = document.createElement("div");
+  head.className = "review-card__head";
 
-  const media = document.createElement("div");
-  media.className = "podcast-card__media cover-wrap";
-  media.innerHTML = `
-    <img class="podcast-image" alt="" loading="lazy" />
-    <div class="image-placeholder" aria-hidden="true">
-      <span class="image-placeholder-icon">▢</span>
-      <span class="image-placeholder-label">Billede mangler</span>
-    </div>
+  const cover = document.createElement("div");
+  cover.className = "review-card__cover";
+  cover.innerHTML = `<img alt="" loading="lazy" />`;
+
+  const coverImg = cover.querySelector("img");
+  coverImg.src = review.image || podcast.image || "";
+  coverImg.alt = review.title || podcast.title || "";
+
+  const headCopy = document.createElement("div");
+  headCopy.className = "review-card__head-copy";
+
+  const meta = [review.publisher, review.genre].filter(Boolean).join(" / ");
+
+  headCopy.innerHTML = `
+    <p class="review-card__eyebrow">Mads anmelder</p>
+    <h3 class="review-card__title">${escapeHtml(review.title || podcast.title)}</h3>
+    <p class="review-card__meta">${escapeHtml(review.host || podcast.host || "")}${meta ? " · " + escapeHtml(meta) : ""}</p>
+    <p class="review-card__date">${escapeHtml(review.reviewDateLabel || "")}</p>
   `;
-  setImage(media, review.image || podcast.image, review.title || podcast.title);
+
+  head.append(cover, headCopy);
+
+  const text = document.createElement("p");
+  text.className = "review-card__text";
+  text.textContent = review.review || "";
 
   const actions = document.createElement("div");
-  actions.className = "podcast-card__actions";
+  actions.className = "review-card__actions";
 
   const linkButton = document.createElement("button");
   linkButton.className = "podcast-card__link";
@@ -813,24 +812,16 @@ function renderPodcastReviewCard(podcast, review, key) {
   });
 
   actions.append(linkButton, backButton);
-  mediaColumn.append(media, actions);
 
-  const content = document.createElement("div");
-  content.className = "podcast-card__content";
+  const divider = document.createElement("div");
+  divider.className = "review-card__divider";
 
-  const meta = [review.publisher, review.genre].filter(Boolean).join(" / ");
+  const heading = document.createElement("p");
+  heading.className = "review-card__heading";
+  heading.textContent = "Vurderet på parametre";
 
-  content.innerHTML = `
-    <p class="review-card__eyebrow">Mads anmelder</p>
-    <h3 class="review-card__title">${escapeHtml(review.title || podcast.title)}</h3>
-    <p class="review-card__meta">${escapeHtml(review.host || podcast.host || "")}${meta ? " · " + escapeHtml(meta) : ""}</p>
-    <p class="review-card__date">${escapeHtml(review.reviewDateLabel || "")}</p>
-    <p class="review-card__text">${escapeHtml(review.review || "")}</p>
-    <p class="review-card__heading">Vurderet på parametre</p>
-    <div class="review-card__params"></div>
-  `;
-
-  const params = content.querySelector(".review-card__params");
+  const params = document.createElement("div");
+  params.className = "review-card__params";
 
   review.params.forEach((param) => {
     const rawValue = normalizeText(param.value);
@@ -871,7 +862,7 @@ function renderPodcastReviewCard(podcast, review, key) {
     params.appendChild(row);
   });
 
-  body.append(mediaColumn, content);
+  body.append(head, text, actions, divider, heading, params);
 
   const footer = document.createElement("div");
   footer.className = "podcast-card__footer";
