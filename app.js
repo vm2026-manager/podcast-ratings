@@ -21,6 +21,8 @@ const FEATURED_ROTATION_MS = 8000;
 const state = {
   podcasts: [],
   featuredReviews: [],
+  featuredReviewByKey: {},
+  openReviewKeys: new Set(),
   featuredIndex: 0,
   featuredTimer: null,
   activeFilter: null,
@@ -186,10 +188,7 @@ function parseNumber(value) {
   }
 
   const raw = normalizeText(value);
-
-  if (!raw) {
-    return null;
-  }
+  if (!raw) return null;
 
   let cleaned = raw.replace(/[^\d,.\-]/g, "");
 
@@ -203,11 +202,7 @@ function parseNumber(value) {
 
 function formatRating(value) {
   const rating = parseNumber(value);
-
-  if (rating === null) {
-    return "";
-  }
-
+  if (rating === null) return "";
   return `${rating.toFixed(1).replace(".", ",")} / 10`;
 }
 
@@ -218,10 +213,7 @@ function parsePlacement(value) {
 
 function parseDate(value) {
   const raw = normalizeText(value);
-
-  if (!raw) {
-    return null;
-  }
+  if (!raw) return null;
 
   const parts = raw.match(/^(\d{1,2})[-./](\d{1,2})[-./](\d{2,4})$/);
 
@@ -230,10 +222,7 @@ function parseDate(value) {
     const month = Number(parts[2]) - 1;
     const year = Number(parts[3].length === 2 ? `20${parts[3]}` : parts[3]);
     const date = new Date(year, month, day);
-
-    if (!Number.isNaN(date.getTime())) {
-      return date;
-    }
+    if (!Number.isNaN(date.getTime())) return date;
   }
 
   const fallback = new Date(raw);
@@ -242,10 +231,7 @@ function parseDate(value) {
 
 function formatDate(value) {
   const date = parseDate(value);
-
-  if (!date) {
-    return "";
-  }
+  if (!date) return "";
 
   return new Intl.DateTimeFormat("da-DK", {
     day: "2-digit",
@@ -271,18 +257,14 @@ function normalizeGenre(value) {
     raw.includes("mord") ||
     raw.includes("forbryd") ||
     raw.includes("svindel")
-  ) {
-    return "True Crime";
-  }
+  ) return "True Crime";
 
   if (
     raw.includes("historie") ||
     raw.includes("historisk") ||
     raw.includes("fortid") ||
     raw.includes("krig")
-  ) {
-    return "Historie";
-  }
+  ) return "Historie";
 
   if (
     raw.includes("samfund") ||
@@ -297,9 +279,7 @@ function normalizeGenre(value) {
     raw.includes("sundhed") ||
     raw.includes("skandaler") ||
     raw.includes("kultur")
-  ) {
-    return "Samfund";
-  }
+  ) return "Samfund";
 
   if (
     raw.includes("sport") ||
@@ -311,9 +291,7 @@ function normalizeGenre(value) {
     raw.includes("tour de france") ||
     raw.includes("giro") ||
     raw.includes("vuelta")
-  ) {
-    return "Sport";
-  }
+  ) return "Sport";
 
   if (
     raw.includes("viden") ||
@@ -321,13 +299,9 @@ function normalizeGenre(value) {
     raw.includes("forskning") ||
     raw.includes("læring") ||
     raw.includes("videnskab")
-  ) {
-    return "Viden";
-  }
+  ) return "Viden";
 
-  if (raw.includes("sladder") || raw.includes("gossip")) {
-    return "Sladder";
-  }
+  if (raw.includes("sladder") || raw.includes("gossip")) return "Sladder";
 
   if (
     raw.includes("underholdning") ||
@@ -339,9 +313,7 @@ function normalizeGenre(value) {
     raw.includes("snak") ||
     raw.includes("kærlighed") ||
     raw.includes("dating")
-  ) {
-    return "Underholdning";
-  }
+  ) return "Underholdning";
 
   if (
     raw.includes("dokumentar") ||
@@ -349,16 +321,13 @@ function normalizeGenre(value) {
     raw.includes("portræt") ||
     raw.includes("drama") ||
     raw.includes("tv & film")
-  ) {
-    return "Dokumentar";
-  }
+  ) return "Dokumentar";
 
   return "Dokumentar";
 }
 
 function normalizePublisher(value) {
   const original = normalizeText(value);
-
   if (!original) return "";
 
   const raw = normalizeComparable(original)
@@ -372,53 +341,24 @@ function normalizePublisher(value) {
     raw === "eb+" ||
     raw === "ekstrabladet" ||
     raw === "ekstra bladet"
-  ) {
-    return "Ekstra Bladet";
-  }
+  ) return "Ekstra Bladet";
 
   if (
     raw === "radio llll" ||
     raw === "radio iiii" ||
     raw === "radio4" ||
     raw === "radio4 (krimiland)"
-  ) {
-    return "RADIO IIII";
-  }
+  ) return "RADIO IIII";
 
   if (raw === "r8dio") return "r8dio";
-
-  if (compact === "radio24syv" || compact === "radio24/7") {
-    return "Radio24syv";
-  }
-
-  if (compact === "24syv" || compact === "24/syv") {
-    return "24syv";
-  }
-
-  if (raw === "dr" || raw === "dr lyd" || raw === "p1") {
-    return "DR";
-  }
-
-  if (raw === "politikken" || raw === "politiken") {
-    return "Politiken";
-  }
-
-  if (raw === "bold" || raw === "bolddk") {
-    return "Bold.dk";
-  }
-
-  if (raw === "fc købenahvn" || raw === "fc københavn") {
-    return "F.C. København";
-  }
-
-  if (raw === "den uafhængige" || raw === "den uafhaengige") {
-    return "Den Uafhængige";
-  }
-
-  if (raw === "podimo" || raw === "podimo/tv2") {
-    return "Podimo";
-  }
-
+  if (compact === "radio24syv" || compact === "radio24/7") return "Radio24syv";
+  if (compact === "24syv" || compact === "24/syv") return "24syv";
+  if (raw === "dr" || raw === "dr lyd" || raw === "p1") return "DR";
+  if (raw === "politikken" || raw === "politiken") return "Politiken";
+  if (raw === "bold" || raw === "bolddk") return "Bold.dk";
+  if (raw === "fc købenahvn" || raw === "fc københavn") return "F.C. København";
+  if (raw === "den uafhængige" || raw === "den uafhaengige") return "Den Uafhængige";
+  if (raw === "podimo" || raw === "podimo/tv2") return "Podimo";
   if (raw === "media o") return "Mediano";
   if (raw === "third ear") return "Third Ear";
   if (raw === "third ear/zetland") return "Third Ear / Zetland";
@@ -464,10 +404,7 @@ function parseCsv(text) {
     }
 
     if ((char === "\n" || char === "\r") && !insideQuotes) {
-      if (char === "\r" && nextChar === "\n") {
-        i += 1;
-      }
-
+      if (char === "\r" && nextChar === "\n") i += 1;
       currentRow.push(currentCell);
 
       if (currentRow.some((cell) => normalizeText(cell) !== "")) {
@@ -619,13 +556,9 @@ function deduplicatePodcasts(podcasts) {
 
   podcasts.forEach((podcast) => {
     const key = normalizeMatchKey(podcast.title);
-
     if (!key) return;
 
-    if (!grouped.has(key)) {
-      grouped.set(key, []);
-    }
-
+    if (!grouped.has(key)) grouped.set(key, []);
     grouped.get(key).push(podcast);
   });
 
@@ -709,6 +642,28 @@ function mapFeaturedReview(row, index, podcastLookup) {
   };
 }
 
+function buildFeaturedReviewLookup(reviews) {
+  const lookup = {};
+
+  reviews.forEach((review) => {
+    const matchKey = normalizeMatchKey(review.matchTitle);
+    const titleKey = normalizeMatchKey(review.title);
+
+    if (matchKey) lookup[matchKey] = review;
+    if (titleKey) lookup[titleKey] = review;
+  });
+
+  return lookup;
+}
+
+function getReviewForPodcast(podcast) {
+  return state.featuredReviewByKey[normalizeMatchKey(podcast.title)] || null;
+}
+
+function getPodcastKey(podcast) {
+  return normalizeMatchKey(podcast.title);
+}
+
 function isUsefulPodcast(podcast) {
   return Boolean(podcast.title);
 }
@@ -747,9 +702,7 @@ function createGenreChips() {
     button.className = "genre-chip";
     button.textContent = genre;
 
-    if (isActiveGenre(genre)) {
-      button.classList.add("active");
-    }
+    if (isActiveGenre(genre)) button.classList.add("active");
 
     button.addEventListener("click", () => {
       if (genre === "Alle") {
@@ -881,6 +834,13 @@ function renderRecent() {
 }
 
 function renderPodcastCard(podcast) {
+  const review = getReviewForPodcast(podcast);
+  const key = getPodcastKey(podcast);
+
+  if (review && state.openReviewKeys.has(key)) {
+    return renderPodcastReviewCard(podcast, review, key);
+  }
+
   const fragment = elements.podcastTemplate.content.cloneNode(true);
 
   const placement = fragment.querySelector(".podcast-card__placement");
@@ -890,6 +850,7 @@ function renderPodcastCard(podcast) {
   const host = fragment.querySelector(".podcast-card__host");
   const description = fragment.querySelector(".podcast-card__description");
   const linkButton = fragment.querySelector(".podcast-card__link");
+  const reviewButton = fragment.querySelector(".podcast-card__review");
   const chips = fragment.querySelector(".podcast-card__chips");
 
   placement.innerHTML = `
@@ -898,7 +859,6 @@ function renderPodcastCard(podcast) {
   `;
 
   rating.textContent = podcast.ratingLabel || "Ikke vurderet";
-
   setImage(media, podcast.image, podcast.title);
 
   title.textContent = podcast.title;
@@ -912,6 +872,16 @@ function renderPodcastCard(podcast) {
     });
   } else {
     linkButton.classList.add("is-hidden");
+  }
+
+  if (review) {
+    reviewButton.classList.remove("is-hidden");
+    reviewButton.addEventListener("click", () => {
+      state.openReviewKeys.add(key);
+      renderPodcastGrid();
+    });
+  } else {
+    reviewButton.classList.add("is-hidden");
   }
 
   const publisherChip = document.createElement("button");
@@ -945,6 +915,156 @@ function renderPodcastCard(podcast) {
   chips.append(publisherChip, genreChip, episodesChip);
 
   return fragment;
+}
+
+function renderPodcastReviewCard(podcast, review, key) {
+  const article = document.createElement("article");
+  article.className = "podcast-card podcast-card--review";
+
+  const placement = document.createElement("div");
+  placement.className = "podcast-card__placement";
+  placement.innerHTML = `
+    <span class="placement-value">#${podcast.placement}</span>
+    <span class="placement-label">Placering</span>
+  `;
+
+  const rating = document.createElement("div");
+  rating.className = "podcast-card__rating";
+  rating.textContent = review.scoreLabel || podcast.ratingLabel || "Ikke vurderet";
+
+  const body = document.createElement("div");
+  body.className = "podcast-card__body";
+
+  const mediaColumn = document.createElement("div");
+  mediaColumn.className = "podcast-card__media-column";
+
+  const media = document.createElement("div");
+  media.className = "podcast-card__media cover-wrap";
+  media.innerHTML = `
+    <img class="podcast-image" alt="" loading="lazy" />
+    <div class="image-placeholder" aria-hidden="true">
+      <span class="image-placeholder-icon">▢</span>
+      <span class="image-placeholder-label">Billede mangler</span>
+    </div>
+  `;
+  setImage(media, review.image || podcast.image, review.title || podcast.title);
+
+  const actions = document.createElement("div");
+  actions.className = "podcast-card__actions";
+
+  const linkButton = document.createElement("button");
+  linkButton.className = "podcast-card__link";
+  linkButton.type = "button";
+  linkButton.textContent = "Åbn link";
+
+  if (review.link || podcast.link) {
+    linkButton.addEventListener("click", () => {
+      window.open(review.link || podcast.link, "_blank", "noopener,noreferrer");
+    });
+  } else {
+    linkButton.classList.add("is-hidden");
+  }
+
+  const backButton = document.createElement("button");
+  backButton.className = "review-card__back";
+  backButton.type = "button";
+  backButton.textContent = "Tilbage";
+  backButton.addEventListener("click", () => {
+    state.openReviewKeys.delete(key);
+    renderPodcastGrid();
+  });
+
+  actions.append(linkButton, backButton);
+  mediaColumn.append(media, actions);
+
+  const content = document.createElement("div");
+  content.className = "podcast-card__content";
+
+  const meta = [review.publisher, review.genre].filter(Boolean).join(" / ");
+
+  content.innerHTML = `
+    <p class="review-card__eyebrow">Mads anmelder</p>
+    <h3 class="review-card__title">${escapeHtml(review.title || podcast.title)}</h3>
+    <p class="review-card__meta">${escapeHtml(review.host || podcast.host || "")}${meta ? " · " + escapeHtml(meta) : ""}</p>
+    <p class="review-card__date">${escapeHtml(review.reviewDateLabel || "")}</p>
+    <p class="review-card__text">${escapeHtml(review.review || "")}</p>
+    <p class="review-card__heading">Vurderet på parametre</p>
+    <div class="review-card__params"></div>
+  `;
+
+  const params = content.querySelector(".review-card__params");
+
+  review.params.forEach((param) => {
+    const rawValue = normalizeText(param.value);
+    if (!rawValue) return;
+
+    const number = parseNumber(rawValue);
+    const row = document.createElement("div");
+    row.className = "review-card__param";
+
+    const label = document.createElement("span");
+    label.className = "review-card__param-name";
+    label.textContent = param.label;
+
+    if (number === null) {
+      row.classList.add("is-na");
+
+      const value = document.createElement("span");
+      value.className = "review-card__param-value";
+      value.textContent = rawValue;
+
+      row.append(label, value);
+    } else {
+      const bar = document.createElement("div");
+      bar.className = "review-card__param-bar";
+
+      const fill = document.createElement("span");
+      fill.className = "review-card__param-fill";
+      fill.style.width = `${Math.max(0, Math.min(100, number * 10))}%`;
+
+      const value = document.createElement("span");
+      value.className = "review-card__param-value";
+      value.textContent = formatRating(rawValue);
+
+      bar.appendChild(fill);
+      row.append(label, bar, value);
+    }
+
+    params.appendChild(row);
+  });
+
+  body.append(mediaColumn, content);
+
+  const footer = document.createElement("div");
+  footer.className = "podcast-card__footer";
+
+  const chips = document.createElement("div");
+  chips.className = "podcast-card__chips";
+
+  [
+    review.publisher || podcast.publisher || "Ukendt",
+    review.genre || podcast.genre || "Dokumentar",
+    podcast.episodes || "—",
+  ].forEach((value) => {
+    const chip = document.createElement("span");
+    chip.className = "podcast-chip";
+    chip.textContent = value;
+    chips.appendChild(chip);
+  });
+
+  footer.appendChild(chips);
+  article.append(placement, rating, body, footer);
+
+  return article;
+}
+
+function escapeHtml(value) {
+  return String(value || "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
 }
 
 function renderPodcastGrid() {
@@ -1191,6 +1311,7 @@ async function loadPodcasts() {
       .filter(isActiveFeatured)
       .sort((a, b) => a.displayOrder - b.displayOrder);
 
+    state.featuredReviewByKey = buildFeaturedReviewLookup(state.featuredReviews);
     state.featuredIndex = 0;
 
     createGenreChips();
