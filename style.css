@@ -827,6 +827,20 @@ button.podcast-chip:hover {
   min-height: 348px;
 }
 
+.podcast-card--review .podcast-card__placement {
+  min-width: 78px;
+  padding: 9px 11px;
+  border-radius: 18px;
+}
+
+.podcast-card--review .placement-value {
+  font-size: 1.45rem;
+}
+
+.podcast-card--review .placement-label {
+  font-size: 0.48rem;
+}
+
 .podcast-card--review .podcast-card__body {
   display: block;
   min-height: 250px;
@@ -835,43 +849,46 @@ button.podcast-chip:hover {
 
 .review-card__head {
   display: grid;
-  grid-template-columns: 58px minmax(0, 1fr);
-  gap: 10px;
+  grid-template-columns: 128px minmax(0, 1fr);
+  gap: 18px;
   align-items: start;
 }
 
 .review-card__cover {
-  width: 58px;
-  height: 58px;
-  border-radius: 12px;
+  width: 128px;
+  height: 128px;
+  border-radius: 20px;
   overflow: hidden;
   background: #eadfd4;
   border: 1px solid rgba(223, 211, 196, 0.75);
+  box-shadow: 0 12px 22px rgba(66, 41, 20, 0.13);
 }
 
 .review-card__cover img {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  object-position: center center;
 }
 
 .review-card__head-copy {
   min-width: 0;
+  padding-top: 6px;
 }
 
 .review-card__eyebrow {
-  margin: 0 0 4px;
+  margin: 0 0 6px;
   color: var(--accent-deep);
-  font-size: 0.56rem;
+  font-size: 0.62rem;
   font-weight: 900;
-  letter-spacing: 0.11em;
+  letter-spacing: 0.13em;
   text-transform: uppercase;
 }
 
 .review-card__title {
-  margin: 0 0 3px;
+  margin: 0 0 6px;
   font-family: "Fraunces", serif;
-  font-size: 0.98rem;
+  font-size: 1.12rem;
   line-height: 1.06;
   letter-spacing: -0.03em;
   display: -webkit-box;
@@ -881,9 +898,9 @@ button.podcast-chip:hover {
 }
 
 .review-card__host {
-  margin: 0 0 2px;
+  margin: 0 0 3px;
   color: #2b2420;
-  font-size: 0.68rem;
+  font-size: 0.78rem;
   line-height: 1.18;
   font-weight: 800;
   display: -webkit-box;
@@ -895,33 +912,33 @@ button.podcast-chip:hover {
 .review-card__date {
   margin: 0;
   color: #9a9088;
-  font-size: 0.58rem;
+  font-size: 0.64rem;
   line-height: 1.15;
   font-weight: 700;
 }
 
 .review-card__actions {
   display: grid;
-  grid-template-columns: 82px 82px;
-  gap: 8px;
-  margin: 10px 0 0;
+  grid-template-columns: 92px 92px;
+  gap: 10px;
+  margin: -42px 0 24px 146px;
 }
 
 .review-card__actions .podcast-card__link,
 .review-card__actions .review-card__back {
-  width: 82px;
-  min-height: 32px;
-  border-radius: 13px;
-  font-size: 0.58rem;
+  width: 92px;
+  min-height: 36px;
+  border-radius: 15px;
+  font-size: 0.62rem;
 }
 
 .review-card__text {
-  margin: 10px 0 0;
-  padding-top: 9px;
+  margin: 12px 0 0;
+  padding-top: 12px;
   border-top: 1px solid rgba(223, 211, 196, 0.72);
   color: #4f463f;
-  font-size: 0.67rem;
-  line-height: 1.31;
+  font-size: 0.72rem;
+  line-height: 1.33;
   font-weight: 600;
   display: -webkit-box;
   -webkit-line-clamp: 6;
@@ -930,36 +947,36 @@ button.podcast-chip:hover {
 }
 
 .review-card__heading {
-  margin: 8px 0 6px;
+  margin: 10px 0 7px;
   color: var(--accent-deep);
-  font-size: 0.54rem;
+  font-size: 0.58rem;
   font-weight: 900;
-  letter-spacing: 0.09em;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
 }
 
 .review-card__params {
   display: flex;
   flex-direction: column;
-  gap: 5px;
+  gap: 6px;
 }
 
 .review-card__param {
   display: grid;
-  grid-template-columns: 52px minmax(0, 1fr) 35px;
-  gap: 6px;
+  grid-template-columns: 58px minmax(0, 1fr) 42px;
+  gap: 7px;
   align-items: center;
 }
 
 .review-card__param-name {
   color: #4a4038;
-  font-size: 0.58rem;
+  font-size: 0.62rem;
   line-height: 1.08;
   font-weight: 800;
 }
 
 .review-card__param-bar {
-  height: 5px;
+  height: 6px;
   border-radius: 999px;
   background: #f0e5da;
   overflow: hidden;
@@ -975,13 +992,13 @@ button.podcast-chip:hover {
 .review-card__param-value {
   text-align: right;
   color: #5b4f46;
-  font-size: 0.54rem;
+  font-size: 0.58rem;
   font-weight: 900;
   white-space: nowrap;
 }
 
 .review-card__param.is-na {
-  grid-template-columns: 52px minmax(0, 1fr);
+  grid-template-columns: 58px minmax(0, 1fr);
 }
 
 .review-card__param.is-na .review-card__param-value {
@@ -1323,6 +1340,20 @@ button.podcast-chip:hover {
   .featured-panel {
     display: block;
   }
+
+  .review-card__head {
+    grid-template-columns: 118px minmax(0, 1fr);
+    gap: 16px;
+  }
+
+  .review-card__cover {
+    width: 118px;
+    height: 118px;
+  }
+
+  .review-card__actions {
+    margin-left: 134px;
+  }
 }
 
 @media (max-width: 540px) {
@@ -1377,6 +1408,20 @@ button.podcast-chip:hover {
 
   .placement-value {
     font-size: 1.55rem;
+  }
+
+  .podcast-card--review .podcast-card__placement {
+    min-width: 74px;
+    padding: 8px 10px;
+    border-radius: 17px;
+  }
+
+  .podcast-card--review .placement-value {
+    font-size: 1.35rem;
+  }
+
+  .podcast-card--review .placement-label {
+    font-size: 0.46rem;
   }
 
   .podcast-card__rating {
@@ -1456,16 +1501,41 @@ button.podcast-chip:hover {
   }
 
   .review-card__head {
-    grid-template-columns: 52px minmax(0, 1fr);
+    grid-template-columns: 92px minmax(0, 1fr);
+    gap: 13px;
   }
 
   .review-card__cover {
-    width: 52px;
-    height: 52px;
+    width: 92px;
+    height: 92px;
+    border-radius: 16px;
+  }
+
+  .review-card__head-copy {
+    padding-top: 3px;
+  }
+
+  .review-card__eyebrow {
+    font-size: 0.54rem;
+    margin-bottom: 4px;
+  }
+
+  .review-card__title {
+    font-size: 1rem;
+    margin-bottom: 4px;
+  }
+
+  .review-card__host {
+    font-size: 0.7rem;
+  }
+
+  .review-card__date {
+    font-size: 0.58rem;
   }
 
   .review-card__actions {
     grid-template-columns: 78px 78px;
+    margin: -28px 0 20px 105px;
   }
 
   .review-card__actions .podcast-card__link,
