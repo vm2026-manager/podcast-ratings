@@ -189,7 +189,6 @@ function parseNumber(value) {
   }
 
   const raw = normalizeText(value);
-
   if (!raw) return null;
 
   let cleaned = raw.replace(/[^\d,.\-]/g, "");
@@ -204,9 +203,7 @@ function parseNumber(value) {
 
 function formatRating(value) {
   const rating = parseNumber(value);
-
   if (rating === null) return "";
-
   return `${rating.toFixed(1).replace(".", ",")} / 10`;
 }
 
@@ -217,7 +214,6 @@ function parsePlacement(value) {
 
 function parseDate(value) {
   const raw = normalizeText(value);
-
   if (!raw) return null;
 
   const parts = raw.match(/^(\d{1,2})[-./](\d{1,2})[-./](\d{2,4})$/);
@@ -237,7 +233,6 @@ function parseDate(value) {
 
 function formatDate(value) {
   const date = parseDate(value);
-
   if (!date) return "";
 
   return new Intl.DateTimeFormat("da-DK", {
@@ -351,7 +346,6 @@ function normalizeGenre(value) {
 
 function normalizePublisher(value) {
   const original = normalizeText(value);
-
   if (!original) return "";
 
   const raw = normalizeComparable(original)
@@ -976,22 +970,31 @@ function renderPodcastReviewCard(podcast, review, key) {
   const body = document.createElement("div");
   body.className = "podcast-card__body";
 
-  const mediaColumn = document.createElement("div");
-  mediaColumn.className = "podcast-card__media-column";
+  const head = document.createElement("div");
+  head.className = "review-card__head";
 
-  const media = document.createElement("div");
-  media.className = "podcast-card__media cover-wrap";
-  media.innerHTML = `
-    <img class="podcast-image" alt="" loading="lazy" />
-    <div class="image-placeholder" aria-hidden="true">
-      <span class="image-placeholder-icon">▢</span>
-      <span class="image-placeholder-label">Billede mangler</span>
-    </div>
+  const cover = document.createElement("div");
+  cover.className = "review-card__cover";
+  cover.innerHTML = `<img alt="" loading="lazy" />`;
+
+  const coverImg = cover.querySelector("img");
+  coverImg.src = review.image || podcast.image || "";
+  coverImg.alt = review.title || podcast.title || "";
+
+  const headCopy = document.createElement("div");
+  headCopy.className = "review-card__head-copy";
+
+  headCopy.innerHTML = `
+    <p class="review-card__eyebrow">Mads anmelder</p>
+    <h3 class="review-card__title">${escapeHtml(review.title || podcast.title)}</h3>
+    <p class="review-card__host">${escapeHtml(review.host || podcast.host || "")}</p>
+    <p class="review-card__date">${escapeHtml(review.reviewDateLabel || "")}</p>
   `;
-  setImage(media, review.image || podcast.image, review.title || podcast.title);
+
+  head.append(cover, headCopy);
 
   const actions = document.createElement("div");
-  actions.className = "podcast-card__actions";
+  actions.className = "review-card__actions";
 
   const linkButton = document.createElement("button");
   linkButton.className = "podcast-card__link";
@@ -1022,26 +1025,17 @@ function renderPodcastReviewCard(podcast, review, key) {
   });
 
   actions.append(linkButton, backButton);
-  mediaColumn.append(media, actions);
 
-  const content = document.createElement("div");
-  content.className = "podcast-card__content";
+  const text = document.createElement("p");
+  text.className = "review-card__text";
+  text.textContent = review.review || "";
 
-  const meta = [review.publisher, review.genre].filter(Boolean).join(" / ");
-  const hostLine = review.host || podcast.host || "";
+  const heading = document.createElement("p");
+  heading.className = "review-card__heading";
+  heading.textContent = "Vurderet på parametre";
 
-  content.innerHTML = `
-    <p class="review-card__eyebrow">Mads anmelder</p>
-    <h3 class="review-card__title">${escapeHtml(review.title || podcast.title)}</h3>
-    <p class="review-card__host">${escapeHtml(hostLine)}</p>
-    <p class="review-card__meta">${escapeHtml(meta)}</p>
-    <p class="review-card__date">${escapeHtml(review.reviewDateLabel || "")}</p>
-    <p class="review-card__text">${escapeHtml(review.review || "")}</p>
-    <p class="review-card__heading">Vurderet på parametre</p>
-    <div class="review-card__params"></div>
-  `;
-
-  const params = content.querySelector(".review-card__params");
+  const params = document.createElement("div");
+  params.className = "review-card__params";
 
   review.params.forEach((param) => {
     const rawValue = normalizeText(param.value);
@@ -1082,7 +1076,7 @@ function renderPodcastReviewCard(podcast, review, key) {
     params.appendChild(row);
   });
 
-  body.append(mediaColumn, content);
+  body.append(head, actions, text, heading, params);
 
   const footer = document.createElement("div");
   footer.className = "podcast-card__footer";
