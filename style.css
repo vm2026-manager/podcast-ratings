@@ -823,6 +823,8 @@ button.podcast-chip:hover {
   padding: 0 8px;
 }
 
+/* ANMELDELSESKORT – FORSLAG A */
+
 .podcast-card--review {
   min-height: 348px;
 }
@@ -898,9 +900,9 @@ button.podcast-chip:hover {
 }
 
 .review-card__host {
-  margin: 0 0 3px;
+  margin: 0 0 5px;
   color: #2b2420;
-  font-size: 0.78rem;
+  font-size: 0.76rem;
   line-height: 1.18;
   font-weight: 800;
   display: -webkit-box;
@@ -921,7 +923,7 @@ button.podcast-chip:hover {
   display: grid;
   grid-template-columns: 92px 92px;
   gap: 10px;
-  margin: -42px 0 24px 146px;
+  margin: 18px 0 24px 146px;
 }
 
 .review-card__actions .podcast-card__link,
@@ -1352,7 +1354,7 @@ button.podcast-chip:hover {
   }
 
   .review-card__actions {
-    margin-left: 134px;
+    margin: 18px 0 24px 134px;
   }
 }
 
@@ -1535,7 +1537,7 @@ button.podcast-chip:hover {
 
   .review-card__actions {
     grid-template-columns: 78px 78px;
-    margin: -28px 0 20px 105px;
+    margin: 16px 0 20px 105px;
   }
 
   .review-card__actions .podcast-card__link,
