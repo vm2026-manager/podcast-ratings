@@ -16,15 +16,26 @@
       rel="stylesheet"
     />
 
-    <link rel="stylesheet" href="style.css?v=38" />
+    <script>
+      const assetVersion = Date.now();
+
+      const stylesheet = document.createElement("link");
+      stylesheet.rel = "stylesheet";
+      stylesheet.href = "style.css?v=" + assetVersion;
+      document.head.appendChild(stylesheet);
+
+      window.addEventListener("DOMContentLoaded", function () {
+        const appScript = document.createElement("script");
+        appScript.src = "app.js?v=" + assetVersion;
+        document.body.appendChild(appScript);
+      });
+    </script>
 
     <script
       data-goatcounter="https://podcastratings.goatcounter.com/count"
       async
       src="//gc.zgo.at/count.js"
     ></script>
-
-    <script src="app.js?v=38" defer></script>
   </head>
 
   <body>
