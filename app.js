@@ -1,9 +1,3 @@
-const DATA_URL =
-  "https://docs.google.com/spreadsheets/d/e/2PACX-1vQRBWQdj-WDNN3l9yxIMCCu_O2dYfP7modSODcYgJRoQDG3GYsu83W_wIFyijPx6v8l-W011zrFyOdq/pub?gid=0&single=true&output=csv";
-
-const FEATURED_DATA_URL =
-  "https://docs.google.com/spreadsheets/d/e/2PACX-1vQRBWQdj-WDNN3l9yxIMCCu_O2dYfP7modSODcYgJRoQDG3GYsu83W_wIFyijPx6v8l-W011zrFyOdq/pub?gid=1418051000&single=true&output=csv";
-
 const JSON_DATA_URL = "data/podcasts.json";
 const FEATURED_JSON_DATA_URL = "data/featured-reviews.json";
 
@@ -255,6 +249,7 @@ function normalizeGenre(value) {
   const raw = normalizeComparable(value);
 
   if (!raw) return "Dokumentar";
+
   if (
     raw.includes("true") ||
     raw.includes("crime") ||
@@ -374,72 +369,6 @@ function extractUrl(value) {
   if (url) return url[0];
 
   return text;
-}
-
-function parseCsv(text) {
-  const rows = [];
-  let currentRow = [];
-  let currentCell = "";
-  let insideQuotes = false;
-
-  for (let i = 0; i < text.length; i += 1) {
-    const char = text[i];
-    const nextChar = text[i + 1];
-
-    if (char === '"' && insideQuotes && nextChar === '"') {
-      currentCell += '"';
-      i += 1;
-      continue;
-    }
-
-    if (char === '"') {
-      insideQuotes = !insideQuotes;
-      continue;
-    }
-
-    if (char === "," && !insideQuotes) {
-      currentRow.push(currentCell);
-      currentCell = "";
-      continue;
-    }
-
-    if ((char === "\n" || char === "\r") && !insideQuotes) {
-      if (char === "\r" && nextChar === "\n") i += 1;
-      currentRow.push(currentCell);
-
-      if (currentRow.some((cell) => normalizeText(cell) !== "")) {
-        rows.push(currentRow);
-      }
-
-      currentRow = [];
-      currentCell = "";
-      continue;
-    }
-
-    currentCell += char;
-  }
-
-  currentRow.push(currentCell);
-
-  if (currentRow.some((cell) => normalizeText(cell) !== "")) {
-    rows.push(currentRow);
-  }
-
-  return rows;
-}
-
-function rowsToObjects(rows) {
-  if (!rows.length) return [];
-
-  const headers = rows[0].map((header) => normalizeText(header));
-
-  return rows.slice(1).map((row) => {
-    const item = {};
-    headers.forEach((header, index) => {
-      item[header] = normalizeText(row[index] || "");
-    });
-    return item;
-  });
 }
 
 function getCompletenessScore(podcast) {
@@ -579,7 +508,13 @@ function mapFeaturedReview(row, index, podcastLookup) {
   const review = getField(row, ["Kort vurdering"]);
 
   const story = getField(row, ["Historie", "Historie/sag"]);
-  const narrator = getField(row, ["Fortæller", "Fortaeller", "Vært/formidling", "Vaert/formidling", "Fortælling"]);
+  const narrator = getField(row, [
+    "Fortæller",
+    "Fortaeller",
+    "Vært/formidling",
+    "Vaert/formidling",
+    "Fortælling"
+  ]);
   const sound = getField(row, ["Lydside", "Produktion"]);
   const relevance = getField(row, ["Aktualitet", "Aktualitet/relevans", "Relevans"]);
 
@@ -651,42 +586,6 @@ function isUsefulPodcast(podcast) {
 function isActiveFeatured(review) {
   const active = normalizeComparable(review.active);
   return active === "ja" || active === "yes" || active === "1" || active === "true";
-}
-
-function applyReviewUpdatesToPodcasts(podcasts, reviews) {
-  const reviewLookup = buildFeaturedReviewLookup(reviews);
-
-  return podcasts.map((podcast) => {
-    const review = reviewLookup[normalizeMatchKey(podcast.title)];
-
-    if (!review) {
-      return podcast;
-    }
-
-    const nextPodcast = { ...podcast };
-    const reviewScore = parseNumber(review.score);
-    const hasPodcastRating = parseNumber(nextPodcast.rawRating) !== null;
-
-    if (reviewScore !== null) {
-      nextPodcast.rawRating = String(review.score);
-      nextPodcast.ratingValue = reviewScore;
-      nextPodcast.ratingLabel = formatRating(review.score);
-
-      if (hasPodcastRating && parseNumber(podcast.rawRating) !== null) {
-        nextPodcast.rawRating = podcast.rawRating;
-        nextPodcast.ratingValue = podcast.ratingValue;
-        nextPodcast.ratingLabel = podcast.ratingLabel;
-      }
-    }
-
-    if (!nextPodcast.ratingDate && review.reviewDate) {
-      nextPodcast.ratingDate = review.reviewDate;
-      nextPodcast.ratingDateObject = parseDate(review.reviewDate);
-      nextPodcast.ratingDateLabel = formatDate(review.reviewDate);
-    }
-
-    return nextPodcast;
-  });
 }
 
 function isActiveGenre(genre) {
@@ -1419,8 +1318,8 @@ function extractRowsFromJsonPayload(data, errorMessage) {
 }
 
 async function loadPodcastObjectsFromJson() {
-  const response = await fetch(`${JSON_DATA_URL}?v=${Date.now()}`, {
-    cache: "no-store"
+  const response = await fetch(`${JSON_DATA_URL}?v=2026-05-17-4`, {
+    cache: "default"
   });
 
   if (!response.ok) {
@@ -1431,31 +1330,9 @@ async function loadPodcastObjectsFromJson() {
   return extractRowsFromJsonPayload(data, "podcasts.json har ikke forventet format.");
 }
 
-async function loadPodcastObjectsFromCsv() {
-  const response = await fetch(DATA_URL, { cache: "no-store" });
-
-  if (!response.ok) {
-    throw new Error("Kunne ikke hente Google Sheets-data.");
-  }
-
-  const csv = await response.text();
-  return rowsToObjects(parseCsv(csv));
-}
-
-async function loadFeaturedReviewObjectsFromCsv() {
-  const response = await fetch(FEATURED_DATA_URL, { cache: "no-store" });
-
-  if (!response.ok) {
-    throw new Error("Kunne ikke hente featured Google Sheets-data.");
-  }
-
-  const csv = await response.text();
-  return rowsToObjects(parseCsv(csv));
-}
-
 async function loadFeaturedReviewObjectsFromJson() {
-  const response = await fetch(`${FEATURED_JSON_DATA_URL}?v=${Date.now()}`, {
-    cache: "no-store"
+  const response = await fetch(`${FEATURED_JSON_DATA_URL}?v=2026-05-17-4`, {
+    cache: "default"
   });
 
   if (!response.ok) {
@@ -1467,21 +1344,6 @@ async function loadFeaturedReviewObjectsFromJson() {
     data,
     "featured-reviews.json har ikke forventet format."
   );
-}
-
-async function loadFeaturedReviewObjects() {
-  try {
-    return await loadFeaturedReviewObjectsFromCsv();
-  } catch (csvError) {
-    console.warn("Featured Google Sheets fejlede, bruger lokal JSON-backup:", csvError);
-
-    try {
-      return await loadFeaturedReviewObjectsFromJson();
-    } catch (jsonError) {
-      console.warn("Udvalgte vurderinger blev ikke indlæst:", jsonError);
-      return [];
-    }
-  }
 }
 
 function buildPodcastLookup(podcasts) {
@@ -1497,22 +1359,20 @@ function buildPodcastLookup(podcasts) {
 
 async function loadPodcasts() {
   try {
-    let objects;
-
-    try {
-      objects = await loadPodcastObjectsFromCsv();
-    } catch (csvError) {
-      console.warn("Google Sheets fejlede, bruger lokal JSON-backup:", csvError);
-      objects = await loadPodcastObjectsFromJson();
-    }
-
-    const mappedPodcasts = objects.map(mapPodcast).filter(isUsefulPodcast);
+    const podcastRows = await loadPodcastObjectsFromJson();
+    const mappedPodcasts = podcastRows.map(mapPodcast).filter(isUsefulPodcast);
     state.podcasts = deduplicatePodcasts(mappedPodcasts);
 
-    const podcastLookup = buildPodcastLookup(state.podcasts);
-    const featuredObjects = await loadFeaturedReviewObjects();
+    let featuredRows = [];
+    try {
+      featuredRows = await loadFeaturedReviewObjectsFromJson();
+    } catch (error) {
+      console.warn("Udvalgte vurderinger blev ikke indlæst:", error);
+    }
 
-    state.allReviews = featuredObjects
+    const podcastLookup = buildPodcastLookup(state.podcasts);
+
+    state.allReviews = featuredRows
       .map((row, index) => mapFeaturedReview(row, index, podcastLookup))
       .filter(isUsableReview);
 
@@ -1521,7 +1381,6 @@ async function loadPodcasts() {
       .sort((a, b) => a.displayOrder - b.displayOrder);
 
     state.featuredReviewByKey = buildFeaturedReviewLookup(state.allReviews);
-    state.podcasts = applyReviewUpdatesToPodcasts(state.podcasts, state.allReviews);
     state.featuredIndex = 0;
 
     createGenreChips();
@@ -1530,7 +1389,7 @@ async function loadPodcasts() {
   } catch (error) {
     console.error(error);
     showLoadError(
-      "Kunne ikke indlæse podcasts. Tjek Google Sheets-linket eller data/podcasts.json."
+      "Kunne ikke indlæse podcasts. Tjek data/podcasts.json og data/featured-reviews.json."
     );
   }
 }
