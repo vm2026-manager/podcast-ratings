@@ -16,26 +16,14 @@
       rel="stylesheet"
     />
 
-    <script>
-      const assetVersion = Date.now();
-
-      const stylesheet = document.createElement("link");
-      stylesheet.rel = "stylesheet";
-      stylesheet.href = "style.css?v=" + assetVersion;
-      document.head.appendChild(stylesheet);
-
-      window.addEventListener("DOMContentLoaded", function () {
-        const appScript = document.createElement("script");
-        appScript.src = "app.js?v=" + assetVersion;
-        document.body.appendChild(appScript);
-      });
-    </script>
+    <link rel="stylesheet" href="style.css?v=2026-05-17-4" />
 
     <script
       data-goatcounter="https://podcastratings.goatcounter.com/count"
       async
       src="//gc.zgo.at/count.js"
     ></script>
+    <script src="app.js?v=2026-05-17-4" defer></script>
   </head>
 
   <body>
@@ -169,7 +157,7 @@
               class="image-placeholder image-placeholder-small"
               aria-hidden="true"
             >
-              <span class="image-placeholder-icon">▢</span>
+              <span class="image-placeholder-icon">□</span>
               <span class="image-placeholder-label">Billede mangler</span>
             </div>
           </div>
@@ -198,7 +186,7 @@
               <div class="podcast-card__media cover-wrap">
                 <img class="podcast-image" alt="" loading="lazy" />
                 <div class="image-placeholder" aria-hidden="true">
-                  <span class="image-placeholder-icon">▢</span>
+                  <span class="image-placeholder-icon">□</span>
                   <span class="image-placeholder-label">Billede mangler</span>
                 </div>
               </div>
