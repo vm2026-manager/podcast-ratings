@@ -14,9 +14,12 @@ const GENRES = [
 ];
 
 const FEATURED_ROTATION_MS = 8000;
+const INITIAL_VISIBLE_COUNT = 48;
+const LOAD_MORE_STEP = 48;
 
 const state = {
   podcasts: [],
+  podcastByKey: {},
   allReviews: [],
   featuredReviews: [],
   featuredReviewByKey: {},
@@ -25,7 +28,8 @@ const state = {
   featuredTimer: null,
   activeFilter: null,
   searchTerm: "",
-  sort: "placement-asc"
+  sort: "placement-asc",
+  visibleCount: INITIAL_VISIBLE_COUNT
 };
 
 const elements = {
@@ -50,7 +54,9 @@ const elements = {
   featuredDate: document.getElementById("featuredDate"),
   featuredText: document.getElementById("featuredText"),
   featuredParams: document.getElementById("featuredParams"),
-  featuredDots: document.getElementById("featuredDots")
+  featuredDots: document.getElementById("featuredDots"),
+  loadMoreWrap: null,
+  loadMoreButton: null
 };
 
 function escapeHtml(value) {
@@ -222,7 +228,10 @@ function parseDate(value) {
     const month = Number(parts[2]) - 1;
     const year = Number(parts[3].length === 2 ? `20${parts[3]}` : parts[3]);
     const date = new Date(year, month, day);
-    if (!Number.isNaN(date.getTime())) return date;
+
+    if (!Number.isNaN(date.getTime())) {
+      return date;
+    }
   }
 
   const fallback = new Date(raw);
@@ -588,6 +597,10 @@ function isActiveFeatured(review) {
   return active === "ja" || active === "yes" || active === "1" || active === "true";
 }
 
+function resetVisibleCount() {
+  state.visibleCount = INITIAL_VISIBLE_COUNT;
+}
+
 function isActiveGenre(genre) {
   if (genre === "Alle") return !state.activeFilter;
   return state.activeFilter?.type === "genre" && state.activeFilter.value === genre;
@@ -595,6 +608,7 @@ function isActiveGenre(genre) {
 
 function setActiveFilter(type, value) {
   state.activeFilter = type && value ? { type, value } : null;
+  resetVisibleCount();
   createGenreChips();
   render();
 }
@@ -680,13 +694,53 @@ function updateSortToggleUi() {
       : "Placering: højest først";
 }
 
-function getResultsText(filtered) {
-  const countText = `Viser ${filtered.length} podcasts ud af ${state.podcasts.length}.`;
+function getResultsText(filteredCount, visibleCount) {
+  const baseText =
+    visibleCount < filteredCount
+      ? `Viser ${visibleCount} af ${filteredCount} podcasts.`
+      : `Viser ${filteredCount} podcasts ud af ${state.podcasts.length}.`;
 
-  if (!state.activeFilter) return countText;
+  if (!state.activeFilter) return baseText;
 
   const label = state.activeFilter.type === "genre" ? "genren" : "udgiveren";
-  return `${countText} Filtreret på ${label} ${state.activeFilter.value}.`;
+  return `${baseText} Filtreret på ${label} ${state.activeFilter.value}.`;
+}
+
+function ensureLoadMoreControls() {
+  if (!elements.podcastGrid || elements.loadMoreWrap) return;
+
+  const wrap = document.createElement("div");
+  wrap.className = "load-more-wrap is-hidden";
+
+  const button = document.createElement("button");
+  button.type = "button";
+  button.className = "load-more-button";
+  button.textContent = "Vis flere";
+
+  button.addEventListener("click", () => {
+    state.visibleCount += LOAD_MORE_STEP;
+    renderPodcastGrid();
+  });
+
+  wrap.appendChild(button);
+  elements.podcastGrid.insertAdjacentElement("afterend", wrap);
+
+  elements.loadMoreWrap = wrap;
+  elements.loadMoreButton = button;
+}
+
+function updateLoadMoreUi(filteredCount, visibleCount) {
+  if (!elements.loadMoreWrap || !elements.loadMoreButton) return;
+
+  const remaining = filteredCount - visibleCount;
+
+  if (remaining <= 0) {
+    elements.loadMoreWrap.classList.add("is-hidden");
+    return;
+  }
+
+  elements.loadMoreWrap.classList.remove("is-hidden");
+  elements.loadMoreButton.textContent = `Vis flere (${remaining} tilbage)`;
 }
 
 function setImage(container, image, alt) {
@@ -723,6 +777,31 @@ function setImage(container, image, alt) {
   img.onerror = showPlaceholder;
 }
 
+function createRecentCardElement(podcast) {
+  const fragment = elements.recentTemplate.content.cloneNode(true);
+  const card = fragment.querySelector(".recent-card");
+  const cover = fragment.querySelector(".recent-cover-wrap");
+  const title = fragment.querySelector(".recent-title");
+  const host = fragment.querySelector(".recent-host");
+  const rating = fragment.querySelector(".recent-rating");
+  const date = fragment.querySelector(".recent-date");
+
+  setImage(cover, podcast.image, podcast.title);
+
+  title.textContent = podcast.title;
+  host.textContent = podcast.host || podcast.publisher || "";
+  rating.textContent = podcast.ratingLabel || "Ikke vurderet";
+  date.textContent = podcast.ratingDateLabel ? `Bedømt ${podcast.ratingDateLabel}` : "";
+
+  card.addEventListener("click", () => {
+    if (podcast.link) {
+      window.open(podcast.link, "_blank", "noopener,noreferrer");
+    }
+  });
+
+  return card;
+}
+
 function renderRecent() {
   if (!elements.recentGrid) return;
 
@@ -737,53 +816,33 @@ function renderRecent() {
     elements.recentSummary.textContent = `Viser de ${recent.length} seneste bedømmelser`;
   }
 
+  const fragment = document.createDocumentFragment();
+
   recent.forEach((podcast) => {
-    const fragment = elements.recentTemplate.content.cloneNode(true);
-    const card = fragment.querySelector(".recent-card");
-    const cover = fragment.querySelector(".recent-cover-wrap");
-    const title = fragment.querySelector(".recent-title");
-    const host = fragment.querySelector(".recent-host");
-    const rating = fragment.querySelector(".recent-rating");
-    const date = fragment.querySelector(".recent-date");
-
-    setImage(cover, podcast.image, podcast.title);
-
-    title.textContent = podcast.title;
-    host.textContent = podcast.host || podcast.publisher || "";
-    rating.textContent = podcast.ratingLabel || "Ikke vurderet";
-    date.textContent = podcast.ratingDateLabel ? `Bedømt ${podcast.ratingDateLabel}` : "";
-
-    card.addEventListener("click", () => {
-      if (podcast.link) {
-        window.open(podcast.link, "_blank", "noopener,noreferrer");
-      }
-    });
-
-    elements.recentGrid.appendChild(fragment);
+    fragment.appendChild(createRecentCardElement(podcast));
   });
+
+  elements.recentGrid.appendChild(fragment);
 }
 
-function createReviewFilterChip(value, type) {
+function createFilterChip(value, type) {
   const chip = document.createElement("button");
   chip.type = "button";
   chip.className = "podcast-chip";
   chip.textContent = value || "Ukendt";
 
-  chip.addEventListener("click", () => {
-    if (!value || value === "Ukendt") return;
-
-    if (type === "publisher") setActiveFilter("publisher", value);
-    if (type === "genre") setActiveFilter("genre", value);
-
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  });
+  if (value && value !== "Ukendt") {
+    chip.dataset.action = type === "publisher" ? "filter-publisher" : "filter-genre";
+    chip.dataset.value = value;
+  }
 
   return chip;
 }
 
-function renderPodcastReviewCard(podcast, review, key) {
+function createPodcastReviewCardElement(podcast, review, key) {
   const article = document.createElement("article");
   article.className = "podcast-card podcast-card--review";
+  article.dataset.key = key;
 
   const placement = document.createElement("div");
   placement.className = "podcast-card__placement";
@@ -834,12 +893,9 @@ function renderPodcastReviewCard(podcast, review, key) {
   linkButton.className = "podcast-card__link";
   linkButton.type = "button";
   linkButton.textContent = "Åbn link";
+  linkButton.dataset.action = "open-link";
 
-  if (review.link || podcast.link) {
-    linkButton.addEventListener("click", () => {
-      window.open(review.link || podcast.link, "_blank", "noopener,noreferrer");
-    });
-  } else {
+  if (!review.link && !podcast.link) {
     linkButton.classList.add("is-hidden");
   }
 
@@ -847,16 +903,7 @@ function renderPodcastReviewCard(podcast, review, key) {
   backButton.className = "review-card__back";
   backButton.type = "button";
   backButton.textContent = "Tilbage";
-  backButton.addEventListener("click", (event) => {
-    state.openReviewKeys.delete(key);
-
-    const currentCard = event.currentTarget.closest(".podcast-card");
-    if (currentCard) {
-      currentCard.replaceWith(renderPodcastCard(podcast));
-    } else {
-      renderPodcastGrid();
-    }
-  });
+  backButton.dataset.action = "close-review";
 
   actions.append(linkButton, backButton);
   headCopy.appendChild(actions);
@@ -920,12 +967,12 @@ function renderPodcastReviewCard(podcast, review, key) {
   const chips = document.createElement("div");
   chips.className = "podcast-card__chips";
 
-  const publisherChip = createReviewFilterChip(
+  const publisherChip = createFilterChip(
     review.publisher || podcast.publisher || "Ukendt",
     "publisher"
   );
 
-  const genreChip = createReviewFilterChip(
+  const genreChip = createFilterChip(
     review.genre || podcast.genre || "Dokumentar",
     "genre"
   );
@@ -941,15 +988,16 @@ function renderPodcastReviewCard(podcast, review, key) {
   return article;
 }
 
-function renderPodcastCard(podcast) {
+function createPodcastCardElement(podcast) {
   const review = getReviewForPodcast(podcast);
   const key = getPodcastKey(podcast);
 
   if (review && state.openReviewKeys.has(key)) {
-    return renderPodcastReviewCard(podcast, review, key);
+    return createPodcastReviewCardElement(podcast, review, key);
   }
 
   const fragment = elements.podcastTemplate.content.cloneNode(true);
+  const article = fragment.querySelector(".podcast-card");
   const placement = fragment.querySelector(".podcast-card__placement");
   const rating = fragment.querySelector(".podcast-card__rating");
   const media = fragment.querySelector(".podcast-card__media");
@@ -959,6 +1007,8 @@ function renderPodcastCard(podcast) {
   const linkButton = fragment.querySelector(".podcast-card__link");
   const reviewButton = fragment.querySelector(".podcast-card__review");
   const chips = fragment.querySelector(".podcast-card__chips");
+
+  article.dataset.key = key;
 
   placement.innerHTML = `
     <span class="placement-value">#${podcast.placement}</span>
@@ -972,65 +1022,35 @@ function renderPodcastCard(podcast) {
   host.textContent = podcast.host || "";
   description.textContent = podcast.description || "";
 
-  if (podcast.link) {
-    linkButton.classList.remove("is-hidden");
-    linkButton.addEventListener("click", () => {
-      window.open(podcast.link, "_blank", "noopener,noreferrer");
-    });
-  } else {
+  linkButton.dataset.action = "open-link";
+  if (!podcast.link) {
     linkButton.classList.add("is-hidden");
   }
 
   if (review && review.review) {
     reviewButton.classList.remove("is-hidden");
-    reviewButton.addEventListener("click", (event) => {
-      state.openReviewKeys.add(key);
-
-      const currentCard = event.currentTarget.closest(".podcast-card");
-      if (currentCard) {
-        currentCard.replaceWith(renderPodcastReviewCard(podcast, review, key));
-      } else {
-        renderPodcastGrid();
-      }
-    });
+    reviewButton.dataset.action = "open-review";
   } else {
     reviewButton.classList.add("is-hidden");
   }
 
-  const publisherChip = document.createElement("button");
-  publisherChip.type = "button";
-  publisherChip.className = "podcast-chip";
-  publisherChip.textContent = podcast.publisher || "Ukendt";
-  publisherChip.addEventListener("click", () => {
-    if (podcast.publisher) {
-      setActiveFilter("publisher", podcast.publisher);
-      window.scrollTo({ top: 0, behavior: "smooth" });
-    }
-  });
-
-  const genreChip = document.createElement("button");
-  genreChip.type = "button";
-  genreChip.className = "podcast-chip";
-  genreChip.textContent = podcast.genre || "Dokumentar";
-  genreChip.addEventListener("click", () => {
-    if (podcast.genre) {
-      setActiveFilter("genre", podcast.genre);
-      window.scrollTo({ top: 0, behavior: "smooth" });
-    }
-  });
+  const publisherChip = createFilterChip(podcast.publisher || "Ukendt", "publisher");
+  const genreChip = createFilterChip(podcast.genre || "Dokumentar", "genre");
 
   const episodesChip = document.createElement("span");
   episodesChip.className = "podcast-chip podcast-chip--episodes";
   episodesChip.textContent = podcast.episodes || "—";
 
   chips.append(publisherChip, genreChip, episodesChip);
-  return fragment;
+  return article;
 }
 
 function renderPodcastGrid() {
   if (!elements.podcastGrid) return;
 
   const filtered = getFilteredPodcasts();
+  const visible = filtered.slice(0, state.visibleCount);
+
   elements.podcastGrid.innerHTML = "";
 
   if (!filtered.length) {
@@ -1039,14 +1059,20 @@ function renderPodcastGrid() {
     empty.textContent = "Ingen podcasts matcher filtreringen.";
     elements.podcastGrid.appendChild(empty);
   } else {
-    filtered.forEach((podcast) => {
-      elements.podcastGrid.appendChild(renderPodcastCard(podcast));
+    const fragment = document.createDocumentFragment();
+
+    visible.forEach((podcast) => {
+      fragment.appendChild(createPodcastCardElement(podcast));
     });
+
+    elements.podcastGrid.appendChild(fragment);
   }
 
   if (elements.resultsText) {
-    elements.resultsText.textContent = getResultsText(filtered);
+    elements.resultsText.textContent = getResultsText(filtered.length, visible.length);
   }
+
+  updateLoadMoreUi(filtered.length, visible.length);
 }
 
 function renderFeaturedReview() {
@@ -1260,10 +1286,62 @@ function render() {
   renderFeaturedReview();
 }
 
+function handlePodcastGridClick(event) {
+  const actionTarget = event.target.closest("[data-action]");
+  if (!actionTarget || !elements.podcastGrid.contains(actionTarget)) {
+    return;
+  }
+
+  const card = actionTarget.closest(".podcast-card");
+  const key = card?.dataset.key;
+  const podcast = key ? state.podcastByKey[key] : null;
+
+  if (!podcast) return;
+
+  const review = getReviewForPodcast(podcast);
+  const action = actionTarget.dataset.action;
+
+  if (action === "open-link") {
+    const url =
+      state.openReviewKeys.has(key) && review
+        ? review.link || podcast.link
+        : podcast.link;
+
+    if (url) {
+      window.open(url, "_blank", "noopener,noreferrer");
+    }
+    return;
+  }
+
+  if (action === "open-review" && review) {
+    state.openReviewKeys.add(key);
+    card.replaceWith(createPodcastReviewCardElement(podcast, review, key));
+    return;
+  }
+
+  if (action === "close-review") {
+    state.openReviewKeys.delete(key);
+    card.replaceWith(createPodcastCardElement(podcast));
+    return;
+  }
+
+  if (action === "filter-publisher") {
+    setActiveFilter("publisher", actionTarget.dataset.value || "");
+    window.scrollTo({ top: 0, behavior: "smooth" });
+    return;
+  }
+
+  if (action === "filter-genre") {
+    setActiveFilter("genre", actionTarget.dataset.value || "");
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+}
+
 function setupEvents() {
   if (elements.searchInput) {
     elements.searchInput.addEventListener("input", (event) => {
       state.searchTerm = event.target.value.trim();
+      resetVisibleCount();
       render();
     });
   }
@@ -1272,6 +1350,7 @@ function setupEvents() {
     elements.sortToggle.addEventListener("click", () => {
       state.sort =
         state.sort === "placement-asc" ? "placement-desc" : "placement-asc";
+      resetVisibleCount();
       render();
     });
   }
@@ -1282,6 +1361,10 @@ function setupEvents() {
 
   if (elements.activeFilterPill) {
     elements.activeFilterPill.addEventListener("click", clearActiveFilter);
+  }
+
+  if (elements.podcastGrid) {
+    elements.podcastGrid.addEventListener("click", handlePodcastGridClick);
   }
 
   setupFeaturedSwipe();
@@ -1303,6 +1386,10 @@ function showLoadError(message) {
   if (elements.featuredPanel) {
     elements.featuredPanel.classList.add("is-hidden");
   }
+
+  if (elements.loadMoreWrap) {
+    elements.loadMoreWrap.classList.add("is-hidden");
+  }
 }
 
 function extractRowsFromJsonPayload(data, errorMessage) {
@@ -1318,7 +1405,7 @@ function extractRowsFromJsonPayload(data, errorMessage) {
 }
 
 async function loadPodcastObjectsFromJson() {
-  const response = await fetch(`${JSON_DATA_URL}?v=2026-05-17-4`, {
+  const response = await fetch(`${JSON_DATA_URL}?v=2026-05-17-5`, {
     cache: "default"
   });
 
@@ -1331,7 +1418,7 @@ async function loadPodcastObjectsFromJson() {
 }
 
 async function loadFeaturedReviewObjectsFromJson() {
-  const response = await fetch(`${FEATURED_JSON_DATA_URL}?v=2026-05-17-4`, {
+  const response = await fetch(`${FEATURED_JSON_DATA_URL}?v=2026-05-17-5`, {
     cache: "default"
   });
 
@@ -1350,8 +1437,9 @@ function buildPodcastLookup(podcasts) {
   const lookup = {};
 
   podcasts.forEach((podcast) => {
-    if (!podcast.title) return;
-    lookup[normalizeMatchKey(podcast.title)] = podcast;
+    const key = getPodcastKey(podcast);
+    if (!key) return;
+    lookup[key] = podcast;
   });
 
   return lookup;
@@ -1361,7 +1449,9 @@ async function loadPodcasts() {
   try {
     const podcastRows = await loadPodcastObjectsFromJson();
     const mappedPodcasts = podcastRows.map(mapPodcast).filter(isUsefulPodcast);
+
     state.podcasts = deduplicatePodcasts(mappedPodcasts);
+    state.podcastByKey = buildPodcastLookup(state.podcasts);
 
     let featuredRows = [];
     try {
@@ -1370,10 +1460,8 @@ async function loadPodcasts() {
       console.warn("Udvalgte vurderinger blev ikke indlæst:", error);
     }
 
-    const podcastLookup = buildPodcastLookup(state.podcasts);
-
     state.allReviews = featuredRows
-      .map((row, index) => mapFeaturedReview(row, index, podcastLookup))
+      .map((row, index) => mapFeaturedReview(row, index, state.podcastByKey))
       .filter(isUsableReview);
 
     state.featuredReviews = state.allReviews
@@ -1445,6 +1533,7 @@ function loadVisitorCount() {
   }, 250);
 }
 
+ensureLoadMoreControls();
 setupEvents();
 loadPodcasts();
 loadVisitorCount();
