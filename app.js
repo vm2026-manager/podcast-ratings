@@ -1239,13 +1239,86 @@ function renderFeaturedReview() {
     }
 
     dot.addEventListener("click", () => {
-      state.featuredIndex = index;
-      renderFeaturedReview();
-      restartFeaturedRotation();
+      showFeaturedReview(index);
     });
 
     elements.featuredDots.appendChild(dot);
   });
+}
+
+function showFeaturedReview(index) {
+  if (!state.featuredReviews.length) return;
+
+  const total = state.featuredReviews.length;
+  state.featuredIndex = ((index % total) + total) % total;
+
+  renderFeaturedReview();
+  restartFeaturedRotation();
+}
+
+function showNextFeaturedReview() {
+  showFeaturedReview(state.featuredIndex + 1);
+}
+
+function showPreviousFeaturedReview() {
+  showFeaturedReview(state.featuredIndex - 1);
+}
+
+function isFeaturedSwipeEnabled() {
+  return (
+    window.matchMedia("(max-width: 860px)").matches ||
+    window.matchMedia("(pointer: coarse)").matches
+  );
+}
+
+function setupFeaturedSwipe() {
+  if (!elements.featuredPanel) return;
+
+  let startX = 0;
+  let startY = 0;
+  let startTime = 0;
+
+  elements.featuredPanel.addEventListener(
+    "touchstart",
+    (event) => {
+      if (!isFeaturedSwipeEnabled()) return;
+      if (!state.featuredReviews || state.featuredReviews.length <= 1) return;
+
+      const touch = event.touches[0];
+      startX = touch.clientX;
+      startY = touch.clientY;
+      startTime = Date.now();
+    },
+    { passive: true }
+  );
+
+  elements.featuredPanel.addEventListener(
+    "touchend",
+    (event) => {
+      if (!isFeaturedSwipeEnabled()) return;
+      if (!state.featuredReviews || state.featuredReviews.length <= 1) return;
+      if (!event.changedTouches || !event.changedTouches.length) return;
+
+      const touch = event.changedTouches[0];
+      const diffX = touch.clientX - startX;
+      const diffY = touch.clientY - startY;
+      const elapsed = Date.now() - startTime;
+
+      const isHorizontalSwipe =
+        Math.abs(diffX) > 45 &&
+        Math.abs(diffX) > Math.abs(diffY) * 1.35 &&
+        elapsed < 700;
+
+      if (!isHorizontalSwipe) return;
+
+      if (diffX < 0) {
+        showNextFeaturedReview();
+      } else {
+        showPreviousFeaturedReview();
+      }
+    },
+    { passive: true }
+  );
 }
 
 function startFeaturedRotation() {
@@ -1294,6 +1367,8 @@ function setupEvents() {
   if (elements.activeFilterPill) {
     elements.activeFilterPill.addEventListener("click", clearActiveFilter);
   }
+
+  setupFeaturedSwipe();
 }
 
 async function loadPodcastObjectsFromJson() {
