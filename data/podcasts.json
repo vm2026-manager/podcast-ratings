@@ -1,7 +1,7 @@
 {
-  "generatedAt": "2026-05-17T04:55:16.201Z",
+  "generatedAt": "2026-05-17T07:35:58.939Z",
   "source": "https://docs.google.com/spreadsheets/d/e/2PACX-1vQRBWQdj-WDNN3l9yxIMCCu_O2dYfP7modSODcYgJRoQDG3GYsu83W_wIFyijPx6v8l-W011zrFyOdq/pub?gid=0&single=true&output=csv",
-  "count": 526,
+  "count": 527,
   "rows": [
     {
       "Placering": "1",
@@ -6567,7 +6567,7 @@
     },
     {
       "Placering": "388",
-      "Titel": "En gonzo skifter spor",
+      "Titel": "En gonzo skifter spor (sæson 1)",
       "Vært": "René Fredensborg & Rasmus Bruun",
       "Vuring (1-10)": "5,9",
       "Genre": "Dokumentar",
@@ -8941,6 +8941,23 @@
       "Afgivet vurdering": "",
       "Billedlink": "https://asset.dr.dk/drlyd/images/urn:dr:radio:image:68fb370e91066218a48c483b?im=AspectCrop%3D%28160%2C160%29%2CxPosition%3D.5%2CyPosition%3D.5%3BResize%3D%28160%2C160%29",
       "Kort beskrivelse": "En historisk fortælling om bedrag, hævn og overlevelse i 1700-tallet.",
+      "": "",
+      "Endnu ikke hørt": "",
+      "Nævneværdige episo:": ""
+    },
+    {
+      "Placering": "528",
+      "Titel": "En gonzo skifter spor (sæson 3)",
+      "Vært": "René Fredensborg & Rasmus Bruun",
+      "Vuring (1-10)": "",
+      "Genre": "Dokumentar",
+      "Udgiver": "R8dio",
+      "Antal afsnit": "",
+      "Årstal afspillet": "2026",
+      "Link": "https://r8dio.dk/program/en-gonzo-skifter-spor/",
+      "Afgivet vurdering": "30-10-2025",
+      "Billedlink": "https://r8dio.dk/img/asset/aW1hZ2VzL2VuLWdvbnpvLXNraWZ0ZXItc3Bvci02MDB4NjAwLnBuZw/en-gonzo-skifter-spor-600x600.png?h=600&w=600&s=b27dfc8ed57f32630812180c556bbb3b",
+      "Kort beskrivelse": "René Fredensborg og Rasmus Bruun taler om liv, skift og nye spor.",
       "": "",
       "Endnu ikke hørt": "",
       "Nævneværdige episo:": ""
