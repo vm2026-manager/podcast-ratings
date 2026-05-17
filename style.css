@@ -398,6 +398,8 @@ select {
     box-shadow 0.18s ease,
     border-color 0.18s ease,
     background 0.18s ease;
+  content-visibility: auto;
+  contain-intrinsic-size: 104px;
 }
 
 .recent-card:hover {
@@ -567,6 +569,8 @@ select {
     box-shadow 0.18s ease,
     border-color 0.18s ease,
     background 0.18s ease;
+  content-visibility: auto;
+  contain-intrinsic-size: 348px;
 }
 
 .podcast-card:hover {
@@ -668,7 +672,8 @@ select {
 
 .podcast-card__link,
 .podcast-card__review,
-.review-card__back {
+.review-card__back,
+.load-more-button {
   min-height: 36px;
   border: 0;
   border-radius: 15px;
@@ -692,7 +697,8 @@ select {
 
 .podcast-card__link:hover,
 .podcast-card__review:hover,
-.review-card__back:hover {
+.review-card__back:hover,
+.load-more-button:hover {
   transform: translateY(-2px);
   box-shadow: 0 10px 18px rgba(38, 33, 29, 0.2);
   background: linear-gradient(180deg, #4a423c, #1f1a17);
@@ -1211,6 +1217,24 @@ button.podcast-chip:hover {
   background: rgba(255, 255, 255, 0.45);
   color: #6f655d;
   font-weight: 700;
+}
+
+.load-more-wrap {
+  display: flex;
+  justify-content: center;
+  margin: 22px 0 0;
+}
+
+.load-more-wrap.is-hidden {
+  display: none;
+}
+
+.load-more-button {
+  min-width: 180px;
+  min-height: 44px;
+  padding: 0 18px;
+  border-radius: 999px;
+  font-size: 0.82rem;
 }
 
 .site-footer {
