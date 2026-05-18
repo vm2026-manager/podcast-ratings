@@ -1,99 +1,35 @@
-import { mkdir, writeFile } from "node:fs/promises";
-import path from "node:path";
-import { fileURLToPath } from "node:url";
+name: Sync podcast sheet data
 
-const SPREADSHEET_BASE_URL =
-  "https://docs.google.com/spreadsheets/d/e/2PACX-1vQRBWQdj-WDNN3l9yxIMCCu_O2dYfP7modSODcYgJRoQDG3GYsu83W_wIFyijPx6v8l-W011zrFyOdq/pub";
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "7 * * * *"
 
-const SHEETS = [
-  {
-    outputPath: "data/podcasts.json",
-    sheetName: "Ark1",
-    gid: "0"
-  },
-  {
-    outputPath: "data/featured-reviews.json",
-    sheetName: "Udvalgte vurderinger",
-    gid: "1418051000"
-  }
-];
+permissions:
+  contents: write
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-const repoRoot = path.resolve(__dirname, "..");
+concurrency:
+  group: sync-podcast-sheet-data
+  cancel-in-progress: false
 
-function normalizeText(value) {
-  return String(value ?? "").trim();
-}
+jobs:
+  sync-sheet-data:
+    runs-on: ubuntu-latest
 
-function buildSheetUrl(gid) {
-  return `${SPREADSHEET_BASE_URL}?gid=${gid}&single=true&output=csv`;
-}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-function parseCsv(text) {
-  const rows = [];
-  let currentRow = [];
-  let currentCell = "";
-  let insideQuotes = false;
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
 
-  const normalizedText = String(text ?? "")
-    .replace(/^\uFEFF/, "")
-    .replace(/\r\n/g, "\n")
-    .replace(/\r/g, "\n");
+      - name: Sync JSON from Google Sheets
+        run: node scripts/sync-sheet-data.mjs
 
-  for (let index = 0; index < normalizedText.length; index += 1) {
-    const character = normalizedText[index];
-    const nextCharacter = normalizedText[index + 1];
-
-    if (character === '"' && insideQuotes && nextCharacter === '"') {
-      currentCell += '"';
-      index += 1;
-      continue;
-    }
-
-    if (character === '"') {
-      insideQuotes = !insideQuotes;
-      continue;
-    }
-
-    if (character === "," && !insideQuotes) {
-      currentRow.push(currentCell);
-      currentCell = "";
-      continue;
-    }
-
-    if (character === "\n" && !insideQuotes) {
-      currentRow.push(currentCell);
-
-      if (currentRow.some((cell) => normalizeText(cell) !== "")) {
-        rows.push(currentRow);
-      }
-
-      currentRow = [];
-      currentCell = "";
-      continue;
-    }
-
-    currentCell += character;
-  }
-
-  currentRow.push(currentCell);
-
-  if (currentRow.some((cell) => normalizeText(cell) !== "")) {
-    rows.push(currentRow);
-  }
-
-  return rows;
-}
-
-function rowsToObjects(rows) {
-  if (!rows.length) {
-    return [];
-  }
-
-  const headers = rows[0].map((header) => normalizeText(header));
-
-  return rows
-    .slice(1)
-    .map((row) => {
-      const item = {};
+      - name: Commit updated JSON files
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: "chore: sync podcast data from Google Sheets"
+          file_pattern: data/podcasts.json data/featured-reviews.json
