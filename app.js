@@ -15,8 +15,7 @@ const GENRES = [
 
 const FEATURED_ROTATION_MS = 8000;
 const INITIAL_VISIBLE_COUNT = 48;
-const LOAD_MORE_STEP = 48;
-const DATA_VERSION = "2026-05-18-1";
+const DATA_VERSION = "2026-05-18-2";
 
 const state = {
   podcasts: [],
@@ -27,10 +26,12 @@ const state = {
   openReviewKeys: new Set(),
   featuredIndex: 0,
   featuredTimer: null,
+  featuredPaused: false,
   activeFilter: null,
   searchTerm: "",
   sort: "placement-asc",
-  visibleCount: INITIAL_VISIBLE_COUNT
+  visibleCount: INITIAL_VISIBLE_COUNT,
+  hasExpandedInitialList: false
 };
 
 const elements = {
@@ -253,6 +254,37 @@ function formatDate(value) {
 function formatFeaturedDate(value) {
   const formatted = formatDate(value);
   return formatted ? `Anmeldt ${formatted}` : "";
+}
+
+function injectRuntimeStyles() {
+  if (document.getElementById("runtimeFeaturedStyles")) return;
+
+  const style = document.createElement("style");
+  style.id = "runtimeFeaturedStyles";
+  style.textContent = `
+    .featured-panel {
+      cursor: pointer;
+    }
+
+    .featured-panel.is-paused .featured-eyebrow::after {
+      content: " • pause";
+      color: #8d837b;
+      font-size: 0.76em;
+      letter-spacing: 0.08em;
+    }
+
+    .featured-dots {
+      justify-content: center !important;
+      gap: 10px !important;
+    }
+
+    .featured-dot {
+      width: 12px !important;
+      height: 12px !important;
+    }
+  `;
+
+  document.head.appendChild(style);
 }
 
 function normalizeGenre(value) {
@@ -549,6 +581,7 @@ function mapFeaturedReview(row, index, podcastLookup) {
     score,
     scoreLabel: formatRating(score),
     reviewDate,
+    reviewDateObject: parseDate(reviewDate),
     reviewDateLabel: formatFeaturedDate(reviewDate),
     displayOrder: displayOrder ?? index + 1,
     publisher: normalizePublisher(autoPublisher || matchedPodcast?.publisher || ""),
@@ -601,7 +634,9 @@ function isActiveFeatured(review) {
 }
 
 function resetVisibleCount() {
-  state.visibleCount = INITIAL_VISIBLE_COUNT;
+  state.visibleCount = state.hasExpandedInitialList
+    ? Number.MAX_SAFE_INTEGER
+    : INITIAL_VISIBLE_COUNT;
 }
 
 function isActiveGenre(genre) {
@@ -629,12 +664,12 @@ function createGenreChips() {
     const button = document.createElement("button");
     button.type = "button";
     button.className = "genre-chip";
-    button.textContent = genre;
 
     if (isActiveGenre(genre)) {
       button.classList.add("active");
     }
 
+    button.textContent = genre;
     button.addEventListener("click", () => {
       if (genre === "Alle") {
         clearActiveFilter();
@@ -718,10 +753,11 @@ function ensureLoadMoreControls() {
   const button = document.createElement("button");
   button.type = "button";
   button.className = "load-more-button";
-  button.textContent = "Vis flere";
+  button.textContent = "Vis resten";
 
   button.addEventListener("click", () => {
-    state.visibleCount += LOAD_MORE_STEP;
+    state.hasExpandedInitialList = true;
+    state.visibleCount = Number.MAX_SAFE_INTEGER;
     renderPodcastGrid();
   });
 
@@ -743,7 +779,7 @@ function updateLoadMoreUi(filteredCount, visibleCount) {
   }
 
   elements.loadMoreWrap.classList.remove("is-hidden");
-  elements.loadMoreButton.textContent = `Vis flere (${remaining} tilbage)`;
+  elements.loadMoreButton.textContent = `Vis resten (${remaining} tilbage)`;
 }
 
 function setImage(container, image, alt) {
@@ -1100,6 +1136,10 @@ function renderFeaturedReview() {
     state.featuredReviews[state.featuredIndex % state.featuredReviews.length];
 
   elements.featuredPanel.classList.remove("is-hidden");
+  elements.featuredPanel.classList.toggle("is-paused", state.featuredPaused);
+  elements.featuredPanel.title = state.featuredPaused
+    ? "Rotation er sat på pause. Klik igen for at starte den."
+    : "Klik på boksen for at sætte rotationen på pause.";
   elements.featuredTitle.textContent = review.title || "";
   elements.featuredMeta.textContent = [review.publisher, review.genre]
     .filter(Boolean)
@@ -1195,7 +1235,9 @@ function showFeaturedReview(index) {
   state.featuredIndex = ((index % total) + total) % total;
 
   renderFeaturedReview();
-  restartFeaturedRotation();
+  if (!state.featuredPaused) {
+    restartFeaturedRotation();
+  }
 }
 
 function showNextFeaturedReview() {
@@ -1266,9 +1308,10 @@ function setupFeaturedSwipe() {
 function startFeaturedRotation() {
   if (state.featuredTimer) {
     window.clearInterval(state.featuredTimer);
+    state.featuredTimer = null;
   }
 
-  if (state.featuredReviews.length <= 1) return;
+  if (state.featuredPaused || state.featuredReviews.length <= 1) return;
 
   state.featuredTimer = window.setInterval(() => {
     state.featuredIndex =
@@ -1279,6 +1322,23 @@ function startFeaturedRotation() {
 
 function restartFeaturedRotation() {
   startFeaturedRotation();
+}
+
+function toggleFeaturedPause() {
+  if (state.featuredReviews.length <= 1) return;
+
+  state.featuredPaused = !state.featuredPaused;
+
+  if (state.featuredPaused) {
+    if (state.featuredTimer) {
+      window.clearInterval(state.featuredTimer);
+      state.featuredTimer = null;
+    }
+  } else {
+    startFeaturedRotation();
+  }
+
+  renderFeaturedReview();
 }
 
 function render() {
@@ -1368,6 +1428,13 @@ function setupEvents() {
 
   if (elements.podcastGrid) {
     elements.podcastGrid.addEventListener("click", handlePodcastGridClick);
+  }
+
+  if (elements.featuredPanel) {
+    elements.featuredPanel.addEventListener("click", (event) => {
+      if (event.target.closest(".featured-dot")) return;
+      toggleFeaturedPause();
+    });
   }
 
   setupFeaturedSwipe();
@@ -1469,10 +1536,21 @@ async function loadPodcasts() {
 
     state.featuredReviews = state.allReviews
       .filter(isActiveFeatured)
-      .sort((a, b) => a.displayOrder - b.displayOrder);
+      .sort((a, b) => {
+        const aTime = a.reviewDateObject ? a.reviewDateObject.getTime() : 0;
+        const bTime = b.reviewDateObject ? b.reviewDateObject.getTime() : 0;
+
+        if (bTime !== aTime) {
+          return bTime - aTime;
+        }
+
+        return a.displayOrder - b.displayOrder;
+      })
+      .slice(0, 5);
 
     state.featuredReviewByKey = buildFeaturedReviewLookup(state.allReviews);
     state.featuredIndex = 0;
+    state.featuredPaused = false;
 
     createGenreChips();
     render();
@@ -1537,6 +1615,7 @@ function loadVisitorCount() {
 }
 
 ensureLoadMoreControls();
+injectRuntimeStyles();
 setupEvents();
 loadPodcasts();
 loadVisitorCount();
