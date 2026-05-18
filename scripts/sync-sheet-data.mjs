@@ -97,3 +97,80 @@ function rowsToObjects(rows) {
     .slice(1)
     .map((row) => {
       const item = {};
+
+      headers.forEach((header, index) => {
+        item[header] = normalizeText(row[index] || "");
+      });
+
+      return item;
+    })
+    .filter((row) => Object.values(row).some((value) => normalizeText(value) !== ""));
+}
+
+function filterPodcastRows(rows) {
+  return rows.filter((row) => normalizeText(row.Titel));
+}
+
+function filterFeaturedRows(rows) {
+  return rows.filter((row) => {
+    return normalizeText(row.Titel || row.Matchtitel || row["Kort vurdering"]);
+  });
+}
+
+function createPayload(sheet, rows) {
+  return {
+    generatedAt: new Date().toISOString(),
+    sheetName: sheet.sheetName,
+    gid: sheet.gid,
+    count: rows.length,
+    rows
+  };
+}
+
+async function fetchSheetCsv(sheet) {
+  const response = await fetch(buildSheetUrl(sheet.gid), {
+    headers: {
+      "cache-control": "no-cache"
+    }
+  });
+
+  if (!response.ok) {
+    throw new Error(
+      `Kunne ikke hente CSV for ${sheet.sheetName} (${response.status}).`
+    );
+  }
+
+  return response.text();
+}
+
+async function writeJsonFile(outputPath, payload) {
+  const absolutePath = path.join(repoRoot, outputPath);
+  await mkdir(path.dirname(absolutePath), { recursive: true });
+  await writeFile(absolutePath, `${JSON.stringify(payload)}\n`, "utf8");
+}
+
+async function syncSheet(sheet) {
+  const csv = await fetchSheetCsv(sheet);
+  const objects = rowsToObjects(parseCsv(csv));
+
+  const filteredRows =
+    sheet.sheetName === "Udvalgte vurderinger"
+      ? filterFeaturedRows(objects)
+      : filterPodcastRows(objects);
+
+  const payload = createPayload(sheet, filteredRows);
+  await writeJsonFile(sheet.outputPath, payload);
+
+  console.log(`Skrev ${payload.count} rækker til ${sheet.outputPath}`);
+}
+
+async function main() {
+  for (const sheet of SHEETS) {
+    await syncSheet(sheet);
+  }
+}
+
+main().catch((error) => {
+  console.error(error);
+  process.exitCode = 1;
+});
