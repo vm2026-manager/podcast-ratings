@@ -1,7 +1,7 @@
 {
-  "generatedAt": "2026-05-18T10:19:55.667Z",
+  "generatedAt": "2026-05-18T10:47:41.124Z",
   "source": "https://docs.google.com/spreadsheets/d/e/2PACX-1vQRBWQdj-WDNN3l9yxIMCCu_O2dYfP7modSODcYgJRoQDG3GYsu83W_wIFyijPx6v8l-W011zrFyOdq/pub?gid=0&single=true&output=csv",
-  "count": 527,
+  "count": 528,
   "rows": [
     {
       "Placering": "1",
@@ -8958,6 +8958,23 @@
       "Afgivet vurdering": "",
       "Billedlink": "https://asset.dr.dk/drlyd/images/urn:dr:radio:image:68fb370e91066218a48c483b?im=AspectCrop%3D%28160%2C160%29%2CxPosition%3D.5%2CyPosition%3D.5%3BResize%3D%28160%2C160%29",
       "Kort beskrivelse": "En historisk fortælling om bedrag, hævn og overlevelse i 1700-tallet.",
+      "": "",
+      "Endnu ikke hørt": "",
+      "Nævneværdige episo:": ""
+    },
+    {
+      "Placering": "529",
+      "Titel": "Det gode skib",
+      "Vært": "Anders Aamand",
+      "Vuring (1-10)": "",
+      "Genre": "Historie",
+      "Udgiver": "DR",
+      "Antal afsnit": "2",
+      "Årstal afspillet": "2026",
+      "Link": "https://www.dr.dk/lyd/p1/det-gode-skib-3045440537000",
+      "Afgivet vurdering": "",
+      "Billedlink": "https://asset.dr.dk/drlyd/images/urn:dr:radio:image:6926eb12f813fbba9054e5b9?im=AspectCrop%3D%28160%2C160%29%2CxPosition%3D.5%2CyPosition%3D.5%3BResize%3D%28160%2C160%29",
+      "Kort beskrivelse": "Om hospitalsskibet Jutlandia og to menneskers møde med Korea-krigen.",
       "": "",
       "Endnu ikke hørt": "",
       "Nævneværdige episo:": ""
