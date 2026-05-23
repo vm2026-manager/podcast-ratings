@@ -16,7 +16,7 @@
       rel="stylesheet"
     />
 
-    <link rel="stylesheet" href="style.css?v=2026-05-23-8" />
+    <link rel="stylesheet" href="style.css?v=2026-05-23-9" />
 
     <script
       data-goatcounter="https://podcastratings.goatcounter.com/count"
@@ -30,10 +30,15 @@
       };
     </script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
-    <script src="app.js?v=2026-05-23-8" defer></script>
+    <script src="app.js?v=2026-05-23-9" defer></script>
   </head>
 
   <body>
+    <form class="autofill-trap" autocomplete="on" aria-hidden="true" tabindex="-1">
+      <input type="email" name="email" autocomplete="username" tabindex="-1" />
+      <input type="password" name="password" autocomplete="current-password" tabindex="-1" />
+    </form>
+
     <div class="page-shell">
       <aside class="sidebar">
         <div class="sidebar-logo">
@@ -61,6 +66,7 @@
               name="podcast_search_query"
               placeholder="S&#248;g efter titel, v&#230;rt eller udgiver"
               value=""
+              readonly
               autocomplete="off"
               autocapitalize="off"
               autocorrect="off"
@@ -314,21 +320,28 @@
             Log ind for at gemme favoritter og give dine egne vurderinger.
           </p>
 
-          <div class="auth-form">
+          <form class="auth-form" autocomplete="on">
             <label class="auth-field">
               <span>Email</span>
-              <input id="authEmail" type="email" placeholder="din@email.dk" autocomplete="email" />
+              <input
+                id="authEmail"
+                name="email"
+                type="email"
+                placeholder="din@email.dk"
+                autocomplete="username"
+              />
             </label>
             <label class="auth-field">
               <span>Adgangskode</span>
               <input
                 id="authPassword"
+                name="password"
                 type="password"
                 placeholder="Mindst 6 tegn"
                 autocomplete="current-password"
               />
             </label>
-          </div>
+          </form>
 
           <div class="auth-actions auth-actions--dialog">
             <button id="signupButton" class="auth-button auth-button--primary" type="button">

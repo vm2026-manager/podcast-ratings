@@ -15,7 +15,7 @@ const GENRES = [
 
 const FEATURED_ROTATION_MS = 8000;
 const INITIAL_VISIBLE_COUNT = 48;
-const DATA_VERSION = "2026-05-23-8";
+const DATA_VERSION = "2026-05-23-9";
 const EXPANDED_LIST_STORAGE_KEY = "podcast-ratings-expanded-list";
 const NEW_BADGE_DAYS = 14;
 const SUPABASE_CONFIG = window.PODCAST_SUPABASE_CONFIG || {
@@ -700,6 +700,11 @@ function clearSearchInput({ rerender = false } = {}) {
       render();
     }
   }
+}
+
+function enableSearchInput() {
+  if (!elements.searchInput) return;
+  elements.searchInput.removeAttribute("readonly");
 }
 
 function isActiveGenre(genre) {
@@ -2065,7 +2070,11 @@ function setupEvents() {
   if (elements.searchInput) {
     clearSearchInput();
 
+    elements.searchInput.addEventListener("pointerdown", enableSearchInput, { once: true });
+
     elements.searchInput.addEventListener("focus", () => {
+      enableSearchInput();
+
       if (elements.searchInput?.value && elements.searchInput.value.includes("@")) {
         clearSearchInput({ rerender: true });
       }
