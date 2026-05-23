@@ -15,7 +15,7 @@ const GENRES = [
 
 const FEATURED_ROTATION_MS = 8000;
 const INITIAL_VISIBLE_COUNT = 48;
-const DATA_VERSION = "2026-05-23-6";
+const DATA_VERSION = "2026-05-23-8";
 const EXPANDED_LIST_STORAGE_KEY = "podcast-ratings-expanded-list";
 const NEW_BADGE_DAYS = 14;
 const SUPABASE_CONFIG = window.PODCAST_SUPABASE_CONFIG || {
@@ -685,6 +685,21 @@ function resetVisibleCount() {
   state.visibleCount = state.hasExpandedInitialList
     ? Number.MAX_SAFE_INTEGER
     : INITIAL_VISIBLE_COUNT;
+}
+
+function clearSearchInput({ rerender = false } = {}) {
+  if (!elements.searchInput) return;
+
+  elements.searchInput.value = "";
+
+  if (state.searchTerm) {
+    state.searchTerm = "";
+
+    if (rerender) {
+      resetVisibleCount();
+      render();
+    }
+  }
 }
 
 function isActiveGenre(genre) {
@@ -2048,6 +2063,14 @@ function handlePodcastGridClick(event) {
 
 function setupEvents() {
   if (elements.searchInput) {
+    clearSearchInput();
+
+    elements.searchInput.addEventListener("focus", () => {
+      if (elements.searchInput?.value && elements.searchInput.value.includes("@")) {
+        clearSearchInput({ rerender: true });
+      }
+    });
+
     elements.searchInput.addEventListener("input", (event) => {
       state.searchTerm = event.target.value.trim();
       resetVisibleCount();
@@ -2146,6 +2169,12 @@ function setupEvents() {
     if (event.key === "Escape" && !elements.ratingDialog?.classList.contains("is-hidden")) {
       closeRatingDialog();
     }
+  });
+
+  window.addEventListener("pageshow", () => {
+    window.setTimeout(() => {
+      clearSearchInput({ rerender: true });
+    }, 0);
   });
 
   setupFeaturedSwipe();
@@ -2337,6 +2366,9 @@ function loadVisitorCount() {
 
 ensureLoadMoreControls();
 setupEvents();
+window.setTimeout(() => {
+  clearSearchInput({ rerender: true });
+}, 120);
 loadPodcasts();
 initSupabase();
 loadVisitorCount();
