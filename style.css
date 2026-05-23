@@ -1724,6 +1724,15 @@ body.has-dialog-open {
   border: 1px solid rgba(223, 211, 196, 0.72);
 }
 
+.visitor-counter.is-unavailable {
+  gap: 6px;
+  color: #9a9088;
+}
+
+.visitor-counter.is-unavailable #goatcounter-visits {
+  font-weight: 700;
+}
+
 #goatcounter-visits iframe {
   width: 90px;
   height: 24px;
