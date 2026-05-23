@@ -16,7 +16,7 @@
       rel="stylesheet"
     />
 
-    <link rel="stylesheet" href="style.css?v=2026-05-23-3" />
+    <link rel="stylesheet" href="style.css?v=2026-05-23-4" />
 
     <script
       data-goatcounter="https://podcastratings.goatcounter.com/count"
@@ -30,7 +30,7 @@
       };
     </script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
-    <script src="app.js?v=2026-05-23-3" defer></script>
+    <script src="app.js?v=2026-05-23-4" defer></script>
   </head>
 
   <body>
@@ -122,27 +122,11 @@
                 Opret dig for selv at anmelde podcasts og gemme dem til senere.
               </p>
 
-              <div class="auth-form">
-                <label class="auth-field">
-                  <span>Email</span>
-                  <input id="authEmail" type="email" placeholder="din@email.dk" autocomplete="email" />
-                </label>
-                <label class="auth-field">
-                  <span>Adgangskode</span>
-                  <input
-                    id="authPassword"
-                    type="password"
-                    placeholder="Mindst 6 tegn"
-                    autocomplete="current-password"
-                  />
-                </label>
-              </div>
-
               <div class="auth-actions">
-                <button id="signupButton" class="auth-button auth-button--primary" type="button">
+                <button id="openSignupButton" class="auth-button auth-button--primary" type="button">
                   Opret dig
                 </button>
-                <button id="loginButton" class="auth-button auth-button--secondary" type="button">
+                <button id="openLoginButton" class="auth-button auth-button--secondary" type="button">
                   Log ind
                 </button>
               </div>
@@ -303,6 +287,58 @@
           </div>
         </article>
       </template>
+
+      <div id="authDialog" class="rating-dialog auth-dialog is-hidden" aria-hidden="true">
+        <div class="rating-dialog__backdrop" data-auth-close="true"></div>
+        <div
+          class="rating-dialog__panel auth-dialog__panel"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="authDialogTitle"
+        >
+          <button
+            id="authDialogCloseButton"
+            class="rating-dialog__close"
+            type="button"
+            aria-label="Luk login"
+          >
+            &#215;
+          </button>
+
+          <p class="rating-dialog__eyebrow">Brugerlogin</p>
+          <h2 id="authDialogTitle" class="rating-dialog__title">Opret dig eller log ind</h2>
+          <p class="rating-dialog__meta">
+            Log ind for at gemme favoritter og give dine egne vurderinger.
+          </p>
+
+          <div class="auth-form">
+            <label class="auth-field">
+              <span>Email</span>
+              <input id="authEmail" type="email" placeholder="din@email.dk" autocomplete="email" />
+            </label>
+            <label class="auth-field">
+              <span>Adgangskode</span>
+              <input
+                id="authPassword"
+                type="password"
+                placeholder="Mindst 6 tegn"
+                autocomplete="current-password"
+              />
+            </label>
+          </div>
+
+          <div class="auth-actions auth-actions--dialog">
+            <button id="signupButton" class="auth-button auth-button--primary" type="button">
+              Opret dig
+            </button>
+            <button id="loginButton" class="auth-button auth-button--secondary" type="button">
+              Log ind
+            </button>
+          </div>
+
+          <p id="authDialogMessage" class="auth-message is-hidden" aria-live="polite"></p>
+        </div>
+      </div>
 
       <div id="ratingDialog" class="rating-dialog is-hidden" aria-hidden="true">
         <div class="rating-dialog__backdrop" data-rating-close="true"></div>

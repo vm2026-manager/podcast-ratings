@@ -15,7 +15,7 @@ const GENRES = [
 
 const FEATURED_ROTATION_MS = 8000;
 const INITIAL_VISIBLE_COUNT = 48;
-const DATA_VERSION = "2026-05-23-3";
+const DATA_VERSION = "2026-05-23-4";
 const EXPANDED_LIST_STORAGE_KEY = "podcast-ratings-expanded-list";
 const NEW_BADGE_DAYS = 14;
 const SUPABASE_CONFIG = window.PODCAST_SUPABASE_CONFIG || {
@@ -93,10 +93,16 @@ const elements = {
   authPanel: document.getElementById("authPanel"),
   authLoggedOut: document.getElementById("authLoggedOut"),
   authLoggedIn: document.getElementById("authLoggedIn"),
+  openSignupButton: document.getElementById("openSignupButton"),
+  openLoginButton: document.getElementById("openLoginButton"),
+  authDialog: document.getElementById("authDialog"),
+  authDialogTitle: document.getElementById("authDialogTitle"),
+  authDialogCloseButton: document.getElementById("authDialogCloseButton"),
   authEmail: document.getElementById("authEmail"),
   authPassword: document.getElementById("authPassword"),
   authUserEmail: document.getElementById("authUserEmail"),
   authMessage: document.getElementById("authMessage"),
+  authDialogMessage: document.getElementById("authDialogMessage"),
   signupButton: document.getElementById("signupButton"),
   loginButton: document.getElementById("loginButton"),
   logoutButton: document.getElementById("logoutButton"),
@@ -860,22 +866,31 @@ function setImage(container, image, alt) {
 }
 
 function showAuthPrompt(preferredAction = "signup") {
-  if (!elements.authPanel) return;
+  if (!elements.authDialog) return;
 
-  elements.authPanel.classList.add("is-highlighted");
+  if (elements.authDialogTitle) {
+    elements.authDialogTitle.textContent =
+      preferredAction === "login" ? "Log ind" : "Opret dig eller log ind";
+  }
 
-  const top =
-    elements.authPanel.getBoundingClientRect().top + window.scrollY - 24;
-  window.scrollTo({ top: Math.max(0, top), behavior: "smooth" });
+  clearAuthMessage();
+  elements.authDialog.classList.remove("is-hidden");
+  elements.authDialog.setAttribute("aria-hidden", "false");
+  document.body.classList.add("has-dialog-open");
 
   window.setTimeout(() => {
-    elements.authPanel.classList.remove("is-highlighted");
-  }, 2200);
+    elements.authEmail?.focus();
+  }, 40);
+}
 
-  if (preferredAction === "login") {
-    elements.authEmail?.focus();
-  } else {
-    elements.authEmail?.focus();
+function closeAuthDialog() {
+  if (!elements.authDialog) return;
+
+  elements.authDialog.classList.add("is-hidden");
+  elements.authDialog.setAttribute("aria-hidden", "true");
+
+  if (elements.ratingDialog?.classList.contains("is-hidden")) {
+    document.body.classList.remove("has-dialog-open");
   }
 }
 
@@ -901,11 +916,13 @@ function formatRatingCount(value) {
 }
 
 function setAuthMessage(message = "", tone = "info") {
-  if (!elements.authMessage) return;
+  [elements.authMessage, elements.authDialogMessage].forEach((element) => {
+    if (!element) return;
 
-  elements.authMessage.textContent = message;
-  elements.authMessage.classList.toggle("is-hidden", !message);
-  elements.authMessage.dataset.tone = tone;
+    element.textContent = message;
+    element.classList.toggle("is-hidden", !message);
+    element.dataset.tone = tone;
+  });
 }
 
 function clearAuthMessage() {
@@ -947,6 +964,14 @@ function renderAuthPanel() {
     elements.authPassword.disabled = !configured || state.authBusy;
   }
 
+  if (elements.openSignupButton) {
+    elements.openSignupButton.disabled = !configured;
+  }
+
+  if (elements.openLoginButton) {
+    elements.openLoginButton.disabled = !configured;
+  }
+
   if (elements.signupButton) {
     elements.signupButton.disabled = !configured || state.authBusy;
   }
@@ -964,10 +989,10 @@ function renderAuthPanel() {
       "Tilføj Supabase URL og anon key i window.PODCAST_SUPABASE_CONFIG for at aktivere login.",
       "warning"
     );
-    } else if (!state.authBusy && !loggedIn) {
-      clearAuthMessage();
-    }
+  } else if (!state.authBusy && !loggedIn) {
+    clearAuthMessage();
   }
+}
 
 function getCommunityStat(podcastKey) {
   return state.communityStatsByKey[podcastKey] || null;
@@ -1144,6 +1169,7 @@ async function handleAuthAction(mode) {
 
       if (data.session) {
         setAuthMessage("Din konto er oprettet, og du er nu logget ind.", "success");
+        closeAuthDialog();
       } else {
         setAuthMessage(
           "Kontoen er oprettet. Hvis du vil logge ind med det samme uden mail, så slå Confirm email fra i Supabase.",
@@ -1159,6 +1185,7 @@ async function handleAuthAction(mode) {
       if (error) throw error;
 
       setAuthMessage("Du er nu logget ind.", "success");
+      closeAuthDialog();
     }
 
     if (elements.authPassword) {
@@ -1230,7 +1257,9 @@ function closeRatingDialog() {
   updateRatingDialogMessage("");
   elements.ratingDialog.classList.add("is-hidden");
   elements.ratingDialog.setAttribute("aria-hidden", "true");
-  document.body.classList.remove("has-dialog-open");
+  if (elements.authDialog?.classList.contains("is-hidden")) {
+    document.body.classList.remove("has-dialog-open");
+  }
 }
 
 async function saveActiveRating() {
@@ -2035,6 +2064,14 @@ function setupEvents() {
     });
   }
 
+  elements.openSignupButton?.addEventListener("click", () => {
+    showAuthPrompt("signup");
+  });
+
+  elements.openLoginButton?.addEventListener("click", () => {
+    showAuthPrompt("login");
+  });
+
   elements.signupButton?.addEventListener("click", () => {
     handleAuthAction("signup");
   });
@@ -2044,6 +2081,7 @@ function setupEvents() {
   });
 
   elements.logoutButton?.addEventListener("click", handleLogout);
+  elements.authDialogCloseButton?.addEventListener("click", closeAuthDialog);
 
   if (elements.clearFilterButton) {
     elements.clearFilterButton.addEventListener("click", clearActiveFilter);
@@ -2075,7 +2113,17 @@ function setupEvents() {
     }
   });
 
+  elements.authDialog?.addEventListener("click", (event) => {
+    if (event.target instanceof HTMLElement && event.target.dataset.authClose === "true") {
+      closeAuthDialog();
+    }
+  });
+
   document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape" && !elements.authDialog?.classList.contains("is-hidden")) {
+      closeAuthDialog();
+    }
+
     if (event.key === "Escape" && !elements.ratingDialog?.classList.contains("is-hidden")) {
       closeRatingDialog();
     }

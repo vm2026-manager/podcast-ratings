@@ -250,6 +250,10 @@ button {
   gap: 8px;
 }
 
+.auth-actions--dialog {
+  margin-top: 6px;
+}
+
 .auth-button {
   min-height: 38px;
   padding: 0 16px;
@@ -338,6 +342,10 @@ button {
 .auth-message[data-tone="error"] {
   background: rgba(199, 66, 56, 0.12);
   color: #9c3028;
+}
+
+.auth-dialog__panel {
+  width: min(100%, 420px);
 }
 
 .genre-nav-header {
