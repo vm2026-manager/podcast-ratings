@@ -348,6 +348,29 @@ button {
   width: min(100%, 420px);
 }
 
+.auth-dialog {
+  z-index: 60;
+}
+
+.auth-dialog .rating-dialog__backdrop {
+  z-index: 0;
+  pointer-events: auto;
+}
+
+.auth-dialog .rating-dialog__panel {
+  z-index: 2;
+  pointer-events: auto;
+}
+
+.auth-dialog .auth-actions,
+.auth-dialog .auth-button,
+.auth-dialog .auth-form,
+.auth-dialog .auth-field,
+.auth-dialog input {
+  position: relative;
+  z-index: 3;
+}
+
 .genre-nav-header {
   display: flex;
   align-items: flex-start;
@@ -555,8 +578,8 @@ button {
   display: grid;
   grid-template-columns: 64px minmax(0, 1fr) auto;
   grid-template-areas:
-    "cover copy actions"
-    "cover copy meta";
+    "cover copy meta"
+    "cover copy actions";
   column-gap: 12px;
   row-gap: 8px;
   padding: 12px 14px;
@@ -1830,8 +1853,8 @@ body.has-dialog-open {
     grid-template-columns: 64px minmax(0, 1fr);
     grid-template-areas:
       "cover copy"
-      "actions actions"
-      "meta meta";
+      "meta meta"
+      "actions actions";
   }
 
   .recent-actions {
