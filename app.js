@@ -2257,6 +2257,8 @@ async function loadPodcasts() {
 
 function loadVisitorCount() {
   const target = document.getElementById("goatcounter-visits");
+  const counter = document.getElementById("visitorCounter");
+  const label = document.getElementById("visitorCounterLabel");
   if (!target) return;
 
   target.textContent = "indl\u00e6ser\u2026";
@@ -2299,11 +2301,19 @@ function loadVisitorCount() {
       return;
     }
 
-    if (attempts >= 30) {
-      target.textContent = "ikke tilg\u00e6ngeligt";
-      window.clearInterval(interval);
-    }
-  }, 250);
+      if (attempts >= 30) {
+        if (counter) {
+          counter.classList.add("is-unavailable");
+        }
+
+        if (label) {
+          label.textContent = "Bes\u00f8gst\u00e6ller";
+        }
+
+        target.textContent = "blokeret i denne browser";
+        window.clearInterval(interval);
+      }
+    }, 250);
 }
 
 ensureLoadMoreControls();
