@@ -15,7 +15,25 @@ const GENRES = [
 
 const FEATURED_ROTATION_MS = 8000;
 const INITIAL_VISIBLE_COUNT = 48;
-const DATA_VERSION = "2026-05-18-2";
+const DATA_VERSION = "2026-05-22-1";
+const EXPANDED_LIST_STORAGE_KEY = "podcast-ratings-expanded-list";
+const NEW_BADGE_DAYS = 14;
+
+function readExpandedListPreference() {
+  try {
+    return window.localStorage.getItem(EXPANDED_LIST_STORAGE_KEY) === "true";
+  } catch {
+    return false;
+  }
+}
+
+function persistExpandedListPreference(value) {
+  try {
+    window.localStorage.setItem(EXPANDED_LIST_STORAGE_KEY, value ? "true" : "false");
+  } catch {
+    // Ignore localStorage failures.
+  }
+}
 
 const state = {
   podcasts: [],
@@ -30,8 +48,8 @@ const state = {
   activeFilter: null,
   searchTerm: "",
   sort: "placement-asc",
-  visibleCount: INITIAL_VISIBLE_COUNT,
-  hasExpandedInitialList: false
+  hasExpandedInitialList: readExpandedListPreference(),
+  visibleCount: readExpandedListPreference() ? Number.MAX_SAFE_INTEGER : INITIAL_VISIBLE_COUNT
 };
 
 const elements = {
@@ -57,6 +75,9 @@ const elements = {
   featuredText: document.getElementById("featuredText"),
   featuredParams: document.getElementById("featuredParams"),
   featuredDots: document.getElementById("featuredDots"),
+  authPanel: document.getElementById("authPanel"),
+  signupButton: document.getElementById("signupButton"),
+  loginButton: document.getElementById("loginButton"),
   loadMoreWrap: null,
   loadMoreButton: null
 };
@@ -94,7 +115,7 @@ function normalizeComparable(value) {
 
 function normalizeMatchKey(value) {
   return normalizeComparable(value)
-    .replace(/[^a-z0-9æøå ]/g, " ")
+    .replace(/[^a-z0-9\u00e6\u00f8\u00e5 ]/g, " ")
     .replace(/\s+/g, " ")
     .trim();
 }
@@ -105,7 +126,7 @@ function normalizeSearchValue(value) {
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "")
     .replace(/&/g, " og ")
-    .replace(/[^a-z0-9æøå ]/g, " ")
+    .replace(/[^a-z0-9\u00e6\u00f8\u00e5 ]/g, " ")
     .replace(/\s+/g, " ")
     .trim();
 }
@@ -256,37 +277,6 @@ function formatFeaturedDate(value) {
   return formatted ? `Anmeldt ${formatted}` : "";
 }
 
-function injectRuntimeStyles() {
-  if (document.getElementById("runtimeFeaturedStyles")) return;
-
-  const style = document.createElement("style");
-  style.id = "runtimeFeaturedStyles";
-  style.textContent = `
-    .featured-panel {
-      cursor: pointer;
-    }
-
-    .featured-panel.is-paused .featured-eyebrow::after {
-      content: " • pause";
-      color: #8d837b;
-      font-size: 0.76em;
-      letter-spacing: 0.08em;
-    }
-
-    .featured-dots {
-      justify-content: center !important;
-      gap: 10px !important;
-    }
-
-    .featured-dot {
-      width: 12px !important;
-      height: 12px !important;
-    }
-  `;
-
-  document.head.appendChild(style);
-}
-
 function normalizeGenre(value) {
   const raw = normalizeComparable(value);
 
@@ -334,7 +324,6 @@ function normalizeGenre(value) {
     raw.includes("samfund") ||
     raw.includes("politik") ||
     raw.includes("nyhed") ||
-    raw.includes("nyhe") ||
     raw.includes("debat") ||
     raw.includes("aktualitet") ||
     raw.includes("krise") ||
@@ -353,7 +342,7 @@ function normalizeGenre(value) {
     raw.includes("comedy") ||
     raw.includes("snakke") ||
     raw.includes("snak") ||
-    raw.includes("kærlighed") ||
+    raw.includes("k\u00e6rlighed") ||
     raw.includes("dating")
   ) {
     return "Underholdning";
@@ -371,6 +360,10 @@ function normalizePublisher(value) {
     .replace(/\s*\/\s*/g, "/");
 
   const compact = raw.replace(/\s+/g, "");
+
+  if (compact === "bolddk" || raw === "bold" || raw === "bold dk") {
+    return "Bold";
+  }
 
   if (raw === "eb" || raw === "eb+" || raw === "ekstrabladet" || raw === "ekstra bladet") {
     return "Ekstra Bladet";
@@ -429,7 +422,7 @@ function getCompletenessScore(podcast) {
 
 function mapPodcast(row, index) {
   const title = getField(row, ["Titel", "Title"]);
-  const host = getField(row, ["Vært", "Vaert", "Host", "Værter"]);
+  const host = getField(row, ["V\u00e6rt", "Vaert", "Host", "V\u00e6rter"]);
   const rawRating = getField(row, [
     "Vuring",
     "Vuring (1-10)",
@@ -443,9 +436,9 @@ function mapPodcast(row, index) {
   const rawGenre = getField(row, ["Genre"]);
   const rawPublisher = getField(row, ["Udgiver", "Publisher"]);
   const episodes = getField(row, ["Antal afsnit", "Afsnit", "Episodes"]);
-  const yearPlayed = getField(row, ["Årstal afspillet", "Aarstal afspillet", "År", "Aar"]);
+  const yearPlayed = getField(row, ["\u00c5rstal afspillet", "Aarstal afspillet", "\u00c5r", "Aar"]);
   const link = extractUrl(getField(row, ["Link", "URL"]));
-  const ratingDate = getField(row, ["Afgivet vurdering", "Dato", "Vurderingsdato", "Bedømt"]);
+  const ratingDate = getField(row, ["Afgivet vurdering", "Dato", "Vurderingsdato", "Bed\u00f8mt"]);
   const image = extractUrl(getField(row, ["Billedlink", "Billedefil", "Billede", "Cover", "Image"]));
   const description = getField(row, [
     "Kort beskrivelse",
@@ -551,25 +544,25 @@ function mapFeaturedReview(row, index, podcastLookup) {
 
   const story = getField(row, ["Historie", "Historie/sag"]);
   const narrator = getField(row, [
-    "Fortæller",
+    "Fort\u00e6ller",
     "Fortaeller",
-    "Vært",
+    "V\u00e6rt",
     "Vaert",
-    "Vært/formidling",
+    "V\u00e6rt/formidling",
     "Vaert/formidling",
-    "Fortælling"
+    "Fort\u00e6lling"
   ]);
   const sound = getField(row, ["Lydside", "Produktion"]);
   const relevance = getField(row, ["Aktualitet", "Aktualitet/relevans", "Relevans"]);
 
   const score = getField(row, ["Samlet score"]);
   const reviewDate = getField(row, ["Anmeldelsesdato", "Anmeldelsesdat", "Anmeldt"]);
-  const displayOrder = parsePlacement(getField(row, ["Visningsrækkefølge"]));
+  const displayOrder = parsePlacement(getField(row, ["Visningsr\u00e6kkef\u00f8lge"]));
   const autoPublisher = getField(row, ["Auto-udgiver"]);
   const autoLink = extractUrl(getField(row, ["Auto-link"]));
   const autoImage = extractUrl(getField(row, ["Auto-billedlink"]));
   const autoGenre = getField(row, ["Auto-genre"]);
-  const autoHost = getField(row, ["Auto-vært", "Auto-vaert"]);
+  const autoHost = getField(row, ["Auto-v\u00e6rt", "Auto-vaert"]);
 
   const matchedPodcast = podcastLookup[normalizeMatchKey(matchTitle)] || null;
 
@@ -591,7 +584,7 @@ function mapFeaturedReview(row, index, podcastLookup) {
     host: autoHost || matchedPodcast?.host || "",
     params: [
       { label: "Historie", value: story },
-      { label: "Fortæller", value: narrator },
+      { label: "Fort\u00e6ller", value: narrator },
       { label: "Lydside", value: sound },
       { label: "Aktualitet", value: relevance }
     ]
@@ -633,6 +626,24 @@ function isActiveFeatured(review) {
   return active === "ja" || active === "yes" || active === "1" || active === "true";
 }
 
+function isNewPodcast(podcast) {
+  if (!podcast.ratingDateObject) return false;
+
+  const ageMs = Date.now() - podcast.ratingDateObject.getTime();
+  const ageDays = ageMs / (1000 * 60 * 60 * 24);
+  return ageDays >= 0 && ageDays <= NEW_BADGE_DAYS;
+}
+
+function getStarString(value, muted = false) {
+  const number = parseNumber(value);
+  if (number === null) {
+    return muted ? "\u2606\u2606\u2606\u2606\u2606" : "\u2605\u2605\u2605\u2605\u2605";
+  }
+
+  const filled = Math.max(0, Math.min(5, Math.round(number / 2)));
+  return `${"\u2605".repeat(filled)}${"\u2606".repeat(5 - filled)}`;
+}
+
 function resetVisibleCount() {
   state.visibleCount = state.hasExpandedInitialList
     ? Number.MAX_SAFE_INTEGER
@@ -664,12 +675,12 @@ function createGenreChips() {
     const button = document.createElement("button");
     button.type = "button";
     button.className = "genre-chip";
+    button.textContent = genre;
 
     if (isActiveGenre(genre)) {
       button.classList.add("active");
     }
 
-    button.textContent = genre;
     button.addEventListener("click", () => {
       if (genre === "Alle") {
         clearActiveFilter();
@@ -728,8 +739,8 @@ function updateSortToggleUi() {
 
   elements.sortToggle.textContent =
     state.sort === "placement-asc"
-      ? "Placering: lavest først"
-      : "Placering: højest først";
+      ? "Placering: lavest f\u00f8rst"
+      : "Placering: h\u00f8jest f\u00f8rst";
 }
 
 function getResultsText(filteredCount, visibleCount) {
@@ -741,7 +752,7 @@ function getResultsText(filteredCount, visibleCount) {
   if (!state.activeFilter) return baseText;
 
   const label = state.activeFilter.type === "genre" ? "genren" : "udgiveren";
-  return `${baseText} Filtreret på ${label} ${state.activeFilter.value}.`;
+  return `${baseText} Filtreret p\u00e5 ${label} ${state.activeFilter.value}.`;
 }
 
 function ensureLoadMoreControls() {
@@ -757,6 +768,7 @@ function ensureLoadMoreControls() {
 
   button.addEventListener("click", () => {
     state.hasExpandedInitialList = true;
+    persistExpandedListPreference(true);
     state.visibleCount = Number.MAX_SAFE_INTEGER;
     renderPodcastGrid();
   });
@@ -816,6 +828,26 @@ function setImage(container, image, alt) {
   img.onerror = showPlaceholder;
 }
 
+function showAuthPrompt(preferredAction = "signup") {
+  if (!elements.authPanel) return;
+
+  elements.authPanel.classList.add("is-highlighted");
+
+  const top =
+    elements.authPanel.getBoundingClientRect().top + window.scrollY - 24;
+  window.scrollTo({ top: Math.max(0, top), behavior: "smooth" });
+
+  window.setTimeout(() => {
+    elements.authPanel.classList.remove("is-highlighted");
+  }, 2200);
+
+  if (preferredAction === "login") {
+    elements.loginButton?.focus();
+  } else {
+    elements.signupButton?.focus();
+  }
+}
+
 function createRecentCardElement(podcast) {
   const fragment = elements.recentTemplate.content.cloneNode(true);
   const card = fragment.querySelector(".recent-card");
@@ -824,18 +856,30 @@ function createRecentCardElement(podcast) {
   const host = fragment.querySelector(".recent-host");
   const rating = fragment.querySelector(".recent-rating");
   const date = fragment.querySelector(".recent-date");
+  const rateButton = fragment.querySelector(".recent-rate-button");
+  const favoriteButton = fragment.querySelector(".favorite-button");
 
   setImage(cover, podcast.image, podcast.title);
 
   title.textContent = podcast.title;
   host.textContent = podcast.host || podcast.publisher || "";
   rating.textContent = podcast.ratingLabel || "Ikke vurderet";
-  date.textContent = podcast.ratingDateLabel ? `Bedømt ${podcast.ratingDateLabel}` : "";
+  date.textContent = podcast.ratingDateLabel ? `Bed\u00f8mt ${podcast.ratingDateLabel}` : "";
 
   card.addEventListener("click", () => {
     if (podcast.link) {
       window.open(podcast.link, "_blank", "noopener,noreferrer");
     }
+  });
+
+  rateButton?.addEventListener("click", (event) => {
+    event.stopPropagation();
+    showAuthPrompt("signup");
+  });
+
+  favoriteButton?.addEventListener("click", (event) => {
+    event.stopPropagation();
+    showAuthPrompt("login");
   });
 
   return card;
@@ -852,7 +896,7 @@ function renderRecent() {
   elements.recentGrid.innerHTML = "";
 
   if (elements.recentSummary) {
-    elements.recentSummary.textContent = `Viser de ${recent.length} seneste bedømmelser`;
+    elements.recentSummary.textContent = `Viser de ${recent.length} seneste bed\u00f8mmelser`;
   }
 
   const fragment = document.createDocumentFragment();
@@ -876,6 +920,35 @@ function createFilterChip(value, type) {
   }
 
   return chip;
+}
+
+function populateCardSummaries(article, podcast) {
+  const ownerValue = article.querySelector(".rating-summary__value--owner");
+  const ownerStars = article.querySelector(".rating-summary__stars--owner");
+  const communityValue = article.querySelector(".rating-summary__value--community");
+  const communityStars = article.querySelector(".rating-summary__stars--community");
+  const communityMeta = article.querySelector(".rating-summary__meta");
+
+  if (ownerValue) {
+    ownerValue.textContent = podcast.ratingLabel || "Ikke vurderet";
+  }
+
+  if (ownerStars) {
+    ownerStars.textContent = getStarString(podcast.ratingValue);
+  }
+
+  if (communityValue) {
+    communityValue.textContent = "Kommer snart";
+  }
+
+  if (communityStars) {
+    communityStars.textContent = getStarString(null, true);
+    communityStars.classList.add("is-muted");
+  }
+
+  if (communityMeta) {
+    communityMeta.textContent = "Brugerratings kobles p\u00e5 med login";
+  }
 }
 
 function createPodcastReviewCardElement(podcast, review, key) {
@@ -931,7 +1004,7 @@ function createPodcastReviewCardElement(podcast, review, key) {
   const linkButton = document.createElement("button");
   linkButton.className = "podcast-card__link";
   linkButton.type = "button";
-  linkButton.textContent = "Åbn link";
+  linkButton.textContent = "\u00c5bn link";
   linkButton.dataset.action = "open-link";
 
   if (!review.link && !podcast.link) {
@@ -954,7 +1027,7 @@ function createPodcastReviewCardElement(podcast, review, key) {
 
   const heading = document.createElement("p");
   heading.className = "review-card__heading";
-  heading.textContent = "Vurderet på parametre";
+  heading.textContent = "Vurderet p\u00e5 parametre";
 
   const params = document.createElement("div");
   params.className = "review-card__params";
@@ -1018,7 +1091,7 @@ function createPodcastReviewCardElement(podcast, review, key) {
 
   const episodesChip = document.createElement("span");
   episodesChip.className = "podcast-chip podcast-chip--episodes";
-  episodesChip.textContent = podcast.episodes || "—";
+  episodesChip.textContent = podcast.episodes || "\u2014";
 
   chips.append(publisherChip, genreChip, episodesChip);
   footer.appendChild(chips);
@@ -1045,7 +1118,10 @@ function createPodcastCardElement(podcast) {
   const description = fragment.querySelector(".podcast-card__description");
   const linkButton = fragment.querySelector(".podcast-card__link");
   const reviewButton = fragment.querySelector(".podcast-card__review");
+  const rateButton = fragment.querySelector(".rate-button");
+  const favoriteButton = fragment.querySelector(".favorite-button");
   const chips = fragment.querySelector(".podcast-card__chips");
+  const newBadge = fragment.querySelector(".podcast-card__new-badge");
 
   article.dataset.key = key;
 
@@ -1061,6 +1137,10 @@ function createPodcastCardElement(podcast) {
   host.textContent = podcast.host || "";
   description.textContent = podcast.description || "";
 
+  if (isNewPodcast(podcast)) {
+    newBadge.classList.remove("is-hidden");
+  }
+
   linkButton.dataset.action = "open-link";
   if (!podcast.link) {
     linkButton.classList.add("is-hidden");
@@ -1073,12 +1153,19 @@ function createPodcastCardElement(podcast) {
     reviewButton.classList.add("is-hidden");
   }
 
+  rateButton.dataset.action = "open-auth";
+  rateButton.dataset.authMode = "signup";
+  favoriteButton.dataset.action = "open-auth";
+  favoriteButton.dataset.authMode = "login";
+
+  populateCardSummaries(article, podcast);
+
   const publisherChip = createFilterChip(podcast.publisher || "Ukendt", "publisher");
   const genreChip = createFilterChip(podcast.genre || "Dokumentar", "genre");
 
   const episodesChip = document.createElement("span");
   episodesChip.className = "podcast-chip podcast-chip--episodes";
-  episodesChip.textContent = podcast.episodes || "—";
+  episodesChip.textContent = podcast.episodes || "\u2014";
 
   chips.append(publisherChip, genreChip, episodesChip);
   return article;
@@ -1132,18 +1219,15 @@ function renderFeaturedReview() {
     return;
   }
 
-  const review =
-    state.featuredReviews[state.featuredIndex % state.featuredReviews.length];
+  const review = state.featuredReviews[state.featuredIndex % state.featuredReviews.length];
 
   elements.featuredPanel.classList.remove("is-hidden");
   elements.featuredPanel.classList.toggle("is-paused", state.featuredPaused);
   elements.featuredPanel.title = state.featuredPaused
-    ? "Rotation er sat på pause. Klik igen for at starte den."
-    : "Klik på boksen for at sætte rotationen på pause.";
+    ? "Rotation er sat p\u00e5 pause. Klik igen for at starte den."
+    : "Klik p\u00e5 boksen for at s\u00e6tte rotationen p\u00e5 pause.";
   elements.featuredTitle.textContent = review.title || "";
-  elements.featuredMeta.textContent = [review.publisher, review.genre]
-    .filter(Boolean)
-    .join(" / ");
+  elements.featuredMeta.textContent = [review.publisher, review.genre].filter(Boolean).join(" / ");
   elements.featuredScore.textContent = review.scoreLabel || "Ikke vurderet";
 
   if (elements.featuredDate) {
@@ -1250,7 +1334,7 @@ function showPreviousFeaturedReview() {
 
 function isFeaturedSwipeEnabled() {
   return (
-    window.matchMedia("(max-width: 860px)").matches ||
+    window.matchMedia("(max-width: 920px)").matches ||
     window.matchMedia("(pointer: coarse)").matches
   );
 }
@@ -1314,8 +1398,7 @@ function startFeaturedRotation() {
   if (state.featuredPaused || state.featuredReviews.length <= 1) return;
 
   state.featuredTimer = window.setInterval(() => {
-    state.featuredIndex =
-      (state.featuredIndex + 1) % state.featuredReviews.length;
+    state.featuredIndex = (state.featuredIndex + 1) % state.featuredReviews.length;
     renderFeaturedReview();
   }, FEATURED_ROTATION_MS);
 }
@@ -1397,6 +1480,11 @@ function handlePodcastGridClick(event) {
   if (action === "filter-genre") {
     setActiveFilter("genre", actionTarget.dataset.value || "");
     window.scrollTo({ top: 0, behavior: "smooth" });
+    return;
+  }
+
+  if (action === "open-auth") {
+    showAuthPrompt(actionTarget.dataset.authMode || "signup");
   }
 }
 
@@ -1417,6 +1505,14 @@ function setupEvents() {
       render();
     });
   }
+
+  elements.signupButton?.addEventListener("click", () => {
+    showAuthPrompt("signup");
+  });
+
+  elements.loginButton?.addEventListener("click", () => {
+    showAuthPrompt("login");
+  });
 
   if (elements.clearFilterButton) {
     elements.clearFilterButton.addEventListener("click", clearActiveFilter);
@@ -1527,7 +1623,7 @@ async function loadPodcasts() {
     try {
       featuredRows = await loadFeaturedReviewObjectsFromJson();
     } catch (error) {
-      console.warn("Udvalgte vurderinger blev ikke indlæst:", error);
+      console.warn("Udvalgte vurderinger blev ikke indl\u00e6st:", error);
     }
 
     state.allReviews = featuredRows
@@ -1558,7 +1654,7 @@ async function loadPodcasts() {
   } catch (error) {
     console.error(error);
     showLoadError(
-      "Kunne ikke indlæse podcasts. Tjek data/podcasts.json og data/featured-reviews.json."
+      "Kunne ikke indl\u00e6se podcasts. Tjek data/podcasts.json og data/featured-reviews.json."
     );
   }
 }
@@ -1567,7 +1663,7 @@ function loadVisitorCount() {
   const target = document.getElementById("goatcounter-visits");
   if (!target) return;
 
-  target.textContent = "indlæser…";
+  target.textContent = "indl\u00e6ser\u2026";
 
   const renderCount = () => {
     if (
@@ -1586,7 +1682,7 @@ function loadVisitorCount() {
           height: "24",
           frameborder: "0",
           scrolling: "no",
-          title: "Besøgstæller"
+          title: "Bes\u00f8gst\u00e6ller"
         }
       });
 
@@ -1608,14 +1704,13 @@ function loadVisitorCount() {
     }
 
     if (attempts >= 30) {
-      target.textContent = "ikke tilgængeligt";
+      target.textContent = "ikke tilg\u00e6ngeligt";
       window.clearInterval(interval);
     }
   }, 250);
 }
 
 ensureLoadMoreControls();
-injectRuntimeStyles();
 setupEvents();
 loadPodcasts();
 loadVisitorCount();
