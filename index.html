@@ -16,14 +16,21 @@
       rel="stylesheet"
     />
 
-    <link rel="stylesheet" href="style.css?v=2026-05-23-1" />
+    <link rel="stylesheet" href="style.css?v=2026-05-23-2" />
 
     <script
       data-goatcounter="https://podcastratings.goatcounter.com/count"
       async
       src="//gc.zgo.at/count.js"
     ></script>
-    <script src="app.js?v=2026-05-23-1" defer></script>
+    <script>
+      window.PODCAST_SUPABASE_CONFIG = window.PODCAST_SUPABASE_CONFIG || {
+        url: "",
+        anonKey: ""
+      };
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
+    <script src="app.js?v=2026-05-23-2" defer></script>
   </head>
 
   <body>
@@ -110,18 +117,55 @@
           </div>
 
           <aside id="authPanel" class="auth-panel">
-            <p class="auth-copy">
-              Opret dig for selv at anmelde podcasts og gemme dem til senere.
-            </p>
+            <div id="authLoggedOut">
+              <p class="auth-copy">
+                Opret dig for selv at anmelde podcasts og gemme dem til senere.
+              </p>
 
-            <div class="auth-actions">
-              <button id="signupButton" class="auth-button auth-button--primary" type="button">
-                Opret dig
-              </button>
-              <button id="loginButton" class="auth-button auth-button--secondary" type="button">
-                Log ind
-              </button>
+              <div class="auth-form">
+                <label class="auth-field">
+                  <span>Email</span>
+                  <input id="authEmail" type="email" placeholder="din@email.dk" autocomplete="email" />
+                </label>
+                <label class="auth-field">
+                  <span>Adgangskode</span>
+                  <input
+                    id="authPassword"
+                    type="password"
+                    placeholder="Mindst 6 tegn"
+                    autocomplete="current-password"
+                  />
+                </label>
+              </div>
+
+              <div class="auth-actions">
+                <button id="signupButton" class="auth-button auth-button--primary" type="button">
+                  Opret dig
+                </button>
+                <button id="loginButton" class="auth-button auth-button--secondary" type="button">
+                  Log ind
+                </button>
+              </div>
+
+              <p class="auth-helper">
+                Du forbliver logget ind i denne browser, indtil du logger ud eller rydder browserdata.
+              </p>
             </div>
+
+            <div id="authLoggedIn" class="auth-session is-hidden">
+              <span class="auth-session__badge">Logget ind</span>
+              <p id="authUserEmail" class="auth-session__email"></p>
+              <p class="auth-helper">
+                Du kan nu vurdere podcasts og gemme favoritter til senere.
+              </p>
+              <div class="auth-actions">
+                <button id="logoutButton" class="auth-button auth-button--secondary" type="button">
+                  Log ud
+                </button>
+              </div>
+            </div>
+
+            <p id="authMessage" class="auth-message is-hidden" aria-live="polite"></p>
           </aside>
         </header>
 
@@ -238,7 +282,7 @@
           <div class="podcast-card__footer">
             <div class="podcast-card__summary">
               <div class="rating-summary rating-summary--owner">
-                <span class="rating-summary__label">Min vurdering</span>
+                <span class="rating-summary__label">Mads' vurdering</span>
                 <div class="rating-summary__value-row">
                   <strong class="rating-summary__value rating-summary__value--owner"></strong>
                   <span class="rating-summary__stars rating-summary__stars--owner"></span>
@@ -259,6 +303,59 @@
           </div>
         </article>
       </template>
+
+      <div id="ratingDialog" class="rating-dialog is-hidden" aria-hidden="true">
+        <div class="rating-dialog__backdrop" data-rating-close="true"></div>
+        <div
+          class="rating-dialog__panel"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="ratingDialogTitle"
+        >
+          <button
+            id="ratingCloseButton"
+            class="rating-dialog__close"
+            type="button"
+            aria-label="Luk vurdering"
+          >
+            &#215;
+          </button>
+
+          <p class="rating-dialog__eyebrow">Din vurdering</p>
+          <h2 id="ratingDialogTitle" class="rating-dialog__title"></h2>
+          <p id="ratingDialogMeta" class="rating-dialog__meta"></p>
+
+          <label class="rating-dialog__field">
+            <span>Vælg en score fra 0 til 10</span>
+            <input
+              id="ratingInput"
+              class="rating-dialog__input"
+              type="number"
+              min="0"
+              max="10"
+              step="0.1"
+              placeholder="8,5"
+            />
+          </label>
+
+          <p class="rating-dialog__hint">
+            Du kan altid ændre eller fjerne din vurdering senere.
+          </p>
+          <p id="ratingDialogMessage" class="rating-dialog__message is-hidden" aria-live="polite"></p>
+
+          <div class="rating-dialog__actions">
+            <button id="ratingDeleteButton" class="auth-button auth-button--secondary" type="button">
+              Fjern vurdering
+            </button>
+            <button id="ratingCancelButton" class="auth-button auth-button--secondary" type="button">
+              Annuller
+            </button>
+            <button id="ratingSaveButton" class="auth-button auth-button--primary" type="button">
+              Gem vurdering
+            </button>
+          </div>
+        </div>
+      </div>
     </div>
   </body>
 </html>

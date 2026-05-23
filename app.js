@@ -15,9 +15,13 @@ const GENRES = [
 
 const FEATURED_ROTATION_MS = 8000;
 const INITIAL_VISIBLE_COUNT = 48;
-const DATA_VERSION = "2026-05-23-1";
+const DATA_VERSION = "2026-05-23-2";
 const EXPANDED_LIST_STORAGE_KEY = "podcast-ratings-expanded-list";
 const NEW_BADGE_DAYS = 14;
+const SUPABASE_CONFIG = window.PODCAST_SUPABASE_CONFIG || {
+  url: "",
+  anonKey: ""
+};
 
 function readExpandedListPreference() {
   try {
@@ -41,6 +45,16 @@ const state = {
   allReviews: [],
   featuredReviews: [],
   featuredReviewByKey: {},
+  supabase: null,
+  session: null,
+  authUser: null,
+  authReady: false,
+  authConfigured: false,
+  authBusy: false,
+  userRatingsByKey: {},
+  communityStatsByKey: {},
+  savedPodcastKeys: new Set(),
+  activeRatingKey: null,
   openReviewKeys: new Set(),
   featuredIndex: 0,
   featuredTimer: null,
@@ -77,8 +91,24 @@ const elements = {
   featuredParams: document.getElementById("featuredParams"),
   featuredDots: document.getElementById("featuredDots"),
   authPanel: document.getElementById("authPanel"),
+  authLoggedOut: document.getElementById("authLoggedOut"),
+  authLoggedIn: document.getElementById("authLoggedIn"),
+  authEmail: document.getElementById("authEmail"),
+  authPassword: document.getElementById("authPassword"),
+  authUserEmail: document.getElementById("authUserEmail"),
+  authMessage: document.getElementById("authMessage"),
   signupButton: document.getElementById("signupButton"),
   loginButton: document.getElementById("loginButton"),
+  logoutButton: document.getElementById("logoutButton"),
+  ratingDialog: document.getElementById("ratingDialog"),
+  ratingDialogTitle: document.getElementById("ratingDialogTitle"),
+  ratingDialogMeta: document.getElementById("ratingDialogMeta"),
+  ratingInput: document.getElementById("ratingInput"),
+  ratingDialogMessage: document.getElementById("ratingDialogMessage"),
+  ratingSaveButton: document.getElementById("ratingSaveButton"),
+  ratingCancelButton: document.getElementById("ratingCancelButton"),
+  ratingDeleteButton: document.getElementById("ratingDeleteButton"),
+  ratingCloseButton: document.getElementById("ratingCloseButton"),
   loadMoreWrap: null,
   loadMoreButton: null
 };
@@ -843,9 +873,9 @@ function showAuthPrompt(preferredAction = "signup") {
   }, 2200);
 
   if (preferredAction === "login") {
-    elements.loginButton?.focus();
+    elements.authEmail?.focus();
   } else {
-    elements.signupButton?.focus();
+    elements.authEmail?.focus();
   }
 }
 
@@ -855,6 +885,463 @@ function scrollToRankingStart() {
 
   const top = target.getBoundingClientRect().top + window.scrollY - 18;
   window.scrollTo({ top: Math.max(0, top), behavior: "smooth" });
+}
+
+function hasSupabaseConfig() {
+  return Boolean(normalizeText(SUPABASE_CONFIG.url) && normalizeText(SUPABASE_CONFIG.anonKey));
+}
+
+function isLoggedIn() {
+  return Boolean(state.authUser);
+}
+
+function formatRatingCount(value) {
+  const count = Number(value || 0);
+  return new Intl.NumberFormat("da-DK").format(count);
+}
+
+function setAuthMessage(message = "", tone = "info") {
+  if (!elements.authMessage) return;
+
+  elements.authMessage.textContent = message;
+  elements.authMessage.classList.toggle("is-hidden", !message);
+  elements.authMessage.dataset.tone = tone;
+}
+
+function clearAuthMessage() {
+  setAuthMessage("");
+}
+
+function setAuthBusy(isBusy) {
+  state.authBusy = isBusy;
+
+  [
+    elements.signupButton,
+    elements.loginButton,
+    elements.logoutButton,
+    elements.ratingSaveButton,
+    elements.ratingDeleteButton
+  ].forEach((button) => {
+    if (button) {
+      button.disabled = isBusy;
+    }
+  });
+}
+
+function renderAuthPanel() {
+  const configured = state.authConfigured;
+  const loggedIn = isLoggedIn();
+
+  elements.authLoggedOut?.classList.toggle("is-hidden", loggedIn);
+  elements.authLoggedIn?.classList.toggle("is-hidden", !loggedIn);
+
+  if (elements.authUserEmail) {
+    elements.authUserEmail.textContent = loggedIn ? state.authUser.email || "" : "";
+  }
+
+  if (elements.authEmail) {
+    elements.authEmail.disabled = !configured || state.authBusy;
+  }
+
+  if (elements.authPassword) {
+    elements.authPassword.disabled = !configured || state.authBusy;
+  }
+
+  if (elements.signupButton) {
+    elements.signupButton.disabled = !configured || state.authBusy;
+  }
+
+  if (elements.loginButton) {
+    elements.loginButton.disabled = !configured || state.authBusy;
+  }
+
+  if (elements.logoutButton) {
+    elements.logoutButton.disabled = !configured || state.authBusy;
+  }
+
+  if (!configured) {
+    setAuthMessage(
+      "Tilføj Supabase URL og anon key i window.PODCAST_SUPABASE_CONFIG for at aktivere login.",
+      "warning"
+    );
+  } else if (!state.authBusy && !loggedIn && !elements.authMessage?.textContent) {
+    clearAuthMessage();
+  }
+}
+
+function getCommunityStat(podcastKey) {
+  return state.communityStatsByKey[podcastKey] || null;
+}
+
+function getUserRating(podcastKey) {
+  return state.userRatingsByKey[podcastKey] || null;
+}
+
+function isPodcastSaved(podcastKey) {
+  return state.savedPodcastKeys.has(podcastKey);
+}
+
+function renderFavoriteButton(button, podcastKey) {
+  if (!button) return;
+
+  const saved = isPodcastSaved(podcastKey);
+  button.classList.toggle("is-saved", saved);
+  button.setAttribute("aria-label", saved ? "Gemt til senere" : "Gem til senere");
+
+  const icon = button.querySelector("span");
+  if (icon) {
+    icon.innerHTML = saved ? "&#9829;" : "&#9825;";
+  }
+}
+
+function updateRatingDialogMessage(message = "", tone = "info") {
+  if (!elements.ratingDialogMessage) return;
+
+  elements.ratingDialogMessage.textContent = message;
+  elements.ratingDialogMessage.classList.toggle("is-hidden", !message);
+  elements.ratingDialogMessage.dataset.tone = tone;
+}
+
+async function fetchCommunityStats() {
+  if (!state.supabase) return;
+
+  const { data, error } = await state.supabase
+    .from("rating_public_stats")
+    .select("podcast_key, average_rating, rating_count");
+
+  if (error) {
+    console.error(error);
+    setAuthMessage("Kunne ikke hente brugernes snit fra Supabase.", "error");
+    return;
+  }
+
+  state.communityStatsByKey = Object.fromEntries(
+    (data || []).map((item) => [
+      item.podcast_key,
+      {
+        averageRating: parseNumber(item.average_rating),
+        ratingCount: Number(item.rating_count || 0)
+      }
+    ])
+  );
+}
+
+async function fetchUserState() {
+  state.userRatingsByKey = {};
+  state.savedPodcastKeys = new Set();
+
+  if (!state.supabase || !state.authUser) return;
+
+  const [{ data: ratings, error: ratingsError }, { data: saved, error: savedError }] =
+    await Promise.all([
+      state.supabase.from("user_ratings").select("podcast_key, rating"),
+      state.supabase.from("saved_podcasts").select("podcast_key")
+    ]);
+
+  if (ratingsError) {
+    console.error(ratingsError);
+    setAuthMessage("Kunne ikke hente dine vurderinger endnu.", "error");
+  } else {
+    state.userRatingsByKey = Object.fromEntries(
+      (ratings || []).map((item) => [item.podcast_key, parseNumber(item.rating)])
+    );
+  }
+
+  if (savedError) {
+    console.error(savedError);
+    setAuthMessage("Kunne ikke hente dine gemte podcasts endnu.", "error");
+  } else {
+    state.savedPodcastKeys = new Set((saved || []).map((item) => item.podcast_key));
+  }
+}
+
+async function refreshSupabaseState() {
+  if (!state.supabase) return;
+
+  await fetchCommunityStats();
+  await fetchUserState();
+  render();
+}
+
+async function initSupabase() {
+  state.authConfigured = hasSupabaseConfig();
+  renderAuthPanel();
+
+  if (!state.authConfigured || !window.supabase?.createClient) {
+    return;
+  }
+
+  state.supabase = window.supabase.createClient(
+    SUPABASE_CONFIG.url,
+    SUPABASE_CONFIG.anonKey,
+    {
+      auth: {
+        persistSession: true,
+        autoRefreshToken: true
+      }
+    }
+  );
+
+  const {
+    data: { session },
+    error
+  } = await state.supabase.auth.getSession();
+
+  if (error) {
+    console.error(error);
+    setAuthMessage("Supabase-session kunne ikke indlæses.", "error");
+  }
+
+  state.session = session;
+  state.authUser = session?.user || null;
+  state.authReady = true;
+
+  await refreshSupabaseState();
+  renderAuthPanel();
+
+  state.supabase.auth.onAuthStateChange(async (_event, sessionUpdate) => {
+    state.session = sessionUpdate;
+    state.authUser = sessionUpdate?.user || null;
+    clearAuthMessage();
+    renderAuthPanel();
+    await refreshSupabaseState();
+  });
+}
+
+async function handleAuthAction(mode) {
+  if (!state.supabase) {
+    setAuthMessage(
+      "Supabase er ikke sat op endnu. Tilføj først URL og anon key i konfigurationen.",
+      "warning"
+    );
+    return;
+  }
+
+  const email = normalizeText(elements.authEmail?.value);
+  const password = normalizeText(elements.authPassword?.value);
+
+  if (!email || !password) {
+    setAuthMessage("Indtast både email og adgangskode.", "warning");
+    return;
+  }
+
+  if (password.length < 6) {
+    setAuthMessage("Adgangskoden skal være mindst 6 tegn.", "warning");
+    return;
+  }
+
+  setAuthBusy(true);
+  clearAuthMessage();
+
+  try {
+    if (mode === "signup") {
+      const { data, error } = await state.supabase.auth.signUp({
+        email,
+        password
+      });
+
+      if (error) throw error;
+
+      if (data.session) {
+        setAuthMessage("Din konto er oprettet, og du er nu logget ind.", "success");
+      } else {
+        setAuthMessage(
+          "Kontoen er oprettet. Hvis du vil logge ind med det samme uden mail, så slå Confirm email fra i Supabase.",
+          "warning"
+        );
+      }
+    } else {
+      const { error } = await state.supabase.auth.signInWithPassword({
+        email,
+        password
+      });
+
+      if (error) throw error;
+
+      setAuthMessage("Du er nu logget ind.", "success");
+    }
+
+    if (elements.authPassword) {
+      elements.authPassword.value = "";
+    }
+  } catch (error) {
+    console.error(error);
+    setAuthMessage(error.message || "Login mislykkedes.", "error");
+  } finally {
+    setAuthBusy(false);
+    renderAuthPanel();
+  }
+}
+
+async function handleLogout() {
+  if (!state.supabase) return;
+
+  setAuthBusy(true);
+
+  try {
+    const { error } = await state.supabase.auth.signOut();
+    if (error) throw error;
+    setAuthMessage("Du er logget ud.", "success");
+  } catch (error) {
+    console.error(error);
+    setAuthMessage(error.message || "Logout mislykkedes.", "error");
+  } finally {
+    setAuthBusy(false);
+    renderAuthPanel();
+  }
+}
+
+function openRatingDialog(podcast) {
+  if (!isLoggedIn()) {
+    showAuthPrompt("login");
+    setAuthMessage("Log ind for at gemme din egen vurdering.", "warning");
+    return;
+  }
+
+  if (!elements.ratingDialog || !elements.ratingInput) return;
+
+  const key = getPodcastKey(podcast);
+  const existingRating = getUserRating(key);
+
+  state.activeRatingKey = key;
+  elements.ratingDialogTitle.textContent = podcast.title;
+  elements.ratingDialogMeta.textContent = podcast.host || podcast.publisher || "";
+  elements.ratingInput.value =
+    existingRating === null || existingRating === undefined ? "" : String(existingRating).replace(".", ",");
+  elements.ratingDeleteButton?.classList.toggle(
+    "is-hidden",
+    existingRating === null || existingRating === undefined
+  );
+
+  updateRatingDialogMessage("");
+  elements.ratingDialog.classList.remove("is-hidden");
+  elements.ratingDialog.setAttribute("aria-hidden", "false");
+  document.body.classList.add("has-dialog-open");
+  window.setTimeout(() => {
+    elements.ratingInput?.focus();
+    elements.ratingInput?.select();
+  }, 40);
+}
+
+function closeRatingDialog() {
+  if (!elements.ratingDialog) return;
+
+  state.activeRatingKey = null;
+  updateRatingDialogMessage("");
+  elements.ratingDialog.classList.add("is-hidden");
+  elements.ratingDialog.setAttribute("aria-hidden", "true");
+  document.body.classList.remove("has-dialog-open");
+}
+
+async function saveActiveRating() {
+  if (!state.supabase || !state.authUser || !state.activeRatingKey || !elements.ratingInput) return;
+
+  const numericValue = parseNumber(elements.ratingInput.value);
+
+  if (numericValue === null || numericValue < 0 || numericValue > 10) {
+    updateRatingDialogMessage("Indtast en score mellem 0 og 10.", "warning");
+    return;
+  }
+
+  setAuthBusy(true);
+  updateRatingDialogMessage("");
+
+  try {
+    const { error } = await state.supabase.from("user_ratings").upsert(
+      {
+        user_id: state.authUser.id,
+        podcast_key: state.activeRatingKey,
+        rating: numericValue
+      },
+      { onConflict: "user_id,podcast_key" }
+    );
+
+    if (error) throw error;
+
+    await refreshSupabaseState();
+    closeRatingDialog();
+    setAuthMessage("Din vurdering er gemt.", "success");
+  } catch (error) {
+    console.error(error);
+    updateRatingDialogMessage(error.message || "Kunne ikke gemme vurderingen.", "error");
+  } finally {
+    setAuthBusy(false);
+  }
+}
+
+async function deleteActiveRating() {
+  if (!state.supabase || !state.authUser || !state.activeRatingKey) return;
+
+  setAuthBusy(true);
+  updateRatingDialogMessage("");
+
+  try {
+    const { error } = await state.supabase
+      .from("user_ratings")
+      .delete()
+      .eq("user_id", state.authUser.id)
+      .eq("podcast_key", state.activeRatingKey);
+
+    if (error) throw error;
+
+    await refreshSupabaseState();
+    closeRatingDialog();
+    setAuthMessage("Din vurdering er fjernet.", "success");
+  } catch (error) {
+    console.error(error);
+    updateRatingDialogMessage(error.message || "Kunne ikke fjerne vurderingen.", "error");
+  } finally {
+    setAuthBusy(false);
+  }
+}
+
+async function toggleSavedPodcast(podcast) {
+  if (!isLoggedIn()) {
+    showAuthPrompt("login");
+    setAuthMessage("Log ind for at gemme podcasts til senere.", "warning");
+    return;
+  }
+
+  if (!state.supabase || !state.authUser) return;
+
+  const podcastKey = getPodcastKey(podcast);
+  const isSaved = isPodcastSaved(podcastKey);
+
+  setAuthBusy(true);
+
+  try {
+    if (isSaved) {
+      const { error } = await state.supabase
+        .from("saved_podcasts")
+        .delete()
+        .eq("user_id", state.authUser.id)
+        .eq("podcast_key", podcastKey);
+
+      if (error) throw error;
+      state.savedPodcastKeys.delete(podcastKey);
+      setAuthMessage("Podcasten er fjernet fra dine gemte.", "success");
+    } else {
+      const { error } = await state.supabase.from("saved_podcasts").upsert(
+        {
+          user_id: state.authUser.id,
+          podcast_key: podcastKey
+        },
+        { onConflict: "user_id,podcast_key" }
+      );
+
+      if (error) throw error;
+      state.savedPodcastKeys.add(podcastKey);
+      setAuthMessage("Podcasten er gemt til senere.", "success");
+    }
+
+    render();
+  } catch (error) {
+    console.error(error);
+    setAuthMessage(error.message || "Kunne ikke opdatere gemte podcasts.", "error");
+  } finally {
+    setAuthBusy(false);
+    renderAuthPanel();
+  }
 }
 
 function createRecentCardElement(podcast) {
@@ -874,6 +1361,7 @@ function createRecentCardElement(podcast) {
   host.textContent = podcast.host || podcast.publisher || "";
   rating.textContent = podcast.ratingLabel || "Ikke vurderet";
   date.textContent = podcast.ratingDateLabel ? `Bed\u00f8mt ${podcast.ratingDateLabel}` : "";
+  renderFavoriteButton(favoriteButton, getPodcastKey(podcast));
 
   card.addEventListener("click", () => {
     if (podcast.link) {
@@ -883,12 +1371,12 @@ function createRecentCardElement(podcast) {
 
   rateButton?.addEventListener("click", (event) => {
     event.stopPropagation();
-    showAuthPrompt("signup");
+    openRatingDialog(podcast);
   });
 
   favoriteButton?.addEventListener("click", (event) => {
     event.stopPropagation();
-    showAuthPrompt("login");
+    toggleSavedPodcast(podcast);
   });
 
   return card;
@@ -937,6 +1425,10 @@ function populateCardSummaries(article, podcast) {
   const communityValue = article.querySelector(".rating-summary__value--community");
   const communityStars = article.querySelector(".rating-summary__stars--community");
   const communityMeta = article.querySelector(".rating-summary__meta");
+  const communityLabel = article.querySelector(".rating-summary--community .rating-summary__label");
+  const key = getPodcastKey(podcast);
+  const communityStat = getCommunityStat(key);
+  const userRating = getUserRating(key);
 
   if (ownerValue) {
     ownerValue.textContent = podcast.ratingLabel || "Ikke vurderet";
@@ -946,17 +1438,46 @@ function populateCardSummaries(article, podcast) {
     ownerStars.textContent = getStarString(podcast.ratingValue);
   }
 
+  if (communityLabel) {
+    communityLabel.textContent = "Brugernes snit";
+  }
+
   if (communityValue) {
-    communityValue.textContent = "Snart";
+    communityValue.textContent =
+      communityStat?.averageRating !== null && communityStat?.averageRating !== undefined
+        ? formatRating(communityStat.averageRating)
+        : "Ingen endnu";
   }
 
   if (communityStars) {
-    communityStars.textContent = getStarString(null, true);
-    communityStars.classList.add("is-muted");
+    const hasCommunityRating =
+      communityStat?.averageRating !== null && communityStat?.averageRating !== undefined;
+
+    communityStars.textContent = getStarString(
+      hasCommunityRating ? communityStat.averageRating : null,
+      !hasCommunityRating
+    );
+    communityStars.classList.toggle("is-muted", !hasCommunityRating);
   }
 
   if (communityMeta) {
-    communityMeta.textContent = "Login kr\u00e6ves";
+    if (communityStat?.ratingCount) {
+      const averageText = communityStat.averageRating
+        ? formatRating(communityStat.averageRating)
+        : "Ikke vurderet";
+      communityMeta.textContent =
+        `${averageText} fra ${formatRatingCount(communityStat.ratingCount)} brugere` +
+        (userRating !== null && userRating !== undefined
+          ? ` · Din: ${formatRating(userRating)}`
+          : "");
+    } else if (isLoggedIn()) {
+      communityMeta.textContent =
+        userRating !== null && userRating !== undefined
+          ? `Din vurdering: ${formatRating(userRating)}`
+          : "Vær den første til at vurdere";
+    } else {
+      communityMeta.textContent = "Log ind for at stemme";
+    }
   }
 }
 
@@ -1156,10 +1677,9 @@ function createPodcastCardElement(podcast) {
     reviewButton.classList.add("is-hidden");
   }
 
-  rateButton.dataset.action = "open-auth";
-  rateButton.dataset.authMode = "signup";
-  favoriteButton.dataset.action = "open-auth";
-  favoriteButton.dataset.authMode = "login";
+  rateButton.dataset.action = "open-rating";
+  favoriteButton.dataset.action = "toggle-save";
+  renderFavoriteButton(favoriteButton, key);
 
   populateCardSummaries(article, podcast);
 
@@ -1428,6 +1948,7 @@ function toggleFeaturedPause() {
 }
 
 function render() {
+  renderAuthPanel();
   updateActiveFilterUi();
   updateSortToggleUi();
   renderRecent();
@@ -1486,8 +2007,13 @@ function handlePodcastGridClick(event) {
     return;
   }
 
-  if (action === "open-auth") {
-    showAuthPrompt(actionTarget.dataset.authMode || "signup");
+  if (action === "open-rating") {
+    openRatingDialog(podcast);
+    return;
+  }
+
+  if (action === "toggle-save") {
+    toggleSavedPodcast(podcast);
   }
 }
 
@@ -1510,12 +2036,14 @@ function setupEvents() {
   }
 
   elements.signupButton?.addEventListener("click", () => {
-    showAuthPrompt("signup");
+    handleAuthAction("signup");
   });
 
   elements.loginButton?.addEventListener("click", () => {
-    showAuthPrompt("login");
+    handleAuthAction("login");
   });
+
+  elements.logoutButton?.addEventListener("click", handleLogout);
 
   if (elements.clearFilterButton) {
     elements.clearFilterButton.addEventListener("click", clearActiveFilter);
@@ -1535,6 +2063,23 @@ function setupEvents() {
       toggleFeaturedPause();
     });
   }
+
+  elements.ratingSaveButton?.addEventListener("click", saveActiveRating);
+  elements.ratingDeleteButton?.addEventListener("click", deleteActiveRating);
+  elements.ratingCancelButton?.addEventListener("click", closeRatingDialog);
+  elements.ratingCloseButton?.addEventListener("click", closeRatingDialog);
+
+  elements.ratingDialog?.addEventListener("click", (event) => {
+    if (event.target instanceof HTMLElement && event.target.dataset.ratingClose === "true") {
+      closeRatingDialog();
+    }
+  });
+
+  document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape" && !elements.ratingDialog?.classList.contains("is-hidden")) {
+      closeRatingDialog();
+    }
+  });
 
   setupFeaturedSwipe();
 }
@@ -1716,4 +2261,5 @@ function loadVisitorCount() {
 ensureLoadMoreControls();
 setupEvents();
 loadPodcasts();
+initSupabase();
 loadVisitorCount();
