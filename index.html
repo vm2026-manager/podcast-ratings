@@ -16,14 +16,14 @@
       rel="stylesheet"
     />
 
-    <link rel="stylesheet" href="style.css?v=2026-05-22-1" />
+    <link rel="stylesheet" href="style.css?v=2026-05-23-1" />
 
     <script
       data-goatcounter="https://podcastratings.goatcounter.com/count"
       async
       src="//gc.zgo.at/count.js"
     ></script>
-    <script src="app.js?v=2026-05-22-1" defer></script>
+    <script src="app.js?v=2026-05-23-1" defer></script>
   </head>
 
   <body>
@@ -111,8 +111,7 @@
 
           <aside id="authPanel" class="auth-panel">
             <p class="auth-copy">
-              Opret dig for selv at anmelde podcasts, gemme favoritter og gemme til
-              senere.
+              Opret dig for selv at anmelde podcasts og gemme dem til senere.
             </p>
 
             <div class="auth-actions">
@@ -123,10 +122,6 @@
                 Log ind
               </button>
             </div>
-
-            <p class="auth-note">
-              Har du allerede en konto? <span>Log ind</span>
-            </p>
           </aside>
         </header>
 
@@ -182,25 +177,21 @@
             </div>
           </div>
 
-          <div class="recent-body">
-            <div class="recent-card__topline">
-              <div class="recent-copy">
-                <h3 class="recent-title"></h3>
-                <p class="recent-host"></p>
-              </div>
+          <div class="recent-copy">
+            <h3 class="recent-title"></h3>
+            <p class="recent-host"></p>
+          </div>
 
-              <div class="recent-actions">
-                <button class="recent-rate-button" type="button">Vurder</button>
-                <button class="favorite-button favorite-button--compact" type="button" aria-label="Gem som favorit">
-                  <span aria-hidden="true">&#9825;</span>
-                </button>
-              </div>
-            </div>
+          <div class="recent-actions">
+            <button class="recent-rate-button" type="button">Vurder</button>
+            <button class="favorite-button favorite-button--compact" type="button" aria-label="Gem som favorit">
+              <span aria-hidden="true">&#9825;</span>
+            </button>
+          </div>
 
-            <div class="recent-meta">
-              <span class="recent-rating"></span>
-              <span class="recent-date"></span>
-            </div>
+          <div class="recent-meta">
+            <span class="recent-rating"></span>
+            <span class="recent-date"></span>
           </div>
         </article>
       </template>
@@ -208,7 +199,6 @@
       <template id="podcastCardTemplate">
         <article class="podcast-card">
           <div class="podcast-card__placement"></div>
-          <div class="podcast-card__rating"></div>
           <div class="podcast-card__new-badge is-hidden">NY</div>
 
           <div class="podcast-card__utility">

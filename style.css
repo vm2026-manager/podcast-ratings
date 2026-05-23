@@ -202,8 +202,8 @@ button {
 .auth-copy {
   margin: 0;
   color: #544941;
-  font-size: 0.98rem;
-  line-height: 1.52;
+  font-size: 0.96rem;
+  line-height: 1.48;
   font-weight: 600;
 }
 
@@ -240,18 +240,6 @@ button {
   background: rgba(255, 255, 255, 0.82);
   color: var(--accent-deep);
   border: 1px solid var(--line);
-}
-
-.auth-note {
-  margin: 0;
-  color: #675b53;
-  font-size: 0.92rem;
-  line-height: 1.4;
-}
-
-.auth-note span {
-  color: var(--accent-deep);
-  font-weight: 800;
 }
 
 .genre-nav-header {
@@ -459,10 +447,14 @@ button {
 
 .recent-card {
   display: grid;
-  grid-template-columns: 74px minmax(0, 1fr);
-  gap: 14px;
+  grid-template-columns: 74px minmax(0, 1fr) auto;
+  grid-template-areas:
+    "cover copy actions"
+    "cover meta actions";
+  column-gap: 14px;
+  row-gap: 10px;
   padding: 14px;
-  min-height: 116px;
+  min-height: 122px;
   background: rgba(255, 255, 255, 0.72);
   border: 1px solid var(--line);
   border-radius: 20px;
@@ -488,6 +480,7 @@ button {
 }
 
 .recent-cover-wrap {
+  grid-area: cover;
   width: 74px;
   height: 74px;
   border-radius: 12px;
@@ -557,50 +550,60 @@ button {
 }
 
 .recent-copy {
+  grid-area: copy;
   min-width: 0;
+  align-self: start;
+  padding-top: 1px;
 }
 
 .recent-title {
   margin: 0 0 4px;
-  font-size: 1rem;
-  line-height: 1.18;
+  font-size: 0.98rem;
+  line-height: 1.12;
+  letter-spacing: -0.02em;
 }
 
 .recent-host {
   margin: 0;
   color: var(--muted);
-  font-size: 0.84rem;
-  line-height: 1.28;
+  font-size: 0.82rem;
+  line-height: 1.24;
 }
 
 .recent-actions {
+  grid-area: actions;
   display: flex;
-  align-items: center;
-  gap: 8px;
+  align-items: flex-start;
+  justify-content: flex-end;
+  gap: 6px;
+  align-self: start;
+  flex-shrink: 0;
 }
 
 .recent-meta {
+  grid-area: meta;
   display: flex;
   flex-wrap: wrap;
-  gap: 6px 8px;
+  gap: 6px 10px;
   align-items: center;
+  align-self: end;
 }
 
 .recent-rating {
   display: inline-flex;
   align-items: center;
-  min-height: 28px;
+  min-height: 30px;
   padding: 0 10px;
   border-radius: 999px;
   background: var(--accent-soft);
   color: #9a5f34;
   font-weight: 800;
-  font-size: 0.88rem;
+  font-size: 0.9rem;
 }
 
 .recent-date {
   color: var(--muted);
-  font-size: 0.78rem;
+  font-size: 0.8rem;
   font-weight: 700;
 }
 
@@ -640,7 +643,7 @@ button {
 
 .podcast-card {
   position: relative;
-  min-height: 466px;
+  min-height: 412px;
   display: flex;
   flex-direction: column;
   padding: 18px;
@@ -654,7 +657,7 @@ button {
     border-color 0.18s ease,
     background 0.18s ease;
   content-visibility: auto;
-  contain-intrinsic-size: 466px;
+  contain-intrinsic-size: 412px;
 }
 
 .podcast-card:hover {
@@ -699,24 +702,9 @@ button {
   white-space: nowrap;
 }
 
-.podcast-card__rating {
-  position: absolute;
-  top: 16px;
-  right: 16px;
-  z-index: 2;
-  background: #f2e9df;
-  color: #9a5f34;
-  border-radius: 999px;
-  padding: 11px 18px;
-  font-weight: 800;
-  font-size: 0.9rem;
-  line-height: 1;
-  white-space: nowrap;
-}
-
 .podcast-card__new-badge {
   position: absolute;
-  top: 62px;
+  top: 18px;
   left: 26px;
   z-index: 3;
   min-height: 26px;
@@ -738,7 +726,7 @@ button {
 
 .podcast-card__utility {
   position: absolute;
-  top: 60px;
+  top: 18px;
   right: 16px;
   z-index: 2;
   display: flex;
@@ -772,6 +760,9 @@ button {
   border: 1px solid var(--line);
   color: #432f21;
   box-shadow: 0 8px 16px rgba(66, 41, 20, 0.08);
+  min-height: 40px;
+  padding: 0 13px;
+  font-size: 0.82rem;
 }
 
 .rate-button::before,
@@ -797,9 +788,9 @@ button {
 }
 
 .favorite-button--compact {
-  width: 34px;
-  min-width: 34px;
-  min-height: 34px;
+  width: 40px;
+  min-width: 40px;
+  min-height: 40px;
 }
 
 .rate-button:hover,
@@ -818,9 +809,9 @@ button {
   grid-template-columns: 144px minmax(0, 1fr);
   gap: 18px;
   align-items: start;
-  min-height: 250px;
+  min-height: 220px;
   flex: 1;
-  padding-top: 92px;
+  padding-top: 72px;
 }
 
 .podcast-card__media-column {
@@ -849,8 +840,8 @@ button {
   min-width: 0;
   display: flex;
   flex-direction: column;
-  gap: 14px;
-  min-height: 184px;
+  gap: 12px;
+  min-height: 170px;
   padding-top: 2px;
 }
 
@@ -943,31 +934,31 @@ button {
 }
 
 .podcast-card__footer {
-  margin-top: 10px;
-  padding-top: 16px;
+  margin-top: 8px;
+  padding-top: 14px;
   border-top: 1px solid rgba(223, 211, 196, 0.9);
 }
 
 .podcast-card__summary {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 12px;
-  margin-bottom: 14px;
+  gap: 10px;
+  margin-bottom: 12px;
 }
 
 .rating-summary {
   border: 1px solid rgba(223, 211, 196, 0.9);
-  border-radius: 18px;
+  border-radius: 16px;
   background: rgba(255, 255, 255, 0.58);
-  padding: 12px;
+  padding: 10px 12px;
   min-width: 0;
 }
 
 .rating-summary__label {
   display: block;
-  margin-bottom: 8px;
+  margin-bottom: 6px;
   color: #3f3025;
-  font-size: 0.78rem;
+  font-size: 0.74rem;
   font-weight: 800;
 }
 
@@ -975,18 +966,18 @@ button {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
 }
 
 .rating-summary__value {
-  font-size: 1.05rem;
+  font-size: 0.92rem;
   line-height: 1;
 }
 
 .rating-summary__stars {
   color: var(--accent);
   letter-spacing: 0.1em;
-  font-size: 0.88rem;
+  font-size: 0.76rem;
   font-weight: 900;
 }
 
@@ -996,10 +987,11 @@ button {
 
 .rating-summary__meta {
   display: block;
-  margin-top: 6px;
+  margin-top: 5px;
   color: #8a7f75;
-  font-size: 0.72rem;
+  font-size: 0.68rem;
   font-weight: 700;
+  line-height: 1.28;
 }
 
 .podcast-card__chips {
@@ -1047,7 +1039,7 @@ button.podcast-chip:hover {
 }
 
 .podcast-card--review {
-  min-height: 388px;
+  min-height: 372px;
 }
 
 .podcast-card--review .podcast-card__placement {
@@ -1572,6 +1564,18 @@ button.podcast-chip:hover {
 }
 
 @media (max-width: 640px) {
+  .recent-card {
+    grid-template-columns: 74px minmax(0, 1fr);
+    grid-template-areas:
+      "cover copy"
+      "meta meta"
+      "actions actions";
+  }
+
+  .recent-actions {
+    justify-content: flex-start;
+  }
+
   .hero h1 {
     font-size: 2.55rem;
   }
@@ -1601,25 +1605,20 @@ button.podcast-chip:hover {
     font-size: 1.55rem;
   }
 
-  .podcast-card__rating {
-    padding: 10px 14px;
-    font-size: 0.84rem;
-  }
-
   .podcast-card__utility {
-    top: 58px;
+    top: 16px;
     right: 14px;
   }
 
   .podcast-card__new-badge {
-    top: 60px;
+    top: 18px;
     left: 24px;
   }
 
   .podcast-card__body {
     grid-template-columns: 116px minmax(0, 1fr);
     gap: 12px;
-    padding-top: 88px;
+    padding-top: 74px;
   }
 
   .podcast-card__media {
@@ -1629,7 +1628,7 @@ button.podcast-chip:hover {
   }
 
   .podcast-card__summary {
-    grid-template-columns: 1fr;
+    grid-template-columns: 1fr 1fr;
   }
 
   .podcast-card__chips {

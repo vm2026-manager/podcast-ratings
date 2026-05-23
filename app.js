@@ -15,7 +15,7 @@ const GENRES = [
 
 const FEATURED_ROTATION_MS = 8000;
 const INITIAL_VISIBLE_COUNT = 48;
-const DATA_VERSION = "2026-05-22-1";
+const DATA_VERSION = "2026-05-23-1";
 const EXPANDED_LIST_STORAGE_KEY = "podcast-ratings-expanded-list";
 const NEW_BADGE_DAYS = 14;
 
@@ -57,6 +57,7 @@ const elements = {
   searchInput: document.getElementById("searchInput"),
   sortToggle: document.getElementById("sortToggle"),
   resultsText: document.getElementById("resultsText"),
+  rankingToolbar: document.querySelector(".ranking-toolbar"),
   podcastGrid: document.getElementById("podcastGrid"),
   recentGrid: document.getElementById("recentGrid"),
   recentSummary: document.getElementById("recentSummary"),
@@ -848,6 +849,14 @@ function showAuthPrompt(preferredAction = "signup") {
   }
 }
 
+function scrollToRankingStart() {
+  const target = elements.rankingToolbar || elements.podcastGrid;
+  if (!target) return;
+
+  const top = target.getBoundingClientRect().top + window.scrollY - 18;
+  window.scrollTo({ top: Math.max(0, top), behavior: "smooth" });
+}
+
 function createRecentCardElement(podcast) {
   const fragment = elements.recentTemplate.content.cloneNode(true);
   const card = fragment.querySelector(".recent-card");
@@ -938,7 +947,7 @@ function populateCardSummaries(article, podcast) {
   }
 
   if (communityValue) {
-    communityValue.textContent = "Kommer snart";
+    communityValue.textContent = "Snart";
   }
 
   if (communityStars) {
@@ -947,7 +956,7 @@ function populateCardSummaries(article, podcast) {
   }
 
   if (communityMeta) {
-    communityMeta.textContent = "Brugerratings kobles p\u00e5 med login";
+    communityMeta.textContent = "Login kr\u00e6ves";
   }
 }
 
@@ -962,10 +971,6 @@ function createPodcastReviewCardElement(podcast, review, key) {
     <span class="placement-value">#${podcast.placement}</span>
     <span class="placement-label">Placering</span>
   `;
-
-  const rating = document.createElement("div");
-  rating.className = "podcast-card__rating";
-  rating.textContent = review.scoreLabel || "Ikke vurderet";
 
   const body = document.createElement("div");
   body.className = "podcast-card__body";
@@ -1096,7 +1101,7 @@ function createPodcastReviewCardElement(podcast, review, key) {
   chips.append(publisherChip, genreChip, episodesChip);
   footer.appendChild(chips);
 
-  article.append(placement, rating, body, footer);
+  article.append(placement, body, footer);
   return article;
 }
 
@@ -1111,7 +1116,6 @@ function createPodcastCardElement(podcast) {
   const fragment = elements.podcastTemplate.content.cloneNode(true);
   const article = fragment.querySelector(".podcast-card");
   const placement = fragment.querySelector(".podcast-card__placement");
-  const rating = fragment.querySelector(".podcast-card__rating");
   const media = fragment.querySelector(".podcast-card__media");
   const title = fragment.querySelector(".podcast-card__title");
   const host = fragment.querySelector(".podcast-card__host");
@@ -1130,7 +1134,6 @@ function createPodcastCardElement(podcast) {
     <span class="placement-label">Placering</span>
   `;
 
-  rating.textContent = podcast.ratingLabel || "Ikke vurderet";
   setImage(media, podcast.image, podcast.title);
 
   title.textContent = podcast.title;
@@ -1473,13 +1476,13 @@ function handlePodcastGridClick(event) {
 
   if (action === "filter-publisher") {
     setActiveFilter("publisher", actionTarget.dataset.value || "");
-    window.scrollTo({ top: 0, behavior: "smooth" });
+    scrollToRankingStart();
     return;
   }
 
   if (action === "filter-genre") {
     setActiveFilter("genre", actionTarget.dataset.value || "");
-    window.scrollTo({ top: 0, behavior: "smooth" });
+    scrollToRankingStart();
     return;
   }
 
