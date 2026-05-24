@@ -193,11 +193,28 @@ function compactObject(entries) {
   );
 }
 
+function sanitizeExportValue(outputKey, value) {
+  const normalizedValue = normalizeText(value);
+
+  if (!normalizedValue) {
+    return "";
+  }
+
+  if (
+    (outputKey === "Billedlink" || outputKey === "Auto-billedlink") &&
+    normalizedValue.startsWith("data:image")
+  ) {
+    return "";
+  }
+
+  return normalizedValue;
+}
+
 function pickFields(row, fieldMap) {
   const output = {};
 
   fieldMap.forEach(({ output, candidates }) => {
-    const value = getField(row, candidates);
+    const value = sanitizeExportValue(output, getField(row, candidates));
 
     if (value) {
       output[output] = value;
