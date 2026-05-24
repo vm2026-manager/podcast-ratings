@@ -16,7 +16,7 @@
       rel="stylesheet"
     />
 
-    <link rel="stylesheet" href="style.css?v=2026-05-23-9" />
+    <link rel="stylesheet" href="style.css?v=2026-05-24-3" />
 
     <script
       data-goatcounter="https://podcastratings.goatcounter.com/count"
@@ -30,7 +30,7 @@
       };
     </script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
-    <script src="app.js?v=2026-05-23-9" defer></script>
+    <script src="app.js?v=2026-05-24-3" defer></script>
   </head>
 
   <body>
@@ -135,10 +135,20 @@
               </p>
 
               <div class="auth-actions">
-                <button id="openSignupButton" class="auth-button auth-button--primary" type="button">
+                <button
+                  id="openSignupButton"
+                  class="auth-button auth-button--primary"
+                  type="button"
+                  onclick="window.podcastAuth?.showSignup()"
+                >
                   Opret dig
                 </button>
-                <button id="openLoginButton" class="auth-button auth-button--secondary" type="button">
+                <button
+                  id="openLoginButton"
+                  class="auth-button auth-button--secondary"
+                  type="button"
+                  onclick="window.podcastAuth?.showLogin()"
+                >
                   Log ind
                 </button>
               </div>
@@ -310,6 +320,7 @@
             class="rating-dialog__close"
             type="button"
             aria-label="Luk login"
+            onclick="window.podcastAuth?.closeDialog()"
           >
             &#215;
           </button>
@@ -341,18 +352,27 @@
                 autocomplete="current-password"
               />
             </label>
+            <div class="auth-actions auth-actions--dialog">
+              <button
+                id="signupButton"
+                class="auth-button auth-button--primary"
+                type="button"
+                onclick="window.podcastAuth?.submitSignup()"
+              >
+                Opret dig
+              </button>
+              <button
+                id="loginButton"
+                class="auth-button auth-button--secondary"
+                type="button"
+                onclick="window.podcastAuth?.submitLogin()"
+              >
+                Log ind
+              </button>
+            </div>
+
+            <p id="authDialogMessage" class="auth-message is-hidden" aria-live="polite"></p>
           </form>
-
-          <div class="auth-actions auth-actions--dialog">
-            <button id="signupButton" class="auth-button auth-button--primary" type="button">
-              Opret dig
-            </button>
-            <button id="loginButton" class="auth-button auth-button--secondary" type="button">
-              Log ind
-            </button>
-          </div>
-
-          <p id="authDialogMessage" class="auth-message is-hidden" aria-live="polite"></p>
         </div>
       </div>
 

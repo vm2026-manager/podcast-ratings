@@ -15,7 +15,7 @@ const GENRES = [
 
 const FEATURED_ROTATION_MS = 8000;
 const INITIAL_VISIBLE_COUNT = 48;
-const DATA_VERSION = "2026-05-23-9";
+const DATA_VERSION = "2026-05-24-3";
 const EXPANDED_LIST_STORAGE_KEY = "podcast-ratings-expanded-list";
 const NEW_BADGE_DAYS = 14;
 const SUPABASE_CONFIG = window.PODCAST_SUPABASE_CONFIG || {
@@ -51,6 +51,7 @@ const state = {
   authReady: false,
   authConfigured: false,
   authBusy: false,
+  authMode: "signup",
   userRatingsByKey: {},
   communityStatsByKey: {},
   savedPodcastKeys: new Set(),
@@ -888,9 +889,11 @@ function setImage(container, image, alt) {
 function showAuthPrompt(preferredAction = "signup") {
   if (!elements.authDialog) return;
 
+  state.authMode = preferredAction === "login" ? "login" : "signup";
+
   if (elements.authDialogTitle) {
     elements.authDialogTitle.textContent =
-      preferredAction === "login" ? "Log ind" : "Opret dig eller log ind";
+      state.authMode === "login" ? "Log ind" : "Opret dig eller log ind";
   }
 
   clearAuthMessage();
@@ -914,6 +917,24 @@ function closeAuthDialog() {
   }
 }
 
+window.podcastAuth = {
+  showSignup() {
+    showAuthPrompt("signup");
+  },
+  showLogin() {
+    showAuthPrompt("login");
+  },
+  submitSignup() {
+    handleAuthAction("signup");
+  },
+  submitLogin() {
+    handleAuthAction("login");
+  },
+  closeDialog() {
+    closeAuthDialog();
+  }
+};
+
 function scrollToRankingStart() {
   const target = elements.rankingToolbar || elements.podcastGrid;
   if (!target) return;
@@ -926,6 +947,22 @@ function hasSupabaseConfig() {
   return Boolean(normalizeText(SUPABASE_CONFIG.url) && normalizeText(SUPABASE_CONFIG.anonKey));
 }
 
+async function waitForSupabaseClient(timeoutMs = 5000) {
+  const startedAt = Date.now();
+
+  while (Date.now() - startedAt < timeoutMs) {
+    if (window.supabase?.createClient) {
+      return window.supabase;
+    }
+
+    await new Promise((resolve) => {
+      window.setTimeout(resolve, 120);
+    });
+  }
+
+  return null;
+}
+
 function isLoggedIn() {
   return Boolean(state.authUser);
 }
@@ -935,18 +972,26 @@ function formatRatingCount(value) {
   return new Intl.NumberFormat("da-DK").format(count);
 }
 
-function setAuthMessage(message = "", tone = "info") {
-  [elements.authMessage, elements.authDialogMessage].forEach((element) => {
-    if (!element) return;
+function setElementMessage(element, message = "", tone = "info") {
+  if (!element) return;
 
-    element.textContent = message;
-    element.classList.toggle("is-hidden", !message);
-    element.dataset.tone = tone;
-  });
+  element.textContent = message;
+  element.classList.toggle("is-hidden", !message);
+  element.dataset.tone = tone;
 }
 
-function clearAuthMessage() {
-  setAuthMessage("");
+function setAuthMessage(message = "", tone = "info", target = "both") {
+  if (target === "hero" || target === "both") {
+    setElementMessage(elements.authMessage, message, tone);
+  }
+
+  if (target === "dialog" || target === "both") {
+    setElementMessage(elements.authDialogMessage, message, tone);
+  }
+}
+
+function clearAuthMessage(target = "both") {
+  setAuthMessage("", "info", target);
 }
 
 function setAuthBusy(isBusy) {
@@ -1007,10 +1052,9 @@ function renderAuthPanel() {
   if (!configured) {
     setAuthMessage(
       "Tilføj Supabase URL og anon key i window.PODCAST_SUPABASE_CONFIG for at aktivere login.",
-      "warning"
+      "warning",
+      "hero"
     );
-  } else if (!state.authBusy && !loggedIn) {
-    clearAuthMessage();
   }
 }
 
@@ -1056,7 +1100,7 @@ async function fetchCommunityStats() {
 
   if (error) {
     console.error(error);
-    setAuthMessage("Kunne ikke hente brugernes snit fra Supabase.", "error");
+    setAuthMessage("Kunne ikke hente brugernes snit fra Supabase.", "error", "hero");
     return;
   }
 
@@ -1085,7 +1129,7 @@ async function fetchUserState() {
 
   if (ratingsError) {
     console.error(ratingsError);
-    setAuthMessage("Kunne ikke hente dine vurderinger endnu.", "error");
+    setAuthMessage("Kunne ikke hente dine vurderinger endnu.", "error", "hero");
   } else {
     state.userRatingsByKey = Object.fromEntries(
       (ratings || []).map((item) => [item.podcast_key, parseNumber(item.rating)])
@@ -1094,7 +1138,7 @@ async function fetchUserState() {
 
   if (savedError) {
     console.error(savedError);
-    setAuthMessage("Kunne ikke hente dine gemte podcasts endnu.", "error");
+    setAuthMessage("Kunne ikke hente dine gemte podcasts endnu.", "error", "hero");
   } else {
     state.savedPodcastKeys = new Set((saved || []).map((item) => item.podcast_key));
   }
@@ -1112,11 +1156,18 @@ async function initSupabase() {
   state.authConfigured = hasSupabaseConfig();
   renderAuthPanel();
 
-  if (!state.authConfigured || !window.supabase?.createClient) {
+  if (!state.authConfigured) {
     return;
   }
 
-  state.supabase = window.supabase.createClient(
+  const supabaseLib = await waitForSupabaseClient();
+
+  if (!supabaseLib?.createClient) {
+    setAuthMessage("Supabase-klienten kunne ikke indlæses i browseren.", "error", "hero");
+    return;
+  }
+
+  state.supabase = supabaseLib.createClient(
     SUPABASE_CONFIG.url,
     SUPABASE_CONFIG.anonKey,
     {
@@ -1134,7 +1185,7 @@ async function initSupabase() {
 
   if (error) {
     console.error(error);
-    setAuthMessage("Supabase-session kunne ikke indlæses.", "error");
+    setAuthMessage("Supabase-session kunne ikke indlæses.", "error", "hero");
   }
 
   state.session = session;
@@ -1157,7 +1208,8 @@ async function handleAuthAction(mode) {
   if (!state.supabase) {
     setAuthMessage(
       "Supabase er ikke sat op endnu. Tilføj først URL og anon key i konfigurationen.",
-      "warning"
+      "warning",
+      "dialog"
     );
     return;
   }
@@ -1166,17 +1218,17 @@ async function handleAuthAction(mode) {
   const password = normalizeText(elements.authPassword?.value);
 
   if (!email || !password) {
-    setAuthMessage("Indtast både email og adgangskode.", "warning");
+    setAuthMessage("Indtast både email og adgangskode.", "warning", "dialog");
     return;
   }
 
   if (password.length < 6) {
-    setAuthMessage("Adgangskoden skal være mindst 6 tegn.", "warning");
+    setAuthMessage("Adgangskoden skal være mindst 6 tegn.", "warning", "dialog");
     return;
   }
 
   setAuthBusy(true);
-  clearAuthMessage();
+  clearAuthMessage("dialog");
 
   try {
     if (mode === "signup") {
@@ -1188,12 +1240,13 @@ async function handleAuthAction(mode) {
       if (error) throw error;
 
       if (data.session) {
-        setAuthMessage("Din konto er oprettet, og du er nu logget ind.", "success");
+        setAuthMessage("Din konto er oprettet, og du er nu logget ind.", "success", "hero");
         closeAuthDialog();
       } else {
         setAuthMessage(
           "Kontoen er oprettet. Hvis du vil logge ind med det samme uden mail, så slå Confirm email fra i Supabase.",
-          "warning"
+          "warning",
+          "dialog"
         );
       }
     } else {
@@ -1204,7 +1257,7 @@ async function handleAuthAction(mode) {
 
       if (error) throw error;
 
-      setAuthMessage("Du er nu logget ind.", "success");
+      setAuthMessage("Du er nu logget ind.", "success", "hero");
       closeAuthDialog();
     }
 
@@ -1213,7 +1266,7 @@ async function handleAuthAction(mode) {
     }
   } catch (error) {
     console.error(error);
-    setAuthMessage(error.message || "Login mislykkedes.", "error");
+    setAuthMessage(error.message || "Login mislykkedes.", "error", "dialog");
   } finally {
     setAuthBusy(false);
     renderAuthPanel();
@@ -1228,10 +1281,10 @@ async function handleLogout() {
   try {
     const { error } = await state.supabase.auth.signOut();
     if (error) throw error;
-    setAuthMessage("Du er logget ud.", "success");
+    setAuthMessage("Du er logget ud.", "success", "hero");
   } catch (error) {
     console.error(error);
-    setAuthMessage(error.message || "Logout mislykkedes.", "error");
+    setAuthMessage(error.message || "Logout mislykkedes.", "error", "hero");
   } finally {
     setAuthBusy(false);
     renderAuthPanel();
@@ -1241,7 +1294,7 @@ async function handleLogout() {
 function openRatingDialog(podcast) {
   if (!isLoggedIn()) {
     showAuthPrompt("login");
-    setAuthMessage("Log ind for at gemme din egen vurdering.", "warning");
+    setAuthMessage("Log ind for at gemme din egen vurdering.", "warning", "dialog");
     return;
   }
 
@@ -1347,7 +1400,7 @@ async function deleteActiveRating() {
 async function toggleSavedPodcast(podcast) {
   if (!isLoggedIn()) {
     showAuthPrompt("login");
-    setAuthMessage("Log ind for at gemme podcasts til senere.", "warning");
+    setAuthMessage("Log ind for at gemme podcasts til senere.", "warning", "dialog");
     return;
   }
 
@@ -2114,6 +2167,12 @@ function setupEvents() {
 
   elements.logoutButton?.addEventListener("click", handleLogout);
   elements.authDialogCloseButton?.addEventListener("click", closeAuthDialog);
+
+  const authForm = elements.authDialog?.querySelector(".auth-form");
+  authForm?.addEventListener("submit", (event) => {
+    event.preventDefault();
+    handleAuthAction(state.authMode === "login" ? "login" : "signup");
+  });
 
   if (elements.clearFilterButton) {
     elements.clearFilterButton.addEventListener("click", clearActiveFilter);
