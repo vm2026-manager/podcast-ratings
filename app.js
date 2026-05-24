@@ -15,7 +15,7 @@ const GENRES = [
 
 const FEATURED_ROTATION_MS = 8000;
 const INITIAL_VISIBLE_COUNT = 48;
-const DATA_VERSION = "2026-05-24-24";
+const DATA_VERSION = "2026-05-24-25";
 const EXPANDED_LIST_STORAGE_KEY = "podcast-ratings-expanded-list";
 const NEW_BADGE_DAYS = 14;
 const SUPABASE_CONFIG = window.PODCAST_SUPABASE_CONFIG || {
@@ -1846,7 +1846,11 @@ function createPodcastReviewCardElement(podcast, review, key) {
       <span class="placement-label">Placering</span>
     `;
   } else {
-    placement.classList.add("is-hidden");
+    placement.classList.add("podcast-card__placement--unranked");
+    placement.innerHTML = `
+      <span class="placement-value">#---</span>
+      <span class="placement-label">Ikke rangeret</span>
+    `;
   }
 
   const body = document.createElement("div");
@@ -2014,7 +2018,11 @@ function createPodcastCardElement(podcast) {
       <span class="placement-label">Placering</span>
     `;
   } else {
-    placement.classList.add("is-hidden");
+    placement.classList.add("podcast-card__placement--unranked");
+    placement.innerHTML = `
+      <span class="placement-value">#---</span>
+      <span class="placement-label">Ikke rangeret</span>
+    `;
   }
 
   setImage(media, podcast.image, podcast.title);

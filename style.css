@@ -981,8 +981,18 @@ button {
   box-shadow: 0 10px 22px rgba(223, 84, 16, 0.24);
 }
 
-.podcast-card__placement.is-hidden {
-  display: none;
+.podcast-card__placement--unranked {
+  background: linear-gradient(180deg, #e8ded3, #d7c9bb);
+  color: #6f6257;
+  box-shadow: 0 10px 22px rgba(66, 41, 20, 0.1);
+}
+
+.podcast-card__placement--unranked .placement-value {
+  color: #5e534b;
+}
+
+.podcast-card__placement--unranked .placement-label {
+  color: #7a6e64;
 }
 
 .placement-value {
