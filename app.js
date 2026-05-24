@@ -15,7 +15,7 @@ const GENRES = [
 
 const FEATURED_ROTATION_MS = 8000;
 const INITIAL_VISIBLE_COUNT = 48;
-const DATA_VERSION = "2026-05-24-19";
+const DATA_VERSION = "2026-05-24-20";
 const EXPANDED_LIST_STORAGE_KEY = "podcast-ratings-expanded-list";
 const NEW_BADGE_DAYS = 14;
 const SUPABASE_CONFIG = window.PODCAST_SUPABASE_CONFIG || {
@@ -1819,12 +1819,9 @@ function populateCardSummaries(article, podcast) {
     if (communityStat?.ratingCount) {
       communityMeta.textContent = formatUserRatingCount(communityStat.ratingCount);
     } else if (isLoggedIn()) {
-      communityMeta.textContent =
-        userRating !== null && userRating !== undefined
-          ? "Din vurdering er gemt"
-          : "Vær den første til at vurdere";
+      communityMeta.textContent = "Vurder først";
     } else {
-      communityMeta.textContent = "Log ind for at stemme";
+      communityMeta.textContent = "Log ind";
     }
   }
 }
