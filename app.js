@@ -15,7 +15,7 @@ const GENRES = [
 
 const FEATURED_ROTATION_MS = 8000;
 const INITIAL_VISIBLE_COUNT = 48;
-const DATA_VERSION = "2026-05-24-13";
+const DATA_VERSION = "2026-05-24-14";
 const EXPANDED_LIST_STORAGE_KEY = "podcast-ratings-expanded-list";
 const NEW_BADGE_DAYS = 14;
 const SUPABASE_CONFIG = window.PODCAST_SUPABASE_CONFIG || {
@@ -835,7 +835,17 @@ function getFilteredPodcasts() {
       return queryParts.every((part) => podcast.searchText.includes(part));
     })
     .sort((a, b) => {
-      if (state.sort === "placement-desc") return b.placement - a.placement;
+      if (state.sort === "placement-desc") {
+        const aHasRating = a.ratingValue !== null;
+        const bHasRating = b.ratingValue !== null;
+
+        if (aHasRating !== bHasRating) {
+          return aHasRating ? -1 : 1;
+        }
+
+        return b.placement - a.placement;
+      }
+
       return a.placement - b.placement;
     });
 }
