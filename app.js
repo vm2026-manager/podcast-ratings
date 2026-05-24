@@ -1073,6 +1073,12 @@ function formatRatingCount(value) {
   return new Intl.NumberFormat("da-DK").format(count);
 }
 
+function formatUserRatingCount(value) {
+  const count = Number(value || 0);
+  const label = count === 1 ? "bruger" : "brugere";
+  return `${new Intl.NumberFormat("da-DK").format(count)} ${label}`;
+}
+
 function setElementMessage(element, message = "", tone = "info") {
   if (!element) return;
 
@@ -1756,6 +1762,7 @@ function createFilterChip(value, type) {
 function populateCardSummaries(article, podcast) {
   const ownerValue = article.querySelector(".rating-summary__value--owner");
   const ownerStars = article.querySelector(".rating-summary__stars--owner");
+  const communitySummary = article.querySelector(".rating-summary--community");
   const communityValue = article.querySelector(".rating-summary__value--community");
   const communityStars = article.querySelector(".rating-summary__stars--community");
   const communityMeta = article.querySelector(".rating-summary__meta");
@@ -1774,6 +1781,21 @@ function populateCardSummaries(article, podcast) {
 
   if (communityLabel) {
     communityLabel.textContent = "Brugernes snit";
+  }
+
+  if (communitySummary) {
+    delete communitySummary.dataset.userRating;
+    communitySummary.removeAttribute("tabindex");
+    communitySummary.removeAttribute("title");
+    communitySummary.removeAttribute("aria-label");
+
+    if (userRating !== null && userRating !== undefined) {
+      const userRatingText = `Din vurdering: ${formatRating(userRating)}`;
+      communitySummary.dataset.userRating = userRatingText;
+      communitySummary.setAttribute("tabindex", "0");
+      communitySummary.setAttribute("title", userRatingText);
+      communitySummary.setAttribute("aria-label", `Brugernes snit. ${userRatingText}`);
+    }
   }
 
   if (communityValue) {
