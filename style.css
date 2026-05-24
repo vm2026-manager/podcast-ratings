@@ -960,20 +960,20 @@ button {
 
 .podcast-card__new-badge {
   position: absolute;
-  top: -10px;
-  left: 10px;
+  top: -12px;
+  left: -4px;
   z-index: 4;
-  min-height: 30px;
-  padding: 0 12px;
+  min-height: 34px;
+  padding: 0 14px;
   border-radius: 999px;
   background: linear-gradient(180deg, #ff4768, #ff5d2a);
   color: #fff;
   border: 1px solid rgba(255, 255, 255, 0.7);
   box-shadow: 0 12px 20px rgba(255, 93, 42, 0.24);
-  font-size: 0.72rem;
+  font-size: 0.78rem;
   font-weight: 900;
   letter-spacing: 0.08em;
-  line-height: 30px;
+  line-height: 34px;
   transform: rotate(-6deg);
 }
 
@@ -2037,11 +2037,12 @@ body.has-dialog-open {
   }
 
   .podcast-card__new-badge {
-    top: -8px;
-    left: 8px;
-    min-height: 28px;
-    padding: 0 11px;
-    line-height: 28px;
+    top: -10px;
+    left: -2px;
+    min-height: 30px;
+    padding: 0 12px;
+    font-size: 0.74rem;
+    line-height: 30px;
   }
 
   .podcast-card__body {
