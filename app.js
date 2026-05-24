@@ -15,7 +15,7 @@ const GENRES = [
 
 const FEATURED_ROTATION_MS = 8000;
 const INITIAL_VISIBLE_COUNT = 48;
-const DATA_VERSION = "2026-05-24-3";
+const DATA_VERSION = "2026-05-24-4";
 const EXPANDED_LIST_STORAGE_KEY = "podcast-ratings-expanded-list";
 const NEW_BADGE_DAYS = 14;
 const SUPABASE_CONFIG = window.PODCAST_SUPABASE_CONFIG || {
@@ -101,6 +101,7 @@ const elements = {
   authDialogCloseButton: document.getElementById("authDialogCloseButton"),
   authEmail: document.getElementById("authEmail"),
   authPassword: document.getElementById("authPassword"),
+  toggleAuthPasswordButton: document.getElementById("toggleAuthPasswordButton"),
   authUserEmail: document.getElementById("authUserEmail"),
   authMessage: document.getElementById("authMessage"),
   authDialogMessage: document.getElementById("authDialogMessage"),
@@ -994,6 +995,29 @@ function clearAuthMessage(target = "both") {
   setAuthMessage("", "info", target);
 }
 
+function normalizeAuthErrorMessage(error) {
+  const raw = normalizeText(error?.message || error || "");
+  const lower = raw.toLowerCase();
+
+  if (lower.includes("email rate limit exceeded")) {
+    return "Der er sendt for mange mails fra Supabase lige nu. Vent lidt og prøv igen. Hvis du vil undgå det, så slå Confirm email fra i Supabase.";
+  }
+
+  if (lower.includes("user already registered")) {
+    return "Den email er allerede oprettet. Prøv i stedet at logge ind.";
+  }
+
+  if (lower.includes("invalid login credentials")) {
+    return "Email eller adgangskode er forkert.";
+  }
+
+  if (lower.includes("password should be at least")) {
+    return "Adgangskoden skal være mindst 6 tegn.";
+  }
+
+  return raw || "Login mislykkedes.";
+}
+
 function setAuthBusy(isBusy) {
   state.authBusy = isBusy;
 
@@ -1001,6 +1025,7 @@ function setAuthBusy(isBusy) {
     elements.signupButton,
     elements.loginButton,
     elements.logoutButton,
+    elements.toggleAuthPasswordButton,
     elements.ratingSaveButton,
     elements.ratingDeleteButton
   ].forEach((button) => {
@@ -1008,6 +1033,25 @@ function setAuthBusy(isBusy) {
       button.disabled = isBusy;
     }
   });
+}
+
+function updateAuthPasswordToggle() {
+  if (!elements.authPassword || !elements.toggleAuthPasswordButton) return;
+
+  const isVisible = elements.authPassword.type === "text";
+  elements.toggleAuthPasswordButton.textContent = isVisible ? "Skjul" : "Vis";
+  elements.toggleAuthPasswordButton.setAttribute("aria-pressed", String(isVisible));
+  elements.toggleAuthPasswordButton.setAttribute(
+    "aria-label",
+    isVisible ? "Skjul adgangskode" : "Vis adgangskode"
+  );
+}
+
+function toggleAuthPasswordVisibility() {
+  if (!elements.authPassword) return;
+
+  elements.authPassword.type = elements.authPassword.type === "password" ? "text" : "password";
+  updateAuthPasswordToggle();
 }
 
 function renderAuthPanel() {
@@ -1027,6 +1071,10 @@ function renderAuthPanel() {
 
   if (elements.authPassword) {
     elements.authPassword.disabled = !configured || state.authBusy;
+  }
+
+  if (elements.toggleAuthPasswordButton) {
+    elements.toggleAuthPasswordButton.disabled = !configured || state.authBusy;
   }
 
   if (elements.openSignupButton) {
@@ -1263,10 +1311,12 @@ async function handleAuthAction(mode) {
 
     if (elements.authPassword) {
       elements.authPassword.value = "";
+      elements.authPassword.type = "password";
     }
+    updateAuthPasswordToggle();
   } catch (error) {
     console.error(error);
-    setAuthMessage(error.message || "Login mislykkedes.", "error", "dialog");
+    setAuthMessage(normalizeAuthErrorMessage(error), "error", "dialog");
   } finally {
     setAuthBusy(false);
     renderAuthPanel();
@@ -2167,6 +2217,7 @@ function setupEvents() {
 
   elements.logoutButton?.addEventListener("click", handleLogout);
   elements.authDialogCloseButton?.addEventListener("click", closeAuthDialog);
+  elements.toggleAuthPasswordButton?.addEventListener("click", toggleAuthPasswordVisibility);
 
   const authForm = elements.authDialog?.querySelector(".auth-form");
   authForm?.addEventListener("submit", (event) => {
@@ -2434,6 +2485,7 @@ function loadVisitorCount() {
 
 ensureLoadMoreControls();
 setupEvents();
+updateAuthPasswordToggle();
 window.setTimeout(() => {
   clearSearchInput({ rerender: true });
 }, 120);

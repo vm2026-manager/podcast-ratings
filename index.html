@@ -16,7 +16,7 @@
       rel="stylesheet"
     />
 
-    <link rel="stylesheet" href="style.css?v=2026-05-24-3" />
+    <link rel="stylesheet" href="style.css?v=2026-05-24-4" />
 
     <script
       data-goatcounter="https://podcastratings.goatcounter.com/count"
@@ -30,7 +30,7 @@
       };
     </script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
-    <script src="app.js?v=2026-05-24-3" defer></script>
+    <script src="app.js?v=2026-05-24-4" defer></script>
   </head>
 
   <body>
@@ -344,13 +344,24 @@
             </label>
             <label class="auth-field">
               <span>Adgangskode</span>
-              <input
-                id="authPassword"
-                name="password"
-                type="password"
-                placeholder="Mindst 6 tegn"
-                autocomplete="current-password"
-              />
+              <div class="auth-password-wrap">
+                <input
+                  id="authPassword"
+                  name="password"
+                  type="password"
+                  placeholder="Mindst 6 tegn"
+                  autocomplete="current-password"
+                />
+                <button
+                  id="toggleAuthPasswordButton"
+                  class="auth-password-toggle"
+                  type="button"
+                  aria-label="Vis adgangskode"
+                  aria-pressed="false"
+                >
+                  Vis
+                </button>
+              </div>
             </label>
             <div class="auth-actions auth-actions--dialog">
               <button

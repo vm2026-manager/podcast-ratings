@@ -262,6 +262,35 @@ button {
   border-color: rgba(255, 106, 19, 0.45);
 }
 
+.auth-password-wrap {
+  position: relative;
+}
+
+.auth-password-wrap input {
+  padding-right: 64px;
+}
+
+.auth-password-toggle {
+  position: absolute;
+  top: 50%;
+  right: 8px;
+  transform: translateY(-50%);
+  min-height: 28px;
+  padding: 0 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(223, 211, 196, 0.95);
+  background: rgba(255, 255, 255, 0.92);
+  color: #7a4d2f;
+  font-size: 0.75rem;
+  font-weight: 800;
+  line-height: 1;
+  box-shadow: 0 6px 12px rgba(66, 41, 20, 0.06);
+}
+
+.auth-password-toggle:hover {
+  transform: translateY(calc(-50% - 1px));
+}
+
 .auth-actions {
   display: flex;
   flex-wrap: wrap;
