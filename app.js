@@ -15,7 +15,7 @@ const GENRES = [
 
 const FEATURED_ROTATION_MS = 8000;
 const INITIAL_VISIBLE_COUNT = 48;
-const DATA_VERSION = "2026-05-24-25";
+const DATA_VERSION = "2026-05-24-26";
 const EXPANDED_LIST_STORAGE_KEY = "podcast-ratings-expanded-list";
 const NEW_BADGE_DAYS = 14;
 const SUPABASE_CONFIG = window.PODCAST_SUPABASE_CONFIG || {
@@ -730,14 +730,22 @@ function isNewPodcast(podcast) {
   return ageDays >= 0 && ageDays <= NEW_BADGE_DAYS;
 }
 
-function getStarString(value, muted = false) {
+function getStarMarkup(value, muted = false) {
   const number = parseNumber(value);
+  const starCount = 10;
+
   if (number === null) {
-    return muted ? "\u2606\u2606\u2606\u2606\u2606" : "\u2605\u2605\u2605\u2605\u2605";
+    return Array.from({ length: starCount }, () =>
+      '<span class="rating-star rating-star--empty">\u2605</span>'
+    ).join("");
   }
 
-  const filled = Math.max(0, Math.min(5, Math.round(number / 2)));
-  return `${"\u2605".repeat(filled)}${"\u2606".repeat(5 - filled)}`;
+  const filled = Math.max(0, Math.min(starCount, Math.round(number)));
+  return Array.from({ length: starCount }, (_item, index) => {
+    const className =
+      index < filled ? "rating-star rating-star--filled" : "rating-star rating-star--empty";
+    return `<span class="${className}">\u2605</span>`;
+  }).join("");
 }
 
 function resetVisibleCount() {
@@ -1778,9 +1786,13 @@ function populateCardSummaries(article, podcast) {
 
   if (ownerStars) {
     const hasOwnerRating = podcast.ratingValue !== null && podcast.ratingValue !== undefined;
-    ownerStars.textContent = getStarString(
+    ownerStars.innerHTML = getStarMarkup(
       hasOwnerRating ? podcast.ratingValue : null,
       !hasOwnerRating
+    );
+    ownerStars.setAttribute(
+      "aria-label",
+      hasOwnerRating ? `${formatRating(podcast.ratingValue)} stjerner` : "Ikke vurderet"
     );
     ownerStars.classList.toggle("is-muted", !hasOwnerRating);
   }
@@ -1813,9 +1825,13 @@ function populateCardSummaries(article, podcast) {
     const hasCommunityRating =
       communityStat?.averageRating !== null && communityStat?.averageRating !== undefined;
 
-    communityStars.textContent = getStarString(
+    communityStars.innerHTML = getStarMarkup(
       hasCommunityRating ? communityStat.averageRating : null,
       !hasCommunityRating
+    );
+    communityStars.setAttribute(
+      "aria-label",
+      hasCommunityRating ? `${formatRating(communityStat.averageRating)} stjerner` : "Ingen endnu"
     );
     communityStars.classList.toggle("is-muted", !hasCommunityRating);
   }

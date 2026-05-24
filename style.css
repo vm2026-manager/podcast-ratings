@@ -1352,18 +1352,32 @@ input:disabled {
 }
 
 .rating-summary__stars {
-  display: block;
-  min-height: 16px;
-  color: var(--accent);
-  letter-spacing: 0.1em;
-  font-size: 0.76rem;
+  display: flex;
+  align-items: center;
+  gap: 1px;
+  min-height: 17px;
   font-weight: 900;
   line-height: 1;
   white-space: nowrap;
 }
 
-.rating-summary__stars.is-muted {
-  color: #ceb8a6;
+.rating-star {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 0.78rem;
+  color: #c9b7a6;
+  font-size: 0.82rem;
+  line-height: 1;
+}
+
+.rating-star--filled {
+  color: var(--accent);
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.72);
+}
+
+.rating-summary__stars.is-muted .rating-star {
+  color: #cbb9aa;
 }
 
 .rating-summary__meta {
