@@ -15,7 +15,7 @@ const GENRES = [
 
 const FEATURED_ROTATION_MS = 8000;
 const INITIAL_VISIBLE_COUNT = 48;
-const DATA_VERSION = "2026-05-24-5";
+const DATA_VERSION = "2026-05-24-6";
 const EXPANDED_LIST_STORAGE_KEY = "podcast-ratings-expanded-list";
 const NEW_BADGE_DAYS = 14;
 const SUPABASE_CONFIG = window.PODCAST_SUPABASE_CONFIG || {
@@ -52,6 +52,7 @@ const state = {
   authConfigured: false,
   authBusy: false,
   authMode: "signup",
+  authMessageTimer: null,
   userRatingsByKey: {},
   communityStatsByKey: {},
   savedPodcastKeys: new Set(),
@@ -104,6 +105,8 @@ const elements = {
   toggleAuthPasswordButton: document.getElementById("toggleAuthPasswordButton"),
   forgotPasswordButton: document.getElementById("forgotPasswordButton"),
   authUserEmail: document.getElementById("authUserEmail"),
+  savedPodcastCount: document.getElementById("savedPodcastCount"),
+  savedFilterButton: document.getElementById("savedFilterButton"),
   authMessage: document.getElementById("authMessage"),
   authDialogMessage: document.getElementById("authDialogMessage"),
   signupButton: document.getElementById("signupButton"),
@@ -756,6 +759,10 @@ function createGenreChips() {
 function getFilteredPodcasts() {
   return state.podcasts
     .filter((podcast) => {
+      if (state.activeFilter?.type === "saved" && !isPodcastSaved(getPodcastKey(podcast))) {
+        return false;
+      }
+
       if (state.activeFilter?.type === "genre" && podcast.genre !== state.activeFilter.value) {
         return false;
       }
@@ -789,8 +796,12 @@ function updateActiveFilterUi() {
     return;
   }
 
-  const label = state.activeFilter.type === "genre" ? "Genre" : "Udgiver";
-  elements.activeFilterText.textContent = `${label}: ${state.activeFilter.value}`;
+  if (state.activeFilter.type === "saved") {
+    elements.activeFilterText.textContent = "Viser kun gemte podcasts";
+  } else {
+    const label = state.activeFilter.type === "genre" ? "Genre" : "Udgiver";
+    elements.activeFilterText.textContent = `${label}: ${state.activeFilter.value}`;
+  }
   elements.activeFilterBox.classList.remove("is-hidden");
 }
 
@@ -811,8 +822,30 @@ function getResultsText(filteredCount, visibleCount) {
 
   if (!state.activeFilter) return baseText;
 
+  if (state.activeFilter.type === "saved") {
+    return `${baseText} Filtreret p\u00e5 dine gemte podcasts.`;
+  }
+
   const label = state.activeFilter.type === "genre" ? "genren" : "udgiveren";
   return `${baseText} Filtreret p\u00e5 ${label} ${state.activeFilter.value}.`;
+}
+
+function toggleSavedFilter() {
+  if (!isLoggedIn()) {
+    showAuthPrompt("login");
+    setAuthMessage("Log ind for at se dine gemte podcasts.", "warning", "dialog");
+    return;
+  }
+
+  state.activeFilter =
+    state.activeFilter?.type === "saved"
+      ? null
+      : { type: "saved", value: "" };
+
+  resetVisibleCount();
+  createGenreChips();
+  render();
+  scrollToRankingStart();
 }
 
 function ensureLoadMoreControls() {
@@ -986,12 +1019,23 @@ function setElementMessage(element, message = "", tone = "info") {
 }
 
 function setAuthMessage(message = "", tone = "info", target = "both") {
+  if (state.authMessageTimer) {
+    window.clearTimeout(state.authMessageTimer);
+    state.authMessageTimer = null;
+  }
+
   if (target === "hero" || target === "both") {
     setElementMessage(elements.authMessage, message, tone);
   }
 
   if (target === "dialog" || target === "both") {
     setElementMessage(elements.authDialogMessage, message, tone);
+  }
+
+  if (message && tone === "success" && (target === "hero" || target === "both")) {
+    state.authMessageTimer = window.setTimeout(() => {
+      clearAuthMessage("hero");
+    }, 2600);
   }
 }
 
@@ -1070,6 +1114,10 @@ function renderAuthPanel() {
     elements.authUserEmail.textContent = loggedIn ? state.authUser.email || "" : "";
   }
 
+  if (elements.savedPodcastCount) {
+    elements.savedPodcastCount.textContent = String(state.savedPodcastKeys.size);
+  }
+
   if (elements.authEmail) {
     elements.authEmail.disabled = !configured || state.authBusy;
   }
@@ -1088,6 +1136,12 @@ function renderAuthPanel() {
 
   if (elements.openLoginButton) {
     elements.openLoginButton.disabled = !configured;
+  }
+
+  if (elements.savedFilterButton) {
+    elements.savedFilterButton.disabled = !configured || !loggedIn;
+    elements.savedFilterButton.textContent =
+      state.activeFilter?.type === "saved" ? "Vis alle" : "Vis gemte";
   }
 
   if (elements.signupButton) {
@@ -2251,6 +2305,8 @@ function setupEvents() {
   elements.openLoginButton?.addEventListener("click", () => {
     showAuthPrompt("login");
   });
+
+  elements.savedFilterButton?.addEventListener("click", toggleSavedFilter);
 
   elements.signupButton?.addEventListener("click", () => {
     handleAuthAction("signup");

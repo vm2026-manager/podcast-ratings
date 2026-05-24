@@ -351,7 +351,12 @@ button {
 
 .auth-session {
   display: grid;
-  gap: 10px;
+  gap: 8px;
+}
+
+.auth-session__topline {
+  display: grid;
+  gap: 6px;
 }
 
 .auth-session__badge {
@@ -372,18 +377,42 @@ button {
 .auth-session__email {
   margin: 0;
   color: #2f241d;
-  font-size: 0.92rem;
-  line-height: 1.3;
+  font-size: 0.88rem;
+  line-height: 1.2;
   font-weight: 800;
   word-break: break-word;
 }
 
+.auth-session__meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.auth-session__saved-label {
+  color: #6f6257;
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.auth-actions--session {
+  margin-top: 2px;
+}
+
+.auth-actions--session .auth-button {
+  min-height: 34px;
+  padding: 0 14px;
+  font-size: 0.84rem;
+}
+
 .auth-message {
   margin: 0;
-  padding: 9px 11px;
+  padding: 8px 10px;
   border-radius: 14px;
-  font-size: 0.76rem;
-  line-height: 1.35;
+  font-size: 0.72rem;
+  line-height: 1.3;
   font-weight: 700;
 }
 

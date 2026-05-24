@@ -16,7 +16,7 @@
       rel="stylesheet"
     />
 
-    <link rel="stylesheet" href="style.css?v=2026-05-24-5" />
+    <link rel="stylesheet" href="style.css?v=2026-05-24-6" />
 
     <script
       data-goatcounter="https://podcastratings.goatcounter.com/count"
@@ -30,7 +30,7 @@
       };
     </script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
-    <script src="app.js?v=2026-05-24-5" defer></script>
+    <script src="app.js?v=2026-05-24-6" defer></script>
   </head>
 
   <body>
@@ -156,12 +156,24 @@
             </div>
 
             <div id="authLoggedIn" class="auth-session is-hidden">
-              <span class="auth-session__badge">Logget ind</span>
-              <p id="authUserEmail" class="auth-session__email"></p>
-              <p class="auth-helper">
-                Du kan nu vurdere podcasts og gemme favoritter til senere.
-              </p>
-              <div class="auth-actions">
+              <div class="auth-session__topline">
+                <span class="auth-session__badge">Logget ind</span>
+                <p id="authUserEmail" class="auth-session__email"></p>
+              </div>
+              <div class="auth-session__meta">
+                <span class="auth-session__saved-label">
+                  Gemte podcasts:
+                  <strong id="savedPodcastCount">0</strong>
+                </span>
+                <button
+                  id="savedFilterButton"
+                  class="auth-text-button"
+                  type="button"
+                >
+                  Vis gemte
+                </button>
+              </div>
+              <div class="auth-actions auth-actions--session">
                 <button id="logoutButton" class="auth-button auth-button--secondary" type="button">
                   Log ud
                 </button>
