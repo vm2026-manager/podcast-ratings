@@ -15,7 +15,7 @@ const GENRES = [
 
 const FEATURED_ROTATION_MS = 8000;
 const INITIAL_VISIBLE_COUNT = 48;
-const DATA_VERSION = "2026-05-24-4";
+const DATA_VERSION = "2026-05-24-5";
 const EXPANDED_LIST_STORAGE_KEY = "podcast-ratings-expanded-list";
 const NEW_BADGE_DAYS = 14;
 const SUPABASE_CONFIG = window.PODCAST_SUPABASE_CONFIG || {
@@ -102,6 +102,7 @@ const elements = {
   authEmail: document.getElementById("authEmail"),
   authPassword: document.getElementById("authPassword"),
   toggleAuthPasswordButton: document.getElementById("toggleAuthPasswordButton"),
+  forgotPasswordButton: document.getElementById("forgotPasswordButton"),
   authUserEmail: document.getElementById("authUserEmail"),
   authMessage: document.getElementById("authMessage"),
   authDialogMessage: document.getElementById("authDialogMessage"),
@@ -931,6 +932,9 @@ window.podcastAuth = {
   submitLogin() {
     handleAuthAction("login");
   },
+  forgotPassword() {
+    requestPasswordReset();
+  },
   closeDialog() {
     closeAuthDialog();
   }
@@ -1026,6 +1030,7 @@ function setAuthBusy(isBusy) {
     elements.loginButton,
     elements.logoutButton,
     elements.toggleAuthPasswordButton,
+    elements.forgotPasswordButton,
     elements.ratingSaveButton,
     elements.ratingDeleteButton
   ].forEach((button) => {
@@ -1314,6 +1319,46 @@ async function handleAuthAction(mode) {
       elements.authPassword.type = "password";
     }
     updateAuthPasswordToggle();
+  } catch (error) {
+    console.error(error);
+    setAuthMessage(normalizeAuthErrorMessage(error), "error", "dialog");
+  } finally {
+    setAuthBusy(false);
+    renderAuthPanel();
+  }
+}
+
+async function requestPasswordReset() {
+  if (!state.supabase) {
+    setAuthMessage(
+      "Supabase er ikke sat op endnu. Tilføj først URL og anon key i konfigurationen.",
+      "warning",
+      "dialog"
+    );
+    return;
+  }
+
+  const email = normalizeText(elements.authEmail?.value);
+
+  if (!email) {
+    setAuthMessage("Indtast din email først, så sender vi et nulstillingslink.", "warning", "dialog");
+    return;
+  }
+
+  setAuthBusy(true);
+  clearAuthMessage("dialog");
+
+  try {
+    const redirectTo = window.location.href.split("#")[0];
+    const { error } = await state.supabase.auth.resetPasswordForEmail(email, { redirectTo });
+
+    if (error) throw error;
+
+    setAuthMessage(
+      "Vi har sendt et link til din email, så du kan nulstille din adgangskode.",
+      "success",
+      "dialog"
+    );
   } catch (error) {
     console.error(error);
     setAuthMessage(normalizeAuthErrorMessage(error), "error", "dialog");
@@ -2218,6 +2263,7 @@ function setupEvents() {
   elements.logoutButton?.addEventListener("click", handleLogout);
   elements.authDialogCloseButton?.addEventListener("click", closeAuthDialog);
   elements.toggleAuthPasswordButton?.addEventListener("click", toggleAuthPasswordVisibility);
+  elements.forgotPasswordButton?.addEventListener("click", requestPasswordReset);
 
   const authForm = elements.authDialog?.querySelector(".auth-form");
   authForm?.addEventListener("submit", (event) => {

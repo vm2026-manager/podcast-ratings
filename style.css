@@ -301,6 +301,17 @@ button {
   margin-top: 6px;
 }
 
+.auth-text-button {
+  justify-self: start;
+  padding: 0;
+  background: transparent;
+  color: var(--accent-deep);
+  font-size: 0.8rem;
+  font-weight: 800;
+  text-decoration: underline;
+  text-underline-offset: 0.18em;
+}
+
 .auth-button {
   min-height: 38px;
   padding: 0 16px;
