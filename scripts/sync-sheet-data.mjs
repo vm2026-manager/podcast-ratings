@@ -39,8 +39,14 @@ const PODCAST_FIELDS = [
   { output: "Antal afsnit", candidates: ["Antal afsnit", "Afsnit", "Episodes"] },
   { output: "Årstal afspillet", candidates: ["Årstal afspillet", "Aarstal afspillet", "År", "Aar"] },
   { output: "Link", candidates: ["Link", "URL"] },
-  { output: "Afgivet vurdering", candidates: ["Afgivet vurdering", "Dato", "Vurderingsdato", "Bedømt"] },
-  { output: "Billedlink", candidates: ["Billedlink", "Billedefil", "Billede", "Cover", "Image"] },
+  {
+    output: "Afgivet vurdering",
+    candidates: ["Afgivet vurdering", "Dato", "Vurderingsdato", "Bedømt"]
+  },
+  {
+    output: "Billedlink",
+    candidates: ["Billedlink", "Billedefil", "Billede", "Cover", "Image"]
+  },
   {
     output: "Kort beskrivelse",
     candidates: ["Kort beskrivelse", "Kortbeskrivelse", "Beskrivelse", "Description"]
@@ -69,7 +75,10 @@ const FEATURED_FIELDS = [
   { output: "Lydside", candidates: ["Lydside", "Produktion"] },
   { output: "Aktualitet", candidates: ["Aktualitet", "Aktualitet/relevans", "Relevans"] },
   { output: "Samlet score", candidates: ["Samlet score"] },
-  { output: "Anmeldelsesdato", candidates: ["Anmeldelsesdato", "Anmeldelsesdat", "Anmeldt"] },
+  {
+    output: "Anmeldelsesdato",
+    candidates: ["Anmeldelsesdato", "Anmeldelsesdat", "Anmeldt"]
+  },
   { output: "Visningsrækkefølge", candidates: ["Visningsrækkefølge"] },
   { output: "Auto-udgiver", candidates: ["Auto-udgiver"] },
   { output: "Auto-link", candidates: ["Auto-link"] },
@@ -77,6 +86,15 @@ const FEATURED_FIELDS = [
   { output: "Auto-genre", candidates: ["Auto-genre"] },
   { output: "Auto-vært", candidates: ["Auto-vært", "Auto-vaert"] }
 ];
+
+const IMAGE_EXTENSION_BY_MIME = {
+  "image/png": "png",
+  "image/jpeg": "jpg",
+  "image/jpg": "jpg",
+  "image/webp": "webp",
+  "image/gif": "gif",
+  "image/svg+xml": "svg"
+};
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -193,33 +211,86 @@ function compactObject(entries) {
   );
 }
 
-function sanitizeExportValue(outputKey, value) {
+function slugify(value) {
+  return normalizeText(value)
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 80);
+}
+
+function parseInlineImage(value) {
+  const normalizedValue = normalizeText(value);
+
+  if (!normalizedValue.startsWith("data:image")) {
+    return null;
+  }
+
+  const separatorIndex = normalizedValue.indexOf(",");
+
+  if (separatorIndex === -1) {
+    return null;
+  }
+
+  const header = normalizedValue.slice(0, separatorIndex);
+  const payload = normalizedValue.slice(separatorIndex + 1);
+  const mimeMatch = header.match(/^data:(image\/[a-z0-9.+-]+);base64$/i);
+
+  if (!mimeMatch || !payload) {
+    return null;
+  }
+
+  return {
+    mimeType: mimeMatch[1].toLowerCase(),
+    base64: payload
+  };
+}
+
+async function writeInlineImageFile(assetBaseName, inlineImage) {
+  const extension = IMAGE_EXTENSION_BY_MIME[inlineImage.mimeType] || "png";
+  const relativePath = `data/covers/${assetBaseName}.${extension}`;
+  const absolutePath = path.join(repoRoot, relativePath);
+
+  await mkdir(path.dirname(absolutePath), { recursive: true });
+  await writeFile(absolutePath, Buffer.from(inlineImage.base64, "base64"));
+
+  return relativePath.replace(/\\/g, "/");
+}
+
+async function sanitizeExportValue(outputKey, value, assetBaseName) {
   const normalizedValue = normalizeText(value);
 
   if (!normalizedValue) {
     return "";
   }
 
-  if (
-    (outputKey === "Billedlink" || outputKey === "Auto-billedlink") &&
-    normalizedValue.startsWith("data:image")
-  ) {
-    return "";
+  if (outputKey === "Billedlink" || outputKey === "Auto-billedlink") {
+    const inlineImage = parseInlineImage(normalizedValue);
+
+    if (inlineImage) {
+      return writeInlineImageFile(assetBaseName, inlineImage);
+    }
   }
 
   return normalizedValue;
 }
 
-function pickFields(row, fieldMap) {
+async function pickFields(row, fieldMap, assetBaseName) {
   const output = {};
 
-  fieldMap.forEach(({ output, candidates }) => {
-    const value = sanitizeExportValue(output, getField(row, candidates));
+  for (const { output: outputKey, candidates } of fieldMap) {
+    const value = await sanitizeExportValue(
+      outputKey,
+      getField(row, candidates),
+      assetBaseName
+    );
 
     if (value) {
-      output[output] = value;
+      output[outputKey] = value;
     }
-  });
+  }
 
   return compactObject(output);
 }
@@ -234,12 +305,32 @@ function filterFeaturedRows(rows) {
   );
 }
 
-function slimPodcastRows(rows) {
-  return rows.map((row) => pickFields(row, PODCAST_FIELDS));
+async function slimPodcastRows(rows) {
+  const slimRows = [];
+
+  for (let index = 0; index < rows.length; index += 1) {
+    const row = rows[index];
+    const title = getField(row, ["Titel", "Title"]);
+    const placement = getField(row, ["Placering", "Rank", "Rangering"]) || String(index + 1);
+    const assetBaseName = `${String(placement).padStart(3, "0")}-${slugify(title) || `podcast-${index + 1}`}`;
+    slimRows.push(await pickFields(row, PODCAST_FIELDS, assetBaseName));
+  }
+
+  return slimRows;
 }
 
-function slimFeaturedRows(rows) {
-  return rows.map((row) => pickFields(row, FEATURED_FIELDS));
+async function slimFeaturedRows(rows) {
+  const slimRows = [];
+
+  for (let index = 0; index < rows.length; index += 1) {
+    const row = rows[index];
+    const title = getField(row, ["Titel"]) || getField(row, ["Matchtitel"]);
+    const order = getField(row, ["Visningsrækkefølge"]) || String(index + 1);
+    const assetBaseName = `featured-${String(order).padStart(3, "0")}-${slugify(title) || `review-${index + 1}`}`;
+    slimRows.push(await pickFields(row, FEATURED_FIELDS, assetBaseName));
+  }
+
+  return slimRows;
 }
 
 async function fetchSheetCsv(sheet) {
@@ -275,8 +366,8 @@ async function syncSheet(sheet) {
 
   const slimRows =
     sheet.sheetName === "Udvalgte vurderinger"
-      ? slimFeaturedRows(filteredRows)
-      : slimPodcastRows(filteredRows);
+      ? await slimFeaturedRows(filteredRows)
+      : await slimPodcastRows(filteredRows);
 
   await writeJsonFile(sheet.outputPath, slimRows);
 
