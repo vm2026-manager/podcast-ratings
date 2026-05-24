@@ -15,7 +15,7 @@ const GENRES = [
 
 const FEATURED_ROTATION_MS = 8000;
 const INITIAL_VISIBLE_COUNT = 48;
-const DATA_VERSION = "2026-05-24-10";
+const DATA_VERSION = "2026-05-24-12";
 const EXPANDED_LIST_STORAGE_KEY = "podcast-ratings-expanded-list";
 const NEW_BADGE_DAYS = 14;
 const SUPABASE_CONFIG = window.PODCAST_SUPABASE_CONFIG || {
@@ -276,6 +276,59 @@ function formatRating(value) {
   const rating = parseNumber(value);
   if (rating === null) return "Ikke vurderet";
   return `${rating.toFixed(1).replace(".", ",")} / 10`;
+}
+
+function parseRatingInputValue(value) {
+  const raw = normalizeText(value);
+  if (!raw) return null;
+
+  if (/^[\d]+$/.test(raw)) {
+    if (raw === "10" || raw === "100") {
+      return 10;
+    }
+
+    if (raw.length === 1) {
+      return parseNumber(raw);
+    }
+
+    if (raw.length <= 3) {
+      return Number(raw) / 10;
+    }
+  }
+
+  return parseNumber(raw.replace(/\./g, ","));
+}
+
+function formatRatingInputValue(value) {
+  const rating = parseRatingInputValue(value);
+  if (rating === null || rating < 0 || rating > 10) {
+    return normalizeText(value);
+  }
+
+  return rating.toFixed(1).replace(".", ",");
+}
+
+function normalizeRatingInputField({ force = false } = {}) {
+  if (!elements.ratingInput) return;
+
+  const raw = normalizeText(elements.ratingInput.value);
+  if (!raw) return;
+
+  const digitsOnly = /^[\d]+$/.test(raw);
+  const shouldFormatNow =
+    force ||
+    raw === "10" ||
+    raw === "100" ||
+    (digitsOnly && raw.length >= 2) ||
+    /[,.]/.test(raw);
+
+  if (!shouldFormatNow) return;
+
+  const formatted = formatRatingInputValue(raw);
+
+  if (formatted && formatted !== raw) {
+    elements.ratingInput.value = formatted;
+  }
 }
 
 function parsePlacement(value) {
@@ -1456,7 +1509,9 @@ function openRatingDialog(podcast) {
   elements.ratingDialogTitle.textContent = podcast.title;
   elements.ratingDialogMeta.textContent = podcast.host || podcast.publisher || "";
   elements.ratingInput.value =
-    existingRating === null || existingRating === undefined ? "" : String(existingRating).replace(".", ",");
+    existingRating === null || existingRating === undefined
+      ? ""
+      : formatRatingInputValue(existingRating);
   elements.ratingDeleteButton?.classList.toggle(
     "is-hidden",
     existingRating === null || existingRating === undefined
@@ -1487,7 +1542,8 @@ function closeRatingDialog() {
 async function saveActiveRating() {
   if (!state.supabase || !state.authUser || !state.activeRatingKey || !elements.ratingInput) return;
 
-  const numericValue = parseNumber(elements.ratingInput.value);
+  normalizeRatingInputField({ force: true });
+  const numericValue = parseRatingInputValue(elements.ratingInput.value);
 
   if (numericValue === null || numericValue < 0 || numericValue > 10) {
     updateRatingDialogMessage("Indtast en score mellem 0 og 10.", "warning");
@@ -2288,6 +2344,14 @@ function setupEvents() {
       render();
     });
   }
+
+  elements.ratingInput?.addEventListener("input", () => {
+    normalizeRatingInputField();
+  });
+
+  elements.ratingInput?.addEventListener("blur", () => {
+    normalizeRatingInputField({ force: true });
+  });
 
   if (elements.sortToggle) {
     elements.sortToggle.addEventListener("click", () => {
