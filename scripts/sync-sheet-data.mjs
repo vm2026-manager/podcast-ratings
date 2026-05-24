@@ -18,12 +18,80 @@ const SHEETS = [
   }
 ];
 
+const PODCAST_FIELDS = [
+  { output: "Titel", candidates: ["Titel", "Title"] },
+  { output: "Vært", candidates: ["Vært", "Vaert", "Host", "Værter"] },
+  {
+    output: "Vuring",
+    candidates: [
+      "Vuring",
+      "Vuring (1-10)",
+      "Vurdering",
+      "Vurdering (1-10)",
+      "Vuring/Vurdering",
+      "Vuring/Vurdering (1-10)",
+      "Rating",
+      "Score"
+    ]
+  },
+  { output: "Genre", candidates: ["Genre"] },
+  { output: "Udgiver", candidates: ["Udgiver", "Publisher"] },
+  { output: "Antal afsnit", candidates: ["Antal afsnit", "Afsnit", "Episodes"] },
+  { output: "Årstal afspillet", candidates: ["Årstal afspillet", "Aarstal afspillet", "År", "Aar"] },
+  { output: "Link", candidates: ["Link", "URL"] },
+  { output: "Afgivet vurdering", candidates: ["Afgivet vurdering", "Dato", "Vurderingsdato", "Bedømt"] },
+  { output: "Billedlink", candidates: ["Billedlink", "Billedefil", "Billede", "Cover", "Image"] },
+  {
+    output: "Kort beskrivelse",
+    candidates: ["Kort beskrivelse", "Kortbeskrivelse", "Beskrivelse", "Description"]
+  },
+  { output: "Placering", candidates: ["Placering", "Rank", "Rangering"] }
+];
+
+const FEATURED_FIELDS = [
+  { output: "Aktiv", candidates: ["Aktiv"] },
+  { output: "Titel", candidates: ["Titel"] },
+  { output: "Matchtitel", candidates: ["Matchtitel"] },
+  { output: "Kort vurdering", candidates: ["Kort vurdering"] },
+  { output: "Historie", candidates: ["Historie", "Historie/sag"] },
+  {
+    output: "Fortæller",
+    candidates: [
+      "Fortæller",
+      "Fortaeller",
+      "Vært",
+      "Vaert",
+      "Vært/formidling",
+      "Vaert/formidling",
+      "Fortælling"
+    ]
+  },
+  { output: "Lydside", candidates: ["Lydside", "Produktion"] },
+  { output: "Aktualitet", candidates: ["Aktualitet", "Aktualitet/relevans", "Relevans"] },
+  { output: "Samlet score", candidates: ["Samlet score"] },
+  { output: "Anmeldelsesdato", candidates: ["Anmeldelsesdato", "Anmeldelsesdat", "Anmeldt"] },
+  { output: "Visningsrækkefølge", candidates: ["Visningsrækkefølge"] },
+  { output: "Auto-udgiver", candidates: ["Auto-udgiver"] },
+  { output: "Auto-link", candidates: ["Auto-link"] },
+  { output: "Auto-billedlink", candidates: ["Auto-billedlink"] },
+  { output: "Auto-genre", candidates: ["Auto-genre"] },
+  { output: "Auto-vært", candidates: ["Auto-vært", "Auto-vaert"] }
+];
+
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const repoRoot = path.resolve(__dirname, "..");
 
 function normalizeText(value) {
   return String(value ?? "").trim();
+}
+
+function normalizeHeader(value) {
+  return String(value ?? "")
+    .trim()
+    .toLowerCase()
+    .replace(/^\uFEFF/, "")
+    .replace(/\s+/g, " ");
 }
 
 function buildSheetUrl(gid) {
@@ -107,24 +175,54 @@ function rowsToObjects(rows) {
     .filter((row) => Object.values(row).some((value) => normalizeText(value) !== ""));
 }
 
+function getField(row, candidates) {
+  const normalizedCandidates = candidates.map(normalizeHeader);
+
+  for (const [key, value] of Object.entries(row)) {
+    if (normalizedCandidates.includes(normalizeHeader(key))) {
+      return normalizeText(value);
+    }
+  }
+
+  return "";
+}
+
+function compactObject(entries) {
+  return Object.fromEntries(
+    Object.entries(entries).filter(([, value]) => normalizeText(value) !== "")
+  );
+}
+
+function pickFields(row, fieldMap) {
+  const output = {};
+
+  fieldMap.forEach(({ output, candidates }) => {
+    const value = getField(row, candidates);
+
+    if (value) {
+      output[output] = value;
+    }
+  });
+
+  return compactObject(output);
+}
+
 function filterPodcastRows(rows) {
-  return rows.filter((row) => normalizeText(row.Titel));
+  return rows.filter((row) => normalizeText(row.Titel || row.Title));
 }
 
 function filterFeaturedRows(rows) {
-  return rows.filter((row) => {
-    return normalizeText(row.Titel || row.Matchtitel || row["Kort vurdering"]);
-  });
+  return rows.filter((row) =>
+    normalizeText(row.Titel || row.Matchtitel || row["Kort vurdering"])
+  );
 }
 
-function createPayload(sheet, rows) {
-  return {
-    generatedAt: new Date().toISOString(),
-    sheetName: sheet.sheetName,
-    gid: sheet.gid,
-    count: rows.length,
-    rows
-  };
+function slimPodcastRows(rows) {
+  return rows.map((row) => pickFields(row, PODCAST_FIELDS));
+}
+
+function slimFeaturedRows(rows) {
+  return rows.map((row) => pickFields(row, FEATURED_FIELDS));
 }
 
 async function fetchSheetCsv(sheet) {
@@ -158,10 +256,14 @@ async function syncSheet(sheet) {
       ? filterFeaturedRows(objects)
       : filterPodcastRows(objects);
 
-  const payload = createPayload(sheet, filteredRows);
-  await writeJsonFile(sheet.outputPath, payload);
+  const slimRows =
+    sheet.sheetName === "Udvalgte vurderinger"
+      ? slimFeaturedRows(filteredRows)
+      : slimPodcastRows(filteredRows);
 
-  console.log(`Skrev ${payload.count} rækker til ${sheet.outputPath}`);
+  await writeJsonFile(sheet.outputPath, slimRows);
+
+  console.log(`Skrev ${slimRows.length} rækker til ${sheet.outputPath}`);
 }
 
 async function main() {

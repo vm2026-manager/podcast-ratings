@@ -15,7 +15,7 @@ const GENRES = [
 
 const FEATURED_ROTATION_MS = 8000;
 const INITIAL_VISIBLE_COUNT = 48;
-const DATA_VERSION = "2026-05-24-6";
+const DATA_VERSION = "2026-05-24-10";
 const EXPANDED_LIST_STORAGE_KEY = "podcast-ratings-expanded-list";
 const NEW_BADGE_DAYS = 14;
 const SUPABASE_CONFIG = window.PODCAST_SUPABASE_CONFIG || {
@@ -2478,18 +2478,18 @@ function buildPodcastLookup(podcasts) {
 
 async function loadPodcasts() {
   try {
-    const podcastRows = await loadPodcastObjectsFromJson();
+    const [podcastRows, featuredRows] = await Promise.all([
+      loadPodcastObjectsFromJson(),
+      loadFeaturedReviewObjectsFromJson().catch((error) => {
+        console.warn("Udvalgte vurderinger blev ikke indlæst:", error);
+        return [];
+      })
+    ]);
+
     const mappedPodcasts = podcastRows.map(mapPodcast).filter(isUsefulPodcast);
 
     state.podcasts = deduplicatePodcasts(mappedPodcasts);
     state.podcastByKey = buildPodcastLookup(state.podcasts);
-
-    let featuredRows = [];
-    try {
-      featuredRows = await loadFeaturedReviewObjectsFromJson();
-    } catch (error) {
-      console.warn("Udvalgte vurderinger blev ikke indl\u00e6st:", error);
-    }
 
     state.allReviews = featuredRows
       .map((row, index) => mapFeaturedReview(row, index, state.podcastByKey))
@@ -2585,6 +2585,11 @@ function loadVisitorCount() {
     }, 250);
 }
 
+function runSecondaryStartup() {
+  initSupabase();
+  loadVisitorCount();
+}
+
 ensureLoadMoreControls();
 setupEvents();
 updateAuthPasswordToggle();
@@ -2592,5 +2597,9 @@ window.setTimeout(() => {
   clearSearchInput({ rerender: true });
 }, 120);
 loadPodcasts();
-initSupabase();
-loadVisitorCount();
+
+if ("requestIdleCallback" in window) {
+  window.requestIdleCallback(runSecondaryStartup, { timeout: 1500 });
+} else {
+  window.setTimeout(runSecondaryStartup, 400);
+}
