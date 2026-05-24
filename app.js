@@ -15,7 +15,7 @@ const GENRES = [
 
 const FEATURED_ROTATION_MS = 8000;
 const INITIAL_VISIBLE_COUNT = 48;
-const DATA_VERSION = "2026-05-24-26";
+const DATA_VERSION = "2026-05-24-27";
 const EXPANDED_LIST_STORAGE_KEY = "podcast-ratings-expanded-list";
 const NEW_BADGE_DAYS = 14;
 const SUPABASE_CONFIG = window.PODCAST_SUPABASE_CONFIG || {
@@ -1614,6 +1614,8 @@ async function saveActiveRating() {
 async function deleteActiveRating() {
   if (!state.supabase || !state.authUser || !state.activeRatingKey) return;
 
+  const deletedKey = state.activeRatingKey;
+
   setAuthBusy(true);
   updateRatingDialogMessage("");
 
@@ -1622,11 +1624,13 @@ async function deleteActiveRating() {
       .from("user_ratings")
       .delete()
       .eq("user_id", state.authUser.id)
-      .eq("podcast_key", state.activeRatingKey);
+      .eq("podcast_key", deletedKey);
 
     if (error) throw error;
 
-    await refreshSupabaseState();
+    delete state.userRatingsByKey[deletedKey];
+    render();
+
     if (elements.ratingInput) {
       elements.ratingInput.value = "";
     }
@@ -1634,8 +1638,12 @@ async function deleteActiveRating() {
     if (elements.ratingSaveButton) {
       elements.ratingSaveButton.textContent = "Gem vurdering";
     }
-    updateRatingDialogMessage("Din vurdering er fjernet.", "success");
     setAuthMessage("Din vurdering er fjernet.", "success");
+    closeRatingDialog();
+    refreshSupabaseState().catch((refreshError) => {
+      console.error(refreshError);
+      setAuthMessage("Din vurdering er fjernet, men snittet kunne ikke opdateres endnu.", "warning");
+    });
   } catch (error) {
     console.error(error);
     updateRatingDialogMessage(error.message || "Kunne ikke fjerne vurderingen.", "error");
