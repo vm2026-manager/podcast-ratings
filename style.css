@@ -1217,11 +1217,50 @@ input:disabled {
 }
 
 .rating-summary {
+  position: relative;
   border: 1px solid rgba(223, 211, 196, 0.9);
   border-radius: 16px;
   background: rgba(255, 255, 255, 0.58);
   padding: 10px 12px;
   min-width: 0;
+}
+
+.rating-summary--community[data-user-rating] {
+  cursor: help;
+}
+
+.rating-summary--community[data-user-rating]:focus-visible {
+  outline: 2px solid rgba(226, 113, 44, 0.48);
+  outline-offset: 3px;
+}
+
+.rating-summary--community[data-user-rating]::after {
+  content: attr(data-user-rating);
+  position: absolute;
+  right: 10px;
+  bottom: calc(100% - 2px);
+  z-index: 4;
+  max-width: min(190px, calc(100vw - 32px));
+  padding: 6px 8px;
+  border: 1px solid rgba(111, 77, 51, 0.16);
+  border-radius: 8px;
+  background: #2f261f;
+  color: #fffaf4;
+  box-shadow: 0 10px 24px rgba(47, 38, 31, 0.18);
+  font-size: 0.68rem;
+  font-weight: 800;
+  line-height: 1.2;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(4px);
+  transition: opacity 160ms ease, transform 160ms ease;
+  white-space: nowrap;
+}
+
+.rating-summary--community[data-user-rating]:hover::after,
+.rating-summary--community[data-user-rating]:focus-visible::after {
+  opacity: 1;
+  transform: translateY(0);
 }
 
 .rating-summary__label {

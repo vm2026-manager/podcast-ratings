@@ -15,7 +15,7 @@ const GENRES = [
 
 const FEATURED_ROTATION_MS = 8000;
 const INITIAL_VISIBLE_COUNT = 48;
-const DATA_VERSION = "2026-05-24-15";
+const DATA_VERSION = "2026-05-24-16";
 const EXPANDED_LIST_STORAGE_KEY = "podcast-ratings-expanded-list";
 const NEW_BADGE_DAYS = 14;
 const SUPABASE_CONFIG = window.PODCAST_SUPABASE_CONFIG || {
@@ -1786,14 +1786,12 @@ function populateCardSummaries(article, podcast) {
   if (communitySummary) {
     delete communitySummary.dataset.userRating;
     communitySummary.removeAttribute("tabindex");
-    communitySummary.removeAttribute("title");
     communitySummary.removeAttribute("aria-label");
 
     if (userRating !== null && userRating !== undefined) {
       const userRatingText = `Din vurdering: ${formatRating(userRating)}`;
       communitySummary.dataset.userRating = userRatingText;
       communitySummary.setAttribute("tabindex", "0");
-      communitySummary.setAttribute("title", userRatingText);
       communitySummary.setAttribute("aria-label", `Brugernes snit. ${userRatingText}`);
     }
   }
@@ -1818,18 +1816,11 @@ function populateCardSummaries(article, podcast) {
 
   if (communityMeta) {
     if (communityStat?.ratingCount) {
-      const averageText = communityStat.averageRating
-        ? formatRating(communityStat.averageRating)
-        : "Ikke vurderet";
-      communityMeta.textContent =
-        `${averageText} fra ${formatRatingCount(communityStat.ratingCount)} brugere` +
-        (userRating !== null && userRating !== undefined
-          ? ` · Din: ${formatRating(userRating)}`
-          : "");
+      communityMeta.textContent = formatUserRatingCount(communityStat.ratingCount);
     } else if (isLoggedIn()) {
       communityMeta.textContent =
         userRating !== null && userRating !== undefined
-          ? `Din vurdering: ${formatRating(userRating)}`
+          ? "Din vurdering er gemt"
           : "Vær den første til at vurdere";
     } else {
       communityMeta.textContent = "Log ind for at stemme";
@@ -2716,3 +2707,4 @@ if ("requestIdleCallback" in window) {
 } else {
   window.setTimeout(runSecondaryStartup, 400);
 }
+
