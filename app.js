@@ -15,7 +15,7 @@ const GENRES = [
 
 const FEATURED_ROTATION_MS = 8000;
 const INITIAL_VISIBLE_COUNT = 48;
-const DATA_VERSION = "2026-05-24-23";
+const DATA_VERSION = "2026-05-24-24";
 const EXPANDED_LIST_STORAGE_KEY = "podcast-ratings-expanded-list";
 const NEW_BADGE_DAYS = 14;
 const SUPABASE_CONFIG = window.PODCAST_SUPABASE_CONFIG || {
@@ -1835,13 +1835,19 @@ function createPodcastReviewCardElement(podcast, review, key) {
   const article = document.createElement("article");
   article.className = "podcast-card podcast-card--review";
   article.dataset.key = key;
+  const hasOwnerRating = podcast.ratingValue !== null && podcast.ratingValue !== undefined;
+  article.classList.toggle("podcast-card--unranked", !hasOwnerRating);
 
   const placement = document.createElement("div");
   placement.className = "podcast-card__placement";
-  placement.innerHTML = `
-    <span class="placement-value">#${podcast.placement}</span>
-    <span class="placement-label">Placering</span>
-  `;
+  if (hasOwnerRating) {
+    placement.innerHTML = `
+      <span class="placement-value">#${podcast.placement}</span>
+      <span class="placement-label">Placering</span>
+    `;
+  } else {
+    placement.classList.add("is-hidden");
+  }
 
   const body = document.createElement("div");
   body.className = "podcast-card__body";
@@ -1997,13 +2003,19 @@ function createPodcastCardElement(podcast) {
   const favoriteButton = fragment.querySelector(".favorite-button");
   const chips = fragment.querySelector(".podcast-card__chips");
   const newBadge = fragment.querySelector(".podcast-card__new-badge");
+  const hasOwnerRating = podcast.ratingValue !== null && podcast.ratingValue !== undefined;
 
   article.dataset.key = key;
+  article.classList.toggle("podcast-card--unranked", !hasOwnerRating);
 
-  placement.innerHTML = `
-    <span class="placement-value">#${podcast.placement}</span>
-    <span class="placement-label">Placering</span>
-  `;
+  if (hasOwnerRating) {
+    placement.innerHTML = `
+      <span class="placement-value">#${podcast.placement}</span>
+      <span class="placement-label">Placering</span>
+    `;
+  } else {
+    placement.classList.add("is-hidden");
+  }
 
   setImage(media, podcast.image, podcast.title);
 

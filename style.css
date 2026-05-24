@@ -981,6 +981,10 @@ button {
   box-shadow: 0 10px 22px rgba(223, 84, 16, 0.24);
 }
 
+.podcast-card__placement.is-hidden {
+  display: none;
+}
+
 .placement-value {
   display: block;
   color: #fff;
