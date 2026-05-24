@@ -16,7 +16,7 @@
       rel="stylesheet"
     />
 
-    <link rel="stylesheet" href="style.css?v=2026-05-24-6" />
+    <link rel="stylesheet" href="style.css?v=2026-05-24-7" />
 
     <script
       data-goatcounter="https://podcastratings.goatcounter.com/count"
@@ -30,7 +30,7 @@
       };
     </script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
-    <script src="app.js?v=2026-05-24-6" defer></script>
+    <script src="app.js?v=2026-05-24-7" defer></script>
   </head>
 
   <body>
@@ -258,8 +258,6 @@
       <template id="podcastCardTemplate">
         <article class="podcast-card">
           <div class="podcast-card__placement"></div>
-          <div class="podcast-card__new-badge is-hidden">NY</div>
-
           <div class="podcast-card__utility">
             <button class="rate-button" type="button">Vurder</button>
             <button class="favorite-button" type="button" aria-label="Gem som favorit">
@@ -269,6 +267,7 @@
 
           <div class="podcast-card__body">
             <div class="podcast-card__media-column">
+              <div class="podcast-card__new-badge is-hidden">NY</div>
               <div class="podcast-card__media cover-wrap">
                 <img class="podcast-image" alt="" loading="lazy" />
                 <div class="image-placeholder" aria-hidden="true">
