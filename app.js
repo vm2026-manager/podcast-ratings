@@ -15,7 +15,7 @@ const GENRES = [
 
 const FEATURED_ROTATION_MS = 8000;
 const INITIAL_VISIBLE_COUNT = 48;
-const DATA_VERSION = "2026-05-24-14";
+const DATA_VERSION = "2026-05-24-15";
 const EXPANDED_LIST_STORAGE_KEY = "podcast-ratings-expanded-list";
 const NEW_BADGE_DAYS = 14;
 const SUPABASE_CONFIG = window.PODCAST_SUPABASE_CONFIG || {
@@ -1522,6 +1522,12 @@ function openRatingDialog(podcast) {
     existingRating === null || existingRating === undefined
       ? ""
       : formatRatingInputValue(existingRating);
+  if (elements.ratingSaveButton) {
+    elements.ratingSaveButton.textContent =
+      existingRating === null || existingRating === undefined
+        ? "Gem vurdering"
+        : "Opdater vurdering";
+  }
   elements.ratingDeleteButton?.classList.toggle(
     "is-hidden",
     existingRating === null || existingRating === undefined
@@ -1576,7 +1582,11 @@ async function saveActiveRating() {
     if (error) throw error;
 
     await refreshSupabaseState();
-    closeRatingDialog();
+    elements.ratingDeleteButton?.classList.remove("is-hidden");
+    if (elements.ratingSaveButton) {
+      elements.ratingSaveButton.textContent = "Opdater vurdering";
+    }
+    updateRatingDialogMessage("Din vurdering er gemt.", "success");
     setAuthMessage("Din vurdering er gemt.", "success");
   } catch (error) {
     console.error(error);
@@ -1602,7 +1612,14 @@ async function deleteActiveRating() {
     if (error) throw error;
 
     await refreshSupabaseState();
-    closeRatingDialog();
+    if (elements.ratingInput) {
+      elements.ratingInput.value = "";
+    }
+    elements.ratingDeleteButton?.classList.add("is-hidden");
+    if (elements.ratingSaveButton) {
+      elements.ratingSaveButton.textContent = "Gem vurdering";
+    }
+    updateRatingDialogMessage("Din vurdering er fjernet.", "success");
     setAuthMessage("Din vurdering er fjernet.", "success");
   } catch (error) {
     console.error(error);

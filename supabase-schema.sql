@@ -37,6 +37,9 @@ execute function public.set_updated_at();
 alter table public.user_ratings enable row level security;
 alter table public.saved_podcasts enable row level security;
 
+grant select, insert, update, delete on public.user_ratings to authenticated;
+grant select, insert, delete on public.saved_podcasts to authenticated;
+
 drop policy if exists "Users can read own ratings" on public.user_ratings;
 create policy "Users can read own ratings"
 on public.user_ratings
