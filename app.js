@@ -15,7 +15,7 @@ const GENRES = [
 
 const FEATURED_ROTATION_MS = 8000;
 const INITIAL_VISIBLE_COUNT = 48;
-const DATA_VERSION = "2026-05-25-03";
+const DATA_VERSION = "2026-05-25-04";
 const EXPANDED_LIST_STORAGE_KEY = "podcast-ratings-expanded-list";
 const NEW_BADGE_DAYS = 14;
 const SUPABASE_CONFIG = window.PODCAST_SUPABASE_CONFIG || {
@@ -733,7 +733,7 @@ function isNewPodcast(podcast) {
 function getScoreBadgeMarkup(value) {
   const number = parseNumber(value);
   if (number === null) {
-    return '<span class="rating-score-badge rating-score-badge--empty" aria-hidden="true">--</span>';
+    return '<span class="rating-score-badge rating-score-badge--empty" aria-hidden="true">–</span>';
   }
 
   return `<span class="rating-score-badge" aria-hidden="true">${number
@@ -1782,8 +1782,7 @@ function populateCardSummaries(article, podcast) {
   const userRating = getUserRating(key);
 
   if (ownerValue) {
-    ownerValue.textContent =
-      podcast.ratingValue !== null && podcast.ratingValue !== undefined ? "" : "Ikke vurderet";
+    ownerValue.textContent = "/ 10";
   }
 
   if (ownerStars) {
@@ -1814,10 +1813,7 @@ function populateCardSummaries(article, podcast) {
   }
 
   if (communityValue) {
-    communityValue.textContent =
-      communityStat?.averageRating !== null && communityStat?.averageRating !== undefined
-        ? ""
-        : "Ingen endnu";
+    communityValue.textContent = "/ 10";
   }
 
   if (communityStars) {
