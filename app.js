@@ -15,7 +15,7 @@ const GENRES = [
 
 const FEATURED_ROTATION_MS = 8000;
 const INITIAL_VISIBLE_COUNT = 48;
-const DATA_VERSION = "2026-05-25-02";
+const DATA_VERSION = "2026-05-25-03";
 const EXPANDED_LIST_STORAGE_KEY = "podcast-ratings-expanded-list";
 const NEW_BADGE_DAYS = 14;
 const SUPABASE_CONFIG = window.PODCAST_SUPABASE_CONFIG || {
@@ -1782,7 +1782,8 @@ function populateCardSummaries(article, podcast) {
   const userRating = getUserRating(key);
 
   if (ownerValue) {
-    ownerValue.textContent = podcast.ratingLabel || "Ikke vurderet";
+    ownerValue.textContent =
+      podcast.ratingValue !== null && podcast.ratingValue !== undefined ? "" : "Ikke vurderet";
   }
 
   if (ownerStars) {
@@ -1815,7 +1816,7 @@ function populateCardSummaries(article, podcast) {
   if (communityValue) {
     communityValue.textContent =
       communityStat?.averageRating !== null && communityStat?.averageRating !== undefined
-        ? formatRating(communityStat.averageRating)
+        ? ""
         : "Ingen endnu";
   }
 

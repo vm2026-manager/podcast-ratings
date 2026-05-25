@@ -1339,7 +1339,7 @@ input:disabled {
 
 .rating-summary__value-row {
   display: grid;
-  grid-template-columns: 46px minmax(0, 1fr);
+  grid-template-columns: auto minmax(0, 1fr);
   grid-template-areas: "badge value";
   align-items: center;
   gap: 10px;
@@ -1357,8 +1357,17 @@ input:disabled {
   word-break: normal;
 }
 
+.rating-summary__value:empty {
+  display: none;
+}
+
 .rating-summary__value--community {
   font-size: 0.88rem;
+}
+
+.rating-summary__value-row:has(.rating-summary__value:empty) {
+  grid-template-columns: auto;
+  grid-template-areas: "badge";
 }
 
 .rating-summary__stars {
