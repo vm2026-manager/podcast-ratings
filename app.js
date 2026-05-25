@@ -15,7 +15,7 @@ const GENRES = [
 
 const FEATURED_ROTATION_MS = 8000;
 const INITIAL_VISIBLE_COUNT = 48;
-const DATA_VERSION = "2026-05-24-27";
+const DATA_VERSION = "2026-05-25-01";
 const EXPANDED_LIST_STORAGE_KEY = "podcast-ratings-expanded-list";
 const NEW_BADGE_DAYS = 14;
 const SUPABASE_CONFIG = window.PODCAST_SUPABASE_CONFIG || {
@@ -730,22 +730,15 @@ function isNewPodcast(podcast) {
   return ageDays >= 0 && ageDays <= NEW_BADGE_DAYS;
 }
 
-function getStarMarkup(value, muted = false) {
+function getScoreBadgeMarkup(value) {
   const number = parseNumber(value);
-  const starCount = 10;
-
   if (number === null) {
-    return Array.from({ length: starCount }, () =>
-      '<span class="rating-star rating-star--empty">\u2605</span>'
-    ).join("");
+    return '<span class="rating-score-badge rating-score-badge--empty" aria-hidden="true">--</span>';
   }
 
-  const filled = Math.max(0, Math.min(starCount, Math.round(number)));
-  return Array.from({ length: starCount }, (_item, index) => {
-    const className =
-      index < filled ? "rating-star rating-star--filled" : "rating-star rating-star--empty";
-    return `<span class="${className}">\u2605</span>`;
-  }).join("");
+  return `<span class="rating-score-badge" aria-hidden="true">${number
+    .toFixed(1)
+    .replace(".", ",")}</span>`;
 }
 
 function resetVisibleCount() {
@@ -1794,13 +1787,10 @@ function populateCardSummaries(article, podcast) {
 
   if (ownerStars) {
     const hasOwnerRating = podcast.ratingValue !== null && podcast.ratingValue !== undefined;
-    ownerStars.innerHTML = getStarMarkup(
-      hasOwnerRating ? podcast.ratingValue : null,
-      !hasOwnerRating
-    );
+    ownerStars.innerHTML = getScoreBadgeMarkup(hasOwnerRating ? podcast.ratingValue : null);
     ownerStars.setAttribute(
       "aria-label",
-      hasOwnerRating ? `${formatRating(podcast.ratingValue)} stjerner` : "Ikke vurderet"
+      hasOwnerRating ? formatRating(podcast.ratingValue) : "Ikke vurderet"
     );
     ownerStars.classList.toggle("is-muted", !hasOwnerRating);
   }
@@ -1833,13 +1823,12 @@ function populateCardSummaries(article, podcast) {
     const hasCommunityRating =
       communityStat?.averageRating !== null && communityStat?.averageRating !== undefined;
 
-    communityStars.innerHTML = getStarMarkup(
-      hasCommunityRating ? communityStat.averageRating : null,
-      !hasCommunityRating
+    communityStars.innerHTML = getScoreBadgeMarkup(
+      hasCommunityRating ? communityStat.averageRating : null
     );
     communityStars.setAttribute(
       "aria-label",
-      hasCommunityRating ? `${formatRating(communityStat.averageRating)} stjerner` : "Ingen endnu"
+      hasCommunityRating ? formatRating(communityStat.averageRating) : "Ingen endnu"
     );
     communityStars.classList.toggle("is-muted", !hasCommunityRating);
   }
