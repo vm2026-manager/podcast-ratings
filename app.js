@@ -15,7 +15,7 @@ const GENRES = [
 
 const FEATURED_ROTATION_MS = 8000;
 const INITIAL_VISIBLE_COUNT = 48;
-const DATA_VERSION = "2026-05-25-05";
+const DATA_VERSION = "2026-05-26-01";
 const EXPANDED_LIST_STORAGE_KEY = "podcast-ratings-expanded-list";
 const NEW_BADGE_DAYS = 14;
 const SUPABASE_CONFIG = window.PODCAST_SUPABASE_CONFIG || {
@@ -1241,7 +1241,7 @@ function getCommunityStat(podcastKey) {
 }
 
 function getUserRating(podcastKey) {
-  return state.userRatingsByKey[podcastKey] || null;
+  return state.userRatingsByKey[podcastKey] ?? null;
 }
 
 function isPodcastSaved(podcastKey) {
@@ -1259,6 +1259,17 @@ function renderFavoriteButton(button, podcastKey) {
   if (icon) {
     icon.innerHTML = saved ? "&#9829;" : "&#9825;";
   }
+}
+
+function renderRateButton(button, podcastKey) {
+  if (!button) return;
+
+  const hasUserRating = getUserRating(podcastKey) !== null;
+  button.classList.toggle("has-user-rating", hasUserRating);
+  button.setAttribute(
+    "aria-label",
+    hasUserRating ? "Rediger din vurdering" : "Vurder podcast"
+  );
 }
 
 function updateRatingDialogMessage(message = "", tone = "info") {
@@ -1711,6 +1722,7 @@ function createRecentCardElement(podcast) {
   host.textContent = podcast.host || podcast.publisher || "";
   rating.textContent = podcast.ratingLabel || "Ikke vurderet";
   date.textContent = podcast.ratingDateLabel ? `Bed\u00f8mt ${podcast.ratingDateLabel}` : "";
+  renderRateButton(rateButton, getPodcastKey(podcast));
   renderFavoriteButton(favoriteButton, getPodcastKey(podcast));
 
   card.addEventListener("click", () => {
@@ -2058,6 +2070,7 @@ function createPodcastCardElement(podcast) {
   }
 
   rateButton.dataset.action = "open-rating";
+  renderRateButton(rateButton, key);
   favoriteButton.dataset.action = "toggle-save";
   renderFavoriteButton(favoriteButton, key);
 

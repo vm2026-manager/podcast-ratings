@@ -1080,9 +1080,14 @@ button {
 .rate-button::before,
 .recent-rate-button::before {
   content: "★";
-  color: var(--accent);
+  color: #cbb9aa;
   margin-right: 6px;
   font-size: 0.84rem;
+}
+
+.rate-button.has-user-rating::before,
+.recent-rate-button.has-user-rating::before {
+  color: var(--accent);
 }
 
 .recent-rate-button {
