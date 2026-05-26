@@ -14,8 +14,9 @@ const GENRES = [
 ];
 
 const FEATURED_ROTATION_MS = 8000;
-const INITIAL_VISIBLE_COUNT = 48;
-const DATA_VERSION = "2026-05-26-01";
+const INITIAL_VISIBLE_COUNT = 25;
+const AUTO_EXPAND_DELAY_MS = 900;
+const DATA_VERSION = "2026-05-26-02";
 const EXPANDED_LIST_STORAGE_KEY = "podcast-ratings-expanded-list";
 const NEW_BADGE_DAYS = 14;
 const SUPABASE_CONFIG = window.PODCAST_SUPABASE_CONFIG || {
@@ -64,8 +65,9 @@ const state = {
   activeFilter: null,
   searchTerm: "",
   sort: "placement-asc",
-  hasExpandedInitialList: readExpandedListPreference(),
-  visibleCount: readExpandedListPreference() ? Number.MAX_SAFE_INTEGER : INITIAL_VISIBLE_COUNT
+  hasExpandedInitialList: false,
+  visibleCount: INITIAL_VISIBLE_COUNT,
+  autoExpandHandle: null
 };
 
 const elements = {
@@ -742,9 +744,31 @@ function getScoreBadgeMarkup(value) {
 }
 
 function resetVisibleCount() {
-  state.visibleCount = state.hasExpandedInitialList
-    ? Number.MAX_SAFE_INTEGER
-    : INITIAL_VISIBLE_COUNT;
+  cancelAutoExpandPodcastGrid();
+  state.hasExpandedInitialList = false;
+  state.visibleCount = INITIAL_VISIBLE_COUNT;
+}
+
+function cancelAutoExpandPodcastGrid() {
+  if (!state.autoExpandHandle) return;
+
+  window.clearTimeout(state.autoExpandHandle);
+  state.autoExpandHandle = null;
+}
+
+function scheduleAutoExpandPodcastGrid(filteredCount, visibleCount) {
+  if (visibleCount >= filteredCount || state.hasExpandedInitialList || state.autoExpandHandle) {
+    return;
+  }
+
+  const expand = () => {
+    state.autoExpandHandle = null;
+    state.hasExpandedInitialList = true;
+    state.visibleCount = Number.MAX_SAFE_INTEGER;
+    renderPodcastGrid();
+  };
+
+  state.autoExpandHandle = window.setTimeout(expand, AUTO_EXPAND_DELAY_MS);
 }
 
 function clearSearchInput({ rerender = false } = {}) {
@@ -947,8 +971,8 @@ function updateLoadMoreUi(filteredCount, visibleCount) {
     return;
   }
 
-  elements.loadMoreWrap.classList.remove("is-hidden");
-  elements.loadMoreButton.textContent = `Vis resten (${remaining} tilbage)`;
+  elements.loadMoreWrap.classList.add("is-hidden");
+  elements.loadMoreButton.textContent = `Indl\u00e6ser resten (${remaining} tilbage)`;
 }
 
 function setImage(container, image, alt) {
@@ -2115,6 +2139,7 @@ function renderPodcastGrid() {
   }
 
   updateLoadMoreUi(filtered.length, visible.length);
+  scheduleAutoExpandPodcastGrid(filtered.length, visible.length);
 }
 
 function renderFeaturedReview() {
