@@ -16,7 +16,7 @@ const GENRES = [
 const FEATURED_ROTATION_MS = 8000;
 const INITIAL_VISIBLE_COUNT = 25;
 const AUTO_EXPAND_DELAY_MS = 900;
-const DATA_VERSION = "2026-05-26-02";
+const DATA_VERSION = "2026-05-26-03";
 const EXPANDED_LIST_STORAGE_KEY = "podcast-ratings-expanded-list";
 const NEW_BADGE_DAYS = 14;
 const SUPABASE_CONFIG = window.PODCAST_SUPABASE_CONFIG || {
@@ -50,7 +50,7 @@ const state = {
   session: null,
   authUser: null,
   authReady: false,
-  authConfigured: false,
+  authConfigured: hasSupabaseConfig(),
   authBusy: false,
   authMode: "signup",
   authMessageTimer: null,
