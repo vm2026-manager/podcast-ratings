@@ -16,7 +16,7 @@
       rel="stylesheet"
     />
 
-    <link rel="stylesheet" href="style.css?v=2026-05-26-03" />
+    <link rel="stylesheet" href="style.css?v=2026-05-26-04" />
 
     <script
       data-goatcounter="https://podcastratings.goatcounter.com/count"
@@ -30,7 +30,7 @@
       };
     </script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
-    <script src="app.js?v=2026-05-26-03" defer></script>
+    <script src="app.js?v=2026-05-26-04" defer></script>
   </head>
 
   <body>
@@ -227,7 +227,6 @@
         <article class="recent-card">
           <div class="recent-cover-wrap">
             <img class="recent-cover" alt="" loading="lazy" />
-            <span class="recent-rating"></span>
             <div
               class="image-placeholder image-placeholder-small"
               aria-hidden="true"
@@ -244,10 +243,13 @@
           </div>
 
           <div class="recent-actions">
-            <button class="recent-rate-button" type="button">Vurder</button>
-            <button class="favorite-button favorite-button--compact" type="button" aria-label="Gem som favorit">
-              <span aria-hidden="true">&#9825;</span>
-            </button>
+            <div class="recent-action-buttons">
+              <button class="recent-rate-button" type="button">Vurder</button>
+              <button class="favorite-button favorite-button--compact" type="button" aria-label="Gem som favorit">
+                <span aria-hidden="true">&#9825;</span>
+              </button>
+            </div>
+            <span class="recent-rating"></span>
           </div>
 
         </article>

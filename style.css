@@ -714,7 +714,7 @@ button {
 .recent-card {
   position: relative;
   display: grid;
-  grid-template-columns: 74px minmax(0, 1fr) 74px;
+  grid-template-columns: 74px minmax(0, 1fr) 108px;
   grid-template-areas: "cover copy actions";
   column-gap: 11px;
   align-items: center;
@@ -865,29 +865,34 @@ button {
   z-index: 1;
   display: flex;
   flex-direction: column;
-  align-items: center;
+  align-items: flex-end;
   justify-content: center;
-  gap: 7px;
+  gap: 6px;
   justify-self: end;
   min-width: 0;
+}
+
+.recent-action-buttons {
+  display: flex;
+  align-items: flex-end;
+  justify-content: flex-end;
+  gap: 6px;
 }
 
 .recent-rating {
   display: inline-flex;
   align-items: center;
-  position: absolute;
-  left: 5px;
-  right: 5px;
-  bottom: 5px;
   justify-content: center;
-  min-height: 24px;
-  padding: 0 6px;
+  min-height: 26px;
+  padding: 0 8px;
   border-radius: 999px;
-  background: rgba(255, 250, 244, 0.94);
+  background: rgba(255, 244, 237, 0.9);
+  border: 1px solid rgba(255, 106, 19, 0.2);
   color: #8f4f24;
-  box-shadow: 0 6px 16px rgba(66, 41, 20, 0.16);
   font-weight: 800;
   font-size: 0.74rem;
+  line-height: 1;
+  white-space: nowrap;
   letter-spacing: 0;
 }
 
@@ -1091,9 +1096,15 @@ button {
 }
 
 .recent-rate-button {
-  min-height: 31px;
-  padding: 0 11px;
+  min-height: 29px;
+  padding: 0 9px;
   border-radius: 999px;
+  font-size: 0.72rem;
+}
+
+.recent-rate-button::before {
+  margin-right: 4px;
+  font-size: 0.76rem;
 }
 
 .favorite-button {
@@ -1117,11 +1128,11 @@ button {
 }
 
 .favorite-button--compact {
-  width: 31px;
-  min-width: 31px;
-  min-height: 31px;
+  width: 29px;
+  min-width: 29px;
+  min-height: 29px;
   border-radius: 999px;
-  font-size: 0.94rem;
+  font-size: 0.9rem;
 }
 
 button:disabled,
