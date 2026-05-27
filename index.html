@@ -16,7 +16,7 @@
       rel="stylesheet"
     />
 
-    <link rel="stylesheet" href="style.css?v=2026-05-27-01" />
+    <link rel="stylesheet" href="style.css?v=2026-05-27-02" />
 
     <script
       data-goatcounter="https://podcastratings.goatcounter.com/count"
@@ -30,7 +30,7 @@
       };
     </script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
-    <script src="app.js?v=2026-05-27-01" defer></script>
+    <script src="app.js?v=2026-05-27-02" defer></script>
   </head>
 
   <body>
@@ -259,6 +259,7 @@
         <article class="podcast-card">
           <div class="podcast-card__placement"></div>
           <div class="podcast-card__utility">
+            <button class="podcast-card__link" type="button">&#197;bn link</button>
             <button class="rate-button" type="button">Vurder</button>
             <button class="favorite-button" type="button" aria-label="Gem som favorit">
               <span aria-hidden="true">&#9825;</span>
@@ -275,6 +276,9 @@
                   <span class="image-placeholder-label">Billede mangler</span>
                 </div>
               </div>
+              <button class="podcast-card__review is-hidden" type="button">
+                Anmeldelse
+              </button>
             </div>
 
             <div class="podcast-card__content">
@@ -282,13 +286,6 @@
                 <h3 class="podcast-card__title"></h3>
                 <p class="podcast-card__host"></p>
                 <p class="podcast-card__description"></p>
-              </div>
-
-              <div class="podcast-card__inline-actions">
-                <button class="podcast-card__link" type="button">&#197;bn link</button>
-                <button class="podcast-card__review is-hidden" type="button">
-                  Anmeldelse
-                </button>
               </div>
             </div>
           </div>
