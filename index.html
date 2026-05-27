@@ -16,7 +16,7 @@
       rel="stylesheet"
     />
 
-    <link rel="stylesheet" href="style.css?v=2026-05-27-02" />
+    <link rel="stylesheet" href="style.css?v=2026-05-27-07" />
 
     <script
       data-goatcounter="https://podcastratings.goatcounter.com/count"
@@ -30,7 +30,7 @@
       };
     </script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
-    <script src="app.js?v=2026-05-27-02" defer></script>
+    <script src="app.js?v=2026-05-27-07" defer></script>
   </head>
 
   <body>
@@ -340,8 +340,8 @@
           </p>
 
           <form class="auth-form" autocomplete="on">
-            <label class="auth-field">
-              <span>Email</span>
+            <div class="auth-field">
+              <label for="authEmail">Email</label>
               <input
                 id="authEmail"
                 name="email"
@@ -349,9 +349,9 @@
                 placeholder="din@email.dk"
                 autocomplete="username"
               />
-            </label>
-            <label class="auth-field">
-              <span>Adgangskode</span>
+            </div>
+            <div class="auth-field">
+              <label for="authPassword">Adgangskode</label>
               <div class="auth-password-wrap">
                 <input
                   id="authPassword"
@@ -370,13 +370,12 @@
                   Vis
                 </button>
               </div>
-            </label>
+            </div>
             <div class="auth-actions auth-actions--dialog">
               <button
                 id="signupButton"
                 class="auth-button auth-button--primary"
                 type="button"
-                onclick="window.podcastAuth?.submitSignup()"
               >
                 Opret dig
               </button>
@@ -384,7 +383,6 @@
                 id="loginButton"
                 class="auth-button auth-button--secondary"
                 type="button"
-                onclick="window.podcastAuth?.submitLogin()"
               >
                 Log ind
               </button>
@@ -394,7 +392,6 @@
               id="forgotPasswordButton"
               class="auth-text-button"
               type="button"
-              onclick="window.podcastAuth?.forgotPassword()"
             >
               Glemt kode?
             </button>

@@ -268,7 +268,8 @@ button {
   gap: 6px;
 }
 
-.auth-field span {
+.auth-field span,
+.auth-field > label {
   font-size: 0.72rem;
   font-weight: 800;
   color: #5f5349;
@@ -303,6 +304,7 @@ button {
   position: absolute;
   top: 50%;
   right: 8px;
+  z-index: 4;
   transform: translateY(-50%);
   min-height: 28px;
   padding: 0 10px;
@@ -1326,11 +1328,16 @@ input:disabled {
   min-width: 0;
 }
 
-.rating-summary--community[data-user-rating] {
-  cursor: help;
+.rating-summary--community.is-clickable {
+  cursor: pointer;
 }
 
-.rating-summary--community[data-user-rating]:focus-visible {
+.rating-summary--community.is-clickable:hover {
+  border-color: rgba(255, 106, 19, 0.42);
+  background: rgba(255, 250, 245, 0.78);
+}
+
+.rating-summary--community.is-clickable:focus-visible {
   outline: 2px solid rgba(226, 113, 44, 0.48);
   outline-offset: 3px;
 }

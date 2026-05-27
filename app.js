@@ -16,7 +16,7 @@ const GENRES = [
 const FEATURED_ROTATION_MS = 8000;
 const INITIAL_VISIBLE_COUNT = 25;
 const AUTO_EXPAND_DELAY_MS = 900;
-const DATA_VERSION = "2026-05-27-02";
+const DATA_VERSION = "2026-05-27-07";
 const EXPANDED_LIST_STORAGE_KEY = "podcast-ratings-expanded-list";
 const NEW_BADGE_DAYS = 14;
 const SUPABASE_CONFIG = window.PODCAST_SUPABASE_CONFIG || {
@@ -1012,6 +1012,7 @@ function setImage(container, image, alt) {
 function showAuthPrompt(preferredAction = "signup") {
   if (!elements.authDialog) return;
 
+  state.authBusy = false;
   state.authMode = preferredAction === "login" ? "login" : "signup";
 
   if (elements.authDialogTitle) {
@@ -1020,6 +1021,7 @@ function showAuthPrompt(preferredAction = "signup") {
   }
 
   clearAuthMessage();
+  renderAuthPanel();
   elements.authDialog.classList.remove("is-hidden");
   elements.authDialog.setAttribute("aria-hidden", "false");
   document.body.classList.add("has-dialog-open");
@@ -1191,7 +1193,7 @@ function updateAuthPasswordToggle() {
 }
 
 function toggleAuthPasswordVisibility() {
-  if (!elements.authPassword) return;
+  if (!elements.authPassword || elements.toggleAuthPasswordButton?.disabled) return;
 
   elements.authPassword.type = elements.authPassword.type === "password" ? "text" : "password";
   updateAuthPasswordToggle();
@@ -1200,8 +1202,9 @@ function toggleAuthPasswordVisibility() {
 function renderAuthPanel() {
   const configured = state.authConfigured;
   const loggedIn = isLoggedIn();
+  const waitingForSession = configured && !state.authReady;
 
-  elements.authLoggedOut?.classList.toggle("is-hidden", loggedIn);
+  elements.authLoggedOut?.classList.toggle("is-hidden", loggedIn || waitingForSession);
   elements.authLoggedIn?.classList.toggle("is-hidden", !loggedIn);
   elements.authPanel?.classList.toggle("is-authenticated", loggedIn);
 
@@ -1411,6 +1414,7 @@ async function initSupabase() {
   state.supabase.auth.onAuthStateChange(async (_event, sessionUpdate) => {
     state.session = sessionUpdate;
     state.authUser = sessionUpdate?.user || null;
+    state.authBusy = false;
     clearAuthMessage();
     renderAuthPanel();
     await refreshSupabaseState();
@@ -1418,6 +1422,8 @@ async function initSupabase() {
 }
 
 async function handleAuthAction(mode) {
+  if (state.authBusy) return;
+
   if (!state.supabase) {
     setAuthMessage(
       "Supabase er ikke sat op endnu. Tilføj først URL og anon key i konfigurationen.",
@@ -1489,6 +1495,8 @@ async function handleAuthAction(mode) {
 }
 
 async function requestPasswordReset() {
+  if (state.authBusy) return;
+
   if (!state.supabase) {
     setAuthMessage(
       "Supabase er ikke sat op endnu. Tilføj først URL og anon key i konfigurationen.",
@@ -1529,6 +1537,8 @@ async function requestPasswordReset() {
 }
 
 async function handleLogout() {
+  if (state.authBusy) return;
+
   if (!state.supabase) return;
 
   setAuthBusy(true);
@@ -1624,13 +1634,10 @@ async function saveActiveRating() {
 
     if (error) throw error;
 
+    state.userRatingsByKey[state.activeRatingKey] = numericValue;
     await refreshSupabaseState();
-    elements.ratingDeleteButton?.classList.remove("is-hidden");
-    if (elements.ratingSaveButton) {
-      elements.ratingSaveButton.textContent = "Opdater vurdering";
-    }
-    updateRatingDialogMessage("Din vurdering er gemt.", "success");
     setAuthMessage("Din vurdering er gemt.", "success");
+    closeRatingDialog();
   } catch (error) {
     console.error(error);
     updateRatingDialogMessage(error.message || "Kunne ikke gemme vurderingen.", "error");
@@ -1837,14 +1844,22 @@ function populateCardSummaries(article, podcast) {
 
   if (communitySummary) {
     delete communitySummary.dataset.userRating;
-    communitySummary.removeAttribute("tabindex");
-    communitySummary.removeAttribute("aria-label");
+    communitySummary.dataset.action = "open-rating";
+    communitySummary.setAttribute("role", "button");
+    communitySummary.setAttribute("tabindex", "0");
+    communitySummary.classList.add("is-clickable");
 
     if (userRating !== null && userRating !== undefined) {
       const userRatingText = `Din vurdering: ${formatRating(userRating)}`;
       communitySummary.dataset.userRating = userRatingText;
-      communitySummary.setAttribute("tabindex", "0");
-      communitySummary.setAttribute("aria-label", `Brugernes snit. ${userRatingText}`);
+      communitySummary.setAttribute(
+        "aria-label",
+        `Brugernes snit. ${userRatingText}. Tryk for at rette din vurdering.`
+      );
+    } else if (isLoggedIn()) {
+      communitySummary.setAttribute("aria-label", "Brugernes snit. Tryk for at give din vurdering.");
+    } else {
+      communitySummary.setAttribute("aria-label", "Brugernes snit. Log ind for at give din vurdering.");
     }
   }
 
@@ -2457,7 +2472,14 @@ function setupEvents() {
   }
 
   elements.ratingInput?.addEventListener("input", () => {
-    normalizeRatingInputField();
+    updateRatingDialogMessage("");
+  });
+
+  elements.ratingInput?.addEventListener("keydown", (event) => {
+    if (event.key !== "Enter" || state.authBusy) return;
+
+    event.preventDefault();
+    saveActiveRating();
   });
 
   elements.ratingInput?.addEventListener("blur", () => {
@@ -2493,7 +2515,17 @@ function setupEvents() {
 
   elements.logoutButton?.addEventListener("click", handleLogout);
   elements.authDialogCloseButton?.addEventListener("click", closeAuthDialog);
-  elements.toggleAuthPasswordButton?.addEventListener("click", toggleAuthPasswordVisibility);
+  elements.toggleAuthPasswordButton?.addEventListener("pointerdown", (event) => {
+    event.preventDefault();
+    toggleAuthPasswordVisibility();
+  });
+
+  elements.toggleAuthPasswordButton?.addEventListener("keydown", (event) => {
+    if (event.key !== "Enter" && event.key !== " ") return;
+
+    event.preventDefault();
+    toggleAuthPasswordVisibility();
+  });
   elements.forgotPasswordButton?.addEventListener("click", requestPasswordReset);
 
   const authForm = elements.authDialog?.querySelector(".auth-form");
@@ -2512,6 +2544,16 @@ function setupEvents() {
 
   if (elements.podcastGrid) {
     elements.podcastGrid.addEventListener("click", handlePodcastGridClick);
+    elements.podcastGrid.addEventListener("keydown", (event) => {
+      if (event.key !== "Enter" && event.key !== " ") return;
+      if (!(event.target instanceof HTMLElement)) return;
+
+      const actionTarget = event.target.closest("[data-action]");
+      if (!actionTarget || !elements.podcastGrid.contains(actionTarget)) return;
+
+      event.preventDefault();
+      actionTarget.click();
+    });
   }
 
   if (elements.featuredPanel) {
@@ -2539,16 +2581,6 @@ function setupEvents() {
 
     if (button?.id === "authDialogCloseButton") {
       closeAuthDialog();
-      return;
-    }
-
-    if (button?.id === "signupButton") {
-      handleAuthAction("signup");
-      return;
-    }
-
-    if (button?.id === "loginButton") {
-      handleAuthAction("login");
       return;
     }
 
