@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-05-29T17:58:58.158Z",
+  "generatedAt": "2026-05-29T19:34:41.529Z",
   "source": "https://docs.google.com/spreadsheets/d/e/2PACX-1vQRBWQdj-WDNN3l9yxIMCCu_O2dYfP7modSODcYgJRoQDG3GYsu83W_wIFyijPx6v8l-W011zrFyOdq/pub?gid=0&single=true&output=csv",
   "count": 698,
   "rows": [
@@ -10598,7 +10598,7 @@
     {
       "Placering": "665",
       "Titel": "TikTok-Manden",
-      "Vært": "",
+      "Vært": "Mathias Pedersen & Karina Muriel Mimoun",
       "Vuring (1-10)": "",
       "Genre": "True Crime",
       "Udgiver": "Radio Loud",
@@ -10606,7 +10606,7 @@
       "Årstal afspillet": "2026",
       "Link": "https://open.spotify.com/show/7z05MLi4btSXcIMziT0nGR",
       "Afgivet vurdering": "",
-      "Billedlink": "https://open.spotifycdn.com/cdn/images/favicon32.b64ecc03.png",
+      "Billedlink": "data:image/png;base64,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",
       "Kort beskrivelse": "Serie om anklager, sociale medier og kvinder, der står frem.",
       "": "",
       "Nævneværdige episo:": ""
@@ -10646,7 +10646,7 @@
     {
       "Placering": "668",
       "Titel": "I de forkerte hænder",
-      "Vært": "",
+      "Vært": "Thomas Arent",
       "Vuring (1-10)": "",
       "Genre": "Dokumentar",
       "Udgiver": "Ekstrabladet",
@@ -10654,7 +10654,7 @@
       "Årstal afspillet": "2026",
       "Link": "https://open.spotify.com/show/046iI5R8YPjFT4f4h6M8SF",
       "Afgivet vurdering": "",
-      "Billedlink": "https://open.spotifycdn.com/cdn/images/favicon32.b64ecc03.png",
+      "Billedlink": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRHuxqybelbV2-RPiVG9_dy0EgKvEon0jCLZQ&s",
       "Kort beskrivelse": "",
       "": "",
       "Nævneværdige episo:": ""
@@ -10662,7 +10662,7 @@
     {
       "Placering": "669",
       "Titel": "Op ad kaninhullet",
-      "Vært": "",
+      "Vært": "Christian Fuhlendorff, Christian Frederiksen & Masoud Vahedi",
       "Vuring (1-10)": "",
       "Genre": "Samfund",
       "Udgiver": "",
@@ -10678,7 +10678,7 @@
     {
       "Placering": "670",
       "Titel": "Mørklagt | Agent Samsam",
-      "Vært": "",
+      "Vært": "Puk Damsgård & Louise Dalsgaard",
       "Vuring (1-10)": "",
       "Genre": "Dokumentar",
       "Udgiver": "DR",
