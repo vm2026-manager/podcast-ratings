@@ -16,7 +16,7 @@
       rel="stylesheet"
     />
 
-    <link rel="stylesheet" href="style.css?v=2026-05-27-07" />
+    <link rel="stylesheet" href="style.css?v=2026-05-30-01" />
 
     <script
       data-goatcounter="https://podcastratings.goatcounter.com/count"
@@ -30,7 +30,7 @@
       };
     </script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
-    <script src="app.js?v=2026-05-27-07" defer></script>
+    <script src="app.js?v=2026-05-30-01" defer></script>
   </head>
 
   <body>
@@ -201,11 +201,33 @@
         <section class="ranking-toolbar" aria-live="polite">
           <p id="resultsText">Indl&#230;ser podcasts...</p>
 
-          <div class="sort-field sort-field--ranking">
-            <span>Sortering</span>
-            <button id="sortToggle" class="sort-toggle" type="button">
-              Placering: lavest f&#248;rst
-            </button>
+          <div class="ranking-controls">
+            <div class="ranking-source-field">
+              <span>Rangliste</span>
+              <div class="ranking-source-toggle" role="group" aria-label="V&#230;lg rangliste">
+                <button
+                  type="button"
+                  class="ranking-source-button active"
+                  data-ranking-source="mads"
+                >
+                  Mads
+                </button>
+                <button
+                  type="button"
+                  class="ranking-source-button"
+                  data-ranking-source="users"
+                >
+                  Brugere
+                </button>
+              </div>
+            </div>
+
+            <div class="sort-field sort-field--ranking">
+              <span>Sortering</span>
+              <button id="sortToggle" class="sort-toggle" type="button">
+                Placering: lavest f&#248;rst
+              </button>
+            </div>
           </div>
         </section>
 

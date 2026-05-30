@@ -16,7 +16,7 @@ const GENRES = [
 const FEATURED_ROTATION_MS = 8000;
 const INITIAL_VISIBLE_COUNT = 25;
 const AUTO_EXPAND_DELAY_MS = 900;
-const DATA_VERSION = "2026-05-27-07";
+const DATA_VERSION = "2026-05-30-01";
 const EXPANDED_LIST_STORAGE_KEY = "podcast-ratings-expanded-list";
 const NEW_BADGE_DAYS = 14;
 const SUPABASE_CONFIG = window.PODCAST_SUPABASE_CONFIG || {
@@ -54,8 +54,10 @@ const state = {
   authBusy: false,
   authMode: "signup",
   authMessageTimer: null,
+  pendingAuthAction: null,
   userRatingsByKey: {},
   communityStatsByKey: {},
+  userRankByKey: {},
   savedPodcastKeys: new Set(),
   activeRatingKey: null,
   openReviewKeys: new Set(),
@@ -64,6 +66,7 @@ const state = {
   featuredPaused: false,
   activeFilter: null,
   searchTerm: "",
+  rankingSource: "mads",
   sort: "placement-asc",
   hasExpandedInitialList: false,
   visibleCount: INITIAL_VISIBLE_COUNT,
@@ -74,6 +77,7 @@ const elements = {
   genreChips: document.getElementById("genreChips"),
   searchInput: document.getElementById("searchInput"),
   sortToggle: document.getElementById("sortToggle"),
+  rankingSourceButtons: document.querySelectorAll("[data-ranking-source]"),
   resultsText: document.getElementById("resultsText"),
   rankingToolbar: document.querySelector(".ranking-toolbar"),
   podcastGrid: document.getElementById("podcastGrid"),
@@ -538,6 +542,26 @@ function mapPodcast(row, index) {
   const link = extractUrl(getField(row, ["Link", "URL"]));
   const ratingDate = getField(row, ["Afgivet vurdering", "Dato", "Vurderingsdato", "Bed\u00f8mt"]);
   const image = extractUrl(getField(row, ["Billedlink", "Billedefil", "Billede", "Cover", "Image"]));
+  const userAverageRating = parseNumber(
+    getField(row, [
+      "Brugernes snit",
+      "Brugerens snit",
+      "Brugervurdering",
+      "User average rating",
+      "userAverageRating"
+    ])
+  );
+  const userRatingCount = parseNumber(
+    getField(row, [
+      "Antal brugervurderinger",
+      "Brugerstemmer",
+      "User rating count",
+      "userRatingCount"
+    ])
+  );
+  const userRank = parsePlacement(
+    getField(row, ["Brugerplacering", "User rank", "userRank"])
+  );
   const description = getField(row, [
     "Kort beskrivelse",
     "Kortbeskrivelse",
@@ -566,6 +590,9 @@ function mapPodcast(row, index) {
     ratingDate,
     ratingDateObject: parseDate(ratingDate),
     ratingDateLabel: formatDate(ratingDate),
+    userAverageRating,
+    userRatingCount,
+    userRank,
     image,
     description,
     placement: placement ?? index + 1,
@@ -860,6 +887,27 @@ function getFilteredPodcasts() {
       return queryParts.every((part) => podcast.searchText.includes(part));
     })
     .sort((a, b) => {
+      if (state.rankingSource === "users") {
+        const aRank = getPodcastUserRank(a);
+        const bRank = getPodcastUserRank(b);
+        const aHasRank = aRank !== null;
+        const bHasRank = bRank !== null;
+
+        if (aHasRank !== bHasRank) {
+          return aHasRank ? -1 : 1;
+        }
+
+        if (!aHasRank && !bHasRank) {
+          return a.placement - b.placement;
+        }
+
+        if (state.sort === "placement-desc") {
+          return bRank - aRank;
+        }
+
+        return aRank - bRank;
+      }
+
       if (state.sort === "placement-desc") {
         const aHasRating = a.ratingValue !== null;
         const bHasRating = b.ratingValue !== null;
@@ -873,6 +921,58 @@ function getFilteredPodcasts() {
 
       return a.placement - b.placement;
     });
+}
+
+function getPodcastUserRank(podcast) {
+  const key = getPodcastKey(podcast);
+  if (state.userRankByKey[key]) return state.userRankByKey[key];
+  return podcast.userRank || null;
+}
+
+function getPodcastPlacementDisplay(podcast) {
+  if (state.rankingSource === "users") {
+    const rank = getPodcastUserRank(podcast);
+    return {
+      hasPlacement: rank !== null,
+      value: rank,
+      label: "Bruger"
+    };
+  }
+
+  const hasOwnerRating = podcast.ratingValue !== null && podcast.ratingValue !== undefined;
+  return {
+    hasPlacement: hasOwnerRating,
+    value: podcast.placement,
+    label: "Placering"
+  };
+}
+
+function rebuildUserRanks() {
+  const ranked = state.podcasts
+    .map((podcast) => {
+      const key = getPodcastKey(podcast);
+      const stat = getCommunityStat(key);
+      const averageRating = stat?.averageRating ?? podcast.userAverageRating;
+
+      return {
+        key,
+        podcast,
+        averageRating: parseNumber(averageRating)
+      };
+    })
+    .filter((item) => item.averageRating !== null)
+    .sort((a, b) => {
+      if (b.averageRating !== a.averageRating) {
+        return b.averageRating - a.averageRating;
+      }
+
+      return a.podcast.placement - b.podcast.placement;
+    });
+
+  state.userRankByKey = {};
+  ranked.forEach((item, index) => {
+    state.userRankByKey[item.key] = index + 1;
+  });
 }
 
 function updateActiveFilterUi() {
@@ -900,6 +1000,14 @@ function updateSortToggleUi() {
     state.sort === "placement-asc"
       ? "Placering: lavest f\u00f8rst"
       : "Placering: h\u00f8jest f\u00f8rst";
+}
+
+function updateRankingSourceUi() {
+  elements.rankingSourceButtons?.forEach((button) => {
+    const active = button.dataset.rankingSource === state.rankingSource;
+    button.classList.toggle("active", active);
+    button.setAttribute("aria-pressed", String(active));
+  });
 }
 
 function getResultsText(filteredCount, visibleCount) {
@@ -1031,9 +1139,12 @@ function showAuthPrompt(preferredAction = "signup") {
   }, 40);
 }
 
-function closeAuthDialog() {
+function closeAuthDialog({ clearPending = true } = {}) {
   if (!elements.authDialog) return;
 
+  if (clearPending) {
+    state.pendingAuthAction = null;
+  }
   elements.authDialog.classList.add("is-hidden");
   elements.authDialog.setAttribute("aria-hidden", "true");
 
@@ -1264,7 +1375,21 @@ function renderAuthPanel() {
 }
 
 function getCommunityStat(podcastKey) {
-  return state.communityStatsByKey[podcastKey] || null;
+  if (state.communityStatsByKey[podcastKey]) {
+    return state.communityStatsByKey[podcastKey];
+  }
+
+  const podcast = state.podcastByKey[podcastKey];
+  if (!podcast) return null;
+
+  if (podcast.userAverageRating === null || podcast.userAverageRating === undefined) {
+    return null;
+  }
+
+  return {
+    averageRating: podcast.userAverageRating,
+    ratingCount: Number(podcast.userRatingCount || 0)
+  };
 }
 
 function getUserRating(podcastKey) {
@@ -1365,6 +1490,7 @@ async function refreshSupabaseState() {
 
   await fetchCommunityStats();
   await fetchUserState();
+  rebuildUserRanks();
   render();
 }
 
@@ -1415,6 +1541,16 @@ async function initSupabase() {
     state.session = sessionUpdate;
     state.authUser = sessionUpdate?.user || null;
     state.authBusy = false;
+    if (!state.authUser) {
+      state.userRatingsByKey = {};
+      state.savedPodcastKeys = new Set();
+      state.activeRatingKey = null;
+      if (state.activeFilter?.type === "saved") {
+        state.activeFilter = null;
+        resetVisibleCount();
+      }
+      closeRatingDialog();
+    }
     clearAuthMessage();
     renderAuthPanel();
     await refreshSupabaseState();
@@ -1458,9 +1594,13 @@ async function handleAuthAction(mode) {
 
       if (error) throw error;
 
+      state.session = data.session || state.session;
+      state.authUser = data.session?.user || data.user || state.authUser;
       if (data.session) {
+        await refreshSupabaseState();
         setAuthMessage("Din konto er oprettet, og du er nu logget ind.", "success", "hero");
-        closeAuthDialog();
+        closeAuthDialog({ clearPending: false });
+        completePendingAuthAction();
       } else {
         setAuthMessage(
           "Kontoen er oprettet. Hvis du vil logge ind med det samme uden mail, så slå Confirm email fra i Supabase.",
@@ -1469,15 +1609,19 @@ async function handleAuthAction(mode) {
         );
       }
     } else {
-      const { error } = await state.supabase.auth.signInWithPassword({
+      const { data, error } = await state.supabase.auth.signInWithPassword({
         email,
         password
       });
 
       if (error) throw error;
 
+      state.session = data.session || state.session;
+      state.authUser = data.session?.user || state.authUser;
+      await refreshSupabaseState();
       setAuthMessage("Du er nu logget ind.", "success", "hero");
-      closeAuthDialog();
+      closeAuthDialog({ clearPending: false });
+      completePendingAuthAction();
     }
 
     if (elements.authPassword) {
@@ -1546,6 +1690,18 @@ async function handleLogout() {
   try {
     const { error } = await state.supabase.auth.signOut();
     if (error) throw error;
+    state.session = null;
+    state.authUser = null;
+    state.userRatingsByKey = {};
+    state.savedPodcastKeys = new Set();
+    state.activeRatingKey = null;
+    if (state.activeFilter?.type === "saved") {
+      state.activeFilter = null;
+      resetVisibleCount();
+    }
+    closeRatingDialog();
+    closeAuthDialog();
+    render();
     setAuthMessage("Du er logget ud.", "success", "hero");
   } catch (error) {
     console.error(error);
@@ -1558,6 +1714,10 @@ async function handleLogout() {
 
 function openRatingDialog(podcast) {
   if (!isLoggedIn()) {
+    state.pendingAuthAction = {
+      type: "rating",
+      podcastKey: getPodcastKey(podcast)
+    };
     showAuthPrompt("login");
     setAuthMessage("Log ind for at gemme din egen vurdering.", "warning", "dialog");
     return;
@@ -1605,6 +1765,25 @@ function closeRatingDialog() {
   elements.ratingDialog.setAttribute("aria-hidden", "true");
   if (elements.authDialog?.classList.contains("is-hidden")) {
     document.body.classList.remove("has-dialog-open");
+  }
+}
+
+function completePendingAuthAction() {
+  const pending = state.pendingAuthAction;
+  state.pendingAuthAction = null;
+
+  if (!pending || !state.authUser) return;
+
+  const podcast = state.podcastByKey[pending.podcastKey];
+  if (!podcast) return;
+
+  if (pending.type === "rating") {
+    openRatingDialog(podcast);
+    return;
+  }
+
+  if (pending.type === "save") {
+    toggleSavedPodcast(podcast);
   }
 }
 
@@ -1689,6 +1868,10 @@ async function deleteActiveRating() {
 
 async function toggleSavedPodcast(podcast) {
   if (!isLoggedIn()) {
+    state.pendingAuthAction = {
+      type: "save",
+      podcastKey: getPodcastKey(podcast)
+    };
     showAuthPrompt("login");
     setAuthMessage("Log ind for at gemme podcasts til senere.", "warning", "dialog");
     return;
@@ -1896,21 +2079,21 @@ function createPodcastReviewCardElement(podcast, review, key) {
   const article = document.createElement("article");
   article.className = "podcast-card podcast-card--review";
   article.dataset.key = key;
-  const hasOwnerRating = podcast.ratingValue !== null && podcast.ratingValue !== undefined;
-  article.classList.toggle("podcast-card--unranked", !hasOwnerRating);
+  const placementDisplay = getPodcastPlacementDisplay(podcast);
+  article.classList.toggle("podcast-card--unranked", !placementDisplay.hasPlacement);
 
   const placement = document.createElement("div");
   placement.className = "podcast-card__placement";
-  if (hasOwnerRating) {
+  if (placementDisplay.hasPlacement) {
     placement.innerHTML = `
-      <span class="placement-value">#${podcast.placement}</span>
-      <span class="placement-label">Placering</span>
+      <span class="placement-value">#${placementDisplay.value}</span>
+      <span class="placement-label">${placementDisplay.label}</span>
     `;
   } else {
     placement.classList.add("podcast-card__placement--unranked");
     placement.innerHTML = `
       <span class="placement-value">#---</span>
-      <span class="placement-label">Ikke rangeret</span>
+      <span class="placement-label">${placementDisplay.label}</span>
     `;
   }
 
@@ -2068,21 +2251,21 @@ function createPodcastCardElement(podcast) {
   const favoriteButton = fragment.querySelector(".favorite-button");
   const chips = fragment.querySelector(".podcast-card__chips");
   const newBadge = fragment.querySelector(".podcast-card__new-badge");
-  const hasOwnerRating = podcast.ratingValue !== null && podcast.ratingValue !== undefined;
+  const placementDisplay = getPodcastPlacementDisplay(podcast);
 
   article.dataset.key = key;
-  article.classList.toggle("podcast-card--unranked", !hasOwnerRating);
+  article.classList.toggle("podcast-card--unranked", !placementDisplay.hasPlacement);
 
-  if (hasOwnerRating) {
+  if (placementDisplay.hasPlacement) {
     placement.innerHTML = `
-      <span class="placement-value">#${podcast.placement}</span>
-      <span class="placement-label">Placering</span>
+      <span class="placement-value">#${placementDisplay.value}</span>
+      <span class="placement-label">${placementDisplay.label}</span>
     `;
   } else {
     placement.classList.add("podcast-card__placement--unranked");
     placement.innerHTML = `
       <span class="placement-value">#---</span>
-      <span class="placement-label">Ikke rangeret</span>
+      <span class="placement-label">${placementDisplay.label}</span>
     `;
   }
 
@@ -2384,6 +2567,7 @@ function render() {
   renderAuthPanel();
   updateActiveFilterUi();
   updateSortToggleUi();
+  updateRankingSourceUi();
   renderRecent();
   renderPodcastGrid();
   renderFeaturedReview();
@@ -2494,6 +2678,17 @@ function setupEvents() {
       render();
     });
   }
+
+  elements.rankingSourceButtons?.forEach((button) => {
+    button.addEventListener("click", () => {
+      const nextSource = button.dataset.rankingSource === "users" ? "users" : "mads";
+      if (state.rankingSource === nextSource) return;
+
+      state.rankingSource = nextSource;
+      resetVisibleCount();
+      render();
+    });
+  });
 
   elements.openSignupButton?.addEventListener("click", () => {
     showAuthPrompt("signup");
@@ -2719,6 +2914,7 @@ async function loadPodcasts() {
     state.featuredReviewByKey = buildFeaturedReviewLookup(state.allReviews);
     state.featuredIndex = 0;
     state.featuredPaused = false;
+    rebuildUserRanks();
 
     createGenreChips();
     render();

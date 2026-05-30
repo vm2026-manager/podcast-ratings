@@ -927,6 +927,56 @@ button {
   color: #5d534a;
 }
 
+.ranking-controls {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 14px;
+}
+
+.ranking-source-field {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.ranking-source-field > span {
+  font-size: 0.94rem;
+  font-weight: 800;
+}
+
+.ranking-source-toggle {
+  display: inline-flex;
+  align-items: center;
+  min-height: 48px;
+  padding: 4px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  background: rgba(255, 255, 255, 0.78);
+}
+
+.ranking-source-button {
+  min-height: 38px;
+  padding: 0 14px;
+  border: 0;
+  border-radius: 13px;
+  background: transparent;
+  color: #8a552f;
+  font-size: 0.84rem;
+  font-weight: 800;
+  cursor: pointer;
+  transition:
+    background 0.16s ease,
+    color 0.16s ease,
+    box-shadow 0.16s ease;
+}
+
+.ranking-source-button.active {
+  background: linear-gradient(180deg, var(--accent), var(--accent-deep));
+  color: #fff;
+  box-shadow: 0 8px 14px rgba(223, 84, 16, 0.16);
+}
+
 .sort-field--ranking {
   min-width: 340px;
   display: grid;
@@ -2141,6 +2191,24 @@ body.has-dialog-open {
   .ranking-toolbar {
     order: 8;
     grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  .ranking-controls {
+    width: 100%;
+    justify-content: stretch;
+    align-items: stretch;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .ranking-source-field,
+  .sort-field--ranking {
+    width: 100%;
+  }
+
+  .ranking-source-field {
+    justify-content: space-between;
   }
 
   .podcast-grid {
@@ -2164,6 +2232,7 @@ body.has-dialog-open {
     width: 100%;
     min-width: 0;
     grid-template-columns: 1fr;
+    gap: 6px;
   }
 }
 
