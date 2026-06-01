@@ -138,6 +138,7 @@ button {
 }
 
 .brand-copy {
+  flex: 1 1 auto;
   min-width: 0;
 }
 
@@ -156,6 +157,27 @@ button {
   font-size: 0.88rem;
   line-height: 1.2;
   font-weight: 600;
+}
+
+.view-mode-toggle {
+  flex: 0 0 auto;
+  min-height: 34px;
+  padding: 0 12px;
+  border: 1px solid rgba(223, 84, 16, 0.24);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.7);
+  color: var(--accent-deep);
+  font-size: 0.76rem;
+  font-weight: 900;
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+}
+
+.view-mode-toggle:hover,
+.view-mode-toggle[aria-pressed="true"] {
+  background: var(--accent);
+  color: #fff;
+  border-color: var(--accent);
 }
 
 .sidebar-section,
@@ -2456,4 +2478,74 @@ body.has-dialog-open {
   .podcast-card__inline-actions {
     justify-content: flex-start;
   }
+}
+
+html.force-desktop-view,
+body.force-desktop-view {
+  overflow-x: auto;
+}
+
+.force-desktop-view .page-shell {
+  width: 1180px;
+  max-width: none;
+  display: grid;
+  grid-template-columns: var(--sidebar-width) minmax(0, 1fr);
+  gap: 24px;
+  align-items: start;
+}
+
+.force-desktop-view .sidebar {
+  position: sticky;
+  top: 16px;
+  width: 100%;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.force-desktop-view .content-shell {
+  display: block;
+  min-width: 0;
+}
+
+.force-desktop-view .sidebar-logo,
+.force-desktop-view .hero,
+.force-desktop-view .recent-section,
+.force-desktop-view .featured-panel,
+.force-desktop-view .genre-nav,
+.force-desktop-view .controls-sidebar,
+.force-desktop-view .ranking-toolbar,
+.force-desktop-view .podcast-grid,
+.force-desktop-view .load-more-wrap,
+.force-desktop-view .site-footer {
+  order: initial;
+}
+
+.force-desktop-view .hero {
+  grid-template-columns: minmax(0, 1fr) 290px;
+}
+
+.force-desktop-view .podcast-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.force-desktop-view .recent-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.force-desktop-view .ranking-toolbar {
+  grid-template-columns: minmax(0, 1fr) auto;
+}
+
+.force-desktop-view .ranking-controls {
+  width: auto;
+  justify-content: flex-end;
+  align-items: center;
+  flex-wrap: nowrap;
+}
+
+.force-desktop-view .ranking-source-field,
+.force-desktop-view .sort-field--ranking {
+  width: auto;
 }

@@ -16,9 +16,37 @@ const GENRES = [
 const FEATURED_ROTATION_MS = 8000;
 const INITIAL_VISIBLE_COUNT = 25;
 const AUTO_EXPAND_DELAY_MS = 900;
-const DATA_VERSION = "2026-05-30-01";
+const DATA_VERSION = "2026-06-01-02";
 const EXPANDED_LIST_STORAGE_KEY = "podcast-ratings-expanded-list";
+const VIEW_MODE_STORAGE_KEY = "podcast-ratings-desktop-view";
 const NEW_BADGE_DAYS = 14;
+const IMAGE_FALLBACK_EXTENSIONS = ["jpg", "jpeg", "png", "webp"];
+const LOCAL_COVER_ALIASES = {
+  "data/covers/075-boraghi-og-pengedoktoren.jpg": "data/covers/076-boraghi-og-pengedoktoren.jpg",
+  "data/covers/076-borgen-unplugged.jpg": "data/covers/077-borgen-unplugged.jpg",
+  "data/covers/077-mediano-waiting.jpg": "data/covers/078-mediano-waiting.jpg",
+  "data/covers/078-med-dansk-hilsen.jpg": "data/covers/079-med-dansk-hilsen.jpg",
+  "data/covers/079-casey-anthony-den-mest-hadede-kvinde-i-usa.png": "data/covers/080-casey-anthony-den-mest-hadede-kvinde-i-usa.png",
+  "data/covers/086-frank-william-abagnale.png": "data/covers/087-frank-william-abagnale.png",
+  "data/covers/090-genstart.jpg": "data/covers/091-genstart.jpg",
+  "data/covers/091-livet-if-lge-emil-og-thomas.jpg": "data/covers/092-livet-if-lge-emil-og-thomas.jpg",
+  "data/covers/183-mediano-marketing.jpg": "data/covers/187-mediano-marketing.jpg",
+  "data/covers/184-max-mediano.jpg": "data/covers/188-max-mediano.jpg",
+  "data/covers/194-der-var-engang-et-mal-af-peter-m-ller-mod-farum.jpg": "data/covers/198-der-var-engang-et-mal-af-peter-m-ller-mod-farum.jpg",
+  "data/covers/210-blodbad.jpg": "data/covers/214-blodbad.jpg",
+  "data/covers/269-spiralkampagnen.png": "data/covers/272-spiralkampagnen.png",
+  "data/covers/280-sadan-blev-han-victor-froholdt.jpg": "data/covers/282-sadan-blev-han-victor-froholdt.jpg",
+  "data/covers/281-minimax.jpg": "data/covers/283-minimax.jpg",
+  "data/covers/293-mediano-special-sagen-om-de-15-point-forsvandt-fra-inlommen-af-den-gamle-dame.jpg": "data/covers/299-mediano-special-sagen-om-de-15-point-forsvandt-fra-inlommen-af-den-gamle-dame.jpg",
+  "data/covers/305-bech-bag-bolden-landsholdets-analytiker-mounir-akhiat.jpg": "data/covers/315-bech-bag-bolden-landsholdets-analytiker-mounir-akhiat.jpg",
+  "data/covers/311-den-store-talentserie.jpg": "data/covers/320-den-store-talentserie.jpg",
+  "data/covers/356-reality-tjek.jpg": "data/covers/362-reality-tjek.jpg",
+  "data/covers/378-hammers-kaffebar.jpg": "data/covers/383-hammers-kaffebar.jpg",
+  "data/covers/424-europa-rundt-med-hebo.jpg": "data/covers/294-europa-rundt-med-hebo.jpg",
+  "data/covers/446-valgfl-sk.jpg": "data/covers/445-valgfl-sk.jpg",
+  "data/covers/451-peter-og-profeterne.jpg": "data/covers/450-peter-og-profeterne.jpg",
+  "data/covers/512-i-dinosaurernes-fodspor.jpg": "data/covers/509-i-dinosaurernes-fodspor.jpg"
+};
 const SUPABASE_CONFIG = window.PODCAST_SUPABASE_CONFIG || {
   url: "",
   anonKey: ""
@@ -35,6 +63,22 @@ function readExpandedListPreference() {
 function persistExpandedListPreference(value) {
   try {
     window.localStorage.setItem(EXPANDED_LIST_STORAGE_KEY, value ? "true" : "false");
+  } catch {
+    // Ignore localStorage failures.
+  }
+}
+
+function readDesktopViewPreference() {
+  try {
+    return window.localStorage.getItem(VIEW_MODE_STORAGE_KEY) === "true";
+  } catch {
+    return false;
+  }
+}
+
+function persistDesktopViewPreference(value) {
+  try {
+    window.localStorage.setItem(VIEW_MODE_STORAGE_KEY, value ? "true" : "false");
   } catch {
     // Ignore localStorage failures.
   }
@@ -68,6 +112,7 @@ const state = {
   searchTerm: "",
   rankingSource: "mads",
   sort: "placement-asc",
+  desktopView: readDesktopViewPreference(),
   hasExpandedInitialList: false,
   visibleCount: INITIAL_VISIBLE_COUNT,
   autoExpandHandle: null
@@ -75,6 +120,8 @@ const state = {
 
 const elements = {
   genreChips: document.getElementById("genreChips"),
+  viewportMeta: document.getElementById("viewportMeta"),
+  viewModeToggle: document.getElementById("viewModeToggle"),
   searchInput: document.getElementById("searchInput"),
   sortToggle: document.getElementById("sortToggle"),
   rankingSourceButtons: document.querySelectorAll("[data-ranking-source]"),
@@ -130,6 +177,31 @@ const elements = {
   loadMoreWrap: null,
   loadMoreButton: null
 };
+
+function applyViewModePreference() {
+  const desktopView = Boolean(state.desktopView);
+
+  document.documentElement.classList.toggle("force-desktop-view", desktopView);
+  document.body.classList.toggle("force-desktop-view", desktopView);
+
+  if (elements.viewportMeta) {
+    elements.viewportMeta.setAttribute(
+      "content",
+      desktopView ? "width=1180, initial-scale=1.0" : "width=device-width, initial-scale=1.0"
+    );
+  }
+
+  if (elements.viewModeToggle) {
+    elements.viewModeToggle.setAttribute("aria-pressed", desktopView ? "true" : "false");
+    elements.viewModeToggle.textContent = desktopView ? "Mobil-visning" : "PC-visning";
+  }
+}
+
+function toggleViewMode() {
+  state.desktopView = !state.desktopView;
+  persistDesktopViewPreference(state.desktopView);
+  applyViewModePreference();
+}
 
 function escapeHtml(value) {
   return String(value || "")
@@ -506,6 +578,113 @@ function extractUrl(value) {
   if (url) return url[0];
 
   return text;
+}
+
+function normalizeImageSource(value) {
+  const src = extractUrl(value);
+  if (!src) return "";
+
+  if (src.trim().toLowerCase().startsWith("data:image/")) {
+    return "";
+  }
+
+  try {
+    const url = new URL(src, window.location.href);
+    const directImageUrl = url.searchParams.get("imgurl");
+    if (url.hostname.includes("google.") && directImageUrl) {
+      return directImageUrl;
+    }
+  } catch {
+    // Keep the original value when it is a relative path or malformed URL.
+  }
+
+  return src;
+}
+
+function addImageCandidate(candidates, candidate) {
+  if (!candidate || candidates.includes(candidate)) return;
+  candidates.push(candidate);
+}
+
+function getLocalCoverFallbacks(src) {
+  const normalizedSrc = normalizeText(src).replace(/\\/g, "/");
+  const alias = LOCAL_COVER_ALIASES[normalizedSrc];
+  const match = normalizedSrc.match(/^data\/covers\/(\d+)-(.+)\.([a-z0-9]+)$/i);
+  const fallbacks = [];
+
+  if (alias) {
+    fallbacks.push(alias);
+  }
+
+  if (!match) return fallbacks;
+
+  const currentNumber = Number(match[1]);
+  const slug = match[2];
+  const extension = match[3].toLowerCase();
+  const nearbyOffsets = [-1, 1, -2, 2, -3, 3, -4, 4, -5, 5, -6, 6, -7, 7, -8, 8, -9, 9, -10, 10];
+
+  nearbyOffsets.forEach((offset) => {
+    const nextNumber = currentNumber + offset;
+    if (nextNumber < 1) return;
+
+    const paddedNumber = String(nextNumber).padStart(match[1].length, "0");
+    IMAGE_FALLBACK_EXTENSIONS.forEach((fallbackExtension) => {
+      if (fallbackExtension !== extension && fallbackExtension !== "jpg" && fallbackExtension !== "png") return;
+      fallbacks.push(`data/covers/${paddedNumber}-${slug}.${fallbackExtension}`);
+    });
+  });
+
+  return fallbacks;
+}
+
+function getImageCandidates(image) {
+  const src = normalizeImageSource(image);
+  const candidates = [];
+
+  addImageCandidate(candidates, src);
+
+  if (src.startsWith("http://")) {
+    addImageCandidate(candidates, `https://${src.slice("http://".length)}`);
+  }
+
+  getLocalCoverFallbacks(src).forEach((candidate) => {
+    addImageCandidate(candidates, candidate);
+  });
+
+  return candidates;
+}
+
+function loadImageWithFallback(img, image, alt, { onLoad, onFail } = {}) {
+  if (!img) return;
+
+  const candidates = getImageCandidates(image);
+  let index = 0;
+
+  const tryNextCandidate = () => {
+    const nextSrc = candidates[index];
+    index += 1;
+
+    if (!nextSrc) {
+      img.hidden = true;
+      img.removeAttribute("src");
+      img.alt = "";
+      if (onFail) onFail();
+      return;
+    }
+
+    img.hidden = false;
+    img.alt = alt || "";
+    img.loading = "lazy";
+    img.decoding = "async";
+    img.referrerPolicy = "no-referrer";
+    img.src = nextSrc;
+  };
+
+  img.onload = () => {
+    if (onLoad) onLoad();
+  };
+  img.onerror = tryNextCandidate;
+  tryNextCandidate();
 }
 
 function getCompletenessScore(podcast) {
@@ -1091,8 +1270,6 @@ function setImage(container, image, alt) {
 
   if (!img) return;
 
-  const src = extractUrl(image);
-
   const showPlaceholder = () => {
     container.classList.add("has-no-image");
     img.hidden = true;
@@ -1101,20 +1278,21 @@ function setImage(container, image, alt) {
     if (placeholder) placeholder.hidden = false;
   };
 
-  if (!src) {
+  if (!normalizeImageSource(image)) {
     showPlaceholder();
     return;
   }
 
   container.classList.remove("has-no-image");
-  img.hidden = false;
-  img.src = src;
-  img.alt = alt || "";
-  img.loading = "lazy";
-  img.decoding = "async";
-  img.referrerPolicy = "no-referrer";
   if (placeholder) placeholder.hidden = true;
-  img.onerror = showPlaceholder;
+
+  loadImageWithFallback(img, image, alt, {
+    onLoad() {
+      container.classList.remove("has-no-image");
+      if (placeholder) placeholder.hidden = true;
+    },
+    onFail: showPlaceholder
+  });
 }
 
 function showAuthPrompt(preferredAction = "signup") {
@@ -1314,6 +1492,10 @@ function renderAuthPanel() {
   const configured = state.authConfigured;
   const loggedIn = isLoggedIn();
   const waitingForSession = configured && !state.authReady;
+
+  if (loggedIn && elements.authDialog && !elements.authDialog.classList.contains("is-hidden")) {
+    closeAuthDialog({ clearPending: false });
+  }
 
   elements.authLoggedOut?.classList.toggle("is-hidden", loggedIn || waitingForSession);
   elements.authLoggedIn?.classList.toggle("is-hidden", !loggedIn);
@@ -1537,7 +1719,7 @@ async function initSupabase() {
   await refreshSupabaseState();
   renderAuthPanel();
 
-  state.supabase.auth.onAuthStateChange(async (_event, sessionUpdate) => {
+  state.supabase.auth.onAuthStateChange(async (event, sessionUpdate) => {
     state.session = sessionUpdate;
     state.authUser = sessionUpdate?.user || null;
     state.authBusy = false;
@@ -1550,10 +1732,15 @@ async function initSupabase() {
         resetVisibleCount();
       }
       closeRatingDialog();
+    } else if (event === "SIGNED_IN") {
+      closeAuthDialog({ clearPending: false });
     }
     clearAuthMessage();
     renderAuthPanel();
     await refreshSupabaseState();
+    if (state.authUser && event === "SIGNED_IN") {
+      completePendingAuthAction();
+    }
   });
 }
 
@@ -1597,9 +1784,10 @@ async function handleAuthAction(mode) {
       state.session = data.session || state.session;
       state.authUser = data.session?.user || data.user || state.authUser;
       if (data.session) {
-        await refreshSupabaseState();
         setAuthMessage("Din konto er oprettet, og du er nu logget ind.", "success", "hero");
         closeAuthDialog({ clearPending: false });
+        renderAuthPanel();
+        await refreshSupabaseState();
         completePendingAuthAction();
       } else {
         setAuthMessage(
@@ -1618,9 +1806,10 @@ async function handleAuthAction(mode) {
 
       state.session = data.session || state.session;
       state.authUser = data.session?.user || state.authUser;
-      await refreshSupabaseState();
       setAuthMessage("Du er nu logget ind.", "success", "hero");
       closeAuthDialog({ clearPending: false });
+      renderAuthPanel();
+      await refreshSupabaseState();
       completePendingAuthAction();
     }
 
@@ -2109,14 +2298,14 @@ function createPodcastReviewCardElement(podcast, review, key) {
 
   const coverImg = cover.querySelector("img");
   if (review.image || podcast.image) {
-    coverImg.src = review.image || podcast.image;
-  }
-  coverImg.alt = review.title || podcast.title || "";
-  coverImg.onerror = () => {
+    loadImageWithFallback(coverImg, review.image || podcast.image, review.title || podcast.title || "", {
+      onFail() {
+        cover.classList.add("has-no-image");
+      }
+    });
+  } else {
     cover.classList.add("has-no-image");
-    coverImg.hidden = true;
-    coverImg.removeAttribute("src");
-  };
+  }
 
   const headCopy = document.createElement("div");
   headCopy.className = "review-card__head-copy";
@@ -2377,13 +2566,7 @@ function renderFeaturedReview() {
 
   if (elements.featuredImage) {
     if (review.image) {
-      elements.featuredImage.src = review.image;
-      elements.featuredImage.alt = review.title || "";
-      elements.featuredImage.hidden = false;
-      elements.featuredImage.onerror = () => {
-        elements.featuredImage.hidden = true;
-        elements.featuredImage.removeAttribute("src");
-      };
+      loadImageWithFallback(elements.featuredImage, review.image, review.title || "");
     } else {
       elements.featuredImage.hidden = true;
       elements.featuredImage.removeAttribute("src");
@@ -2690,6 +2873,8 @@ function setupEvents() {
     });
   });
 
+  elements.viewModeToggle?.addEventListener("click", toggleViewMode);
+
   elements.openSignupButton?.addEventListener("click", () => {
     showAuthPrompt("signup");
   });
@@ -2994,6 +3179,7 @@ function runSecondaryStartup() {
 }
 
 ensureLoadMoreControls();
+applyViewModePreference();
 setupEvents();
 updateAuthPasswordToggle();
 window.setTimeout(() => {

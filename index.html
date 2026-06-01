@@ -2,7 +2,7 @@
 <html lang="da">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta id="viewportMeta" name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Mine podcastfavoritter</title>
     <meta
       name="description"
@@ -16,7 +16,7 @@
       rel="stylesheet"
     />
 
-    <link rel="stylesheet" href="style.css?v=2026-05-30-01" />
+    <link rel="stylesheet" href="style.css?v=2026-06-01-02" />
 
     <script
       data-goatcounter="https://podcastratings.goatcounter.com/count"
@@ -30,7 +30,7 @@
       };
     </script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
-    <script src="app.js?v=2026-05-30-01" defer></script>
+    <script src="app.js?v=2026-06-01-02" defer></script>
   </head>
 
   <body>
@@ -47,6 +47,14 @@
             <p class="brand-title">Podcast Favoritter</p>
             <p class="brand-subtitle">af Mads Asp</p>
           </div>
+          <button
+            id="viewModeToggle"
+            class="view-mode-toggle"
+            type="button"
+            aria-pressed="false"
+          >
+            PC-visning
+          </button>
         </div>
 
         <aside id="featuredReviewPanel" class="featured-panel is-hidden">
