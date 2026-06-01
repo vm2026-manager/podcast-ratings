@@ -160,12 +160,17 @@ button {
 }
 
 .view-mode-toggle {
+  position: fixed;
+  top: 12px;
+  right: 12px;
+  z-index: 30;
   flex: 0 0 auto;
   min-height: 34px;
   padding: 0 12px;
   border: 1px solid rgba(223, 84, 16, 0.24);
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.7);
+  background: rgba(255, 255, 255, 0.92);
+  box-shadow: 0 10px 22px rgba(66, 41, 20, 0.16);
   color: var(--accent-deep);
   font-size: 0.76rem;
   font-weight: 900;
