@@ -16,7 +16,7 @@ const GENRES = [
 const FEATURED_ROTATION_MS = 8000;
 const INITIAL_VISIBLE_COUNT = 25;
 const AUTO_EXPAND_DELAY_MS = 900;
-const DATA_VERSION = "2026-06-01-03";
+const DATA_VERSION = "2026-06-02-01";
 const EXPANDED_LIST_STORAGE_KEY = "podcast-ratings-expanded-list";
 const VIEW_MODE_STORAGE_KEY = "podcast-ratings-desktop-view";
 const NEW_BADGE_DAYS = 14;
@@ -1772,6 +1772,8 @@ async function handleAuthAction(mode) {
   setAuthBusy(true);
   clearAuthMessage("dialog");
 
+  let shouldCompletePendingAuthAction = false;
+
   try {
     if (mode === "signup") {
       const { data, error } = await state.supabase.auth.signUp({
@@ -1788,7 +1790,7 @@ async function handleAuthAction(mode) {
         closeAuthDialog({ clearPending: false });
         renderAuthPanel();
         await refreshSupabaseState();
-        completePendingAuthAction();
+        shouldCompletePendingAuthAction = true;
       } else {
         setAuthMessage(
           "Kontoen er oprettet. Hvis du vil logge ind med det samme uden mail, så slå Confirm email fra i Supabase.",
@@ -1810,7 +1812,7 @@ async function handleAuthAction(mode) {
       closeAuthDialog({ clearPending: false });
       renderAuthPanel();
       await refreshSupabaseState();
-      completePendingAuthAction();
+      shouldCompletePendingAuthAction = true;
     }
 
     if (elements.authPassword) {
@@ -1824,6 +1826,9 @@ async function handleAuthAction(mode) {
   } finally {
     setAuthBusy(false);
     renderAuthPanel();
+    if (shouldCompletePendingAuthAction) {
+      completePendingAuthAction();
+    }
   }
 }
 
@@ -1929,6 +1934,10 @@ function openRatingDialog(podcast) {
       existingRating === null || existingRating === undefined
         ? "Gem vurdering"
         : "Opdater vurdering";
+    elements.ratingSaveButton.disabled = false;
+  }
+  if (elements.ratingDeleteButton) {
+    elements.ratingDeleteButton.disabled = false;
   }
   elements.ratingDeleteButton?.classList.toggle(
     "is-hidden",
