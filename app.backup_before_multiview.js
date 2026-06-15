@@ -145,8 +145,6 @@ const elements = {
   featuredText: document.getElementById("featuredText"),
   featuredParams: document.getElementById("featuredParams"),
   featuredDots: document.getElementById("featuredDots"),
-  pageIntroPanel: document.getElementById("pageIntroPanel"),
-  pageLinks: document.querySelectorAll("[data-page-link]"),
   authPanel: document.getElementById("authPanel"),
   authLoggedOut: document.getElementById("authLoggedOut"),
   authLoggedIn: document.getElementById("authLoggedIn"),
@@ -777,7 +775,6 @@ function mapPodcast(row, index) {
     image,
     description,
     placement: placement ?? index + 1,
-    randomTieBreaker: Math.random(),
     completenessScore: getCompletenessScore({
       yearPlayed,
       link,
@@ -941,22 +938,6 @@ function isNewPodcast(podcast) {
   return ageDays >= 0 && ageDays <= NEW_BADGE_DAYS;
 }
 
-function getPodcastRandomTieBreaker(podcast) {
-  return Number.isFinite(podcast?.randomTieBreaker) ? podcast.randomTieBreaker : 0.5;
-}
-
-function compareRandomTieBreaker(a, b) {
-  return getPodcastRandomTieBreaker(a) - getPodcastRandomTieBreaker(b);
-}
-
-function hasSameMadsRating(a, b) {
-  return a.ratingValue !== null && b.ratingValue !== null && a.ratingValue === b.ratingValue;
-}
-
-function bothMissingMadsRating(a, b) {
-  return a.ratingValue === null && b.ratingValue === null;
-}
-
 function getScoreBadgeMarkup(value) {
   const number = parseNumber(value);
   if (number === null) {
@@ -1096,7 +1077,7 @@ function getFilteredPodcasts() {
         }
 
         if (!aHasRank && !bHasRank) {
-          return compareRandomTieBreaker(a, b);
+          return a.placement - b.placement;
         }
 
         if (state.sort === "placement-desc") {
@@ -1114,15 +1095,7 @@ function getFilteredPodcasts() {
           return aHasRating ? -1 : 1;
         }
 
-        if (hasSameMadsRating(a, b) || bothMissingMadsRating(a, b)) {
-          return compareRandomTieBreaker(a, b);
-        }
-
         return b.placement - a.placement;
-      }
-
-      if (hasSameMadsRating(a, b) || bothMissingMadsRating(a, b)) {
-        return compareRandomTieBreaker(a, b);
       }
 
       return a.placement - b.placement;
@@ -1172,7 +1145,7 @@ function rebuildUserRanks() {
         return b.averageRating - a.averageRating;
       }
 
-      return compareRandomTieBreaker(a.podcast, b.podcast);
+      return a.podcast.placement - b.podcast.placement;
     });
 
   state.userRankByKey = {};
@@ -2787,132 +2760,9 @@ function render() {
   updateActiveFilterUi();
   updateSortToggleUi();
   updateRankingSourceUi();
-  renderRoute();
-
-  if (document.body.classList.contains("page-ranglister")) {
-    renderRecent();
-    renderPodcastGrid();
-    renderFeaturedReview();
-  }
-}
-
-function renderRoute() {
-  const route = window.location.hash.slice(1).toLowerCase();
-
-  switch (route) {
-    case "forside":
-    case "ranglister":
-    case "udforsk":
-    case "gemte":
-    case "profil":
-      break;
-    default:
-      window.location.replace("#forside");
-      return;
-  }
-
-  document.body.classList.remove(
-    "page-forside",
-    "page-ranglister",
-    "page-udforsk",
-    "page-gemte",
-    "page-profil"
-  );
-  document.body.classList.add(`page-${route}`);
-
-  elements.pageLinks.forEach((link) => {
-    const isActive = link.dataset.pageLink === route;
-    link.classList.toggle("is-active", isActive);
-
-    if (isActive) {
-      link.setAttribute("aria-current", "page");
-    } else {
-      link.removeAttribute("aria-current");
-    }
-  });
-
-  if (!elements.pageIntroPanel) return;
-
-  if (route === "ranglister") {
-    elements.pageIntroPanel.classList.add("is-hidden");
-    elements.pageIntroPanel.innerHTML = "";
-    return;
-  }
-
-  if (route === "forside") {
-    const featuredReview = state.featuredReviews[0] || null;
-    const featuredPodcast = featuredReview
-      ? state.podcastByKey[normalizeMatchKey(featuredReview.matchTitle || featuredReview.title)]
-      : null;
-
-    elements.pageIntroPanel.innerHTML = `
-      <div class="home-hero">
-        <p class="eyebrow">Personlige podcastfavoritter</p>
-        <h1>Mine podcastfavoritter</h1>
-        <p class="intro">
-          Mads Asps personlige rangliste over podcasts &ndash; udvalgt og delt til
-          inspiration for andre lyttere.
-        </p>
-        <div class="page-intro-panel__actions">
-          <a class="page-intro-panel__button" href="#ranglister">Se ranglister</a>
-        </div>
-      </div>
-      <section class="home-featured" aria-labelledby="homeFeaturedHeading">
-        <div class="section-header">
-          <div>
-            <p class="eyebrow">Mads anbefaler</p>
-            <h2 id="homeFeaturedHeading">Ugens anbefaling</h2>
-          </div>
-        </div>
-        <div class="home-featured__content"></div>
-      </section>
-    `;
-
-    const featuredContent = elements.pageIntroPanel.querySelector(
-      ".home-featured__content"
-    );
-
-    if (featuredPodcast) {
-      featuredContent.appendChild(createRecentCardElement(featuredPodcast));
-    } else {
-      featuredContent.innerHTML =
-        '<div class="empty-state">Ugens anbefaling er på vej.</div>';
-    }
-
-    elements.pageIntroPanel.classList.remove("is-hidden");
-    return;
-  }
-
-  const loggedIn = isLoggedIn();
-  let title = "";
-  let text = "";
-  let action = "";
-
-  switch (route) {
-    case "udforsk":
-      title = "Udforsk podcasts";
-      text = "Her kommer genresektioner og anbefalinger.";
-      break;
-    case "gemte":
-      title = "Dine gemte podcasts";
-      text = loggedIn
-        ? `Du har gemt ${state.savedPodcastKeys.size} podcasts.`
-        : "Log ind for at se dine gemte podcasts.";
-      break;
-    case "profil":
-      title = "Din profil";
-      text = loggedIn
-        ? `Du er logget ind som ${state.authUser.email || "bruger"}.`
-        : "Log ind for at se din profil.";
-      break;
-  }
-
-  elements.pageIntroPanel.innerHTML = `
-    <h2>${escapeHtml(title)}</h2>
-    <p>${escapeHtml(text)}</p>
-    ${action ? `<div class="page-intro-panel__actions">${action}</div>` : ""}
-  `;
-  elements.pageIntroPanel.classList.remove("is-hidden");
+  renderRecent();
+  renderPodcastGrid();
+  renderFeaturedReview();
 }
 
 function handlePodcastGridClick(event) {
@@ -2977,8 +2827,6 @@ function handlePodcastGridClick(event) {
 }
 
 function setupEvents() {
-  window.addEventListener("hashchange", render);
-
   if (elements.searchInput) {
     clearSearchInput();
 
@@ -3343,7 +3191,6 @@ ensureLoadMoreControls();
 applyViewModePreference();
 setupEvents();
 updateAuthPasswordToggle();
-renderRoute();
 window.setTimeout(() => {
   clearSearchInput({ rerender: true });
 }, 120);
