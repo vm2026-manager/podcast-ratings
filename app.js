@@ -16,9 +16,10 @@ const GENRES = [
 const FEATURED_ROTATION_MS = 8000;
 const INITIAL_VISIBLE_COUNT = 25;
 const AUTO_EXPAND_DELAY_MS = 900;
-const DATA_VERSION = "2026-06-02-01";
+const DATA_VERSION = "2026-06-27-02";
 const EXPANDED_LIST_STORAGE_KEY = "podcast-ratings-expanded-list";
 const VIEW_MODE_STORAGE_KEY = "podcast-ratings-desktop-view";
+const AUTH_PERSISTENCE_STORAGE_KEY = "podcast-ratings-auth-persistence";
 const NEW_BADGE_DAYS = 14;
 const IMAGE_FALLBACK_EXTENSIONS = ["jpg", "jpeg", "png", "webp"];
 const LOCAL_COVER_ALIASES = {
@@ -51,6 +52,83 @@ const SUPABASE_CONFIG = window.PODCAST_SUPABASE_CONFIG || {
   url: "",
   anonKey: ""
 };
+
+function readAuthPersistencePreference() {
+  try {
+    return window.localStorage.getItem(AUTH_PERSISTENCE_STORAGE_KEY) !== "session";
+  } catch {
+    return true;
+  }
+}
+
+let authUsesPersistentStorage = readAuthPersistencePreference();
+const trackedAuthStorageKeys = new Set();
+
+function getAuthStorage(persistent = authUsesPersistentStorage) {
+  try {
+    return persistent ? window.localStorage : window.sessionStorage;
+  } catch {
+    return null;
+  }
+}
+
+function setAuthStorageMode(persistent, { savePreference = true } = {}) {
+  authUsesPersistentStorage = Boolean(persistent);
+
+  if (!savePreference) return;
+
+  try {
+    window.localStorage.setItem(
+      AUTH_PERSISTENCE_STORAGE_KEY,
+      authUsesPersistentStorage ? "local" : "session"
+    );
+  } catch {
+    // Supabase reports storage failures during authentication when relevant.
+  }
+}
+
+function removeAuthStorageKey(storage, key) {
+  if (!storage) return;
+
+  try {
+    storage.removeItem(key);
+  } catch {
+    // Ignore cleanup failures in unavailable browser storage.
+  }
+}
+
+const supabaseAuthStorage = {
+  getItem(key) {
+    trackedAuthStorageKeys.add(key);
+    const selectedStorage = getAuthStorage();
+    if (!selectedStorage) return null;
+
+    try {
+      return selectedStorage.getItem(key);
+    } catch {
+      return null;
+    }
+  },
+  setItem(key, value) {
+    trackedAuthStorageKeys.add(key);
+    const selectedStorage = getAuthStorage();
+    if (!selectedStorage) throw new Error("Browserens sessionlager er ikke tilg\u00e6ngeligt.");
+
+    selectedStorage.setItem(key, value);
+    removeAuthStorageKey(getAuthStorage(!authUsesPersistentStorage), key);
+  },
+  removeItem(key) {
+    trackedAuthStorageKeys.add(key);
+    removeAuthStorageKey(getAuthStorage(true), key);
+    removeAuthStorageKey(getAuthStorage(false), key);
+  }
+};
+
+function clearTrackedAuthStorage() {
+  trackedAuthStorageKeys.forEach((key) => {
+    supabaseAuthStorage.removeItem(key);
+  });
+}
 
 function readExpandedListPreference() {
   try {
@@ -99,9 +177,14 @@ const state = {
   authMode: "signup",
   authMessageTimer: null,
   pendingAuthAction: null,
+  exploreSuggestionDialogOpen: false,
   userRatingsByKey: {},
   communityStatsByKey: {},
   userRankByKey: {},
+  profileSuggestions: [],
+  profileSuggestionsLoadedFor: null,
+  profileSuggestionsLoading: false,
+  profileSuggestionsError: "",
   savedPodcastKeys: new Set(),
   activeRatingKey: null,
   openReviewKeys: new Set(),
@@ -110,8 +193,10 @@ const state = {
   featuredPaused: false,
   activeFilter: null,
   searchTerm: "",
+  minimumRating: 0,
   rankingSource: "mads",
   sort: "placement-asc",
+  mobileRankingFiltersOpen: false,
   desktopView: readDesktopViewPreference(),
   hasExpandedInitialList: false,
   visibleCount: INITIAL_VISIBLE_COUNT,
@@ -124,6 +209,7 @@ const elements = {
   viewModeToggle: document.getElementById("viewModeToggle"),
   searchInput: document.getElementById("searchInput"),
   sortToggle: document.getElementById("sortToggle"),
+  mobileSortToggle: document.getElementById("mobileSortToggle"),
   rankingSourceButtons: document.querySelectorAll("[data-ranking-source]"),
   resultsText: document.getElementById("resultsText"),
   rankingToolbar: document.querySelector(".ranking-toolbar"),
@@ -136,6 +222,10 @@ const elements = {
   activeFilterText: document.getElementById("activeFilterText"),
   activeFilterPill: document.getElementById("activeFilterPill"),
   clearFilterButton: document.getElementById("clearFilterButton"),
+  ratingFilter: document.getElementById("ratingFilter"),
+  ratingFilterValue: document.getElementById("ratingFilterValue"),
+  rankingMobileFilterSummary: document.getElementById("rankingMobileFilterSummary"),
+  rankingMobileFilterToggle: document.getElementById("rankingMobileFilterToggle"),
   featuredPanel: document.getElementById("featuredReviewPanel"),
   featuredImage: document.getElementById("featuredImage"),
   featuredTitle: document.getElementById("featuredTitle"),
@@ -147,6 +237,7 @@ const elements = {
   featuredDots: document.getElementById("featuredDots"),
   pageIntroPanel: document.getElementById("pageIntroPanel"),
   pageLinks: document.querySelectorAll("[data-page-link]"),
+  globalAuthZone: document.getElementById("globalAuthZone"),
   authPanel: document.getElementById("authPanel"),
   authLoggedOut: document.getElementById("authLoggedOut"),
   authLoggedIn: document.getElementById("authLoggedIn"),
@@ -157,6 +248,8 @@ const elements = {
   authDialogCloseButton: document.getElementById("authDialogCloseButton"),
   authEmail: document.getElementById("authEmail"),
   authPassword: document.getElementById("authPassword"),
+  authPersistenceField: document.getElementById("authPersistenceField"),
+  authRememberLogin: document.getElementById("authRememberLogin"),
   toggleAuthPasswordButton: document.getElementById("toggleAuthPasswordButton"),
   forgotPasswordButton: document.getElementById("forgotPasswordButton"),
   authUserEmail: document.getElementById("authUserEmail"),
@@ -356,6 +449,12 @@ function formatRating(value) {
   const rating = parseNumber(value);
   if (rating === null) return "Ikke vurderet";
   return `${rating.toFixed(1).replace(".", ",")} / 10`;
+}
+
+function formatCompactRating(value) {
+  const rating = parseNumber(value);
+  if (rating === null) return "";
+  return rating.toFixed(1).replace(".", ",");
 }
 
 function parseRatingInputValue(value) {
@@ -1032,6 +1131,54 @@ function clearActiveFilter() {
   setActiveFilter(null, null);
 }
 
+function formatMinimumRating(value) {
+  const number = Number(value) || 0;
+  if (number <= 0) return "Alle";
+  return `${number.toLocaleString("da-DK", {
+    minimumFractionDigits: Number.isInteger(number) ? 0 : 1,
+    maximumFractionDigits: 1
+  })}+`;
+}
+
+function updateRatingFilterUi() {
+  if (elements.ratingFilter) {
+    elements.ratingFilter.value = String(state.minimumRating);
+  }
+
+  if (elements.ratingFilterValue) {
+    elements.ratingFilterValue.textContent = formatMinimumRating(state.minimumRating);
+  }
+}
+
+function getPodcastRatingForActiveSource(podcast) {
+  if (state.rankingSource === "users") {
+    const key = getPodcastKey(podcast);
+    const stat = getCommunityStat(key);
+    return parseNumber(stat?.averageRating ?? podcast.userAverageRating);
+  }
+
+  return parseNumber(podcast.ratingValue);
+}
+
+function setMinimumRating(value) {
+  const nextRating = Math.max(0, Math.min(10, parseNumber(value) ?? 0));
+  if (state.minimumRating === nextRating) return;
+
+  state.minimumRating = nextRating;
+  resetVisibleCount();
+  updateRatingFilterUi();
+  render();
+}
+
+function clearRankingFilters() {
+  state.activeFilter = null;
+  state.minimumRating = 0;
+  resetVisibleCount();
+  createGenreChips();
+  updateRatingFilterUi();
+  render();
+}
+
 function createGenreChips() {
   if (!elements.genreChips) return;
 
@@ -1074,6 +1221,13 @@ function getFilteredPodcasts() {
         return false;
       }
 
+      if (state.minimumRating > 0) {
+        const rating = getPodcastRatingForActiveSource(podcast);
+        if (rating === null || rating < state.minimumRating) {
+          return false;
+        }
+      }
+
       if (!state.searchTerm) return true;
 
       const query = expandSearchAliases(state.searchTerm);
@@ -1106,26 +1260,23 @@ function getFilteredPodcasts() {
         return aRank - bRank;
       }
 
-      if (state.sort === "placement-desc") {
-        const aHasRating = a.ratingValue !== null;
-        const bHasRating = b.ratingValue !== null;
+      const aHasRating = a.ratingValue !== null;
+      const bHasRating = b.ratingValue !== null;
 
-        if (aHasRating !== bHasRating) {
-          return aHasRating ? -1 : 1;
-        }
-
-        if (hasSameMadsRating(a, b) || bothMissingMadsRating(a, b)) {
-          return compareRandomTieBreaker(a, b);
-        }
-
-        return b.placement - a.placement;
+      if (aHasRating !== bHasRating) {
+        return aHasRating ? -1 : 1;
       }
 
-      if (hasSameMadsRating(a, b) || bothMissingMadsRating(a, b)) {
+      if (bothMissingMadsRating(a, b)) {
         return compareRandomTieBreaker(a, b);
       }
 
-      return a.placement - b.placement;
+      const placementDelta = a.placement - b.placement;
+      if (placementDelta !== 0) {
+        return state.sort === "placement-desc" ? -placementDelta : placementDelta;
+      }
+
+      return compareRandomTieBreaker(a, b);
     });
 }
 
@@ -1200,12 +1351,46 @@ function updateActiveFilterUi() {
 }
 
 function updateSortToggleUi() {
-  if (!elements.sortToggle) return;
+  const isAscending = state.sort === "placement-asc";
 
-  elements.sortToggle.textContent =
-    state.sort === "placement-asc"
+  if (elements.sortToggle) {
+    elements.sortToggle.textContent = isAscending
       ? "Placering: lavest f\u00f8rst"
       : "Placering: h\u00f8jest f\u00f8rst";
+  }
+
+  if (elements.mobileSortToggle) {
+    elements.mobileSortToggle.textContent = isAscending ? "\u21c5 Lavest" : "\u21c5 H\u00f8jest";
+    elements.mobileSortToggle.setAttribute(
+      "aria-label",
+      isAscending ? "Sorter efter laveste placering f\u00f8rst" : "Sorter efter h\u00f8jeste placering f\u00f8rst"
+    );
+  }
+}
+
+function updateMobileRankingFilterUi() {
+  document.body.classList.toggle(
+    "ranking-filters-open",
+    state.mobileRankingFiltersOpen
+  );
+
+  if (elements.rankingMobileFilterToggle) {
+    elements.rankingMobileFilterToggle.textContent = state.mobileRankingFiltersOpen
+      ? "Skjul"
+      : "Filtre";
+    elements.rankingMobileFilterToggle.setAttribute(
+      "aria-expanded",
+      String(state.mobileRankingFiltersOpen)
+    );
+  }
+
+  if (!elements.rankingMobileFilterSummary) return;
+
+  const genreLabel =
+    state.activeFilter?.type === "genre" ? state.activeFilter.value : "Alle genrer";
+  const ratingLabel = `Vurdering: ${formatMinimumRating(state.minimumRating)}`;
+
+  elements.rankingMobileFilterSummary.textContent = `${genreLabel} \u00b7 ${ratingLabel}`;
 }
 
 function updateRankingSourceUi() {
@@ -1217,19 +1402,31 @@ function updateRankingSourceUi() {
 }
 
 function getResultsText(filteredCount, visibleCount) {
-  const baseText =
-    visibleCount < filteredCount
+  const isMobileRanking =
+    typeof window !== "undefined" &&
+    window.matchMedia?.("(max-width: 768px)").matches;
+  const baseText = isMobileRanking
+    ? visibleCount < filteredCount
+      ? `Viser ${visibleCount} af ${filteredCount} podcasts`
+      : `Viser ${filteredCount} podcasts`
+    : visibleCount < filteredCount
       ? `Viser ${visibleCount} af ${filteredCount} podcasts.`
       : `Viser ${filteredCount} podcasts ud af ${state.podcasts.length}.`;
 
-  if (!state.activeFilter) return baseText;
+  const suffixes = [];
 
-  if (state.activeFilter.type === "saved") {
-    return `${baseText} Filtreret p\u00e5 dine gemte podcasts.`;
+  if (state.activeFilter?.type === "saved") {
+    suffixes.push("Filtreret p\u00e5 dine gemte podcasts.");
+  } else if (state.activeFilter) {
+    const label = state.activeFilter.type === "genre" ? "genren" : "udgiveren";
+    suffixes.push(`Filtreret p\u00e5 ${label} ${state.activeFilter.value}.`);
   }
 
-  const label = state.activeFilter.type === "genre" ? "genren" : "udgiveren";
-  return `${baseText} Filtreret p\u00e5 ${label} ${state.activeFilter.value}.`;
+  if (state.minimumRating > 0) {
+    suffixes.push(`Minimum ${formatMinimumRating(state.minimumRating)}.`);
+  }
+
+  return suffixes.length ? `${baseText} ${suffixes.join(" ")}` : baseText;
 }
 
 function toggleSavedFilter() {
@@ -1333,6 +1530,13 @@ function showAuthPrompt(preferredAction = "signup") {
       state.authMode === "login" ? "Log ind" : "Opret dig eller log ind";
   }
 
+  const isLogin = state.authMode === "login";
+  elements.authPersistenceField?.classList.toggle("is-hidden", !isLogin);
+  elements.authPersistenceField?.setAttribute("aria-hidden", String(!isLogin));
+  if (elements.authRememberLogin) {
+    elements.authRememberLogin.checked = true;
+  }
+
   clearAuthMessage();
   renderAuthPanel();
   elements.authDialog.classList.remove("is-hidden");
@@ -1348,6 +1552,9 @@ function closeAuthDialog({ clearPending = true } = {}) {
   if (!elements.authDialog) return;
 
   if (clearPending) {
+    if (state.pendingAuthAction?.type === "suggestion") {
+      state.exploreSuggestionDialogOpen = false;
+    }
     state.pendingAuthAction = null;
   }
   elements.authDialog.classList.add("is-hidden");
@@ -1422,6 +1629,12 @@ function formatUserRatingCount(value) {
   return `${new Intl.NumberFormat("da-DK").format(count)} ${label}`;
 }
 
+function formatUserReviewCount(value) {
+  const count = Number(value || 0);
+  const label = count === 1 ? "brugervurdering" : "brugervurderinger";
+  return `${new Intl.NumberFormat("da-DK").format(count)} ${label}`;
+}
+
 function setElementMessage(element, message = "", tone = "info") {
   if (!element) return;
 
@@ -1485,6 +1698,7 @@ function setAuthBusy(isBusy) {
     elements.signupButton,
     elements.loginButton,
     elements.logoutButton,
+    elements.authRememberLogin,
     elements.toggleAuthPasswordButton,
     elements.forgotPasswordButton,
     elements.ratingSaveButton,
@@ -1515,10 +1729,49 @@ function toggleAuthPasswordVisibility() {
   updateAuthPasswordToggle();
 }
 
+function renderGlobalAuthZone() {
+  if (!elements.globalAuthZone) return;
+
+  const configured = state.authConfigured;
+  const loggedIn = isLoggedIn();
+  const waitingForSession = configured && !state.authReady;
+  const disabled = !configured || state.authBusy || waitingForSession;
+
+  if (loggedIn) {
+    const email = state.authUser.email || "Logget ind";
+    elements.globalAuthZone.innerHTML = `
+      <span class="global-auth-zone__email" title="${escapeHtml(email)}">${escapeHtml(email)}</span>
+      <button
+        class="global-auth-zone__button global-auth-zone__button--logout"
+        type="button"
+        data-global-auth-action="logout"
+        ${disabled ? "disabled" : ""}
+      >
+        Log ud
+      </button>
+    `;
+    return;
+  }
+
+  elements.globalAuthZone.innerHTML = `
+    <button
+      class="global-auth-zone__button global-auth-zone__button--login"
+      type="button"
+      data-global-auth-action="login"
+      ${disabled ? "disabled" : ""}
+    >
+      <span class="global-auth-zone__desktop-label">Log ind / Opret dig</span>
+      <span class="global-auth-zone__mobile-label">Log ind</span>
+    </button>
+  `;
+}
+
 function renderAuthPanel() {
   const configured = state.authConfigured;
   const loggedIn = isLoggedIn();
   const waitingForSession = configured && !state.authReady;
+
+  renderGlobalAuthZone();
 
   if (loggedIn && elements.authDialog && !elements.authDialog.classList.contains("is-hidden")) {
     closeAuthDialog({ clearPending: false });
@@ -1542,6 +1795,11 @@ function renderAuthPanel() {
 
   if (elements.authPassword) {
     elements.authPassword.disabled = !configured || state.authBusy;
+  }
+
+  if (elements.authRememberLogin) {
+    elements.authRememberLogin.disabled =
+      !configured || state.authBusy || state.authMode !== "login";
   }
 
   if (elements.toggleAuthPasswordButton) {
@@ -1599,6 +1857,49 @@ function getCommunityStat(podcastKey) {
     averageRating: podcast.userAverageRating,
     ratingCount: Number(podcast.userRatingCount || 0)
   };
+}
+
+function hasCommunityRating(stat) {
+  return stat?.averageRating !== null && stat?.averageRating !== undefined;
+}
+
+function getExploreSortStats(podcast) {
+  const communityStat = getCommunityStat(getPodcastKey(podcast));
+  return {
+    hasCommunityRating: hasCommunityRating(communityStat),
+    communityRating: parseNumber(communityStat?.averageRating),
+    ratingCount: Number(communityStat?.ratingCount || 0),
+    madsRating: parseNumber(podcast.ratingValue)
+  };
+}
+
+function compareExplorePodcasts(a, b) {
+  const aStats = getExploreSortStats(a);
+  const bStats = getExploreSortStats(b);
+
+  if (aStats.hasCommunityRating !== bStats.hasCommunityRating) {
+    return aStats.hasCommunityRating ? -1 : 1;
+  }
+
+  const aCommunityRating = aStats.communityRating ?? -1;
+  const bCommunityRating = bStats.communityRating ?? -1;
+  if (bCommunityRating !== aCommunityRating) {
+    return bCommunityRating - aCommunityRating;
+  }
+
+  if (bStats.ratingCount !== aStats.ratingCount) {
+    return bStats.ratingCount - aStats.ratingCount;
+  }
+
+  const aMadsRating = aStats.madsRating ?? -1;
+  const bMadsRating = bStats.madsRating ?? -1;
+  if (bMadsRating !== aMadsRating) {
+    return bMadsRating - aMadsRating;
+  }
+
+  return normalizeText(a.title).localeCompare(normalizeText(b.title), "da", {
+    sensitivity: "base"
+  });
 }
 
 function getUserRating(podcastKey) {
@@ -1668,6 +1969,10 @@ async function fetchCommunityStats() {
 async function fetchUserState() {
   state.userRatingsByKey = {};
   state.savedPodcastKeys = new Set();
+  state.profileSuggestions = [];
+  state.profileSuggestionsLoadedFor = null;
+  state.profileSuggestionsLoading = false;
+  state.profileSuggestionsError = "";
 
   if (!state.supabase || !state.authUser) return;
 
@@ -1724,7 +2029,8 @@ async function initSupabase() {
     {
       auth: {
         persistSession: true,
-        autoRefreshToken: true
+        autoRefreshToken: true,
+        storage: supabaseAuthStorage
       }
     }
   );
@@ -1800,6 +2106,11 @@ async function handleAuthAction(mode) {
   clearAuthMessage("dialog");
 
   let shouldCompletePendingAuthAction = false;
+  let authenticationSucceeded = false;
+  const previousStorageMode = authUsesPersistentStorage;
+  const requestedStorageMode =
+    mode === "login" ? Boolean(elements.authRememberLogin?.checked) : true;
+  setAuthStorageMode(requestedStorageMode);
 
   try {
     if (mode === "signup") {
@@ -1809,6 +2120,7 @@ async function handleAuthAction(mode) {
       });
 
       if (error) throw error;
+      authenticationSucceeded = Boolean(data.session);
 
       state.session = data.session || state.session;
       state.authUser = data.session?.user || data.user || state.authUser;
@@ -1832,6 +2144,7 @@ async function handleAuthAction(mode) {
       });
 
       if (error) throw error;
+      authenticationSucceeded = true;
 
       state.session = data.session || state.session;
       state.authUser = data.session?.user || state.authUser;
@@ -1848,6 +2161,9 @@ async function handleAuthAction(mode) {
     }
     updateAuthPasswordToggle();
   } catch (error) {
+    if (!authenticationSucceeded) {
+      setAuthStorageMode(previousStorageMode);
+    }
     console.error(error);
     setAuthMessage(normalizeAuthErrorMessage(error), "error", "dialog");
   } finally {
@@ -1911,11 +2227,13 @@ async function handleLogout() {
   try {
     const { error } = await state.supabase.auth.signOut();
     if (error) throw error;
+    clearTrackedAuthStorage();
     state.session = null;
     state.authUser = null;
     state.userRatingsByKey = {};
     state.savedPodcastKeys = new Set();
     state.activeRatingKey = null;
+    state.exploreSuggestionDialogOpen = false;
     if (state.activeFilter?.type === "saved") {
       state.activeFilter = null;
       resetVisibleCount();
@@ -1998,6 +2316,16 @@ function completePendingAuthAction() {
   state.pendingAuthAction = null;
 
   if (!pending || !state.authUser) return;
+
+  if (pending.type === "suggestion") {
+    state.exploreSuggestionDialogOpen = true;
+    if (window.location.hash !== "#udforsk") {
+      window.location.hash = "#udforsk";
+    } else {
+      render();
+    }
+    return;
+  }
 
   const podcast = state.podcastByKey[pending.podcastKey];
   if (!podcast) return;
@@ -2144,6 +2472,297 @@ async function toggleSavedPodcast(podcast) {
   }
 }
 
+function createHomePopularCardElement(podcast) {
+  const key = getPodcastKey(podcast);
+  const stat = getCommunityStat(key);
+  const rank = state.userRankByKey[key];
+  const card = document.createElement("article");
+  card.className = "home-popular-card";
+
+  const cover = document.createElement("div");
+  cover.className = "home-popular-card__cover";
+  const image = document.createElement("img");
+  image.className = "home-popular-card__image";
+  image.loading = "lazy";
+  cover.appendChild(image);
+  setImage(cover, podcast.image, podcast.title);
+
+  const copy = document.createElement("div");
+  copy.className = "home-popular-card__copy";
+  copy.innerHTML = `
+    <span class="home-popular-card__rank">${rank ? `#${rank}` : ""}</span>
+    <h3>${escapeHtml(podcast.title)}</h3>
+    <p class="home-popular-card__host">${escapeHtml(
+      podcast.host || podcast.publisher || ""
+    )}</p>
+    <p class="home-popular-card__rating">
+      <strong>${escapeHtml(formatRating(stat?.averageRating))}</strong>
+      <span>${escapeHtml(formatUserRatingCount(stat?.ratingCount || 0))}</span>
+    </p>
+  `;
+
+  card.append(cover, copy);
+
+  if (podcast.link) {
+    card.classList.add("is-clickable");
+    card.tabIndex = 0;
+    card.setAttribute("role", "link");
+    card.setAttribute("aria-label", `Åbn ${podcast.title}`);
+
+    const openPodcast = () => {
+      window.open(podcast.link, "_blank", "noopener,noreferrer");
+    };
+
+    card.addEventListener("click", openPodcast);
+    card.addEventListener("keydown", (event) => {
+      if (event.key !== "Enter" && event.key !== " ") return;
+      event.preventDefault();
+      openPodcast();
+    });
+  }
+
+  return card;
+}
+
+function renderHomePopular(container) {
+  if (!container) return;
+
+  const popular = state.podcasts
+    .filter((podcast) => {
+      const key = getPodcastKey(podcast);
+      const averageRating = getCommunityStat(key)?.averageRating;
+      return Boolean(state.userRankByKey[key]) && averageRating !== null && averageRating !== undefined;
+    })
+    .sort(
+      (a, b) =>
+        state.userRankByKey[getPodcastKey(a)] - state.userRankByKey[getPodcastKey(b)]
+    )
+    .slice(0, 4);
+
+  container.innerHTML = "";
+
+  if (!popular.length) {
+    container.innerHTML =
+      '<div class="empty-state">Brugernes favoritter er på vej.</div>';
+    return;
+  }
+
+  const fragment = document.createDocumentFragment();
+  popular.forEach((podcast) => {
+    fragment.appendChild(createHomePopularCardElement(podcast));
+  });
+  container.appendChild(fragment);
+}
+
+function createHomeRecentCardElement(podcast) {
+  const card = document.createElement("article");
+  card.className = "home-recent-card";
+
+  const cover = document.createElement("div");
+  cover.className = "home-recent-card__cover";
+  const image = document.createElement("img");
+  image.className = "home-recent-card__image";
+  image.loading = "lazy";
+  cover.appendChild(image);
+  setImage(cover, podcast.image, podcast.title);
+
+  const copy = document.createElement("div");
+  copy.className = "home-recent-card__copy";
+  copy.innerHTML = `
+    <h3>${escapeHtml(podcast.title)}</h3>
+    <p class="home-recent-card__host">${escapeHtml(
+      podcast.host || podcast.publisher || ""
+    )}</p>
+    <p class="home-recent-card__meta">
+      <span>${escapeHtml(
+        podcast.ratingDateLabel ? `Bed\u00f8mt ${podcast.ratingDateLabel}` : ""
+      )}</span>
+      <strong>${escapeHtml(podcast.ratingLabel || "Ikke vurderet")}</strong>
+    </p>
+  `;
+
+  const actions = document.createElement("div");
+  actions.className = "home-recent-card__actions";
+
+  const mobileRating = document.createElement("strong");
+  mobileRating.className = "home-recent-card__mobile-rating";
+  mobileRating.textContent = podcast.ratingLabel || "Ikke vurderet";
+
+  const favoriteButton = document.createElement("button");
+  favoriteButton.className = "favorite-button favorite-button--compact home-recent-card__favorite";
+  favoriteButton.type = "button";
+  favoriteButton.dataset.action = "toggle-save";
+  favoriteButton.innerHTML = "<span aria-hidden=\"true\"></span>";
+  renderFavoriteButton(favoriteButton, getPodcastKey(podcast));
+
+  favoriteButton.addEventListener("click", (event) => {
+    event.preventDefault();
+    event.stopPropagation();
+    toggleSavedPodcast(podcast);
+  });
+
+  actions.append(mobileRating, favoriteButton);
+  card.append(cover, copy, actions);
+
+  if (podcast.link) {
+    card.classList.add("is-clickable");
+    card.tabIndex = 0;
+    card.setAttribute("role", "link");
+    card.setAttribute("aria-label", `\u00c5bn ${podcast.title}`);
+
+    const openPodcast = () => {
+      window.open(podcast.link, "_blank", "noopener,noreferrer");
+    };
+
+    card.addEventListener("click", openPodcast);
+    card.addEventListener("keydown", (event) => {
+      if (event.key !== "Enter" && event.key !== " ") return;
+      event.preventDefault();
+      openPodcast();
+    });
+  }
+
+  return card;
+}
+
+function renderHomeRecent(container) {
+  if (!container) return;
+
+  const section = container.closest(".home-recent");
+  const recent = state.podcasts
+    .filter(
+      (podcast) =>
+        podcast.ratingDateObject &&
+        typeof podcast.ratingValue === "number" &&
+        podcast.ratingValue >= 7
+    )
+    .sort((a, b) => b.ratingDateObject - a.ratingDateObject)
+    .slice(0, 4);
+
+  container.innerHTML = "";
+
+  if (!recent.length) {
+    if (section) section.hidden = true;
+    return;
+  }
+
+  if (section) section.hidden = false;
+
+  const fragment = document.createDocumentFragment();
+  recent.forEach((podcast) => {
+    fragment.appendChild(createHomeRecentCardElement(podcast));
+  });
+  container.appendChild(fragment);
+}
+
+function createHomeGenreCardElement(podcast, genre) {
+  const card = document.createElement("article");
+  card.className = "home-genres-card";
+
+  const cover = document.createElement("div");
+  cover.className = "home-genres-card__cover";
+  const image = document.createElement("img");
+  image.className = "home-genres-card__image";
+  image.loading = "lazy";
+  cover.appendChild(image);
+  setImage(cover, podcast.image, podcast.title);
+
+  const copy = document.createElement("div");
+  copy.className = "home-genres-card__copy";
+  copy.innerHTML = `
+    <p class="home-genres-card__genre">${escapeHtml(genre)}</p>
+    <h3>${escapeHtml(podcast.title)}</h3>
+    <p class="home-genres-card__host">${escapeHtml(
+      podcast.host || podcast.publisher || ""
+    )}</p>
+    <p class="home-genres-card__meta">
+      <span>#${escapeHtml(podcast.placement)}</span>
+      <strong>${escapeHtml(podcast.ratingLabel || "Ikke vurderet")}</strong>
+    </p>
+  `;
+
+  card.append(cover, copy);
+
+  card.classList.add("is-clickable");
+  card.tabIndex = 0;
+  card.setAttribute("role", "link");
+  card.setAttribute("aria-label", `Udforsk ${genre}`);
+
+  const openGenre = () => {
+    try {
+      window.sessionStorage?.setItem("podcastExploreGenre", genre);
+    } catch (error) {
+      // Session storage can be unavailable in strict browser modes.
+    }
+    window.location.hash = "#udforsk";
+  };
+
+  card.addEventListener("click", (event) => {
+    event.preventDefault();
+    event.stopPropagation();
+    openGenre();
+  });
+  card.addEventListener("keydown", (event) => {
+    if (event.key !== "Enter" && event.key !== " ") return;
+    event.preventDefault();
+    event.stopPropagation();
+    openGenre();
+  });
+
+  return card;
+}
+
+function renderHomeGenres(container) {
+  if (!container) return;
+
+  container.innerHTML = "";
+  const fragment = document.createDocumentFragment();
+  let renderedCount = 0;
+
+  GENRES.forEach((genre) => {
+    if (genre === "Alle") return;
+
+    let topPodcast = null;
+    state.podcasts.forEach((podcast) => {
+      const hasMadsRating =
+        podcast.ratingValue !== null && podcast.ratingValue !== undefined;
+      if (!hasMadsRating || podcast.genre !== genre) return;
+
+      if (!topPodcast || podcast.placement < topPodcast.placement) {
+        topPodcast = podcast;
+      }
+    });
+
+    if (!topPodcast) return;
+    fragment.appendChild(createHomeGenreCardElement(topPodcast, genre));
+    renderedCount += 1;
+  });
+
+  if (!renderedCount) {
+    container.innerHTML =
+      '<div class="empty-state">Genreanbefalinger er p\u00e5 vej.</div>';
+    return;
+  }
+
+  container.appendChild(fragment);
+}
+
+function setHomeHeroCover(container, selector, item) {
+  const cover = container?.querySelector(selector);
+  const image = cover?.querySelector("img");
+
+  if (!cover || !image || !item?.image) {
+    cover?.classList.add("is-hidden");
+    return;
+  }
+
+  loadImageWithFallback(image, item.image, item.title || "", {
+    onFail() {
+      cover.classList.add("is-hidden");
+    }
+  });
+}
+
 function createRecentCardElement(podcast) {
   const fragment = elements.recentTemplate.content.cloneNode(true);
   const card = fragment.querySelector(".recent-card");
@@ -2228,6 +2847,7 @@ function populateCardSummaries(article, podcast) {
   const communityStars = article.querySelector(".rating-summary__stars--community");
   const communityMeta = article.querySelector(".rating-summary__meta");
   const communityLabel = article.querySelector(".rating-summary--community .rating-summary__label");
+  const userCount = article.querySelector(".podcast-card__user-count");
   const key = getPodcastKey(podcast);
   const communityStat = getCommunityStat(key);
   const userRating = getUserRating(key);
@@ -2297,6 +2917,12 @@ function populateCardSummaries(article, podcast) {
     } else {
       communityMeta.textContent = "Log ind";
     }
+  }
+
+  if (userCount) {
+    const count = Number(communityStat?.ratingCount || 0);
+    userCount.textContent = count > 0 ? formatUserReviewCount(count) : "";
+    userCount.classList.toggle("is-hidden", count <= 0);
   }
 }
 
@@ -2787,6 +3413,8 @@ function render() {
   updateActiveFilterUi();
   updateSortToggleUi();
   updateRankingSourceUi();
+  updateRatingFilterUi();
+  updateMobileRankingFilterUi();
   renderRoute();
 
   if (document.body.classList.contains("page-ranglister")) {
@@ -2794,6 +3422,1264 @@ function render() {
     renderPodcastGrid();
     renderFeaturedReview();
   }
+}
+
+function createProfilePodcastCardElement(podcast, badgeText, badgeTone = "neutral") {
+  const card = document.createElement(podcast.link ? "a" : "article");
+  card.className = "profile-podcast-card";
+
+  if (podcast.link) {
+    card.href = podcast.link;
+    card.target = "_blank";
+    card.rel = "noopener noreferrer";
+    card.setAttribute("aria-label", `\u00c5bn ${podcast.title}`);
+  }
+
+  const cover = document.createElement("div");
+  cover.className = "profile-podcast-card__cover";
+
+  const image = document.createElement("img");
+  image.className = "profile-podcast-card__image";
+  image.loading = "lazy";
+
+  const placeholder = document.createElement("span");
+  placeholder.className = "image-placeholder profile-podcast-card__placeholder";
+  placeholder.textContent = "Billede mangler";
+  placeholder.hidden = true;
+
+  cover.append(image, placeholder);
+  setImage(cover, podcast.image, podcast.title);
+
+  const meta = [podcast.host || podcast.publisher, podcast.genre].filter(Boolean).join(" / ");
+  const copy = document.createElement("div");
+  copy.className = "profile-podcast-card__copy";
+  copy.innerHTML = `
+    <h3>${escapeHtml(podcast.title)}</h3>
+    <p>${escapeHtml(meta)}</p>
+  `;
+
+  const badge = document.createElement("strong");
+  badge.className = `profile-podcast-card__badge profile-podcast-card__badge--${badgeTone}`;
+  badge.textContent = badgeText;
+
+  card.append(cover, copy, badge);
+  return card;
+}
+
+function getProfileRatedPodcasts() {
+  return Object.entries(state.userRatingsByKey)
+    .map(([key, rating]) => ({ podcast: state.podcastByKey[key], rating }))
+    .filter((item) => item.podcast)
+    .sort((a, b) => a.podcast.title.localeCompare(b.podcast.title, "da", { sensitivity: "base" }));
+}
+
+function getSavedPodcasts() {
+  return Array.from(state.savedPodcastKeys)
+    .map((key) => state.podcastByKey[key])
+    .filter(Boolean)
+    .sort((a, b) => a.title.localeCompare(b.title, "da", { sensitivity: "base" }));
+}
+
+function bindAuthPromptButtons(container) {
+  container?.querySelectorAll("[data-auth-prompt]").forEach((button) => {
+    button.addEventListener("click", () => {
+      showAuthPrompt(button.dataset.authPrompt === "login" ? "login" : "signup");
+    });
+  });
+}
+
+function getSuggestionStatusLabel(status) {
+  const normalized = normalizeComparable(status);
+  const labels = {
+    new: "Afventer",
+    reviewed: "Gennemg\u00e5et",
+    added: "Tilf\u00f8jet",
+    rejected: "Afvist",
+    duplicate: "Findes allerede"
+  };
+  return labels[normalized] || "Afventer";
+}
+
+function findPodcastForSuggestion(suggestion) {
+  const suggestionKey = normalizeMatchKey(suggestion?.title);
+  if (!suggestionKey) return null;
+  return state.podcastByKey[suggestionKey] || null;
+}
+
+function getSuggestionMatchMarkup(suggestion) {
+  const matchedPodcast = findPodcastForSuggestion(suggestion);
+
+  if (!matchedPodcast) {
+    return `
+      <div class="profile-suggestion-card__match">
+        <span class="profile-suggestion-badge profile-suggestion-badge--muted">Ikke tilf&oslash;jet endnu</span>
+        <p>Afventer tilf&oslash;jelse</p>
+      </div>
+    `;
+  }
+
+  const communityStat = getCommunityStat(getPodcastKey(matchedPodcast));
+  const scoreParts = [];
+  const userRating = hasCommunityRating(communityStat)
+    ? formatCompactRating(communityStat.averageRating)
+    : "";
+  const madsRating = formatCompactRating(matchedPodcast.ratingValue);
+
+  if (userRating) {
+    scoreParts.push(`Brugere ${escapeHtml(userRating)}`);
+  }
+
+  if (madsRating) {
+    scoreParts.push(`Mads ${escapeHtml(madsRating)}`);
+  }
+
+  return `
+    <div class="profile-suggestion-card__match">
+      <span class="profile-suggestion-badge profile-suggestion-badge--success">P&aring; siden</span>
+      <p>${scoreParts.length ? scoreParts.join(" &middot; ") : "Ingen vurdering endnu"}</p>
+    </div>
+  `;
+}
+
+function createProfileSuggestionCardElement(suggestion) {
+  const card = document.createElement("article");
+  card.className = "profile-suggestion-card";
+
+  const statusLabel = getSuggestionStatusLabel(suggestion.status);
+  const submittedDate = formatDate(suggestion.created_at);
+  const linkMarkup = suggestion.podcast_url
+    ? `<a href="${escapeHtml(suggestion.podcast_url)}" target="_blank" rel="noopener noreferrer">Podcastlink</a>`
+    : "";
+  const platformMarkup = suggestion.platform
+    ? `<p><strong>Platform:</strong> ${escapeHtml(suggestion.platform)}</p>`
+    : "";
+  const commentMarkup = suggestion.comment
+    ? `<p><strong>Kommentar:</strong> ${escapeHtml(suggestion.comment)}</p>`
+    : "";
+
+  card.innerHTML = `
+    <header class="profile-suggestion-card__header">
+      <div>
+        <h3>${escapeHtml(suggestion.title || "Podcast uden titel")}</h3>
+        <p>Indsendt${submittedDate ? `: ${escapeHtml(submittedDate)}` : ""}</p>
+      </div>
+      <span class="profile-suggestion-badge">${escapeHtml(statusLabel)}</span>
+    </header>
+    <div class="profile-suggestion-card__meta">
+      ${linkMarkup}
+      ${platformMarkup}
+      ${commentMarkup}
+    </div>
+    ${getSuggestionMatchMarkup(suggestion)}
+  `;
+
+  return card;
+}
+
+async function fetchProfileSuggestions() {
+  if (!state.supabase || !state.authUser || state.profileSuggestionsLoading) return;
+
+  const userId = state.authUser.id;
+  state.profileSuggestionsLoading = true;
+  state.profileSuggestionsError = "";
+
+  try {
+    const { data, error } = await state.supabase
+      .from("podcast_suggestions")
+      .select("id, title, podcast_url, platform, comment, status, created_at")
+      .eq("suggested_by_user_id", userId)
+      .order("created_at", { ascending: false });
+
+    if (error) throw error;
+
+    state.profileSuggestions = data || [];
+    state.profileSuggestionsLoadedFor = userId;
+  } catch (error) {
+    console.error(error);
+    state.profileSuggestions = [];
+    state.profileSuggestionsLoadedFor = userId;
+    state.profileSuggestionsError =
+      "Dine podcastforslag kunne ikke hentes lige nu.";
+  } finally {
+    state.profileSuggestionsLoading = false;
+    if (document.body.classList.contains("page-profil")) {
+      renderProfilePage();
+    }
+  }
+}
+
+function renderProfilePage() {
+  const container = elements.pageIntroPanel;
+  if (!container) return;
+
+  container.innerHTML = "";
+  container.classList.remove("is-hidden");
+
+  if (state.authConfigured && !state.authReady) {
+    container.innerHTML = `
+      <section class="profile-page">
+        <div class="profile-state-card" aria-live="polite">
+          <p class="profile-eyebrow">Konto</p>
+          <h1>Indl&aelig;ser din profil&hellip;</h1>
+          <p>Vi kontrollerer din loginstatus og henter dine personlige podcastdata.</p>
+        </div>
+      </section>
+    `;
+    return;
+  }
+
+  if (!isLoggedIn()) {
+    const disabled = !state.authConfigured || state.authBusy ? "disabled" : "";
+    const availabilityMessage = state.authConfigured
+      ? "Log ind for at se dine vurderinger og gemte podcasts."
+      : "Login er ikke tilg&aelig;ngeligt, fordi auth ikke er konfigureret.";
+
+    container.innerHTML = `
+      <section class="profile-page">
+        <div class="profile-state-card profile-state-card--logged-out">
+          <p class="profile-eyebrow">Din podcastkonto</p>
+          <h1>Din profil</h1>
+          <p>${availabilityMessage}</p>
+          <div class="profile-actions">
+            <button class="profile-button profile-button--primary" type="button" data-auth-prompt="login" ${disabled}>
+              Log ind
+            </button>
+            <button class="profile-button profile-button--secondary" type="button" data-auth-prompt="signup" ${disabled}>
+              Opret konto
+            </button>
+            <a class="profile-button profile-button--quiet" href="#ranglister">Se ranglister</a>
+          </div>
+        </div>
+      </section>
+    `;
+
+    bindAuthPromptButtons(container);
+    return;
+  }
+
+  const ratedPodcasts = getProfileRatedPodcasts();
+  const ratingCount = Object.keys(state.userRatingsByKey).length;
+
+  container.innerHTML = `
+    <section class="profile-page">
+      <header class="profile-header">
+        <div class="profile-avatar" aria-hidden="true">${escapeHtml(
+          (state.authUser.email || "?").trim().charAt(0).toUpperCase() || "?"
+        )}</div>
+        <div class="profile-header__copy">
+          <p class="profile-eyebrow"><span class="profile-status-dot" aria-hidden="true"></span> Logget ind</p>
+          <h1 data-mobile-title="Profil">Din profil</h1>
+          <p class="profile-email">${escapeHtml(state.authUser.email || "Email ikke tilg\u00e6ngelig")}</p>
+        </div>
+        <nav class="profile-actions" aria-label="Profilhandlinger">
+          <a class="profile-button profile-button--primary" href="#ranglister">Se ranglister</a>
+          <a class="profile-button profile-button--secondary" href="#gemte">Se gemte</a>
+          <button class="profile-button profile-button--logout" type="button" data-profile-logout ${state.authBusy ? "disabled" : ""}>
+            Log ud
+          </button>
+        </nav>
+      </header>
+
+      <div class="profile-stats" aria-label="Profilstatistik">
+        <article class="profile-stat-card">
+          <span class="profile-stat-card__label">Dine vurderinger</span>
+          <strong>${ratingCount}</strong>
+          <span class="profile-stat-card__desktop-label">Vurderinger</span>
+          <span class="profile-stat-card__icon" aria-hidden="true">&starf;</span>
+        </article>
+      </div>
+
+      <div class="profile-dashboard">
+        <section class="profile-panel" aria-labelledby="profileRatingsHeading">
+          <header class="profile-panel__header">
+            <div>
+              <p class="profile-eyebrow">Dine scores</p>
+              <h2 id="profileRatingsHeading">Dine vurderinger</h2>
+            </div>
+            <span>${ratingCount}</span>
+          </header>
+          <p class="profile-panel__note">Vises alfabetisk.</p>
+          <div class="profile-podcast-list" data-profile-ratings></div>
+        </section>
+
+        <section class="profile-panel profile-suggestions-panel" aria-labelledby="profileSuggestionsHeading">
+          <header class="profile-panel__header">
+            <div>
+              <p class="profile-eyebrow">Dine indsendelser</p>
+              <h2 id="profileSuggestionsHeading">Mine podcastforslag</h2>
+            </div>
+            <span data-profile-suggestions-count></span>
+          </header>
+          <p class="profile-panel__note">Nyeste forslag vises f&oslash;rst.</p>
+          <div class="profile-suggestion-list" data-profile-suggestions></div>
+        </section>
+      </div>
+
+      <nav class="profile-menu" aria-label="Profilmenu">
+        <a class="profile-menu__item" href="#profil">
+          <span aria-hidden="true">&star;</span>
+          <strong>Mine vurderinger</strong>
+          <em aria-hidden="true">&rsaquo;</em>
+        </a>
+        <a class="profile-menu__item" href="#profil">
+          <span aria-hidden="true">&#9881;</span>
+          <strong>Indstillinger</strong>
+          <em aria-hidden="true">&rsaquo;</em>
+        </a>
+        <a class="profile-menu__item" href="#profil">
+          <span aria-hidden="true">?</span>
+          <strong>Hj&aelig;lp &amp; FAQ</strong>
+          <em aria-hidden="true">&rsaquo;</em>
+        </a>
+        <button class="profile-menu__item profile-menu__item--logout" type="button" data-profile-logout ${state.authBusy ? "disabled" : ""}>
+          <span aria-hidden="true">&#8618;</span>
+          <strong>Log ud</strong>
+        </button>
+      </nav>
+    </section>
+  `;
+
+  container
+    .querySelectorAll("[data-profile-logout]")
+    .forEach((button) => button.addEventListener("click", handleLogout));
+
+  const ratingsContainer = container.querySelector("[data-profile-ratings]");
+  if (ratedPodcasts.length) {
+    const ratingsFragment = document.createDocumentFragment();
+    ratedPodcasts.forEach(({ podcast, rating }) => {
+      ratingsFragment.appendChild(
+        createProfilePodcastCardElement(podcast, formatRating(rating), "rating")
+      );
+    });
+    ratingsContainer.appendChild(ratingsFragment);
+  } else if (ratingCount === 0) {
+    ratingsContainer.innerHTML = `
+      <div class="profile-empty-state">
+        <h3>Ingen vurderinger endnu</h3>
+        <p>Find en podcast i ranglisten og giv den din egen score.</p>
+        <a class="profile-button profile-button--quiet" href="#ranglister">Find podcasts</a>
+      </div>
+    `;
+  } else {
+    ratingsContainer.innerHTML = `
+      <div class="profile-empty-state">
+        <h3>Vurderingerne kunne ikke vises</h3>
+        <p>De gemte vurderinger matcher ikke de aktuelle podcastdata.</p>
+        <a class="profile-button profile-button--quiet" href="#ranglister">Se ranglister</a>
+      </div>
+    `;
+  }
+
+  const suggestionsContainer = container.querySelector("[data-profile-suggestions]");
+  const suggestionsCount = container.querySelector("[data-profile-suggestions-count]");
+  const suggestionsLoaded = state.profileSuggestionsLoadedFor === state.authUser.id;
+
+  if (suggestionsCount) {
+    suggestionsCount.textContent = suggestionsLoaded ? String(state.profileSuggestions.length) : "";
+  }
+
+  if (!suggestionsLoaded) {
+    suggestionsContainer.innerHTML = `
+      <div class="profile-empty-state">
+        <h3>Indl&aelig;ser dine podcastforslag&hellip;</h3>
+        <p>Vi henter de forslag, du har sendt ind.</p>
+      </div>
+    `;
+    fetchProfileSuggestions();
+  } else if (state.profileSuggestionsError) {
+    suggestionsContainer.innerHTML = `
+      <div class="profile-empty-state">
+        <h3>Podcastforslag kunne ikke hentes</h3>
+        <p>${escapeHtml(state.profileSuggestionsError)}</p>
+      </div>
+    `;
+  } else if (state.profileSuggestions.length) {
+    const suggestionsFragment = document.createDocumentFragment();
+    state.profileSuggestions.forEach((suggestion) => {
+      suggestionsFragment.appendChild(createProfileSuggestionCardElement(suggestion));
+    });
+    suggestionsContainer.appendChild(suggestionsFragment);
+  } else {
+    suggestionsContainer.innerHTML = `
+      <div class="profile-empty-state">
+        <h3>Du har ikke sendt nogen podcastforslag endnu.</h3>
+        <p>G&aring; til Udforsk, hvis der mangler en podcast p&aring; listen.</p>
+        <a class="profile-button profile-button--quiet" href="#udforsk">Foresl&aring; podcast</a>
+      </div>
+    `;
+  }
+
+}
+
+function createSavedPodcastCardElement(podcast) {
+  const podcastKey = getPodcastKey(podcast);
+  const communityStat = getCommunityStat(podcastKey);
+  const card = document.createElement("article");
+  card.className = "saved-card";
+
+  const cover = document.createElement("div");
+  cover.className = "saved-card__cover";
+
+  const image = document.createElement("img");
+  image.className = "saved-card__image";
+  image.loading = "lazy";
+
+  const placeholder = document.createElement("span");
+  placeholder.className = "image-placeholder saved-card__placeholder";
+  placeholder.textContent = "Billede mangler";
+  placeholder.hidden = true;
+
+  cover.append(image, placeholder);
+  setImage(cover, podcast.image, podcast.title);
+
+  const copy = document.createElement("div");
+  copy.className = "saved-card__copy";
+  const meta = [podcast.host || podcast.publisher, podcast.genre].filter(Boolean).join(" / ");
+  copy.innerHTML = `
+    <h2>${escapeHtml(podcast.title)}</h2>
+    <p>${escapeHtml(meta)}</p>
+  `;
+
+  const scores = document.createElement("div");
+  scores.className = "saved-card__scores";
+
+  if (podcast.ratingValue !== null && podcast.ratingValue !== undefined) {
+    const madsScore = document.createElement("span");
+    madsScore.innerHTML = `<small>Mads</small><strong>${escapeHtml(
+      podcast.ratingLabel || formatRating(podcast.ratingValue)
+    )}</strong>`;
+    scores.appendChild(madsScore);
+  }
+
+  if (communityStat?.averageRating !== null && communityStat?.averageRating !== undefined) {
+    const communityScore = document.createElement("span");
+    communityScore.innerHTML = `
+      <small>Brugere</small>
+      <strong>${escapeHtml(formatRating(communityStat.averageRating))}</strong>
+      <em>${escapeHtml(formatUserRatingCount(communityStat.ratingCount || 0))}</em>
+    `;
+    scores.appendChild(communityScore);
+  }
+
+  const actions = document.createElement("div");
+  actions.className = "saved-card__actions";
+
+  if (podcast.link) {
+    const openLink = document.createElement("a");
+    openLink.className = "saved-button saved-button--primary";
+    openLink.href = podcast.link;
+    openLink.target = "_blank";
+    openLink.rel = "noopener noreferrer";
+    openLink.textContent = "\u00c5bn podcast";
+    actions.appendChild(openLink);
+  }
+
+  const removeButton = document.createElement("button");
+  removeButton.className = "saved-button saved-button--remove";
+  removeButton.type = "button";
+  removeButton.setAttribute("aria-label", `Fjern ${podcast.title} fra gemte`);
+  removeButton.textContent = "Fjern fra gemte";
+  removeButton.addEventListener("click", async () => {
+    if (state.authBusy) return;
+
+    removeButton.disabled = true;
+    await toggleSavedPodcast(podcast);
+    if (removeButton.isConnected) {
+      removeButton.disabled = false;
+    }
+  });
+  actions.appendChild(removeButton);
+
+  card.append(cover, copy);
+  if (scores.childElementCount) {
+    card.appendChild(scores);
+  }
+  card.appendChild(actions);
+  return card;
+}
+
+function renderSavedPage() {
+  const container = elements.pageIntroPanel;
+  if (!container) return;
+
+  container.innerHTML = "";
+  container.classList.remove("is-hidden");
+
+  if (state.authConfigured && !state.authReady) {
+    container.innerHTML = `
+      <section class="saved-page">
+        <div class="saved-state-card" aria-live="polite">
+          <p class="saved-eyebrow">Dit bibliotek</p>
+          <h1>Indl&aelig;ser gemte podcasts&hellip;</h1>
+          <p>Vi kontrollerer din loginstatus og henter dit bibliotek.</p>
+        </div>
+      </section>
+    `;
+    return;
+  }
+
+  if (!isLoggedIn()) {
+    const disabled = !state.authConfigured || state.authBusy ? "disabled" : "";
+    const availabilityMessage = state.authConfigured
+      ? "Log ind for at se de podcasts, du har gemt til senere."
+      : "Login er ikke tilg&aelig;ngeligt, fordi auth ikke er konfigureret.";
+
+    container.innerHTML = `
+      <section class="saved-page">
+        <div class="saved-state-card saved-state-card--logged-out">
+          <p class="saved-eyebrow">Dit podcastbibliotek</p>
+          <h1>Gemte podcasts</h1>
+          <p>${availabilityMessage}</p>
+          <div class="saved-actions">
+            <button class="saved-button saved-button--primary" type="button" data-auth-prompt="login" ${disabled}>
+              Log ind
+            </button>
+            <button class="saved-button saved-button--secondary" type="button" data-auth-prompt="signup" ${disabled}>
+              Opret konto
+            </button>
+            <a class="saved-button saved-button--quiet" href="#ranglister">Se ranglister</a>
+          </div>
+        </div>
+      </section>
+    `;
+
+    bindAuthPromptButtons(container);
+    return;
+  }
+
+  const savedCount = state.savedPodcastKeys.size;
+  const savedPodcasts = getSavedPodcasts();
+  const unmatchedCount = Math.max(0, savedCount - savedPodcasts.length);
+
+  container.innerHTML = `
+    <section class="saved-page">
+      <header class="saved-header">
+        <div>
+          <p class="saved-eyebrow">Dit bibliotek</p>
+          <h1>Gemte podcasts</h1>
+          <p>De podcasts, du har gemt til senere, vises alfabetisk.</p>
+        </div>
+        <div class="saved-header__aside">
+          <div class="saved-count" aria-label="Antal gemte podcasts">
+            <strong>${savedCount}</strong>
+            <span>${savedCount === 1 ? "gemt podcast" : "gemte podcasts"}</span>
+          </div>
+          <a class="saved-button saved-button--primary" href="#ranglister">Find flere podcasts</a>
+        </div>
+      </header>
+      ${
+        unmatchedCount
+          ? `<p class="saved-notice">${unmatchedCount} ${
+              unmatchedCount === 1 ? "gemt podcast matcher" : "gemte podcasts matcher"
+            } ikke l&aelig;ngere det aktuelle datagrundlag.</p>`
+          : ""
+      }
+      <div class="saved-grid" data-saved-grid></div>
+    </section>
+  `;
+
+  const grid = container.querySelector("[data-saved-grid]");
+  if (savedPodcasts.length) {
+    const fragment = document.createDocumentFragment();
+    savedPodcasts.forEach((podcast) => {
+      fragment.appendChild(createSavedPodcastCardElement(podcast));
+    });
+    grid.appendChild(fragment);
+    return;
+  }
+
+  grid.innerHTML = `
+    <div class="saved-empty-state">
+      <h2>${savedCount ? "Ingen gemte podcasts kan vises" : "Ingen gemte podcasts endnu"}</h2>
+      <p>${
+        savedCount
+          ? "Dine gemte n&oslash;gler matcher ikke de aktuelle podcastdata."
+          : "G&aring; p&aring; opdagelse i ranglisten og gem de podcasts, du vil finde igen."
+      }</p>
+      <a class="saved-button saved-button--primary" href="#ranglister">Se ranglister</a>
+    </div>
+  `;
+}
+
+function getExploreScoreMarkup(podcast, className) {
+  const communityStat = getCommunityStat(getPodcastKey(podcast));
+  const hasUsers = hasCommunityRating(communityStat);
+  const userRating = hasUsers ? formatCompactRating(communityStat.averageRating) : "";
+  const madsRating = formatCompactRating(podcast.ratingValue);
+  const parts = [];
+
+  if (userRating) {
+    parts.push(`<span><strong>Brugere</strong> ${escapeHtml(userRating)}</span>`);
+  }
+
+  if (madsRating) {
+    parts.push(`<span><strong>Mads</strong> ${escapeHtml(madsRating)}</span>`);
+  }
+
+  if (!parts.length) {
+    parts.push("<span>Ikke vurderet</span>");
+  }
+
+  const count = Number(communityStat?.ratingCount || 0);
+  const countMarkup = count
+    ? `<em>${escapeHtml(formatUserReviewCount(count))}</em>`
+    : "";
+
+  return `
+    <div class="${className}">
+      <p>${parts.join(" <span aria-hidden=\"true\">&middot;</span> ")}</p>
+      ${countMarkup}
+    </div>
+  `;
+}
+
+function normalizeSuggestionUrl(value) {
+  const raw = normalizeText(value);
+  if (!raw) return "";
+
+  try {
+    return new URL(raw).href;
+  } catch {
+    return null;
+  }
+}
+
+function getSuggestionErrorMessage(error) {
+  const code = normalizeText(error?.code || "");
+  const message = normalizeText(error?.message || "");
+  const details = normalizeText(error?.details || "");
+  const hint = normalizeText(error?.hint || "");
+  const lower = `${message} ${details} ${hint}`.toLowerCase();
+
+  if (
+    code === "PGRST205" ||
+    lower.includes("schema cache") ||
+    lower.includes("could not find the table") ||
+    lower.includes("relation \"podcast_suggestions\" does not exist") ||
+    lower.includes("table podcast_suggestions does not exist")
+  ) {
+    return "Forslagstabellen er ikke klar endnu. Pr&oslash;v igen senere.";
+  }
+
+  if (
+    code === "42501" ||
+    lower.includes("row-level security") ||
+    lower.includes("permission denied") ||
+    lower.includes("not authorized") ||
+    lower.includes("violates row-level security")
+  ) {
+    return "Du har ikke adgang til at sende forslaget. Pr&oslash;v at logge ind igen.";
+  }
+
+  return "Forslaget kunne ikke sendes. Pr&oslash;v igen.";
+}
+
+function setSuggestionMessage(messageElement, message = "", tone = "info") {
+  if (!messageElement) return;
+  messageElement.innerHTML = message;
+  messageElement.classList.toggle("is-hidden", !message);
+  messageElement.dataset.tone = tone;
+}
+
+async function submitPodcastSuggestion(form, messageElement) {
+  if (!form) return;
+
+  const formData = new FormData(form);
+  const title = normalizeText(formData.get("title"));
+  const podcastUrl = normalizeSuggestionUrl(formData.get("podcast_url"));
+
+  if (!title) {
+    setSuggestionMessage(messageElement, "Skriv podcastens titel.", "warning");
+    form.querySelector("[name='title']")?.focus();
+    return;
+  }
+
+  if (podcastUrl === null) {
+    setSuggestionMessage(messageElement, "Skriv et gyldigt link, eller lad feltet st&aring; tomt.", "warning");
+    form.querySelector("[name='podcast_url']")?.focus();
+    return;
+  }
+
+  if (!state.supabase) {
+    setSuggestionMessage(
+      messageElement,
+      "Forslag kan ikke sendes endnu, fordi Supabase ikke er klar.",
+      "error"
+    );
+    return;
+  }
+
+  const submitButton = form.querySelector("[type='submit']");
+  if (submitButton) submitButton.disabled = true;
+  setSuggestionMessage(messageElement, "");
+
+  try {
+    const {
+      data: { session },
+      error: sessionError
+    } = await state.supabase.auth.getSession();
+
+    if (sessionError) {
+      console.warn("Podcast suggestion session lookup failed", sessionError);
+    }
+
+    const user = session?.user || null;
+    state.session = session || null;
+    state.authUser = user;
+    renderAuthPanel();
+
+    if (!user?.id) {
+      setSuggestionMessage(
+        messageElement,
+        "Du skal v&aelig;re logget ind for at sende forslag.",
+        "warning"
+      );
+      showAuthPrompt("login");
+      return;
+    }
+
+    const payload = {
+      title,
+      podcast_url: podcastUrl || null,
+      platform: normalizeText(formData.get("platform")) || null,
+      comment: normalizeText(formData.get("comment")) || null,
+      suggested_by_user_id: user.id,
+      suggested_by_email: user.email || null,
+      status: "new"
+    };
+
+    const { error } = await state.supabase.from("podcast_suggestions").insert(payload);
+    if (error) throw error;
+
+    form.reset();
+    state.profileSuggestionsLoadedFor = null;
+    const successState = form
+      .closest(".explore-suggestion-dialog__panel")
+      ?.querySelector("[data-explore-suggest-success]");
+    form.hidden = true;
+    successState?.classList.remove("is-hidden");
+    setSuggestionMessage(messageElement, "");
+  } catch (error) {
+    console.warn("Podcast suggestion submit failed", error);
+    setSuggestionMessage(messageElement, getSuggestionErrorMessage(error), "error");
+  } finally {
+    if (submitButton) submitButton.disabled = false;
+  }
+}
+
+function createExplorePodcastCardElement(podcast) {
+  const card = document.createElement("article");
+  card.className = "explore-card";
+
+  const cover = document.createElement("div");
+  cover.className = "explore-card__cover";
+
+  const image = document.createElement("img");
+  image.className = "explore-card__image";
+  image.loading = "lazy";
+
+  const placeholder = document.createElement("span");
+  placeholder.className = "image-placeholder explore-card__placeholder";
+  placeholder.textContent = "Billede mangler";
+  placeholder.hidden = true;
+
+  cover.append(image, placeholder);
+  setImage(cover, podcast.image, podcast.title);
+
+  const copy = document.createElement("div");
+  copy.className = "explore-card__copy";
+  copy.innerHTML = `
+    <p class="explore-card__genre">${escapeHtml(podcast.genre || "Podcast")}</p>
+    <h3>${escapeHtml(podcast.title)}</h3>
+    <p class="explore-card__host">${escapeHtml(
+      podcast.host || podcast.publisher || ""
+    )}</p>
+    ${getExploreScoreMarkup(podcast, "explore-card__rating")}
+  `;
+
+  const actions = document.createElement("div");
+  actions.className = "explore-card__actions";
+
+  if (podcast.link) {
+    const openLink = document.createElement("a");
+    openLink.className = "explore-button explore-button--card";
+    openLink.href = podcast.link;
+    openLink.target = "_blank";
+    openLink.rel = "noopener noreferrer";
+    openLink.textContent = "\u00c5bn podcast";
+    actions.appendChild(openLink);
+  }
+
+  card.append(cover, copy);
+  if (actions.childElementCount) {
+    card.appendChild(actions);
+  }
+  return card;
+}
+
+function createExploreFeaturedCardElement(review) {
+  const card = document.createElement("article");
+  card.className = "explore-featured-card";
+
+  const cover = document.createElement("div");
+  cover.className = "explore-featured-card__cover";
+
+  const image = document.createElement("img");
+  image.className = "explore-featured-card__image";
+  image.loading = "lazy";
+  cover.appendChild(image);
+  setImage(cover, review.image, review.title || "");
+
+  const meta = [review.host, review.publisher, review.genre].filter(Boolean).join(" / ");
+  const linkMarkup = review.link
+    ? `
+      <a
+        class="explore-button explore-featured-card__link"
+        href="${escapeHtml(review.link)}"
+        target="_blank"
+        rel="noopener noreferrer"
+      >
+        \u00c5bn podcast
+      </a>
+    `
+    : "";
+
+  const copy = document.createElement("div");
+  copy.className = "explore-featured-card__copy";
+  copy.innerHTML = `
+    <h3>${escapeHtml(review.title || "")}</h3>
+    <p class="explore-featured-card__meta">${escapeHtml(meta)}</p>
+    <p class="explore-featured-card__score">${escapeHtml(
+      review.scoreLabel || "Ikke vurderet"
+    )}</p>
+    <p class="explore-featured-card__review">${escapeHtml(review.review || "")}</p>
+    ${linkMarkup}
+  `;
+
+  card.append(cover, copy);
+  return card;
+}
+
+function renderExploreFeatured(container) {
+  if (!container) return;
+
+  const reviews = state.featuredReviews.slice(0, 3);
+  container.innerHTML = "";
+
+  if (!reviews.length) {
+    const section = container.closest(".explore-featured");
+    if (section) section.hidden = true;
+    return;
+  }
+
+  const fragment = document.createDocumentFragment();
+  reviews.forEach((review) => {
+    fragment.appendChild(createExploreFeaturedCardElement(review));
+  });
+  container.appendChild(fragment);
+}
+
+function createExploreGenreCardElement(podcast) {
+  const card = document.createElement("article");
+  card.className = "explore-genre-card";
+
+  const cover = document.createElement("div");
+  cover.className = "explore-genre-card__cover";
+
+  const image = document.createElement("img");
+  image.className = "explore-genre-card__image";
+  image.loading = "lazy";
+
+  const placeholder = document.createElement("span");
+  placeholder.className = "image-placeholder explore-genre-card__placeholder";
+  placeholder.textContent = "Billede mangler";
+  placeholder.hidden = true;
+
+  cover.append(image, placeholder);
+  setImage(cover, podcast.image, podcast.title);
+
+  const copy = document.createElement("div");
+  copy.className = "explore-genre-card__copy";
+  copy.innerHTML = `
+    <p class="explore-genre-card__genre">${escapeHtml(podcast.genre)}</p>
+    <h3>${escapeHtml(podcast.title)}</h3>
+    <p class="explore-genre-card__host">${escapeHtml(
+      podcast.host || podcast.publisher || ""
+    )}</p>
+    ${getExploreScoreMarkup(podcast, "explore-genre-card__scores")}
+  `;
+
+  card.append(cover, copy);
+
+  if (podcast.link) {
+    const openLink = document.createElement("a");
+    openLink.className = "explore-button explore-genre-card__link";
+    openLink.href = podcast.link;
+    openLink.target = "_blank";
+    openLink.rel = "noopener noreferrer";
+    openLink.textContent = "\u00c5bn podcast";
+    card.appendChild(openLink);
+  }
+
+  return card;
+}
+
+function renderExploreGenreSections(container, { searchTerm = "", genre = "Alle" } = {}) {
+  if (!container) return;
+
+  const hasSearch = Boolean(normalizeText(searchTerm));
+  container.classList.toggle("is-hidden", hasSearch);
+  container.innerHTML = "";
+
+  if (hasSearch) return;
+
+  const visibleGenres =
+    genre === "Alle" ? GENRES.filter((item) => item !== "Alle") : [genre];
+  const fragment = document.createDocumentFragment();
+  let sectionCount = 0;
+
+  visibleGenres.forEach((genreName) => {
+    const podcasts = state.podcasts
+      .filter(
+        (podcast) =>
+          podcast.genre === genreName &&
+          (hasCommunityRating(getCommunityStat(getPodcastKey(podcast))) ||
+            (podcast.ratingValue !== null && podcast.ratingValue !== undefined))
+      )
+      .sort(compareExplorePodcasts)
+      .slice(0, 4);
+
+    if (!podcasts.length) return;
+
+    const section = document.createElement("section");
+    section.className = "explore-genre-section";
+    section.setAttribute("aria-labelledby", `exploreGenre${sectionCount}Heading`);
+    section.innerHTML = `
+      <header class="explore-genre-section__header">
+        <div>
+          <p class="explore-eyebrow">Bedst vurderet af brugere</p>
+          <h2 id="exploreGenre${sectionCount}Heading">${escapeHtml(genreName)}</h2>
+        </div>
+        <span class="explore-genre-count">${podcasts.length} ${podcasts.length === 1 ? "podcast" : "podcasts"}</span>
+        <a href="#ranglister" class="explore-see-all">Se alle</a>
+      </header>
+      <div class="explore-genre-grid"></div>
+    `;
+
+    const grid = section.querySelector(".explore-genre-grid");
+    const cardFragment = document.createDocumentFragment();
+    podcasts.forEach((podcast) => {
+      cardFragment.appendChild(createExploreGenreCardElement(podcast));
+    });
+    grid.appendChild(cardFragment);
+    fragment.appendChild(section);
+    sectionCount += 1;
+  });
+
+  if (!sectionCount) {
+    container.innerHTML = `
+      <div class="explore-empty-state">
+        <h3>Ingen genreanbefalinger endnu</h3>
+        <p>Der er ingen podcasts med vurderinger i den valgte genre.</p>
+      </div>
+    `;
+    return;
+  }
+
+  container.appendChild(fragment);
+}
+
+function renderExplorePage() {
+  const container = elements.pageIntroPanel;
+  if (!container) return;
+
+  const genreMarkup = GENRES.map(
+    (genre) => `
+      <button
+        class="explore-genre-chip${genre === "Alle" ? " is-active" : ""}"
+        type="button"
+        data-explore-genre="${escapeHtml(genre)}"
+        aria-pressed="${genre === "Alle"}"
+      >
+        ${escapeHtml(genre)}
+      </button>
+    `
+  ).join("");
+
+  container.innerHTML = `
+    <section class="explore-page">
+      <header class="explore-hero">
+        <div class="explore-hero__copy">
+          <p class="explore-eyebrow">Opdag din n&aelig;ste favorit</p>
+          <h1 data-mobile-title="Udforsk">Udforsk podcasts</h1>
+          <p>Find podcasts efter genre, emne og brugernes vurderinger.</p>
+        </div>
+        <label class="explore-search" for="exploreSearchInput">
+          <span>S&oslash;g i Udforsk</span>
+          <input
+            id="exploreSearchInput"
+            type="search"
+            placeholder="S&oslash;g efter podcast, v&aelig;rt, udgiver eller genre"
+            autocomplete="off"
+            spellcheck="false"
+          />
+        </label>
+        <div class="explore-genres" aria-label="Filtrer Udforsk efter genre">
+          ${genreMarkup}
+        </div>
+      </header>
+
+      <section class="explore-featured" aria-labelledby="exploreFeaturedHeading">
+        <header class="explore-section-header">
+          <div>
+            <p class="explore-eyebrow">Kurateret inspiration</p>
+            <h2 id="exploreFeaturedHeading">Mads&rsquo; udvalgte</h2>
+          </div>
+        </header>
+        <div class="explore-featured__grid" data-explore-featured></div>
+      </section>
+
+      <section class="explore-popular" aria-labelledby="explorePopularHeading">
+        <header class="explore-section-header">
+          <div>
+            <p class="explore-eyebrow">Communityrangering</p>
+            <h2 id="explorePopularHeading">Popul&aelig;re blandt brugere</h2>
+          </div>
+          <span class="explore-results-count" data-explore-count></span>
+        </header>
+        <div class="explore-grid" data-explore-grid></div>
+      </section>
+
+      <section class="explore-suggest-card" aria-labelledby="exploreSuggestHeading">
+        <div>
+          <p class="explore-eyebrow">F&aelig;llesskabet hj&aelig;lper</p>
+          <h2 id="exploreSuggestHeading">Mangler der en podcast?</h2>
+          <p>Send et forslag, s&aring; kigger vi p&aring; den.</p>
+        </div>
+        <button class="explore-suggest-card__button" type="button" data-explore-suggest-open>
+          Foresl&aring; podcast
+        </button>
+      </section>
+
+      <div
+        class="explore-genre-sections"
+        data-explore-genre-sections
+        aria-label="Podcastanbefalinger efter genre"
+      ></div>
+
+      <div class="explore-suggestion-dialog is-hidden" data-explore-suggest-dialog aria-hidden="true">
+        <div class="explore-suggestion-dialog__backdrop" data-explore-suggest-close></div>
+        <div
+          class="explore-suggestion-dialog__panel"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="exploreSuggestionTitle"
+        >
+          <button
+            class="explore-suggestion-dialog__close"
+            type="button"
+            aria-label="Luk forslag"
+            data-explore-suggest-close
+          >
+            &times;
+          </button>
+          <p class="explore-eyebrow">Podcastforslag</p>
+          <h2 id="exploreSuggestionTitle">Foresl&aring; podcast</h2>
+          <p class="explore-suggestion-dialog__intro">Send en podcast til manuel gennemgang.</p>
+          <form class="explore-suggestion-form" data-explore-suggest-form novalidate>
+            <label>
+              <span>Podcasttitel *</span>
+              <input name="title" type="text" autocomplete="off" required />
+            </label>
+            <label>
+              <span>Link til podcast</span>
+              <input name="podcast_url" type="url" placeholder="https://..." autocomplete="url" />
+            </label>
+            <label>
+              <span>Platform/udbyder</span>
+              <input name="platform" type="text" autocomplete="organization" />
+            </label>
+            <label>
+              <span>Kort kommentar</span>
+              <textarea name="comment" rows="3"></textarea>
+            </label>
+            <p class="explore-suggestion-message is-hidden" data-explore-suggest-message aria-live="polite"></p>
+            <div class="explore-suggestion-form__actions">
+              <button class="auth-button auth-button--secondary" type="button" data-explore-suggest-close>
+                Annuller
+              </button>
+              <button class="auth-button auth-button--primary" type="submit">
+                Send forslag
+              </button>
+            </div>
+          </form>
+          <div class="explore-suggestion-success is-hidden" data-explore-suggest-success>
+            <h3>Tak for forslaget!</h3>
+            <p>Vi kigger p&aring; den.</p>
+            <button class="auth-button auth-button--primary" type="button" data-explore-suggest-close>
+              Luk
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+  `;
+  container.classList.remove("is-hidden");
+
+  const searchInput = container.querySelector("#exploreSearchInput");
+  const genreButtons = container.querySelectorAll("[data-explore-genre]");
+  const grid = container.querySelector("[data-explore-grid]");
+  const count = container.querySelector("[data-explore-count]");
+  const genreSections = container.querySelector("[data-explore-genre-sections]");
+  const featuredGrid = container.querySelector("[data-explore-featured]");
+  const suggestionDialog = container.querySelector("[data-explore-suggest-dialog]");
+  const suggestionForm = container.querySelector("[data-explore-suggest-form]");
+  const suggestionMessage = container.querySelector("[data-explore-suggest-message]");
+  const suggestionSuccess = container.querySelector("[data-explore-suggest-success]");
+  let localSearchTerm = "";
+  let localGenre = "Alle";
+
+  try {
+    const pendingGenre = window.sessionStorage?.getItem("podcastExploreGenre");
+    if (pendingGenre && GENRES.includes(pendingGenre)) {
+      localGenre = pendingGenre;
+    }
+    window.sessionStorage?.removeItem("podcastExploreGenre");
+  } catch (error) {
+    localGenre = "Alle";
+  }
+
+  renderExploreFeatured(featuredGrid);
+
+  const renderExploreResults = () => {
+    const expandedQuery = expandSearchAliases(localSearchTerm);
+    const queryParts = expandedQuery
+      .split(" ")
+      .map((part) => part.trim())
+      .filter(Boolean);
+
+    const matchingPodcasts = state.podcasts
+      .filter((podcast) => {
+        const stat = getCommunityStat(getPodcastKey(podcast));
+        if (!hasCommunityRating(stat)) {
+          return false;
+        }
+
+        if (localGenre !== "Alle" && podcast.genre !== localGenre) {
+          return false;
+        }
+
+        return queryParts.every((part) => podcast.searchText.includes(part));
+      })
+      .sort(compareExplorePodcasts);
+
+    renderExploreGenreSections(genreSections, {
+      searchTerm: localSearchTerm,
+      genre: localGenre
+    });
+
+    if (count) {
+      const visibleResultCount = Math.min(matchingPodcasts.length, 12);
+      count.textContent =
+        matchingPodcasts.length > visibleResultCount
+          ? `Viser ${visibleResultCount} af ${matchingPodcasts.length}`
+          : `${matchingPodcasts.length} ${
+              matchingPodcasts.length === 1 ? "podcast" : "podcasts"
+            }`;
+    }
+
+    grid.innerHTML = "";
+    if (!matchingPodcasts.length) {
+      grid.innerHTML = `
+        <div class="explore-empty-state">
+          <h3>Ingen podcasts fundet</h3>
+          <p>${
+            localSearchTerm || localGenre !== "Alle"
+              ? "Pr&oslash;v en anden s&oslash;gning eller genre."
+              : "Der er endnu ingen podcasts med brugervurderinger."
+          }</p>
+        </div>
+      `;
+      return;
+    }
+
+    const fragment = document.createDocumentFragment();
+    matchingPodcasts.slice(0, 12).forEach((podcast) => {
+      fragment.appendChild(createExplorePodcastCardElement(podcast));
+    });
+    grid.appendChild(fragment);
+  };
+
+  searchInput?.addEventListener("input", (event) => {
+    localSearchTerm = normalizeText(event.target.value);
+    renderExploreResults();
+  });
+
+  genreButtons.forEach((button) => {
+    const isInitiallyActive = button.dataset.exploreGenre === localGenre;
+    button.classList.toggle("is-active", isInitiallyActive);
+    button.setAttribute("aria-pressed", String(isInitiallyActive));
+
+    button.addEventListener("click", () => {
+      localGenre = button.dataset.exploreGenre || "Alle";
+      genreButtons.forEach((genreButton) => {
+        const isActive = genreButton === button;
+        genreButton.classList.toggle("is-active", isActive);
+        genreButton.setAttribute("aria-pressed", String(isActive));
+      });
+      renderExploreResults();
+    });
+  });
+
+  const closeSuggestionDialog = () => {
+    state.exploreSuggestionDialogOpen = false;
+    suggestionDialog?.classList.add("is-hidden");
+    suggestionDialog?.setAttribute("aria-hidden", "true");
+    if (
+      elements.authDialog?.classList.contains("is-hidden") &&
+      elements.ratingDialog?.classList.contains("is-hidden")
+    ) {
+      document.body.classList.remove("has-dialog-open");
+    }
+  };
+
+  const openSuggestionDialog = () => {
+    if (!isLoggedIn()) {
+      state.pendingAuthAction = { type: "suggestion" };
+      showAuthPrompt("login");
+      setAuthMessage("Log ind for at sende podcastforslag.", "warning", "dialog");
+      return;
+    }
+
+    setSuggestionMessage(suggestionMessage, "");
+    state.exploreSuggestionDialogOpen = true;
+    if (suggestionForm) {
+      suggestionForm.hidden = false;
+      suggestionForm.reset();
+    }
+    suggestionSuccess?.classList.add("is-hidden");
+    suggestionDialog?.classList.remove("is-hidden");
+    suggestionDialog?.setAttribute("aria-hidden", "false");
+    document.body.classList.add("has-dialog-open");
+    suggestionForm?.querySelector("[name='title']")?.focus();
+  };
+
+  container.querySelector("[data-explore-suggest-open]")?.addEventListener("click", openSuggestionDialog);
+
+  container.querySelectorAll("[data-explore-suggest-close]").forEach((button) => {
+    button.addEventListener("click", closeSuggestionDialog);
+  });
+
+  suggestionForm?.addEventListener("submit", (event) => {
+    event.preventDefault();
+    submitPodcastSuggestion(suggestionForm, suggestionMessage);
+  });
+
+  if (state.exploreSuggestionDialogOpen && isLoggedIn()) {
+    window.setTimeout(openSuggestionDialog, 0);
+  }
+
+  renderExploreResults();
 }
 
 function renderRoute() {
@@ -2820,6 +4706,10 @@ function renderRoute() {
   );
   document.body.classList.add(`page-${route}`);
 
+  if (route !== "udforsk") {
+    state.exploreSuggestionDialogOpen = false;
+  }
+
   elements.pageLinks.forEach((link) => {
     const isActive = link.dataset.pageLink === route;
     link.classList.toggle("is-active", isActive);
@@ -2841,22 +4731,70 @@ function renderRoute() {
 
   if (route === "forside") {
     const featuredReview = state.featuredReviews[0] || null;
-    const featuredPodcast = featuredReview
-      ? state.podcastByKey[normalizeMatchKey(featuredReview.matchTitle || featuredReview.title)]
-      : null;
+    const showHomeCommunityCta = !isLoggedIn();
+    const heroPodcastPrimary =
+      state.podcasts.find(
+        (podcast) => podcast.image && podcast.title !== featuredReview?.title
+      ) || null;
+    const heroPodcastSecondary =
+      state.podcasts.find(
+        (podcast) =>
+          podcast.image &&
+          podcast !== heroPodcastPrimary &&
+          podcast.title !== featuredReview?.title
+      ) || null;
+    const ratedPodcastCount = state.podcasts.reduce(
+      (count, podcast) =>
+        count +
+        (podcast.ratingValue !== null && podcast.ratingValue !== undefined ? 1 : 0),
+      0
+    );
 
     elements.pageIntroPanel.innerHTML = `
       <div class="home-hero">
-        <p class="eyebrow">Personlige podcastfavoritter</p>
-        <h1>Mine podcastfavoritter</h1>
-        <p class="intro">
-          Mads Asps personlige rangliste over podcasts &ndash; udvalgt og delt til
-          inspiration for andre lyttere.
-        </p>
-        <div class="page-intro-panel__actions">
-          <a class="page-intro-panel__button" href="#ranglister">Se ranglister</a>
+        <div class="home-hero__copy">
+          <p class="eyebrow"><span class="mobile-brand-word">Podcast<span class="mobile-brand-accent">listen</span></span>Personlige podcastfavoritter</p>
+          <h1>Find din n&aelig;ste podcastfavorit</h1>
+          <p
+            class="intro"
+            data-mobile-intro="Se hvilke podcasts lytterne vurderer h&oslash;jest &ndash; og find inspiration til din n&aelig;ste lytning."
+          >
+            Mads Asps personlige rangliste over podcasts &ndash; udvalgt og delt til
+            inspiration for andre lyttere.
+          </p>
+          <div class="home-mobile-actions" aria-label="Hurtige handlinger">
+            <a class="home-mobile-action home-mobile-action--primary" href="#ranglister">Se ranglisten</a>
+            <a class="home-mobile-action home-mobile-action--secondary" href="#ranglister">Vurder podcasts</a>
+          </div>
+          <p class="home-mobile-helper">Filtr&eacute;r efter genre, gem favoritter og giv dine egne vurderinger.</p>
+          <div class="page-intro-panel__actions">
+            <a class="page-intro-panel__button" href="#ranglister">Se ranglister</a>
+            <a
+              class="page-intro-panel__button page-intro-panel__button--secondary"
+              href="#udforsk"
+            >
+              Udforsk podcasts
+            </a>
+          </div>
+        </div>
+        <div class="home-hero__visual" aria-label="Udvalgte podcasts">
+          <div class="home-hero__glow" aria-hidden="true"></div>
+          <div class="home-hero__cover home-hero__cover--featured">
+            <img alt="" loading="lazy" />
+          </div>
+          <div class="home-hero__cover home-hero__cover--primary">
+            <img alt="" loading="lazy" />
+          </div>
+          <div class="home-hero__cover home-hero__cover--secondary">
+            <img alt="" loading="lazy" />
+          </div>
+          <div class="home-hero__stat">
+            <strong>${ratedPodcastCount}</strong>
+            <span>podcasts vurderet af Mads</span>
+          </div>
         </div>
       </div>
+      <div class="home-primary-row">
       <section class="home-featured" aria-labelledby="homeFeaturedHeading">
         <div class="section-header">
           <div>
@@ -2864,22 +4802,168 @@ function renderRoute() {
             <h2 id="homeFeaturedHeading">Ugens anbefaling</h2>
           </div>
         </div>
-        <div class="home-featured__content"></div>
+        <article class="home-featured__content"></article>
       </section>
+      <section class="home-popular" aria-labelledby="homePopularHeading">
+        <div class="section-header">
+          <div>
+            <p class="eyebrow">Brugernes favoritter</p>
+            <h2 id="homePopularHeading">Populært blandt brugere</h2>
+          </div>
+          <span class="home-swipe-hint">Swipe &rarr;</span>
+        </div>
+        <div class="home-popular__grid"></div>
+      </section>
+      </div>
+      <div class="home-secondary-row">
+        <section class="home-genres" aria-labelledby="homeGenresHeading">
+          <div class="section-header">
+            <div>
+              <p class="eyebrow">Mads' favoritter</p>
+              <h2 id="homeGenresHeading" data-mobile-title="Top i genrer">Top i hver genre</h2>
+            </div>
+          </div>
+          <p class="home-genres__hint">Tryk p&aring; en genre for at udforske podcasts i kategorien.</p>
+          <div class="home-genres__grid"></div>
+        </section>
+        <section class="home-recent" aria-labelledby="homeRecentHeading">
+          <div class="section-header">
+            <div>
+              <p class="eyebrow">Nye vurderinger</p>
+              <h2 id="homeRecentHeading">
+                <span class="home-recent-heading__desktop">Senest bed&oslash;mte</span>
+                <span class="home-recent-heading__mobile">Nye fund p&aring; listen</span>
+              </h2>
+            </div>
+          </div>
+          <div class="home-recent__grid"></div>
+        </section>
+      </div>
+      ${
+        showHomeCommunityCta
+          ? `
+            <section class="home-community-cta" aria-labelledby="homeCommunityCtaHeading">
+              <div class="home-community-cta__copy">
+                <h2 id="homeCommunityCtaHeading">Bliv en del af f&aelig;llesskabet</h2>
+                <p>Opret en gratis konto, gem dine favoritter og del dine vurderinger.</p>
+              </div>
+              <button
+                class="home-community-cta__button"
+                type="button"
+                ${state.authConfigured ? "" : "disabled"}
+              >
+                Opret gratis konto
+              </button>
+            </section>
+          `
+          : ""
+      }
     `;
+
+    setHomeHeroCover(
+      elements.pageIntroPanel,
+      ".home-hero__cover--featured",
+      featuredReview
+    );
+    setHomeHeroCover(
+      elements.pageIntroPanel,
+      ".home-hero__cover--primary",
+      heroPodcastPrimary
+    );
+    setHomeHeroCover(
+      elements.pageIntroPanel,
+      ".home-hero__cover--secondary",
+      heroPodcastSecondary
+    );
 
     const featuredContent = elements.pageIntroPanel.querySelector(
       ".home-featured__content"
     );
 
-    if (featuredPodcast) {
-      featuredContent.appendChild(createRecentCardElement(featuredPodcast));
+    if (featuredReview) {
+      const meta = [featuredReview.host, featuredReview.publisher, featuredReview.genre]
+        .filter(Boolean)
+        .join(" / ");
+      const linkMarkup = featuredReview.link
+        ? `
+          <a
+            class="page-intro-panel__button home-featured__link"
+            href="${escapeHtml(featuredReview.link)}"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            Åbn podcast
+          </a>
+        `
+        : "";
+
+      featuredContent.innerHTML = `
+        <div class="home-featured__cover">
+          <img class="home-featured__image" alt="" loading="lazy" />
+        </div>
+        <div class="home-featured__copy">
+          <p class="home-featured__label">Ugens anbefaling</p>
+          <h3>${escapeHtml(featuredReview.title || "")}</h3>
+          <p class="home-featured__meta">${escapeHtml(meta)}</p>
+          <div class="home-featured__details">
+            <strong>${escapeHtml(featuredReview.scoreLabel || "Ikke vurderet")}</strong>
+            <span>${escapeHtml(featuredReview.reviewDateLabel || "")}</span>
+          </div>
+          <p class="home-featured__review">${escapeHtml(featuredReview.review || "")}</p>
+          ${linkMarkup}
+        </div>
+      `;
+
+      const image = featuredContent.querySelector(".home-featured__image");
+      const cover = featuredContent.querySelector(".home-featured__cover");
+
+      if (featuredReview.image) {
+        loadImageWithFallback(image, featuredReview.image, featuredReview.title || "", {
+          onFail() {
+            cover.classList.add("has-no-image");
+          }
+        });
+      } else {
+        cover.classList.add("has-no-image");
+      }
     } else {
       featuredContent.innerHTML =
         '<div class="empty-state">Ugens anbefaling er på vej.</div>';
     }
 
+    renderHomePopular(
+      elements.pageIntroPanel.querySelector(".home-popular__grid")
+    );
+    renderHomeRecent(
+      elements.pageIntroPanel.querySelector(".home-recent__grid")
+    );
+    renderHomeGenres(
+      elements.pageIntroPanel.querySelector(".home-genres__grid")
+    );
+
+    const homeCommunityCtaButton = elements.pageIntroPanel.querySelector(
+      ".home-community-cta__button"
+    );
+    homeCommunityCtaButton?.addEventListener("click", () => {
+      showAuthPrompt("signup");
+    });
+
     elements.pageIntroPanel.classList.remove("is-hidden");
+    return;
+  }
+
+  if (route === "profil") {
+    renderProfilePage();
+    return;
+  }
+
+  if (route === "gemte") {
+    renderSavedPage();
+    return;
+  }
+
+  if (route === "udforsk") {
+    renderExplorePage();
     return;
   }
 
@@ -2889,16 +4973,6 @@ function renderRoute() {
   let action = "";
 
   switch (route) {
-    case "udforsk":
-      title = "Udforsk podcasts";
-      text = "Her kommer genresektioner og anbefalinger.";
-      break;
-    case "gemte":
-      title = "Dine gemte podcasts";
-      text = loggedIn
-        ? `Du har gemt ${state.savedPodcastKeys.size} podcasts.`
-        : "Log ind for at se dine gemte podcasts.";
-      break;
     case "profil":
       title = "Din profil";
       text = loggedIn
@@ -3023,6 +5097,15 @@ function setupEvents() {
     });
   }
 
+  if (elements.mobileSortToggle) {
+    elements.mobileSortToggle.addEventListener("click", () => {
+      state.sort =
+        state.sort === "placement-asc" ? "placement-desc" : "placement-asc";
+      resetVisibleCount();
+      render();
+    });
+  }
+
   elements.rankingSourceButtons?.forEach((button) => {
     button.addEventListener("click", () => {
       const nextSource = button.dataset.rankingSource === "users" ? "users" : "mads";
@@ -3034,6 +5117,15 @@ function setupEvents() {
     });
   });
 
+  elements.ratingFilter?.addEventListener("input", (event) => {
+    setMinimumRating(event.target.value);
+  });
+
+  elements.rankingMobileFilterToggle?.addEventListener("click", () => {
+    state.mobileRankingFiltersOpen = !state.mobileRankingFiltersOpen;
+    updateMobileRankingFilterUi();
+  });
+
   elements.viewModeToggle?.addEventListener("click", toggleViewMode);
 
   elements.openSignupButton?.addEventListener("click", () => {
@@ -3041,6 +5133,21 @@ function setupEvents() {
   });
 
   elements.openLoginButton?.addEventListener("click", () => {
+    showAuthPrompt("login");
+  });
+
+  elements.globalAuthZone?.addEventListener("click", (event) => {
+    if (!(event.target instanceof HTMLElement)) return;
+
+    const actionTarget = event.target.closest("[data-global-auth-action]");
+    if (!actionTarget || !elements.globalAuthZone.contains(actionTarget)) return;
+
+    const action = actionTarget.dataset.globalAuthAction;
+    if (action === "logout") {
+      handleLogout();
+      return;
+    }
+
     showAuthPrompt("login");
   });
 
@@ -3076,7 +5183,7 @@ function setupEvents() {
   });
 
   if (elements.clearFilterButton) {
-    elements.clearFilterButton.addEventListener("click", clearActiveFilter);
+    elements.clearFilterButton.addEventListener("click", clearRankingFilters);
   }
 
   if (elements.activeFilterPill) {
@@ -3137,6 +5244,19 @@ function setupEvents() {
 
     if (event.key === "Escape" && !elements.ratingDialog?.classList.contains("is-hidden")) {
       closeRatingDialog();
+    }
+
+    const suggestionDialog = document.querySelector(".explore-suggestion-dialog:not(.is-hidden)");
+    if (event.key === "Escape" && suggestionDialog) {
+      state.exploreSuggestionDialogOpen = false;
+      suggestionDialog.classList.add("is-hidden");
+      suggestionDialog.setAttribute("aria-hidden", "true");
+      if (
+        elements.authDialog?.classList.contains("is-hidden") &&
+        elements.ratingDialog?.classList.contains("is-hidden")
+      ) {
+        document.body.classList.remove("has-dialog-open");
+      }
     }
   });
 

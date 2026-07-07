@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="da">
   <head>
     <meta charset="UTF-8" />
@@ -16,7 +16,7 @@
       rel="stylesheet"
     />
 
-    <link rel="stylesheet" href="style.css?v=2026-06-02-01" />
+    <link rel="stylesheet" href="style.css?v=2026-07-07-suggestions-auth-zone" />
 
     <script
       data-goatcounter="https://podcastratings.goatcounter.com/count"
@@ -30,7 +30,7 @@
       };
     </script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
-    <script src="app.js?v=2026-06-02-01" defer></script>
+    <script src="app.js?v=2026-07-07-suggestions-auth-zone" defer></script>
   </head>
 
   <body>
@@ -40,7 +40,7 @@
     </form>
 
     <div class="page-shell">
-      <aside class="sidebar">
+      <header class="topbar">
         <div class="sidebar-logo">
           <div class="logo-mark">P</div>
           <div class="brand-copy">
@@ -65,202 +65,254 @@
           <a class="site-nav__link" href="#profil" data-page-link="profil">Profil</a>
         </nav>
 
-        <aside id="featuredReviewPanel" class="featured-panel is-hidden">
-          <p class="featured-eyebrow">Mads anmelder</p>
+        <div id="globalAuthZone" class="global-auth-zone" aria-live="polite"></div>
+      </header>
 
-          <div class="featured-top">
-            <div class="featured-cover-wrap">
-              <img id="featuredImage" class="featured-image" alt="" loading="lazy" />
-            </div>
-
-            <div class="featured-title-block">
-              <h2 id="featuredTitle" class="featured-title"></h2>
-              <p id="featuredMeta" class="featured-meta"></p>
-              <div id="featuredScore" class="featured-score"></div>
-              <p id="featuredDate" class="featured-date"></p>
-            </div>
-          </div>
-
-          <p id="featuredText" class="featured-text"></p>
-
-          <div class="featured-divider"></div>
-
-          <p class="featured-param-heading">Vurderet p&#229; parametre</p>
-          <div id="featuredParams" class="featured-params"></div>
-
-          <div class="featured-method">
-            Samlet score er v&#230;gtet ud fra relevante parametre.
-          </div>
-
-          <div id="featuredDots" class="featured-dots"></div>
-        </aside>
-
-        <section class="sidebar-section genre-nav">
-          <div class="genre-nav-header">
-            <h2>Genre</h2>
-          </div>
-          <p class="genre-helper">Filtrer p&#229; genre</p>
-          <div id="genreChips" class="genre-chips"></div>
-        </section>
-
-        <section class="sidebar-section controls-sidebar">
-          <label class="search-field">
-            <span>S&#248;g</span>
-            <input
-              type="search"
-              id="searchInput"
-              name="podcast_search_query"
-              placeholder="S&#248;g efter titel, v&#230;rt eller udgiver"
-              value=""
-              readonly
-              autocomplete="off"
-              autocapitalize="off"
-              autocorrect="off"
-              spellcheck="false"
-            />
-          </label>
-
-          <div id="activeFilterBox" class="active-filter-box is-hidden">
-            <span class="active-filter-label">Aktivt filter</span>
-            <button id="activeFilterPill" class="active-filter-pill" type="button">
-              <span id="activeFilterText"></span>
-              <span aria-hidden="true">&#215;</span>
-            </button>
-            <button id="clearFilterButton" class="clear-filter-button" type="button">
-              Ryd filter
-            </button>
-          </div>
-        </section>
-      </aside>
+      <aside class="sidebar"></aside>
 
       <main class="content-shell">
-        <header class="hero">
-          <div class="hero-copy">
-            <p class="eyebrow">Personlig rangliste</p>
-            <h1>Mine podcastfavoritter</h1>
-            <p class="intro">
-              Mads Asps personlige rangliste over podcasts &#8211; udvalgt og delt til
-              inspiration for andre lyttere.
-            </p>
-          </div>
+        <section id="pageIntroPanel" class="page-intro-panel is-hidden" aria-live="polite"></section>
 
-          <aside id="authPanel" class="auth-panel">
-            <div id="authLoggedOut">
-              <p class="auth-copy">
-                Opret dig for selv at anmelde podcasts og gemme dem til senere.
-              </p>
+        <div class="ranking-layout">
+          <aside class="ranking-sidebar-column" aria-label="Ranglistefiltre">
+            <aside id="featuredReviewPanel" class="featured-panel is-hidden">
+              <p class="featured-eyebrow">Mads anmelder</p>
 
-              <div class="auth-actions">
-                <button
-                  id="openSignupButton"
-                  class="auth-button auth-button--primary"
-                  type="button"
-                  onclick="window.podcastAuth?.showSignup()"
-                >
-                  Opret dig
-                </button>
-                <button
-                  id="openLoginButton"
-                  class="auth-button auth-button--secondary"
-                  type="button"
-                  onclick="window.podcastAuth?.showLogin()"
-                >
-                  Log ind
-                </button>
+            <div class="featured-top">
+              <div class="featured-cover-wrap">
+                <img id="featuredImage" class="featured-image" alt="" loading="lazy" />
               </div>
 
+              <div class="featured-title-block">
+                <h2 id="featuredTitle" class="featured-title"></h2>
+                <p id="featuredMeta" class="featured-meta"></p>
+                <div id="featuredScore" class="featured-score"></div>
+                <p id="featuredDate" class="featured-date"></p>
+              </div>
             </div>
 
-            <div id="authLoggedIn" class="auth-session is-hidden">
-              <div class="auth-session__topline">
-                <span class="auth-session__badge">LOGGET IND</span>
-                <p id="authUserEmail" class="auth-session__email"></p>
+            <p id="featuredText" class="featured-text"></p>
+
+            <div class="featured-divider"></div>
+
+            <p class="featured-param-heading">Vurderet p&#229; parametre</p>
+            <div id="featuredParams" class="featured-params"></div>
+
+            <div class="featured-method">
+              Samlet score er v&#230;gtet ud fra relevante parametre.
+            </div>
+
+            <div id="featuredDots" class="featured-dots"></div>
+            </aside>
+
+            <section class="ranking-filter-panel" aria-label="Filtrer ranglisten">
+              <div class="ranking-filter-panel__header">
+                <h2>Filtrer</h2>
+                <button id="clearFilterButton" class="clear-filter-button" type="button">
+                  Ryd alle
+                </button>
               </div>
-              <div class="auth-session__footer">
-                <span class="auth-session__saved-label">
-                  Gemte podcasts:
-                  <strong id="savedPodcastCount">0</strong>
-                </span>
-                <div class="auth-session__controls">
-                  <button
-                    id="savedFilterButton"
-                    class="auth-text-button"
-                    type="button"
-                  >
-                    Vis gemte
+
+              <section class="sidebar-section genre-nav">
+                <div class="genre-nav-header">
+                  <h3>Genre</h3>
+                </div>
+                <p class="genre-helper">Filtrer p&#229; genre</p>
+                <div id="genreChips" class="genre-chips"></div>
+              </section>
+
+              <section class="sidebar-section rating-filter-section" aria-labelledby="ratingFilterHeading">
+                <div class="rating-filter-topline">
+                  <h3 id="ratingFilterHeading">Vurdering</h3>
+                  <span id="ratingFilterValue" class="rating-filter-value">Alle</span>
+                </div>
+
+                <div class="rating-filter-slider-row">
+                  <input
+                    id="ratingFilter"
+                    class="rating-filter"
+                    type="range"
+                    min="0"
+                    max="10"
+                    step="0.5"
+                    value="0"
+                    aria-labelledby="ratingFilterHeading"
+                  />
+                </div>
+
+                <div class="rating-filter-endpoints" aria-hidden="true">
+                  <span>0</span>
+                  <span>10</span>
+                </div>
+              </section>
+
+              <section class="sidebar-section controls-sidebar">
+                <div id="activeFilterBox" class="active-filter-box is-hidden">
+                  <span class="active-filter-label">Aktivt filter</span>
+                  <button id="activeFilterPill" class="active-filter-pill" type="button">
+                    <span id="activeFilterText"></span>
+                    <span aria-hidden="true">&#215;</span>
                   </button>
-                  <button id="logoutButton" class="auth-button auth-button--secondary" type="button">
-                    Log ud
+                </div>
+              </section>
+
+              <div class="ranking-mobile-filter-bar">
+                <span id="rankingMobileFilterSummary" class="ranking-mobile-filter-summary">
+                  Alle genrer &middot; Vurdering: Alle
+                </span>
+                <button
+                  id="rankingMobileFilterToggle"
+                  class="ranking-mobile-filter-toggle"
+                  type="button"
+                  aria-expanded="false"
+                >
+                  Filtre
+                </button>
+              </div>
+
+              <div class="ranking-filter-controls">
+                <div class="ranking-source-field">
+                  <span>Kilde</span>
+                  <div class="ranking-source-toggle" role="group" aria-label="V&#230;lg rangliste">
+                    <button
+                      type="button"
+                      class="ranking-source-button active"
+                      data-ranking-source="mads"
+                    >
+                      Mads
+                    </button>
+                    <button
+                      type="button"
+                      class="ranking-source-button"
+                      data-ranking-source="users"
+                    >
+                      Brugere
+                    </button>
+                  </div>
+                </div>
+
+                <div class="sort-field sort-field--ranking">
+                  <span>Sortering</span>
+                  <button id="sortToggle" class="sort-toggle" type="button">
+                    Placering: lavest f&#248;rst
                   </button>
                 </div>
               </div>
-            </div>
+            </section>
 
-            <p id="authMessage" class="auth-message is-hidden" aria-live="polite"></p>
-          </aside>
-        </header>
+            <aside id="authPanel" class="auth-panel">
+              <div id="authLoggedOut">
+                <p class="auth-copy">
+                  Opret dig for selv at anmelde podcasts og gemme dem til senere.
+                </p>
 
-        <section id="pageIntroPanel" class="page-intro-panel is-hidden" aria-live="polite"></section>
+                <div class="auth-actions">
+                  <button
+                    id="openSignupButton"
+                    class="auth-button auth-button--primary"
+                    type="button"
+                    onclick="window.podcastAuth?.showSignup()"
+                  >
+                    Opret dig
+                  </button>
+                  <button
+                    id="openLoginButton"
+                    class="auth-button auth-button--secondary"
+                    type="button"
+                    onclick="window.podcastAuth?.showLogin()"
+                  >
+                    Log ind
+                  </button>
+                </div>
 
-        <section class="recent-section" aria-labelledby="recentHeading">
-          <div class="section-header">
-            <div>
-              <h2 id="recentHeading">Senest bed&#248;mte podcasts</h2>
-              <p>De nyeste vurderinger</p>
-            </div>
-            <span id="recentSummary" class="section-chip">
-              Viser de seneste bed&#248;mmelser
-            </span>
-          </div>
-
-          <div id="recentGrid" class="recent-grid"></div>
-        </section>
-
-        <section class="ranking-toolbar" aria-live="polite">
-          <p id="resultsText">Indl&#230;ser podcasts...</p>
-
-          <div class="ranking-controls">
-            <div class="ranking-source-field">
-              <span>Rangliste</span>
-              <div class="ranking-source-toggle" role="group" aria-label="V&#230;lg rangliste">
-                <button
-                  type="button"
-                  class="ranking-source-button active"
-                  data-ranking-source="mads"
-                >
-                  Mads
-                </button>
-                <button
-                  type="button"
-                  class="ranking-source-button"
-                  data-ranking-source="users"
-                >
-                  Brugere
-                </button>
               </div>
+
+              <div id="authLoggedIn" class="auth-session is-hidden">
+                <div class="auth-session__topline">
+                  <span class="auth-session__badge">LOGGET IND</span>
+                  <p id="authUserEmail" class="auth-session__email"></p>
+                </div>
+                <div class="auth-session__footer">
+                  <span class="auth-session__saved-label">
+                    Gemte podcasts:
+                    <strong id="savedPodcastCount">0</strong>
+                  </span>
+                  <div class="auth-session__controls">
+                    <button
+                      id="savedFilterButton"
+                      class="auth-text-button"
+                      type="button"
+                    >
+                      Vis gemte
+                    </button>
+                    <button id="logoutButton" class="auth-button auth-button--secondary" type="button">
+                      Log ud
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <p id="authMessage" class="auth-message is-hidden" aria-live="polite"></p>
+            </aside>
+          </aside>
+
+          <div class="ranking-main-column">
+            <section class="recent-section" aria-labelledby="recentHeading">
+              <div class="section-header">
+                <div>
+                  <h2 id="recentHeading">Senest bed&#248;mte podcasts</h2>
+                  <p>De nyeste vurderinger</p>
+                </div>
+                <span id="recentSummary" class="section-chip">
+                  Viser de seneste bed&#248;mmelser
+                </span>
+              </div>
+
+              <div id="recentGrid" class="recent-grid"></div>
+            </section>
+
+            <div class="ranking-search-strip">
+              <label class="search-field">
+                <span>S&#248;g i ranglisten</span>
+                <input
+                  type="search"
+                  id="searchInput"
+                  name="podcast_search_query"
+                  placeholder="S&#248;g efter titel, v&#230;rt eller udgiver"
+                  value=""
+                  readonly
+                  autocomplete="off"
+                  autocapitalize="off"
+                  autocorrect="off"
+                  spellcheck="false"
+                />
+              </label>
             </div>
 
-            <div class="sort-field sort-field--ranking">
-              <span>Sortering</span>
-              <button id="sortToggle" class="sort-toggle" type="button">
-                Placering: lavest f&#248;rst
-              </button>
-            </div>
+            <section class="ranking-list-panel" aria-labelledby="rankingListHeading">
+              <section class="ranking-toolbar" aria-live="polite">
+                <h2 id="rankingListHeading">Rangliste over podcasts</h2>
+                <p id="resultsText">Indl&#230;ser podcasts...</p>
+                <button id="mobileSortToggle" class="mobile-sort-toggle" type="button">
+                  &#8645; Lavest
+                </button>
+              </section>
+
+              <section
+                id="podcastGrid"
+                class="podcast-grid"
+                aria-label="Podcastoversigt"
+              ></section>
+            </section>
+
+            <footer class="site-footer">
+              <span id="visitorCounter" class="visitor-counter">
+                <span id="visitorCounterLabel">Bes&#248;g siden siden 3. maj 2026</span>
+                <span id="goatcounter-visits">indl&#230;ser&#8230;</span>
+              </span>
+            </footer>
           </div>
-        </section>
-
-        <section
-          id="podcastGrid"
-          class="podcast-grid"
-          aria-label="Podcastoversigt"
-        ></section>
-
-        <footer class="site-footer">
-          <span id="visitorCounter" class="visitor-counter">
-            <span id="visitorCounterLabel">Bes&#248;g siden siden 3. maj 2026</span>
-            <span id="goatcounter-visits">indl&#230;ser&#8230;</span>
-          </span>
-        </footer>
+        </div>
       </main>
 
       <template id="recentCardTemplate">
@@ -279,17 +331,19 @@
           <div class="recent-copy">
             <h3 class="recent-title"></h3>
             <p class="recent-host"></p>
-            <span class="recent-date"></span>
+            <div class="recent-meta-row">
+              <span class="recent-date"></span>
+              <span class="recent-rating"></span>
+            </div>
           </div>
 
           <div class="recent-actions">
             <div class="recent-action-buttons">
               <button class="recent-rate-button" type="button">Vurder</button>
-              <button class="favorite-button favorite-button--compact" type="button" aria-label="Gem som favorit">
-                <span aria-hidden="true">&#9825;</span>
-              </button>
             </div>
-            <span class="recent-rating"></span>
+            <button class="favorite-button favorite-button--compact" type="button" aria-label="Gem som favorit">
+              <span aria-hidden="true">&#9825;</span>
+            </button>
           </div>
 
         </article>
@@ -349,6 +403,7 @@
                 <span class="rating-summary__meta">Kr&#230;ver brugerlogin</span>
               </div>
             </div>
+            <span class="podcast-card__user-count is-hidden"></span>
 
             <div class="podcast-card__chips"></div>
           </div>
@@ -411,6 +466,10 @@
                 </button>
               </div>
             </div>
+            <label id="authPersistenceField" class="auth-persistence-option" for="authRememberLogin">
+              <input id="authRememberLogin" name="remember_login" type="checkbox" checked />
+              <span>Forbliv logget ind</span>
+            </label>
             <div class="auth-actions auth-actions--dialog">
               <button
                 id="signupButton"
@@ -463,7 +522,7 @@
           <p id="ratingDialogMeta" class="rating-dialog__meta"></p>
 
           <label class="rating-dialog__field">
-            <span>Vælg en score fra 0 til 10</span>
+            <span>V&aelig;lg en score fra 0 til 10</span>
             <input
               id="ratingInput"
               class="rating-dialog__input"
@@ -475,7 +534,7 @@
           </label>
 
           <p class="rating-dialog__hint">
-            Du kan altid ændre eller fjerne din vurdering senere.
+            Du kan altid &aelig;ndre eller fjerne din vurdering senere.
           </p>
           <p id="ratingDialogMessage" class="rating-dialog__message is-hidden" aria-live="polite"></p>
 
@@ -495,3 +554,7 @@
     </div>
   </body>
 </html>
+
+
+
+
