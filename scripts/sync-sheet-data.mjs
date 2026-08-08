@@ -1,6 +1,7 @@
 import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { parseSupplementarySimilarities } from "./manual-similarity-supplements.mjs";
 
 const SPREADSHEET_BASE_URL =
   "https://docs.google.com/spreadsheets/d/e/2PACX-1vQRBWQdj-WDNN3l9yxIMCCu_O2dYfP7modSODcYgJRoQDG3GYsu83W_wIFyijPx6v8l-W011zrFyOdq/pub";
@@ -22,7 +23,7 @@ const PODCAST_FIELDS = [
   { output: "Titel", candidates: ["Titel", "Title"] },
   { output: "Vært", candidates: ["Vært", "Vaert", "Host", "Værter"] },
   {
-    output: "Vuring",
+    output: "Vuring (1-10)",
     candidates: [
       "Vuring",
       "Vuring (1-10)",
@@ -36,9 +37,14 @@ const PODCAST_FIELDS = [
   },
   { output: "Genre", candidates: ["Genre"] },
   { output: "Udgiver", candidates: ["Udgiver", "Publisher"] },
+  {
+    output: "Hovedserie",
+    candidates: ["Hovedserie", "Hoved serie", "Main series", "MainSeries", "mainSeries"]
+  },
   { output: "Antal afsnit", candidates: ["Antal afsnit", "Afsnit", "Episodes"] },
   { output: "Årstal afspillet", candidates: ["Årstal afspillet", "Aarstal afspillet", "År", "Aar"] },
   { output: "Link", candidates: ["Link", "URL"] },
+  { output: "Feed", candidates: ["Feed", "RSS", "RSS feed", "Episode feed"] },
   {
     output: "Afgivet vurdering",
     candidates: ["Afgivet vurdering", "Dato", "Vurderingsdato", "Bedømt"]
@@ -51,8 +57,22 @@ const PODCAST_FIELDS = [
     output: "Kort beskrivelse",
     candidates: ["Kort beskrivelse", "Kortbeskrivelse", "Beskrivelse", "Description"]
   },
+  {
+    output: "Lang beskrivelse",
+    candidates: ["Lang beskrivelse", "Langbeskrivelse"]
+  },
+  {
+    output: "Undervurderet perle",
+    candidates: ["Undervurderet perle", "Undervurderede perler", "Underrated pearl", "Underrated"]
+  },
   { output: "Placering", candidates: ["Placering", "Rank", "Rangering"] }
 ];
+
+const SECONDARY_GENRE_FIELDS = ["2. genre"];
+const TOPIC_FIELDS = ["Emner"];
+const MANUAL_EPISODES_FIELDS = ["Episoder", "Manual episodes", "ManualEpisodes"];
+const SUPPLEMENTARY_SIMILARITIES_HEADER = "Supplerende ligheder";
+const SUPPLEMENTARY_SIMILARITIES_COLUMN_INDEX = 19;
 
 const FEATURED_FIELDS = [
   { output: "Aktiv", candidates: ["Aktiv"] },
@@ -193,6 +213,25 @@ function rowsToObjects(rows) {
     .filter((row) => Object.values(row).some((value) => normalizeText(value) !== ""));
 }
 
+function getColumnTHeader(rows) {
+  return normalizeText(rows?.[0]?.[SUPPLEMENTARY_SIMILARITIES_COLUMN_INDEX] || "");
+}
+
+function validateSupplementarySimilaritiesColumn(rows) {
+  const header = getColumnTHeader(rows);
+  if (!header) {
+    throw new Error(
+      `Could not identify Column T for ${JSON.stringify(SUPPLEMENTARY_SIMILARITIES_HEADER)}.`
+    );
+  }
+  if (normalizeHeader(header) !== normalizeHeader(SUPPLEMENTARY_SIMILARITIES_HEADER)) {
+    throw new Error(
+      `Column T must be ${JSON.stringify(SUPPLEMENTARY_SIMILARITIES_HEADER)}; found ${JSON.stringify(header)}.`
+    );
+  }
+  return header;
+}
+
 function getField(row, candidates) {
   const normalizedCandidates = candidates.map(normalizeHeader);
 
@@ -203,6 +242,43 @@ function getField(row, candidates) {
   }
 
   return "";
+}
+
+function parseTopics(value) {
+  const topics = [];
+  const seen = new Set();
+
+  String(value ?? "")
+    .split(";")
+    .forEach((part) => {
+      const topic = normalizeText(part);
+      if (!topic) return;
+
+      const key = topic.normalize("NFC").toLocaleLowerCase("da-DK");
+      if (seen.has(key)) return;
+
+      seen.add(key);
+      topics.push(topic);
+    });
+
+  return topics;
+}
+
+function parseManualEpisodes(value) {
+  const episodes = [];
+  const seen = new Set();
+
+  String(value ?? "")
+    .split(";")
+    .forEach((part) => {
+      const title = normalizeText(part);
+      if (!title || seen.has(title)) return;
+
+      seen.add(title);
+      episodes.push(title);
+    });
+
+  return episodes;
 }
 
 function compactObject(entries) {
@@ -313,7 +389,26 @@ async function slimPodcastRows(rows) {
     const title = getField(row, ["Titel", "Title"]);
     const placement = getField(row, ["Placering", "Rank", "Rangering"]) || String(index + 1);
     const assetBaseName = `${String(placement).padStart(3, "0")}-${slugify(title) || `podcast-${index + 1}`}`;
-    slimRows.push(await pickFields(row, PODCAST_FIELDS, assetBaseName));
+    const podcast = await pickFields(row, PODCAST_FIELDS, assetBaseName);
+    podcast.secondaryGenre = getField(row, SECONDARY_GENRE_FIELDS);
+    podcast.topics = parseTopics(getField(row, TOPIC_FIELDS));
+    const manualEpisodes = parseManualEpisodes(getField(row, MANUAL_EPISODES_FIELDS));
+    if (manualEpisodes.length) {
+      podcast.manualEpisodes = manualEpisodes;
+    }
+    const supplementarySimilaritiesRaw = getField(row, [
+      SUPPLEMENTARY_SIMILARITIES_HEADER
+    ]);
+    if (supplementarySimilaritiesRaw) {
+      podcast.supplementarySimilaritiesRaw = supplementarySimilaritiesRaw;
+      const supplementarySimilarities = parseSupplementarySimilarities(
+        supplementarySimilaritiesRaw
+      );
+      if (supplementarySimilarities.length) {
+        podcast.supplementarySimilarities = supplementarySimilarities;
+      }
+    }
+    slimRows.push(podcast);
   }
 
   return slimRows;
@@ -355,9 +450,22 @@ async function writeJsonFile(outputPath, payload) {
   await writeFile(absolutePath, `${JSON.stringify(payload)}\n`, "utf8");
 }
 
+function buildPodcastPayload(rows, source, generatedAt = new Date().toISOString()) {
+  return {
+    generatedAt,
+    source,
+    count: rows.length,
+    rows
+  };
+}
+
 async function syncSheet(sheet) {
   const csv = await fetchSheetCsv(sheet);
-  const objects = rowsToObjects(parseCsv(csv));
+  const parsedRows = parseCsv(csv);
+  if (sheet.sheetName === "Ark1") {
+    validateSupplementarySimilaritiesColumn(parsedRows);
+  }
+  const objects = rowsToObjects(parsedRows);
 
   const filteredRows =
     sheet.sheetName === "Udvalgte vurderinger"
@@ -369,7 +477,12 @@ async function syncSheet(sheet) {
       ? await slimFeaturedRows(filteredRows)
       : await slimPodcastRows(filteredRows);
 
-  await writeJsonFile(sheet.outputPath, slimRows);
+  const payload =
+    sheet.sheetName === "Udvalgte vurderinger"
+      ? slimRows
+      : buildPodcastPayload(slimRows, buildSheetUrl(sheet.gid));
+
+  await writeJsonFile(sheet.outputPath, payload);
 
   console.log(`Skrev ${slimRows.length} rækker til ${sheet.outputPath}`);
 }
@@ -380,7 +493,22 @@ async function main() {
   }
 }
 
-main().catch((error) => {
-  console.error(error);
-  process.exitCode = 1;
-});
+if (process.argv[1] && path.resolve(process.argv[1]) === __filename) {
+  main().catch((error) => {
+    console.error(error);
+    process.exitCode = 1;
+  });
+}
+
+export {
+  buildPodcastPayload,
+  getField,
+  normalizeHeader,
+  parseCsv,
+  parseSupplementarySimilarities,
+  parseManualEpisodes,
+  parseTopics,
+  rowsToObjects,
+  slimPodcastRows,
+  validateSupplementarySimilaritiesColumn
+};
