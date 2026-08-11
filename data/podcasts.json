@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-08-11T06:21:06.134Z",
+  "generatedAt": "2026-08-11T10:20:26.432Z",
   "source": "https://docs.google.com/spreadsheets/d/e/2PACX-1vQRBWQdj-WDNN3l9yxIMCCu_O2dYfP7modSODcYgJRoQDG3GYsu83W_wIFyijPx6v8l-W011zrFyOdq/pub?gid=0&single=true&output=csv",
   "count": 1153,
   "rows": [
@@ -990,7 +990,7 @@
       "Årstal afspillet": "2026",
       "Link": "https://www.dr.dk/lyd/p3/mysteriet-om-adam-6641038509092",
       "Afgivet vurdering": "07-07-2026",
-      "Billedlink": "https://api.dr.dk/podcasts/v1/images/urn:dr:podcast:image:6a3913ffe113d0bb5b411f6b.jpg",
+      "Billedlink": "https://i.imgur.com/PUdD4y5.png",
       "Kort beskrivelse": "DR-serie om Adam, der starter i en skole i Oslo med en hemmelighed, som viser sig at være langt større.",
       "Undervurderet perle": "",
       "Lang beskrivelse": "En ny dreng ved navn Adam begynder i en skoleklasse i Oslo, men lærerne opdager hurtigt, at hans baggrund og identitet er omgærdet af usædvanlige forklaringer. Sporene fører fra Norge til Tjekkiet og en alvorlig sag om børn, kontrol og lukkede miljøer. Den danske version følger den norske undersøgelse gennem interviews, arkivmateriale og nye spor.",
@@ -1590,7 +1590,7 @@
       "Årstal afspillet": "-",
       "Link": "https://www.bt.dk/det-vi-taler-om/270422-den-vi-taler-om-om-rasmus-paludan?gaa_at=eafs&gaa_n=AVngi4jnYihI5qF7V9TLY_628L9E2PIsVvJYfHsi4qjcvB3Uh5NTjaTVMCq17Cd0Np0%3D&gaa_ts=6a75e516&gaa_sig=64LFI5_2GC5-9au0ssOkjaZxdXmd7zO3DqA5Bg4ArHWFzdJ4Io6pjvuHOPfDrrUHUBeydqHDc1Y81sG1HMOYpg%3D%3D",
       "Afgivet vurdering": "",
-      "Billedlink": "https://i.imgur.com/uSUd0bU.png",
+      "Billedlink": "https://i.imgur.com/1i0CyCi.png",
       "Kort beskrivelse": "Ditte Okman og panel tegner et kulørt portræt af en person, alle taler om.",
       "Undervurderet perle": "",
       "Lang beskrivelse": "Ditte Okman tegner hver uge et portræt af en person, der fylder i politik, kongehus, medier eller kulturliv. Gennem research, samtaler og biografiske nedslag gennemgår podcasten hovedpersonens baggrund, karriere, relationer og offentlige konflikter og forsøger at forklare, hvorfor netop denne person er blevet den, alle taler om.",
@@ -3699,7 +3699,7 @@
       "Episoder": "",
       "Feed": "",
       "Supplerende ligheder": "Borgerlig tabloid; Fri Mads; Verdens klogeste land; Ingen kommentarer",
-      "Uaktuel": "",
+      "Uaktuel": "x",
       "": "",
       "Nævneværdige episo:": ""
     },
@@ -4624,7 +4624,7 @@
       "Episoder": "",
       "Feed": "",
       "Supplerende ligheder": "I skyggen af den gule trøje; Forhjulslir; THEMOVE; Souplesse",
-      "Uaktuel": "",
+      "Uaktuel": "x",
       "": "",
       "Nævneværdige episo:": ""
     },
@@ -7063,9 +7063,9 @@
       "Hovedserie": "",
       "Antal afsnit": "daglig",
       "Årstal afspillet": "2024",
-      "Link": "",
+      "Link": "https://podcasts.apple.com/dk/podcast/borgerlig-tabloid/id1647786104?l=da",
       "Afgivet vurdering": "",
-      "Billedlink": "https://i.scdn.co/image/ab67656300005f1ff4781e824d3cfe736baba923",
+      "Billedlink": "https://is1-ssl.mzstatic.com/image/thumb/Podcasts221/v4/e8/73/64/e873645b-23e6-d9b8-2fd8-31970b6d4be8/mza_17260088015441192454.jpg/800x800bb.webp",
       "Kort beskrivelse": "Joachim B. Olsen vender borgerlig politik, medier og magtspil.",
       "Undervurderet perle": "",
       "Lang beskrivelse": "Joachim B. Olsen diskuterer borgerlig politik, medier og magtkampe med gæster fra den politiske og offentlige debat. Programmet tager udgangspunkt i aktuelle sager og undersøger både de politiske beslutninger og kommunikationen bag dem.",
@@ -7188,7 +7188,7 @@
       "Hovedserie": "Djævlen i detaljen",
       "Antal afsnit": "2",
       "Årstal afspillet": "",
-      "Link": "",
+      "Link": "https://www.dr.dk/lyd/special-radio/djaevlen-i-detaljen/djaevlen-i-detaljen-2021/drabssektionen-1-16122111601",
       "Afgivet vurdering": "",
       "Billedlink": "https://api.dr.dk/podcasts/v1/images/urn:dr:podcast:image:66f271c4b75d19480fa40d01.jpg",
       "Kort beskrivelse": "Per Lysholt går tæt på drabssager, efterforskning og kriminalitet.",
@@ -7824,7 +7824,7 @@
       "Episoder": "",
       "Feed": "",
       "Supplerende ligheder": "EM-bold; Mediano: EM Speciel (2021); I skyggen af EM 1992; VM Manager Special",
-      "Uaktuel": "",
+      "Uaktuel": "x",
       "": "",
       "Nævneværdige episo:": ""
     },
@@ -8509,11 +8509,11 @@
       "Vært": "Uffe Holm & Torben Chris",
       "Vuring (1-10)": "6,4",
       "Genre": "Snakke",
-      "Udgiver": "",
+      "Udgiver": "Podads",
       "Hovedserie": "",
       "Antal afsnit": "Ugentlig",
       "Årstal afspillet": "2023-",
-      "Link": "",
+      "Link": "https://podcasts.apple.com/us/podcast/bagstiv-sidste-censurfri-zone/id1616620220",
       "Afgivet vurdering": "",
       "Billedlink": "https://is1-ssl.mzstatic.com/image/thumb/Podcasts112/v4/7b/90/01/7b90015a-ddff-76fe-df6f-db20019c85af/mza_6717258178926659167.jpg/250x250bb.jpg",
       "Kort beskrivelse": "Uffe Holm og Torben Chris taler frit, groft og komisk uden censur.",
@@ -8599,7 +8599,7 @@
       "Episoder": "",
       "Feed": "https://www.omnycontent.com/d/playlist/1283f5f4-2508-4981-a99f-acb500e64dcf/9bb41e53-28fa-4a3d-899b-ad0800ae3d37/00ad7c08-8a51-46d7-8e8f-ad0800ae3d41/podcast.rss",
       "Supplerende ligheder": "Kampagnesporet; Information går til valg; Valgguf; #DKpol",
-      "Uaktuel": "",
+      "Uaktuel": "x",
       "": "",
       "Nævneværdige episo:": ""
     },
@@ -8849,7 +8849,7 @@
       "Episoder": "",
       "Feed": "",
       "Supplerende ligheder": "Bag om Bachelorette (sæson 2); Besat af Bachelorette; Reality tjek; Romantik på hotellet",
-      "Uaktuel": "",
+      "Uaktuel": "x",
       "": "",
       "Nævneværdige episo:": ""
     },
@@ -9313,7 +9313,7 @@
       "Hovedserie": "Katastrofe",
       "Antal afsnit": "2",
       "Årstal afspillet": "2023",
-      "Link": "",
+      "Link": "https://podcasts.apple.com/is/podcast/danmarks-titanic-del-1/id1587709471?i=1000536855945",
       "Afgivet vurdering": "",
       "Billedlink": "https://imgcdn.saxo.com/_9788728362433",
       "Kort beskrivelse": "Om skibsforliset, der blev kaldt Danmarks Titanic, og de mange døde.",
@@ -9338,7 +9338,7 @@
       "Hovedserie": "",
       "Antal afsnit": "6",
       "Årstal afspillet": "",
-      "Link": "",
+      "Link": "https://mofibo.com/dk/podcasts/satankulten-53723/satankulten-1-6-ta-til-anholt-for-satan-1055740",
       "Afgivet vurdering": "",
       "Billedlink": "https://covers.storytel.com/jpg-320/9788726277746.7373eb4b-c2d4-4b48-88c5-49a16307b849?optimize=high&quality=70&width=600",
       "Kort beskrivelse": "Om satanisme, frygt og en sag, hvor rygter og virkelighed blandes.",
@@ -9563,7 +9563,7 @@
       "Hovedserie": "",
       "Antal afsnit": "Ugentlig",
       "Årstal afspillet": "",
-      "Link": "",
+      "Link": "https://podcasts.apple.com/bg/podcast/absalons-radio/id1499577918",
       "Afgivet vurdering": "23-07-2026",
       "Billedlink": "https://www.buzzsprout.com/rails/active_storage/representations/redirect/eyJfcmFpbHMiOnsiZGF0YSI6MTU4NTgxNTgsInB1ciI6ImJsb2JfaWQifX0%3D--5b452858589223a3661332e64596713de56b9adc/eyJfcmFpbHMiOnsiZGF0YSI6eyJmb3JtYXQiOiJqcGciLCJyZXNpemVfdG9fZmlsbCI6WzE0MDAsMTQwMCx7ImNyb3AiOiJjZW50cmUifV0sImRlZmF1bHRfdXJsIjoiaHR0cHM6Ly93d3cuYnV6enNwcm91dC5jb20vaW1hZ2VzL2FydHdvcmtzX2xhcmdlLmpwZyIsInNhdmVyIjp7InF1YWxpdHkiOjYwfSwiY29sb3Vyc3BhY2UiOiJzcmdiIn0sInB1ciI6InZhcmlhdGlvbiJ9fQ%3D%3D--2454c883dcd12a10059f243d8ea753f8b5c1613e/absalon.jpg",
       "Kort beskrivelse": "Victor og David vender fodbold, fans og klubkultur med løst og engageret format.",
@@ -9580,31 +9580,6 @@
     },
     {
       "Placering": "385",
-      "Titel": "Fries before guys",
-      "Vært": "Nanna Hovgaard & Josephine Kuhn",
-      "Vuring (1-10)": "6,0",
-      "Genre": "Snakke",
-      "Udgiver": "Podtail",
-      "Hovedserie": "",
-      "Antal afsnit": "Ugentlig",
-      "Årstal afspillet": "",
-      "Link": "",
-      "Afgivet vurdering": "",
-      "Billedlink": "https://is5-ssl.mzstatic.com/image/thumb/Podcasts116/v4/b4/8b/a1/b48ba1c3-d182-5993-ff51-88e536461b30/mza_6138383045340151512.jpeg/250x250bb.jpg",
-      "Kort beskrivelse": "Nanna og Josephine taler venskab, kærlighed og hverdagsliv med personlig tone.",
-      "Undervurderet perle": "",
-      "Lang beskrivelse": "Nanna Hovgaard og Josephine Kuhn taler åbent om venskab, kærlighed, seksualitet og de udfordringer, der følger med voksenlivet. Podcasten tager udgangspunkt i deres egne erfaringer og lytternes historier og kombinerer humor med personlige refleksioner.",
-      "2. genre": "",
-      "Emner": "Kvindevenskaber; kærlighed; seksualitet; voksenliv",
-      "Episoder": "",
-      "Feed": "https://rss.libsyn.com/shows/108204/destinations/587954.xml",
-      "Supplerende ligheder": "Voksenvenner; Dårlig stemning; Bøvlede mænd; Bare mellem os",
-      "Uaktuel": "",
-      "": "",
-      "Nævneværdige episo:": ""
-    },
-    {
-      "Placering": "386",
       "Titel": "Voksendating",
       "Vært": "Claudia Novalee & Danica Chlóe",
       "Vuring (1-10)": "6,0",
@@ -9629,7 +9604,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "387",
+      "Placering": "386",
       "Titel": "Momkind podcast",
       "Vært": "Camille Gudmand Lange",
       "Vuring (1-10)": "6,0",
@@ -9654,13 +9629,13 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "388",
+      "Placering": "387",
       "Titel": "Valgguf",
       "Vært": "Martin Nørgaard, Michael \"MC\" Christiansen, Morten Wichmann, Sebastian Kanani & Anton Nørbæk",
       "Vuring (1-10)": "6,0",
       "Genre": "Underholdning",
       "Udgiver": "RADIO IIII",
-      "Hovedserie": "",
+      "Hovedserie": "Langt fra løgnen",
       "Antal afsnit": "STOPPET",
       "Årstal afspillet": "2026",
       "Link": "",
@@ -9679,7 +9654,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "389",
+      "Placering": "388",
       "Titel": "Det vildeste dobbeltliv",
       "Vært": "Per Lysholt",
       "Vuring (1-10)": "6,0",
@@ -9704,7 +9679,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "390",
+      "Placering": "389",
       "Titel": "Pusher Street",
       "Vært": "Dan Bjerregaard & Camilla Marie Nielsen",
       "Vuring (1-10)": "6,0",
@@ -9729,7 +9704,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "391",
+      "Placering": "390",
       "Titel": "Claus",
       "Vært": "Wilhelm Østergaard",
       "Vuring (1-10)": "6,0",
@@ -9754,7 +9729,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "392",
+      "Placering": "391",
       "Titel": "Piper alpha eksplosionen",
       "Vært": "Kristoffer Lind & Rasmus Dahlberg",
       "Vuring (1-10)": "6,0",
@@ -9763,7 +9738,7 @@
       "Hovedserie": "Katastrofe",
       "Antal afsnit": "1",
       "Årstal afspillet": "2023",
-      "Link": "",
+      "Link": "https://podcasts.apple.com/in/podcast/piper-alpha-eksplosionen/id1587709471?i=1000536856777&l=bn",
       "Afgivet vurdering": "",
       "Billedlink": "https://imgcdn.saxo.com/_9788728362433",
       "Kort beskrivelse": "Om Piper Alpha-eksplosionen og en af olieindustriens værste katastrofer.",
@@ -9779,7 +9754,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "393",
+      "Placering": "392",
       "Titel": "De lovløse",
       "Vært": "Emil Rothstein-Christensen",
       "Vuring (1-10)": "6,0",
@@ -9804,32 +9779,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "394",
-      "Titel": "Røverhistorier (sæson 1)",
-      "Vært": "Morten Beiter",
-      "Vuring (1-10)": "6,0",
-      "Genre": "True Crime",
-      "Udgiver": "Weekendavisen",
-      "Hovedserie": "",
-      "Antal afsnit": "6",
-      "Årstal afspillet": "",
-      "Link": "",
-      "Afgivet vurdering": "",
-      "Billedlink": "https://i.scdn.co/image/ab67656300005f1f85e0e8ee3e1081c70f607ac5",
-      "Kort beskrivelse": "Morten Beiter fortæller røverhistorier fra kriminalitetens verden.",
-      "Undervurderet perle": "",
-      "Lang beskrivelse": "Morten Beiter fortæller historier fra kriminalitetens verden med udgangspunkt i personer, der selv har oplevet røverier, smugling eller andre forbrydelser. Serien kombinerer personlige beretninger med journalistisk baggrund og undersøger grænsen mellem myte og virkelighed.",
-      "2. genre": "",
-      "Emner": "Røverier; smugling; kriminelle livsfortællinger",
-      "Episoder": "",
-      "Feed": "",
-      "Supplerende ligheder": "Røverhistorier (sæson 2); Famøse fangeflugter: flugten fra alvatraz; Fangeflugten fra Vridsløselille; Helikopterkuppet",
-      "Uaktuel": "",
-      "": "",
-      "Nævneværdige episo:": ""
-    },
-    {
-      "Placering": "395",
+      "Placering": "393",
       "Titel": "Hammers Kaffebar",
       "Vært": "Dan hammer",
       "Vuring (1-10)": "6,0",
@@ -9854,7 +9804,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "396",
+      "Placering": "394",
       "Titel": "Sladderligaen",
       "Vært": "Michel vikkelsø davidsen",
       "Vuring (1-10)": "6,0",
@@ -9874,12 +9824,12 @@
       "Episoder": "",
       "Feed": "",
       "Supplerende ligheder": "Mediano Superliga; F.C Københavns Fanradio; Superliga for voksne",
-      "Uaktuel": "",
+      "Uaktuel": "x",
       "": "",
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "397",
+      "Placering": "395",
       "Titel": "Fra fodboldstjerne til narkohaj",
       "Vært": "Dan Bjerregaard",
       "Vuring (1-10)": "6,0",
@@ -9888,7 +9838,7 @@
       "Hovedserie": "På fersk gerning",
       "Antal afsnit": "1",
       "Årstal afspillet": "",
-      "Link": "",
+      "Link": "https://open.spotify.com/episode/0kWkQqzfluOSormWQ1coGa",
       "Afgivet vurdering": "",
       "Billedlink": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS4-s7fQglkrsarBqIzYCUvgPRguaN63CiWnw&s",
       "Kort beskrivelse": "Om en tidligere fodboldstjerne, kriminalitet og vejen ind i narkomiljøet.",
@@ -9904,7 +9854,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "398",
+      "Placering": "396",
       "Titel": "Vi ejer natten",
       "Vært": "Jean Von Baden",
       "Vuring (1-10)": "6,0",
@@ -9913,7 +9863,7 @@
       "Hovedserie": "",
       "Antal afsnit": "Ugentlig",
       "Årstal afspillet": "",
-      "Link": "",
+      "Link": "https://podcasts.apple.com/dk/podcast/vi-ejer-natten/id1668807065?l=da",
       "Afgivet vurdering": "",
       "Billedlink": "https://i.scdn.co/image/ab6765630000ba8a9f6cc594f1e97b2581f8775e",
       "Kort beskrivelse": "Jean Von Baden taler natteliv, kultur og historier fra byens mørke timer.",
@@ -9929,7 +9879,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "399",
+      "Placering": "397",
       "Titel": "Tragedien i Teater Dubrovka",
       "Vært": "Martin Grønne & Celine Klint",
       "Vuring (1-10)": "6,0",
@@ -9954,7 +9904,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "400",
+      "Placering": "398",
       "Titel": "Store Penge",
       "Vært": "Mikkel Rosenvold, Joakim Brüchmann, Michael Bo Mortensen, Mads Aagurd & Anders Olsen",
       "Vuring (1-10)": "6,0",
@@ -9979,7 +9929,32 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "401",
+      "Placering": "399",
+      "Titel": "Fries before guys",
+      "Vært": "Nanna Hovgaard & Josephine Kuhn",
+      "Vuring (1-10)": "5,9",
+      "Genre": "Snakke",
+      "Udgiver": "Podtail",
+      "Hovedserie": "",
+      "Antal afsnit": "Ugentlig",
+      "Årstal afspillet": "",
+      "Link": "https://podimo.com/dk/shows/fries-before-guys",
+      "Afgivet vurdering": "",
+      "Billedlink": "https://is5-ssl.mzstatic.com/image/thumb/Podcasts116/v4/b4/8b/a1/b48ba1c3-d182-5993-ff51-88e536461b30/mza_6138383045340151512.jpeg/250x250bb.jpg",
+      "Kort beskrivelse": "Nanna og Josephine taler venskab, kærlighed og hverdagsliv med personlig tone.",
+      "Undervurderet perle": "",
+      "Lang beskrivelse": "Nanna Hovgaard og Josephine Kuhn taler åbent om venskab, kærlighed, seksualitet og de udfordringer, der følger med voksenlivet. Podcasten tager udgangspunkt i deres egne erfaringer og lytternes historier og kombinerer humor med personlige refleksioner.",
+      "2. genre": "",
+      "Emner": "Kvindevenskaber; kærlighed; seksualitet; voksenliv",
+      "Episoder": "",
+      "Feed": "https://rss.libsyn.com/shows/108204/destinations/587954.xml",
+      "Supplerende ligheder": "Voksenvenner; Dårlig stemning; Bøvlede mænd; Bare mellem os",
+      "Uaktuel": "",
+      "": "",
+      "Nævneværdige episo:": ""
+    },
+    {
+      "Placering": "400",
       "Titel": "Mord i Rum Sø",
       "Vært": "Jesper Henriksen & Anders Thorkil Bechgaard",
       "Vuring (1-10)": "5,9",
@@ -10004,7 +9979,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "402",
+      "Placering": "401",
       "Titel": "Lang levetid podcast",
       "Vært": "Emil Thorup",
       "Vuring (1-10)": "5,9",
@@ -10029,7 +10004,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "403",
+      "Placering": "402",
       "Titel": "Diddy - no way out",
       "Vært": "Mads Emil Møller",
       "Vuring (1-10)": "5,9",
@@ -10054,7 +10029,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "404",
+      "Placering": "403",
       "Titel": "Bag politiets afspærring",
       "Vært": "Camilla Marie Nielsen & Dan Bjerregaard",
       "Vuring (1-10)": "5,9",
@@ -10079,7 +10054,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "405",
+      "Placering": "404",
       "Titel": "Rygtetid",
       "Vært": "Oliver Routledge",
       "Vuring (1-10)": "5,9",
@@ -10104,7 +10079,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "406",
+      "Placering": "405",
       "Titel": "En gonzo skifter spor (sæson 1)",
       "Vært": "René Fredensborg & Rasmus Bruun",
       "Vuring (1-10)": "5,9",
@@ -10129,7 +10104,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "407",
+      "Placering": "406",
       "Titel": "Bare mellem os",
       "Vært": "Nikita Klæstrup",
       "Vuring (1-10)": "5,9",
@@ -10154,7 +10129,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "408",
+      "Placering": "407",
       "Titel": "Et drab bliver aldrig glemt",
       "Vært": "Per Lysholt",
       "Vuring (1-10)": "5,9",
@@ -10179,7 +10154,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "409",
+      "Placering": "408",
       "Titel": "Giftmorderen fra sønder økse",
       "Vært": "Per Lysholt & Søren Møgelvang Nielsen",
       "Vuring (1-10)": "5,9",
@@ -10204,7 +10179,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "410",
+      "Placering": "409",
       "Titel": "Våddragtsmysteriet",
       "Vært": "Per Lysholt",
       "Vuring (1-10)": "5,9",
@@ -10229,7 +10204,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "411",
+      "Placering": "410",
       "Titel": "Varme drenge",
       "Vært": "",
       "Vuring (1-10)": "5,9",
@@ -10254,7 +10229,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "412",
+      "Placering": "411",
       "Titel": "Fart på",
       "Vært": "Martin Svensson",
       "Vuring (1-10)": "5,9",
@@ -10279,7 +10254,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "413",
+      "Placering": "412",
       "Titel": "Avistid",
       "Vært": "Martin Krasnik",
       "Vuring (1-10)": "5,9",
@@ -10304,7 +10279,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "414",
+      "Placering": "413",
       "Titel": "Equinox 1985",
       "Vært": "Tea Lindeburg",
       "Vuring (1-10)": "5,9",
@@ -10329,7 +10304,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "415",
+      "Placering": "414",
       "Titel": "Onde Anna",
       "Vært": "Olga Ravn",
       "Vuring (1-10)": "5,9",
@@ -10354,7 +10329,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "416",
+      "Placering": "415",
       "Titel": "Sovjetunionen - Lenin og Stalins danske agent",
       "Vært": "Adam Holm",
       "Vuring (1-10)": "5,9",
@@ -10379,7 +10354,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "417",
+      "Placering": "416",
       "Titel": "Lady Diana",
       "Vært": "Martin grønne",
       "Vuring (1-10)": "5,9",
@@ -10404,7 +10379,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "418",
+      "Placering": "417",
       "Titel": "Copenhagen Narcos",
       "Vært": "Dan Bjerregaard & Tobias Ingemann",
       "Vuring (1-10)": "5,9",
@@ -10429,7 +10404,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "419",
+      "Placering": "418",
       "Titel": "Morgenoverblikket",
       "Vært": "",
       "Vuring (1-10)": "5,9",
@@ -10454,7 +10429,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "420",
+      "Placering": "419",
       "Titel": "Den dræbende butler",
       "Vært": "Per Lysholt",
       "Vuring (1-10)": "5,9",
@@ -10479,7 +10454,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "421",
+      "Placering": "420",
       "Titel": "YPG",
       "Vært": "Martin Tamm Andersen",
       "Vuring (1-10)": "5,9",
@@ -10504,7 +10479,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "422",
+      "Placering": "421",
       "Titel": "Kampen om historien",
       "Vært": "Adam Holm",
       "Vuring (1-10)": "5,8",
@@ -10529,7 +10504,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "423",
+      "Placering": "422",
       "Titel": "Massakren ved Den Himmelske Freds Plads",
       "Vært": "Martin Grønne",
       "Vuring (1-10)": "5,8",
@@ -10554,7 +10529,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "424",
+      "Placering": "423",
       "Titel": "VM Manager 2026",
       "Vært": "Andreas Vidførle & Linares",
       "Vuring (1-10)": "5,8",
@@ -10579,7 +10554,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "425",
+      "Placering": "424",
       "Titel": "Kristjaan Speakmann",
       "Vært": "Peter Brüchmann",
       "Vuring (1-10)": "5,8",
@@ -10604,7 +10579,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "426",
+      "Placering": "425",
       "Titel": "Søvn",
       "Vært": "Huxi Bach",
       "Vuring (1-10)": "5,8",
@@ -10629,7 +10604,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "427",
+      "Placering": "426",
       "Titel": "Lige på sengekanten",
       "Vært": "Kathrine Abrahamsen",
       "Vuring (1-10)": "5,7",
@@ -10654,7 +10629,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "428",
+      "Placering": "427",
       "Titel": "Skyggesiden",
       "Vært": "Janni Pedersen & Carsten Norton",
       "Vuring (1-10)": "5,7",
@@ -10679,7 +10654,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "429",
+      "Placering": "428",
       "Titel": "Historien om alt",
       "Vært": "Simon Jul & Rane Willerslev",
       "Vuring (1-10)": "5,7",
@@ -10704,7 +10679,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "430",
+      "Placering": "429",
       "Titel": "Scandinavian Star - Kampen for at få svar",
       "Vært": "Lars Halskov",
       "Vuring (1-10)": "5,7",
@@ -10729,7 +10704,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "431",
+      "Placering": "430",
       "Titel": "Nyt fra Højbjerg",
       "Vært": "Per Lysholt",
       "Vuring (1-10)": "5,7",
@@ -10754,7 +10729,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "432",
+      "Placering": "431",
       "Titel": "Palme-drabet",
       "Vært": "Per Lysholt",
       "Vuring (1-10)": "5,7",
@@ -10779,7 +10754,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "433",
+      "Placering": "432",
       "Titel": "Jan Wiborg-mysteriet",
       "Vært": "Signe Frederikke Pedersen",
       "Vuring (1-10)": "5,7",
@@ -10804,7 +10779,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "434",
+      "Placering": "433",
       "Titel": "At vente på sin mors død med Christina Brunken",
       "Vært": "Ditlev Hartmann",
       "Vuring (1-10)": "5,7",
@@ -10829,7 +10804,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "435",
+      "Placering": "434",
       "Titel": "Fodboldlisten",
       "Vært": "Andreas Kraul",
       "Vuring (1-10)": "5,6",
@@ -10854,7 +10829,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "436",
+      "Placering": "435",
       "Titel": "Clement møder Lea Korsgaard",
       "Vært": "Clement Kjersgaard",
       "Vuring (1-10)": "5,6",
@@ -10879,7 +10854,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "437",
+      "Placering": "436",
       "Titel": "TelefonJokes med Palle Bo",
       "Vært": "Palle Bo",
       "Vuring (1-10)": "5,6",
@@ -10904,7 +10879,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "438",
+      "Placering": "437",
       "Titel": "Utrolige sekter",
       "Vært": "",
       "Vuring (1-10)": "5,6",
@@ -10929,7 +10904,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "439",
+      "Placering": "438",
       "Titel": "Dømt til sexarbejde",
       "Vært": "Per Lysholt",
       "Vuring (1-10)": "5,6",
@@ -10954,7 +10929,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "440",
+      "Placering": "439",
       "Titel": "4. division",
       "Vært": "Adam Holm",
       "Vuring (1-10)": "5,6",
@@ -10979,7 +10954,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "441",
+      "Placering": "440",
       "Titel": "Kvinden bag et mordkomplot",
       "Vært": "Per Lysholt & Søren Møgelvang Nielsen",
       "Vuring (1-10)": "5,6",
@@ -11004,7 +10979,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "442",
+      "Placering": "441",
       "Titel": "Narkobetjenten (sæson 9)",
       "Vært": "Rene Dahl Andersen & Pernille Brunse",
       "Vuring (1-10)": "5,6",
@@ -11029,7 +11004,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "443",
+      "Placering": "442",
       "Titel": "Her er de 100 ting, mor og far ikke fortæller",
       "Vært": "Merian Garde Gräs & Kaya Anna Hertz",
       "Vuring (1-10)": "5,6",
@@ -11054,7 +11029,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "444",
+      "Placering": "443",
       "Titel": "Undercover",
       "Vært": "Per Lysholt",
       "Vuring (1-10)": "5,6",
@@ -11079,7 +11054,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "445",
+      "Placering": "444",
       "Titel": "Av min krop",
       "Vært": "Natasja Elf Dybmose",
       "Vuring (1-10)": "5,6",
@@ -11104,7 +11079,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "446",
+      "Placering": "445",
       "Titel": "Nedsmeltning med Sisse Sejr",
       "Vært": "Sisse Sejr",
       "Vuring (1-10)": "5,6",
@@ -11129,7 +11104,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "447",
+      "Placering": "446",
       "Titel": "Uopklaret: Drabet i Virum",
       "Vært": "Per Lysholt",
       "Vuring (1-10)": "5,6",
@@ -11154,7 +11129,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "448",
+      "Placering": "447",
       "Titel": "Europa rundt med Hebo",
       "Vært": "Jonas Hebo",
       "Vuring (1-10)": "5,5",
@@ -11179,7 +11154,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "449",
+      "Placering": "448",
       "Titel": "Spillertruppen",
       "Vært": "Kasper Steenbach",
       "Vuring (1-10)": "5,5",
@@ -11204,7 +11179,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "450",
+      "Placering": "449",
       "Titel": "Bernstein cigaretetui (sæson 1)",
       "Vært": "Frederik Cilius & Mikael Bertelsen",
       "Vuring (1-10)": "5,5",
@@ -11229,7 +11204,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "451",
+      "Placering": "450",
       "Titel": "Meget mere",
       "Vært": "Janni Ree",
       "Vuring (1-10)": "5,5",
@@ -11254,7 +11229,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "452",
+      "Placering": "451",
       "Titel": "Det store forsvindingsnummer",
       "Vært": "Ayan Yasin Abdi & Mads Olrik",
       "Vuring (1-10)": "5,5",
@@ -11279,7 +11254,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "453",
+      "Placering": "452",
       "Titel": "Souplesse",
       "Vært": "Adam Møller Gomaa & Sebastian Stanbury",
       "Vuring (1-10)": "5,5",
@@ -11304,7 +11279,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "454",
+      "Placering": "453",
       "Titel": "Svindlerne",
       "Vært": "",
       "Vuring (1-10)": "5,5",
@@ -11329,7 +11304,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "455",
+      "Placering": "454",
       "Titel": "Del & Like",
       "Vært": "Christina Vejlø",
       "Vuring (1-10)": "5,5",
@@ -11354,7 +11329,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "456",
+      "Placering": "455",
       "Titel": "P1 Morgen",
       "Vært": "Bodil Gantzel",
       "Vuring (1-10)": "5,5",
@@ -11379,7 +11354,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "457",
+      "Placering": "456",
       "Titel": "Den giftige tvivl",
       "Vært": "Kristoffer Eriksen & Louise Dalsgaard",
       "Vuring (1-10)": "5,5",
@@ -11404,7 +11379,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "458",
+      "Placering": "457",
       "Titel": "Dato",
       "Vært": "Abdel Aziz Mahmoud",
       "Vuring (1-10)": "5,4",
@@ -11429,7 +11404,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "459",
+      "Placering": "458",
       "Titel": "Profeten fra Waco",
       "Vært": "Peder Byberg & Kristoffer Lind",
       "Vuring (1-10)": "5,4",
@@ -11454,7 +11429,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "460",
+      "Placering": "459",
       "Titel": "Millionærklubben",
       "Vært": "",
       "Vuring (1-10)": "5,4",
@@ -11479,7 +11454,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "461",
+      "Placering": "460",
       "Titel": "Ondskab i forklædning",
       "Vært": "Heidi, Dudski & Manja",
       "Vuring (1-10)": "5,4",
@@ -11504,7 +11479,7 @@
       "Nævneværdige episo:": ""
     },
     {
-      "Placering": "462",
+      "Placering": "461",
       "Titel": "Fodbold var bedre i 90'erne",
       "Vært": "Kenneth Hansen, Karsten Kr&h & Sebastian Stanbury",
       "Vuring (1-10)": "5,4",
@@ -11524,6 +11499,31 @@
       "Episoder": "",
       "Feed": "",
       "Supplerende ligheder": "Fodbold var værre i 70'erne; Mediano Waiting; Mediano Superliga; Superliga for voksne",
+      "Uaktuel": "",
+      "": "",
+      "Nævneværdige episo:": ""
+    },
+    {
+      "Placering": "462",
+      "Titel": "Røverhistorier (sæson 1)",
+      "Vært": "Morten Beiter",
+      "Vuring (1-10)": "5,3",
+      "Genre": "True Crime",
+      "Udgiver": "Weekendavisen",
+      "Hovedserie": "",
+      "Antal afsnit": "6",
+      "Årstal afspillet": "",
+      "Link": "https://podcasts.apple.com/dk/podcast/r%C3%B8verhistorier/id1571897999",
+      "Afgivet vurdering": "",
+      "Billedlink": "https://i.scdn.co/image/ab67656300005f1f85e0e8ee3e1081c70f607ac5",
+      "Kort beskrivelse": "Morten Beiter fortæller røverhistorier fra kriminalitetens verden.",
+      "Undervurderet perle": "",
+      "Lang beskrivelse": "Morten Beiter fortæller historier fra kriminalitetens verden med udgangspunkt i personer, der selv har oplevet røverier, smugling eller andre forbrydelser. Serien kombinerer personlige beretninger med journalistisk baggrund og undersøger grænsen mellem myte og virkelighed.",
+      "2. genre": "",
+      "Emner": "Røverier; smugling; kriminelle livsfortællinger",
+      "Episoder": "",
+      "Feed": "",
+      "Supplerende ligheder": "Røverhistorier (sæson 2); Famøse fangeflugter: flugten fra alvatraz; Fangeflugten fra Vridsløselille; Helikopterkuppet",
       "Uaktuel": "",
       "": "",
       "Nævneværdige episo:": ""
@@ -26855,25 +26855,25 @@
     },
     {
       "Placering": "1080",
-      "Titel": "",
+      "Titel": "Børssnak",
       "Vært": "",
       "Vuring (1-10)": "",
-      "Genre": "",
-      "Udgiver": "",
+      "Genre": "Samfund",
+      "Udgiver": "Saxo Bank",
       "Hovedserie": "",
-      "Antal afsnit": "",
-      "Årstal afspillet": "",
-      "Link": "",
+      "Antal afsnit": "100",
+      "Årstal afspillet": "2026",
+      "Link": "https://podcasts.apple.com/dk/podcast/b%C3%B8rssnak/id1703527964?l=da",
       "Afgivet vurdering": "",
-      "Billedlink": "",
-      "Kort beskrivelse": "",
+      "Billedlink": "https://is1-ssl.mzstatic.com/image/thumb/Podcasts211/v4/d4/38/7b/d4387bc9-8421-5488-a03a-1c4031b9ee37/mza_9020266135433441844.jpg/800x800bb.webp",
+      "Kort beskrivelse": "Ugentlig podcast fra Saxo Bank, der forbereder lytteren på den kommende uge på aktiemarkederne.",
       "Undervurderet perle": "",
-      "Lang beskrivelse": "",
-      "2. genre": "",
-      "Emner": "",
+      "Lang beskrivelse": "Børssnak gennemgår hver uge de vigtigste begivenheder, der kan påvirke aktiemarkederne. Podcasten ser blandt andet på selskabsregnskaber, teknologiaktier, renter, råvarer og internationale begivenheder og peger på, hvad investorer bør holde øje med i den kommende børsuge.",
+      "2. genre": "Viden",
+      "Emner": "Aktiemarkeder; selskabsregnskaber; investering; markedsudsigter",
       "Episoder": "",
-      "Feed": "",
-      "Supplerende ligheder": "",
+      "Feed": "https://feed.podbean.com/borssnak/feed.xml",
+      "Supplerende ligheder": "Børsen investor; Store Penge; Millionærklubben; Aktieuniverset",
       "Uaktuel": "",
       "": "",
       "Nævneværdige episo:": ""
