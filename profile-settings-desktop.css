@@ -1,0 +1,86 @@
+/* Approved desktop composition for Profil > Indstillinger. */
+@media (min-width: 1101px) {
+  html body.page-profil #pageIntroPanel .profile-page--subview { width: min(calc(100vw - 64px), 1280px); max-width: 1280px; padding: 18px 0 34px; }
+  html body.page-profil #pageIntroPanel .profile-subview-card { gap: 14px; }
+  html body.page-profil #pageIntroPanel .profile-subview-card__header { min-height: 146px; padding: 23px 160px 23px 28px; border-radius: 22px; }
+  html body.page-profil #pageIntroPanel .profile-subview-card__heading { display: block; min-width: 0; }
+  html body.page-profil #pageIntroPanel .profile-subview-card__icon { width: 64px; height: 64px; flex-basis: 64px; }
+  html body.page-profil #pageIntroPanel .profile-subview-card__icon svg { width: 29px; height: 29px; }
+  html body.page-profil #pageIntroPanel .profile-subview-card__header h2 { font-size: clamp(2.15rem, 3vw, 3.05rem); }
+  html body.page-profil #pageIntroPanel .profile-settings-grid { gap: 14px; }
+  html body.page-profil #pageIntroPanel .profile-settings-card { min-height: 0; padding: 22px 22px 20px 84px; gap: 13px; border-radius: 18px; }
+  html body.page-profil #pageIntroPanel .profile-settings-card::before { top: 22px; left: 22px; width: 46px; height: 46px; background-size: 22px 22px; }
+
+  html body.page-profil #pageIntroPanel .profile-settings-card--account,
+  html body.page-profil #pageIntroPanel .profile-settings-card--password { min-height: 274px; }
+  html body.page-profil #pageIntroPanel .profile-settings-card--account { background: linear-gradient(145deg, #fffdf9, #fff8ef); }
+  html body.page-profil #pageIntroPanel .profile-settings-card--password { background: linear-gradient(145deg, #fffdf9, #fff5ec); }
+  html body.page-profil #pageIntroPanel .profile-settings-card--display { grid-column: span 6; background: linear-gradient(145deg, #fffdf8, #fff6e9); }
+  html body.page-profil #pageIntroPanel .profile-settings-card--privacy,
+  html body.page-profil #pageIntroPanel .profile-settings-card--recommendations { grid-column: span 3; min-height: 218px; align-self: start; }
+  html body.page-profil #pageIntroPanel .profile-settings-card--privacy { background: linear-gradient(145deg, #fffdf9, #fdf8f3); }
+  html body.page-profil #pageIntroPanel .profile-settings-card--recommendations { background: linear-gradient(145deg, #fffdf9, #fff3ec); }
+
+  html body.page-profil #pageIntroPanel .profile-settings-card[data-settings-card="privacy"]::before { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23f15a16' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cellipse cx='12' cy='5.5' rx='6.5' ry='2.8'/%3E%3Cpath d='M5.5 5.5v6c0 1.55 2.9 2.8 6.5 2.8s6.5-1.25 6.5-2.8v-6M5.5 11.5v6C5.5 19.05 8.4 20.3 12 20.3s6.5-1.25 6.5-2.8v-6'/%3E%3C/svg%3E"); }
+  html body.page-profil #pageIntroPanel .profile-settings-card[data-settings-card="recommendations"]::before { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23f15a16' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4 7h10l-2.4-2.4M20 17H10l2.4 2.4'/%3E%3Cpath d='m14 7-2.4 2.4M10 17l2.4-2.4'/%3E%3Cpath d='M14 7a6 6 0 0 1 5.5 3.6M10 17a6 6 0 0 1-5.5-3.6'/%3E%3C/svg%3E"); }
+
+  html body.page-profil #pageIntroPanel .profile-settings-card__heading { gap: 5px; }
+  html body.page-profil #pageIntroPanel .profile-settings-card h3 { font-size: 1.28rem; }
+  html body.page-profil #pageIntroPanel .profile-settings-card__heading > p:last-child,
+  html body.page-profil #pageIntroPanel .profile-settings-card__note { font-size: .78rem; line-height: 1.42; }
+  html body.page-profil #pageIntroPanel .profile-settings-fields { gap: 9px; }
+  html body.page-profil #pageIntroPanel .profile-settings-field input,
+  html body.page-profil #pageIntroPanel .profile-settings-field select { min-height: 42px; border-radius: 10px; }
+  html body.page-profil #pageIntroPanel .profile-ranking-position-option { min-height: 70px; padding: 10px 11px; }
+  html body.page-profil #pageIntroPanel .profile-settings-card--privacy .profile-settings-card__actions,
+  html body.page-profil #pageIntroPanel .profile-settings-card--recommendations .profile-settings-card__actions { margin-top: 4px; }
+
+  html body.page-profil #pageIntroPanel .profile-settings-card--danger { min-height: 122px; padding: 19px 22px 19px 84px; display: grid; grid-template-columns: minmax(0, 1fr) minmax(360px, 470px); align-items: center; gap: 24px; background: linear-gradient(145deg, #fffaf8, #fff1ef); }
+  html body.page-profil #pageIntroPanel .profile-settings-card--danger::before { top: 50%; transform: translateY(-50%); }
+  html body.page-profil #pageIntroPanel .profile-settings-danger-actions { min-width: 0; display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: end; gap: 12px; }
+  html body.page-profil #pageIntroPanel .profile-settings-card--danger .profile-settings-fields--danger { max-width: none; }
+  html body.page-profil #pageIntroPanel .profile-settings-card--danger .profile-settings-card__actions { margin: 0; }
+  html body.page-profil #pageIntroPanel .profile-settings-card--danger .profile-button { min-height: 42px; color: #fff; border-color: #d13c32; background: #d13c32; }
+}
+
+/* The existing desktop profile layer uses !important; keep this narrow final
+   settings composition at the same cascade level. */
+@media (min-width: 1101px) {
+  html body.page-profil #pageIntroPanel .profile-page--subview { width: min(calc(100vw - 64px), 1280px) !important; max-width: 1280px !important; padding: 18px 0 34px !important; }
+  html body.page-profil #pageIntroPanel .profile-subview-card { gap: 14px !important; }
+  html body.page-profil #pageIntroPanel .profile-subview-card__header { min-height: 146px !important; padding: 23px 160px 23px 28px !important; border-radius: 22px !important; }
+  html body.page-profil #pageIntroPanel .profile-subview-card__heading { display: block !important; min-width: 0 !important; }
+  html body.page-profil #pageIntroPanel .profile-subview-card__icon { width: 64px !important; height: 64px !important; flex-basis: 64px !important; }
+  html body.page-profil #pageIntroPanel .profile-subview-card__icon svg { width: 29px !important; height: 29px !important; }
+  html body.page-profil #pageIntroPanel .profile-subview-card__header h2 { font-size: clamp(2.15rem, 3vw, 3.05rem) !important; }
+  html body.page-profil #pageIntroPanel .profile-settings-grid { gap: 14px !important; }
+  html body.page-profil #pageIntroPanel .profile-settings-card { min-height: 0 !important; padding: 22px 22px 20px 84px !important; gap: 13px !important; border-radius: 18px !important; }
+  html body.page-profil #pageIntroPanel .profile-settings-card::before { top: 22px !important; left: 22px !important; width: 46px !important; height: 46px !important; background-size: 22px 22px !important; }
+  html body.page-profil #pageIntroPanel .profile-settings-card--account,
+  html body.page-profil #pageIntroPanel .profile-settings-card--password { min-height: 274px !important; }
+  html body.page-profil #pageIntroPanel .profile-settings-card--account { background: linear-gradient(145deg, #fffdf9, #fff8ef) !important; }
+  html body.page-profil #pageIntroPanel .profile-settings-card--password { background: linear-gradient(145deg, #fffdf9, #fff5ec) !important; }
+  html body.page-profil #pageIntroPanel .profile-settings-card--display { grid-column: span 6 !important; background: linear-gradient(145deg, #fffdf8, #fff6e9) !important; }
+  html body.page-profil #pageIntroPanel .profile-settings-card--privacy,
+  html body.page-profil #pageIntroPanel .profile-settings-card--recommendations { grid-column: span 3 !important; min-height: 218px !important; align-self: start !important; }
+  html body.page-profil #pageIntroPanel .profile-settings-card--privacy { background: linear-gradient(145deg, #fffdf9, #fdf8f3) !important; }
+  html body.page-profil #pageIntroPanel .profile-settings-card--recommendations { background: linear-gradient(145deg, #fffdf9, #fff3ec) !important; }
+  html body.page-profil #pageIntroPanel .profile-settings-card[data-settings-card="privacy"]::before,
+  html body.page-profil #pageIntroPanel .profile-settings-card[data-settings-card="recommendations"]::before { background-size: 22px 22px !important; }
+  html body.page-profil #pageIntroPanel .profile-settings-card__heading { gap: 5px !important; }
+  html body.page-profil #pageIntroPanel .profile-settings-card h3 { font-size: 1.28rem !important; }
+  html body.page-profil #pageIntroPanel .profile-settings-card__heading > p:last-child,
+  html body.page-profil #pageIntroPanel .profile-settings-card__note { font-size: .78rem !important; line-height: 1.42 !important; }
+  html body.page-profil #pageIntroPanel .profile-settings-fields { gap: 9px !important; }
+  html body.page-profil #pageIntroPanel .profile-settings-field input,
+  html body.page-profil #pageIntroPanel .profile-settings-field select { min-height: 42px !important; border-radius: 10px !important; }
+  html body.page-profil #pageIntroPanel .profile-ranking-position-option { min-height: 70px !important; padding: 10px 11px !important; }
+  html body.page-profil #pageIntroPanel .profile-settings-card--privacy .profile-settings-card__actions,
+  html body.page-profil #pageIntroPanel .profile-settings-card--recommendations .profile-settings-card__actions { margin-top: 4px !important; }
+  html body.page-profil #pageIntroPanel .profile-settings-card--danger { min-height: 122px !important; padding: 19px 22px 19px 84px !important; display: grid !important; grid-template-columns: minmax(0, 1fr) minmax(360px, 470px) !important; align-items: center !important; gap: 24px !important; background: linear-gradient(145deg, #fffaf8, #fff1ef) !important; }
+  html body.page-profil #pageIntroPanel .profile-settings-card--danger::before { top: 50% !important; transform: translateY(-50%) !important; }
+  html body.page-profil #pageIntroPanel .profile-settings-danger-actions { min-width: 0 !important; display: grid !important; grid-template-columns: minmax(0, 1fr) auto !important; align-items: end !important; gap: 12px !important; }
+  html body.page-profil #pageIntroPanel .profile-settings-card--danger .profile-settings-fields--danger { max-width: none !important; }
+  html body.page-profil #pageIntroPanel .profile-settings-card--danger .profile-settings-card__actions { margin: 0 !important; }
+  html body.page-profil #pageIntroPanel .profile-settings-card--danger .profile-button { min-height: 42px !important; color: #fff !important; border-color: #d13c32 !important; background: #d13c32 !important; }
+}

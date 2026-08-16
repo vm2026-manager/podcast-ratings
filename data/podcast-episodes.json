@@ -1,0 +1,87 @@
+{
+  "version": 1,
+  "podcasts": {
+    "bomben": {
+      "parentPodcastKey": "bomben",
+      "publishedEpisodeCount": 10,
+      "excludedItems": [
+        {
+          "type": "teaser",
+          "rateable": false
+        }
+      ],
+      "episodes": [
+        {
+          "id": "bomben-01",
+          "podcast_key": "bomben",
+          "episode_number": 1,
+          "title": "Da verden ændrede sig for altid",
+          "editorial_rating": null
+        },
+        {
+          "id": "bomben-02",
+          "podcast_key": "bomben",
+          "episode_number": 2,
+          "title": "Atomkapløbet",
+          "editorial_rating": null
+        },
+        {
+          "id": "bomben-03",
+          "podcast_key": "bomben",
+          "episode_number": 3,
+          "title": "Cubakrisen: på randen af atomkrig",
+          "editorial_rating": null
+        },
+        {
+          "id": "bomben-04",
+          "podcast_key": "bomben",
+          "episode_number": 4,
+          "title": "Bombemål: Danmark",
+          "editorial_rating": null
+        },
+        {
+          "id": "bomben-05",
+          "podcast_key": "bomben",
+          "episode_number": 5,
+          "title": "Atomulykken i Thule: Hvad vidste Danmark?",
+          "editorial_rating": null
+        },
+        {
+          "id": "bomben-06",
+          "podcast_key": "bomben",
+          "episode_number": 6,
+          "title": "Nedrustningens tid",
+          "editorial_rating": null
+        },
+        {
+          "id": "bomben-07",
+          "podcast_key": "bomben",
+          "episode_number": 7,
+          "title": "Sortsyn og satire: Når bomben rammer kulturen",
+          "editorial_rating": null
+        },
+        {
+          "id": "bomben-08",
+          "podcast_key": "bomben",
+          "episode_number": 8,
+          "title": "Truslen fra Nordkorea",
+          "editorial_rating": null
+        },
+        {
+          "id": "bomben-09",
+          "podcast_key": "bomben",
+          "episode_number": 9,
+          "title": "Putins bomber",
+          "editorial_rating": null
+        },
+        {
+          "id": "bomben-10",
+          "podcast_key": "bomben",
+          "episode_number": 10,
+          "title": "Et nyt atomkapløb",
+          "editorial_rating": null
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,519 @@
+@media (max-width: 768px) {
+  html body {
+    padding-bottom: 0 !important;
+  }
+
+  html body .page-shell {
+    padding-bottom: calc(14px + var(--mobile-bottom-reserve, 76px)) !important;
+  }
+
+  html body.page-forside #pageIntroPanel .home-recent #homeRecentHeading {
+    font-size: clamp(1.32rem, 5.7vw, 1.52rem) !important;
+    line-height: 1.04 !important;
+    letter-spacing: -0.025em !important;
+  }
+
+  html body.page-forside #pageIntroPanel .home-recent-heading__mobile {
+    text-transform: none !important;
+  }
+
+  html body.page-forside #pageIntroPanel .home-recent-heading__accent,
+  html body.page-ranglister .ranking-mobile-title__accent {
+    color: #ff4f1f;
+  }
+
+  html body.page-ranglister .ranking-mobile-page-header .ranking-mobile-title {
+    font-size: clamp(2.55rem, 10.6vw, 2.9rem) !important;
+    line-height: 0.96 !important;
+    letter-spacing: -0.052em !important;
+  }
+
+  html body.page-ranglister .podcast-card__mobile-ranking-line {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    align-items: center !important;
+    gap: 5px !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+    margin: 2px 0 0 !important;
+  }
+
+  html body.page-ranglister .podcast-card {
+    grid-template-columns: 40px 78px minmax(0, 1fr) 30px !important;
+    column-gap: 6px !important;
+  }
+
+  html body.page-ranglister .podcast-card__content,
+  html body.page-ranglister .podcast-card__top,
+  html body.page-ranglister .podcast-card__summary {
+    min-width: 0 !important;
+    max-width: 100% !important;
+  }
+
+  html body.page-ranglister .podcast-card__title,
+  html body.page-ranglister .podcast-card__title.is-medium-title,
+  html body.page-ranglister .podcast-card__title.is-long-title {
+    max-height: none !important;
+    max-width: 100% !important;
+  }
+
+  html body.page-ranglister .podcast-card__title {
+    font-size: 1rem !important;
+    line-height: 1.16 !important;
+    padding-bottom: 2px !important;
+  }
+
+  html body.page-ranglister .podcast-card__title.is-medium-title {
+    font-size: 0.94rem !important;
+    line-height: 1.22 !important;
+  }
+
+  html body.page-ranglister .podcast-card__title.is-long-title {
+    font-size: 0.83rem !important;
+    line-height: 1.22 !important;
+  }
+
+  html body.page-ranglister .podcast-card__top {
+    align-content: start !important;
+    gap: 2px !important;
+  }
+
+  html body.page-ranglister .podcast-card__host {
+    font-size: 0.76rem !important;
+    line-height: 1.18 !important;
+    margin-top: 1px !important;
+    max-width: 100% !important;
+  }
+
+  html body.page-ranglister .podcast-card__mobile-score-field {
+    width: auto !important;
+    min-width: 0 !important;
+    height: 24px !important;
+    min-height: 24px !important;
+    padding: 0 8px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 4px !important;
+    border-radius: 999px !important;
+    font-size: 0.75rem !important;
+    line-height: 1 !important;
+    white-space: nowrap !important;
+  }
+
+  html body.page-ranglister .podcast-card__mobile-score-field--primary {
+    border-color: var(--accent) !important;
+    background: var(--accent) !important;
+    color: #fff !important;
+  }
+
+  html body.page-ranglister .podcast-card__mobile-score-field--own {
+    border: 1px solid rgba(255, 117, 48, 0.28) !important;
+    background: rgba(255, 252, 247, 0.84) !important;
+    color: #3f3730 !important;
+  }
+
+  html body.page-ranglister .podcast-card__mobile-score-label,
+  html body.page-ranglister .podcast-card__mobile-score-spacer,
+  html body.page-ranglister .podcast-card__mobile-score-value {
+    display: inline !important;
+    min-width: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    font-size: inherit !important;
+    line-height: 1 !important;
+  }
+
+  html body.page-ranglister .podcast-card__mobile-score-label {
+    font-weight: 850 !important;
+  }
+
+  html body.page-ranglister .podcast-card__mobile-score-field--primary .podcast-card__mobile-score-label {
+    font-size: 0.8rem !important;
+  }
+
+  html body.page-ranglister .podcast-card__mobile-score-spacer {
+    display: none !important;
+  }
+
+  html body.page-ranglister .podcast-card__mobile-score-value {
+    font-weight: 850 !important;
+  }
+}
+
+@media (max-width: 768px) {
+  html body input[type="text"],
+  html body input[type="search"],
+  html body input[type="email"],
+  html body input[type="password"],
+  html body input[type="url"],
+  html body input[type="number"],
+  html body input[type="tel"],
+  html body select,
+  html body textarea {
+    font-size: 16px !important;
+  }
+
+  html body .podcast-detail-sheet {
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+  }
+
+  html body .podcast-detail-sheet__panel {
+    max-height: min(84vh, 700px) !important;
+    max-height: min(84dvh, 700px) !important;
+    padding: 0 14px calc(10px + env(safe-area-inset-bottom, 0px)) !important;
+  }
+
+  html body .podcast-detail-sheet__drag-header {
+    min-height: 40px !important;
+  }
+
+  html body .podcast-detail-sheet__handle {
+    width: 42px !important;
+    height: 5px !important;
+  }
+
+  html body .podcast-detail-sheet__close {
+    top: 7px !important;
+    right: 12px !important;
+    width: 34px !important;
+    height: 34px !important;
+    min-width: 34px !important;
+    min-height: 34px !important;
+  }
+
+  html body .podcast-detail-sheet__content {
+    max-height: calc(84vh - 42px - env(safe-area-inset-bottom, 0px)) !important;
+    max-height: calc(84dvh - 42px - env(safe-area-inset-bottom, 0px)) !important;
+    grid-auto-rows: max-content !important;
+    align-content: start !important;
+    gap: 12px !important;
+    padding-bottom: calc(10px + env(safe-area-inset-bottom, 0px)) !important;
+  }
+
+  html body .podcast-detail-sheet__header {
+    grid-template-columns: minmax(0, 1fr) !important;
+    gap: 12px !important;
+    align-items: start !important;
+    padding-right: 0 !important;
+  }
+
+  html body .podcast-detail-sheet__cover {
+    width: min(36vw, 140px) !important;
+    height: auto !important;
+    aspect-ratio: 1 / 1 !important;
+    justify-self: center !important;
+    border-radius: 16px !important;
+    background: #f1eee9 !important;
+  }
+
+  html body .podcast-detail-sheet__image {
+    object-fit: contain !important;
+  }
+
+  html body .podcast-detail-sheet__intro h2 {
+    margin-bottom: 4px !important;
+    font-size: clamp(1.04rem, 5vw, 1.22rem) !important;
+    line-height: 1.06 !important;
+    text-align: center !important;
+  }
+
+  html body .podcast-detail-sheet__intro > p {
+    margin-bottom: 5px !important;
+    font-size: 0.82rem !important;
+    line-height: 1.18 !important;
+    text-align: center !important;
+  }
+
+  html body .podcast-detail-sheet__chips {
+    gap: 5px !important;
+    justify-content: center !important;
+  }
+
+  html body .podcast-detail-sheet__chip,
+  html body .podcast-detail-sheet__genre,
+  html body .podcast-detail-sheet__publisher {
+    min-height: 22px !important;
+    padding: 0 8px !important;
+    border-radius: 8px !important;
+    font-size: 0.68rem !important;
+    line-height: 1.1 !important;
+  }
+
+  html body .podcast-detail-sheet__ratings {
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    height: auto !important;
+    min-height: 76px !important;
+    border-radius: 15px !important;
+  }
+
+  html body .podcast-detail-sheet__ratings > div {
+    min-height: 76px !important;
+    gap: 3px !important;
+    padding: 8px 10px !important;
+  }
+
+  html body .podcast-detail-sheet__ratings > div + div {
+    border-top: 0 !important;
+    border-left: 1px solid rgba(196, 176, 156, 0.58) !important;
+  }
+
+  html body .podcast-detail-sheet__rating-cell--own {
+    grid-template-columns: minmax(0, 1fr) !important;
+    grid-template-rows: auto auto auto !important;
+    gap: 3px !important;
+  }
+
+  html body .podcast-detail-sheet__rating-cell--own > span,
+  html body .podcast-detail-sheet__rating-cell--own > em {
+    grid-column: 1 / -1 !important;
+  }
+
+  html body .podcast-detail-sheet__own-rating-control {
+    display: inline-flex !important;
+    align-items: baseline !important;
+    justify-content: center !important;
+    gap: 4px !important;
+  }
+
+  html body .podcast-detail-sheet__own-rating-input {
+    width: 78px !important;
+    height: 38px !important;
+    padding: 0 8px !important;
+    border: 1px solid rgba(220, 199, 182, 0.95) !important;
+    border-radius: 10px !important;
+    color: #ff5c16 !important;
+    background: #fffaf6 !important;
+    font: 950 1.35rem/1 "Manrope", sans-serif !important;
+    text-align: center !important;
+  }
+
+  html body .podcast-detail-sheet__own-rating-save {
+    min-height: 38px !important;
+    padding: 0 12px !important;
+    border: 0 !important;
+    border-radius: 10px !important;
+    color: #fff !important;
+    background: #ff5c16 !important;
+    font: 900 0.72rem/1 "Manrope", sans-serif !important;
+  }
+
+  html body .podcast-detail-sheet__ratings span {
+    font-size: 0.68rem !important;
+    line-height: 1.08 !important;
+  }
+
+  html body .podcast-detail-sheet__ratings strong {
+    font-size: 1.04rem !important;
+    line-height: 1 !important;
+  }
+
+  html body .podcast-detail-sheet__ratings small {
+    font-size: 0.74rem !important;
+  }
+
+  html body .podcast-detail-sheet__ratings em {
+    font-size: 0.68rem !important;
+    line-height: 1.08 !important;
+  }
+
+  html body .podcast-detail-sheet__description h3 {
+    margin-top: 12px !important;
+    margin-bottom: 4px !important;
+    font-size: 0.9rem !important;
+    line-height: 1.12 !important;
+  }
+
+  html body .podcast-detail-sheet__description p {
+    font-size: 0.86rem !important;
+    line-height: 1.32 !important;
+  }
+
+  html body .podcast-detail-sheet__review-button,
+  html body .podcast-detail-sheet__back {
+    min-height: 42px !important;
+    font-size: 0.9rem !important;
+  }
+
+  html body .podcast-detail-sheet__actions {
+    gap: 7px !important;
+    padding-bottom: 0 !important;
+  }
+
+  html body .podcast-detail-sheet__button {
+    min-height: 66px !important;
+    height: auto !important;
+    gap: 12px !important;
+    padding: 11px 16px !important;
+    border-radius: 14px !important;
+    font-size: 0.9rem !important;
+  }
+
+  html body .podcast-detail-sheet__button--favorite > span:first-child {
+    width: 24px !important;
+    height: 24px !important;
+  }
+
+  html body .podcast-detail-sheet__button--review,
+  html body .podcast-detail-sheet__button--user-review {
+    border: 1px solid rgba(244, 90, 18, 0.24) !important;
+    color: #f45a12 !important;
+    background: rgba(255, 253, 249, 0.86) !important;
+  }
+
+  html body .podcast-detail-sheet__button--unavailable {
+    border: 1px solid rgba(190, 176, 164, 0.58) !important;
+    color: #49413b !important;
+    background: rgba(245, 242, 238, 0.88) !important;
+  }
+
+  html body .podcast-detail-sheet__action-icon {
+    width: 24px !important;
+    height: 24px !important;
+    flex: 0 0 24px !important;
+    display: inline-grid !important;
+    place-items: center !important;
+  }
+
+  html body .podcast-detail-sheet__action-icon svg {
+    width: 24px !important;
+    height: 24px !important;
+    display: block !important;
+    fill: none !important;
+    stroke: currentColor !important;
+    stroke-width: 1.8 !important;
+    stroke-linecap: round !important;
+    stroke-linejoin: round !important;
+  }
+
+  html body .podcast-detail-sheet__action-copy {
+    min-width: 0 !important;
+    display: grid !important;
+    justify-items: center !important;
+    gap: 4px !important;
+    text-align: center !important;
+  }
+
+  html body .podcast-detail-sheet__action-copy strong,
+  html body .podcast-detail-sheet__action-copy small {
+    display: block !important;
+  }
+
+  html body .podcast-detail-sheet__action-copy strong {
+    color: inherit !important;
+    font: 900 0.9rem/1.2 "Manrope", sans-serif !important;
+  }
+
+  html body .podcast-detail-sheet__action-copy small {
+    color: inherit !important;
+    font: 650 0.72rem/1.25 "Manrope", sans-serif !important;
+    opacity: 0.78 !important;
+  }
+}
+
+html body.page-profil .profile-faq-item a {
+  color: #c84612;
+  font-weight: 850;
+  text-decoration: underline;
+  text-decoration-thickness: 0.08em;
+  text-underline-offset: 0.18em;
+}
+
+html body.page-profil .profile-faq-contact {
+  min-height: 76px;
+  display: grid;
+  grid-template-columns: 44px minmax(0, 1fr);
+  align-items: center;
+  gap: 12px;
+  padding: 14px;
+  border: 1px solid rgba(255, 92, 22, 0.18);
+  border-radius: 18px;
+  background: linear-gradient(145deg, rgba(255, 250, 243, 0.96), rgba(255, 244, 235, 0.9));
+  color: #1f1a16;
+  text-decoration: none;
+  box-shadow: 0 12px 28px rgba(78, 51, 27, 0.06);
+}
+
+html body.page-profil .profile-faq-contact:focus-visible {
+  outline: 3px solid rgba(255, 92, 22, 0.26);
+  outline-offset: 3px;
+}
+
+html body.page-profil .profile-faq-contact__icon {
+  width: 44px;
+  height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(255, 92, 22, 0.24);
+  border-radius: 999px;
+  color: #ff5c16;
+  background: rgba(255, 92, 22, 0.07);
+}
+
+html body.page-profil .profile-faq-contact__icon svg {
+  width: 22px;
+  height: 22px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+html body.page-profil .profile-faq-contact__copy {
+  min-width: 0;
+  display: grid;
+  gap: 2px;
+}
+
+html body.page-profil .profile-faq-contact__copy strong,
+html body.page-profil .profile-faq-contact__copy span,
+html body.page-profil .profile-faq-contact__copy small {
+  overflow-wrap: anywhere;
+}
+
+html body.page-profil .profile-faq-contact__copy strong {
+  font-size: 0.98rem;
+  font-weight: 950;
+  line-height: 1.1;
+}
+
+html body.page-profil .profile-faq-contact__copy span {
+  color: #c84612;
+  font-size: 0.84rem;
+  font-weight: 900;
+  line-height: 1.15;
+}
+
+html body.page-profil .profile-faq-contact__copy small {
+  color: #6a6058;
+  font-size: 0.78rem;
+  font-weight: 750;
+  line-height: 1.2;
+}
+
+@media (min-width: 901px) {
+  html body.page-ranglister .podcast-card__title,
+  html body.page-ranglister .podcast-card__title.is-medium-title,
+  html body.page-ranglister .podcast-card__title.is-long-title {
+    margin: 0 0 10px !important;
+    font-size: 1.1rem !important;
+    line-height: 1.12 !important;
+    display: -webkit-box !important;
+    overflow: hidden !important;
+    -webkit-line-clamp: 3 !important;
+    -webkit-box-orient: vertical !important;
+  }
+
+  html body.page-ranglister .podcast-card__host {
+    margin: 0 0 10px !important;
+    font-size: 0.89rem !important;
+    line-height: 1.32 !important;
+    display: -webkit-box !important;
+    overflow: hidden !important;
+    -webkit-line-clamp: 2 !important;
+    -webkit-box-orient: vertical !important;
+  }
+}

@@ -1,0 +1,44 @@
+@media (max-width: 768px) {
+  html body.page-udforsk .explore-personal-modules {
+    gap: 0 !important;
+    margin: 12px 0 16px !important;
+  }
+
+  html body.page-udforsk .explore-personal-modules > section,
+  html body.page-udforsk .explore-personal-modules > .explore-recommendations,
+  html body.page-udforsk .explore-personal-modules > .explore-popular,
+  html body.page-udforsk .explore-personal-modules > .explore-gems {
+    margin-top: 0 !important;
+    margin-bottom: 0 !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+  }
+
+  html body.page-udforsk .explore-personal-modules > section + section,
+  html body.page-udforsk .explore-personal-modules > .explore-recommendations + .explore-recommendations,
+  html body.page-udforsk .explore-personal-modules > .explore-popular + .explore-popular {
+    margin-top: 0 !important;
+  }
+
+  html body.page-udforsk .explore-personal-modules > section:not(:first-child),
+  html body.page-udforsk .explore-personal-modules > .explore-recommendations:not(:first-child) {
+    border-top-width: 0 !important;
+  }
+
+  html body.page-udforsk .explore-personal-modules > section:first-child,
+  html body.page-udforsk .explore-personal-modules > .explore-recommendations:first-child {
+    border-top-left-radius: 18px !important;
+    border-top-right-radius: 18px !important;
+  }
+
+  html body.page-udforsk .explore-personal-modules > section:last-child,
+  html body.page-udforsk .explore-personal-modules > .explore-recommendations:last-child {
+    border-bottom-left-radius: 18px !important;
+    border-bottom-right-radius: 18px !important;
+  }
+
+  html body.page-udforsk .explore-personal-modules + .explore-suggest-card,
+  html body.page-udforsk .explore-personal-modules + .explore-community-cta {
+    margin-top: 16px !important;
+  }
+}
