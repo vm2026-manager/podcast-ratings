@@ -3553,6 +3553,22 @@ function showAuthPrompt(preferredAction = "signup") {
   }
 
   const isLogin = state.authMode === "login";
+  if (elements.signupButton && elements.loginButton) {
+    const authActions = elements.signupButton.parentElement;
+
+    if (authActions) {
+      if (isLogin) {
+        authActions.insertBefore(elements.loginButton, elements.signupButton);
+      } else {
+        authActions.insertBefore(elements.signupButton, elements.loginButton);
+      }
+    }
+
+    elements.loginButton.classList.toggle("auth-button--primary", isLogin);
+    elements.loginButton.classList.toggle("auth-button--secondary", !isLogin);
+    elements.signupButton.classList.toggle("auth-button--primary", !isLogin);
+    elements.signupButton.classList.toggle("auth-button--secondary", isLogin);
+  }
   elements.authPersistenceField?.classList.toggle("is-hidden", !isLogin);
   elements.authPersistenceField?.setAttribute("aria-hidden", String(!isLogin));
   if (elements.authRememberLogin) {

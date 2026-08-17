@@ -18278,7 +18278,7 @@ html body #podcastDetailSheet [data-podcast-detail-placement]:empty {
 /* Keep the desktop composition fully visible in short-height browser windows. */
 @media (min-width: 769px) and (max-height: 800px) {
   html body #podcastDetailSheet .podcast-detail-sheet__content { gap: 8px !important; }
-  html body #podcastDetailSheet .podcast-detail-sheet__related-cover { height: 104px !important; }
+  html body #podcastDetailSheet .podcast-detail-sheet__related-cover { height: 150px !important; }
   html body #podcastDetailSheet .podcast-detail-sheet__related-copy { padding: 7px 9px !important; }
 }
 
