@@ -8,6 +8,30 @@ function normalizeText(value) {
   return String(value || "").trim();
 }
 
+function normalizeHeader(value) {
+  return normalizeText(value).toLocaleLowerCase("da-DK").replace(/\s+/g, " ");
+}
+
+function parseTopics(value) {
+  const topics = [];
+  const seen = new Set();
+
+  String(value || "")
+    .split(";")
+    .forEach((part) => {
+      const topic = normalizeText(part);
+      if (!topic) return;
+
+      const key = topic.normalize("NFC").toLocaleLowerCase("da-DK");
+      if (seen.has(key)) return;
+
+      seen.add(key);
+      topics.push(topic);
+    });
+
+  return topics;
+}
+
 function parseCsv(text) {
   const rows = [];
   let currentRow = [];
@@ -74,8 +98,20 @@ function rowsToObjects(rows) {
     const item = {};
 
     headers.forEach((header, index) => {
-      item[header] = normalizeText(row[index] || "");
+      const value = normalizeText(row[index] || "");
+      const normalizedHeader = normalizeHeader(header);
+
+      if (normalizedHeader === "2. genre") {
+        item.secondaryGenre = value;
+      } else if (normalizedHeader === "emner") {
+        item.topics = parseTopics(value);
+      } else {
+        item[header] = value;
+      }
     });
+
+    if (!Object.hasOwn(item, "secondaryGenre")) item.secondaryGenre = "";
+    if (!Object.hasOwn(item, "topics")) item.topics = [];
 
     return item;
   });
@@ -90,7 +126,9 @@ async function main() {
 
   const csv = await response.text();
   const rows = parseCsv(csv);
-  const objects = rowsToObjects(rows);
+  const objects = rowsToObjects(rows).filter((row) =>
+    normalizeText(row.Titel || row.Title)
+  );
 
   const output = {
     generatedAt: new Date().toISOString(),
@@ -108,7 +146,16 @@ async function main() {
   console.log(`Wrote ${objects.length} podcast rows to ${outputPath}`);
 }
 
-main().catch((error) => {
-  console.error(error);
-  process.exit(1);
-});
+if (require.main === module) {
+  main().catch((error) => {
+    console.error(error);
+    process.exit(1);
+  });
+}
+
+module.exports = {
+  normalizeHeader,
+  parseCsv,
+  parseTopics,
+  rowsToObjects
+};

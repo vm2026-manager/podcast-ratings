@@ -297,6 +297,34 @@ function slugify(value) {
     .slice(0, 80);
 }
 
+function normalizeCatalogueIdentityPart(value) {
+  return normalizeText(value)
+    .toLocaleLowerCase("da-DK")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/æ/g, "ae")
+    .replace(/ø/g, "oe")
+    .replace(/å/g, "aa")
+    .replace(/[^a-z0-9]+/g, " ")
+    .trim();
+}
+
+function catalogueHash(value) {
+  let hash = 2166136261;
+  for (const character of String(value || "")) {
+    hash ^= character.charCodeAt(0);
+    hash = Math.imul(hash, 16777619) >>> 0;
+  }
+  return hash.toString(16).padStart(8, "0");
+}
+
+function createCatalogueId({ title, host, publisher, link, feed }) {
+  const identity = [title, host, publisher, link, feed]
+    .map(normalizeCatalogueIdentityPart)
+    .join("|");
+  return `catalogue-v1-${catalogueHash(identity)}`;
+}
+
 function parseInlineImage(value) {
   const normalizedValue = normalizeText(value);
 
@@ -390,6 +418,13 @@ async function slimPodcastRows(rows) {
     const placement = getField(row, ["Placering", "Rank", "Rangering"]) || String(index + 1);
     const assetBaseName = `${String(placement).padStart(3, "0")}-${slugify(title) || `podcast-${index + 1}`}`;
     const podcast = await pickFields(row, PODCAST_FIELDS, assetBaseName);
+    podcast.catalogue_id = createCatalogueId({
+      title,
+      host: getField(row, ["Vært", "Vaert", "Host", "Værter"]),
+      publisher: getField(row, ["Udgiver", "Publisher"]),
+      link: getField(row, ["Link", "URL"]),
+      feed: getField(row, ["Feed", "RSS", "RSS feed", "Episode feed"])
+    });
     podcast.secondaryGenre = getField(row, SECONDARY_GENRE_FIELDS);
     podcast.topics = parseTopics(getField(row, TOPIC_FIELDS));
     const manualEpisodes = parseManualEpisodes(getField(row, MANUAL_EPISODES_FIELDS));
@@ -502,6 +537,7 @@ if (process.argv[1] && path.resolve(process.argv[1]) === __filename) {
 
 export {
   buildPodcastPayload,
+  createCatalogueId,
   getField,
   normalizeHeader,
   parseCsv,
