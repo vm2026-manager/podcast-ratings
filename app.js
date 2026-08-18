@@ -557,13 +557,12 @@ function persistDesktopViewPreference(value) {
 function readDesktopRankingLayoutPreference() {
   try {
     const value = window.localStorage.getItem(DESKTOP_RANKING_LAYOUT_STORAGE_KEY);
-    if (value === "list" || value === "uniform") return "list";
-    return "cards";
+    if (value === "cards") return "cards";
+    return "list";
   } catch {
-    return "cards";
+    return "list";
   }
 }
-
 function persistDesktopRankingLayoutPreference(value) {
   try {
     window.localStorage.setItem(DESKTOP_RANKING_LAYOUT_STORAGE_KEY, value);
