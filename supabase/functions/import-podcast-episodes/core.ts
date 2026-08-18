@@ -429,6 +429,152 @@ export function mapRadio4Episodes(episodesInput: unknown[], config: FeedConfig, 
   };
 }
 
+export type DrLydEpisode = {
+  id?: unknown;
+  learnId?: unknown;
+  productionNumber?: unknown;
+  title?: unknown;
+  description?: unknown;
+  startTime?: unknown;
+  durationMilliseconds?: unknown;
+  presentationUrl?: unknown;
+  slug?: unknown;
+};
+
+export function parseDrLydEpisodes(html: string): unknown[] {
+  const match = html.match(
+    /<script[^>]*id=["']__NEXT_DATA__["'][^>]*>([\s\S]*?)<\/script>/i
+  );
+
+  if (!match?.[1]) {
+    throw new Error("Invalid DR Lyd page: missing __NEXT_DATA__");
+  }
+
+  let payload: any;
+
+  try {
+    payload = JSON.parse(match[1]);
+  } catch (_error) {
+    throw new Error("Invalid DR Lyd __NEXT_DATA__ JSON");
+  }
+
+  const groups = payload?.props?.pageProps?.episodesGroups;
+
+  if (!Array.isArray(groups)) {
+    throw new Error("Invalid DR Lyd page: missing episode groups");
+  }
+
+  return groups.flatMap((group: any) =>
+    Array.isArray(group?.items) ? group.items : []
+  );
+}
+
+function drLydExternalGuid(productionNumber: string): string | null {
+  if (!/^\d+$/.test(productionNumber)) return null;
+
+  const value = Number(productionNumber);
+
+  if (!Number.isSafeInteger(value)) return null;
+
+  return String(value + 10000);
+}
+
+export function mapDrLydEpisodes(
+  episodesInput: unknown[],
+  config: FeedConfig,
+  now: string
+) {
+  const seen = new Set<string>();
+  const episodes: PodcastEpisodeRow[] = [];
+  const errors: Array<Record<string, unknown>> = [];
+  const warnings: Array<Record<string, unknown>> = [];
+
+  episodesInput.forEach((item, index) => {
+    if (!item || typeof item !== "object" || Array.isArray(item)) {
+      errors.push({ index, errors: ["Invalid DR Lyd episode item"] });
+      return;
+    }
+
+    const episode = item as DrLydEpisode;
+    const productionNumber = normalizeText(episode.productionNumber);
+    const guid = drLydExternalGuid(productionNumber);
+    const title = normalizeText(episode.title);
+    const publishedRaw = normalizeText(episode.startTime) || null;
+    const published = parsePublishedAt(publishedRaw);
+
+    const durationMs = Number(episode.durationMilliseconds);
+    const durationSeconds =
+      Number.isFinite(durationMs) && durationMs >= 0
+        ? Math.round(durationMs / 1000)
+        : null;
+
+    const validationErrors: string[] = [];
+
+    if (!productionNumber) validationErrors.push("Missing productionNumber");
+    if (!guid) validationErrors.push("Invalid productionNumber");
+    if (!title) validationErrors.push("Missing title");
+    if (guid && seen.has(guid)) validationErrors.push("Duplicate GUID");
+
+    if (validationErrors.length) {
+      errors.push({
+        index,
+        guid,
+        title: title || null,
+        errors: validationErrors
+      });
+      return;
+    }
+
+    seen.add(guid!);
+
+    const exclusionReason =
+      isTeaserOrTrailerTitle(title) ? "teaser_or_trailer" : null;
+
+    episodes.push({
+      podcast_key: config.podcast_key,
+      source: config.source,
+      external_guid: guid!,
+      external_episode_id: guid!,
+      title,
+      description: stripHtml(normalizeText(episode.description)) || null,
+      published_at: published.value,
+      duration_seconds: durationSeconds,
+      episode_url: normalizeText(episode.presentationUrl) || null,
+      audio_url: null,
+      image_url: null,
+      is_active: exclusionReason === null,
+      metadata: {
+        feed_url: config.feed_url,
+        format: "dr_lyd_next_data",
+        dr_lyd_episode_id: normalizeText(episode.id) || null,
+        dr_lyd_learn_id: normalizeText(episode.learnId) || null,
+        dr_lyd_production_number: productionNumber,
+        dr_lyd_slug: normalizeText(episode.slug) || null,
+        original_start_time: publishedRaw,
+        rateable: exclusionReason === null,
+        exclusion_reason: exclusionReason
+      }
+    });
+  });
+
+  episodes.sort(
+    (a, b) =>
+      Date.parse(b.published_at || "1970-01-01") -
+      Date.parse(a.published_at || "1970-01-01")
+  );
+
+  return {
+    fetched_count: episodesInput.length,
+    episodes,
+    errors,
+    warnings,
+    eligibility: getEpisodeFeatureEligibility(
+      episodes,
+      episodesInput.length
+    ),
+    imported_at: now
+  };
+}
 function stableValue(value: unknown): unknown {
   if (Array.isArray(value)) return value.map(stableValue);
   if (value && typeof value === "object") {
@@ -526,12 +672,35 @@ export async function runEpisodeImport(options: {
     const content = await (options.fetchText || fetchFeedText)(config.feed_url);
     const mapped = config.format === "radio4_json"
       ? mapRadio4Episodes(parseRadio4Episodes(content), config, now())
-      : mapEpisodes(parseFeed(content), config, now());
+      : config.format === "dr_lyd_next_data"
+        ? mapDrLydEpisodes(parseDrLydEpisodes(content), config, now())
+        : mapEpisodes(parseFeed(content), config, now());
     const existing = await options.repository.loadExistingEpisodes(
       config.source,
       mapped.episodes.map((episode) => episode.external_guid)
     );
-    const classified = classifyEpisodes(mapped.episodes, existing);
+    const episodesForClassification =
+      config.format === "dr_lyd_next_data"
+        ? mapped.episodes.map((episode) => {
+            const current = existing.find(
+              (row) => row.external_guid === episode.external_guid
+            );
+
+            if (!current) return episode;
+
+            return {
+              ...episode,
+              audio_url: episode.audio_url || current.audio_url,
+              image_url: episode.image_url || current.image_url,
+              metadata: {
+                ...(current.metadata || {}),
+                ...(episode.metadata || {})
+              }
+            };
+          })
+        : mapped.episodes;
+
+    const classified = classifyEpisodes(episodesForClassification, existing);
     const writeRows = classified.inserted.concat(classified.updated);
     const batches = chunk(writeRows);
     let batchErrors = 0;

@@ -1,4 +1,4 @@
-export type FeedFormat = "rss" | "radio4_json";
+export type FeedFormat = "rss" | "radio4_json" | "dr_lyd_next_data";
 
 export type FeedConfig = {
   podcast_key: string;
@@ -18,8 +18,8 @@ export const FEED_CONFIGS: FeedConfigMap = {
   "genstart": {
     podcast_key: "genstart",
     source: "dr_genstart_rss",
-    format: "radio4_json",
-    feed_url: "https://api.dr.dk/podcasts/v1/feeds/genstart.xml?format=podcast"
+    format: "dr_lyd_next_data",
+    feed_url: "https://www.dr.dk/lyd/special-radio/genstart-2642056922000"
   },
 
   "det_vi_taler_om": {
