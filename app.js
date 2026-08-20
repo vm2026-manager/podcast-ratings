@@ -395,6 +395,10 @@ const AUTH_PERSISTENCE_STORAGE_KEY = "podcast-ratings-auth-persistence";
 const PROFILE_PREFERENCES_STORAGE_KEY = "podcast-ratings-profile-preferences";
 const EXPLORE_PERSONAL_SEED_HISTORY_STORAGE_KEY =
   "podcast-ratings-explore-personal-seed-history-v1";
+const UDFORSK_RECOMMENDATION_VERSION = 2;
+const EXPLORE_PERSONAL_SNAPSHOT_STORAGE_KEY =
+  "podcast-ratings-explore-personal-snapshots-v2";
+const EXPLORE_PERSONAL_MINIMUM_GROUP_SIZE = 3;
 const LOCAL_EPISODE_RATINGS_STORAGE_KEY = "podcast-ratings-local-episode-ratings-v1";
 const EPISODE_PARENT_RATING_BACKUP_STORAGE_KEY =
   "podcast-ratings-episode-parent-rating-backups-v1";
@@ -4390,6 +4394,7 @@ async function persistEffectiveParentRating(
   }
 
   updateLocalCommunityStatForRating(key, nextValue, previousValue);
+  invalidateExplorePersonalSnapshot();
 }
 
 async function synchronizeEpisodeDerivedParentRating(
@@ -5306,6 +5311,7 @@ async function removeSavedPodcastFromProfileCard(podcast, card, button) {
   state.favoriteSavePendingKeys.add(podcastKey);
   state.savedPodcastKeys.delete(podcastKey);
   removeSavedPodcastMeta(podcastKey);
+  invalidateExplorePersonalSnapshot();
   updateFavoriteButtonsForPodcast(podcastKey, false, true);
   updateProfileSavedCounts();
   renderProfileSavedPreview();
@@ -6185,6 +6191,7 @@ async function saveActiveRating() {
     const previousRating = state.userRatingsByKey[ratingKey] ?? null;
     state.userRatingsByKey[ratingKey] = numericValue;
     updateLocalCommunityStatForRating(ratingKey, numericValue, previousRating);
+    invalidateExplorePersonalSnapshot();
     rebuildUserRanks();
     render();
     refreshOpenPodcastDetailSheet();
@@ -6327,6 +6334,7 @@ async function deleteActiveRating() {
     const previousRating = state.userRatingsByKey[deletedKey] ?? null;
     delete state.userRatingsByKey[deletedKey];
     updateLocalCommunityStatForRating(deletedKey, null, previousRating);
+    invalidateExplorePersonalSnapshot();
     rebuildUserRanks();
     render();
     refreshOpenPodcastDetailSheet();
@@ -6380,6 +6388,7 @@ async function toggleSavedPodcast(podcast) {
     state.savedPodcastKeys.delete(podcastKey);
     removeSavedPodcastMeta(podcastKey);
   }
+  invalidateExplorePersonalSnapshot();
 
   updateFavoriteButtonsForPodcast(podcastKey, nextSaved, true);
 
@@ -6423,6 +6432,7 @@ async function toggleSavedPodcast(podcast) {
   } finally {
     state.favoriteSavePendingKeys.delete(podcastKey);
     updateFavoriteButtonsForPodcast(podcastKey, isPodcastSaved(podcastKey), false);
+    if (document.body.classList.contains("page-udforsk")) renderExplorePage();
   }
 }
 
@@ -9690,6 +9700,7 @@ async function savePodcastDetailInlineRating(dialog, podcast, input, message) {
     const previousRating = state.userRatingsByKey[podcastKey] ?? null;
     state.userRatingsByKey[podcastKey] = numericValue;
     updateLocalCommunityStatForRating(podcastKey, numericValue, previousRating);
+    invalidateExplorePersonalSnapshot();
     rebuildUserRanks();
     render();
     refreshOpenPodcastDetailSheet();
@@ -15583,6 +15594,100 @@ function getExplorePreferenceProfile() {
   return profile;
 }
 
+function getExploreRecommendationInputFingerprint() {
+  const ratings = Object.entries(state.userRatingsByKey || {})
+    .map(([key, rating]) => [normalizeText(key), parseNumber(rating)])
+    .filter(([key, rating]) => key && rating !== null)
+    .sort(([leftKey], [rightKey]) => leftKey.localeCompare(rightKey, "da"));
+  const savedKeys = Array.from(state.savedPodcastKeys || [])
+    .map((key) => normalizeText(key))
+    .filter(Boolean)
+    .sort((left, right) => left.localeCompare(right, "da"));
+
+  return String(
+    getExploreShuffleSeed(
+      JSON.stringify({ version: UDFORSK_RECOMMENDATION_VERSION, ratings, savedKeys })
+    )
+  );
+}
+
+function getExplorePersonalSnapshotUserKey() {
+  return state.authUser?.id || null;
+}
+
+function readExplorePersonalSnapshot({ dayKey, fingerprint }) {
+  const userKey = getExplorePersonalSnapshotUserKey();
+  if (!userKey) return null;
+
+  try {
+    const parsed = JSON.parse(window.localStorage.getItem(EXPLORE_PERSONAL_SNAPSHOT_STORAGE_KEY) || "{}");
+    const snapshot = parsed?.byUser?.[userKey];
+    if (
+      !snapshot ||
+      snapshot.version !== UDFORSK_RECOMMENDATION_VERSION ||
+      snapshot.dayKey !== dayKey ||
+      snapshot.fingerprint !== fingerprint ||
+      !Array.isArray(snapshot.sections)
+    ) {
+      return null;
+    }
+
+    const sections = snapshot.sections
+      .map((section) => ({
+        ...section,
+        items: (section.items || [])
+          .map((item) => ({ ...item, podcast: state.podcastByKey[item.key] }))
+          .filter((item) => item.podcast)
+      }))
+      .filter((section) => section.items.length >= EXPLORE_PERSONAL_MINIMUM_GROUP_SIZE);
+
+    return sections.length ? sections : null;
+  } catch {
+    return null;
+  }
+}
+
+function persistExplorePersonalSnapshot(sections, { dayKey, fingerprint }) {
+  const userKey = getExplorePersonalSnapshotUserKey();
+  if (!userKey || !sections.length) return;
+
+  try {
+    const parsed = JSON.parse(window.localStorage.getItem(EXPLORE_PERSONAL_SNAPSHOT_STORAGE_KEY) || "{}");
+    const byUser = parsed?.byUser && typeof parsed.byUser === "object" ? parsed.byUser : {};
+    byUser[userKey] = {
+      version: UDFORSK_RECOMMENDATION_VERSION,
+      dayKey,
+      fingerprint,
+      generatedAt: new Date().toISOString(),
+      sections: sections.map((section) => ({
+        eyebrow: section.eyebrow,
+        title: section.title,
+        note: section.note || "",
+        items: section.items
+          .map((item) => ({ key: getPodcastKey(item.podcast || item), reason: item.reason || "" }))
+          .filter((item) => item.key)
+      }))
+    };
+    window.localStorage.setItem(EXPLORE_PERSONAL_SNAPSHOT_STORAGE_KEY, JSON.stringify({ byUser }));
+  } catch {
+    // Recommendation snapshots are a convenience cache only.
+  }
+}
+
+function invalidateExplorePersonalSnapshot() {
+  const userKey = getExplorePersonalSnapshotUserKey();
+  if (!userKey) return;
+
+  try {
+    const parsed = JSON.parse(window.localStorage.getItem(EXPLORE_PERSONAL_SNAPSHOT_STORAGE_KEY) || "{}");
+    if (!parsed?.byUser?.[userKey]) return;
+    delete parsed.byUser[userKey];
+    window.localStorage.setItem(EXPLORE_PERSONAL_SNAPSHOT_STORAGE_KEY, JSON.stringify(parsed));
+  } catch {
+    // A mismatching input fingerprint still prevents stale snapshot reuse.
+  }
+}
+
 function getExploreSignalWeight(map, value) {
   const normalized = normalizeComparable(value);
   return normalized ? map.get(normalized) || 0 : 0;
@@ -15941,7 +16046,18 @@ function getExploreSeedSectionItems(
     genre,
     usedKeys
   });
-  if (productItems !== null) return productItems;
+  if (productItems !== null) {
+    if (productItems.length >= limit) return productItems;
+
+    const productKeys = new Set(productItems.map((item) => getPodcastKey(item.podcast)));
+    const relatedFallback = getExploreRelatedItems(seed, {
+      limit: limit * 3,
+      searchParts,
+      genre
+    }).filter((item) => !productKeys.has(getPodcastKey(item.podcast)) && !usedKeys.has(getPodcastKey(item.podcast)));
+
+    return productItems.concat(relatedFallback).slice(0, limit);
+  }
 
   // Product data may be unavailable during initial load. Keep the established
   // host/series/genre matcher as a temporary lower-priority fallback only.
@@ -16102,13 +16218,13 @@ function getExploreSeedUsability(seed, { searchParts = [], genre = "Alle" } = {}
   if (!seed?.podcast) return { ok: false, reason: "missing-podcast", count: 0 };
 
   const items = getExploreSeedSectionItems(seed, {
-    limit: 2,
+    limit: EXPLORE_PERSONAL_MINIMUM_GROUP_SIZE,
     searchParts,
     genre,
     usedKeys: new Set()
   });
 
-  if (items.length < 2) {
+  if (items.length < EXPLORE_PERSONAL_MINIMUM_GROUP_SIZE) {
     return { ok: false, reason: "too-few-recommendations", count: items.length };
   }
 
@@ -16220,13 +16336,19 @@ function getExplorePersonalSections({
 
   const profile = getExplorePreferenceProfile();
   const seedPool = getExploreDailySeedPool(profile, { searchParts, genre });
+  const fingerprint = getExploreRecommendationInputFingerprint();
+  const canUseSnapshot = !searchParts.length && genre === "Alle";
+  const cachedSections = canUseSnapshot
+    ? readExplorePersonalSnapshot({ dayKey: seedPool.dayKey, fingerprint })
+    : null;
+  if (cachedSections) return cachedSections;
   const seeds = seedPool.seeds;
   const sections = [];
   const usedKeys = new Set();
   const sectionTitles = new Set();
   const renderedPersonalSeeds = [];
 
-  const pushSection = (section, { minItems = 2 } = {}) => {
+  const pushSection = (section, { minItems = EXPLORE_PERSONAL_MINIMUM_GROUP_SIZE } = {}) => {
     if (!section?.items?.length || section.items.length < minItems) return false;
     if (sections.length >= maxSections || sectionTitles.has(section.title)) return false;
 
@@ -16397,7 +16519,11 @@ function getExplorePersonalSections({
     selectedSeeds: seedPool.diagnostics.filter((item) => item.selected)
   };
 
-  return sections.slice(0, maxSections);
+  const result = sections.slice(0, maxSections);
+  if (canUseSnapshot) {
+    persistExplorePersonalSnapshot(result, { dayKey: seedPool.dayKey, fingerprint });
+  }
+  return result;
 }
 
 if (typeof window !== "undefined") {
@@ -16631,6 +16757,31 @@ function prioritizeExploreItemsForHour(
   return arrangeWithoutAdjacentMainSeries(
     ordered,
     getHourlyRotationSeed(`explore:${salt}:series`, hourBucket)
+  );
+}
+
+function getExplorePersonalSnapshotRotationKey(sectionKey) {
+  if (!isLoggedIn()) return getExploreHourBucket();
+  return [
+    getDailyExploreRotationKey(),
+    state.authUser?.id || "anonymous",
+    getExploreRecommendationInputFingerprint(),
+    sectionKey
+  ].join(":");
+}
+
+function prioritizeExploreItemsForPersonalSnapshot(items, sectionKey) {
+  return prioritizeExploreItemsForHour(
+    items,
+    getExplorePersonalSnapshotRotationKey(sectionKey),
+    `snapshot:${sectionKey}`
+  );
+}
+
+function orderExplorePersonalSectionsForSnapshot(sections) {
+  return orderExplorePersonalSectionsForHour(
+    sections,
+    getExplorePersonalSnapshotRotationKey("section-order")
   );
 }
 
@@ -17864,12 +18015,11 @@ function renderExplorePage() {
       const sectionsToRender = showPersonalFirst ? personalSections : [];
 
       const createPersonalSection = (section, index) => {
-        const items = prioritizeExploreItemsForHour(
+        const items = prioritizeExploreItemsForPersonalSnapshot(
           dedupeExploreItems(section.items, usedPersonalKeys),
-          exploreHourBucket,
           `${index}:${section.title}`
         );
-        if (!items.length) return null;
+        if (items.length < EXPLORE_PERSONAL_MINIMUM_GROUP_SIZE) return null;
 
         items.forEach((item) => {
           const key = getPodcastKey(item.podcast || item);
@@ -17907,22 +18057,23 @@ function renderExplorePage() {
         return sectionElement;
       };
 
-      const underratedItems = prioritizeExploreItemsForHour(
+      const underratedItems = prioritizeExploreItemsForPersonalSnapshot(
         dedupeExploreItems(
           getExploreUnderratedGemItems({
             limit: 12,
             searchParts: queryParts,
             genre: localGenre,
-            hourBucket: exploreHourBucket
+            hourBucket: isLoggedIn()
+              ? getExplorePersonalSnapshotRotationKey("underrated-candidates")
+              : exploreHourBucket
           }),
           usedEditorialKeys
         ),
-        exploreHourBucket,
         "undervurderede-perler"
       );
 
       const createGemsSection = () => {
-        if (!underratedItems.length) return null;
+        if (underratedItems.length < EXPLORE_PERSONAL_MINIMUM_GROUP_SIZE) return null;
 
         underratedItems.forEach((item) => {
           const key = getPodcastKey(item.podcast || item);
@@ -18081,12 +18232,11 @@ function renderExplorePage() {
       favoriteGenreSections.forEach((section, genreIndex) => {
         // Lower-priority genre rows avoid podcasts already shown in either
         // personal or editorial rows, while those top sections keep separate scopes.
-        const items = prioritizeExploreItemsForHour(
+        const items = prioritizeExploreItemsForPersonalSnapshot(
           dedupeExploreItems(section.podcasts, usedTopKeys),
-          exploreHourBucket,
           `genre:${section.genreName}`
         );
-        if (!items.length) return;
+        if (items.length < EXPLORE_PERSONAL_MINIMUM_GROUP_SIZE) return;
 
         const sectionElement = document.createElement("section");
         const headingId = `exploreFavoriteGenreHeading${genreIndex + 1}`;
@@ -18118,10 +18268,7 @@ function renderExplorePage() {
       const shouldRotatePersonalSectionOrder =
         isLoggedIn() && ratedKeys.size > 0 && personalModules.children.length > 1;
       if (shouldRotatePersonalSectionOrder) {
-        const orderedSections = orderExplorePersonalSectionsForHour(
-          [...personalModules.children],
-          exploreHourBucket
-        );
+        const orderedSections = orderExplorePersonalSectionsForSnapshot([...personalModules.children]);
         orderedSections.forEach((sectionElement) => {
           personalModules.appendChild(sectionElement);
         });
