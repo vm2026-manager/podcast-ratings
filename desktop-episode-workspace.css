@@ -1,0 +1,24 @@
+/* Readability pass for the existing desktop episode-rating workspace. */
+@media (min-width: 769px) {
+  html body #podcastDetailSheet.is-episode-workspace .podcast-detail-sheet__episode-table {
+    table-layout: fixed;
+  }
+  html body #podcastDetailSheet.is-episode-workspace .podcast-detail-sheet__episode-table th:nth-child(1),
+  html body #podcastDetailSheet.is-episode-workspace .podcast-detail-sheet__episode-table td:nth-child(1) { width: 10.5rem !important; min-width: 10.5rem !important; }
+  html body #podcastDetailSheet.is-episode-workspace .podcast-detail-sheet__episode-table th:nth-child(2) { width: auto !important; }
+  html body #podcastDetailSheet.is-episode-workspace .podcast-detail-sheet__episode-table th:nth-child(3),
+  html body #podcastDetailSheet.is-episode-workspace .podcast-detail-sheet__episode-table td:nth-child(3) { width: 9.25rem !important; }
+  html body #podcastDetailSheet.is-episode-workspace .podcast-detail-sheet__episode-table th:nth-child(4),
+  html body #podcastDetailSheet.is-episode-workspace .podcast-detail-sheet__episode-table td:nth-child(4) { width: 7.75rem !important; }
+  html body #podcastDetailSheet.is-episode-workspace .podcast-detail-sheet__episode-table th,
+  html body #podcastDetailSheet.is-episode-workspace .podcast-detail-sheet__episode-table td { padding: 15px 14px !important; }
+  html body #podcastDetailSheet.is-episode-workspace .podcast-detail-sheet__episode-table td:nth-child(1) { font-size: .9rem !important; font-weight: 800 !important; }
+  html body #podcastDetailSheet.is-episode-workspace .episode-title { font: 800 1rem/1.35 "Manrope", sans-serif !important; overflow-wrap: anywhere; }
+  html body #podcastDetailSheet.is-episode-workspace .episode-title--long { font-size: .94rem !important; }
+  html body #podcastDetailSheet.is-episode-workspace .episode-title--very-long { font-size: .88rem !important; }
+  html body #podcastDetailSheet.is-episode-workspace tr.is-community-rated td { background: rgba(255, 92, 22, .045); }
+  html body #podcastDetailSheet.is-episode-workspace tr.is-community-rated td:first-child { box-shadow: inset 3px 0 0 #f26f21; }
+  html body #podcastDetailSheet.is-episode-workspace tr.is-community-rated .podcast-detail-sheet__episode-source-score > strong { color: #d84b11 !important; font-size: .96rem !important; }
+  html body #podcastDetailSheet.is-episode-workspace tr.is-user-rated .podcast-detail-sheet__episode-own-score { border-color: rgba(242, 111, 33, .62) !important; background: #fff3e9 !important; }
+  html body #podcastDetailSheet.is-episode-workspace tr.is-user-rated .podcast-detail-sheet__episode-own-score > strong { color: #a64118 !important; font-size: .96rem !important; }
+}

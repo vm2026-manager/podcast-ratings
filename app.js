@@ -8892,9 +8892,19 @@ function renderPodcastEpisodeOverviewRows(podcast) {
       const userRating = getEpisodeUserRating(episodeId);
       const sourceScore = parseNumber(stat?.averageRating);
       const ratingCount = Number(stat?.ratingCount || 0);
+      const title = episode.title || `Episode ${episodeNumber}`;
+      const titleLengthClass = title.length > 115
+        ? " episode-title--very-long"
+        : title.length > 72
+          ? " episode-title--long"
+          : "";
+      const rowStateClasses = [
+        ratingCount > 0 ? "is-community-rated" : "",
+        userRating === null ? "" : "is-user-rated"
+      ].filter(Boolean).join(" ");
 
       return `
-        <tr>
+        <tr class="${rowStateClasses}">
           ${
             showPublicationDate
               ? `<td class="episode-publication-date-cell" data-label="Udgivelsesdato" aria-label="Udgivelsesdato ${escapeHtml(
@@ -8903,7 +8913,7 @@ function renderPodcastEpisodeOverviewRows(podcast) {
               : `<td data-label="#">${escapeHtml(String(episodeNumber))}</td>`
           }
           <td data-label="Episode">
-            <strong>${escapeHtml(episode.title || `Episode ${episodeNumber}`)}</strong>
+            <strong class="episode-title${titleLengthClass}">${escapeHtml(title)}</strong>
           </td>
           <td data-label="Brugere">
             <span class="podcast-detail-sheet__episode-source-score">
