@@ -9297,6 +9297,10 @@ function renderPodcastEpisodeDetailContent(dialog, podcast, episode, { backLabel
         <span aria-hidden="true">&larr;</span>
         <span>${escapeHtml(backLabel)}</span>
       </button>
+      ${backLabel === "Tilbage til Profil" && podcast?.key && state.podcastByKey[podcast.key] ? `
+        <button class="podcast-detail-sheet__back" type="button" data-podcast-episode-series>
+          <span>Se serie</span><span aria-hidden="true">&rarr;</span>
+        </button>` : ""}
       <span class="podcast-detail-sheet__review-nav-title">Episode</span>
     </div>
     <article class="podcast-detail-sheet__episode-detail">
@@ -9347,6 +9351,13 @@ function renderPodcastEpisodeDetailContent(dialog, podcast, episode, { backLabel
       left: 0,
       behavior: "auto"
     });
+  });
+  content.querySelector("[data-podcast-episode-series]")?.addEventListener("click", (event) => {
+    event.preventDefault();
+    event.stopPropagation();
+    if (!podcast?.key || !state.podcastByKey[podcast.key]) return;
+    closePodcastDetailSheet({ returnFocus: false });
+    openPodcastDetailSheet(state.podcastByKey[podcast.key], null, { allowDesktop: true });
   });
 
   content.querySelector("[data-episode-rating]")?.addEventListener("click", (event) => {
