@@ -32,9 +32,18 @@
         url: "https://mgaqycuexbyplqcmcsbc.supabase.co",
         anonKey: "sb_publishable_RMGpMpbKbRT0X42YWaRz7A_y_q7IyQJ"
       };
+      // Preserve only the fact that this load began as a recovery link. The
+      // Supabase client remains solely responsible for consuming its tokens.
+      (() => {
+        const params = new URLSearchParams(window.location.hash.slice(1));
+        window.PODCAST_RECOVERY_LINK_OBSERVED =
+          params.get("type") === "recovery" ||
+          params.has("error_code") ||
+          params.has("error_description");
+      })();
     </script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
-    <script src="app.js?v=20260814-recommendation-diversity-key" defer></script>
+    <script src="app.js?v=20260820-password-recovery" defer></script>
   </head>
 
   <body>
@@ -583,6 +592,59 @@
 
             <p id="authDialogMessage" class="auth-message is-hidden" aria-live="polite"></p>
           </form>
+        </div>
+      </div>
+
+      <div id="passwordRecoveryDialog" class="rating-dialog auth-dialog password-recovery-dialog is-hidden" aria-hidden="true">
+        <div class="rating-dialog__backdrop"></div>
+        <div
+          class="rating-dialog__panel auth-dialog__panel"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="passwordRecoveryDialogTitle"
+        >
+          <button
+            id="passwordRecoveryCloseButton"
+            class="rating-dialog__close is-hidden"
+            type="button"
+            aria-label="Luk"
+          >
+            &#215;
+          </button>
+          <p class="rating-dialog__eyebrow">Adgangskode</p>
+          <h2 id="passwordRecoveryDialogTitle" class="rating-dialog__title">Vælg ny adgangskode</h2>
+          <p class="rating-dialog__meta">Vælg en ny adgangskode til den konto, der er bekræftet via dit link.</p>
+
+          <form id="passwordRecoveryForm" class="auth-form" autocomplete="off">
+            <div class="auth-field">
+              <label for="passwordRecoveryPassword">Ny adgangskode</label>
+              <input
+                id="passwordRecoveryPassword"
+                name="new_password"
+                type="password"
+                autocomplete="new-password"
+                minlength="6"
+                required
+              />
+            </div>
+            <div class="auth-field">
+              <label for="passwordRecoveryPasswordRepeat">Gentag adgangskode</label>
+              <input
+                id="passwordRecoveryPasswordRepeat"
+                name="new_password_repeat"
+                type="password"
+                autocomplete="new-password"
+                minlength="6"
+                required
+              />
+            </div>
+            <div class="auth-actions auth-actions--dialog">
+              <button id="passwordRecoverySaveButton" class="auth-button auth-button--primary" type="submit">
+                Gem ny adgangskode
+              </button>
+            </div>
+          </form>
+          <p id="passwordRecoveryMessage" class="auth-message is-hidden" aria-live="polite"></p>
         </div>
       </div>
 

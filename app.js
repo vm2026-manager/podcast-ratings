@@ -633,6 +633,13 @@ const state = {
   authBusy: false,
   authMode: "signup",
   authMessageTimer: null,
+  passwordRecovery: {
+    status: "idle",
+    userId: "",
+    // Capture the recovery URL before the application's hash router normalizes it.
+    linkObserved: Boolean(window.PODCAST_RECOVERY_LINK_OBSERVED) || hasRecoveryLinkInHash(),
+    invalidLinkTimer: null
+  },
   pendingAuthAction: null,
   authReturnFocus: null,
   exploreSuggestionDialogOpen: false,
@@ -834,6 +841,13 @@ const elements = {
   authRememberLogin: document.getElementById("authRememberLogin"),
   toggleAuthPasswordButton: document.getElementById("toggleAuthPasswordButton"),
   forgotPasswordButton: document.getElementById("forgotPasswordButton"),
+  passwordRecoveryDialog: document.getElementById("passwordRecoveryDialog"),
+  passwordRecoveryCloseButton: document.getElementById("passwordRecoveryCloseButton"),
+  passwordRecoveryForm: document.getElementById("passwordRecoveryForm"),
+  passwordRecoveryPassword: document.getElementById("passwordRecoveryPassword"),
+  passwordRecoveryPasswordRepeat: document.getElementById("passwordRecoveryPasswordRepeat"),
+  passwordRecoverySaveButton: document.getElementById("passwordRecoverySaveButton"),
+  passwordRecoveryMessage: document.getElementById("passwordRecoveryMessage"),
   authUserEmail: document.getElementById("authUserEmail"),
   savedPodcastCount: document.getElementById("savedPodcastCount"),
   savedFilterButton: document.getElementById("savedFilterButton"),
@@ -3946,6 +3960,7 @@ function setAuthBusy(isBusy) {
     elements.authRememberLogin,
     elements.toggleAuthPasswordButton,
     elements.forgotPasswordButton,
+    elements.passwordRecoverySaveButton,
     elements.ratingSaveButton,
     elements.ratingDeleteButton
   ].forEach((button) => {
@@ -3972,6 +3987,150 @@ function toggleAuthPasswordVisibility() {
 
   elements.authPassword.type = elements.authPassword.type === "password" ? "text" : "password";
   updateAuthPasswordToggle();
+}
+
+function hasRecoveryLinkInHash() {
+  const hash = window.location.hash.replace(/^#/, "");
+  if (!hash) return false;
+
+  const params = new URLSearchParams(hash);
+  return (
+    params.get("type") === "recovery" ||
+    params.has("error_code") ||
+    params.has("error_description")
+  );
+}
+
+function replaceVisibleRecoveryHash(hash = "") {
+  // Supabase has already consumed the recovery parameters before this is called.
+  window.history.replaceState(null, "", `${window.location.pathname}${window.location.search}${hash}`);
+}
+
+function setPasswordRecoveryMessage(message = "", tone = "info") {
+  setElementMessage(elements.passwordRecoveryMessage, message, tone);
+}
+
+function openPasswordRecoveryDialog(status) {
+  const dialog = elements.passwordRecoveryDialog;
+  if (!dialog) return;
+
+  state.passwordRecovery.status = status;
+  const isValid = status === "valid";
+  const isSuccess = status === "success";
+  dialog.classList.remove("is-hidden");
+  dialog.setAttribute("aria-hidden", "false");
+  document.body.classList.add("has-dialog-open");
+  setPodcastDetailAuthLayerActive(true);
+
+  elements.passwordRecoveryForm?.classList.toggle("is-hidden", !isValid);
+  elements.passwordRecoveryCloseButton?.classList.toggle("is-hidden", isValid);
+  if (isValid) {
+    setPasswordRecoveryMessage("Vælg en ny adgangskode på mindst 6 tegn.", "info");
+    window.setTimeout(() => elements.passwordRecoveryPassword?.focus(), 40);
+  } else if (!isSuccess) {
+    setPasswordRecoveryMessage("Linket er ugyldigt eller udløbet. Bed om et nyt link.", "error");
+    window.setTimeout(() => elements.passwordRecoveryCloseButton?.focus(), 40);
+  }
+}
+
+function closePasswordRecoveryDialog() {
+  const dialog = elements.passwordRecoveryDialog;
+  if (!dialog) return;
+
+  dialog.classList.add("is-hidden");
+  dialog.setAttribute("aria-hidden", "true");
+  setPodcastDetailAuthLayerActive(false);
+  if (elements.authDialog?.classList.contains("is-hidden") && elements.ratingDialog?.classList.contains("is-hidden")) {
+    document.body.classList.remove("has-dialog-open");
+  }
+}
+
+function clearPasswordRecoveryState() {
+  if (state.passwordRecovery.invalidLinkTimer) {
+    window.clearTimeout(state.passwordRecovery.invalidLinkTimer);
+  }
+  state.passwordRecovery = { status: "idle", userId: "", linkObserved: false, invalidLinkTimer: null };
+  if (elements.passwordRecoveryPassword) elements.passwordRecoveryPassword.value = "";
+  if (elements.passwordRecoveryPasswordRepeat) elements.passwordRecoveryPasswordRepeat.value = "";
+}
+
+function handlePasswordRecoveryEvent(session) {
+  const userId = normalizeText(session?.user?.id);
+  if (!userId) {
+    openPasswordRecoveryDialog("invalid");
+    return;
+  }
+
+  if (state.passwordRecovery.invalidLinkTimer) {
+    window.clearTimeout(state.passwordRecovery.invalidLinkTimer);
+    state.passwordRecovery.invalidLinkTimer = null;
+  }
+  state.passwordRecovery.linkObserved = true;
+  state.passwordRecovery.userId = userId;
+  replaceVisibleRecoveryHash("#reset-password");
+  openPasswordRecoveryDialog("valid");
+}
+
+function scheduleInvalidPasswordRecoveryNotice() {
+  if (!state.passwordRecovery.linkObserved || state.passwordRecovery.status !== "idle") return;
+  state.passwordRecovery.invalidLinkTimer = window.setTimeout(() => {
+    if (state.passwordRecovery.status === "idle") {
+      replaceVisibleRecoveryHash("#reset-password");
+      openPasswordRecoveryDialog("invalid");
+    }
+  }, 1200);
+}
+
+async function submitPasswordRecovery() {
+  if (state.authBusy || state.passwordRecovery.status !== "valid" || !state.supabase) return;
+
+  const password = normalizeText(elements.passwordRecoveryPassword?.value);
+  const passwordRepeat = normalizeText(elements.passwordRecoveryPasswordRepeat?.value);
+  if (!password || !passwordRepeat) {
+    setPasswordRecoveryMessage("Indtast og gentag din nye adgangskode.", "warning");
+    return;
+  }
+  if (password.length < 6) {
+    setPasswordRecoveryMessage("Adgangskoden skal være mindst 6 tegn.", "warning");
+    return;
+  }
+  if (password !== passwordRepeat) {
+    setPasswordRecoveryMessage("Adgangskoderne matcher ikke.", "warning");
+    return;
+  }
+
+  setAuthBusy(true);
+  setPasswordRecoveryMessage("Gemmer ny adgangskode…", "info");
+  try {
+    // The user is read solely from Supabase's current authenticated recovery session.
+    const { data, error: userError } = await state.supabase.auth.getUser();
+    if (userError || !data.user || data.user.id !== state.passwordRecovery.userId) {
+      throw new Error("RECOVERY_SESSION_INVALID");
+    }
+
+    const { error } = await state.supabase.auth.updateUser({ password });
+    if (error) throw error;
+
+    elements.passwordRecoveryPassword.value = "";
+    elements.passwordRecoveryPasswordRepeat.value = "";
+    state.passwordRecovery.status = "success";
+    setPasswordRecoveryMessage("Din adgangskode er opdateret. Du er nu logget ind.", "success");
+    replaceVisibleRecoveryHash("#profil");
+    window.setTimeout(() => {
+      closePasswordRecoveryDialog();
+      clearPasswordRecoveryState();
+      render();
+    }, 1600);
+  } catch (error) {
+    const invalidSession = normalizeText(error?.message) === "RECOVERY_SESSION_INVALID";
+    setPasswordRecoveryMessage(
+      invalidSession ? "Linket er ugyldigt eller udløbet. Bed om et nyt link." : normalizeAuthErrorMessage(error),
+      "error"
+    );
+    if (invalidSession) openPasswordRecoveryDialog("invalid");
+  } finally {
+    setAuthBusy(false);
+  }
 }
 
 function renderAuthPanel() {
@@ -5410,6 +5569,10 @@ async function initSupabase() {
     syncRankingPositionModeForAuthUser();
     state.authBusy = false;
 
+    if (event === "PASSWORD_RECOVERY") {
+      handlePasswordRecoveryEvent(sessionUpdate);
+    }
+
     // Supabase kan udsende de samme session-events igen, når fanen får fokus.
     // Sessionen og brugeren er uændret, så undgå at genhente alt og genopbygge profilsiden.
     if (isRecurringSameUserEvent) {
@@ -5442,6 +5605,8 @@ async function initSupabase() {
       completePendingAuthAction();
     }
   });
+
+  scheduleInvalidPasswordRecoveryNotice();
 }
 
 async function handleAuthAction(mode) {
@@ -19241,6 +19406,14 @@ function setupEvents() {
     toggleAuthPasswordVisibility();
   });
   elements.forgotPasswordButton?.addEventListener("click", requestPasswordReset);
+
+  elements.passwordRecoveryForm?.addEventListener("submit", (event) => {
+    event.preventDefault();
+    submitPasswordRecovery();
+  });
+  elements.passwordRecoveryCloseButton?.addEventListener("click", () => {
+    closePasswordRecoveryDialog();
+  });
 
   const authForm = elements.authDialog?.querySelector(".auth-form");
   authForm?.addEventListener("submit", (event) => {
