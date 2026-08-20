@@ -29268,6 +29268,19 @@ html body.page-forside #pageIntroPanel .home-editorial-card__date { color: #8a7d
 html body.page-forside #pageIntroPanel .home-editorial-card__score { align-self: end; color: var(--accent); font-size: 1.35rem; font-weight: 850; line-height: 1; white-space: nowrap; }
 html body.page-forside #pageIntroPanel .home-editorial-card__score small { color: #776b60; font-size: .67rem; }
 
+@media (min-width: 769px) and (hover: hover) and (pointer: fine) {
+  html body.page-forside #pageIntroPanel .home-editorial-feature,
+  html body.page-forside #pageIntroPanel .home-editorial-card:not(.home-editorial-card--episode) {
+    transition: transform 180ms ease, box-shadow 180ms ease, border-color 180ms ease;
+  }
+  html body.page-forside #pageIntroPanel .home-editorial-feature:hover,
+  html body.page-forside #pageIntroPanel .home-editorial-card:not(.home-editorial-card--episode):hover {
+    transform: translateY(-3px);
+    border-color: rgba(255, 92, 22, .45);
+    box-shadow: 0 17px 30px rgba(66, 41, 20, .16);
+  }
+}
+
 @media (max-width: 768px) {
   html body.page-forside #pageIntroPanel .home-editorial-latest { margin-top: 0; padding: 15px; border-radius: 22px; }
   html body.page-forside #pageIntroPanel .home-editorial-latest .section-header { margin-bottom: 18px; }
