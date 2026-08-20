@@ -12195,6 +12195,10 @@ function render() {
   state.currentRoute = renderedRoute;
   state.currentRawRoute = nextRouteInfo.rawRoute;
 
+  if (routeChanged && renderedRoute === "forside") {
+    scrollWindowToTop();
+  }
+
   if (!routeChanged) return;
 
   if (renderedRoute === "ranglister" && previousRoute && previousRoute !== "ranglister") {
@@ -19230,6 +19234,9 @@ function setupEvents() {
 
   elements.pageLinks.forEach((link) => {
     link.addEventListener("click", () => {
+      if (link.dataset.pageLink === "forside") {
+        scrollWindowToTop();
+      }
       if (
         document.body.classList.contains("page-ranglister") &&
         link.dataset.pageLink !== "ranglister" &&
