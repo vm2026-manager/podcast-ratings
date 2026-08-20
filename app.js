@@ -5538,6 +5538,24 @@ async function initSupabase() {
     }
   );
 
+  // Subscribe before getSession(): the client may consume an implicit recovery
+  // fragment while it initializes, so a later subscription can miss this event.
+  let recoveryEventObserved = false;
+  state.supabase.auth.onAuthStateChange((event, recoverySession) => {
+    if (event === "PASSWORD_RECOVERY") {
+      recoveryEventObserved = true;
+      handlePasswordRecoveryEvent(recoverySession);
+      return;
+    }
+    // INITIAL_SESSION is Supabase's completion signal for this initialization.
+    // It is safe to reject a recovery-looking URL only after that signal, not on
+    // an arbitrary elapsed-time timer. A normal session never enables the form.
+    if (event === "INITIAL_SESSION" && state.passwordRecovery.linkObserved && !recoveryEventObserved) {
+      replaceVisibleRecoveryHash("#reset-password");
+      openPasswordRecoveryDialog("invalid");
+    }
+  });
+
   const {
     data: { session },
     error
@@ -5606,7 +5624,6 @@ async function initSupabase() {
     }
   });
 
-  scheduleInvalidPasswordRecoveryNotice();
 }
 
 async function handleAuthAction(mode) {
