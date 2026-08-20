@@ -1207,8 +1207,14 @@ function openHeaderSearchResult(index) {
   const match = headerSearchState.matches[index];
   if (!match) return;
 
+  const navigationKeys = headerSearchState.matches
+    .map(({ podcast }) => getPodcastKey(podcast))
+    .filter(Boolean);
   closeHeaderPodcastSearch({ clearInput: true, closeMobile: true });
-  openPodcastDetailSheet(match.podcast, elements.desktopHeaderSearchInput, { allowDesktop: true });
+  openPodcastDetailSheet(match.podcast, elements.desktopHeaderSearchInput, {
+    allowDesktop: true,
+    navigationKeys: isMobileViewport() ? navigationKeys : null
+  });
 }
 
 function compactSearchValue(value) {
@@ -7281,6 +7287,7 @@ function ensurePodcastDetailSheet() {
 
   document.body.appendChild(dialog);
   initPodcastDetailSheetDrag(dialog);
+  initPodcastDetailRankingSwipe(dialog);
   return dialog;
 }
 
@@ -7342,13 +7349,19 @@ function navigatePodcastDetailHistoryBack() {
   return opened;
 }
 
-function setPodcastDetailRankingContext(podcast) {
-  if (!isDesktopRankingViewport() || getRouteInfoFromHash().route !== "ranglister") {
+function setPodcastDetailRankingContext(podcast, navigationKeys = null) {
+  const suppliedKeys = Array.isArray(navigationKeys)
+    ? navigationKeys.map((key) => normalizeText(key)).filter(Boolean)
+    : [];
+  const isRankingRoute = getRouteInfoFromHash().route === "ranglister";
+  if (!suppliedKeys.length && !isRankingRoute) {
     clearPodcastDetailRankingContext();
     return;
   }
 
-  const keys = getFilteredPodcasts().map((item) => getPodcastKey(item)).filter(Boolean);
+  const keys = suppliedKeys.length
+    ? suppliedKeys
+    : getFilteredPodcasts().map((item) => getPodcastKey(item)).filter(Boolean);
   const activeKey = getPodcastKey(podcast);
   const index = keys.indexOf(activeKey);
 
@@ -7507,6 +7520,32 @@ function initPodcastDetailSheetDrag(dialog) {
 
   panel.addEventListener("pointerup", finishDrag);
   panel.addEventListener("pointercancel", finishDrag);
+}
+
+function initPodcastDetailRankingSwipe(dialog) {
+  if (!dialog || dialog.dataset.rankingSwipeReady === "true") return;
+  dialog.dataset.rankingSwipeReady = "true";
+
+  const content = dialog.querySelector("[data-podcast-detail-content]");
+  if (!content) return;
+
+  let swipeStart = null;
+  content.addEventListener("pointerdown", (event) => {
+    if (!isMobileViewport() || event.pointerType === "mouse") return;
+    if (event.target.closest("button, a, input, select, textarea, [data-action]")) return;
+    swipeStart = { pointerId: event.pointerId, x: event.clientX, y: event.clientY };
+  });
+  content.addEventListener("pointerup", (event) => {
+    if (!swipeStart || event.pointerId !== swipeStart.pointerId) return;
+    const deltaX = event.clientX - swipeStart.x;
+    const deltaY = event.clientY - swipeStart.y;
+    swipeStart = null;
+    if (Math.abs(deltaX) < 54 || Math.abs(deltaX) < Math.abs(deltaY) * 1.35) return;
+    navigatePodcastDetailRanking(deltaX < 0 ? 1 : -1);
+  });
+  content.addEventListener("pointercancel", () => {
+    swipeStart = null;
+  });
 }
 
 function getPodcastDetailPlacementText(podcast) {
@@ -10088,7 +10127,7 @@ function refreshOpenPodcastDetailSheet() {
 function openPodcastDetailSheet(
   podcast,
   triggerElement = null,
-  { allowDesktop = false, preserveModalHistory = false } = {}
+  { allowDesktop = false, preserveModalHistory = false, navigationKeys = null } = {}
 ) {
   if ((!isMobileViewport() && !allowDesktop) || !podcast) return false;
 
@@ -10098,7 +10137,7 @@ function openPodcastDetailSheet(
   if (!isInternalModalNavigation) {
     clearPodcastDetailNavigationHistory();
   }
-  setPodcastDetailRankingContext(podcast);
+  setPodcastDetailRankingContext(podcast, navigationKeys);
   state.activePodcastDetailKey = getPodcastKey(podcast);
   state.podcastDetailView = "detail";
   state.podcastDetailMainSeriesValue = "";
