@@ -10493,9 +10493,10 @@ function renderHomeLatestEditorial(container) {
   }
   if (section) section.hidden = false;
   const featured = reviews.find((item) => item.hasWrittenReview) || null;
+  const compactLimit = isMobileViewport() ? 3 : 8;
   const compactItems = reviews
     .filter((item) => item !== featured)
-    .slice(0, 8)
+    .slice(0, compactLimit)
     .map((item) => ({ ...item, hasWrittenReview: false }));
   if (!featured) {
     if (section) section.hidden = true;
