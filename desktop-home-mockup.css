@@ -7432,7 +7432,8 @@ html body #podcastDetailSheet .podcast-detail-sheet__related-copy small {
 
   html body.page-forside #pageIntroPanel .home-hero__scroll-button {
     position: absolute !important;
-    z-index: 12 !important;
+    z-index: 30 !important;
+    pointer-events: auto !important;
     top: 50% !important;
     width: 48px !important;
     height: 48px !important;
@@ -7451,6 +7452,10 @@ html body #podcastDetailSheet .podcast-detail-sheet__related-copy small {
 
   html body.page-forside #pageIntroPanel .home-hero__scroll-button--previous { left: 10px !important; }
   html body.page-forside #pageIntroPanel .home-hero__scroll-button--next { right: 50px !important; }
+
+  html body.page-forside #pageIntroPanel .home-hero__scroll-button > * {
+    pointer-events: none !important;
+  }
 
   html body.page-forside #pageIntroPanel .home-hero__scroll-button:hover:not(:disabled),
   html body.page-forside #pageIntroPanel .home-hero__scroll-button:focus-visible:not(:disabled) {
@@ -16052,9 +16057,12 @@ html body #podcastDetailSheet [data-podcast-detail-placement]:empty {
   html body.page-forside #pageIntroPanel .home-popular__arrow {
     position: absolute !important;
     top: 54% !important;
-    z-index: 3 !important;
+    z-index: 30 !important;
     width: 46px !important;
     height: 46px !important;
+    min-width: 46px !important;
+    min-height: 46px !important;
+    pointer-events: auto !important;
     padding: 0 !important;
     display: grid !important;
     place-items: center !important;
@@ -16077,6 +16085,7 @@ html body #podcastDetailSheet [data-podcast-detail-placement]:empty {
   }
 
   html body.page-forside #pageIntroPanel .home-popular__arrow span {
+    pointer-events: none !important;
     font: 500 2rem / 0.7 Arial, sans-serif !important;
     transform: translateY(-1px) !important;
   }
