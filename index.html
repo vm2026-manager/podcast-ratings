@@ -31,6 +31,9 @@
       src="//gc.zgo.at/count.js"
     ></script>
     <script>
+      // Establish this before deferred application code so mobile browsers do not restore
+      // a previous document offset after the Forside route has rendered.
+      if ("scrollRestoration" in history) history.scrollRestoration = "manual";
       window.PODCAST_SUPABASE_CONFIG = {
         url: "https://mgaqycuexbyplqcmcsbc.supabase.co",
         anonKey: "sb_publishable_RMGpMpbKbRT0X42YWaRz7A_y_q7IyQJ"
@@ -42,7 +45,7 @@
       })();
     </script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
-    <script src="app.js?v=20260820-password-recovery-v12" defer></script>
+    <script src="app.js?v=20260820-password-recovery-v13" defer></script>
   </head>
 
   <body>

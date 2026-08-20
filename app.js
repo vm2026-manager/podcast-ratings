@@ -2554,6 +2554,18 @@ function scrollWindowToTop() {
   });
 }
 
+function stabilizeFreshForsideScroll() {
+  const navigationType = performance.getEntriesByType?.("navigation")?.[0]?.type;
+  const isFreshNavigation = navigationType !== "back_forward";
+  if (!isFreshNavigation || getRouteInfoFromHash().route !== "forside") return;
+
+  const reset = () => window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+  window.requestAnimationFrame(() => {
+    reset();
+    window.setTimeout(reset, 120);
+  });
+}
+
 function restoreRankingScrollPosition() {
   const targetY = Math.max(0, state.rankingScrollY || 0);
 
@@ -20013,6 +20025,10 @@ setupEvents();
 updateAuthPasswordToggle();
 restoreNormalViewportMeta();
 renderRoute();
+stabilizeFreshForsideScroll();
+window.addEventListener("pageshow", (event) => {
+  if (!event.persisted) stabilizeFreshForsideScroll();
+});
 window.setTimeout(() => {
   clearSearchInput({ rerender: true });
 }, 120);
