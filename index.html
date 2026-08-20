@@ -35,11 +35,11 @@
       // Transient provenance; Supabase alone validates this token.
       (() => {
         const params = new URLSearchParams(window.location.hash.slice(1));
-        window.PODCAST_RECOVERY_PROVENANCE = { type: params.get("type") || "", accessToken: params.get("access_token") || "" };
+        window.PODCAST_RECOVERY_PROVENANCE = { type: params.get("type") || "", accessToken: params.get("access_token") || "", refreshToken: params.get("refresh_token") || "" };
       })();
     </script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
-    <script src="app.js?v=20260820-password-recovery-v5" defer></script>
+    <script src="app.js?v=20260820-password-recovery-v6" defer></script>
   </head>
 
   <body>

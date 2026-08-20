@@ -5516,9 +5516,9 @@ async function initSupabase() {
     return;
   }
 
-  const recoveryParams = new URLSearchParams(window.location.hash.slice(1));
-  const recoveryAccessToken = recoveryParams.get("type") === "recovery" ? recoveryParams.get("access_token") : "";
-  const recoveryRefreshToken = recoveryParams.get("type") === "recovery" ? recoveryParams.get("refresh_token") : "";
+  const recoveryProvenance = window.PODCAST_RECOVERY_PROVENANCE;
+  const recoveryAccessToken = recoveryProvenance?.type === "recovery" ? recoveryProvenance.accessToken : "";
+  const recoveryRefreshToken = recoveryProvenance?.type === "recovery" ? recoveryProvenance.refreshToken : "";
   const isExplicitRecovery = Boolean(recoveryAccessToken && recoveryRefreshToken);
   if (isExplicitRecovery) window.history.replaceState(null, "", `${window.location.pathname}${window.location.search}#reset-password`);
 
@@ -5549,6 +5549,8 @@ async function initSupabase() {
   } = isExplicitRecovery
     ? await state.supabase.auth.setSession({ access_token: recoveryAccessToken, refresh_token: recoveryRefreshToken })
     : await state.supabase.auth.getSession();
+
+  window.PODCAST_RECOVERY_PROVENANCE = null;
 
 
   if (error) {
