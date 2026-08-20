@@ -10786,6 +10786,23 @@ function renderHomeFeatured(container) {
     });
   });
 
+  const featuredSurface = container.querySelector(".home-featured__surface");
+  let swipeStartX = null;
+  featuredSurface?.addEventListener("pointerdown", (event) => {
+    if (!window.matchMedia?.("(max-width: 768px)").matches || event.pointerType === "mouse") return;
+    swipeStartX = event.clientX;
+  });
+  featuredSurface?.addEventListener("pointerup", (event) => {
+    if (swipeStartX === null) return;
+    const distance = event.clientX - swipeStartX;
+    swipeStartX = null;
+    if (Math.abs(distance) < 42) return;
+    setHomeFeaturedIndex(container, distance < 0 ? nextIndex : previousIndex);
+  });
+  featuredSurface?.addEventListener("pointercancel", () => {
+    swipeStartX = null;
+  });
+
   bindHomeFeaturedAutoplayPause(container);
   startHomeFeaturedAutoplay(container);
 }
