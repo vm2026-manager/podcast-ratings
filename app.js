@@ -4099,7 +4099,8 @@ async function submitPasswordRecovery() {
     }
 
     const { error } = await state.supabase.auth.updateUser({ password });
-    if (error) throw error;
+    const samePassword = /new password should be different from the old password/i.test(normalizeText(error?.message));
+    if (error && !samePassword) throw error;
 
     elements.passwordRecoveryPassword.value = "";
     elements.passwordRecoveryPasswordRepeat.value = "";
