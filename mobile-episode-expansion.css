@@ -1,0 +1,40 @@
+/* Shared mobile expand/collapse treatment for profile panels. */
+@media (max-width: 768px) {
+  html body.page-profil .profile-panel__toggle {
+    min-height: 34px;
+    padding: 0 11px;
+    display: inline-flex;
+    flex: 0 0 auto;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid rgba(255, 92, 22, .4);
+    border-radius: 999px;
+    color: #a64118;
+    background: #fff8f2;
+    font: 850 .72rem / 1 "Manrope", Inter, system-ui, sans-serif;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+
+  html body.page-profil .profile-panel__toggle:focus-visible {
+    outline: 2px solid rgba(255, 92, 22, .5);
+    outline-offset: 3px;
+  }
+
+  html body.page-profil #profileEpisodeRatings .profile-panel__tools {
+    flex-wrap: nowrap !important;
+    align-items: center;
+  }
+
+  html body.page-profil #profileEpisodeRatings.is-collapsed .profile-episode-card:nth-child(n + 4) {
+    display: none !important;
+  }
+
+  html body.page-profil #profileEpisodeRatings.is-expanded .profile-episode-card {
+    display: grid !important;
+  }
+
+  html body.page-profil #profileEpisodeRatings .profile-episode-list {
+    gap: 8px !important;
+  }
+}

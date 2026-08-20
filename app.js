@@ -14317,7 +14317,7 @@ function renderProfilePage() {
             </div>
             <div class="profile-panel__tools">
               <span data-profile-saved-count>${savedCount}</span>
-              <button class="profile-panel__toggle" type="button" data-profile-panel-toggle aria-expanded="true">Fold ind</button>
+              <button class="profile-panel__toggle" type="button" data-profile-panel-toggle aria-expanded="true">Fold sammen</button>
             </div>
           </header>
           ${
@@ -14415,7 +14415,7 @@ function renderProfilePage() {
             </div>
             <div class="profile-panel__tools">
               <span data-profile-suggestions-count></span>
-              <button class="profile-panel__toggle" type="button" data-profile-panel-toggle aria-expanded="true">Fold ind</button>
+              <button class="profile-panel__toggle" type="button" data-profile-panel-toggle aria-expanded="true">Fold sammen</button>
             </div>
           </header>
           <button class="profile-suggest-button profile-suggest-button--wide" type="button" data-explore-suggest-open>
@@ -14435,13 +14435,13 @@ function renderProfilePage() {
             </div>
             <div class="profile-panel__tools">
               <span data-profile-episode-ratings-count></span>
-              <button class="profile-panel__toggle" type="button" data-profile-panel-toggle aria-expanded="false">Fold ud</button>
+              <button class="profile-panel__toggle" type="button" data-profile-panel-toggle aria-expanded="false" aria-controls="profileEpisodeRatingsList">Fold ud</button>
             </div>
           </header>
           <p class="profile-panel__note">
             Dine vurderinger af enkelte episoder er adskilt fra dine podcastvurderinger.
           </p>
-          <div class="profile-episode-list" data-profile-episode-ratings></div>
+          <div class="profile-episode-list" id="profileEpisodeRatingsList" data-profile-episode-ratings></div>
           <button class="profile-expand-button" type="button" data-profile-episode-ratings-more hidden>
             Vis flere episodevurderinger
           </button>
@@ -14629,7 +14629,11 @@ function renderProfilePage() {
     panel.classList.toggle("is-expanded", willExpand);
     button?.setAttribute("aria-expanded", String(willExpand));
     if (button) {
-      button.textContent = willExpand ? "Fold ind" : "Fold ud";
+      button.textContent = willExpand ? "Fold sammen" : "Fold ud";
+      if (!willExpand && isMobileViewport()) {
+        panel.querySelector("h2")?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+        button.focus({ preventScroll: true });
+      }
     }
   };
 
