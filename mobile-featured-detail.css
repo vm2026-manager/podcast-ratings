@@ -205,3 +205,53 @@
   html body #podcastDetailSheet .podcast-detail-sheet__header { grid-template-columns: 94px minmax(0, 1fr) !important; }
   html body #podcastDetailSheet .podcast-detail-sheet__cover { width: 94px !important; height: 94px !important; }
 }
+
+/* Full-bleed editorial treatment for the existing weekly recommendation only. */
+@media (max-width: 768px) {
+  html body.page-forside #pageIntroPanel .home-featured {
+    width: calc(100% + 28px) !important;
+    margin: 18px -14px !important;
+  }
+  html body.page-forside #pageIntroPanel .home-featured__content {
+    width: 100% !important;
+    margin: 0 !important;
+    overflow: hidden !important;
+  }
+  html body.page-forside #pageIntroPanel .home-featured__surface {
+    grid-template-columns: minmax(0, 1fr) 122px !important;
+    min-height: 510px !important;
+    padding: 30px 28px 76px !important;
+    overflow: hidden !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    color: #fff !important;
+    background-image: linear-gradient(105deg, rgba(12, 7, 5, .94) 0%, rgba(20, 9, 5, .8) 53%, rgba(36, 14, 7, .56) 100%), var(--home-featured-bg) !important;
+    background-position: center !important;
+    background-size: cover !important;
+    box-shadow: none !important;
+  }
+  html body.page-forside #pageIntroPanel .home-featured__cover-column { grid-column: 2; grid-row: 1 / span 3; align-self: center; }
+  html body.page-forside #pageIntroPanel .home-featured__copy { grid-column: 1; grid-row: 1 / span 3; padding-right: 4px; }
+  html body.page-forside #pageIntroPanel .home-featured__cover { border: 1px solid rgba(255,255,255,.55) !important; border-radius: 18px !important; box-shadow: 0 14px 28px rgba(0,0,0,.28) !important; }
+  html body.page-forside #pageIntroPanel .home-featured__top-action-details { display: none !important; }
+  html body.page-forside #pageIntroPanel .home-featured__label { color: #ff7a3c !important; font-size: .68rem !important; }
+  html body.page-forside #pageIntroPanel .home-featured__copy h3,
+  html body.page-forside #pageIntroPanel .home-featured__title-button { color: #fff !important; font-size: clamp(2rem, 10vw, 2.8rem) !important; line-height: 1.01 !important; }
+  html body.page-forside #pageIntroPanel .home-featured__meta,
+  html body.page-forside #pageIntroPanel .home-featured__meta * { color: rgba(255,255,255,.9) !important; }
+  html body.page-forside #pageIntroPanel .home-featured__scorecard { margin-top: 16px !important; }
+  html body.page-forside #pageIntroPanel .home-featured__score-item small,
+  html body.page-forside #pageIntroPanel .home-featured__review { color: rgba(255,255,255,.88) !important; }
+  html body.page-forside #pageIntroPanel .home-featured__score-value { color: #fff !important; font-size: 1.45rem !important; }
+  html body.page-forside #pageIntroPanel .home-featured__review { max-width: 18rem; font-size: .94rem !important; line-height: 1.42 !important; -webkit-line-clamp: 4; }
+  html body.page-forside #pageIntroPanel .home-featured__open { min-height: 42px !important; color: #fff !important; background: #f2612b !important; border: 0 !important; font-size: .86rem !important; }
+  html body.page-forside #pageIntroPanel .home-featured__favorite { border-color: rgba(255,255,255,.7) !important; background: rgba(0,0,0,.16) !important; color: #fff !important; }
+  html body.page-forside #pageIntroPanel .home-featured__controls { right: 24px; bottom: 18px; }
+  html body.page-forside #pageIntroPanel .home-featured__nav { border: 1px solid rgba(255,255,255,.65) !important; background: rgba(0,0,0,.17) !important; color: #fff !important; }
+  html body.page-forside #pageIntroPanel .home-featured__indicators { bottom: 36px; left: 50%; transform: translateX(-50%); }
+  html body.page-forside #pageIntroPanel .home-featured__indicator { background: rgba(255,255,255,.6) !important; }
+  html body.page-forside #pageIntroPanel .home-featured__indicator.is-active { background: #ff6a32 !important; }
+  html body.page-forside #pageIntroPanel .home-featured__preview { top: 42%; width: 22% !important; height: 122px; opacity: .48 !important; border-radius: 14px !important; }
+  html body.page-forside #pageIntroPanel .home-featured__preview--previous { left: -17% !important; }
+  html body.page-forside #pageIntroPanel .home-featured__preview--next { right: -17% !important; }
+}
