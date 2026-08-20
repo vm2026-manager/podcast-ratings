@@ -39,7 +39,7 @@
       })();
     </script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
-    <script src="app.js?v=20260820-password-recovery-v7" defer></script>
+    <script src="app.js?v=20260820-password-recovery-v8" defer></script>
   </head>
 
   <body>
@@ -614,25 +614,31 @@
           <form id="passwordRecoveryForm" class="auth-form" autocomplete="off">
             <div class="auth-field">
               <label for="passwordRecoveryPassword">Ny adgangskode</label>
-              <input
-                id="passwordRecoveryPassword"
-                name="new_password"
-                type="password"
-                autocomplete="new-password"
-                minlength="6"
-                required
-              />
+              <div class="auth-password-wrap">
+                <input
+                  id="passwordRecoveryPassword"
+                  name="new_password"
+                  type="password"
+                  autocomplete="new-password"
+                  minlength="6"
+                  required
+                />
+                <button id="toggleRecoveryPassword" class="auth-password-toggle" type="button" aria-label="Vis adgangskode">Vis</button>
+              </div>
             </div>
             <div class="auth-field">
               <label for="passwordRecoveryPasswordRepeat">Gentag adgangskode</label>
-              <input
-                id="passwordRecoveryPasswordRepeat"
-                name="new_password_repeat"
-                type="password"
-                autocomplete="new-password"
-                minlength="6"
-                required
-              />
+              <div class="auth-password-wrap">
+                <input
+                  id="passwordRecoveryPasswordRepeat"
+                  name="new_password_repeat"
+                  type="password"
+                  autocomplete="new-password"
+                  minlength="6"
+                  required
+                />
+                <button id="toggleRecoveryPasswordRepeat" class="auth-password-toggle" type="button" aria-label="Vis adgangskode">Vis</button>
+              </div>
             </div>
             <div class="auth-actions auth-actions--dialog">
               <button id="passwordRecoverySaveButton" class="auth-button auth-button--primary" type="submit">

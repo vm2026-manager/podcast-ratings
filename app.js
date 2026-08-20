@@ -846,6 +846,8 @@ const elements = {
   passwordRecoveryForm: document.getElementById("passwordRecoveryForm"),
   passwordRecoveryPassword: document.getElementById("passwordRecoveryPassword"),
   passwordRecoveryPasswordRepeat: document.getElementById("passwordRecoveryPasswordRepeat"),
+  toggleRecoveryPassword: document.getElementById("toggleRecoveryPassword"),
+  toggleRecoveryPasswordRepeat: document.getElementById("toggleRecoveryPasswordRepeat"),
   passwordRecoverySaveButton: document.getElementById("passwordRecoverySaveButton"),
   passwordRecoveryMessage: document.getElementById("passwordRecoveryMessage"),
   authUserEmail: document.getElementById("authUserEmail"),
@@ -19428,6 +19430,18 @@ function setupEvents() {
   });
   elements.passwordRecoveryCloseButton?.addEventListener("click", () => {
     closePasswordRecoveryDialog();
+  });
+  [
+    [elements.passwordRecoveryPassword, elements.toggleRecoveryPassword],
+    [elements.passwordRecoveryPasswordRepeat, elements.toggleRecoveryPasswordRepeat]
+  ].forEach(([input, button]) => {
+    button?.addEventListener("click", () => {
+      if (!input) return;
+      const visible = input.type === "password";
+      input.type = visible ? "text" : "password";
+      button.textContent = visible ? "Skjul" : "Vis";
+      button.setAttribute("aria-label", visible ? "Skjul adgangskode" : "Vis adgangskode");
+    });
   });
 
   const authForm = elements.authDialog?.querySelector(".auth-form");
