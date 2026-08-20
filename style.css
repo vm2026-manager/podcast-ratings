@@ -844,6 +844,7 @@ body.page-ranglister .search-field__clear:focus-visible {
 /* Final mobile bottom navigation offset for dynamic iOS browser chrome. */
 :root {
   --mobile-browser-bottom-offset: 0px;
+  --mobile-visual-top: 0px;
   --mobile-nav-height: calc(76px + env(safe-area-inset-bottom, 0px));
   --mobile-bottom-reserve: calc(var(--mobile-nav-height) + var(--mobile-browser-bottom-offset, 0px));
 }
@@ -20875,7 +20876,7 @@ html body.page-profil .profile-suggestion-action--danger {
 /* Mobile home premium spacing end-of-file guard. */
 @media (max-width: 768px) {
   html body.page-forside.page-forside #pageIntroPanel {
-    padding: 26px 22px calc(104px + env(safe-area-inset-bottom)) !important;
+    padding: max(26px, env(safe-area-inset-top, 0px), var(--mobile-visual-top, 0px)) 22px calc(104px + env(safe-area-inset-bottom)) !important;
     overflow-x: hidden !important;
   }
 

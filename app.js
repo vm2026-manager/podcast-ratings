@@ -19057,14 +19057,17 @@ function setupMobileViewportOffsets() {
     frameId = null;
     const viewport = window.visualViewport;
     let bottomOffset = 0;
+    let topOffset = 0;
 
     if (viewport) {
       const occludedBottom = Math.max(0, window.innerHeight - viewport.height - viewport.offsetTop);
       const keyboardLikelyOpen = occludedBottom > 160 || viewport.height < window.innerHeight * 0.75;
       bottomOffset = keyboardLikelyOpen ? 0 : occludedBottom;
+      topOffset = Math.max(0, viewport.offsetTop || 0);
     }
 
     root.style.setProperty("--mobile-browser-bottom-offset", `${Math.round(bottomOffset)}px`);
+    root.style.setProperty("--mobile-visual-top", `${Math.round(topOffset)}px`);
   };
 
   const scheduleUpdate = () => {
