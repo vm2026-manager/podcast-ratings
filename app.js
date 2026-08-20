@@ -4071,16 +4071,6 @@ function handlePasswordRecoveryEvent(session) {
   openPasswordRecoveryDialog("valid");
 }
 
-function scheduleInvalidPasswordRecoveryNotice() {
-  if (!state.passwordRecovery.linkObserved || state.passwordRecovery.status !== "idle") return;
-  state.passwordRecovery.invalidLinkTimer = window.setTimeout(() => {
-    if (state.passwordRecovery.status === "idle") {
-      replaceVisibleRecoveryHash("#reset-password");
-      openPasswordRecoveryDialog("invalid");
-    }
-  }, 1200);
-}
-
 async function submitPasswordRecovery() {
   if (state.authBusy || state.passwordRecovery.status !== "valid" || !state.supabase) return;
 
@@ -5540,19 +5530,9 @@ async function initSupabase() {
 
   // Subscribe before getSession(): the client may consume an implicit recovery
   // fragment while it initializes, so a later subscription can miss this event.
-  let recoveryEventObserved = false;
   state.supabase.auth.onAuthStateChange((event, recoverySession) => {
     if (event === "PASSWORD_RECOVERY") {
-      recoveryEventObserved = true;
       handlePasswordRecoveryEvent(recoverySession);
-      return;
-    }
-    // INITIAL_SESSION is Supabase's completion signal for this initialization.
-    // It is safe to reject a recovery-looking URL only after that signal, not on
-    // an arbitrary elapsed-time timer. A normal session never enables the form.
-    if (event === "INITIAL_SESSION" && state.passwordRecovery.linkObserved && !recoveryEventObserved) {
-      replaceVisibleRecoveryHash("#reset-password");
-      openPasswordRecoveryDialog("invalid");
     }
   });
 
@@ -5576,7 +5556,7 @@ async function initSupabase() {
   state.authReady = true;
 
   if (hasMatchingRecoverySession) handlePasswordRecoveryEvent(session);
-  else if (state.passwordRecovery.linkObserved) { replaceVisibleRecoveryHash("#reset-password"); openPasswordRecoveryDialog("invalid"); }
+  else if (state.passwordRecovery.linkObserved && state.passwordRecovery.status === "idle") { replaceVisibleRecoveryHash("#reset-password"); openPasswordRecoveryDialog("invalid"); }
 
   await refreshSupabaseState();
   renderAuthPanel();
