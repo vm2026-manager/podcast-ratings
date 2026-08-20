@@ -5516,6 +5516,12 @@ async function initSupabase() {
     return;
   }
 
+  const recoveryParams = new URLSearchParams(window.location.hash.slice(1));
+  const recoveryAccessToken = recoveryParams.get("type") === "recovery" ? recoveryParams.get("access_token") : "";
+  const recoveryRefreshToken = recoveryParams.get("type") === "recovery" ? recoveryParams.get("refresh_token") : "";
+  const isExplicitRecovery = Boolean(recoveryAccessToken && recoveryRefreshToken);
+  if (isExplicitRecovery) window.history.replaceState(null, "", `${window.location.pathname}${window.location.search}#reset-password`);
+
   state.supabase = supabaseLib.createClient(
     SUPABASE_CONFIG.url,
     SUPABASE_CONFIG.anonKey,
@@ -5523,6 +5529,7 @@ async function initSupabase() {
       auth: {
         persistSession: true,
         autoRefreshToken: true,
+        detectSessionInUrl: !isExplicitRecovery,
         storage: supabaseAuthStorage
       }
     }
@@ -5539,11 +5546,10 @@ async function initSupabase() {
   const {
     data: { session },
     error
-  } = await state.supabase.auth.getSession();
+  } = isExplicitRecovery
+    ? await state.supabase.auth.setSession({ access_token: recoveryAccessToken, refresh_token: recoveryRefreshToken })
+    : await state.supabase.auth.getSession();
 
-  const recoveryProvenance = window.PODCAST_RECOVERY_PROVENANCE;
-  const hasMatchingRecoverySession = recoveryProvenance?.type === "recovery" && Boolean(recoveryProvenance.accessToken) && recoveryProvenance.accessToken === session?.access_token && Boolean(session?.user);
-  window.PODCAST_RECOVERY_PROVENANCE = null;
 
   if (error) {
     console.error(error);
@@ -5555,8 +5561,10 @@ async function initSupabase() {
   syncRankingPositionModeForAuthUser();
   state.authReady = true;
 
-  if (hasMatchingRecoverySession) handlePasswordRecoveryEvent(session);
-  else if (state.passwordRecovery.linkObserved && state.passwordRecovery.status === "idle") { replaceVisibleRecoveryHash("#reset-password"); openPasswordRecoveryDialog("invalid"); }
+  if (isExplicitRecovery) {
+    if (error || !session?.user) openPasswordRecoveryDialog("invalid");
+    else handlePasswordRecoveryEvent(session);
+  }
 
   await refreshSupabaseState();
   renderAuthPanel();
