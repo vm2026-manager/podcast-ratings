@@ -32,14 +32,10 @@
         url: "https://mgaqycuexbyplqcmcsbc.supabase.co",
         anonKey: "sb_publishable_RMGpMpbKbRT0X42YWaRz7A_y_q7IyQJ"
       };
-      // Preserve only the fact that this load began as a recovery link. The
-      // Supabase client remains solely responsible for consuming its tokens.
+      // Transient provenance; Supabase alone validates this token.
       (() => {
         const params = new URLSearchParams(window.location.hash.slice(1));
-        window.PODCAST_RECOVERY_LINK_OBSERVED =
-          params.get("type") === "recovery" ||
-          params.has("error_code") ||
-          params.has("error_description");
+        window.PODCAST_RECOVERY_PROVENANCE = { type: params.get("type") || "", accessToken: params.get("access_token") || "" };
       })();
     </script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>

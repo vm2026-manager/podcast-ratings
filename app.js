@@ -637,7 +637,7 @@ const state = {
     status: "idle",
     userId: "",
     // Capture the recovery URL before the application's hash router normalizes it.
-    linkObserved: Boolean(window.PODCAST_RECOVERY_LINK_OBSERVED) || hasRecoveryLinkInHash(),
+    linkObserved: window.PODCAST_RECOVERY_PROVENANCE?.type === "recovery" || hasRecoveryLinkInHash(),
     invalidLinkTimer: null
   },
   pendingAuthAction: null,
@@ -5561,6 +5561,10 @@ async function initSupabase() {
     error
   } = await state.supabase.auth.getSession();
 
+  const recoveryProvenance = window.PODCAST_RECOVERY_PROVENANCE;
+  const hasMatchingRecoverySession = recoveryProvenance?.type === "recovery" && Boolean(recoveryProvenance.accessToken) && recoveryProvenance.accessToken === session?.access_token && Boolean(session?.user);
+  window.PODCAST_RECOVERY_PROVENANCE = null;
+
   if (error) {
     console.error(error);
     setAuthMessage("Supabase-session kunne ikke indlæses.", "error", "hero");
@@ -5570,6 +5574,9 @@ async function initSupabase() {
   state.authUser = session?.user || null;
   syncRankingPositionModeForAuthUser();
   state.authReady = true;
+
+  if (hasMatchingRecoverySession) handlePasswordRecoveryEvent(session);
+  else if (state.passwordRecovery.linkObserved) { replaceVisibleRecoveryHash("#reset-password"); openPasswordRecoveryDialog("invalid"); }
 
   await refreshSupabaseState();
   renderAuthPanel();
