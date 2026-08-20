@@ -1,0 +1,12 @@
+/* Focused mobile overrides for existing header search, detail sheet and Udforsk cards. */
+.mobile-header-search-close { display: none; }
+
+@media (max-width: 768px) {
+  html body .mobile-header-search-button { position: absolute !important; top: calc(env(safe-area-inset-top, 0px) + 10px) !important; right: 12px !important; z-index: 12 !important; width: 38px !important; height: 38px !important; box-shadow: none !important; }
+  html body .page-shell > .topbar #desktopHeaderSearch.is-mobile-open { position: fixed !important; inset: 0 !important; z-index: 1700 !important; display: grid !important; grid-template-columns: 20px minmax(0, 1fr) 38px !important; align-content: start !important; width: auto !important; min-height: 0 !important; padding: calc(env(safe-area-inset-top, 0px) + 12px) 12px 12px !important; border: 0 !important; border-radius: 0 !important; background: rgba(255,252,248,.98) !important; box-shadow: none !important; }
+  html body .page-shell > .topbar #desktopHeaderSearch.is-mobile-open .desktop-header-search__results { position: absolute !important; top: calc(env(safe-area-inset-top, 0px) + 70px) !important; right: 12px !important; bottom: calc(env(safe-area-inset-bottom, 0px) + 12px) !important; left: 12px !important; max-height: none !important; overflow-y: auto !important; -webkit-overflow-scrolling: touch !important; overscroll-behavior: contain !important; }
+  html body .page-shell > .topbar #desktopHeaderSearch.is-mobile-open .mobile-header-search-close { display: grid !important; width: 38px !important; height: 38px !important; place-items: center !important; border: 1px solid rgba(226,213,198,.95) !important; border-radius: 50% !important; background: #fff !important; font-size: 1.5rem !important; }
+  html body .podcast-detail-sheet__panel { max-height: calc(100dvh - env(safe-area-inset-top, 0px)) !important; }
+  html body .podcast-detail-sheet__content { flex: 1 1 auto !important; max-height: none !important; overflow-y: auto !important; padding-bottom: calc(28px + env(safe-area-inset-bottom, 0px)) !important; }
+  html body.page-udforsk .explore-card__favorite { width: 36px !important; min-width: 36px !important; height: 36px !important; min-height: 36px !important; margin: 0 !important; padding: 0 !important; border-radius: 50% !important; }
+}

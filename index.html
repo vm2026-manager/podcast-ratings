@@ -21,6 +21,7 @@
     <link rel="stylesheet" href="mobile-home-ranking-polish.css?v=20260813-mobile-podcast-modal-breakpoint-fix" />
     <link rel="stylesheet" href="desktop-home-mockup.css?v=20260813-profile-settings-approved-mockup" />
     <link rel="stylesheet" href="profile-settings-desktop.css?v=20260813-approved-mockup" />
+    <link rel="stylesheet" href="mobile-ux-fixes.css?v=20260820-mobile-core-v1" />
 
     <script
       data-goatcounter="https://podcastratings.goatcounter.com/count"
@@ -39,7 +40,7 @@
       })();
     </script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
-    <script src="app.js?v=20260820-password-recovery-v8" defer></script>
+    <script src="app.js?v=20260820-password-recovery-v9" defer></script>
   </head>
 
   <body>
@@ -110,6 +111,9 @@
             aria-expanded="false"
           />
           <button class="desktop-header-search__submit" type="submit">Søg</button>
+          <button id="mobileHeaderSearchClose" class="mobile-header-search-close" type="button" aria-label="Luk søgning">
+            &#215;
+          </button>
           <div
             id="desktopHeaderSearchResults"
             class="desktop-header-search__results is-hidden"

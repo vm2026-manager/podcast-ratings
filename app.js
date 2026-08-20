@@ -786,6 +786,7 @@ const elements = {
   desktopHeaderSearchInput: document.getElementById("desktopHeaderSearchInput"),
   desktopHeaderSearchResults: document.getElementById("desktopHeaderSearchResults"),
   mobileHeaderSearchButton: document.getElementById("mobileHeaderSearchButton"),
+  mobileHeaderSearchClose: document.getElementById("mobileHeaderSearchClose"),
   desktopUserButton: document.getElementById("desktopUserButton"),
   desktopUserMenu: document.getElementById("desktopUserMenu"),
   desktopUserProfileLink: document.getElementById("desktopUserProfileLink"),
@@ -19311,6 +19312,10 @@ function setupEvents() {
     } else {
       closeHeaderPodcastSearch();
     }
+  });
+  elements.mobileHeaderSearchClose?.addEventListener("click", () => {
+    closeHeaderPodcastSearch({ clearInput: true, closeMobile: true });
+    elements.mobileHeaderSearchButton?.focus({ preventScroll: true });
   });
 
   elements.desktopUserButton?.addEventListener("click", () => {
