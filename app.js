@@ -395,7 +395,7 @@ const AUTH_PERSISTENCE_STORAGE_KEY = "podcast-ratings-auth-persistence";
 const PROFILE_PREFERENCES_STORAGE_KEY = "podcast-ratings-profile-preferences";
 const EXPLORE_PERSONAL_SEED_HISTORY_STORAGE_KEY =
   "podcast-ratings-explore-personal-seed-history-v1";
-const UDFORSK_RECOMMENDATION_VERSION = 2;
+const UDFORSK_RECOMMENDATION_VERSION = 3;
 const EXPLORE_PERSONAL_SNAPSHOT_STORAGE_KEY =
   "podcast-ratings-explore-personal-snapshots-v2";
 const EXPLORE_PERSONAL_MINIMUM_GROUP_SIZE = 3;
