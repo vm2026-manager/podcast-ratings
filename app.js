@@ -16785,6 +16785,31 @@ function orderExplorePersonalSectionsForSnapshot(sections) {
   );
 }
 
+function getExploreDesktopRecommendationItemLimit(sectionKey, availableCount) {
+  const viewportWidth = typeof window !== "undefined" ? window.innerWidth : 0;
+  if (viewportWidth < 1101) return availableCount;
+
+  let minimum = 3;
+  let maximum = 4;
+  if (viewportWidth >= 1600) {
+    minimum = 5;
+    maximum = 6;
+  } else if (viewportWidth >= 1350) {
+    minimum = 4;
+    maximum = 5;
+  }
+
+  const seed = getExploreShuffleSeed(
+    `${getExplorePersonalSnapshotRotationKey(sectionKey)}:visible-count`
+  );
+  const targetCount = minimum + (seed % (maximum - minimum + 1));
+  return Math.min(availableCount, targetCount);
+}
+
+function getExploreVisibleDesktopRecommendationItems(items, sectionKey) {
+  return items.slice(0, getExploreDesktopRecommendationItemLimit(sectionKey, items.length));
+}
+
 function getExploreHourBucket(timestamp = Date.now()) {
   return getHourlyRotationKey(timestamp);
 }
@@ -18015,15 +18040,26 @@ function renderExplorePage() {
       const sectionsToRender = showPersonalFirst ? personalSections : [];
 
       const createPersonalSection = (section, index) => {
-        const items = prioritizeExploreItemsForPersonalSnapshot(
-          dedupeExploreItems(section.items, usedPersonalKeys),
+        const availableItems = section.items.filter((item) => {
+          const key = getPodcastKey(item.podcast || item);
+          return key && !usedPersonalKeys.has(key);
+        });
+        const orderedItems = prioritizeExploreItemsForPersonalSnapshot(
+          availableItems,
+          `${index}:${section.title}`
+        );
+        const items = getExploreVisibleDesktopRecommendationItems(
+          orderedItems,
           `${index}:${section.title}`
         );
         if (items.length < EXPLORE_PERSONAL_MINIMUM_GROUP_SIZE) return null;
 
         items.forEach((item) => {
           const key = getPodcastKey(item.podcast || item);
-          if (key) usedTopKeys.add(key);
+          if (key) {
+            usedPersonalKeys.add(key);
+            usedTopKeys.add(key);
+          }
         });
 
         const sectionElement = document.createElement("section");
@@ -18073,9 +18109,13 @@ function renderExplorePage() {
       );
 
       const createGemsSection = () => {
-        if (underratedItems.length < EXPLORE_PERSONAL_MINIMUM_GROUP_SIZE) return null;
+        const visibleItems = getExploreVisibleDesktopRecommendationItems(
+          underratedItems,
+          "undervurderede-perler"
+        );
+        if (visibleItems.length < EXPLORE_PERSONAL_MINIMUM_GROUP_SIZE) return null;
 
-        underratedItems.forEach((item) => {
+        visibleItems.forEach((item) => {
           const key = getPodcastKey(item.podcast || item);
           if (key) usedTopKeys.add(key);
         });
@@ -18102,7 +18142,7 @@ function renderExplorePage() {
           <div class="explore-grid"></div>
         `;
 
-        appendExploreCards(sectionElement.querySelector(".explore-grid"), underratedItems, {
+        appendExploreCards(sectionElement.querySelector(".explore-grid"), visibleItems, {
           className: "explore-card--gem"
         });
         return sectionElement;
@@ -18232,8 +18272,12 @@ function renderExplorePage() {
       favoriteGenreSections.forEach((section, genreIndex) => {
         // Lower-priority genre rows avoid podcasts already shown in either
         // personal or editorial rows, while those top sections keep separate scopes.
-        const items = prioritizeExploreItemsForPersonalSnapshot(
+        const orderedItems = prioritizeExploreItemsForPersonalSnapshot(
           dedupeExploreItems(section.podcasts, usedTopKeys),
+          `genre:${section.genreName}`
+        );
+        const items = getExploreVisibleDesktopRecommendationItems(
+          orderedItems,
           `genre:${section.genreName}`
         );
         if (items.length < EXPLORE_PERSONAL_MINIMUM_GROUP_SIZE) return;

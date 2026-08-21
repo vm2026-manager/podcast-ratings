@@ -29310,6 +29310,22 @@ html body.page-forside #pageIntroPanel .home-editorial-card__score small { color
     overflow: visible !important;
   }
 
+  html body.page-udforsk .explore-recommendations .explore-grid[data-item-count="3"] {
+    grid-template-columns: repeat(3, minmax(220px, 280px)) !important;
+  }
+
+  html body.page-udforsk .explore-recommendations .explore-grid[data-item-count="4"] {
+    grid-template-columns: repeat(4, minmax(220px, 280px)) !important;
+  }
+
+  html body.page-udforsk .explore-recommendations .explore-grid[data-item-count="5"] {
+    grid-template-columns: repeat(5, minmax(220px, 280px)) !important;
+  }
+
+  html body.page-udforsk .explore-recommendations .explore-grid[data-item-count="6"] {
+    grid-template-columns: repeat(6, minmax(220px, 280px)) !important;
+  }
+
   html body.page-udforsk .explore-recommendations.explore-recommendations--lead .explore-grid > .explore-card,
   html body.page-udforsk .explore-recommendations.explore-recommendations--secondary .explore-grid > .explore-card,
   html body.page-udforsk .explore-recommendations.explore-recommendations--gems .explore-grid > .explore-card {
