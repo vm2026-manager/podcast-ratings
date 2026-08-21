@@ -127,9 +127,12 @@
   html body.page-forside #pageIntroPanel .home-featured__title-button {
     margin: 0 !important;
     color: #fff !important;
+    background: transparent !important;
+    box-shadow: none !important;
     font-size: clamp(1.75rem, 8vw, 2.1rem) !important;
     line-height: 1.06 !important;
     text-align: left !important;
+    text-shadow: 0 2px 10px rgba(0, 0, 0, .62) !important;
   }
   html body.page-forside #pageIntroPanel .home-featured__meta {
     grid-area: meta !important;
@@ -142,6 +145,13 @@
     line-height: 1.25 !important;
   }
   html body.page-forside #pageIntroPanel .home-featured__meta * { color: rgba(255, 255, 255, .9) !important; }
+  html body.page-forside #pageIntroPanel .home-featured__meta-link {
+    padding: 0 !important;
+    border: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    text-shadow: 0 1px 7px rgba(0, 0, 0, .58) !important;
+  }
   html body.page-forside #pageIntroPanel .home-featured__meta > span:first-child { flex-basis: 100% !important; }
   html body.page-forside #pageIntroPanel .home-featured__scorecard { grid-area: score !important; margin: 0 !important; }
   html body.page-forside #pageIntroPanel .home-featured__score-item small { color: rgba(255, 255, 255, .88) !important; font-size: .74rem !important; }
