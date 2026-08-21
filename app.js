@@ -9857,7 +9857,13 @@ function renderPodcastDetailSheetContent(
         </div>
         <section class="podcast-detail-sheet__description">
           <h3>Om podcasten</h3>
-          <p>${escapeHtml(getPodcastDetailDescription(podcast))}</p>
+          <p data-podcast-detail-description>${escapeHtml(getPodcastDetailDescription(podcast))}</p>
+          <button
+            class="podcast-detail-sheet__description-toggle"
+            type="button"
+            data-podcast-detail-description-toggle
+            aria-expanded="false"
+          >Læs mere</button>
         </section>
       </div>
     </header>
@@ -10061,6 +10067,18 @@ function renderPodcastDetailSheetContent(
     state.podcastDetailDetailScrollTop = content.scrollTop || 0;
     renderPodcastDetailReviewContent(dialog, podcast, review);
     content.scrollTo?.({ top: 0, left: 0, behavior: "auto" });
+  });
+
+  const description = content.querySelector("[data-podcast-detail-description]");
+  const descriptionToggle = content.querySelector("[data-podcast-detail-description-toggle]");
+  if (description && descriptionToggle) {
+    descriptionToggle.hidden =
+      !isMobileViewport() || description.textContent.trim().length <= 220;
+  }
+  descriptionToggle?.addEventListener("click", () => {
+    const expanded = description?.classList.toggle("is-expanded") || false;
+    descriptionToggle.setAttribute("aria-expanded", String(expanded));
+    descriptionToggle.textContent = expanded ? "Vis mindre" : "Læs mere";
   });
 
   content.querySelector("[data-podcast-detail-user-review]")?.addEventListener("click", (event) => {
