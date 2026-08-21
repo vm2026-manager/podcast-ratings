@@ -36,12 +36,12 @@
     grid-template-areas: "label cover" "title cover" "meta cover" "score cover" "review review" "actions actions" "indicators controls" !important;
     align-items: start !important;
     column-gap: 14px !important;
-    row-gap: 12px !important;
-    min-height: 620px !important;
+    row-gap: 8px !important;
+    min-height: 550px !important;
     width: 100% !important;
     box-sizing: border-box !important;
     margin: 0 !important;
-    padding: 24px 20px 20px !important;
+    padding: 20px 20px 14px !important;
     overflow: hidden !important;
     border: 0 !important;
     border-radius: 0 !important;
@@ -98,7 +98,7 @@
     min-width: 0 !important;
     align-items: center !important;
     flex-wrap: wrap !important;
-    gap: 8px 12px !important;
+    gap: 6px 10px !important;
     margin: 0 !important;
   }
   html body.page-forside #pageIntroPanel .home-featured__open {
@@ -146,17 +146,44 @@
   html body.page-forside #pageIntroPanel .home-featured__scorecard { grid-area: score !important; margin: 0 !important; }
   html body.page-forside #pageIntroPanel .home-featured__score-item small { color: rgba(255, 255, 255, .88) !important; font-size: .74rem !important; }
   html body.page-forside #pageIntroPanel .home-featured__score-value { color: #fff !important; font-size: 1.5rem !important; }
+  html body.page-forside #pageIntroPanel .home-featured__review-wrap {
+    grid-area: review !important;
+    min-width: 0 !important;
+  }
   html body.page-forside #pageIntroPanel .home-featured__review {
     display: -webkit-box !important;
-    grid-area: review !important;
     margin: 0 !important;
     overflow: hidden !important;
     max-width: none !important;
     color: rgba(255, 255, 255, .88) !important;
     font-size: .92rem !important;
-    line-height: 1.45 !important;
+    line-height: 1.4 !important;
     -webkit-box-orient: vertical;
-    -webkit-line-clamp: 4;
+    -webkit-line-clamp: 3;
+  }
+  html body.page-forside #pageIntroPanel .home-featured__review.is-expanded {
+    display: block !important;
+    overflow: visible !important;
+    -webkit-line-clamp: unset !important;
+  }
+  html body.page-forside #pageIntroPanel .home-featured__review-toggle {
+    display: inline-flex !important;
+    align-items: center !important;
+    min-height: 40px !important;
+    margin: 0 !important;
+    padding: 8px 0 !important;
+    border: 0 !important;
+    color: #fffaf5 !important;
+    background: transparent !important;
+    font: 700 .9rem/1.2 "Manrope", sans-serif !important;
+    text-decoration: underline !important;
+    text-underline-offset: 3px !important;
+  }
+  html body.page-forside #pageIntroPanel .home-featured__review-toggle span { margin-left: 5px !important; }
+  html body.page-forside #pageIntroPanel .home-featured__review-toggle:focus-visible {
+    outline: 2px solid #ff7540 !important;
+    outline-offset: 3px !important;
+    border-radius: 4px !important;
   }
 
   html body.page-forside #pageIntroPanel .home-featured__controls {

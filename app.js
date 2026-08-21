@@ -10750,7 +10750,12 @@ function renderHomeFeatured(container) {
           <strong class="home-featured__score-value">${scoreMarkup}</strong>
         </span>
       </div>
-      <p class="home-featured__review">${escapeHtml(review.review || "")}</p>
+      <div class="home-featured__review-wrap">
+        <p class="home-featured__review">${escapeHtml(review.review || "")}</p>
+        <button class="home-featured__review-toggle" type="button" aria-expanded="false" hidden>
+          Læs mere <span aria-hidden="true">↓</span>
+        </button>
+      </div>
     </div>
     <div class="home-featured__controls${showNavigation ? "" : " home-featured__controls--single"}">
       <div class="home-featured__nav-group" aria-label="Skift anbefaling">
@@ -10814,6 +10819,25 @@ function renderHomeFeatured(container) {
   if (favoriteButton && podcast) {
     renderFavoriteButton(favoriteButton, featuredPodcastKey);
     favoriteButton.addEventListener("click", (event) => handleFavoriteToggle(event, podcast));
+  }
+
+  const featuredReview = container.querySelector(".home-featured__review");
+  const featuredReviewToggle = container.querySelector(".home-featured__review-toggle");
+  if (featuredReview && featuredReviewToggle) {
+    window.requestAnimationFrame(() => {
+      const isMobile = window.matchMedia?.("(max-width: 768px)").matches;
+      const hasOverflow = featuredReview.scrollHeight > featuredReview.clientHeight + 1;
+      featuredReviewToggle.hidden = !isMobile || !hasOverflow;
+    });
+
+    featuredReviewToggle.addEventListener("click", () => {
+      const expanded = !featuredReview.classList.contains("is-expanded");
+      featuredReview.classList.toggle("is-expanded", expanded);
+      featuredReviewToggle.setAttribute("aria-expanded", String(expanded));
+      featuredReviewToggle.innerHTML = expanded
+        ? 'Vis mindre <span aria-hidden="true">↑</span>'
+        : 'Læs mere <span aria-hidden="true">↓</span>';
+    });
   }
 
   const setPreviewImage = (selector, sources, title, cacheVersion) => {
