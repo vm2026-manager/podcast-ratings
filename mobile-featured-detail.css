@@ -36,12 +36,12 @@
     grid-template-areas: "label cover" "title cover" "meta cover" "score cover" "review review" "actions actions" "indicators controls" !important;
     align-items: start !important;
     column-gap: 14px !important;
-    row-gap: 8px !important;
+    row-gap: 13px !important;
     min-height: 550px !important;
     width: 100% !important;
     box-sizing: border-box !important;
     margin: 0 !important;
-    padding: 20px 20px 14px !important;
+    padding: 20px 20px 10px !important;
     overflow: hidden !important;
     border: 0 !important;
     border-radius: 0 !important;
@@ -191,6 +191,7 @@
     position: static !important;
     z-index: 3;
     display: flex !important;
+    align-self: start !important;
     align-items: center !important;
     justify-self: end !important;
     margin: 0 !important;
@@ -210,7 +211,7 @@
     position: static !important;
     z-index: 3;
     justify-self: start !important;
-    align-self: center !important;
+    align-self: start !important;
     min-height: 44px !important;
     margin: 0 !important;
   }
