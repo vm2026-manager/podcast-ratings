@@ -9873,32 +9873,45 @@ function renderPodcastDetailSheetContent(
     </header>
     <section class="podcast-detail-sheet__ratings" aria-label="Vurderinger">
       <div class="podcast-detail-sheet__rating-cell podcast-detail-sheet__rating-cell--mads">
-        <span>Podcastlistens vurdering</span>
+        <span class="podcast-detail-sheet__rating-icon" aria-hidden="true">★</span>
+        <span class="podcast-detail-sheet__rating-label">Podcastlistens vurdering</span>
         <strong>${escapeHtml(rating.mads)}<small>/10</small></strong>
       </div>
       <div class="podcast-detail-sheet__rating-cell podcast-detail-sheet__rating-cell--users">
-        <span>Brugernes vurdering</span>
+        <span class="podcast-detail-sheet__rating-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3"></circle><circle cx="17" cy="9" r="2.4"></circle><path d="M3.5 19c.35-3.2 2.3-5 5.5-5s5.15 1.8 5.5 5M14 15c2.5.2 4 1.55 4.35 4"></path></svg>
+        </span>
+        <span class="podcast-detail-sheet__rating-label">Brugernes vurdering</span>
         <strong>${escapeHtml(rating.users)}<small>/10</small></strong>
         <em>${escapeHtml(userCountText)}</em>
       </div>
       <div class="podcast-detail-sheet__rating-cell podcast-detail-sheet__rating-cell--own" aria-label="Din vurdering">
-        <span>Din vurdering</span>
-        <div class="podcast-detail-sheet__own-rating-control">
+        <span class="podcast-detail-sheet__rating-label">Din vurdering</span>
+        <label class="podcast-detail-sheet__own-rating-control podcast-detail-sheet__own-rating-picker">
+          <span class="podcast-detail-sheet__rating-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24"><rect x="4" y="3" width="16" height="18" rx="3"></rect><path d="M8 8h.01M12 8h.01M16 8h.01M8 12h.01M12 12h.01M16 12h.01M8 16h.01M12 16h.01M16 16h.01"></path></svg>
+          </span>
+          <span class="podcast-detail-sheet__own-rating-copy">
           <input
             class="podcast-detail-sheet__own-rating-input${isOwnRatingLocked ? " is-episode-calculated" : ""}"
-            type="${isOwnRatingLocked ? "text" : "number"}"
+            type="text"
             min="0"
             max="10"
             step="0.1"
             inputmode="decimal"
-            placeholder="–"
+            pattern="[0-9]*[.,]?[0-9]*"
+            autocomplete="off"
+            enterkeyhint="done"
+            placeholder="Vælg din score"
             value="${escapeHtml(ownRatingValue)}"
             data-podcast-detail-inline-rating-input
             aria-label="Din vurdering fra 0 til 10"
             ${isOwnRatingLocked ? 'disabled aria-describedby="podcastDetailEpisodeRatingLockHelp"' : ""}
           />
-          <span>/10</span>
-        </div>
+          <small>${isOwnRatingLocked ? "Beregnet fra episoder" : "Tryk for at vælge 0–10"}</small>
+          </span>
+          <span class="podcast-detail-sheet__own-rating-suffix">/10</span>
+        </label>
         ${
           isOwnRatingLocked
             ? ""
