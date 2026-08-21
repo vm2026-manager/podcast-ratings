@@ -16091,18 +16091,7 @@ function getExploreSeedSectionItems(
     genre,
     usedKeys
   });
-  if (productItems !== null) {
-    if (productItems.length >= limit) return productItems;
-
-    const productKeys = new Set(productItems.map((item) => getPodcastKey(item.podcast)));
-    const relatedFallback = getExploreRelatedItems(seed, {
-      limit: limit * 3,
-      searchParts,
-      genre
-    }).filter((item) => !productKeys.has(getPodcastKey(item.podcast)) && !usedKeys.has(getPodcastKey(item.podcast)));
-
-    return productItems.concat(relatedFallback).slice(0, limit);
-  }
+  if (productItems !== null) return productItems;
 
   // Product data may be unavailable during initial load. Keep the established
   // host/series/genre matcher as a temporary lower-priority fallback only.
