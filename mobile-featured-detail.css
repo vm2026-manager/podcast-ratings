@@ -1,4 +1,8 @@
 /* Mobile-only composition for the existing featured recommendation and detail sheet. */
+@media (min-width: 769px) {
+  .podcast-detail-sheet__description--mobile { display: none; }
+}
+
 @media (max-width: 768px) {
   /* Structured mobile composition for the existing weekly recommendation hero. */
   html body.page-forside #pageIntroPanel .home-featured {
@@ -273,7 +277,8 @@
   }
   html body #podcastDetailSheet .podcast-detail-sheet__header {
     grid-template-columns: 112px minmax(0, 1fr) !important;
-    gap: 11px !important;
+    column-gap: 11px !important;
+    row-gap: 0 !important;
     align-items: start !important;
   }
   html body #podcastDetailSheet .podcast-detail-sheet__cover { width: 112px !important; height: 112px !important; }
@@ -289,9 +294,10 @@
   html body #podcastDetailSheet .podcast-detail-sheet__chips { gap: 4px !important; margin-bottom: 6px !important; }
   html body #podcastDetailSheet .podcast-detail-sheet__chip,
   html body #podcastDetailSheet .podcast-detail-sheet__genre { min-height: 24px !important; padding: 0 7px !important; font-size: .66rem !important; }
-  html body #podcastDetailSheet .podcast-detail-sheet__description { grid-column: 1 / -1; }
-  html body #podcastDetailSheet .podcast-detail-sheet__description h3 { margin-bottom: 4px !important; font-size: .94rem !important; }
-  html body #podcastDetailSheet .podcast-detail-sheet__description p {
+  html body #podcastDetailSheet .podcast-detail-sheet__description--desktop { display: none !important; }
+  html body #podcastDetailSheet .podcast-detail-sheet__description--mobile { grid-column: 1 / -1; }
+  html body #podcastDetailSheet .podcast-detail-sheet__description--mobile h3 { margin-bottom: 4px !important; font-size: .94rem !important; }
+  html body #podcastDetailSheet .podcast-detail-sheet__description--mobile p {
     display: -webkit-box !important;
     overflow: hidden !important;
     -webkit-box-orient: vertical !important;
@@ -299,7 +305,7 @@
     font-size: .88rem !important;
     line-height: 1.38 !important;
   }
-  html body #podcastDetailSheet .podcast-detail-sheet__description p.is-expanded { display: block !important; }
+  html body #podcastDetailSheet .podcast-detail-sheet__description--mobile p.is-expanded { display: block !important; }
   html body #podcastDetailSheet .podcast-detail-sheet__description-toggle {
     min-height: 32px !important;
     margin-top: 2px !important;

@@ -9855,17 +9855,21 @@ function renderPodcastDetailSheetContent(
           ${publisherMarkup}
           ${mainSeriesMarkup}
         </div>
-        <section class="podcast-detail-sheet__description">
+        <section class="podcast-detail-sheet__description podcast-detail-sheet__description--desktop">
           <h3>Om podcasten</h3>
-          <p data-podcast-detail-description>${escapeHtml(getPodcastDetailDescription(podcast))}</p>
-          <button
-            class="podcast-detail-sheet__description-toggle"
-            type="button"
-            data-podcast-detail-description-toggle
-            aria-expanded="false"
-          >Læs mere</button>
+          <p>${escapeHtml(getPodcastDetailDescription(podcast))}</p>
         </section>
       </div>
+      <section class="podcast-detail-sheet__description podcast-detail-sheet__description--mobile">
+        <h3>Om podcasten</h3>
+        <p data-podcast-detail-description>${escapeHtml(getPodcastDetailDescription(podcast))}</p>
+        <button
+          class="podcast-detail-sheet__description-toggle"
+          type="button"
+          data-podcast-detail-description-toggle
+          aria-expanded="false"
+        >Læs mere</button>
+      </section>
     </header>
     <section class="podcast-detail-sheet__ratings" aria-label="Vurderinger">
       <div class="podcast-detail-sheet__rating-cell podcast-detail-sheet__rating-cell--mads">
