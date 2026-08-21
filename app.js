@@ -6432,7 +6432,6 @@ async function toggleSavedPodcast(podcast) {
   } finally {
     state.favoriteSavePendingKeys.delete(podcastKey);
     updateFavoriteButtonsForPodcast(podcastKey, isPodcastSaved(podcastKey), false);
-    if (document.body.classList.contains("page-udforsk")) renderExplorePage();
   }
 }
 
