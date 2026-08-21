@@ -127,6 +127,8 @@
   html body.page-forside #pageIntroPanel .home-featured__title-button {
     margin: 0 !important;
     color: #fff !important;
+    appearance: none !important;
+    -webkit-appearance: none !important;
     background: transparent !important;
     box-shadow: none !important;
     font-size: clamp(1.75rem, 8vw, 2.1rem) !important;
@@ -146,6 +148,8 @@
   }
   html body.page-forside #pageIntroPanel .home-featured__meta * { color: rgba(255, 255, 255, .9) !important; }
   html body.page-forside #pageIntroPanel .home-featured__meta-link {
+    appearance: none !important;
+    -webkit-appearance: none !important;
     padding: 0 !important;
     border: 0 !important;
     background: transparent !important;
