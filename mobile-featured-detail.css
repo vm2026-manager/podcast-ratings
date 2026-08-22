@@ -520,6 +520,103 @@
   html body #podcastDetailSheet .podcast-detail-sheet__rating-cell--own > em {
     display: none !important;
   }
+
+  /* Keep the sheet itself fixed-width. The related rail owns its horizontal
+     scrolling; no other detail surface may create an x-axis scroll range. */
+  html body.has-podcast-detail-open,
+  html body.has-podcast-detail-open #podcastDetailSheet {
+    overscroll-behavior-x: none !important;
+  }
+  html body #podcastDetailSheet .podcast-detail-sheet__panel {
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+    overflow-x: clip !important;
+    overscroll-behavior-x: none !important;
+  }
+  html body #podcastDetailSheet .podcast-detail-sheet__content {
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+    overflow-x: hidden !important;
+    overscroll-behavior-x: none !important;
+    touch-action: pan-y !important;
+  }
+  html body #podcastDetailSheet .podcast-detail-sheet__header,
+  html body #podcastDetailSheet .podcast-detail-sheet__intro,
+  html body #podcastDetailSheet .podcast-detail-sheet__chips,
+  html body #podcastDetailSheet .podcast-detail-sheet__recommendation-row,
+  html body #podcastDetailSheet .podcast-detail-sheet__related,
+  html body #podcastDetailSheet .podcast-detail-sheet__related-section {
+    min-width: 0 !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+  }
+
+  /* The desktop tooltip is invisible on touch screens but still had a 205px
+     box in layout, widening the header's scrollable area. */
+  html body #podcastDetailSheet .podcast-detail-sheet__episode-entry-tooltip {
+    right: 0 !important;
+    left: auto !important;
+    max-width: min(205px, 100%) !important;
+    transform: translateY(-3px) !important;
+  }
+  html body #podcastDetailSheet .podcast-detail-sheet__episode-entry-tooltip::before {
+    right: 18px !important;
+    left: auto !important;
+    transform: rotate(45deg) !important;
+  }
+
+  /* A compact, full-size touch target keeps episode ratings discoverable
+     without letting its pill dominate the narrow header column. */
+  html body #podcastDetailSheet .podcast-detail-sheet__episode-entry-button {
+    width: fit-content !important;
+    max-width: 100% !important;
+    min-height: 44px !important;
+    padding: 0 8px !important;
+    gap: 5px !important;
+    border-radius: 10px !important;
+    font-size: .7rem !important;
+    line-height: 1 !important;
+  }
+  html body #podcastDetailSheet .podcast-detail-sheet__episode-entry-button svg {
+    width: 15px !important;
+    height: 15px !important;
+    flex: 0 0 auto !important;
+  }
+  html body #podcastDetailSheet .podcast-detail-sheet__meta {
+    margin-bottom: 2px !important;
+  }
+  html body #podcastDetailSheet .podcast-detail-sheet__chips {
+    row-gap: 0 !important;
+    margin-bottom: 2px !important;
+  }
+  html body #podcastDetailSheet .podcast-detail-sheet__chip,
+  html body #podcastDetailSheet .podcast-detail-sheet__genre {
+    min-height: 20px !important;
+  }
+
+  /* iOS Safari zooms controls rendered below 16px. Keep the real decimal
+     input at the native threshold; no scaling or viewport restriction. */
+  html body #podcastDetailSheet .podcast-detail-sheet__own-rating-input {
+    height: 26px !important;
+    font-size: 16px !important;
+    line-height: 1.15 !important;
+  }
+
+  /* Preserve the intentional horizontal rail while stopping it from widening
+     the sheet through its former negative outer margin. */
+  html body #podcastDetailSheet .podcast-detail-sheet__related-track {
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+    margin-right: 0 !important;
+    padding-right: 0 !important;
+    overflow-x: auto !important;
+    overscroll-behavior-x: contain !important;
+    touch-action: pan-x !important;
+  }
 }
 @media (max-width: 380px) {
   html body.page-forside #pageIntroPanel .home-featured__surface {
