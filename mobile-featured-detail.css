@@ -357,7 +357,7 @@
      the real decimal input read as a clear, tap-first score selector. */
   html body #podcastDetailSheet .podcast-detail-sheet__intro {
     position: relative !important;
-    padding-right: 48px !important;
+    padding-right: 46px !important;
   }
   html body #podcastDetailSheet .podcast-detail-sheet__intro-actions {
     position: absolute !important;
@@ -595,13 +595,13 @@
     width: fit-content !important;
     max-width: 100% !important;
     min-height: 44px !important;
-    padding: 0 7px !important;
+    padding: 0 4px !important;
     gap: 4px !important;
     border-color: rgba(225, 105, 49, .56) !important;
     border-radius: 9px !important;
     background: rgba(255, 250, 247, .4) !important;
     box-shadow: none !important;
-    font-size: .68rem !important;
+    font-size: .66rem !important;
     line-height: 1 !important;
   }
   html body #podcastDetailSheet .podcast-detail-sheet__episode-entry-button svg {
