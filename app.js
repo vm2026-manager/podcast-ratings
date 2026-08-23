@@ -655,6 +655,7 @@ const state = {
   profileSuggestionsLoadedFor: null,
   profileSuggestionsLoading: false,
   profileSuggestionsError: "",
+  suggestionNotificationTarget: null,
   adminPodcastSuggestions: [],
   adminPodcastSuggestionsLoadedFor: null,
   adminPodcastSuggestionsLoading: false,
@@ -3714,6 +3715,98 @@ function isPodcastSuggestionAdmin() {
   return PODCAST_SUGGESTION_ADMIN_EMAILS.has(getCurrentUserEmail());
 }
 
+function getUnreadSuggestionItems() {
+  const items = isPodcastSuggestionAdmin() ? state.adminPodcastSuggestions : state.profileSuggestions;
+  return (items || []).filter((suggestion) => isPodcastSuggestionAdmin()
+    ? normalizeComparable(suggestion.status) === "new" && !suggestion.moderator_seen_at
+    : Boolean(suggestion.reviewed_at) && !suggestion.user_seen_response_at
+  ).sort((a, b) => new Date((b.reviewed_at || b.created_at) || 0) - new Date((a.reviewed_at || a.created_at) || 0));
+}
+
+function getSuggestionUnreadCount() {
+  return getUnreadSuggestionItems().length;
+}
+
+function formatSuggestionUnreadCount(count) {
+  return count >= 10 ? "9+" : String(count);
+}
+
+function renderSuggestionNotificationBadges() {
+  const count = getSuggestionUnreadCount();
+  const label = count ? formatSuggestionUnreadCount(count) : "";
+  const unreadLabel = count ? `${label} ulæste podcastforslag` : "";
+  document.querySelectorAll(".suggestion-notification-badge").forEach((badge) => {
+    badge.textContent = label;
+    badge.classList.toggle("is-hidden", !count);
+    badge.setAttribute("aria-label", unreadLabel);
+  });
+  document.querySelectorAll("[data-home-account-toggle]").forEach((button) => {
+    button.setAttribute("aria-label", unreadLabel ? `Åbn profilmenu, ${unreadLabel}` : "Åbn profilmenu");
+  });
+  if (elements.desktopUserButton && isLoggedIn()) {
+    const currentLabel = getProfileDisplayName() || normalizeText(state.authUser?.email) || "Din profil";
+    elements.desktopUserButton.setAttribute("aria-label", unreadLabel
+      ? `Åbn brugermenu for ${currentLabel}, ${unreadLabel}`
+      : `Åbn brugermenu for ${currentLabel}`);
+  }
+}
+
+function navigateToSuggestionNotification() {
+  const target = getUnreadSuggestionItems()[0];
+  if (!target) {
+    window.location.hash = "#profil";
+    return;
+  }
+  state.suggestionNotificationTarget = { id: target.id, moderator: isPodcastSuggestionAdmin() };
+  if (isPodcastSuggestionAdmin()) state.adminPodcastSuggestionFilter = "new";
+  window.location.hash = isPodcastSuggestionAdmin() ? "#moderator" : "#profil";
+}
+
+async function markSuggestionNotificationTargetSeen(target) {
+  if (!target?.id || !state.supabase) return;
+  const rpc = target.moderator
+    ? "mark_podcast_suggestion_seen_by_moderator"
+    : "mark_podcast_suggestion_response_seen";
+  const { error } = await state.supabase.rpc(rpc, { p_suggestion_id: target.id });
+  if (error) return;
+  const list = target.moderator ? state.adminPodcastSuggestions : state.profileSuggestions;
+  const field = target.moderator ? "moderator_seen_at" : "user_seen_response_at";
+  const seenAt = new Date().toISOString();
+  const next = list.map((item) => normalizeText(item.id) === normalizeText(target.id) ? { ...item, [field]: seenAt } : item);
+  if (target.moderator) state.adminPodcastSuggestions = next; else state.profileSuggestions = next;
+  renderSuggestionNotificationBadges();
+}
+
+function revealSuggestionNotificationTarget() {
+  const target = state.suggestionNotificationTarget;
+  if (!target) return;
+  const card = document.querySelector(`[data-suggestion-id="${CSS.escape(target.id)}"]`);
+  if (!card) return;
+
+  card.closest(".profile-suggestions-panel")?.classList.add("is-expanded");
+  state.suggestionNotificationTarget = null;
+  const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  card.scrollIntoView({ behavior: prefersReducedMotion ? "auto" : "smooth", block: "center" });
+  card.classList.add("is-notification-target");
+  window.setTimeout(() => card.classList.remove("is-notification-target"), 2000);
+
+  let targetingFrames = 0;
+  const markWhenTargeted = () => {
+    const rect = card.getBoundingClientRect();
+    if (rect.bottom > 0 && rect.top < window.innerHeight) {
+      markSuggestionNotificationTargetSeen(target);
+      return;
+    }
+    if (targetingFrames >= 60) {
+      state.suggestionNotificationTarget = target;
+      return;
+    }
+    targetingFrames += 1;
+    window.requestAnimationFrame(markWhenTargeted);
+  };
+  window.requestAnimationFrame(markWhenTargeted);
+}
+
 function isProfileSavedRoute() {
   return window.location.hash.slice(1).toLowerCase() === "profil-gemte";
 }
@@ -3781,6 +3874,15 @@ function bindHomeAccountMenu(root = elements.pageIntroPanel) {
       return;
     }
 
+    if (event.target.closest("[data-suggestion-profile-link]")) {
+      if (getSuggestionUnreadCount()) {
+        event.preventDefault();
+        closeHomeAccountMenu();
+        navigateToSuggestionNotification();
+      }
+      return;
+    }
+
     if (event.target.closest("a")) {
       closeHomeAccountMenu();
     }
@@ -3799,10 +3901,10 @@ function getMobileToplineProfileMarkup() {
           aria-expanded="false"
           data-home-account-toggle
         >
-          ${escapeHtml(initial)}
+          ${escapeHtml(initial)}<span class="suggestion-notification-badge${getSuggestionUnreadCount() ? "" : " is-hidden"}" aria-label="${getSuggestionUnreadCount() ? `${formatSuggestionUnreadCount(getSuggestionUnreadCount())} ulæste podcastforslag` : ""}">${getSuggestionUnreadCount() ? formatSuggestionUnreadCount(getSuggestionUnreadCount()) : ""}</span>
         </button>
         <div class="home-account-menu__panel" data-home-account-menu hidden>
-          <a class="home-account-menu__item" href="#profil">G\u00e5 til profil</a>
+          <a class="home-account-menu__item" href="#profil" data-suggestion-profile-link>G\u00e5 til profil</a>
           <button class="home-account-menu__item home-account-menu__item--logout" type="button" data-home-logout>
             Log ud
           </button>
@@ -3849,7 +3951,7 @@ function getProfileMobilePageHeadingMarkup() {
 
 function handleMobileToplineProfileClick() {
   if (isLoggedIn()) {
-    window.location.hash = "#profil";
+    navigateToSuggestionNotification();
     return;
   }
 
@@ -4168,6 +4270,16 @@ function renderAuthPanel() {
 
   renderStaticMobileToplines();
   renderDesktopUserArea();
+
+  if (loggedIn && state.supabase) {
+    if (isPodcastSuggestionAdmin()) {
+      if (state.adminPodcastSuggestionsLoadedFor !== state.authUser?.id && !state.adminPodcastSuggestionsLoading) {
+        fetchPodcastSuggestionsForAdmin();
+      }
+    } else if (state.profileSuggestionsLoadedFor !== state.authUser?.id && !state.profileSuggestionsLoading) {
+      fetchProfileSuggestions();
+    }
+  }
 
   if (elements.savedPodcastCount) {
     elements.savedPodcastCount.textContent = String(state.savedPodcastKeys.size);
@@ -12489,6 +12601,7 @@ function clearUserScopedState({ clearUi = false } = {}) {
   state.profileSuggestionsLoadedFor = null;
   state.profileSuggestionsLoading = false;
   state.profileSuggestionsError = "";
+  state.suggestionNotificationTarget = null;
   state.adminPodcastSuggestions = [];
   state.adminPodcastSuggestionsLoadedFor = null;
   state.adminPodcastSuggestionsLoading = false;
@@ -12757,6 +12870,10 @@ function createProfileSuggestionCardElement(suggestion) {
     normalizeComparable(suggestion.status) === "approved"
       ? findPodcastByCatalogueId(suggestion.catalogue_podcast_id)
       : null;
+  const reviewedDate = formatSuggestionDateTime(suggestion.reviewed_at);
+  const responseMarkup = normalizeText(suggestion.admin_note)
+    ? `<section class="profile-suggestion-card__response"><strong>Svar fra Podcastlisten</strong><p>${escapeHtml(suggestion.admin_note)}</p></section>`
+    : "";
 
   card.innerHTML = `
     <header class="profile-suggestion-card__header">
@@ -12771,6 +12888,8 @@ function createProfileSuggestionCardElement(suggestion) {
       ${platformMarkup}
       ${commentMarkup}
     </div>
+    ${reviewedDate ? `<p class="profile-suggestion-card__reviewed">Behandlet: ${escapeHtml(reviewedDate)}</p>` : ""}
+    ${responseMarkup}
     ${linkedPodcast ? `<div class="profile-suggestion-card__actions"><button class="profile-button profile-button--quiet" type="button" data-suggestion-open-podcast="${escapeHtml(linkedPodcast.catalogueId)}">Se podcast</button></div>` : ""}
   `;
 
@@ -12841,6 +12960,8 @@ function renderProfileSuggestionsSectionContent(container = document) {
     });
   });
 
+  window.requestAnimationFrame(revealSuggestionNotificationTarget);
+
 }
 
 async function fetchProfileSuggestions() {
@@ -12853,14 +12974,14 @@ async function fetchProfileSuggestions() {
   try {
     let { data, error } = await state.supabase
       .from("podcast_suggestions")
-      .select("id, title, podcast_url, platform, comment, status, created_at, catalogue_podcast_id")
+      .select("id, title, podcast_url, platform, comment, status, created_at, reviewed_at, admin_note, catalogue_podcast_id, user_seen_response_at")
       .eq("suggested_by_user_id", userId)
       .order("created_at", { ascending: false });
 
     if (error && normalizeText(error.message).toLowerCase().includes("catalogue_podcast_id")) {
       ({ data, error } = await state.supabase
         .from("podcast_suggestions")
-        .select("id, title, podcast_url, platform, comment, status, created_at")
+        .select("id, title, podcast_url, platform, comment, status, created_at, reviewed_at, admin_note, user_seen_response_at")
         .eq("suggested_by_user_id", userId)
         .order("created_at", { ascending: false }));
     }
@@ -12869,6 +12990,7 @@ async function fetchProfileSuggestions() {
 
     state.profileSuggestions = data || [];
     state.profileSuggestionsLoadedFor = userId;
+    renderSuggestionNotificationBadges();
   } catch (error) {
     console.error(error);
     state.profileSuggestions = [];
@@ -13161,6 +13283,7 @@ function renderModeratorPage() {
     renderModeratorPage();
   }));
   bindModeratorSuggestionActions(container);
+  window.requestAnimationFrame(revealSuggestionNotificationTarget);
   if (!loaded) fetchPodcastSuggestionsForAdmin();
 }
 
@@ -13178,7 +13301,7 @@ function createModeratorSuggestionMarkup(suggestion) {
     <dl class="moderator-suggestion__meta"><div><dt>Indsendt af</dt><dd>${escapeHtml(suggestion.suggested_by_email || "Ikke oplyst")}</dd></div><div><dt>Dato</dt><dd>${escapeHtml(formatSuggestionDateTime(suggestion.created_at) || "Ikke oplyst")}</dd></div>${suggestion.platform ? `<div><dt>Platform</dt><dd>${escapeHtml(suggestion.platform)}</dd></div>` : ""}${suggestion.podcast_url ? `<div class="moderator-suggestion__url"><dt>Podcastlink</dt><dd><a href="${escapeHtml(suggestion.podcast_url)}" target="_blank" rel="noopener noreferrer">${escapeHtml(suggestion.podcast_url)}</a></dd></div>` : ""}</dl>
     ${suggestion.comment ? `<section class="moderator-suggestion__comment"><h3>Kommentar</h3><p>${escapeHtml(suggestion.comment)}</p></section>` : ""}
     ${status !== "rejected" ? renderModeratorCatalogueMatchControl(linkedPodcast, pending, state.adminPodcastSuggestionCatalogueDrafts.has(suggestion.id)) : ""}
-    ${status === "new" ? `<label class="moderator-suggestion__note"><span>Intern note <small>(kun moderatorer)</small></span><textarea rows="2" data-admin-suggestion-note placeholder="Tilføj eventuel intern kontekst" ${pending ? "disabled" : ""}>${escapeHtml(savedNote)}</textarea></label><div class="moderator-suggestion__actions" aria-label="Moderation"><button type="button" class="moderator-action moderator-action--reject" data-admin-suggestion-status="rejected" ${pending ? "disabled" : ""}>${pending ? "Gemmer..." : "Afvis"}</button><button type="button" class="moderator-action moderator-action--approve" data-admin-suggestion-status="approved" ${pending ? "disabled" : ""}>${pending ? "Gemmer..." : "Godkend"}</button></div>` : `<section class="moderator-suggestion__decision"><p><strong>Besluttet:</strong> ${escapeHtml(reviewed || "Tidspunkt ikke tilgængeligt")}</p><p><strong>Behandlet af:</strong> ${suggestion.reviewed_by_user_id ? "Moderator" : "Ikke oplyst"}</p>${suggestion.admin_note ? `<p><strong>Intern note:</strong> ${escapeHtml(suggestion.admin_note)}</p>` : ""}</section>`}
+    ${status === "new" ? `<label class="moderator-suggestion__note"><span>Svar til brugeren <small>(valgfrit)</small></span><textarea rows="2" data-admin-suggestion-note placeholder="Skriv eventuelt en kort besked til brugeren" ${pending ? "disabled" : ""}>${escapeHtml(savedNote)}</textarea></label><div class="moderator-suggestion__actions" aria-label="Moderation"><button type="button" class="moderator-action moderator-action--reject" data-admin-suggestion-status="rejected" ${pending ? "disabled" : ""}>${pending ? "Gemmer..." : "Afvis"}</button><button type="button" class="moderator-action moderator-action--approve" data-admin-suggestion-status="approved" ${pending ? "disabled" : ""}>${pending ? "Gemmer..." : "Godkend"}</button></div>` : `<section class="moderator-suggestion__decision"><p><strong>Besluttet:</strong> ${escapeHtml(reviewed || "Tidspunkt ikke tilgængeligt")}</p>${suggestion.admin_note ? `<p><strong>Svar til brugeren:</strong> ${escapeHtml(suggestion.admin_note)}</p>` : ""}</section>`}
   </article>`;
 }
 
@@ -13265,18 +13388,19 @@ async function fetchPodcastSuggestionsForAdmin() {
   try {
     let { data, error } = await state.supabase
       .from("podcast_suggestions")
-      .select("id, title, podcast_url, platform, comment, suggested_by_email, status, created_at, reviewed_at, reviewed_by_user_id, admin_note, catalogue_podcast_id")
+      .select("id, title, podcast_url, platform, comment, suggested_by_email, status, created_at, reviewed_at, reviewed_by_user_id, admin_note, catalogue_podcast_id, moderator_seen_at")
       .order("created_at", { ascending: false });
     if (error && normalizeText(error.message).toLowerCase().includes("catalogue_podcast_id")) {
       ({ data, error } = await state.supabase
         .from("podcast_suggestions")
-        .select("id, title, podcast_url, platform, comment, suggested_by_email, status, created_at, reviewed_at, reviewed_by_user_id, admin_note")
+        .select("id, title, podcast_url, platform, comment, suggested_by_email, status, created_at, reviewed_at, reviewed_by_user_id, admin_note, moderator_seen_at")
         .order("created_at", { ascending: false }));
     }
     if (error) throw error;
 
     state.adminPodcastSuggestions = data || [];
     state.adminPodcastSuggestionsLoadedFor = state.authUser.id;
+    renderSuggestionNotificationBadges();
   } catch (error) {
     console.error("Podcast suggestion admin fetch failed", error);
     state.adminPodcastSuggestions = [];
@@ -13420,6 +13544,8 @@ function renderDesktopUserArea() {
   if (elements.desktopUserMeta) {
     elements.desktopUserMeta.textContent = meta;
   }
+
+  renderSuggestionNotificationBadges();
 
   if (!loggedIn) {
     closeDesktopUserMenu();
@@ -19625,7 +19751,7 @@ function setupEvents() {
 
   elements.desktopUserProfileLink?.addEventListener("click", () => {
     closeDesktopUserMenu();
-    window.location.hash = "#profil";
+    navigateToSuggestionNotification();
   });
 
   elements.desktopUserLogoutButton?.addEventListener("click", () => {

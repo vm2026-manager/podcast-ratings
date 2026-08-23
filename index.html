@@ -16,7 +16,7 @@
       rel="stylesheet"
     />
 
-    <link rel="stylesheet" href="style.css?v=20260820-mobile-visual-top-v10" />
+    <link rel="stylesheet" href="style.css?v=20260823-suggestion-notifications-v1" />
     <link rel="stylesheet" href="explore-mobile-stack.css?v=2026-07-19-desktop-home-package-02" />
     <link rel="stylesheet" href="mobile-home-ranking-polish.css?v=20260813-mobile-podcast-modal-breakpoint-fix" />
     <link rel="stylesheet" href="desktop-home-mockup.css?v=20260820-carousel-hitareas-v1" />
@@ -50,7 +50,7 @@
       })();
     </script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
-    <script src="app.js?v=20260820-password-recovery-v29" defer></script>
+    <script src="app.js?v=20260823-suggestion-notifications-v1" defer></script>
   </head>
 
   <body>
@@ -88,6 +88,7 @@
 
         <button id="desktopUserButton" class="desktop-user-button" type="button" aria-label="Gå til profil">
           <span id="desktopUserAvatar" class="desktop-user-button__avatar" aria-hidden="true">?</span>
+          <span id="desktopSuggestionUnreadBadge" class="suggestion-notification-badge is-hidden" aria-label="Ulæste podcastforslag"></span>
           <span class="desktop-user-button__copy">
             <span id="desktopUserLabel" class="desktop-user-button__label">Log ind</span>
             <span id="desktopUserMeta" class="desktop-user-button__meta">Profil</span>
@@ -95,7 +96,7 @@
         </button>
         <div id="desktopUserMenu" class="desktop-user-menu is-hidden" aria-hidden="true">
           <button id="desktopUserProfileLink" class="desktop-user-menu__item" type="button">
-            Min profil
+            <span>Min profil</span><span id="desktopSuggestionMenuBadge" class="suggestion-notification-badge suggestion-notification-badge--menu is-hidden"></span>
           </button>
           <button id="desktopUserLogoutButton" class="desktop-user-menu__item desktop-user-menu__item--danger" type="button">
             Log ud

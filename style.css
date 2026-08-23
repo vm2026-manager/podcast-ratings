@@ -29298,3 +29298,87 @@ html body.page-forside #pageIntroPanel .home-editorial-card__score small { color
   html body.page-forside #pageIntroPanel .home-editorial-card { height: 94px; min-height: 94px; grid-template-columns: 56px minmax(0, 1fr) auto; grid-template-rows: none; gap: 9px; padding: 9px; }
   html body.page-forside #pageIntroPanel .home-editorial-card__cover { width: 56px; height: 56px; }
 }
+
+/* Podcast suggestion unread state: badges augment existing profile controls without changing their layout. */
+.suggestion-notification-badge {
+  position: absolute;
+  z-index: 2;
+  top: -5px;
+  right: -5px;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 4px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  border: 2px solid #fffaf4;
+  border-radius: 999px;
+  background: var(--accent, #ff5c16);
+  color: #fff;
+  font-size: 0.65rem;
+  font-weight: 900;
+  line-height: 1;
+  pointer-events: none;
+}
+
+.suggestion-notification-badge.is-hidden {
+  display: none !important;
+}
+
+html body .home-account-menu__toggle,
+html body .desktop-user-button,
+html body .desktop-user-button__avatar {
+  position: relative;
+}
+
+html body .desktop-user-button > .suggestion-notification-badge {
+  top: 0;
+  left: 29px;
+  right: auto;
+}
+
+html body .desktop-user-menu__item {
+  justify-content: space-between;
+}
+
+html body .suggestion-notification-badge--menu {
+  position: static;
+  min-width: 18px;
+  margin-left: 10px;
+  border-width: 0;
+}
+
+html body .profile-suggestion-card__response {
+  margin-top: 10px;
+  padding: 10px 12px;
+  border: 1px solid rgba(255, 92, 22, 0.2);
+  border-radius: 12px;
+  background: rgba(255, 92, 22, 0.06);
+}
+
+html body .profile-suggestion-card__response strong {
+  color: #a8461b;
+  font-size: 0.83rem;
+}
+
+html body .profile-suggestion-card__response p {
+  margin: 4px 0 0;
+}
+
+html body [data-suggestion-id].is-notification-target {
+  outline: 3px solid rgba(255, 92, 22, 0.78);
+  outline-offset: 3px;
+  background-color: rgba(255, 244, 236, 0.96) !important;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  html body [data-suggestion-id].is-notification-target {
+    animation: suggestion-notification-target 1.6s ease-out;
+  }
+}
+
+@keyframes suggestion-notification-target {
+  0%, 100% { outline-color: rgba(255, 92, 22, 0.35); }
+  30%, 65% { outline-color: rgba(255, 92, 22, 0.95); }
+}
