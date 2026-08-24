@@ -34,4 +34,24 @@ html body .home-podcast-search { display: none; }
   html body.page-forside .home-podcast-search__copy span, html body.page-forside .home-podcast-search__match { color: #7d6655; font-size: .72rem; line-height: 1.2; }
   html body.page-forside .home-podcast-search__match { white-space: nowrap; }
   html body.page-forside .home-podcast-search__empty { margin: 0; padding: 14px; color: #6f5c4d; font-size: .84rem; }
+
+  html body.has-home-search-focus.page-forside .home-podcast-search.is-focused {
+    position: fixed;
+    z-index: 1800;
+    top: var(--home-search-viewport-top, 12px);
+    right: max(16px, env(safe-area-inset-right, 0px));
+    left: max(16px, env(safe-area-inset-left, 0px));
+    width: auto;
+    margin: 0;
+  }
+
+  html body.has-home-search-focus.page-forside .home-podcast-search.is-focused .home-podcast-search__results {
+    max-height: var(--home-search-results-height, 45dvh);
+    -webkit-overflow-scrolling: touch;
+  }
+
+  html body.has-home-search-keyboard .topbar .site-nav,
+  html body.has-home-search-keyboard .site-nav {
+    display: none !important;
+  }
 }

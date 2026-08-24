@@ -884,7 +884,8 @@ const headerSearchState = {
 
 const homeSearchState = {
   matches: [],
-  activeIndex: -1
+  activeIndex: -1,
+  viewportCleanup: null
 };
 
 function applyViewModePreference() {
@@ -1236,7 +1237,56 @@ function getHomeSearchElements() {
   };
 }
 
-function closeHomePodcastSearch({ clearInput = false } = {}) {
+function deactivateHomePodcastSearchFocus() {
+  homeSearchState.viewportCleanup?.();
+  homeSearchState.viewportCleanup = null;
+  document.body.classList.remove("has-home-search-focus", "has-home-search-keyboard");
+
+  const { form } = getHomeSearchElements();
+  form?.classList.remove("is-focused");
+  form?.style.removeProperty("--home-search-viewport-top");
+  form?.style.removeProperty("--home-search-results-height");
+}
+
+function activateHomePodcastSearchFocus() {
+  if (!isMobileViewport()) return;
+
+  const { form } = getHomeSearchElements();
+  if (!form) return;
+
+  deactivateHomePodcastSearchFocus();
+  form.classList.add("is-focused");
+  document.body.classList.add("has-home-search-focus");
+
+  const updateViewport = () => {
+    const viewport = window.visualViewport;
+    const viewportHeight = viewport?.height || window.innerHeight;
+    const viewportTop = Math.max(12, (viewport?.offsetTop || 0) + 12);
+    const keyboardOpen = Boolean(
+      viewport && viewport.height < window.innerHeight - 120
+    );
+    const bottomClearance = keyboardOpen ? 12 : 88;
+    const resultsHeight = Math.max(
+      120,
+      Math.floor(viewportHeight - viewportTop - form.getBoundingClientRect().height - bottomClearance - 7)
+    );
+
+    form.style.setProperty("--home-search-viewport-top", `${viewportTop}px`);
+    form.style.setProperty("--home-search-results-height", `${resultsHeight}px`);
+    document.body.classList.toggle("has-home-search-keyboard", keyboardOpen);
+  };
+
+  updateViewport();
+  window.requestAnimationFrame(updateViewport);
+  window.visualViewport?.addEventListener("resize", updateViewport);
+  window.visualViewport?.addEventListener("scroll", updateViewport);
+  homeSearchState.viewportCleanup = () => {
+    window.visualViewport?.removeEventListener("resize", updateViewport);
+    window.visualViewport?.removeEventListener("scroll", updateViewport);
+  };
+}
+
+function closeHomePodcastSearch({ clearInput = false, exitFocus = false } = {}) {
   const { input, results } = getHomeSearchElements();
   homeSearchState.matches = [];
   homeSearchState.activeIndex = -1;
@@ -1245,6 +1295,7 @@ function closeHomePodcastSearch({ clearInput = false } = {}) {
   input?.setAttribute("aria-expanded", "false");
   input?.removeAttribute("aria-activedescendant");
   if (clearInput && input) input.value = "";
+  if (exitFocus) deactivateHomePodcastSearchFocus();
 }
 
 function setHomeSearchActiveIndex(index) {
@@ -1260,12 +1311,12 @@ function setHomeSearchActiveIndex(index) {
   input?.setAttribute("aria-activedescendant", `homePodcastSearchResult-${nextIndex}`);
 }
 
-function renderHomePodcastSearchResults() {
+function renderHomePodcastSearchResults({ exitFocusOnEmpty = false } = {}) {
   const { input, results } = getHomeSearchElements();
   if (!input || !results) return;
   const query = input.value.trim();
   if (normalizeSearchValue(query).length < 2) {
-    closeHomePodcastSearch();
+    closeHomePodcastSearch({ exitFocus: exitFocusOnEmpty && query.length === 0 });
     return;
   }
   const matches = getHeaderSearchMatches(query);
@@ -1297,7 +1348,7 @@ function openHomePodcastSearchResult(index) {
   if (!match) return;
   const navigationKeys = homeSearchState.matches.map(({ podcast }) => getPodcastKey(podcast)).filter(Boolean);
   const { input } = getHomeSearchElements();
-  closeHomePodcastSearch({ clearInput: true });
+  closeHomePodcastSearch({ clearInput: true, exitFocus: true });
   openPodcastDetailSheet(match.podcast, input, {
     allowDesktop: true,
     navigationKeys: isMobileViewport() ? navigationKeys : null
@@ -1311,12 +1362,15 @@ function bindHomePodcastSearch() {
     event.preventDefault();
     if (homeSearchState.matches.length) openHomePodcastSearchResult(homeSearchState.activeIndex >= 0 ? homeSearchState.activeIndex : 0);
   });
-  input.addEventListener("input", renderHomePodcastSearchResults);
-  input.addEventListener("focus", renderHomePodcastSearchResults);
+  input.addEventListener("input", () => renderHomePodcastSearchResults({ exitFocusOnEmpty: true }));
+  input.addEventListener("focus", () => {
+    activateHomePodcastSearchFocus();
+    renderHomePodcastSearchResults();
+  });
   input.addEventListener("keydown", (event) => {
     if (event.key === "Escape") {
       event.preventDefault();
-      closeHomePodcastSearch({ clearInput: true });
+      closeHomePodcastSearch({ clearInput: true, exitFocus: true });
       return;
     }
     if (!homeSearchState.matches.length) return;
@@ -18725,6 +18779,7 @@ function renderExplorePage() {
 }
 
 function renderRoute() {
+  deactivateHomePodcastSearchFocus();
   const { rawRoute, route } = getRouteInfoFromHash();
 
   if (rawRoute === "gemte") {
@@ -20102,7 +20157,7 @@ function setupEvents() {
       closeHeaderPodcastSearch({ closeMobile: true });
     }
     if (!elements.pageIntroPanel?.querySelector("[data-home-podcast-search]")?.contains(event.target)) {
-      closeHomePodcastSearch();
+      closeHomePodcastSearch({ exitFocus: true });
     }
     if (elements.desktopUserButton?.contains(event.target)) return;
     if (elements.desktopUserMenu?.contains(event.target)) return;
