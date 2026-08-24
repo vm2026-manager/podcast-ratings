@@ -18941,28 +18941,22 @@ function renderRoute() {
     const savedCtaLabel = savedPodcastCta?.title
       ? `Mine gemte: ${savedPodcastCta.title}`
       : "Mine gemte";
-    const homeCtaTopIcon = isMobileViewport()
-      ? `
-        <svg class="home-quick-card__outline-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-          <path d="M5 20V11M12 20V5M19 20v-8" />
-        </svg>
-      `
-      : `
-        <svg class="home-quick-card__outline-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-          <path d="m12 3.4 2.7 5.5 6.1.9-4.4 4.3 1 6.1-5.4-2.9-5.4 2.9 1-6.1-4.4-4.3 6.1-.9L12 3.4Z" />
-        </svg>
-      `;
-    const homeCtaSavedIcon = isMobileViewport()
-      ? `
-        <svg class="home-quick-card__outline-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-          <path d="M7 4.5h10a1 1 0 0 1 1 1v15l-6-3.6-6 3.6v-15a1 1 0 0 1 1-1Z" />
-        </svg>
-      `
-      : `
-        <svg class="home-quick-card__outline-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-          <path d="M12 20.2s-6.8-4.3-9.1-8.3C1 8.6 2.7 5 6.3 5c2 0 3.5 1.1 4.4 2.6C11.6 6.1 13.1 5 15.1 5c3.6 0 5.3 3.6 3.4 6.9C16.2 15.9 12 20.2 12 20.2Z" />
-        </svg>
-      `;
+    const homeCtaTopIcon = `
+      <svg class="home-quick-card__outline-icon home-quick-card__outline-icon--mobile" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+        <path d="M5 20V11M12 20V5M19 20v-8" />
+      </svg>
+      <svg class="home-quick-card__outline-icon home-quick-card__outline-icon--desktop" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+        <path d="m12 3.4 2.7 5.5 6.1.9-4.4 4.3 1 6.1-5.4-2.9-5.4 2.9 1-6.1-4.4-4.3 6.1-.9L12 3.4Z" />
+      </svg>
+    `;
+    const homeCtaSavedIcon = `
+      <svg class="home-quick-card__outline-icon home-quick-card__outline-icon--mobile" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+        <path d="M7 4.5h10a1 1 0 0 1 1 1v15l-6-3.6-6 3.6v-15a1 1 0 0 1 1-1Z" />
+      </svg>
+      <svg class="home-quick-card__outline-icon home-quick-card__outline-icon--desktop" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+        <path d="M12 20.2s-6.8-4.3-9.1-8.3C1 8.6 2.7 5 6.3 5c2 0 3.5 1.1 4.4 2.6C11.6 6.1 13.1 5 15.1 5c3.6 0 5.3 3.6 3.4 6.9C16.2 15.9 12 20.2 12 20.2Z" />
+      </svg>
+    `;
 
     elements.pageIntroPanel.innerHTML = `
       <div class="home-hero home-hero--${loggedIn ? "logged-in" : "logged-out"}">

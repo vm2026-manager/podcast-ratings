@@ -1588,6 +1588,10 @@ body.page-ranglister .search-field__clear:focus-visible {
     stroke-linejoin: round !important;
   }
 
+  html body.page-forside.page-forside #pageIntroPanel .home-quick-card__outline-icon--desktop {
+    display: none !important;
+  }
+
   html body.page-forside.page-forside #pageIntroPanel .home-quick-card__meta,
   html body.page-forside.page-forside #pageIntroPanel .home-quick-card__meta::before,
   html body.page-forside.page-forside #pageIntroPanel .home-quick-card > strong {
@@ -26190,6 +26194,10 @@ body.page-ranglister .search-field__clear:focus-visible {
 
 /* Final desktop homepage package 2: quick cards and genre dashboard. */
 @media (min-width: 769px) {
+  html body.page-forside #pageIntroPanel .home-quick-card__outline-icon--mobile {
+    display: none !important;
+  }
+
   html body.page-forside #pageIntroPanel {
     display: flex !important;
     flex-direction: column !important;
