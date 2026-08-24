@@ -885,7 +885,8 @@ const headerSearchState = {
 const homeSearchState = {
   matches: [],
   activeIndex: -1,
-  viewportCleanup: null
+  viewportCleanup: null,
+  focusViewportHeight: 0
 };
 
 function applyViewModePreference() {
@@ -1240,11 +1241,11 @@ function getHomeSearchElements() {
 function deactivateHomePodcastSearchFocus() {
   homeSearchState.viewportCleanup?.();
   homeSearchState.viewportCleanup = null;
+  homeSearchState.focusViewportHeight = 0;
   document.body.classList.remove("has-home-search-focus", "has-home-search-keyboard");
 
   const { form } = getHomeSearchElements();
   form?.classList.remove("is-focused");
-  form?.style.removeProperty("--home-search-viewport-top");
   form?.style.removeProperty("--home-search-results-height");
 }
 
@@ -1257,21 +1258,26 @@ function activateHomePodcastSearchFocus() {
   deactivateHomePodcastSearchFocus();
   form.classList.add("is-focused");
   document.body.classList.add("has-home-search-focus");
+  homeSearchState.focusViewportHeight = window.visualViewport?.height || window.innerHeight;
 
   const updateViewport = () => {
     const viewport = window.visualViewport;
     const viewportHeight = viewport?.height || window.innerHeight;
-    const viewportTop = Math.max(12, (viewport?.offsetTop || 0) + 12);
+    const referenceHeight = Math.max(
+      homeSearchState.focusViewportHeight,
+      window.innerHeight,
+      document.documentElement.clientHeight
+    );
     const keyboardOpen = Boolean(
-      viewport && viewport.height < window.innerHeight - 120
+      viewport && viewport.height < referenceHeight - 120
     );
     const bottomClearance = keyboardOpen ? 12 : 88;
+    const formBottom = form.getBoundingClientRect().bottom;
     const resultsHeight = Math.max(
       120,
-      Math.floor(viewportHeight - viewportTop - form.getBoundingClientRect().height - bottomClearance - 7)
+      Math.floor(viewportHeight - formBottom - bottomClearance - 7)
     );
 
-    form.style.setProperty("--home-search-viewport-top", `${viewportTop}px`);
     form.style.setProperty("--home-search-results-height", `${resultsHeight}px`);
     document.body.classList.toggle("has-home-search-keyboard", keyboardOpen);
   };

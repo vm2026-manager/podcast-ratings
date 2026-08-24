@@ -38,7 +38,7 @@ html body .home-podcast-search { display: none; }
   html body.has-home-search-focus.page-forside .home-podcast-search.is-focused {
     position: fixed;
     z-index: 1800;
-    top: var(--home-search-viewport-top, 12px);
+    top: 12px;
     right: max(16px, env(safe-area-inset-right, 0px));
     left: max(16px, env(safe-area-inset-left, 0px));
     width: auto;
@@ -50,8 +50,7 @@ html body .home-podcast-search { display: none; }
     -webkit-overflow-scrolling: touch;
   }
 
-  html body.has-home-search-keyboard .topbar .site-nav,
-  html body.has-home-search-keyboard .site-nav {
+  html body.has-home-search-keyboard.page-forside .page-shell > .topbar > nav.site-nav[aria-label="Hovednavigation"] {
     display: none !important;
   }
 }
