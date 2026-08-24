@@ -18140,7 +18140,7 @@ body.page-forside .home-hero__signup {
   }
 
   .site-nav__link[data-page-link="udforsk"] {
-    --mobile-nav-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='none' stroke='%23000' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round' d='m15.8 15.8 4.2 4.2M10.8 18.2a7.4 7.4 0 1 1 0-14.8 7.4 7.4 0 0 1 0 14.8Z'/%3E%3C/svg%3E");
+    --mobile-nav-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Ccircle cx='12' cy='12' r='8.2' fill='none' stroke='%23000' stroke-width='2.2'/%3E%3Cpath fill='none' stroke='%23000' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round' d='m14.9 9.1-2.1 4.7-4.7 2.1 2.1-4.7 4.7-2.1Z'/%3E%3C/svg%3E");
   }
 
   .site-nav__link[data-page-link="gemte"] {

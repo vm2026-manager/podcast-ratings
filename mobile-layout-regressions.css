@@ -10,3 +10,28 @@
   html body.page-profil .profile-stat-card:nth-child(4) { grid-column: 2 / span 2 !important; }
   html body.page-profil .profile-stat-card:nth-child(5) { grid-column: 4 / span 2 !important; }
 }
+
+/* Homepage search uses the existing catalogue matcher and detail-sheet flow. */
+html body .home-podcast-search { display: none; }
+
+@media (max-width: 768px) {
+  html body.page-forside .home-podcast-search { position: relative; display: grid; grid-template-columns: 20px minmax(0, 1fr); align-items: center; gap: 9px; width: calc(100% + clamp(126px, 34vw, 150px)); min-width: 0; margin: 16px 0 74px; transform: translateY(60px); padding: 0 14px; border: 1px solid rgba(183, 113, 59, .23); border-radius: 14px; background: rgba(255, 252, 248, .92); box-shadow: 0 5px 14px rgba(91, 55, 27, .06); }
+  html body.page-forside .home-podcast-search:focus-within { border-color: rgba(236, 97, 28, .58); box-shadow: 0 0 0 3px rgba(236, 97, 28, .1); }
+  html body.page-forside .home-podcast-search__icon { width: 20px; height: 20px; fill: none; stroke: #8f7563; stroke-width: 2.2; stroke-linecap: round; }
+  html body.page-forside .home-podcast-search__input { width: 100%; min-width: 0; height: 44px; padding: 0; border: 0; outline: 0; color: #2f2118; background: transparent; font: inherit; }
+  html body.page-forside .home-podcast-search__input::placeholder { color: #927d6d; }
+  html body.page-forside .home-podcast-search__results { position: absolute; z-index: 30; top: calc(100% + 7px); right: 0; left: 0; max-height: min(43dvh, 340px); overflow-y: auto; overscroll-behavior: contain; border: 1px solid rgba(183, 113, 59, .2); border-radius: 14px; background: #fffdf9; box-shadow: 0 16px 30px rgba(66, 39, 19, .16); }
+  html body.page-forside .home-podcast-search__results.is-hidden { display: none; }
+  html body.page-forside .home-podcast-search__result { display: grid; grid-template-columns: 42px minmax(0, 1fr) auto; align-items: center; gap: 10px; width: 100%; min-width: 0; padding: 10px 12px; border: 0; border-bottom: 1px solid rgba(110, 82, 61, .11); color: #2f2118; background: transparent; text-align: left; }
+  html body.page-forside .home-podcast-search__result:last-child { border-bottom: 0; }
+  html body.page-forside .home-podcast-search__result.is-active, html body.page-forside .home-podcast-search__result:active { background: #fff1e5; }
+  html body.page-forside .home-podcast-search__cover, html body.page-forside .home-podcast-search__cover img { display: block; width: 42px; height: 42px; border-radius: 8px; }
+  html body.page-forside .home-podcast-search__cover { overflow: hidden; background: #f0e4d8; }
+  html body.page-forside .home-podcast-search__cover img { object-fit: cover; }
+  html body.page-forside .home-podcast-search__copy { display: grid; min-width: 0; gap: 2px; }
+  html body.page-forside .home-podcast-search__copy strong, html body.page-forside .home-podcast-search__copy span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  html body.page-forside .home-podcast-search__copy strong { font-size: .88rem; line-height: 1.2; }
+  html body.page-forside .home-podcast-search__copy span, html body.page-forside .home-podcast-search__match { color: #7d6655; font-size: .72rem; line-height: 1.2; }
+  html body.page-forside .home-podcast-search__match { white-space: nowrap; }
+  html body.page-forside .home-podcast-search__empty { margin: 0; padding: 14px; color: #6f5c4d; font-size: .84rem; }
+}

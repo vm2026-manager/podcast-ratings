@@ -882,6 +882,11 @@ const headerSearchState = {
   activeIndex: -1
 };
 
+const homeSearchState = {
+  matches: [],
+  activeIndex: -1
+};
+
 function applyViewModePreference() {
   const desktopView = Boolean(state.desktopView);
 
@@ -1219,6 +1224,116 @@ function openHeaderSearchResult(index) {
   openPodcastDetailSheet(match.podcast, elements.desktopHeaderSearchInput, {
     allowDesktop: true,
     navigationKeys: isMobileViewport() ? navigationKeys : null
+  });
+}
+
+function getHomeSearchElements() {
+  const container = elements.pageIntroPanel;
+  return {
+    form: container?.querySelector("[data-home-podcast-search]"),
+    input: container?.querySelector("[data-home-podcast-search-input]"),
+    results: container?.querySelector("[data-home-podcast-search-results]")
+  };
+}
+
+function closeHomePodcastSearch({ clearInput = false } = {}) {
+  const { input, results } = getHomeSearchElements();
+  homeSearchState.matches = [];
+  homeSearchState.activeIndex = -1;
+  results?.classList.add("is-hidden");
+  results?.replaceChildren();
+  input?.setAttribute("aria-expanded", "false");
+  input?.removeAttribute("aria-activedescendant");
+  if (clearInput && input) input.value = "";
+}
+
+function setHomeSearchActiveIndex(index) {
+  const { input, results } = getHomeSearchElements();
+  if (!homeSearchState.matches.length || !results) return;
+  const nextIndex = (index + homeSearchState.matches.length) % homeSearchState.matches.length;
+  homeSearchState.activeIndex = nextIndex;
+  results.querySelectorAll("[data-home-search-index]").forEach((option, optionIndex) => {
+    const isActive = optionIndex === nextIndex;
+    option.classList.toggle("is-active", isActive);
+    option.setAttribute("aria-selected", String(isActive));
+  });
+  input?.setAttribute("aria-activedescendant", `homePodcastSearchResult-${nextIndex}`);
+}
+
+function renderHomePodcastSearchResults() {
+  const { input, results } = getHomeSearchElements();
+  if (!input || !results) return;
+  const query = input.value.trim();
+  if (normalizeSearchValue(query).length < 2) {
+    closeHomePodcastSearch();
+    return;
+  }
+  const matches = getHeaderSearchMatches(query);
+  homeSearchState.matches = matches;
+  homeSearchState.activeIndex = -1;
+  if (!matches.length) {
+    results.innerHTML = '<p class="home-podcast-search__empty" role="status">Ingen podcasts matcher din søgning.</p>';
+  } else {
+    results.innerHTML = matches.map(({ podcast, matchLabel }, index) => {
+      const metadata = [podcast.host, podcast.publisher, podcast.genre].filter(Boolean).join(" · ");
+      return `
+        <button id="homePodcastSearchResult-${index}" class="home-podcast-search__result" type="button" role="option" aria-selected="false" data-home-search-index="${index}">
+          <span class="home-podcast-search__cover"><img alt="" /></span>
+          <span class="home-podcast-search__copy"><strong>${escapeHtml(podcast.title)}</strong><span>${escapeHtml(metadata || matchLabel)}</span></span>
+          <span class="home-podcast-search__match">${escapeHtml(matchLabel)}</span>
+        </button>`;
+    }).join("");
+    results.querySelectorAll(".home-podcast-search__cover").forEach((cover, index) => {
+      const podcast = matches[index]?.podcast;
+      setImage(cover, getPodcastImageSources(podcast), podcast?.title || "Podcastcover");
+    });
+  }
+  results.classList.remove("is-hidden");
+  input.setAttribute("aria-expanded", "true");
+}
+
+function openHomePodcastSearchResult(index) {
+  const match = homeSearchState.matches[index];
+  if (!match) return;
+  const navigationKeys = homeSearchState.matches.map(({ podcast }) => getPodcastKey(podcast)).filter(Boolean);
+  const { input } = getHomeSearchElements();
+  closeHomePodcastSearch({ clearInput: true });
+  openPodcastDetailSheet(match.podcast, input, {
+    allowDesktop: true,
+    navigationKeys: isMobileViewport() ? navigationKeys : null
+  });
+}
+
+function bindHomePodcastSearch() {
+  const { form, input, results } = getHomeSearchElements();
+  if (!form || !input || !results) return;
+  form.addEventListener("submit", (event) => {
+    event.preventDefault();
+    if (homeSearchState.matches.length) openHomePodcastSearchResult(homeSearchState.activeIndex >= 0 ? homeSearchState.activeIndex : 0);
+  });
+  input.addEventListener("input", renderHomePodcastSearchResults);
+  input.addEventListener("focus", renderHomePodcastSearchResults);
+  input.addEventListener("keydown", (event) => {
+    if (event.key === "Escape") {
+      event.preventDefault();
+      closeHomePodcastSearch({ clearInput: true });
+      return;
+    }
+    if (!homeSearchState.matches.length) return;
+    if (event.key === "ArrowDown") {
+      event.preventDefault();
+      setHomeSearchActiveIndex(homeSearchState.activeIndex + 1);
+    } else if (event.key === "ArrowUp") {
+      event.preventDefault();
+      setHomeSearchActiveIndex(homeSearchState.activeIndex < 0 ? homeSearchState.matches.length - 1 : homeSearchState.activeIndex - 1);
+    } else if (event.key === "Enter") {
+      event.preventDefault();
+      openHomePodcastSearchResult(homeSearchState.activeIndex >= 0 ? homeSearchState.activeIndex : 0);
+    }
+  });
+  results.addEventListener("click", (event) => {
+    const result = event.target.closest("[data-home-search-index]");
+    if (result) openHomePodcastSearchResult(Number(result.dataset.homeSearchIndex));
   });
 }
 
@@ -18824,6 +18939,11 @@ function renderRoute() {
           >
             ${escapeHtml(mobileHeroIntro)}
           </p>
+          <form class="home-podcast-search" data-home-podcast-search role="search" aria-label="Søg podcasts">
+            <svg class="home-podcast-search__icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="10.8" cy="10.8" r="6.4"></circle><path d="m16 16 4.2 4.2"></path></svg>
+            <input class="home-podcast-search__input" data-home-podcast-search-input type="search" autocomplete="off" spellcheck="false" placeholder="Søg efter podcasts..." aria-label="Søg efter podcasts" aria-autocomplete="list" aria-controls="homePodcastSearchResults" aria-expanded="false" />
+            <div id="homePodcastSearchResults" class="home-podcast-search__results is-hidden" data-home-podcast-search-results role="listbox" aria-label="Søgeresultater"></div>
+          </form>
           ${
             loggedIn
               ? `
@@ -19074,6 +19194,7 @@ function renderRoute() {
       });
 
     bindHomeHeroScroller(elements.pageIntroPanel);
+    bindHomePodcastSearch();
 
     const featuredContent = elements.pageIntroPanel.querySelector(
       ".home-featured__content"
@@ -19979,6 +20100,9 @@ function setupEvents() {
       !elements.mobileHeaderSearchButton?.contains(event.target)
     ) {
       closeHeaderPodcastSearch({ closeMobile: true });
+    }
+    if (!elements.pageIntroPanel?.querySelector("[data-home-podcast-search]")?.contains(event.target)) {
+      closeHomePodcastSearch();
     }
     if (elements.desktopUserButton?.contains(event.target)) return;
     if (elements.desktopUserMenu?.contains(event.target)) return;
