@@ -19094,9 +19094,9 @@ body.page-forside .home-hero__signup {
     background:
       linear-gradient(
         to top,
-        rgba(0, 0, 0, 0.72) 0%,
-        rgba(0, 0, 0, 0.44) 34%,
-        rgba(0, 0, 0, 0.1) 68%,
+        rgba(8, 6, 5, 0.82) 0%,
+        rgba(8, 6, 5, 0.58) 38%,
+        rgba(8, 6, 5, 0.14) 70%,
         rgba(0, 0, 0, 0.02) 100%
       ) !important;
     pointer-events: none !important;
