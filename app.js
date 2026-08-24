@@ -10119,6 +10119,12 @@ function renderPodcastDetailSheetContent(
         </span>
       </span>`
     : "";
+  const mobileEpisodeEntryMarkup = supportsEpisodes
+    ? `<button class="podcast-detail-sheet__episode-entry-button podcast-detail-sheet__episode-entry-button--mobile" type="button" data-podcast-episodes-open aria-label="Vurder episoder">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="3" width="14" height="18" rx="2"></rect><path d="M9 8h6M9 12h6M9 16h4"></path></svg>
+        <span>Vurder episoder</span>
+      </button>`
+    : "";
   const externalLinkMarkup = hasLink
     ? `<a class="podcast-detail-sheet__header-link" href="${escapeHtml(podcast.link)}" target="_blank" rel="noopener noreferrer" aria-label="Link til podcasten" title="Link til podcasten" data-tooltip="Link til podcasten"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 5h5v5M19 5l-9 9"></path><path d="M19 14v4a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1h4"></path></svg></a>`
     : "";
@@ -10133,11 +10139,17 @@ function renderPodcastDetailSheetContent(
         <img class="podcast-detail-sheet__image" alt="" loading="lazy" />
       </div>
       <div class="podcast-detail-sheet__intro">
-        <div class="podcast-detail-sheet__intro-actions">
+        <div class="podcast-detail-sheet__intro-actions podcast-detail-sheet__intro-actions--desktop">
           <span class="podcast-detail-sheet__header-action-icons"><button class="favorite-button podcast-detail-sheet__header-favorite" type="button" data-podcast-detail-favorite aria-label="Gem podcast"><span aria-hidden="true"></span></button>${externalLinkMarkup}</span>
         </div>
         <h2 id="podcastDetailTitle">${escapeHtml(podcast.title || "Podcast")}</h2>
         ${meta ? `<p class="podcast-detail-sheet__meta">${escapeHtml(meta)}</p>` : ""}
+        <div class="podcast-detail-sheet__mobile-action-row">
+          ${mobileEpisodeEntryMarkup}
+          <div class="podcast-detail-sheet__intro-actions podcast-detail-sheet__intro-actions--mobile">
+            <span class="podcast-detail-sheet__header-action-icons"><button class="favorite-button podcast-detail-sheet__header-favorite" type="button" data-podcast-detail-favorite aria-label="Gem podcast"><span aria-hidden="true"></span></button>${externalLinkMarkup}</span>
+          </div>
+        </div>
         <div class="podcast-detail-sheet__chips">
           ${episodeEntryMarkup}
           ${genreMarkup}
@@ -10181,8 +10193,8 @@ function renderPodcastDetailSheetContent(
         <button class="podcast-detail-sheet__own-rating-reveal" type="button" data-podcast-detail-inline-rating-reveal aria-expanded="${
           isOwnRatingEditorOpen ? "true" : "false"
         }"${isOwnRatingEditorOpen ? " hidden" : ""}>
-          <span aria-hidden="true">☆ ☆ ☆ ☆ ☆</span>
-          <small>Tryk for at vælge 0–10</small>
+          <span aria-hidden="true">0–10</span>
+          <small>Vælg 0–10</small>
         </button>
         <div class="podcast-detail-sheet__own-rating-editor">
           <label class="podcast-detail-sheet__own-rating-control podcast-detail-sheet__own-rating-picker">
@@ -10295,11 +10307,13 @@ function renderPodcastDetailSheetContent(
     content.scrollTo?.({ top: 0, left: 0, behavior: "auto" });
   });
 
-  content.querySelector("[data-podcast-episodes-open]")?.addEventListener("click", (event) => {
-    event.preventDefault();
-    event.stopPropagation();
-    renderPodcastEpisodeOverviewContent(dialog, podcast);
-    content.scrollTo?.({ top: 0, left: 0, behavior: "auto" });
+  content.querySelectorAll("[data-podcast-episodes-open]").forEach((episodeOpenButton) => {
+    episodeOpenButton.addEventListener("click", (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      renderPodcastEpisodeOverviewContent(dialog, podcast);
+      content.scrollTo?.({ top: 0, left: 0, behavior: "auto" });
+    });
   });
 
   const inlineRatingInput = content.querySelector("[data-podcast-detail-inline-rating-input]");
