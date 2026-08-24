@@ -18939,11 +18939,6 @@ function renderRoute() {
           >
             ${escapeHtml(mobileHeroIntro)}
           </p>
-          <form class="home-podcast-search" data-home-podcast-search role="search" aria-label="Søg podcasts">
-            <svg class="home-podcast-search__icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="10.8" cy="10.8" r="6.4"></circle><path d="m16 16 4.2 4.2"></path></svg>
-            <input class="home-podcast-search__input" data-home-podcast-search-input type="search" autocomplete="off" spellcheck="false" placeholder="Søg efter podcasts..." aria-label="Søg efter podcasts" aria-autocomplete="list" aria-controls="homePodcastSearchResults" aria-expanded="false" />
-            <div id="homePodcastSearchResults" class="home-podcast-search__results is-hidden" data-home-podcast-search-results role="listbox" aria-label="Søgeresultater"></div>
-          </form>
           ${
             loggedIn
               ? `
@@ -19049,6 +19044,11 @@ function renderRoute() {
           ></div>
         </div>
       </div>
+      <form class="home-podcast-search" data-home-podcast-search role="search" aria-label="Søg podcasts">
+        <svg class="home-podcast-search__icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="10.8" cy="10.8" r="6.4"></circle><path d="m16 16 4.2 4.2"></path></svg>
+        <input class="home-podcast-search__input" data-home-podcast-search-input type="search" autocomplete="off" spellcheck="false" placeholder="Søg efter podcasts..." aria-label="Søg efter podcasts" aria-autocomplete="list" aria-controls="homePodcastSearchResults" aria-expanded="false" />
+        <div id="homePodcastSearchResults" class="home-podcast-search__results is-hidden" data-home-podcast-search-results role="listbox" aria-label="Søgeresultater"></div>
+      </form>
       <div class="home-quick-cards" aria-label="Genveje p&aring; forsiden">
         <a class="home-quick-card home-quick-card--top" href="#ranglister"${createHomeCtaStyle(topPodcastCta)} aria-label="${escapeHtml(topCtaLabel)}">
           <span class="home-quick-card__cover-bg" aria-hidden="true"></span>

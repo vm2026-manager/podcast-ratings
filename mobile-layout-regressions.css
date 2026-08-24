@@ -15,7 +15,7 @@
 html body .home-podcast-search { display: none; }
 
 @media (max-width: 768px) {
-  html body.page-forside .home-podcast-search { position: relative; display: grid; grid-template-columns: 20px minmax(0, 1fr); align-items: center; gap: 9px; width: calc(100% + clamp(126px, 34vw, 150px)); min-width: 0; margin: 16px 0 74px; transform: translateY(60px); padding: 0 14px; border: 1px solid rgba(183, 113, 59, .23); border-radius: 14px; background: rgba(255, 252, 248, .92); box-shadow: 0 5px 14px rgba(91, 55, 27, .06); }
+  html body.page-forside .home-podcast-search { position: relative; z-index: 1; order: 1; display: grid; grid-template-columns: 20px minmax(0, 1fr); align-items: center; gap: 9px; width: 100%; min-width: 0; margin: 0 0 14px; padding: 0 14px; border: 1px solid rgba(183, 113, 59, .23); border-radius: 14px; background: rgba(255, 252, 248, .92); box-shadow: 0 5px 14px rgba(91, 55, 27, .06); }
   html body.page-forside .home-podcast-search:focus-within { border-color: rgba(236, 97, 28, .58); box-shadow: 0 0 0 3px rgba(236, 97, 28, .1); }
   html body.page-forside .home-podcast-search__icon { width: 20px; height: 20px; fill: none; stroke: #8f7563; stroke-width: 2.2; stroke-linecap: round; }
   html body.page-forside .home-podcast-search__input { width: 100%; min-width: 0; height: 44px; padding: 0; border: 0; outline: 0; color: #2f2118; background: transparent; font: inherit; }
