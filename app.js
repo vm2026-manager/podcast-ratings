@@ -7104,6 +7104,7 @@ function renderPodcastSimilarityProductSection(title, items) {
     <section class="podcast-detail-sheet__related-section" data-podcast-similarity-section="recommendations">
       <div class="podcast-detail-sheet__related-heading">
         <h3>${escapeHtml(title)}</h3>
+        <button class="podcast-detail-sheet__related-show-all" type="button" data-podcast-similarity-scroll="1">Se alle</button>
         <div class="podcast-detail-sheet__related-controls" aria-label="Naviger i ${sectionLabel}">
           <button type="button" data-podcast-similarity-scroll="-1" aria-label="Rul tilbage i ${sectionLabel}">‹</button>
           <button type="button" data-podcast-similarity-scroll="1" aria-label="Rul frem i ${sectionLabel}">›</button>
@@ -10078,6 +10079,7 @@ function renderPodcastDetailSheetContent(
     : manualOwnRating === null || manualOwnRating === undefined
       ? ""
       : String(manualOwnRating);
+  const isOwnRatingEditorOpen = isOwnRatingLocked || ownRatingValue !== "";
   const episodeRatingCountText = `${episodeRatingSummary.count} ${
     episodeRatingSummary.count === 1 ? "episodevurdering" : "episodevurderinger"
   }`;
@@ -10172,9 +10174,18 @@ function renderPodcastDetailSheetContent(
         <strong>${escapeHtml(rating.users)}<small>/10</small></strong>
         <em>${escapeHtml(userCountText)}</em>
       </div>
-      <div class="podcast-detail-sheet__rating-cell podcast-detail-sheet__rating-cell--own" aria-label="Din vurdering">
+      <div class="podcast-detail-sheet__rating-cell podcast-detail-sheet__rating-cell--own${
+        isOwnRatingEditorOpen ? " is-rating-entry-open" : ""
+      }" aria-label="Din vurdering">
         <span class="podcast-detail-sheet__rating-label">Din vurdering</span>
-        <label class="podcast-detail-sheet__own-rating-control podcast-detail-sheet__own-rating-picker">
+        <button class="podcast-detail-sheet__own-rating-reveal" type="button" data-podcast-detail-inline-rating-reveal aria-expanded="${
+          isOwnRatingEditorOpen ? "true" : "false"
+        }"${isOwnRatingEditorOpen ? " hidden" : ""}>
+          <span aria-hidden="true">☆ ☆ ☆ ☆ ☆</span>
+          <small>Tryk for at vælge 0–10</small>
+        </button>
+        <div class="podcast-detail-sheet__own-rating-editor">
+          <label class="podcast-detail-sheet__own-rating-control podcast-detail-sheet__own-rating-picker">
           <span class="podcast-detail-sheet__rating-icon" aria-hidden="true">
             <svg viewBox="0 0 24 24"><rect x="4" y="3" width="16" height="18" rx="3"></rect><path d="M8 8h.01M12 8h.01M16 8h.01M8 12h.01M12 12h.01M16 12h.01M8 16h.01M12 16h.01M16 16h.01"></path></svg>
           </span>
@@ -10198,12 +10209,13 @@ function renderPodcastDetailSheetContent(
           <small>${isOwnRatingLocked ? "Beregnet fra episoder" : "Tryk for at vælge 0–10"}</small>
           </span>
           <span class="podcast-detail-sheet__own-rating-suffix">/10</span>
-        </label>
+          </label>
         ${
           isOwnRatingLocked
             ? ""
             : '<button class="podcast-detail-sheet__own-rating-save" type="button" data-podcast-detail-inline-rating-save>Gem din vurdering</button>'
         }
+        </div>
         <em data-podcast-detail-inline-rating-message>${
           isOwnRatingLocked
             ? `Beregnes automatisk fra ${escapeHtml(episodeRatingCountText)}`
@@ -10291,11 +10303,24 @@ function renderPodcastDetailSheetContent(
   });
 
   const inlineRatingInput = content.querySelector("[data-podcast-detail-inline-rating-input]");
+  const inlineRatingRevealButton = content.querySelector(
+    "[data-podcast-detail-inline-rating-reveal]"
+  );
   const inlineRatingMessage = content.querySelector("[data-podcast-detail-inline-rating-message]");
   const inlineRatingSaveButton = content.querySelector(
     "[data-podcast-detail-inline-rating-save]"
   );
   let inlineRatingSavePending = false;
+
+  inlineRatingRevealButton?.addEventListener("click", () => {
+    const ratingCell = inlineRatingRevealButton.closest(
+      ".podcast-detail-sheet__rating-cell--own"
+    );
+    ratingCell?.classList.add("is-rating-entry-open");
+    inlineRatingRevealButton.hidden = true;
+    inlineRatingRevealButton.setAttribute("aria-expanded", "true");
+    inlineRatingInput?.focus({ preventScroll: true });
+  });
 
   inlineRatingInput?.addEventListener("input", () => {
     if (inlineRatingMessage) inlineRatingMessage.textContent = "";
