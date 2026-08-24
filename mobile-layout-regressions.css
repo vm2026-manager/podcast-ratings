@@ -53,4 +53,36 @@ html body .home-podcast-search { display: none; }
   html body.has-home-search-keyboard.page-forside .page-shell > .topbar > nav.site-nav[aria-label="Hovednavigation"] {
     display: none !important;
   }
+
+  /* Keep Popular among users cards focused on title, hosts and rating. */
+  html body.page-forside.page-forside #pageIntroPanel .home-popular .home-popular-card__metadata-separator,
+  html body.page-forside.page-forside #pageIntroPanel .home-popular .home-popular-card__metadata-publisher,
+  html body.page-forside.page-forside #pageIntroPanel .home-popular .home-popular-card__metadata--hostless {
+    display: none !important;
+  }
+
+  html body.page-forside.page-forside #pageIntroPanel .home-popular .home-popular-card__copy h3 {
+    margin: 0 0 5px !important;
+    min-height: 0 !important;
+    color: #211813 !important;
+    font: 800 1rem / 1.15 "Manrope", sans-serif !important;
+  }
+
+  html body.page-forside.page-forside #pageIntroPanel .home-popular .home-popular-card__metadata {
+    margin: 0 0 5px !important;
+    display: -webkit-box !important;
+    overflow: hidden !important;
+    color: #756a61 !important;
+    font: 500 0.9375rem / 1.35 "Manrope", sans-serif !important;
+    -webkit-box-orient: vertical !important;
+    -webkit-line-clamp: 2 !important;
+  }
+
+  html body.page-forside.page-forside #pageIntroPanel .home-popular .home-popular-card__metadata-host {
+    display: inline !important;
+  }
+
+  html body.page-forside.page-forside #pageIntroPanel .home-popular .home-popular-card__rating {
+    margin: 0 !important;
+  }
 }

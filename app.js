@@ -10658,8 +10658,9 @@ function createHomePopularCardElement(podcast, options = {}) {
       : podcastlistenRating === null
         ? "Ingen vurdering endnu"
         : "Podcastlistens vurdering");
-  const metadataParts = [podcast.host, podcast.publisher]
-    .map((value) => normalizeText(value))
+  const hostLabel = normalizeText(podcast.host);
+  const publisherLabel = normalizeText(podcast.publisher);
+  const metadataParts = [hostLabel, publisherLabel]
     .filter((value, index, values) => value && values.indexOf(value) === index);
   const metadataLabel = metadataParts.join(" · ") || "Udgiver ikke angivet";
   const card = document.createElement("article");
@@ -10683,7 +10684,15 @@ function createHomePopularCardElement(podcast, options = {}) {
   copy.innerHTML = `
     <span class="home-popular-card__rank">${rank ? `#${rank}` : ""}</span>
     <h3>${escapeHtml(podcast.title)}</h3>
-    <p class="home-popular-card__metadata">${escapeHtml(metadataLabel)}</p>
+    <p class="home-popular-card__metadata${hostLabel ? "" : " home-popular-card__metadata--hostless"}">
+      <span class="home-popular-card__metadata-host">${escapeHtml(hostLabel)}</span>${
+        hostLabel && publisherLabel && publisherLabel !== hostLabel
+          ? '<span class="home-popular-card__metadata-separator" aria-hidden="true"> · </span>'
+          : ""
+      }<span class="home-popular-card__metadata-publisher">${escapeHtml(
+        publisherLabel && publisherLabel !== hostLabel ? publisherLabel : hostLabel ? "" : metadataLabel
+      )}</span>
+    </p>
     <p class="home-popular-card__rating">
       <span class="home-popular-card__rating-source" aria-hidden="true">★</span>
       <strong>${escapeHtml(ratingLabel)}</strong>
