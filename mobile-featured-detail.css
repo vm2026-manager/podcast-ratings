@@ -253,19 +253,7 @@
   html body.page-forside #pageIntroPanel .home-featured__preview--next { right: -68px !important; }
 
   html body #podcastDetailSheet .podcast-detail-sheet__ranking-nav {
-    position: fixed !important;
-    z-index: 4 !important;
-    top: calc(env(safe-area-inset-top, 0px) + 78px) !important;
-    width: 44px !important;
-    height: 44px !important;
-    display: grid !important;
-    place-items: center !important;
-    border: 1px solid rgba(224, 208, 191, .95) !important;
-    border-radius: 50% !important;
-    background: rgba(255, 255, 255, .92) !important;
-    color: #372e28 !important;
-    box-shadow: 0 5px 14px rgba(55, 38, 24, .12) !important;
-    font-size: 1.6rem !important;
+    display: none !important;
   }
   html body #podcastDetailSheet .podcast-detail-sheet__ranking-nav--previous { left: 12px !important; }
   html body #podcastDetailSheet .podcast-detail-sheet__ranking-nav--next { right: 52px !important; }

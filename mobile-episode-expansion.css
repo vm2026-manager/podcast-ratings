@@ -38,3 +38,116 @@
     gap: 8px !important;
   }
 }
+
+@media (max-width: 768px) {
+  html body #podcastDetailSheet.is-episode-workspace .podcast-detail-sheet__episode-overview {
+    display: grid !important;
+    gap: 10px !important;
+  }
+  html body #podcastDetailSheet.is-episode-workspace .podcast-detail-sheet__episode-overview-toolbar {
+    display: grid !important;
+    grid-template-columns: auto 1fr !important;
+    gap: 8px !important;
+    align-items: center !important;
+  }
+  html body #podcastDetailSheet.is-episode-workspace .podcast-detail-sheet__episode-back {
+    min-height: 42px !important;
+    padding: 0 4px !important;
+    border: 0 !important;
+    background: transparent !important;
+    color: #9d451f !important;
+    font: 800 .82rem/1 "Manrope", sans-serif !important;
+    white-space: nowrap !important;
+  }
+  html body #podcastDetailSheet.is-episode-workspace .podcast-detail-sheet__episode-back-label--desktop { display: none !important; }
+  html body #podcastDetailSheet.is-episode-workspace .podcast-detail-sheet__episode-workspace-title {
+    display: block !important;
+    margin: 0 !important;
+    color: #332922 !important;
+    font: 800 1rem/1 "Manrope", sans-serif !important;
+  }
+  html body #podcastDetailSheet.is-episode-workspace .podcast-detail-sheet__episode-search {
+    grid-column: 1 / -1 !important;
+    width: 100% !important;
+    min-height: 44px !important;
+  }
+  html body #podcastDetailSheet.is-episode-workspace .podcast-detail-sheet__episode-search input {
+    width: 100% !important;
+    min-height: 44px !important;
+    font-size: 16px !important;
+  }
+  html body #podcastDetailSheet.is-episode-workspace .podcast-detail-sheet__episode-workspace-summary {
+    margin: 0 !important;
+    color: #786a60 !important;
+    font: 800 .75rem/1.2 "Manrope", sans-serif !important;
+  }
+  html body #podcastDetailSheet.is-episode-workspace .podcast-detail-sheet__episode-table-wrap {
+    max-height: none !important;
+    overflow: visible !important;
+    border: 1px solid rgba(222, 204, 188, .72) !important;
+    border-radius: 16px !important;
+  }
+  html body #podcastDetailSheet.is-episode-workspace .podcast-detail-sheet__episode-table,
+  html body #podcastDetailSheet.is-episode-workspace .podcast-detail-sheet__episode-table tbody {
+    display: block !important;
+    width: 100% !important;
+  }
+  html body #podcastDetailSheet.is-episode-workspace .podcast-detail-sheet__episode-table thead { display: none !important; }
+  html body #podcastDetailSheet.is-episode-workspace .podcast-detail-sheet__episode-table tr {
+    display: grid !important;
+    grid-template-columns: 26px minmax(0, 1fr) minmax(72px, auto) !important;
+    grid-template-rows: auto auto !important;
+    column-gap: 8px !important;
+    row-gap: 4px !important;
+    min-height: 102px !important;
+    padding: 11px 10px !important;
+    border: 0 !important;
+    border-bottom: 1px solid rgba(222, 204, 188, .62) !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+  }
+  html body #podcastDetailSheet.is-episode-workspace .podcast-detail-sheet__episode-table tr:last-child { border-bottom: 0 !important; }
+  html body #podcastDetailSheet.is-episode-workspace .podcast-detail-sheet__episode-table td {
+    display: block !important;
+    min-width: 0 !important;
+    width: auto !important;
+    padding: 0 !important;
+    border: 0 !important;
+    background: transparent !important;
+  }
+  html body #podcastDetailSheet.is-episode-workspace .podcast-detail-sheet__episode-table td:nth-child(1) {
+    grid-column: 1 !important;
+    grid-row: 1 / span 2 !important;
+    color: #e65a1d !important;
+    font: 850 1rem/1.2 "Manrope", sans-serif !important;
+  }
+  html body #podcastDetailSheet.is-episode-workspace .podcast-detail-sheet__episode-table td:nth-child(2) { grid-column: 2 !important; grid-row: 1 !important; }
+  html body #podcastDetailSheet.is-episode-workspace .podcast-detail-sheet__episode-table td:nth-child(3) { grid-column: 2 !important; grid-row: 2 !important; }
+  html body #podcastDetailSheet.is-episode-workspace .podcast-detail-sheet__episode-table td:nth-child(4) { grid-column: 3 !important; grid-row: 1 / span 2 !important; align-self: center !important; }
+  html body #podcastDetailSheet.is-episode-workspace .podcast-detail-sheet__episode-table td:nth-child(3)::before,
+  html body #podcastDetailSheet.is-episode-workspace .podcast-detail-sheet__episode-table td:nth-child(4)::before { display: none !important; }
+  html body #podcastDetailSheet.is-episode-workspace .episode-title {
+    display: -webkit-box !important;
+    overflow: hidden !important;
+    -webkit-box-orient: vertical !important;
+    -webkit-line-clamp: 2 !important;
+    font: 800 1rem/1.24 "Manrope", sans-serif !important;
+  }
+  html body #podcastDetailSheet.is-episode-workspace .podcast-detail-sheet__episode-source-score,
+  html body #podcastDetailSheet.is-episode-workspace .podcast-detail-sheet__episode-own-score {
+    display: inline-flex !important;
+    align-items: baseline !important;
+    gap: 3px !important;
+    min-height: 0 !important;
+    padding: 0 !important;
+    border: 0 !important;
+    background: transparent !important;
+    color: #75675d !important;
+  }
+  html body #podcastDetailSheet.is-episode-workspace .podcast-detail-sheet__episode-source-score::before { content: "Brugere:"; font: 700 .68rem/1 "Manrope", sans-serif !important; }
+  html body #podcastDetailSheet.is-episode-workspace .podcast-detail-sheet__episode-own-score::before { content: "Din vurdering"; display: block; color: #75675d; font: 700 .64rem/1.1 "Manrope", sans-serif; }
+  html body #podcastDetailSheet.is-episode-workspace .podcast-detail-sheet__episode-source-score strong,
+  html body #podcastDetailSheet.is-episode-workspace .podcast-detail-sheet__episode-own-score strong { color: #342a24 !important; font-size: .82rem !important; }
+  html body #podcastDetailSheet.is-episode-workspace .podcast-detail-sheet__episode-source-score em { display: none !important; }
+  html body #podcastDetailSheet.is-episode-workspace .podcast-detail-sheet__episode-own-score { display: grid !important; justify-items: end !important; gap: 4px !important; }
+}

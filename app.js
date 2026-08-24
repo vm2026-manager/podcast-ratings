@@ -9215,7 +9215,7 @@ function renderPodcastEpisodeOverviewRows(podcast) {
           <td data-label="Brugere">
             <span class="podcast-detail-sheet__episode-source-score">
               <strong>${formatEpisodeOverviewScore(sourceScore)}</strong>
-              <em>${ratingCount ? escapeHtml(formatUserRatingCount(ratingCount)) : "Ingen vurderinger endnu"}</em>
+              <em>${ratingCount ? escapeHtml(formatUserRatingCount(ratingCount)) : ""}</em>
             </span>
           </td>
           <td data-label="Din vurdering">
@@ -9227,7 +9227,7 @@ function renderPodcastEpisodeOverviewRows(podcast) {
                 episode.title || `episode ${episodeNumber}`
               )}"
             >
-              <strong>${formatEpisodeOverviewScore(userRating)}</strong>
+              <strong>${userRating === null ? "0–10" : formatEpisodeOverviewScore(userRating)}</strong>
             </button>
           </td>
         </tr>
@@ -9281,7 +9281,7 @@ function renderManualPodcastEpisodeOverviewRows(podcast) {
           <td data-label="Brugere">
             <span class="podcast-detail-sheet__episode-source-score">
               <strong>${formatEpisodeOverviewScore(sourceScore)}</strong>
-              <em>${ratingCount ? escapeHtml(formatUserRatingCount(ratingCount)) : "Ingen vurderinger endnu"}</em>
+              <em>${ratingCount ? escapeHtml(formatUserRatingCount(ratingCount)) : ""}</em>
             </span>
           </td>
           <td data-label="Din vurdering">
@@ -9293,7 +9293,7 @@ function renderManualPodcastEpisodeOverviewRows(podcast) {
                 episode.title || `episode ${episodeNumber}`
               )}"
             >
-              <strong>${formatEpisodeOverviewScore(userRating)}</strong>
+              <strong>${userRating === null ? "0–10" : formatEpisodeOverviewScore(userRating)}</strong>
             </button>
           </td>
         </tr>
@@ -9315,8 +9315,10 @@ function renderPodcastEpisodeOverview(podcast) {
       <div class="podcast-detail-sheet__episode-overview-toolbar">
         <button class="podcast-detail-sheet__episode-back" type="button" data-podcast-episode-overview-back>
           <span aria-hidden="true">&larr;</span>
-          <span>Tilbage til podcasten</span>
+          <span class="podcast-detail-sheet__episode-back-label podcast-detail-sheet__episode-back-label--mobile">Tilbage</span>
+          <span class="podcast-detail-sheet__episode-back-label podcast-detail-sheet__episode-back-label--desktop">Tilbage til podcasten</span>
         </button>
+        <h2 class="podcast-detail-sheet__episode-workspace-title">Episoder</h2>
         <label class="podcast-detail-sheet__episode-search">
           <span class="sr-only">S&oslash;g i episoder</span>
           <input type="search" value="${escapeHtml(episodeState.searchTerm || "")}" placeholder="${escapeHtml(searchPlaceholder)}" data-episode-workspace-search autocomplete="off" />
@@ -9465,12 +9467,9 @@ function renderPodcastEpisodeOverviewContent(dialog, podcast) {
   resetEpisodeWorkspaceSearch(podcast);
 
   const content = dialog.querySelector("[data-podcast-detail-content]");
-  const ratings = content?.querySelector(".podcast-detail-sheet__ratings");
-  if (!content || !ratings) return;
+  if (!content) return;
 
-  ratings.outerHTML = renderPodcastEpisodeOverview(podcast);
-  content.querySelector(".podcast-detail-sheet__episode-entry")?.remove();
-  content.querySelector(".podcast-detail-sheet__actions")?.remove();
+  content.innerHTML = renderPodcastEpisodeOverview(podcast);
   content.classList.add("podcast-detail-sheet__content--episode-overview");
   bindPodcastEpisodeOverviewEvents(dialog, podcast);
 
