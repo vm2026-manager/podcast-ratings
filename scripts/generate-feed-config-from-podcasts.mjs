@@ -27,8 +27,12 @@ function normalizePodcastKey(value) {
     .trim();
 }
 
-function toFeedKey(title) {
-  return normalizePodcastKey(title).replace(/\s+/g, "_");
+function toFeedKey(podcastId) {
+  return normalizePodcastKey(podcastId).replace(/\s+/g, "_");
+}
+
+function getPodcastId(podcast) {
+  return String(podcast?.["Podcast-ID"] ?? podcast?.["Podcast ID"] ?? podcast?.PodcastID ?? "").trim();
 }
 
 function getFeedUrl(podcast) {
@@ -64,13 +68,14 @@ function escapeTsString(value) {
   return String(value).replace(/\\/g, "\\\\").replace(/"/g, '\\"');
 }
 
-export function buildSheetFeedEntries(podcasts, configSource) {
+export function buildSheetFeedEntries(podcasts, configSource, { identity = "podcast-id" } = {}) {
   const manual = getManualConfigKeys(configSource);
   const seenFeedKeys = new Set();
   const seenUrls = new Set();
   const generated = [];
   const invalid = [];
   const duplicates = [];
+  const missingPodcastIds = [];
   let withFeed = 0;
   let existingPreserved = 0;
 
@@ -81,8 +86,14 @@ export function buildSheetFeedEntries(podcasts, configSource) {
     withFeed += 1;
 
     const feedUrl = parseHttpUrl(rawFeedUrl);
-    const podcastKey = normalizePodcastKey(title);
-    const feedKey = toFeedKey(title);
+    const podcastId = getPodcastId(podcast);
+    if (identity === "podcast-id" && !podcastId) {
+      missingPodcastIds.push({ title: title || "(mangler titel)", feed: rawFeedUrl });
+      continue;
+    }
+    const identityValue = identity === "podcast-id" ? podcastId : title;
+    const podcastKey = identity === "podcast-id" ? podcastId : normalizePodcastKey(title);
+    const feedKey = toFeedKey(identityValue);
     if (!title || !podcastKey || !feedKey || !feedUrl) {
       invalid.push({ title: title || "(mangler titel)", feed: rawFeedUrl });
       continue;
@@ -119,7 +130,9 @@ export function buildSheetFeedEntries(podcasts, configSource) {
       sheetFeedsUsingExistingManualEntries: existingPreserved,
       skippedInvalidFeedUrls: invalid.length,
       duplicatesDetected: duplicates.length,
+      missingPodcastIds: missingPodcastIds.length,
       invalid,
+      missingPodcastIdRows: missingPodcastIds,
       duplicates
     }
   };

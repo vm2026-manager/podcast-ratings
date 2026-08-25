@@ -7,6 +7,7 @@ export type FeedConfigAudit = {
   dynamic_sheet_feed_count: number;
   duplicates_skipped: number;
   invalid_feed_urls_skipped: number;
+  missing_podcast_ids_skipped: number;
   total_enabled_feeds: number;
   podcasts_json_url_configured: boolean;
   dynamic_feed_load_error?: string;
@@ -24,8 +25,12 @@ function normalizePodcastKey(value: unknown): string {
     .trim();
 }
 
-function toFeedKey(title: unknown): string {
-  return normalizePodcastKey(title).replace(/\s+/g, "_");
+function toFeedKey(podcastId: unknown): string {
+  return normalizePodcastKey(podcastId).replace(/\s+/g, "_");
+}
+
+function getPodcastId(row: Record<string, unknown>): string {
+  return String(row["Podcast-ID"] ?? row["Podcast ID"] ?? row.PodcastID ?? "").trim();
 }
 
 function parseHttpUrl(value: unknown): string {
@@ -72,14 +77,19 @@ export function mergeSheetFeedConfigs(
   let dynamicSheetFeedCount = 0;
   let duplicatesSkipped = 0;
   let invalidFeedUrlsSkipped = 0;
+  let missingPodcastIdsSkipped = 0;
 
   for (const row of getPodcastRows(sheetPayload)) {
-    const title = row.Titel ?? row.Title ?? row.title;
     const feedUrl = parseHttpUrl(row.Feed ?? row.feed);
-    const podcastKey = normalizePodcastKey(title);
-    const feedKey = toFeedKey(title);
+    const podcastId = getPodcastId(row);
+    const podcastKey = podcastId;
+    const feedKey = toFeedKey(podcastId);
 
     if (!String(row.Feed ?? row.feed ?? "").trim()) continue;
+    if (!podcastId) {
+      missingPodcastIdsSkipped += 1;
+      continue;
+    }
     if (!feedUrl || !podcastKey || !feedKey) {
       invalidFeedUrlsSkipped += 1;
       continue;
@@ -110,6 +120,7 @@ export function mergeSheetFeedConfigs(
       dynamic_sheet_feed_count: dynamicSheetFeedCount,
       duplicates_skipped: duplicatesSkipped,
       invalid_feed_urls_skipped: invalidFeedUrlsSkipped,
+      missing_podcast_ids_skipped: missingPodcastIdsSkipped,
       total_enabled_feeds: Object.values(configs).filter((config) => config.enabled !== false).length
     }
   };
@@ -142,6 +153,7 @@ export async function loadRuntimeFeedConfigs(options: {
     dynamic_sheet_feed_count: 0,
     duplicates_skipped: 0,
     invalid_feed_urls_skipped: 0,
+    missing_podcast_ids_skipped: 0,
     total_enabled_feeds: Object.values(staticConfigs).filter((config) => config.enabled !== false).length,
     podcasts_json_url_configured: Boolean(podcastsJsonUrl)
   };
