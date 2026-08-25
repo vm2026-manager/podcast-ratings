@@ -2222,6 +2222,7 @@ function mapPodcast(row, index) {
   const rawGenre = getField(row, ["Genre"]);
   const rawSecondaryGenre = getField(row, ["secondaryGenre", "Secondary genre", "Sekundærgenre"]);
   const rawPublisher = getField(row, ["Udgiver", "Publisher"]);
+  const podcastId = normalizeText(getField(row, ["Podcast-ID", "Podcast ID", "PodcastID"]));
   const topics = (Array.isArray(row?.topics) ? row.topics : String(getField(row, ["topics", "Topics", "Emner"]) || "").split(/[;,]/))
     .map(normalizeText)
     .filter(Boolean);
@@ -2299,6 +2300,8 @@ function mapPodcast(row, index) {
   return {
     id: `${title}-${index}`,
     catalogueId,
+    podcastId,
+    legacyKey: normalizeMatchKey(title),
     title,
     host,
     rawRating,

@@ -65,7 +65,8 @@ const PODCAST_FIELDS = [
     output: "Undervurderet perle",
     candidates: ["Undervurderet perle", "Undervurderede perler", "Underrated pearl", "Underrated"]
   },
-  { output: "Placering", candidates: ["Placering", "Rank", "Rangering"] }
+  { output: "Placering", candidates: ["Placering", "Rank", "Rangering"] },
+  { output: "Podcast-ID", candidates: ["Podcast-ID", "Podcast ID", "PodcastID"] }
 ];
 
 const SECONDARY_GENRE_FIELDS = ["2. genre"];
