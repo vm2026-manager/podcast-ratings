@@ -11111,6 +11111,17 @@ function renderHomeFeatured(container) {
   const featuredTitle = podcast
     ? getDesktopRankingTitleParts(podcast).displayText
     : review.title || "";
+  const featuredTitleSize = featuredTitle.length <= 18
+    ? "short"
+    : featuredTitle.length <= 35
+      ? "medium"
+      : "long";
+  container.classList.remove(
+    "home-featured__content--title-short",
+    "home-featured__content--title-medium",
+    "home-featured__content--title-long"
+  );
+  container.classList.add(`home-featured__content--title-${featuredTitleSize}`);
   container.classList.toggle("home-featured__content--long-title", featuredTitle.length > 28);
   const featuredMeta = Array.from(
     new Set(

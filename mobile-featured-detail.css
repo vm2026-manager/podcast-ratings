@@ -42,12 +42,13 @@
   html body.page-forside #pageIntroPanel .home-featured__surface {
     position: relative !important;
     display: grid !important;
-    grid-template-columns: minmax(0, 1fr) 128px !important;
-    grid-template-areas: "label cover" "title cover" "meta cover" "score cover" "review review" "actions actions" "indicators controls" !important;
+    --home-featured-cover-size: clamp(138px, 39vw, 160px);
+    grid-template-columns: minmax(0, 1fr) var(--home-featured-cover-size) !important;
+    grid-template-areas: "label favorite" "title cover" "meta cover" "score score" "review review" "actions actions" "indicators controls" !important;
     align-items: start !important;
     column-gap: 14px !important;
     row-gap: 13px !important;
-    min-height: 550px !important;
+    min-height: 0 !important;
     width: 100% !important;
     box-sizing: border-box !important;
     margin: 0 !important;
@@ -69,29 +70,36 @@
   }
 
   html body.page-forside #pageIntroPanel .home-featured__cover-column { position: static !important; }
-  html body.page-forside #pageIntroPanel .home-featured__title-row { grid-area: title !important; display: block !important; min-width: 0 !important; }
-  html body.page-forside #pageIntroPanel .home-featured__title-row h3 { min-width: 0 !important; margin: 0 !important; }
+  html body.page-forside #pageIntroPanel .home-featured__title-row { display: contents !important; }
+  html body.page-forside #pageIntroPanel .home-featured__title-row h3 {
+    grid-area: title !important;
+    min-width: 0 !important;
+    margin: 0 !important;
+  }
   html body.page-forside #pageIntroPanel .home-featured__cover {
     grid-area: cover !important;
     align-self: start !important;
     justify-self: end !important;
-    width: 128px !important;
+    width: var(--home-featured-cover-size) !important;
     height: auto !important;
     aspect-ratio: 1 !important;
     margin: 0 !important;
-    border: 1px solid rgba(255, 255, 255, .62) !important;
-    border-radius: 16px !important;
-    box-shadow: 0 14px 28px rgba(0, 0, 0, .28) !important;
+    overflow: hidden !important;
+    border: 0 !important;
+    border-radius: 20px !important;
+    background: transparent !important;
+    box-shadow: none !important;
   }
   html body.page-forside #pageIntroPanel .home-featured__favorite {
-    position: absolute !important;
+    position: static !important;
+    grid-area: favorite !important;
     z-index: 3 !important;
-    top: 31px !important;
-    right: 27px !important;
-    width: 38px !important;
-    min-width: 38px !important;
-    height: 38px !important;
-    min-height: 38px !important;
+    align-self: start !important;
+    justify-self: end !important;
+    width: 46px !important;
+    min-width: 46px !important;
+    height: 46px !important;
+    min-height: 46px !important;
     margin: 0 !important;
     border-color: rgba(255, 255, 255, .62) !important;
     border-radius: 10px !important;
@@ -135,7 +143,11 @@
   }
   html body.page-forside #pageIntroPanel .home-featured__copy h3,
   html body.page-forside #pageIntroPanel .home-featured__title-button {
+    display: -webkit-box !important;
+    width: 100% !important;
+    max-height: 2.12em !important;
     margin: 0 !important;
+    overflow: hidden !important;
     color: #fff !important;
     appearance: none !important;
     -webkit-appearance: none !important;
@@ -145,7 +157,15 @@
     line-height: 1.06 !important;
     text-align: left !important;
     text-shadow: 0 2px 10px rgba(0, 0, 0, .62) !important;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
   }
+  html body.page-forside #pageIntroPanel .home-featured__content--title-short .home-featured__copy h3,
+  html body.page-forside #pageIntroPanel .home-featured__content--title-short .home-featured__title-button { font-size: clamp(2rem, 8.8vw, 2.25rem) !important; }
+  html body.page-forside #pageIntroPanel .home-featured__content--title-medium .home-featured__copy h3,
+  html body.page-forside #pageIntroPanel .home-featured__content--title-medium .home-featured__title-button { font-size: clamp(1.75rem, 7.8vw, 2rem) !important; }
+  html body.page-forside #pageIntroPanel .home-featured__content--title-long .home-featured__copy h3,
+  html body.page-forside #pageIntroPanel .home-featured__content--title-long .home-featured__title-button { font-size: clamp(1.5rem, 6.7vw, 1.72rem) !important; }
   html body.page-forside #pageIntroPanel .home-featured__meta {
     grid-area: meta !important;
     display: flex !important;
@@ -975,12 +995,8 @@
 }
 @media (max-width: 380px) {
   html body.page-forside #pageIntroPanel .home-featured__surface {
-    grid-template-columns: minmax(0, 1fr) 112px !important;
     padding-inline: 20px !important;
   }
-  html body.page-forside #pageIntroPanel .home-featured__copy h3,
-  html body.page-forside #pageIntroPanel .home-featured__title-button { font-size: 1.72rem !important; }
-  html body.page-forside #pageIntroPanel .home-featured__cover { width: 112px !important; }
   html body #podcastDetailSheet .podcast-detail-sheet__header { grid-template-columns: 124px minmax(0, 1fr) !important; }
   html body #podcastDetailSheet .podcast-detail-sheet__cover { width: 120px !important; height: 120px !important; }
   html body #podcastDetailSheet .podcast-detail-sheet__header-favorite,
