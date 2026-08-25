@@ -2557,6 +2557,18 @@ function getEpisodePodcastKey(podcastOrKey) {
   return resolved ? getLegacyPodcastKey(resolved) : normalizeMatchKey(podcastOrKey);
 }
 
+// Local/manual episode data is part of the catalogue namespace, not the
+// imported-feed namespace. Keep this deliberately separate from
+// getEpisodePodcastKey(), whose title-derived value is still the database key
+// until the remote episode migration happens.
+function getLocalEpisodePodcastKey(podcastOrKey) {
+  const podcast =
+    typeof podcastOrKey === "object"
+      ? podcastOrKey
+      : resolvePodcastByStoredKey(podcastOrKey);
+  return getPodcastId(podcast);
+}
+
 function resolvePodcastByStoredKey(key) {
   const storedKey = normalizeText(key);
   if (!storedKey) return null;
@@ -4672,17 +4684,25 @@ function writeEpisodeParentRatingBackups(backups) {
   }
 }
 
-function getEpisodeParentRatingBackup(podcastKey) {
+function getEpisodeParentRatingBackup(podcastKey, { local = false } = {}) {
   const userId = state.authUser?.id;
-  const key = normalizeText(podcastKey);
+  const key = local ? getLocalEpisodePodcastKey(podcastKey) : normalizeText(podcastKey);
   if (!userId || !key) return null;
-  return readEpisodeParentRatingBackups()?.[userId]?.[key] ?? null;
+  const userBackups = readEpisodeParentRatingBackups()?.[userId] || {};
+  if (userBackups[key]) return userBackups[key];
+
+  if (!local) return null;
+  const podcast = resolvePodcastByStoredKey(key);
+  const legacyKey = getLegacyPodcastKey(podcast);
+  return getPodcastId(resolvePodcastByStoredKey(legacyKey)) === key
+    ? userBackups[legacyKey] ?? null
+    : null;
 }
 
-function captureEpisodeParentRatingBackup(podcastKey) {
+function captureEpisodeParentRatingBackup(podcastKey, { local = false } = {}) {
   const userId = state.authUser?.id;
-  const key = normalizeText(podcastKey);
-  if (!userId || !key || getEpisodeParentRatingBackup(key)) return false;
+  const key = local ? getLocalEpisodePodcastKey(podcastKey) : normalizeText(podcastKey);
+  if (!userId || !key || getEpisodeParentRatingBackup(key, { local })) return false;
 
   const manualRating = parseNumber(
     state.userRatingsByKey[resolveCanonicalPodcastId(key) || key]
@@ -4698,14 +4718,21 @@ function captureEpisodeParentRatingBackup(podcastKey) {
   return writeEpisodeParentRatingBackups(backups);
 }
 
-function clearEpisodeParentRatingBackup(podcastKey) {
+function clearEpisodeParentRatingBackup(podcastKey, { local = false } = {}) {
   const userId = state.authUser?.id;
-  const key = normalizeText(podcastKey);
+  const key = local ? getLocalEpisodePodcastKey(podcastKey) : normalizeText(podcastKey);
   if (!userId || !key) return;
 
   const backups = readEpisodeParentRatingBackups();
-  if (!backups[userId]?.[key]) return;
+  if (!backups[userId]) return;
   delete backups[userId][key];
+  if (local) {
+    const podcast = resolvePodcastByStoredKey(key);
+    const legacyKey = getLegacyPodcastKey(podcast);
+    if (getPodcastId(resolvePodcastByStoredKey(legacyKey)) === key) {
+      delete backups[userId][legacyKey];
+    }
+  }
   if (!Object.keys(backups[userId]).length) delete backups[userId];
   writeEpisodeParentRatingBackups(backups);
 }
@@ -4750,13 +4777,15 @@ async function persistEffectiveParentRating(
 async function synchronizeEpisodeDerivedParentRating(
   podcastKey,
   previousEffectiveRating = null,
-  { refreshUi = true } = {}
+  { refreshUi = true, local = false } = {}
 ) {
-  const episodeKey = getEpisodePodcastKey(podcastKey);
+  const episodeKey = local
+    ? getLocalEpisodePodcastKey(podcastKey)
+    : getEpisodePodcastKey(podcastKey);
   const canonicalKey = resolveCanonicalPodcastId(podcastKey);
   if (!episodeKey || !canonicalKey) return;
   const summary = getPodcastEpisodeUserRatingSummary(episodeKey);
-  const backup = getEpisodeParentRatingBackup(episodeKey);
+  const backup = getEpisodeParentRatingBackup(episodeKey, { local });
   const nextEffectiveRating =
     summary.count > 0
       ? Math.round(Number(summary.average) * 10) / 10
@@ -4767,7 +4796,7 @@ async function synchronizeEpisodeDerivedParentRating(
   await persistEffectiveParentRating(canonicalKey, nextEffectiveRating, previousEffectiveRating);
 
   if (summary.count === 0) {
-    clearEpisodeParentRatingBackup(episodeKey);
+    clearEpisodeParentRatingBackup(episodeKey, { local });
     delete state.episodeParentRatingSyncSignatures[episodeKey];
   } else {
     state.episodeParentRatingSyncSignatures[episodeKey] =
@@ -4782,7 +4811,10 @@ async function synchronizeEpisodeDerivedParentRating(
 }
 
 async function reconcileExistingEpisodeDerivedParentRating(podcastKey) {
-  const episodeKey = getEpisodePodcastKey(podcastKey);
+  const local = usesLocalEpisodePersistence(podcastKey);
+  const episodeKey = local
+    ? getLocalEpisodePodcastKey(podcastKey)
+    : getEpisodePodcastKey(podcastKey);
   const canonicalKey = resolveCanonicalPodcastId(podcastKey);
   const summary = getPodcastEpisodeUserRatingSummary(episodeKey);
   if (!state.authUser || !episodeKey || !canonicalKey || summary.count === 0) return;
@@ -4797,9 +4829,9 @@ async function reconcileExistingEpisodeDerivedParentRating(podcastKey) {
     return;
   }
 
-  if (!getEpisodeParentRatingBackup(episodeKey)) {
-    captureEpisodeParentRatingBackup(episodeKey);
-    if (!getEpisodeParentRatingBackup(episodeKey)) {
+  if (!getEpisodeParentRatingBackup(episodeKey, { local })) {
+    captureEpisodeParentRatingBackup(episodeKey, { local });
+    if (!getEpisodeParentRatingBackup(episodeKey, { local })) {
       console.error("Din tidligere samlede vurdering kunne ikke bevares.");
       return;
     }
@@ -4808,7 +4840,7 @@ async function reconcileExistingEpisodeDerivedParentRating(podcastKey) {
   const previousEffectiveRating = state.userRatingsByKey[canonicalKey] ?? null;
   state.episodeParentRatingSyncPendingKeys.add(episodeKey);
   try {
-    await synchronizeEpisodeDerivedParentRating(episodeKey, previousEffectiveRating);
+    await synchronizeEpisodeDerivedParentRating(episodeKey, previousEffectiveRating, { local });
   } catch (error) {
     console.error(error);
     setAuthMessage(
@@ -6495,6 +6527,7 @@ async function saveActiveEpisodeRating() {
   const episode = getGenstartEpisodeById(episodeId);
   const podcastKey = normalizeText(episode?.podcast_key) || getEpisodePodcastKey(state.activePodcastDetailKey);
   const config = getEpisodeRatingPersistenceConfig(podcastKey, episode);
+  const isLocalEpisodeRating = config?.persistence === "local";
   const episodeState = getPodcastEpisodeState(podcastKey);
   const previousUserRating = episodeState.userRatingsById[episodeId];
   const previousEpisodeSummary = getPodcastEpisodeUserRatingSummary(podcastKey);
@@ -6507,9 +6540,9 @@ async function saveActiveEpisodeRating() {
   updateRatingDialogMessage("");
 
   try {
-    if (previousEpisodeSummary.count === 0 && !getEpisodeParentRatingBackup(podcastKey)) {
-      captureEpisodeParentRatingBackup(podcastKey);
-      if (!getEpisodeParentRatingBackup(podcastKey)) {
+    if (previousEpisodeSummary.count === 0 && !getEpisodeParentRatingBackup(podcastKey, { local: isLocalEpisodeRating })) {
+      captureEpisodeParentRatingBackup(podcastKey, { local: isLocalEpisodeRating });
+      if (!getEpisodeParentRatingBackup(podcastKey, { local: isLocalEpisodeRating })) {
         throw new Error("Din tidligere samlede vurdering kunne ikke bevares.");
       }
     }
@@ -6520,7 +6553,8 @@ async function saveActiveEpisodeRating() {
       }
       await synchronizeEpisodeDerivedParentRating(
         podcastKey,
-        previousEffectiveParentRating
+        previousEffectiveParentRating,
+        { local: true }
       );
       closeRatingDialog();
       updatePodcastEpisodeOverview(document.getElementById("podcastDetailSheet"));
@@ -6563,7 +6597,7 @@ async function saveActiveEpisodeRating() {
       }
     }
     if (previousEpisodeSummary.count === 0) {
-      clearEpisodeParentRatingBackup(podcastKey);
+      clearEpisodeParentRatingBackup(podcastKey, { local: isLocalEpisodeRating });
     }
     console.error(error);
     if (elements.ratingSaveButton) elements.ratingSaveButton.textContent = originalSaveLabel;
@@ -6663,7 +6697,8 @@ async function deleteActiveEpisodeRating() {
       }
       await synchronizeEpisodeDerivedParentRating(
         podcastKey,
-        previousEffectiveParentRating
+        previousEffectiveParentRating,
+        { local: true }
       );
       closeRatingDialog();
       updatePodcastEpisodeOverview(document.getElementById("podcastDetailSheet"));
@@ -8054,13 +8089,21 @@ function createStableManualEpisodeUuid(podcastKey, episodeNumber, title) {
 }
 
 function getPodcastManualEpisodes(podcast) {
-  const podcastKey = getEpisodePodcastKey(podcast) || normalizeMatchKey(podcast?.title) || "podcast";
+  const podcastKey = getLocalEpisodePodcastKey(podcast) || "podcast";
+  const legacyPodcastKey = getLegacyPodcastKey(podcast);
+  const canReadLegacyEpisodeIds =
+    Boolean(legacyPodcastKey) &&
+    getPodcastId(resolvePodcastByStoredKey(legacyPodcastKey)) === podcastKey;
 
   return getPodcastManualEpisodeTitles(podcast).map((title, index) => {
     const episodeNumber = index + 1;
+    const legacyEpisodeId = canReadLegacyEpisodeIds
+      ? createStableManualEpisodeUuid(legacyPodcastKey, episodeNumber, title)
+      : "";
 
     return {
       id: createStableManualEpisodeUuid(podcastKey, episodeNumber, title),
+      legacy_manual_episode_id: legacyEpisodeId,
       manual_episode_key: `manual:${podcastKey}:${episodeNumber}:${encodeURIComponent(title)}`,
       podcast_key: podcastKey,
       title,
@@ -8142,6 +8185,18 @@ function getEpisodeRatingPersistenceConfig(podcastOrKey, episode) {
   }
 
   return null;
+}
+
+function usesLocalEpisodePersistence(podcastOrKey) {
+  const podcast =
+    typeof podcastOrKey === "object"
+      ? podcastOrKey
+      : resolvePodcastByStoredKey(podcastOrKey);
+  const config = getEpisodePodcastConfig(podcast || podcastOrKey);
+  return Boolean(
+    config?.persistence === "local" ||
+      (!config && podcast && podcastHasManualEpisodeList(podcast))
+  );
 }
 
 function getEpisodeDatabasePodcastKey(configOrPodcast) {
@@ -8238,8 +8293,27 @@ function writeLocalEpisodeRatingStore(store) {
   }
 }
 
+function getStoredLocalEpisodeRating(ratings, episode) {
+  const canonicalEpisodeId = getEpisodeKey(episode);
+  const direct = ratings?.[canonicalEpisodeId];
+  if (direct) return direct;
+
+  // Legacy manual IDs were title-keyed. Read one only if that title remains an
+  // unambiguous alias for this exact canonical podcast; never attach a shared
+  // legacy namespace to either same-title podcast.
+  const legacyEpisodeId = normalizeText(episode?.legacy_manual_episode_id);
+  const localPodcastKey = getLocalEpisodePodcastKey(episode?.podcast_key);
+  const legacy = legacyEpisodeId ? ratings?.[legacyEpisodeId] : null;
+  return legacy && getLocalEpisodePodcastKey(legacy.podcastKey) === localPodcastKey
+    ? legacy
+    : null;
+}
+
 function hydrateLocalEpisodeRatingState(podcastKey, episodes) {
-  const episodeState = getPodcastEpisodeState(podcastKey);
+  const localPodcastKey = getLocalEpisodePodcastKey(podcastKey);
+  if (!localPodcastKey) return;
+
+  const episodeState = getPodcastEpisodeState(localPodcastKey);
   const store = readLocalEpisodeRatingStore();
   const activeUserRatings = state.authUser ? store[state.authUser.id] || {} : {};
 
@@ -8248,7 +8322,7 @@ function hydrateLocalEpisodeRatingState(podcastKey, episodes) {
     if (!episodeId) return;
 
     const values = Object.values(store)
-      .map((ratings) => parseNumber(ratings?.[episodeId]?.rating))
+      .map((ratings) => parseNumber(getStoredLocalEpisodeRating(ratings, episode)?.rating))
       .filter((value) => value !== null);
 
     episodeState.statsById[episodeId] = {
@@ -8258,30 +8332,34 @@ function hydrateLocalEpisodeRatingState(podcastKey, episodes) {
       ratingCount: values.length
     };
     episodeState.userRatingsById[episodeId] = state.authUser
-      ? parseNumber(activeUserRatings?.[episodeId]?.rating)
+      ? parseNumber(getStoredLocalEpisodeRating(activeUserRatings, episode)?.rating)
       : null;
   });
 }
 
 function saveLocalEpisodeRating(podcastKey, episodeId, rating) {
   if (!state.authUser) return false;
+  const localPodcastKey = getLocalEpisodePodcastKey(podcastKey);
+  if (!localPodcastKey) return false;
 
   const store = readLocalEpisodeRatingStore();
   const userRatings = store[state.authUser.id] || {};
   userRatings[episodeId] = {
-    podcastKey,
+    podcastKey: localPodcastKey,
     rating,
     updatedAt: new Date().toISOString()
   };
   store[state.authUser.id] = userRatings;
 
   if (!writeLocalEpisodeRatingStore(store)) return false;
-  hydrateLocalEpisodeRatingState(podcastKey, getPodcastEpisodeState(podcastKey).items);
+  hydrateLocalEpisodeRatingState(localPodcastKey, getPodcastEpisodeState(localPodcastKey).items);
   return true;
 }
 
 function deleteLocalEpisodeRating(podcastKey, episodeId) {
   if (!state.authUser) return false;
+  const localPodcastKey = getLocalEpisodePodcastKey(podcastKey);
+  if (!localPodcastKey) return false;
 
   const store = readLocalEpisodeRatingStore();
   const userRatings = store[state.authUser.id] || {};
@@ -8289,7 +8367,7 @@ function deleteLocalEpisodeRating(podcastKey, episodeId) {
   store[state.authUser.id] = userRatings;
 
   if (!writeLocalEpisodeRatingStore(store)) return false;
-  hydrateLocalEpisodeRatingState(podcastKey, getPodcastEpisodeState(podcastKey).items);
+  hydrateLocalEpisodeRatingState(localPodcastKey, getPodcastEpisodeState(localPodcastKey).items);
   return true;
 }
 
@@ -8324,14 +8402,17 @@ function createEmptyPodcastEpisodeState() {
 
 function getPodcastEpisodeState(podcastOrKey) {
   const config = getEpisodePodcastConfig(podcastOrKey);
+  const localEpisodeKey = usesLocalEpisodePersistence(podcastOrKey)
+    ? getLocalEpisodePodcastKey(podcastOrKey)
+    : "";
 
-  const podcastKey = config
+  const podcastKey = localEpisodeKey || (config
     ? getEpisodeDatabasePodcastKey(config)
     : normalizeText(
         typeof podcastOrKey === "string"
           ? getEpisodePodcastKey(podcastOrKey)
           : getEpisodePodcastKey(podcastOrKey)
-      );
+      ));
 
   if (!podcastKey) {
     return createEmptyPodcastEpisodeState();
@@ -9370,7 +9451,7 @@ function renderPodcastEpisodeOverviewRows(podcast) {
 function ensureManualPodcastEpisodeState(podcast) {
   const episodeState = getPodcastEpisodeState(podcast);
   const episodes = getPodcastManualEpisodes(podcast);
-  const podcastKey = getEpisodePodcastKey(podcast) || normalizeMatchKey(podcast?.title) || "";
+  const podcastKey = getLocalEpisodePodcastKey(podcast);
 
   episodeState.items = mergeEpisodes([], episodes);
   episodeState.hasMore = false;
