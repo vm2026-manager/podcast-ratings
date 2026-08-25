@@ -1747,27 +1747,56 @@ function normalizeCoverManifestEntries(payload) {
     : Array.isArray(payload?.entries)
       ? payload.entries
       : [];
-  const lookup = {};
+  const podcastIdCandidates = new Map();
+  const signatureCandidates = new Map();
+  const legacyKeyCandidates = new Map();
+
+  const addCandidate = (candidates, key, entry) => {
+    if (!key) return;
+    if (!candidates.has(key)) candidates.set(key, []);
+    const matches = candidates.get(key);
+    if (!matches.includes(entry)) matches.push(entry);
+  };
+
+  const uniqueEntries = (candidates) => {
+    const lookup = {};
+    candidates.forEach((matches, key) => {
+      if (matches.length === 1) lookup[key] = matches[0];
+    });
+    return lookup;
+  };
 
   entries.forEach((entry) => {
     const podcastId = normalizeText(entry?.podcastId || entry?.["Podcast-ID"]);
+    const signature = getCoverManifestSignature(entry);
     const keys = [
       entry?.podcastKey,
       entry?.matchKey,
       entry?.titleKey,
-      entry?.title,
-      entry?.stableKey
+      entry?.title
     ]
       .map(normalizeMatchKey)
       .filter(Boolean);
 
-    if (podcastId && !lookup[podcastId]) lookup[podcastId] = entry;
+    addCandidate(podcastIdCandidates, podcastId, entry);
+    addCandidate(signatureCandidates, signature, entry);
     keys.forEach((key) => {
-      if (!lookup[key]) lookup[key] = entry;
+      addCandidate(legacyKeyCandidates, key, entry);
     });
   });
 
-  return lookup;
+  return {
+    byPodcastId: uniqueEntries(podcastIdCandidates),
+    bySignature: uniqueEntries(signatureCandidates),
+    byLegacyKey: uniqueEntries(legacyKeyCandidates)
+  };
+}
+
+function getCoverManifestSignature(record) {
+  const title = normalizeMatchKey(record?.title);
+  if (!title) return "";
+
+  return [title, normalizeMatchKey(record?.host), normalizeMatchKey(record?.publisher)].join("|");
 }
 
 function getManifestVariantEntries(entry) {
@@ -1791,12 +1820,23 @@ function getManifestVariantEntries(entry) {
 
 function applyLocalCoverManifest(podcasts, manifestLookup) {
   state.coverMetaByPrimarySrc = {};
+  const legacyKeyCounts = new Map();
 
   podcasts.forEach((podcast) => {
+    const legacyKey = getLegacyPodcastKey(podcast);
+    if (!legacyKey) return;
+    legacyKeyCounts.set(legacyKey, (legacyKeyCounts.get(legacyKey) || 0) + 1);
+  });
+
+  podcasts.forEach((podcast) => {
+    const podcastId = getPodcastId(podcast);
+    const legacyKey = getLegacyPodcastKey(podcast);
     const entry =
-      manifestLookup[getPodcastId(podcast)] ||
-      manifestLookup[getLegacyPodcastKey(podcast)] ||
-      manifestLookup[normalizeMatchKey(podcast.title)];
+      manifestLookup?.byPodcastId?.[podcastId] ||
+      manifestLookup?.bySignature?.[getCoverManifestSignature(podcast)] ||
+      (legacyKeyCounts.get(legacyKey) === 1
+        ? manifestLookup?.byLegacyKey?.[legacyKey]
+        : null);
     const variants = getManifestVariantEntries(entry);
 
     podcast.localCoverVariants = variants;
