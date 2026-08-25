@@ -78,6 +78,7 @@ const SUPPLEMENTARY_SIMILARITIES_COLUMN_INDEX = 19;
 const FEATURED_FIELDS = [
   { output: "Aktiv", candidates: ["Aktiv"] },
   { output: "Titel", candidates: ["Titel"] },
+  { output: "Podcast-ID", candidates: ["Podcast-ID", "Podcast ID", "PodcastID"] },
   { output: "Matchtitel", candidates: ["Matchtitel"] },
   { output: "Kort vurdering", candidates: ["Kort vurdering"] },
   { output: "Historie", candidates: ["Historie", "Historie/sag"] },

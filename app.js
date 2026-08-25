@@ -622,6 +622,8 @@ function persistProfilePreferences(preferences) {
 const state = {
   podcasts: [],
   podcastByKey: {},
+  podcastById: {},
+  podcastByLegacyKey: {},
   coverManifestByKey: {},
   coverMetaByPrimarySrc: {},
   coverManifestWarningShown: false,
@@ -1746,6 +1748,7 @@ function normalizeCoverManifestEntries(payload) {
   const lookup = {};
 
   entries.forEach((entry) => {
+    const podcastId = normalizeText(entry?.podcastId || entry?.["Podcast-ID"]);
     const keys = [
       entry?.podcastKey,
       entry?.matchKey,
@@ -1756,6 +1759,7 @@ function normalizeCoverManifestEntries(payload) {
       .map(normalizeMatchKey)
       .filter(Boolean);
 
+    if (podcastId && !lookup[podcastId]) lookup[podcastId] = entry;
     keys.forEach((key) => {
       if (!lookup[key]) lookup[key] = entry;
     });
@@ -1787,8 +1791,10 @@ function applyLocalCoverManifest(podcasts, manifestLookup) {
   state.coverMetaByPrimarySrc = {};
 
   podcasts.forEach((podcast) => {
-    const key = getPodcastKey(podcast);
-    const entry = manifestLookup[key] || manifestLookup[normalizeMatchKey(podcast.title)];
+    const entry =
+      manifestLookup[getPodcastId(podcast)] ||
+      manifestLookup[getLegacyPodcastKey(podcast)] ||
+      manifestLookup[normalizeMatchKey(podcast.title)];
     const variants = getManifestVariantEntries(entry);
 
     podcast.localCoverVariants = variants;
@@ -2369,7 +2375,7 @@ function deduplicatePodcasts(podcasts) {
   const grouped = new Map();
 
   podcasts.forEach((podcast) => {
-    const key = normalizeMatchKey(podcast.title);
+    const key = getPodcastId(podcast);
     if (!key) return;
 
     if (!grouped.has(key)) {
@@ -2423,7 +2429,7 @@ function deduplicatePodcasts(podcasts) {
   return result.sort((a, b) => a.placement - b.placement);
 }
 
-function mapFeaturedReview(row, index, podcastLookup) {
+function mapFeaturedReview(row, index) {
   const active = getField(row, ["Aktiv"]);
   const title = getField(row, ["Titel"]);
   const matchTitle = getField(row, ["Matchtitel"]) || title;
@@ -2450,13 +2456,18 @@ function mapFeaturedReview(row, index, podcastLookup) {
   const autoImage = extractUrl(getField(row, ["Auto-billedlink"]));
   const autoGenre = getField(row, ["Auto-genre"]);
   const autoHost = getField(row, ["Auto-v\u00e6rt", "Auto-vaert"]);
+  const podcastId = normalizeText(getField(row, ["Podcast-ID", "Podcast ID", "PodcastID"]));
 
-  const matchedPodcast = podcastLookup[normalizeMatchKey(matchTitle)] || null;
+  const matchedPodcast = podcastId
+    ? state.podcastById[podcastId] || null
+    : resolvePodcastByStoredKey(normalizeMatchKey(matchTitle)) ||
+      resolvePodcastByStoredKey(normalizeMatchKey(title));
 
   return {
     active,
     title: title || matchedPodcast?.title || matchTitle,
     matchTitle: matchTitle || title,
+    podcastId: getPodcastId(matchedPodcast),
     review,
     score,
     scoreLabel: formatRating(score),
@@ -2486,25 +2497,30 @@ function buildFeaturedReviewLookup(reviews) {
   const lookup = {};
 
   reviews.forEach((review) => {
+    const podcastId = getPodcastId(review);
     const matchKey = normalizeMatchKey(review.matchTitle);
     const titleKey = normalizeMatchKey(review.title);
 
     if (matchKey) lookup[matchKey] = review;
     if (titleKey) lookup[titleKey] = review;
+    if (podcastId) lookup[podcastId] = review;
   });
 
   return lookup;
 }
 
 function getReviewForPodcast(podcast) {
-  return state.featuredReviewByKey[normalizeMatchKey(podcast.title)] || null;
+  return state.featuredReviewByKey[getPodcastId(podcast)] ||
+    state.featuredReviewByKey[getLegacyPodcastKey(podcast)] ||
+    null;
 }
 
 function getFeaturedReviewPodcast(review) {
   if (!review) return null;
   return (
-    state.podcastByKey[normalizeMatchKey(review.matchTitle || review.title)] ||
-    state.podcastByKey[normalizeMatchKey(review.title)] ||
+    state.podcastById[getPodcastId(review)] ||
+    resolvePodcastByStoredKey(normalizeMatchKey(review.matchTitle || review.title)) ||
+    resolvePodcastByStoredKey(normalizeMatchKey(review.title)) ||
     null
   );
 }
@@ -2523,8 +2539,32 @@ function getFeaturedReviewImageSources(review) {
   );
 }
 
+function getPodcastId(podcast) {
+  return normalizeText(podcast?.podcastId);
+}
+
+function getLegacyPodcastKey(podcast) {
+  return normalizeText(podcast?.legacyKey) || normalizeMatchKey(podcast?.title);
+}
+
 function getPodcastKey(podcast) {
-  return normalizeMatchKey(podcast.title);
+  return getPodcastId(podcast) || getLegacyPodcastKey(podcast);
+}
+
+function getEpisodePodcastKey(podcastOrKey) {
+  if (typeof podcastOrKey === "object") return getLegacyPodcastKey(podcastOrKey);
+  const resolved = resolvePodcastByStoredKey(podcastOrKey);
+  return resolved ? getLegacyPodcastKey(resolved) : normalizeMatchKey(podcastOrKey);
+}
+
+function resolvePodcastByStoredKey(key) {
+  const storedKey = normalizeText(key);
+  if (!storedKey) return null;
+  return state.podcastById[storedKey] || state.podcastByLegacyKey[storedKey] || null;
+}
+
+function resolveCanonicalPodcastId(key) {
+  return getPodcastId(resolvePodcastByStoredKey(key));
 }
 
 function findPodcastByCatalogueId(catalogueId) {
@@ -4533,11 +4573,12 @@ function renderAuthPanel() {
 }
 
 function getCommunityStat(podcastKey) {
-  if (state.communityStatsByKey[podcastKey]) {
-    return state.communityStatsByKey[podcastKey];
+  const canonicalKey = resolveCanonicalPodcastId(podcastKey) || normalizeText(podcastKey);
+  if (state.communityStatsByKey[canonicalKey]) {
+    return state.communityStatsByKey[canonicalKey];
   }
 
-  const podcast = state.podcastByKey[podcastKey];
+  const podcast = resolvePodcastByStoredKey(podcastKey);
   if (!podcast) return null;
 
   if (podcast.userAverageRating === null || podcast.userAverageRating === undefined) {
@@ -4643,7 +4684,9 @@ function captureEpisodeParentRatingBackup(podcastKey) {
   const key = normalizeText(podcastKey);
   if (!userId || !key || getEpisodeParentRatingBackup(key)) return false;
 
-  const manualRating = parseNumber(state.userRatingsByKey[key]);
+  const manualRating = parseNumber(
+    state.userRatingsByKey[resolveCanonicalPodcastId(key) || key]
+  );
   const backups = readEpisodeParentRatingBackups();
   backups[userId] = {
     ...(backups[userId] || {}),
@@ -4709,9 +4752,11 @@ async function synchronizeEpisodeDerivedParentRating(
   previousEffectiveRating = null,
   { refreshUi = true } = {}
 ) {
-  const key = normalizeText(podcastKey);
-  const summary = getPodcastEpisodeUserRatingSummary(key);
-  const backup = getEpisodeParentRatingBackup(key);
+  const episodeKey = getEpisodePodcastKey(podcastKey);
+  const canonicalKey = resolveCanonicalPodcastId(podcastKey);
+  if (!episodeKey || !canonicalKey) return;
+  const summary = getPodcastEpisodeUserRatingSummary(episodeKey);
+  const backup = getEpisodeParentRatingBackup(episodeKey);
   const nextEffectiveRating =
     summary.count > 0
       ? Math.round(Number(summary.average) * 10) / 10
@@ -4719,13 +4764,13 @@ async function synchronizeEpisodeDerivedParentRating(
         ? parseNumber(backup.manualRating)
         : null;
 
-  await persistEffectiveParentRating(key, nextEffectiveRating, previousEffectiveRating);
+  await persistEffectiveParentRating(canonicalKey, nextEffectiveRating, previousEffectiveRating);
 
   if (summary.count === 0) {
-    clearEpisodeParentRatingBackup(key);
-    delete state.episodeParentRatingSyncSignatures[key];
+    clearEpisodeParentRatingBackup(episodeKey);
+    delete state.episodeParentRatingSyncSignatures[episodeKey];
   } else {
-    state.episodeParentRatingSyncSignatures[key] =
+    state.episodeParentRatingSyncSignatures[episodeKey] =
       `${summary.count}:${formatCompactRating(nextEffectiveRating)}`;
   }
 
@@ -4737,32 +4782,33 @@ async function synchronizeEpisodeDerivedParentRating(
 }
 
 async function reconcileExistingEpisodeDerivedParentRating(podcastKey) {
-  const key = normalizeText(podcastKey);
-  const summary = getPodcastEpisodeUserRatingSummary(key);
-  if (!state.authUser || !key || summary.count === 0) return;
+  const episodeKey = getEpisodePodcastKey(podcastKey);
+  const canonicalKey = resolveCanonicalPodcastId(podcastKey);
+  const summary = getPodcastEpisodeUserRatingSummary(episodeKey);
+  if (!state.authUser || !episodeKey || !canonicalKey || summary.count === 0) return;
 
   const derivedRating = Math.round(Number(summary.average) * 10) / 10;
   const signature = `${summary.count}:${formatCompactRating(derivedRating)}`;
   if (
-    state.episodeParentRatingSyncPendingKeys.has(key) ||
-    (state.episodeParentRatingSyncSignatures[key] === signature &&
-      parseNumber(state.userRatingsByKey[key]) === derivedRating)
+    state.episodeParentRatingSyncPendingKeys.has(episodeKey) ||
+    (state.episodeParentRatingSyncSignatures[episodeKey] === signature &&
+      parseNumber(state.userRatingsByKey[canonicalKey]) === derivedRating)
   ) {
     return;
   }
 
-  if (!getEpisodeParentRatingBackup(key)) {
-    captureEpisodeParentRatingBackup(key);
-    if (!getEpisodeParentRatingBackup(key)) {
+  if (!getEpisodeParentRatingBackup(episodeKey)) {
+    captureEpisodeParentRatingBackup(episodeKey);
+    if (!getEpisodeParentRatingBackup(episodeKey)) {
       console.error("Din tidligere samlede vurdering kunne ikke bevares.");
       return;
     }
   }
 
-  const previousEffectiveRating = state.userRatingsByKey[key] ?? null;
-  state.episodeParentRatingSyncPendingKeys.add(key);
+  const previousEffectiveRating = state.userRatingsByKey[canonicalKey] ?? null;
+  state.episodeParentRatingSyncPendingKeys.add(episodeKey);
   try {
-    await synchronizeEpisodeDerivedParentRating(key, previousEffectiveRating);
+    await synchronizeEpisodeDerivedParentRating(episodeKey, previousEffectiveRating);
   } catch (error) {
     console.error(error);
     setAuthMessage(
@@ -4770,7 +4816,7 @@ async function reconcileExistingEpisodeDerivedParentRating(podcastKey) {
       "warning"
     );
   } finally {
-    state.episodeParentRatingSyncPendingKeys.delete(key);
+    state.episodeParentRatingSyncPendingKeys.delete(episodeKey);
   }
 }
 
@@ -4814,7 +4860,8 @@ function compareExplorePodcasts(a, b) {
 }
 
 function getUserRating(podcastKey) {
-  return state.userRatingsByKey[podcastKey] ?? null;
+  const canonicalKey = resolveCanonicalPodcastId(podcastKey) || normalizeText(podcastKey);
+  return state.userRatingsByKey[canonicalKey] ?? null;
 }
 
 function getLoosePodcastRatingKey(value) {
@@ -5485,7 +5532,8 @@ function renderDesktopRanking(podcasts) {
 }
 
 function isPodcastSaved(podcastKey) {
-  return state.savedPodcastKeys.has(podcastKey);
+  const canonicalKey = resolveCanonicalPodcastId(podcastKey) || normalizeText(podcastKey);
+  return state.savedPodcastKeys.has(canonicalKey);
 }
 
 function getSavedMetaStorageKey() {
@@ -5759,13 +5807,16 @@ async function fetchCommunityStats() {
   }
 
   state.communityStatsByKey = Object.fromEntries(
-    (data || []).map((item) => [
-      item.podcast_key,
-      {
-        averageRating: parseNumber(item.average_rating),
-        ratingCount: Number(item.rating_count || 0)
-      }
-    ])
+    (data || [])
+      .map((item) => [resolveCanonicalPodcastId(item.podcast_key), item])
+      .filter(([podcastId]) => podcastId)
+      .map(([podcastId, item]) => [
+        podcastId,
+        {
+          averageRating: parseNumber(item.average_rating),
+          ratingCount: Number(item.rating_count || 0)
+        }
+      ])
   );
   state.communityStatsStatus = "ready";
   invalidateRankingListCache();
@@ -5846,7 +5897,9 @@ async function fetchUserState() {
     setAuthMessage("Kunne ikke hente dine vurderinger endnu.", "error", "hero");
   } else {
     state.userRatingsByKey = Object.fromEntries(
-      (ratings || []).map((item) => [item.podcast_key, parseNumber(item.rating)])
+      (ratings || [])
+        .map((item) => [resolveCanonicalPodcastId(item.podcast_key), parseNumber(item.rating)])
+        .filter(([podcastId]) => podcastId)
     );
   }
 
@@ -5855,13 +5908,21 @@ async function fetchUserState() {
     setAuthMessage("Kunne ikke hente dine gemte podcasts endnu.", "error", "hero");
   } else {
     const localMeta = readSavedPodcastMeta();
-    state.savedPodcastKeys = new Set((saved || []).map((item) => item.podcast_key));
-    state.savedPodcastMetaByKey = { ...localMeta };
+    state.savedPodcastKeys = new Set(
+      (saved || []).map((item) => resolveCanonicalPodcastId(item.podcast_key)).filter(Boolean)
+    );
+    state.savedPodcastMetaByKey = Object.fromEntries(
+      Object.entries(localMeta)
+        .map(([key, value]) => [resolveCanonicalPodcastId(key), value])
+        .filter(([podcastId]) => podcastId)
+    );
     (saved || []).forEach((item) => {
+      const podcastId = resolveCanonicalPodcastId(item.podcast_key);
+      if (!podcastId) return;
       const savedAt = item.saved_at || item.created_at || localMeta[item.podcast_key]?.savedAt || "";
       if (savedAt) {
-        state.savedPodcastMetaByKey[item.podcast_key] = {
-          ...(state.savedPodcastMetaByKey[item.podcast_key] || {}),
+        state.savedPodcastMetaByKey[podcastId] = {
+          ...(state.savedPodcastMetaByKey[podcastId] || {}),
           savedAt
         };
       }
@@ -6432,12 +6493,13 @@ async function saveActiveEpisodeRating() {
 
   const episodeId = state.activeEpisodeRatingId;
   const episode = getGenstartEpisodeById(episodeId);
-  const podcastKey = normalizeText(episode?.podcast_key) || state.activePodcastDetailKey;
+  const podcastKey = normalizeText(episode?.podcast_key) || getEpisodePodcastKey(state.activePodcastDetailKey);
   const config = getEpisodeRatingPersistenceConfig(podcastKey, episode);
   const episodeState = getPodcastEpisodeState(podcastKey);
   const previousUserRating = episodeState.userRatingsById[episodeId];
   const previousEpisodeSummary = getPodcastEpisodeUserRatingSummary(podcastKey);
-  const previousEffectiveParentRating = state.userRatingsByKey[podcastKey] ?? null;
+  const previousEffectiveParentRating =
+    state.userRatingsByKey[resolveCanonicalPodcastId(podcastKey)] ?? null;
   const originalSaveLabel = elements.ratingSaveButton?.textContent || "Gem vurdering";
 
   setAuthBusy(true);
@@ -6584,11 +6646,12 @@ async function deleteActiveEpisodeRating() {
 
   const episodeId = state.activeEpisodeRatingId;
   const episode = getGenstartEpisodeById(episodeId);
-  const podcastKey = normalizeText(episode?.podcast_key) || state.activePodcastDetailKey;
+  const podcastKey = normalizeText(episode?.podcast_key) || getEpisodePodcastKey(state.activePodcastDetailKey);
   const config = getEpisodeRatingPersistenceConfig(podcastKey, episode);
   const episodeState = getPodcastEpisodeState(podcastKey);
   const previousUserRating = episodeState.userRatingsById[episodeId];
-  const previousEffectiveParentRating = state.userRatingsByKey[podcastKey] ?? null;
+  const previousEffectiveParentRating =
+    state.userRatingsByKey[resolveCanonicalPodcastId(podcastKey)] ?? null;
 
   setAuthBusy(true);
   updateRatingDialogMessage("");
@@ -6971,7 +7034,7 @@ function buildPodcastSimilarityProductLookups(metadataPayload, productPayload) {
       ? productPayload.results
       : null;
 
-  // The UI catalogue is de-duplicated by title, while these files retain one
+  // Recommendation metadata retains title-derived legacy identities, while
   // row per source record; only the two source artifacts are count-comparable.
   if (
     !metadataRows ||
@@ -7011,8 +7074,8 @@ function buildPodcastSimilarityProductLookups(metadataPayload, productPayload) {
   const recommendationIdByPodcastKey = {};
   const podcastByRecommendationId = {};
   state.podcasts.forEach((podcast) => {
-    const podcastKey = getPodcastKey(podcast);
-    const matches = metadataByExistingId.get(podcastKey) || [];
+    const podcastId = getPodcastId(podcast);
+    const matches = metadataByExistingId.get(getLegacyPodcastKey(podcast)) || [];
     let resolved = matches.length === 1 ? matches[0] : null;
 
     if (matches.length > 1) {
@@ -7028,7 +7091,7 @@ function buildPodcastSimilarityProductLookups(metadataPayload, productPayload) {
     }
 
     if (!resolved) return;
-    recommendationIdByPodcastKey[podcastKey] = resolved.recommendationId;
+    recommendationIdByPodcastKey[podcastId] = resolved.recommendationId;
     podcastByRecommendationId[resolved.recommendationId] = podcast;
   });
 
@@ -7991,7 +8054,7 @@ function createStableManualEpisodeUuid(podcastKey, episodeNumber, title) {
 }
 
 function getPodcastManualEpisodes(podcast) {
-  const podcastKey = getPodcastKey(podcast) || normalizeMatchKey(podcast?.title) || "podcast";
+  const podcastKey = getEpisodePodcastKey(podcast) || normalizeMatchKey(podcast?.title) || "podcast";
 
   return getPodcastManualEpisodeTitles(podcast).map((title, index) => {
     const episodeNumber = index + 1;
@@ -8010,7 +8073,7 @@ function getPodcastManualEpisodes(podcast) {
 
 function getEpisodePodcastConfig(podcastOrKey) {
   const podcastKey =
-    typeof podcastOrKey === "string" ? normalizeText(podcastOrKey) : getPodcastKey(podcastOrKey);
+    getEpisodePodcastKey(podcastOrKey);
 
   const directConfig = EPISODE_PODCAST_CONFIG[podcastKey];
   if (directConfig?.enabled) return directConfig;
@@ -8043,7 +8106,7 @@ function getEpisodePodcastConfig(podcastOrKey) {
   if (matchedConfig) return matchedConfig;
 
   const podcast =
-    typeof podcastOrKey === "object" ? podcastOrKey : state.podcastByKey?.[podcastKey];
+    typeof podcastOrKey === "object" ? podcastOrKey : resolvePodcastByStoredKey(podcastOrKey);
   const feedUrl = normalizeText(podcast?.feedUrl || podcast?.Feed);
 
   try {
@@ -8073,7 +8136,7 @@ function getEpisodeRatingPersistenceConfig(podcastOrKey, episode) {
   // database foreign key used by episode_ratings.
   if (episode?.dataSource === "manual") {
     return {
-      podcastKey: normalizeText(episode.podcast_key) || getPodcastKey(podcastOrKey),
+      podcastKey: normalizeText(episode.podcast_key) || getEpisodePodcastKey(podcastOrKey),
       persistence: "local"
     };
   }
@@ -8096,7 +8159,7 @@ function getEpisodeDatabasePodcastKey(configOrPodcast) {
     typeof configOrPodcast === "string" ? configOrPodcast : "",
     typeof configOrPodcast === "object" ? configOrPodcast?.title : "",
     typeof configOrPodcast === "object" ? configOrPodcast?.Titel : "",
-    state.activePodcastDetailKey
+    getEpisodePodcastKey(state.activePodcastDetailKey)
   ];
 
   for (const candidate of rawCandidates) {
@@ -8114,7 +8177,7 @@ function getEpisodeDatabasePodcastKey(configOrPodcast) {
   return normalizeText(
     config?.databasePodcastKey ||
     config?.podcastKey ||
-    state.activePodcastDetailKey ||
+    getEpisodePodcastKey(state.activePodcastDetailKey) ||
     ""
   );
 }
@@ -8153,7 +8216,7 @@ function getEpisodePodcastDisplayName(podcastOrKey) {
   const config = getEpisodePodcastConfig(podcastOrKey);
   if (config?.displayName) return config.displayName;
   if (typeof podcastOrKey !== "string" && podcastOrKey?.title) return podcastOrKey.title;
-  const key = typeof podcastOrKey === "string" ? podcastOrKey : getPodcastKey(podcastOrKey);
+  const key = getEpisodePodcastKey(podcastOrKey);
   return key ? key.replace(/[-_]+/g, " ") : "Podcast";
 }
 
@@ -8266,8 +8329,8 @@ function getPodcastEpisodeState(podcastOrKey) {
     ? getEpisodeDatabasePodcastKey(config)
     : normalizeText(
         typeof podcastOrKey === "string"
-          ? podcastOrKey
-          : getPodcastKey(podcastOrKey)
+          ? getEpisodePodcastKey(podcastOrKey)
+          : getEpisodePodcastKey(podcastOrKey)
       );
 
   if (!podcastKey) {
@@ -8605,7 +8668,7 @@ function createProfileEpisodeRatingCardElement(item) {
   const episodeId = normalizeText(item.episode_id);
   const episode = getGenstartEpisodeById(episodeId);
   const podcastKey = normalizeText(episode?.podcast_key) || getDefaultEpisodePodcastKey();
-  const podcast = state.podcastByKey[podcastKey];
+  const podcast = resolvePodcastByStoredKey(podcastKey);
   const podcastName = getEpisodePodcastDisplayName(podcast || podcastKey);
   const stat = getEpisodeStat(episodeId);
   const userRating = parseNumber(item.rating);
@@ -9307,7 +9370,7 @@ function renderPodcastEpisodeOverviewRows(podcast) {
 function ensureManualPodcastEpisodeState(podcast) {
   const episodeState = getPodcastEpisodeState(podcast);
   const episodes = getPodcastManualEpisodes(podcast);
-  const podcastKey = getPodcastKey(podcast) || normalizeMatchKey(podcast?.title) || "";
+  const podcastKey = getEpisodePodcastKey(podcast) || normalizeMatchKey(podcast?.title) || "";
 
   episodeState.items = mergeEpisodes([], episodes);
   episodeState.hasMore = false;
@@ -20475,16 +20538,25 @@ async function loadCoverManifestFromJson() {
   }
 }
 
-function buildPodcastLookup(podcasts) {
-  const lookup = {};
+function buildPodcastLookups(podcasts) {
+  const byId = {};
+  const legacyCandidates = new Map();
 
   podcasts.forEach((podcast) => {
-    const key = getPodcastKey(podcast);
-    if (!key) return;
-    lookup[key] = podcast;
+    const podcastId = getPodcastId(podcast);
+    const legacyKey = getLegacyPodcastKey(podcast);
+    if (podcastId) byId[podcastId] = podcast;
+    if (!legacyKey || !podcastId) return;
+    if (!legacyCandidates.has(legacyKey)) legacyCandidates.set(legacyKey, []);
+    legacyCandidates.get(legacyKey).push(podcast);
   });
 
-  return lookup;
+  const byLegacyKey = {};
+  legacyCandidates.forEach((matches, legacyKey) => {
+    if (matches.length === 1) byLegacyKey[legacyKey] = matches[0];
+  });
+
+  return { byId, byLegacyKey };
 }
 
 function applyPodcastDataRefresh(podcastRows, featuredRows, coverManifestLookup = {}) {
@@ -20494,7 +20566,10 @@ function applyPodcastDataRefresh(podcastRows, featuredRows, coverManifestLookup 
   state.coverManifestByKey = coverManifestLookup;
   state.failedImageSources.clear();
   applyLocalCoverManifest(state.podcasts, coverManifestLookup);
-  state.podcastByKey = buildPodcastLookup(state.podcasts);
+  const lookups = buildPodcastLookups(state.podcasts);
+  state.podcastById = lookups.byId;
+  state.podcastByLegacyKey = lookups.byLegacyKey;
+  state.podcastByKey = { ...lookups.byLegacyKey, ...lookups.byId };
   if (
     state.podcastSimilarityProductStatus === "ready" &&
     state.podcastSimilarityMetadataPayload
@@ -20519,7 +20594,7 @@ function applyPodcastDataRefresh(podcastRows, featuredRows, coverManifestLookup 
   invalidateRankingListCache();
 
   state.allReviews = featuredRows
-    .map((row, index) => mapFeaturedReview(row, index, state.podcastByKey))
+    .map((row, index) => mapFeaturedReview(row, index))
     .filter(isUsableReview);
 
   state.featuredReviews = state.allReviews

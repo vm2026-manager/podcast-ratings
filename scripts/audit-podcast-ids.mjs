@@ -80,9 +80,18 @@ async function main() {
   const duplicateTitleGroups = [...titleGroups.entries()]
     .filter(([title, details]) => title && details.length > 1)
     .map(([title, rowsInGroup]) => ({ title, rows: rowsInGroup }));
+  const podcastIdLegacyKeyMismatches = rows
+    .map((row, index) => {
+      const detail = rowDetails(row, index);
+      return {
+        ...detail,
+        legacyKey: normalizeMatchKey(detail.title)
+      };
+    })
+    .filter(({ podcastId, legacyKey }) => normalizeText(podcastId) !== legacyKey);
 
   const report = {
-    inputPath,
+    inputFile: path.basename(inputPath),
     totalPodcastRows: rows.length,
     rowsWithPodcastId: rows.length - missingPodcastIds.length,
     rowsMissingPodcastId: missingPodcastIds.length,
@@ -91,6 +100,7 @@ async function main() {
     suspiciousDuplicateIdGroups,
     duplicateTitleGroups,
     duplicateTitleGroupsWithDistinctIds,
+    podcastIdLegacyKeyMismatches,
     podcastIdsWithLeadingOrTrailingWhitespace: whitespacePodcastIds,
     blankPodcastIds,
     missingPodcastIds
