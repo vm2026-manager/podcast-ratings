@@ -10214,6 +10214,18 @@ html body #podcastDetailSheet .podcast-detail-sheet__back {
   cursor: pointer !important;
 }
 
+html body #podcastDetailSheet .podcast-detail-sheet__episode-series-link {
+  color: #685a4f !important;
+  background: #fffdfb !important;
+}
+
+html body #podcastDetailSheet .podcast-detail-sheet__episode-series-link:hover,
+html body #podcastDetailSheet .podcast-detail-sheet__episode-series-link:focus-visible {
+  border-color: rgba(184, 152, 124, 0.78) !important;
+  background: #fff7f1 !important;
+  outline: none !important;
+}
+
 html body #podcastDetailSheet .podcast-detail-sheet__review-nav-title {
   color: #685a4f !important;
   font: 700 0.96rem/1 "Manrope", sans-serif !important;

@@ -9707,6 +9707,11 @@ function renderPodcastEpisodeDetailContent(dialog, podcast, episode, { backLabel
   const description = getEpisodeDescription(episode);
   const link = getEpisodeLink(episode);
   const displayName = getEpisodePodcastDisplayName(podcast);
+  const parentPodcastKey = normalizeText(episode?.podcast_key);
+  const parentPodcast = parentPodcastKey ? state.podcastByKey[parentPodcastKey] : null;
+  const parentPodcastTitle = normalizeText(parentPodcast?.title);
+  const canOpenParentPodcast =
+    backLabel === "Tilbage til Profil" && !isMobileViewport() && Boolean(parentPodcast && parentPodcastTitle);
 
   content.innerHTML = `
     <div class="podcast-detail-sheet__review-nav">
@@ -9719,9 +9724,14 @@ function renderPodcastEpisodeDetailContent(dialog, podcast, episode, { backLabel
         <span aria-hidden="true">&larr;</span>
         <span>${escapeHtml(backLabel)}</span>
       </button>
-      ${backLabel === "Tilbage til Profil" && podcast?.key && state.podcastByKey[podcast.key] ? `
-        <button class="podcast-detail-sheet__back" type="button" data-podcast-episode-series>
-          <span>Se serie</span><span aria-hidden="true">&rarr;</span>
+      ${canOpenParentPodcast ? `
+        <button
+          class="podcast-detail-sheet__back podcast-detail-sheet__episode-series-link"
+          type="button"
+          data-podcast-episode-series
+          aria-label="Se hovedserien ${escapeHtml(parentPodcastTitle)}"
+        >
+          <span>Se ${escapeHtml(parentPodcastTitle)}</span><span aria-hidden="true">&rarr;</span>
         </button>` : ""}
       <span class="podcast-detail-sheet__review-nav-title">Episode</span>
     </div>
@@ -9777,9 +9787,9 @@ function renderPodcastEpisodeDetailContent(dialog, podcast, episode, { backLabel
   content.querySelector("[data-podcast-episode-series]")?.addEventListener("click", (event) => {
     event.preventDefault();
     event.stopPropagation();
-    if (!podcast?.key || !state.podcastByKey[podcast.key]) return;
+    if (!parentPodcast) return;
     closePodcastDetailSheet({ returnFocus: false });
-    openPodcastDetailSheet(state.podcastByKey[podcast.key], null, { allowDesktop: true });
+    openPodcastDetailSheet(parentPodcast, null, { allowDesktop: true });
   });
 
   content.querySelector("[data-episode-rating]")?.addEventListener("click", (event) => {
