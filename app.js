@@ -38,29 +38,21 @@ const EPISODE_DATABASE_KEY_ALIASES = {
   "mørkeland": "mørkeland",
   "verdens klogeste land": "verdens klogeste land",
   "borgen unplugged 2 0": "borgen unplugged 2 0",
-  "jagten paa det evige liv": "jagten på det evige liv",
-  "jagten på det evige liv": "jagten på det evige liv",
-  "hva saa": "hva så",
-  "hva så": "hva så",
+  "jagten paa det evige liv": "jagten pa det evige liv",
+  "jagten på det evige liv": "jagten pa det evige liv",
+  "hva saa": "hva sa",
+  "hva så": "hva sa",
   "112 for knuste hjerter": "112 for knuste hjerter",
   "langt fra lognen": "langt fra løgnen",
   "langt fra løgnen": "langt fra løgnen",
   "dkpol": "dkpol",
   "millionaerklubben": "millionærklubben",
   "millionærklubben": "millionærklubben",
-  "sagen genaabnet": "sagen genåbnet",
-  "sagen genåbnet": "sagen genåbnet",
-  "vi ser paa det": "vi ser på det",
-  "vi ser på det": "vi ser på det"
-};
-// Temporary read bridge for the five audited database-key migrations. The
-// importer and database rows remain on the legacy key until the Phase 2B
-// migration; the frontend deliberately accepts either stored parent key.
-const EPISODE_DATABASE_KEY_READ_BRIDGES = {
-  "hva så": "hva sa",
-  "jagten på det evige liv": "jagten pa det evige liv",
+  "sagen genaabnet": "sagen genabnet",
   "sagen genåbnet": "sagen genabnet",
+  "vi ser paa det": "vi ser pa det",
   "vi ser på det": "vi ser pa det",
+  "vaagn lidt op": "vagn lidt op",
   "vågn lidt op": "vagn lidt op"
 };
 const EPISODE_PODCAST_CONFIG = {
@@ -109,18 +101,18 @@ const EPISODE_PODCAST_CONFIG = {
     source: "soundcloud",
     persistence: "supabase"
   },
-  "jagten på det evige liv": {
-    podcastKey: "jagten på det evige liv",
-    databasePodcastKey: "jagten på det evige liv",
+  "jagten pa det evige liv": {
+    podcastKey: "jagten pa det evige liv",
+    databasePodcastKey: "jagten pa det evige liv",
     enabled: true,
     displayName: "Jagten på det evige liv",
     searchPlaceholder: "Søg i Jagten på det evige liv-episoder",
     source: "dr",
     persistence: "supabase"
   },
-  "hva så": {
-    podcastKey: "hva så",
-    databasePodcastKey: "hva så",
+  "hva sa": {
+    podcastKey: "hva sa",
+    databasePodcastKey: "hva sa",
     enabled: true,
     displayName: "Hva så?!",
     searchPlaceholder: "Søg i Hva så?!-episoder",
@@ -163,18 +155,18 @@ const EPISODE_PODCAST_CONFIG = {
     source: "omny",
     persistence: "supabase"
   },
-  "sagen genåbnet": {
-    podcastKey: "sagen genåbnet",
-    databasePodcastKey: "sagen genåbnet",
+  "sagen genabnet": {
+    podcastKey: "sagen genabnet",
+    databasePodcastKey: "sagen genabnet",
     enabled: true,
     displayName: "Sagen Genåbnet",
     searchPlaceholder: "Søg i Sagen Genåbnet-episoder",
     source: "simplecast",
     persistence: "supabase"
   },
-  "vi ser på det": {
-    podcastKey: "vi ser på det",
-    databasePodcastKey: "vi ser på det",
+  "vi ser pa det": {
+    podcastKey: "vi ser pa det",
+    databasePodcastKey: "vi ser pa det",
     enabled: true,
     displayName: "Vi ser på det",
     searchPlaceholder: "Søg i Vi ser på det-episoder",
@@ -370,9 +362,9 @@ const EPISODE_PODCAST_CONFIG = {
     source: "omny",
     persistence: "supabase"
   },
-  "vågn lidt op": {
-    podcastKey: "vågn lidt op",
-    databasePodcastKey: "vågn lidt op",
+  "vagn lidt op": {
+    podcastKey: "vagn lidt op",
+    databasePodcastKey: "vagn lidt op",
     enabled: true,
     displayName: "Vågn lidt op!",
     searchPlaceholder: "Søg i Vågn lidt op!-episoder",
@@ -8125,41 +8117,31 @@ function getPodcastManualEpisodes(podcast) {
 }
 
 function getEpisodePodcastConfig(podcastOrKey) {
-  const podcastKey =
-    getEpisodePodcastKey(podcastOrKey);
-
-  const directConfig = EPISODE_PODCAST_CONFIG[podcastKey];
-  if (directConfig?.enabled) return directConfig;
-
-  const podcastTitle =
-    typeof podcastOrKey === "string"
-      ? normalizeText(podcastOrKey)
-      : normalizeText(
-          podcastOrKey?.title ||
-          podcastOrKey?.Titel ||
-          podcastOrKey?.name ||
-          podcastKey
-        );
-
-  const comparableKeys = new Set(
-    [podcastKey, podcastTitle]
-      .map((value) => normalizeMatchKey(value))
-      .filter(Boolean)
-  );
-
-  const matchedConfig = Object.values(EPISODE_PODCAST_CONFIG).find((config) => {
-    if (!config?.enabled) return false;
-
-    return (
-      comparableKeys.has(normalizeMatchKey(config.podcastKey)) ||
-      comparableKeys.has(normalizeMatchKey(config.displayName))
-    );
-  });
-
-  if (matchedConfig) return matchedConfig;
-
   const podcast =
     typeof podcastOrKey === "object" ? podcastOrKey : resolvePodcastByStoredKey(podcastOrKey);
+  const podcastId = getPodcastId(podcast);
+  const episodeKey = getEpisodePodcastKey(podcastOrKey);
+  const rawKey = typeof podcastOrKey === "string" ? normalizeText(podcastOrKey) : "";
+  const configKeys = [podcastId, rawKey, episodeKey]
+    .flatMap((key) => {
+      const normalized = normalizeText(key);
+      const comparable = normalizeMatchKey(key);
+      return [
+        normalized,
+        EPISODE_DATABASE_KEY_ALIASES[normalized],
+        EPISODE_DATABASE_KEY_ALIASES[comparable]
+      ];
+    })
+    .map(normalizeText)
+    .filter(Boolean);
+
+  for (const configKey of configKeys) {
+    const config = EPISODE_PODCAST_CONFIG[configKey];
+    if (config?.enabled) return config;
+  }
+
+  if (!podcastId) return null;
+
   const feedUrl = normalizeText(podcast?.feedUrl || podcast?.Feed);
 
   try {
@@ -8172,9 +8154,9 @@ function getEpisodePodcastConfig(podcastOrKey) {
   // Sheet-managed RSS feeds use the same Supabase episode lookup as the
   // existing manual configurations. Import configuration is generated separately.
   return {
-    podcastKey,
-    databasePodcastKey: podcastKey,
-    displayName: podcast?.title || podcastTitle || podcastKey,
+    podcastKey: podcastId,
+    databasePodcastKey: podcastId,
+    displayName: podcast?.title || podcastId,
     enabled: true,
     persistence: "supabase"
   };
@@ -8217,9 +8199,12 @@ function getEpisodeDatabasePodcastKey(configOrPodcast) {
       ? configOrPodcast
       : getEpisodePodcastConfig(configOrPodcast);
 
+  const explicitDatabaseKey = normalizeText(config?.databasePodcastKey);
+  if (explicitDatabaseKey) return explicitDatabaseKey;
+
   const rawCandidates = [
-    config?.databasePodcastKey,
     config?.podcastKey,
+    typeof configOrPodcast === "object" ? getPodcastId(configOrPodcast) : "",
     config?.displayName,
     typeof configOrPodcast === "string" ? configOrPodcast : "",
     typeof configOrPodcast === "object" ? configOrPodcast?.title : "",
@@ -8239,18 +8224,7 @@ function getEpisodeDatabasePodcastKey(configOrPodcast) {
     if (comparableAlias) return comparableAlias;
   }
 
-  return normalizeText(
-    config?.databasePodcastKey ||
-    config?.podcastKey ||
-    getEpisodePodcastKey(state.activePodcastDetailKey) ||
-    ""
-  );
-}
-
-function getEpisodeDatabaseReadKeys(configOrPodcast) {
-  const legacyKey = getEpisodeDatabasePodcastKey(configOrPodcast);
-  const permanentKey = EPISODE_DATABASE_KEY_READ_BRIDGES[legacyKey];
-  return Array.from(new Set([legacyKey, permanentKey].map(normalizeText).filter(Boolean)));
+  return normalizeText(config?.podcastKey || getPodcastId(configOrPodcast) || "");
 }
 function podcastHasEpisodeConfiguration(podcastOrKey) {
   return Boolean(getEpisodePodcastConfig(podcastOrKey)) ||
@@ -9050,7 +9024,7 @@ async function fetchGenstartEpisodes({ append = false } = {}) {
     const { data, error, count } = await state.supabase
       .from("podcast_episodes")
       .select("id,podcast_key,title,description,published_at,duration_seconds,episode_url,audio_url,image_url,external_guid,is_active,metadata", { count: "exact" })
-      .in("podcast_key", getEpisodeDatabaseReadKeys(config))
+      .eq("podcast_key", getEpisodeDatabasePodcastKey(config))
       .eq("is_active", true)
       .order("published_at", { ascending: false })
       .range(offset, offset + EPISODE_PAGE_SIZE - 1);
@@ -9101,7 +9075,7 @@ async function searchGenstartEpisodes(term, token, { append = false } = {}) {
     const { data, error, count } = await state.supabase
       .from("podcast_episodes")
       .select("id,podcast_key,title,description,published_at,duration_seconds,episode_url,audio_url,image_url,external_guid,is_active,metadata", { count: "exact" })
-      .in("podcast_key", getEpisodeDatabaseReadKeys(config))
+      .eq("podcast_key", getEpisodeDatabasePodcastKey(config))
       .eq("is_active", true)
       .or(`title.ilike.${pattern},description.ilike.${pattern}`)
       .order("published_at", { ascending: false })
