@@ -687,6 +687,7 @@ const state = {
   rankingSourceTouched: false,
   sort: "placement-asc",
   sortTouched: false,
+  desktopOwnRatingSort: null,
   profilePreferences: readProfilePreferences(),
   rankingPositionMode: "dynamic",
   profileSettingsBusy: false,
@@ -3072,6 +3073,7 @@ function getRankingListCacheKey() {
     state.rankingListCacheVersion,
     state.rankingSource,
     state.sort,
+    isDesktopRankingViewport() ? state.desktopOwnRatingSort || "" : "",
     activeFilter,
     getExactPublisherFilterToken(state.activePublisherFilter),
     getExactMainSeriesFilterToken(state.activeMainSeriesFilter),
@@ -3148,8 +3150,16 @@ function getFilteredPodcasts() {
       return queryParts.every((part) => podcast.searchText.includes(part));
     })
     .sort((a, b) => {
-      const aRating = getPodcastRatingForActiveSource(a);
-      const bRating = getPodcastRatingForActiveSource(b);
+      const ownRatingSortDirection = isDesktopRankingViewport()
+        ? state.desktopOwnRatingSort
+        : null;
+      const isOwnRatingSort = ownRatingSortDirection === "asc" || ownRatingSortDirection === "desc";
+      const aRating = isOwnRatingSort
+        ? getDesktopRankingOwnScore(a)
+        : getPodcastRatingForActiveSource(a);
+      const bRating = isOwnRatingSort
+        ? getDesktopRankingOwnScore(b)
+        : getPodcastRatingForActiveSource(b);
       const aHasRating = aRating !== null;
       const bHasRating = bRating !== null;
 
@@ -3163,25 +3173,32 @@ function getFilteredPodcasts() {
 
       const ratingDelta = aRating - bRating;
       if (ratingDelta !== 0) {
+        if (isOwnRatingSort) {
+          return ownRatingSortDirection === "asc" ? ratingDelta : -ratingDelta;
+        }
         return state.sort === "placement-desc" ? ratingDelta : -ratingDelta;
       }
 
-      if (state.rankingSource === "users") {
-        const aRank = getPodcastUserRank(a);
-        const bRank = getPodcastUserRank(b);
-        return state.sort === "placement-desc" ? bRank - aRank : aRank - bRank;
-      }
-
-      const placementDelta = a.placement - b.placement;
-      if (placementDelta !== 0) {
-        return state.sort === "placement-desc" ? -placementDelta : placementDelta;
-      }
-
-      return compareRandomTieBreaker(a, b);
+      return comparePodcastsByActiveRankingOrder(a, b);
     });
 
   state.rankingListCache.set(cacheKey, filtered);
   return filtered;
+}
+
+function comparePodcastsByActiveRankingOrder(a, b) {
+  if (state.rankingSource === "users") {
+    const aRank = getPodcastUserRank(a);
+    const bRank = getPodcastUserRank(b);
+    return state.sort === "placement-desc" ? bRank - aRank : aRank - bRank;
+  }
+
+  const placementDelta = a.placement - b.placement;
+  if (placementDelta !== 0) {
+    return state.sort === "placement-desc" ? -placementDelta : placementDelta;
+  }
+
+  return compareRandomTieBreaker(a, b);
 }
 
 function getPodcastUserRank(podcast) {
@@ -5379,25 +5396,59 @@ function renderDesktopRanking(podcasts) {
     "aria-label",
     "Hele ranglisten som liste"
   );
+  const isOwnRatingSort =
+    state.desktopOwnRatingSort === "asc" || state.desktopOwnRatingSort === "desc";
   const isDescendingScore = state.sort !== "placement-desc";
+  const isDescendingOwnScore = state.desktopOwnRatingSort !== "asc";
   table.innerHTML = `
     <div class="desktop-ranking-table__head" role="row">
       <span role="columnheader">#</span>
       <span role="columnheader">Podcast</span>
       <span role="columnheader">Udgiver</span>
-      <span role="columnheader" aria-sort="${isDescendingScore ? "descending" : "ascending"}">
+      <span role="columnheader" aria-sort="${
+        !isOwnRatingSort ? (isDescendingScore ? "descending" : "ascending") : "none"
+      }">
         <button
-          class="desktop-ranking-score-sort"
+          class="desktop-ranking-score-sort${!isOwnRatingSort ? " is-active" : ""}"
           type="button"
           data-ranking-score-sort
-          aria-label="Sortér efter ${escapeHtml(activeScoreLabel)}: ${isDescendingScore ? "højeste først" : "laveste først"}"
+          aria-label="Sortér efter ${escapeHtml(activeScoreLabel)}${
+            !isOwnRatingSort ? `: ${isDescendingScore ? "højeste først" : "laveste først"}` : ""
+          }"
           title="Sortér efter ${escapeHtml(activeScoreLabel)}"
         >
           <span>${escapeHtml(activeScoreLabel)}</span>
-          <span class="desktop-ranking-score-sort__indicator" aria-hidden="true">${isDescendingScore ? "↓" : "↑"}</span>
+          ${
+            !isOwnRatingSort
+              ? `<span class="desktop-ranking-score-sort__indicator" aria-hidden="true">${
+                  isDescendingScore ? "↓" : "↑"
+                }</span>`
+              : ""
+          }
         </button>
       </span>
-      <span role="columnheader">Min vurdering</span>
+      <span role="columnheader" aria-sort="${
+        isOwnRatingSort ? (isDescendingOwnScore ? "descending" : "ascending") : "none"
+      }">
+        <button
+          class="desktop-ranking-score-sort${isOwnRatingSort ? " is-active" : ""}"
+          type="button"
+          data-ranking-own-score-sort
+          aria-label="Sortér efter Min vurdering${
+            isOwnRatingSort ? `: ${isDescendingOwnScore ? "højeste først" : "laveste først"}` : ""
+          }"
+          title="Sortér efter Min vurdering"
+        >
+          <span>Min vurdering</span>
+          ${
+            isOwnRatingSort
+              ? `<span class="desktop-ranking-score-sort__indicator" aria-hidden="true">${
+                  isDescendingOwnScore ? "↓" : "↑"
+                }</span>`
+              : ""
+          }
+        </button>
+      </span>
       <span role="columnheader"><span class="sr-only">Handlinger</span></span>
     </div>
   `;
@@ -5410,7 +5461,21 @@ function renderDesktopRanking(podcasts) {
 
   table.querySelector("[data-ranking-score-sort]")?.addEventListener("click", () => {
     state.sortTouched = true;
-    state.sort = state.sort === "placement-asc" ? "placement-desc" : "placement-asc";
+    const wasOwnRatingSort = state.desktopOwnRatingSort !== null;
+    state.desktopOwnRatingSort = null;
+    state.sort = wasOwnRatingSort
+      ? "placement-asc"
+      : state.sort === "placement-asc"
+        ? "placement-desc"
+        : "placement-asc";
+    resetVisibleCount();
+    render();
+  });
+
+  table.querySelector("[data-ranking-own-score-sort]")?.addEventListener("click", () => {
+    state.sortTouched = true;
+    state.desktopOwnRatingSort =
+      state.desktopOwnRatingSort === "desc" ? "asc" : "desc";
     resetVisibleCount();
     render();
   });

@@ -17639,9 +17639,9 @@ html body #podcastDetailSheet [data-podcast-detail-placement]:empty {
     justify-content: space-between !important;
     gap: 6px !important;
     padding: 4px 5px !important;
-    border: 1px solid rgba(255, 92, 22, 0.32) !important;
+    border: 1px solid transparent !important;
     border-radius: 8px !important;
-    background: rgba(255, 250, 246, 0.72) !important;
+    background: transparent !important;
     color: inherit !important;
     cursor: pointer !important;
     font: inherit !important;
@@ -17650,6 +17650,11 @@ html body #podcastDetailSheet [data-podcast-detail-placement]:empty {
     text-align: left !important;
     text-transform: inherit !important;
     transition: border-color 140ms ease, background-color 140ms ease, color 140ms ease !important;
+  }
+
+  html body.page-ranglister .desktop-ranking-score-sort.is-active {
+    border-color: rgba(255, 92, 22, 0.32) !important;
+    background: rgba(255, 250, 246, 0.72) !important;
   }
 
   html body.page-ranglister .desktop-ranking-score-sort > span:first-child {
