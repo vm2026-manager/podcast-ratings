@@ -11177,15 +11177,21 @@ function renderHomeFeatured(container) {
   const featuredTitle = podcast
     ? getDesktopRankingTitleParts(podcast).displayText
     : review.title || "";
-  const featuredTitleSize = featuredTitle.length <= 14
-    ? "short"
-    : featuredTitle.length <= 21
-      ? "medium"
-      : "long";
+  const longestTitleWord = featuredTitle
+    .split(/\s+/)
+    .reduce((longest, word) => Math.max(longest, word.length), 0);
+  const featuredTitleSize = longestTitleWord >= 15
+    ? "single-long"
+    : featuredTitle.length <= 14
+      ? "short"
+      : featuredTitle.length <= 21
+        ? "medium"
+        : "long";
   container.classList.remove(
     "home-featured__content--title-short",
     "home-featured__content--title-medium",
-    "home-featured__content--title-long"
+    "home-featured__content--title-long",
+    "home-featured__content--title-single-long"
   );
   container.classList.add(`home-featured__content--title-${featuredTitleSize}`);
   container.classList.toggle("home-featured__content--long-title", featuredTitle.length > 28);
@@ -11207,6 +11213,16 @@ function renderHomeFeatured(container) {
       return `<span class="home-featured__meta-host">${escapeHtml(item)}</span>`;
     })
     .join("");
+  const featuredTagMarkup = featuredMeta
+    .filter((item) => item === normalizeText(review.publisher) || item === normalizeText(review.genre))
+    .map((item) => {
+      const filterType = item === normalizeText(review.publisher) ? "publisher" : "genre";
+      return `<button class="home-featured__meta-link home-featured__meta-badge home-featured__meta-badge--${filterType}" type="button" data-home-featured-filter="${filterType}" data-value="${escapeHtml(item)}">${escapeHtml(item)}</button>`;
+    })
+    .join("");
+  const featuredHost = featuredMeta.find(
+    (item) => item !== normalizeText(review.publisher) && item !== normalizeText(review.genre)
+  ) || "";
   const showNavigation = reviews.length > 1;
   const indicatorMarkup = showNavigation
     ? `<div class="home-featured__indicators" aria-label="Vælg ugens anbefaling">${reviews.map((reviewItem, index) => `<button class="home-featured__indicator${index === state.homeFeaturedIndex ? " is-active" : ""}" type="button" data-home-featured-index="${index}" aria-label="Vis anbefaling ${index + 1}: ${escapeHtml(reviewItem.title || "podcast")}" aria-current="${index === state.homeFeaturedIndex ? "true" : "false"}"></button>`).join("")}</div>`
@@ -11272,11 +11288,16 @@ function renderHomeFeatured(container) {
           ? `<p class="home-featured__meta">${featuredMetaMarkup}</p>`
           : ""
       }
+      <p class="home-featured__mobile-host">${escapeHtml(featuredHost)}</p>
       <div class="home-featured__scorecard" aria-label="Podcastlistens vurdering">
         <span class="home-featured__score-item">
           <small>Podcastlistens vurdering</small>
           <strong class="home-featured__score-value">${scoreMarkup}</strong>
         </span>
+      </div>
+      <div class="home-featured__mobile-meta-row">
+        <div class="home-featured__mobile-tags">${featuredTagMarkup}</div>
+        ${featuredPodcastKey ? '<button class="favorite-button home-featured__favorite home-featured__favorite--mobile" type="button" aria-label="Gem podcast"><span aria-hidden="true"></span></button>' : ""}
       </div>
       <div class="home-featured__review-wrap">
         <p class="home-featured__review">${escapeHtml(review.review || "")}</p>
@@ -11344,11 +11365,11 @@ function renderHomeFeatured(container) {
     if (image) image.hidden = true;
   }
 
-  const favoriteButton = container.querySelector(".home-featured__favorite");
-  if (favoriteButton && podcast) {
+  container.querySelectorAll(".home-featured__favorite").forEach((favoriteButton) => {
+    if (!podcast) return;
     renderFavoriteButton(favoriteButton, featuredPodcastKey);
     favoriteButton.addEventListener("click", (event) => handleFavoriteToggle(event, podcast));
-  }
+  });
 
   const featuredReview = container.querySelector(".home-featured__review");
   const featuredReviewToggle = container.querySelector(".home-featured__review-toggle");
