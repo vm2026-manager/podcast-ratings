@@ -1,18 +1,46 @@
 /* Explicit desktop header grids prevent legacy rules from auto-placing controls. */
 @media (min-width: 1201px) {
-  html body .page-shell > .topbar {
+  html body:is(.page-forside, .page-ranglister, .page-udforsk, .page-profil) .page-shell > .topbar {
     display: grid !important;
+    width: 100% !important;
+    min-width: 0 !important;
     grid-template-columns: minmax(220px, 1fr) auto minmax(260px, 360px) auto !important;
     grid-template-areas: "brand nav search account" !important;
     grid-template-rows: 76px !important;
     column-gap: 16px !important;
     align-items: center !important;
+    transition: grid-template-columns 220ms ease-out !important;
   }
-  html body .page-shell > .topbar .sidebar-logo { grid-area: brand !important; }
-  html body .page-shell > .topbar .site-nav { grid-area: nav !important; display: flex !important; flex-wrap: nowrap !important; white-space: nowrap; }
-  html body .page-shell > .topbar #desktopHeaderSearch { grid-area: search !important; width: 100% !important; min-width: 0 !important; }
-  html body .page-shell > .topbar #desktopUserButton { grid-area: account !important; justify-self: end; }
-  html body .page-shell > .topbar #desktopUserMenu { position: absolute !important; }
+  html body:is(.page-forside, .page-ranglister, .page-udforsk, .page-profil) .page-shell > .topbar .sidebar-logo { grid-area: brand !important; }
+  html body:is(.page-forside, .page-ranglister, .page-udforsk, .page-profil) .page-shell > .topbar .site-nav { grid-area: nav !important; width: max-content !important; display: flex !important; flex-wrap: nowrap !important; white-space: nowrap; }
+  html body:is(.page-forside, .page-ranglister, .page-udforsk, .page-profil) .page-shell > .topbar #desktopHeaderSearch {
+    grid-area: search !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    transition: border-color 220ms ease-out, box-shadow 220ms ease-out !important;
+  }
+  html body:is(.page-forside, .page-ranglister, .page-udforsk, .page-profil) .page-shell > .topbar #desktopHeaderSearch .desktop-header-search__results {
+    width: 100% !important;
+    max-width: none !important;
+    transition: width 220ms ease-out !important;
+  }
+  html body:is(.page-forside, .page-ranglister, .page-udforsk, .page-profil) .page-shell > .topbar #desktopUserButton { grid-area: account !important; justify-self: end; }
+  html body:is(.page-forside, .page-ranglister, .page-udforsk, .page-profil) .page-shell > .topbar #desktopUserMenu { position: absolute !important; }
+}
+
+@media (min-width: 1366px) {
+  html body:is(.page-forside, .page-ranglister, .page-udforsk, .page-profil) .page-shell > .topbar:has(#desktopHeaderSearch:focus-within) {
+    grid-template-columns: minmax(220px, 1fr) auto minmax(260px, min(430px, 36vw)) auto !important;
+  }
+}
+
+@media (min-width: 1400px) {
+  html body:is(.page-forside, .page-ranglister, .page-udforsk, .page-profil) .page-shell > .topbar {
+    grid-template-columns: minmax(220px, 1fr) auto minmax(300px, 360px) auto !important;
+  }
+  html body:is(.page-forside, .page-ranglister, .page-udforsk, .page-profil) .page-shell > .topbar:has(#desktopHeaderSearch:focus-within) {
+    grid-template-columns: minmax(220px, 1fr) auto minmax(360px, min(540px, 42vw)) auto !important;
+  }
 }
 
 /* Deliberate two-row desktop header before the mobile breakpoint. */
