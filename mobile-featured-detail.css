@@ -5,6 +5,7 @@
   .podcast-detail-sheet__own-rating-picker .podcast-detail-sheet__rating-icon,
   .podcast-detail-sheet__own-rating-copy small { display: none; }
   .podcast-detail-sheet__own-rating-copy { display: contents; }
+  .podcast-detail-sheet__own-rating-mobile-summary { display: none; }
   .podcast-detail-sheet__related-show-all { display: none; }
 }
 

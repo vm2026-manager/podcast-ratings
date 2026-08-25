@@ -10089,7 +10089,7 @@ function renderPodcastDetailSheetContent(
         <strong>${escapeHtml(ownRatingDisplayValue)}<small>/10</small></strong>
         <small>Beregnet fra episoder</small>
       </span>`
-    : `<button class="podcast-detail-sheet__own-rating-reveal${
+    : `<button class="podcast-detail-sheet__own-rating-reveal podcast-detail-sheet__own-rating-mobile-summary${
         hasManualOwnRating ? " is-saved-rating" : ""
       }" type="button" data-podcast-detail-inline-rating-reveal aria-expanded="false">
         ${
