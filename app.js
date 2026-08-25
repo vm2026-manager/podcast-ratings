@@ -11177,9 +11177,9 @@ function renderHomeFeatured(container) {
   const featuredTitle = podcast
     ? getDesktopRankingTitleParts(podcast).displayText
     : review.title || "";
-  const featuredTitleSize = featuredTitle.length <= 18
+  const featuredTitleSize = featuredTitle.length <= 14
     ? "short"
-    : featuredTitle.length <= 35
+    : featuredTitle.length <= 27
       ? "medium"
       : "long";
   container.classList.remove(
@@ -11208,6 +11208,9 @@ function renderHomeFeatured(container) {
     })
     .join("");
   const showNavigation = reviews.length > 1;
+  const indicatorMarkup = showNavigation
+    ? `<div class="home-featured__indicators" aria-label="Vælg ugens anbefaling">${reviews.map((reviewItem, index) => `<button class="home-featured__indicator${index === state.homeFeaturedIndex ? " is-active" : ""}" type="button" data-home-featured-index="${index}" aria-label="Vis anbefaling ${index + 1}: ${escapeHtml(reviewItem.title || "podcast")}" aria-current="${index === state.homeFeaturedIndex ? "true" : "false"}"></button>`).join("")}</div>`
+    : "";
   const previousIndex = (state.homeFeaturedIndex - 1 + reviews.length) % reviews.length;
   const nextIndex = (state.homeFeaturedIndex + 1) % reviews.length;
   const previousReview = showNavigation ? reviews[previousIndex] : null;
@@ -11306,11 +11309,12 @@ function renderHomeFeatured(container) {
       </button>
       </div>
     </div>
-    ${showNavigation ? `<div class="home-featured__indicators" aria-label="Vælg ugens anbefaling">${reviews.map((reviewItem, index) => `<button class="home-featured__indicator${index === state.homeFeaturedIndex ? " is-active" : ""}" type="button" data-home-featured-index="${index}" aria-label="Vis anbefaling ${index + 1}: ${escapeHtml(reviewItem.title || "podcast")}" aria-current="${index === state.homeFeaturedIndex ? "true" : "false"}"></button>`).join("")}</div>` : ""}
+    <div class="home-featured__indicators--desktop">${indicatorMarkup}</div>
     <button class="home-featured__preview home-featured__preview--next" type="button" data-home-featured-next aria-label="Næste anbefaling">
       <img class="home-featured__preview-image home-featured__preview-image--next" alt="" loading="lazy" />
     </button>
     </div>
+    <div class="home-featured__indicators--mobile">${indicatorMarkup}</div>
   `;
 
   const image = container.querySelector(".home-featured__image");
