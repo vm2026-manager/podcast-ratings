@@ -21562,20 +21562,7 @@ html body.page-profil .profile-suggestion-action--danger {
   }
 
   html body.page-forside.page-forside #pageIntroPanel .home-hero__saved-link {
-    min-height: 42px !important;
-    width: fit-content !important;
-    display: inline-flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    margin-top: 16px !important;
-    padding: 0 16px !important;
-    border: 1px solid rgba(255, 92, 22, 0.32) !important;
-    border-radius: 999px !important;
-    background: rgba(255, 245, 236, 0.74) !important;
-    color: #c84612 !important;
-    font-size: 0.86rem !important;
-    font-weight: 850 !important;
-    text-decoration: none !important;
+    display: none !important;
   }
 
   html body.page-forside.page-forside #pageIntroPanel .home-quick-card {
