@@ -19133,17 +19133,13 @@ function renderRoute() {
             ${escapeHtml(mobileHeroIntro)}
           </p>
           ${
-            loggedIn
+            !loggedIn
               ? `
-                <a class="home-hero__saved-link" href="#profil-gemte">
-                  Se dine gemte podcasts
-                </a>
-              `
-              : `
                 <button class="home-hero__signup" type="button" ${state.authConfigured ? "" : "disabled"}>
                   Opret gratis konto
                 </button>
               `
+              : ""
           }
           <div class="home-mobile-actions" aria-label="Hurtige handlinger">
             <a class="home-mobile-action home-mobile-action--primary" href="#ranglister">Se ranglisten</a>
