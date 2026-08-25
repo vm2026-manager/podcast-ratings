@@ -35,9 +35,10 @@ function toPodcast(row) {
 }
 
 function signature(record) {
-  const title = normalizeMatchKey(record?.title);
+  const normalizePart = (value) => normalizeMatchKey(value).replace(/\s+/g, "");
+  const title = normalizePart(record?.title);
   return title
-    ? [title, normalizeMatchKey(record?.host), normalizeMatchKey(record?.publisher)].join("|")
+    ? [title, normalizePart(record?.host), normalizePart(record?.publisher)].join("|")
     : "";
 }
 

@@ -1793,10 +1793,11 @@ function normalizeCoverManifestEntries(payload) {
 }
 
 function getCoverManifestSignature(record) {
-  const title = normalizeMatchKey(record?.title);
+  const normalizePart = (value) => normalizeMatchKey(value).replace(/\s+/g, "");
+  const title = normalizePart(record?.title);
   if (!title) return "";
 
-  return [title, normalizeMatchKey(record?.host), normalizeMatchKey(record?.publisher)].join("|");
+  return [title, normalizePart(record?.host), normalizePart(record?.publisher)].join("|");
 }
 
 function getManifestVariantEntries(entry) {
