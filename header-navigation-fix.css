@@ -26,6 +26,53 @@
   }
   html body:is(.page-forside, .page-ranglister, .page-udforsk, .page-profil) .page-shell > .topbar #desktopUserButton { grid-area: account !important; justify-self: end; }
   html body:is(.page-forside, .page-ranglister, .page-udforsk, .page-profil) .page-shell > .topbar #desktopUserMenu { position: absolute !important; }
+
+  /* Keep the established focus-width transition; only improve scanability. */
+  html body:is(.page-forside, .page-ranglister, .page-udforsk, .page-profil) .page-shell > .topbar #desktopHeaderSearch {
+    min-height: 48px !important;
+  }
+  html body:is(.page-forside, .page-ranglister, .page-udforsk, .page-profil) .page-shell > .topbar #desktopHeaderSearch .desktop-header-search__input {
+    height: 48px !important;
+    min-height: 48px !important;
+    font-size: 1rem !important;
+    line-height: 1.2 !important;
+  }
+  html body:is(.page-forside, .page-ranglister, .page-udforsk, .page-profil) .page-shell > .topbar #desktopHeaderSearch .desktop-header-search__icon {
+    width: 18px !important;
+    height: 18px !important;
+  }
+  html body:is(.page-forside, .page-ranglister, .page-udforsk, .page-profil) .page-shell > .topbar #desktopHeaderSearch .desktop-header-search__results {
+    padding: 7px !important;
+  }
+  html body:is(.page-forside, .page-ranglister, .page-udforsk, .page-profil) .page-shell > .topbar #desktopHeaderSearch .desktop-header-search__result {
+    grid-template-columns: 42px minmax(0, 1fr) auto !important;
+    gap: 11px !important;
+    min-height: 56px !important;
+    padding: 7px 8px !important;
+  }
+  html body:is(.page-forside, .page-ranglister, .page-udforsk, .page-profil) .page-shell > .topbar #desktopHeaderSearch .desktop-header-search__cover {
+    width: 42px !important;
+    height: 42px !important;
+  }
+  html body:is(.page-forside, .page-ranglister, .page-udforsk, .page-profil) .page-shell > .topbar #desktopHeaderSearch .desktop-header-search__copy {
+    gap: 4px !important;
+  }
+  html body:is(.page-forside, .page-ranglister, .page-udforsk, .page-profil) .page-shell > .topbar #desktopHeaderSearch .desktop-header-search__copy strong {
+    color: #241c17 !important;
+    font-size: 0.98rem !important;
+    font-weight: 800 !important;
+    line-height: 1.15 !important;
+  }
+  html body:is(.page-forside, .page-ranglister, .page-udforsk, .page-profil) .page-shell > .topbar #desktopHeaderSearch .desktop-header-search__copy span {
+    font-size: 0.81rem !important;
+    font-weight: 700 !important;
+    line-height: 1.2 !important;
+  }
+  html body:is(.page-forside, .page-ranglister, .page-udforsk, .page-profil) .page-shell > .topbar #desktopHeaderSearch .desktop-header-search__match {
+    padding: 3px 6px !important;
+    font-size: 0.66rem !important;
+    font-weight: 750 !important;
+  }
 }
 
 @media (min-width: 1366px) {
