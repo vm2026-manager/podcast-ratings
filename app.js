@@ -53,6 +53,16 @@ const EPISODE_DATABASE_KEY_ALIASES = {
   "vi ser paa det": "vi ser på det",
   "vi ser på det": "vi ser på det"
 };
+// Temporary read bridge for the five audited database-key migrations. The
+// importer and database rows remain on the legacy key until the Phase 2B
+// migration; the frontend deliberately accepts either stored parent key.
+const EPISODE_DATABASE_KEY_READ_BRIDGES = {
+  "hva så": "hva sa",
+  "jagten på det evige liv": "jagten pa det evige liv",
+  "sagen genåbnet": "sagen genabnet",
+  "vi ser på det": "vi ser pa det",
+  "vågn lidt op": "vagn lidt op"
+};
 const EPISODE_PODCAST_CONFIG = {
   genstart: {
     podcastKey: "genstart",
@@ -8236,6 +8246,12 @@ function getEpisodeDatabasePodcastKey(configOrPodcast) {
     ""
   );
 }
+
+function getEpisodeDatabaseReadKeys(configOrPodcast) {
+  const legacyKey = getEpisodeDatabasePodcastKey(configOrPodcast);
+  const permanentKey = EPISODE_DATABASE_KEY_READ_BRIDGES[legacyKey];
+  return Array.from(new Set([legacyKey, permanentKey].map(normalizeText).filter(Boolean)));
+}
 function podcastHasEpisodeConfiguration(podcastOrKey) {
   return Boolean(getEpisodePodcastConfig(podcastOrKey)) ||
     (typeof podcastOrKey === "object" && podcastHasManualEpisodeList(podcastOrKey));
@@ -9034,7 +9050,7 @@ async function fetchGenstartEpisodes({ append = false } = {}) {
     const { data, error, count } = await state.supabase
       .from("podcast_episodes")
       .select("id,podcast_key,title,description,published_at,duration_seconds,episode_url,audio_url,image_url,external_guid,is_active,metadata", { count: "exact" })
-      .eq("podcast_key", getEpisodeDatabasePodcastKey(config))
+      .in("podcast_key", getEpisodeDatabaseReadKeys(config))
       .eq("is_active", true)
       .order("published_at", { ascending: false })
       .range(offset, offset + EPISODE_PAGE_SIZE - 1);
@@ -9085,7 +9101,7 @@ async function searchGenstartEpisodes(term, token, { append = false } = {}) {
     const { data, error, count } = await state.supabase
       .from("podcast_episodes")
       .select("id,podcast_key,title,description,published_at,duration_seconds,episode_url,audio_url,image_url,external_guid,is_active,metadata", { count: "exact" })
-      .eq("podcast_key", getEpisodeDatabasePodcastKey(config))
+      .in("podcast_key", getEpisodeDatabaseReadKeys(config))
       .eq("is_active", true)
       .or(`title.ilike.${pattern},description.ilike.${pattern}`)
       .order("published_at", { ascending: false })
