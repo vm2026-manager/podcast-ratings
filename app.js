@@ -11179,7 +11179,7 @@ function renderHomeFeatured(container) {
     : review.title || "";
   const featuredTitleSize = featuredTitle.length <= 14
     ? "short"
-    : featuredTitle.length <= 27
+    : featuredTitle.length <= 21
       ? "medium"
       : "long";
   container.classList.remove(
@@ -11202,9 +11202,9 @@ function renderHomeFeatured(container) {
       const isGenre = item === normalizeText(review.genre);
       if (isPublisher || isGenre) {
         const filterType = isPublisher ? "publisher" : "genre";
-        return `<button class="home-featured__meta-link" type="button" data-home-featured-filter="${filterType}" data-value="${escapeHtml(item)}">${escapeHtml(item)}</button>`;
+        return `<button class="home-featured__meta-link home-featured__meta-badge home-featured__meta-badge--${filterType}" type="button" data-home-featured-filter="${filterType}" data-value="${escapeHtml(item)}">${escapeHtml(item)}</button>`;
       }
-      return `<span>${escapeHtml(item)}</span>`;
+      return `<span class="home-featured__meta-host">${escapeHtml(item)}</span>`;
     })
     .join("");
   const showNavigation = reviews.length > 1;
