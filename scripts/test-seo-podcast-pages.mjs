@@ -4,17 +4,24 @@ import { assertUniqueSlugs, generateSeoPodcastPages, PILOT_PODCAST_IDS, resolveP
 
 const payload = JSON.parse(await readFile(new URL("../data/podcasts.json", import.meta.url), "utf8"));
 const rows = resolvePilotPodcasts(payload.rows);
-assert.equal(rows.length, 10);
+const ORIGINAL_PILOT_ROUTES = new Map([
+  ["mørkeland", "moerkeland"], ["genstart", "genstart"], ["millionærklubben", "millionaerklubben"],
+  ["sagen genabnet", "sagen-genabnet"], ["borgerlig tabloid", "borgerlig-tabloid"], ["det vi taler om", "det-vi-taler-om"],
+  ["langt fra løgnen", "langt-fra-loegnen"], ["mads og a holdet", "mads-og-a-holdet"],
+  ["vanvittig verdenshistorie", "vanvittig-verdenshistorie"], ["afhørt", "afhoert"]
+]);
+assert.equal(rows.length, 30);
 assert.equal(slugFromPodcastId(" Mørkeland ÆØÅ! "), "moerkeland-aeoeaa");
 assert.throws(() => resolvePilotPodcasts([{ "Podcast-ID": "mørkeland" }]), /resolve uniquely/);
 assert.throws(() => assertUniqueSlugs([{ "Podcast-ID": "a!" }, { "Podcast-ID": "a?" }]), /slug collision/);
 const pages = await generateSeoPodcastPages();
+assert.equal(pages.length, 30);
 const urls = new Set(); const titles = new Set();
 for (const page of pages) {
   const html = await readFile(new URL(`../podcast/${page.slug}/index.html`, import.meta.url), "utf8");
   assert.equal((html.match(/<title>/g) || []).length, 1); assert.equal((html.match(/<h1>/g) || []).length, 1);
   assert.equal((html.match(/rel="canonical"/g) || []).length, 1); assert.equal((html.match(/name="description"/g) || []).length, 1);
-  assert(html.includes(page.canonical)); assert(!/(?:href|content)="[^\"]*#/.test(html)); assert(!html.includes("noindex")); assert(html.length > 1200);
+  assert(html.includes(page.canonical)); assert(!/href="[^\"]*#/.test(html)); assert(!html.includes("noindex")); assert(html.length > 1200);
   assert(html.includes(page.description)); assert(html.includes(page.metaDescription));
   assert(!html.includes("episoder og anbefalinger"));
   if (page.rating) {
@@ -28,6 +35,12 @@ for (const page of pages) {
   const staticLinks = [...html.matchAll(/href="(\/podcast\/[^\"]+)"/g)].map((match) => match[1]);
   assert.deepEqual(staticLinks, []);
   assert(!urls.has(page.canonical)); assert(!titles.has(page.pageTitle)); urls.add(page.canonical); titles.add(page.pageTitle);
+}
+for (const [id, slug] of ORIGINAL_PILOT_ROUTES) {
+  const page = pages.find((candidate) => candidate.id === id);
+  assert(page, `original pilot missing: ${id}`);
+  assert.equal(page.slug, slug);
+  assert.equal(page.canonical, `https://podcastlisten.dk/podcast/${slug}/`);
 }
 const sitemap = await readFile(new URL("../sitemap.xml", import.meta.url), "utf8");
 assert.equal((sitemap.match(/<loc>/g) || []).length, PILOT_PODCAST_IDS.length + 1); assert(!sitemap.includes("#"));

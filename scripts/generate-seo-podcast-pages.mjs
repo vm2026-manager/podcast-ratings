@@ -10,7 +10,12 @@ const sitemapPath = path.join(repoRoot, "sitemap.xml");
 export const PILOT_PODCAST_IDS = [
   "mørkeland", "genstart", "millionærklubben", "sagen genabnet",
   "borgerlig tabloid", "det vi taler om", "langt fra løgnen", "mads og a holdet",
-  "vanvittig verdenshistorie", "afhørt"
+  "vanvittig verdenshistorie", "afhørt",
+  "fantino og bonde", "danske drabssager", "only in america", "dkpol",
+  "børsen morgenbriefing", "jagten pa det evige liv", "sig det løgn", "frontlinjen",
+  "børsen brænder", "hva sa", "112 for knuste hjerter", "aftalt spil",
+  "transferguru", "grebet af gvfb", "opskriften pa kærlighed", "bomben",
+  "mathias helts talkshow", "tiden", "nationens mareridt", "kvart i bold"
 ];
 
 export function slugFromPodcastId(id) {
