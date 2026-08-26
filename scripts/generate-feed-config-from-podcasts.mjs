@@ -1,6 +1,7 @@
 import { readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { appleShowUrl, parseAppleFeed, parseHttpFeed } from "../supabase/functions/import-podcast-episodes/feed-syntax.mjs";
 
 const __filename = fileURLToPath(import.meta.url);
 const repoRoot = path.resolve(path.dirname(__filename), "..");
@@ -39,15 +40,6 @@ function getFeedUrl(podcast) {
   return String(podcast?.Feed ?? podcast?.feed ?? "").trim();
 }
 
-function parseHttpUrl(value) {
-  try {
-    const url = new URL(value);
-    return /^https?:$/.test(url.protocol) ? url.href : "";
-  } catch {
-    return "";
-  }
-}
-
 function getManualConfigKeys(configSource) {
   const beforeGenerated = configSource.split(generatedStart)[0];
   const keys = new Set();
@@ -71,7 +63,8 @@ function escapeTsString(value) {
 export function buildSheetFeedEntries(podcasts, configSource, { identity = "podcast-id" } = {}) {
   const manual = getManualConfigKeys(configSource);
   const seenFeedKeys = new Set();
-  const seenUrls = new Set();
+  const seenSources = new Set();
+  const seenAppleShowIds = new Set();
   const generated = [];
   const invalid = [];
   const duplicates = [];
@@ -85,7 +78,8 @@ export function buildSheetFeedEntries(podcasts, configSource, { identity = "podc
     if (!rawFeedUrl) continue;
     withFeed += 1;
 
-    const feedUrl = parseHttpUrl(rawFeedUrl);
+    const apple = parseAppleFeed(rawFeedUrl);
+    const feedUrl = parseHttpFeed(rawFeedUrl);
     const podcastId = getPodcastId(podcast);
     if (identity === "podcast-id" && !podcastId) {
       missingPodcastIds.push({ title: title || "(mangler titel)", feed: rawFeedUrl });
@@ -93,8 +87,8 @@ export function buildSheetFeedEntries(podcasts, configSource, { identity = "podc
     }
     const identityValue = identity === "podcast-id" ? podcastId : title;
     const podcastKey = identity === "podcast-id" ? podcastId : normalizePodcastKey(title);
-    const feedKey = toFeedKey(identityValue);
-    if (!title || !podcastKey || !feedKey || !feedUrl) {
+    const feedKey = apple ? `apple_${apple.appleShowId}` : toFeedKey(identityValue);
+    if (!title || !podcastKey || !feedKey || (!feedUrl && !apple)) {
       invalid.push({ title: title || "(mangler titel)", feed: rawFeedUrl });
       continue;
     }
@@ -105,18 +99,22 @@ export function buildSheetFeedEntries(podcasts, configSource, { identity = "podc
       continue;
     }
 
-    if (seenFeedKeys.has(feedKey) || seenUrls.has(feedUrl)) {
-      duplicates.push({ title, feed: feedUrl });
+    const source = apple ? `apple_podcasts_${apple.appleShowId}` : `sheet_${feedKey}_rss`;
+    if (seenFeedKeys.has(feedKey) || seenSources.has(source) || (apple && seenAppleShowIds.has(apple.appleShowId))) {
+      duplicates.push({ title, feed: rawFeedUrl });
       continue;
     }
 
     seenFeedKeys.add(feedKey);
-    seenUrls.add(feedUrl);
+    seenSources.add(source);
+    if (apple) seenAppleShowIds.add(apple.appleShowId);
     generated.push({
       feedKey,
       podcastKey,
-      source: `sheet_${feedKey}_rss`,
-      feedUrl
+      source,
+      feedUrl: apple ? appleShowUrl(apple.appleShowId) : feedUrl,
+      format: apple ? "apple_podcasts_html" : "rss",
+      appleShowId: apple?.appleShowId || ""
     });
   }
 
@@ -150,6 +148,11 @@ function renderGeneratedBlock(entries) {
       `    podcast_key: "${escapeTsString(entry.podcastKey)}",`,
       `    source: "${escapeTsString(entry.source)}",`,
       `    feed_url: "${escapeTsString(entry.feedUrl)}",`,
+      ...(entry.format === "apple_podcasts_html" ? [
+        '    format: "apple_podcasts_html",',
+        `    apple_show_id: "${escapeTsString(entry.appleShowId)}",`,
+        "    enabled: false,"
+      ] : []),
       "    generated_from_sheet: true",
       "  },"
     );

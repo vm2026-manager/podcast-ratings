@@ -1,5 +1,5 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.4";
-import { fetchFeedText, jsonResponse, runEpisodeImport, runEpisodeImports, safeErrorMessage, validateImportRequest } from "./core.ts";
+import { fetchFeedText, jsonResponse, runEpisodeImport, runEpisodeImports, safeErrorMessage, selectAppleFeedKeys, validateImportRequest } from "./core.ts";
 import { mapApplePodcastHtmlEpisodes } from "./apple-podcasts.ts";
 import { FEED_CONFIGS } from "./feed-config.ts";
 import { createSupabaseImportRepository } from "./repository.ts";
@@ -52,6 +52,12 @@ Deno.serve(async (request) => {
     console.log("[episode-import] feed configuration", JSON.stringify(runtimeFeeds.audit));
     const summary = validation.feed === "all"
       ? await runEpisodeImports({ repository, feedConfigs: runtimeFeeds.configs })
+      : validation.feed === "apple_all"
+      ? await runEpisodeImports({
+          repository,
+          feedConfigs: runtimeFeeds.configs,
+          feedKeys: selectAppleFeedKeys(runtimeFeeds.configs)
+        })
       : await runEpisodeImport({ feedKey: validation.feed, repository, feedConfigs: runtimeFeeds.configs });
     const status = summary.status === "failed" ? 500 : summary.status === "partial" ? 207 : 200;
     return jsonResponse({ ...summary, feed_config_audit: runtimeFeeds.audit }, status);

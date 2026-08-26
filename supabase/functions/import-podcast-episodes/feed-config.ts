@@ -20,7 +20,7 @@ export const FEED_CONFIGS: FeedConfigMap = {
     podcast_key: "mads og a holdet",
     source: "apple_podcasts_1575533784",
     format: "apple_podcasts_html",
-    feed_url: "https://podcasts.apple.com/dk/podcast/mads-og-a-holdet/id1575533784?l=da",
+    feed_url: "https://podcasts.apple.com/dk/podcast/id1575533784",
     apple_show_id: "1575533784",
     enabled: false
   },

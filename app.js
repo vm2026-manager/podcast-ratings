@@ -2290,7 +2290,8 @@ function mapPodcast(row, index) {
   const episodes = getField(row, ["Antal afsnit", "Afsnit", "Episodes"]);
   const yearPlayed = getField(row, ["\u00c5rstal afspillet", "Aarstal afspillet", "\u00c5r", "Aar"]);
   const link = extractUrl(getField(row, ["Link", "URL"]));
-  const feedUrl = extractUrl(getField(row, ["Feed", "RSS", "RSS feed", "Episode feed"]));
+  const rawFeed = normalizeText(getField(row, ["Feed", "RSS", "RSS feed", "Episode feed"]));
+  const feedUrl = extractUrl(rawFeed);
   const ratingDate = getField(row, ["Afgivet vurdering", "Dato", "Vurderingsdato", "Bed\u00f8mt"]);
   const rawImage = extractUrl(getField(row, ["Billedlink", "Billedefil", "Billede", "Cover", "Image"]));
   const imageFallback = extractUrl(
@@ -2377,6 +2378,7 @@ function mapPodcast(row, index) {
     yearPlayed,
     link,
     feedUrl,
+    rawFeed,
     ratingDate,
     ratingDateObject: parseDate(ratingDate),
     ratingDateLabel: formatDate(ratingDate),
@@ -8191,6 +8193,22 @@ function getEpisodePodcastConfig(podcastOrKey) {
   }
 
   if (!podcastId) return null;
+
+  const rawFeed = normalizeText(podcast?.rawFeed || podcast?.Feed);
+  const appleMatch = rawFeed.match(/^apple:(\d+)$/i);
+  if (appleMatch) {
+    // Apple identity comes only from the permanent catalogue ID and show ID;
+    // never infer it from a display title.
+    return {
+      podcastKey: podcastId,
+      databasePodcastKey: podcastId,
+      displayName: podcast?.title || podcastId,
+      searchPlaceholder: `Søg i ${podcast?.title || podcastId}-episoder`,
+      source: `apple_podcasts_${appleMatch[1]}`,
+      enabled: true,
+      persistence: "supabase"
+    };
+  }
 
   const feedUrl = normalizeText(podcast?.feedUrl || podcast?.Feed);
 

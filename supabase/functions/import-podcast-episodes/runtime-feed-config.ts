@@ -1,4 +1,5 @@
 import { FEED_CONFIGS, type FeedConfig, type FeedConfigMap } from "./feed-config.ts";
+import { appleShowUrl, parseAppleFeed, parseHttpFeed } from "./feed-syntax.mjs";
 
 const PODCASTS_JSON_TIMEOUT_MS = 15000;
 
@@ -33,15 +34,6 @@ function getPodcastId(row: Record<string, unknown>): string {
   return String(row["Podcast-ID"] ?? row["Podcast ID"] ?? row.PodcastID ?? "").trim();
 }
 
-function parseHttpUrl(value: unknown): string {
-  try {
-    const url = new URL(String(value ?? "").trim());
-    return /^https?:$/.test(url.protocol) ? url.href : "";
-  } catch {
-    return "";
-  }
-}
-
 function getPodcastRows(payload: unknown): Array<Record<string, unknown>> {
   if (Array.isArray(payload)) return payload.filter((row) => row && typeof row === "object");
   if (payload && typeof payload === "object" && Array.isArray((payload as { rows?: unknown }).rows)) {
@@ -72,7 +64,8 @@ export function mergeSheetFeedConfigs(
   const configs: FeedConfigMap = { ...manualStaticConfigs };
   const staticKeys = new Set(Object.keys(manualStaticConfigs));
   const staticPodcastKeys = getStaticPodcastKeys(manualStaticConfigs);
-  const seenUrls = new Set<string>();
+  const seenSources = new Set(Object.values(manualStaticConfigs).map((config) => config.source));
+  const seenAppleShowIds = new Set(Object.values(manualStaticConfigs).filter((config) => config.format === "apple_podcasts_html").map((config) => config.apple_show_id).filter(Boolean));
   const seenPodcastKeys = new Set(staticPodcastKeys);
   let dynamicSheetFeedCount = 0;
   let duplicatesSkipped = 0;
@@ -80,36 +73,40 @@ export function mergeSheetFeedConfigs(
   let missingPodcastIdsSkipped = 0;
 
   for (const row of getPodcastRows(sheetPayload)) {
-    const feedUrl = parseHttpUrl(row.Feed ?? row.feed);
+    const rawFeed = row.Feed ?? row.feed;
+    const apple = parseAppleFeed(rawFeed);
+    const feedUrl = parseHttpFeed(rawFeed);
     const podcastId = getPodcastId(row);
     const podcastKey = podcastId;
-    const feedKey = toFeedKey(podcastId);
+    const feedKey = apple ? `apple_${apple.appleShowId}` : toFeedKey(podcastId);
 
     if (!String(row.Feed ?? row.feed ?? "").trim()) continue;
     if (!podcastId) {
       missingPodcastIdsSkipped += 1;
       continue;
     }
-    if (!feedUrl || !podcastKey || !feedKey) {
+    if ((!feedUrl && !apple) || !podcastKey || !feedKey) {
       invalidFeedUrlsSkipped += 1;
       continue;
     }
 
     // Static configs own special adapters and always take precedence.
-    if (staticKeys.has(feedKey) || seenPodcastKeys.has(podcastKey) || seenUrls.has(feedUrl)) {
+    const source = apple ? `apple_podcasts_${apple.appleShowId}` : `sheet_${feedKey}_rss`;
+    if (staticKeys.has(feedKey) || seenPodcastKeys.has(podcastKey) || seenSources.has(source) || (apple && seenAppleShowIds.has(apple.appleShowId))) {
       duplicatesSkipped += 1;
       continue;
     }
 
     configs[feedKey] = {
       podcast_key: podcastKey,
-      source: `sheet_${feedKey}_rss`,
-      feed_url: feedUrl,
-      format: "rss",
-      enabled: true
+      source,
+      feed_url: apple ? appleShowUrl(apple.appleShowId) : feedUrl,
+      format: apple ? "apple_podcasts_html" : "rss",
+      ...(apple ? { apple_show_id: apple.appleShowId, enabled: false } : { enabled: true })
     };
     seenPodcastKeys.add(podcastKey);
-    seenUrls.add(feedUrl);
+    seenSources.add(source);
+    if (apple) seenAppleShowIds.add(apple.appleShowId);
     dynamicSheetFeedCount += 1;
   }
 
@@ -147,7 +144,7 @@ export async function loadRuntimeFeedConfigs(options: {
   staticConfigs?: FeedConfigMap;
 } = {}): Promise<{ configs: FeedConfigMap; audit: FeedConfigAudit }> {
   const staticConfigs = getManualStaticConfigs(options.staticConfigs || FEED_CONFIGS);
-  const podcastsJsonUrl = parseHttpUrl(options.podcastsJsonUrl || Deno.env.get("PODCASTS_JSON_URL"));
+  const podcastsJsonUrl = parseHttpFeed(options.podcastsJsonUrl || Deno.env.get("PODCASTS_JSON_URL"));
   const baseAudit = {
     static_feed_count: Object.keys(staticConfigs).length,
     dynamic_sheet_feed_count: 0,
