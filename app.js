@@ -19254,14 +19254,14 @@ function renderRoute() {
     const loggedIn = isLoggedIn();
     const showHomeCommunityCta = !loggedIn;
     const homeDisplayName = getHomeDisplayName();
-    const mobileHeroTitle = loggedIn
-      ? homeDisplayName
-        ? `God dag, ${homeDisplayName}`
-        : "God dag"
-      : "Find din n\u00e6ste podcastfavorit";
-    const mobileHeroIntro = loggedIn
-      ? "Se personlige favoritter, brugernes vurderinger og find noget nyt at lytte til."
-      : "Opdag podcastfavoritter med vurderinger, ranglister og inspiration fra Podcastlistens fællesskab.";
+    const mobileHeroTitle = "Find din næste podcastfavorit";
+    const mobileHeroIntro = "Se personlige favoritter, brugernes vurderinger og find noget nyt at lytte til.";
+    const mobileHeroPodcastIds = ["millionærklubben", "genstart", "det vi taler om"];
+    const mobileHeroPodcastCovers = mobileHeroPodcastIds.map((id, index) => {
+      const podcast = state.podcastById[id] || state.podcasts.find((item) => getPodcastId(item) === id);
+      const source = podcast ? getPodcastImageSources(podcast)[0] : "";
+      return source ? `<div class="home-hero__fixed-cover home-hero__fixed-cover--${["left", "center", "right"][index]}"><img src="${escapeHtml(source)}" alt="" /></div>` : "";
+    }).join("");
     const homeHourBucket = getExploreHourBucket();
     const heroPodcasts = getHomeHeroPodcasts(homeHourBucket);
     const heroPodcastPrimary =
@@ -19404,7 +19404,7 @@ function renderRoute() {
           }
         </div>
         <div class="home-hero__copy">
-          <h1 data-mobile-title="${escapeHtml(mobileHeroTitle)}">Find din n&aelig;ste podcastfavorit</h1>
+          <h1 data-mobile-title="${escapeHtml(mobileHeroTitle)}"><span class="home-hero__headline-line">Find din næste</span><span class="home-hero__headline-line home-hero__headline-line--accent">podcastfavorit</span></h1>
           <p
             class="intro"
             data-mobile-intro="${escapeHtml(mobileHeroIntro)}"
@@ -19510,6 +19510,10 @@ function renderRoute() {
             data-home-hero-indicators
             aria-label="Flere grupper af topbedømte podcasts"
           ></div>
+        </div>
+        <div class="home-hero__visual home-hero__visual--mobile-fixed" aria-hidden="true">
+          <div class="home-hero__fixed-glow"></div>
+          ${mobileHeroPodcastCovers}
         </div>
       </div>
       <form class="home-podcast-search" data-home-podcast-search role="search" aria-label="Søg podcasts">
