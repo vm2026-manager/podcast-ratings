@@ -14,7 +14,8 @@ select cron.schedule(
   '30 5,6 * * *',
   $$
   select case
-    when (now() at time zone 'Europe/Copenhagen')::time = time '07:30' then
+    when (now() at time zone 'Europe/Copenhagen')::time >= time '07:30'
+      and (now() at time zone 'Europe/Copenhagen')::time < time '07:31' then
       net.http_post(
         url := (select decrypted_secret from vault.decrypted_secrets where name = 'episode_import_function_url'),
         headers := jsonb_build_object(
