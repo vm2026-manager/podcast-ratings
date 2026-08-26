@@ -31,6 +31,11 @@ const HOME_COMMUNITY_MIN_RATING = 6;
 const HOME_COMMUNITY_PRIMARY_MIN_COUNT = 3;
 const HOME_COMMUNITY_SECONDARY_MIN_COUNT = 2;
 const AUTO_EXPAND_DELAY_MS = 900;
+const SEO_PILOT_PODCAST_IDS = new Set([
+  "mørkeland", "genstart", "millionærklubben", "sagen genabnet",
+  "borgerlig tabloid", "det vi taler om", "langt fra løgnen", "mads og a holdet",
+  "vanvittig verdenshistorie", "afhørt"
+]);
 const EPISODE_DATABASE_KEY_ALIASES = {
   "genstart": "genstart",
   "det vi taler om": "det vi taler om",
@@ -2595,6 +2600,16 @@ function getFeaturedReviewImageSources(review) {
 
 function getPodcastId(podcast) {
   return normalizeText(podcast?.podcastId);
+}
+
+function getSeoPilotRoute(podcast) {
+  const id = getPodcastId(podcast);
+  if (!SEO_PILOT_PODCAST_IDS.has(id)) return "";
+  const slug = id.toLowerCase()
+    .replace(/æ/g, "ae").replace(/ø/g, "oe").replace(/å/g, "aa")
+    .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
+  return slug ? `/podcast/${slug}/` : "";
 }
 
 function getLegacyPodcastKey(podcast) {
@@ -12542,7 +12557,22 @@ function createPodcastCardElement(podcast, displayRank = null) {
 
   setImage(media, getPodcastImageSources(podcast), podcast.title);
 
-  title.innerHTML = getMainSeriesTitleMarkup(podcast);
+  const seoPilotRoute = getSeoPilotRoute(podcast);
+  if (seoPilotRoute) {
+    const titleLink = document.createElement("a");
+    titleLink.href = seoPilotRoute;
+    titleLink.innerHTML = getMainSeriesTitleMarkup(podcast);
+    titleLink.style.color = "inherit";
+    titleLink.style.textDecoration = "none";
+    titleLink.addEventListener("click", (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      openPodcastDetailSheet(podcast, article, { allowDesktop: true });
+    });
+    title.replaceChildren(titleLink);
+  } else {
+    title.innerHTML = getMainSeriesTitleMarkup(podcast);
+  }
   title.classList.remove("is-medium-title", "is-long-title");
   const mobileTitleLengthClass = getMobileTitleLengthClass(
     getMobileTitleClassificationText(podcast)
