@@ -86,3 +86,51 @@ html body .home-podcast-search { display: none; }
     margin: 0 !important;
   }
 }
+
+/* MOBILE RANKING GENRES ALWAYS VISIBLE START */
+@media (max-width: 768px) {
+  /* Den gamle "Alle genrer / Filtre / Skjul"-række bruges ikke længere. */
+  body.page-ranglister .ranking-mobile-filter-bar {
+    display: none !important;
+  }
+
+  /* Vurderingsfilter og desktop-sortering skal fortsat være skjult på mobil. */
+  body.page-ranglister .rating-filter-section,
+  body.page-ranglister .sort-field {
+    display: none !important;
+  }
+
+  /* Genrevalgene er altid synlige direkte under Podcastlisten/Brugere. */
+  body.page-ranglister .ranking-filter-panel .genre-nav {
+    display: block !important;
+    order: 2 !important;
+    width: 100% !important;
+    max-width: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+  }
+
+  body.page-ranglister .ranking-filter-panel .genre-chips {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    gap: 6px 5px !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow: visible !important;
+  }
+
+  body.page-ranglister .ranking-filter-panel .genre-chip {
+    flex: 0 0 auto !important;
+    max-width: calc(50% - 4px) !important;
+    min-height: 29px !important;
+    padding: 0 7px !important;
+    font-size: 0.74rem !important;
+  }
+}
+/* MOBILE RANKING GENRES ALWAYS VISIBLE END */
