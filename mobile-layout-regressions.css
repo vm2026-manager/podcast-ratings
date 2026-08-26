@@ -134,3 +134,10 @@ html body .home-podcast-search { display: none; }
   }
 }
 /* MOBILE RANKING GENRES ALWAYS VISIBLE END */
+
+/* MOBILE GENRE CHIP LINK NORMALIZATION */
+@media (max-width: 768px) {
+  body.page-ranglister .ranking-filter-panel .genre-chip {
+    text-decoration: none !important;
+  }
+}
