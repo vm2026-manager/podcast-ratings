@@ -53,7 +53,7 @@ for (const [id, slug] of ORIGINAL_PILOT_ROUTES) {
 const trueCrimeHtml = await readFile(new URL("../genre/true-crime/index.html", import.meta.url), "utf8");
 assert.equal((trueCrimeHtml.match(/<title>/g) || []).length, 1); assert.equal((trueCrimeHtml.match(/<h1>/g) || []).length, 1);
 assert.equal((trueCrimeHtml.match(/rel="canonical"/g) || []).length, 1); assert.equal((trueCrimeHtml.match(/name="description"/g) || []).length, 1);
-assert(trueCrimeHtml.includes(TRUE_CRIME_CANONICAL)); assert(!trueCrimeHtml.includes("noindex")); assert(trueCrimeHtml.includes("Danske true crime podcasts"));
+assert(trueCrimeHtml.includes(TRUE_CRIME_CANONICAL)); assert(!trueCrimeHtml.includes("noindex")); assert(trueCrimeHtml.includes("True crime podcasts")); assert(!trueCrimeHtml.includes("Danske true crime podcasts"));
 const genreStaticLinks = [...trueCrimeHtml.matchAll(/href="(\/podcast\/[^\"]+)"/g)].map((match) => match[1]);
 const expectedGenreStaticLinks = trueCrimeEntries.filter((entry) => entry.staticSlug).map((entry) => `/podcast/${entry.staticSlug}/`);
 assert.deepEqual(genreStaticLinks, expectedGenreStaticLinks);

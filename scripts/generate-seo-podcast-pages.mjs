@@ -181,8 +181,8 @@ export function renderTrueCrimePage(entries) {
       .map(([label, value]) => `<span><strong>${label}:</strong> ${escapeHtml(value)}</span>`).join("<span aria-hidden=\"true\"> · </span>");
     return `<article class="podcast-card">${cover}<div><h2>${title}</h2>${entry.rating ? `<p class="rating"><strong>Podcastlisten-vurdering:</strong> ${escapeHtml(entry.rating)} / 10</p>` : ""}${facts ? `<p class="facts">${facts}</p>` : ""}${entry.description ? `<p>${escapeHtml(entry.description)}</p>` : ""}<p><a href="/?podcast=${encodeURIComponent(entry.id)}">Se i Podcastlisten</a></p></div></article>`;
   }).join("\n      ");
-  const title = "Danske true crime podcasts – ratings og podcastguide | Podcastlisten";
-  const description = "Find danske true crime podcasts på Podcastlisten. Se beskrivelser og tilgængelige vurderinger, og find din næste podcast.";
+  const title = "True crime podcasts – ratings og podcastguide | Podcastlisten";
+  const description = "Find true crime podcasts på Podcastlisten. Se beskrivelser og tilgængelige vurderinger, og find din næste podcast.";
   return `<!DOCTYPE html>
 <html lang="da">
   <head>
@@ -200,7 +200,7 @@ export function renderTrueCrimePage(entries) {
   </head>
   <body><main class="page">
     <a class="brand" href="/">Podcastlisten</a>
-    <h1>Danske true crime podcasts</h1>
+    <h1>True crime podcasts</h1>
     <p class="intro">Her finder du podcasts i Podcastlistens aktuelle katalog, som er klassificeret i genren True Crime. Sammenlign beskrivelser og Podcastlisten-vurderinger, hvor de er registreret.</p>
     <section aria-labelledby="catalogue"><h2 id="catalogue">True crime podcasts i kataloget</h2><div class="podcast-list">
       ${cards}
