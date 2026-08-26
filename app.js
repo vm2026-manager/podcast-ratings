@@ -56,6 +56,15 @@ const EPISODE_DATABASE_KEY_ALIASES = {
   "vågn lidt op": "vagn lidt op"
 };
 const EPISODE_PODCAST_CONFIG = {
+  "mads og a holdet": {
+    podcastKey: "mads og a holdet",
+    databasePodcastKey: "mads og a holdet",
+    enabled: true,
+    displayName: "Mads og A-holdet",
+    searchPlaceholder: "Søg i Mads og A-holdet-episoder",
+    source: "apple_podcasts",
+    persistence: "supabase"
+  },
   genstart: {
     podcastKey: "genstart",
     databasePodcastKey: "genstart",

@@ -1,4 +1,5 @@
 import { FEED_CONFIGS, type FeedConfig, type FeedConfigMap } from "./feed-config.ts";
+import { mapApplePodcastHtmlEpisodes } from "./apple-podcasts.ts";
 
 export const FEED_TIMEOUT_MS = 15000;
 export const BATCH_SIZE = 200;
@@ -109,7 +110,7 @@ export async function validateImportRequest(request: Request, expectedSecret: st
     if (!feed) {
       return { ok: false as const, status: 400, body: { status: "failed", error: "Missing feed" } };
     }
-    return { ok: true as const, feed };
+    return { ok: true as const, feed, dryRun: body.dry_run === true };
   } catch (_error) {
     return { ok: false as const, status: 400, body: { status: "failed", error: "Invalid JSON body" } };
   }
@@ -670,7 +671,14 @@ export async function runEpisodeImport(options: {
 
   try {
     const content = await (options.fetchText || fetchFeedText)(config.feed_url);
-    const mapped = config.format === "radio4_json"
+    const mapped = config.format === "apple_podcasts_html"
+      ? await mapApplePodcastHtmlEpisodes({
+          showHtml: content,
+          config,
+          fetchText: options.fetchText || fetchFeedText,
+          now: now()
+        })
+      : config.format === "radio4_json"
       ? mapRadio4Episodes(parseRadio4Episodes(content), config, now())
       : config.format === "dr_lyd_next_data"
         ? mapDrLydEpisodes(parseDrLydEpisodes(content), config, now())

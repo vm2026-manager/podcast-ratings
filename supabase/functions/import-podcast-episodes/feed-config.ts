@@ -1,4 +1,4 @@
-export type FeedFormat = "rss" | "radio4_json" | "dr_lyd_next_data";
+export type FeedFormat = "rss" | "radio4_json" | "dr_lyd_next_data" | "apple_podcasts_html";
 
 export type FeedConfig = {
   podcast_key: string;
@@ -10,11 +10,20 @@ export type FeedConfig = {
   enabled?: boolean;
   // Generated sheet entries are replaced from PODCASTS_JSON_URL at runtime.
   generated_from_sheet?: boolean;
+  apple_show_id?: string;
 };
 
 export type FeedConfigMap = Record<string, FeedConfig>;
 
 export const FEED_CONFIGS: FeedConfigMap = {
+  "apple_1575533784": {
+    podcast_key: "mads og a holdet",
+    source: "apple_podcasts_1575533784",
+    format: "apple_podcasts_html",
+    feed_url: "https://podcasts.apple.com/dk/podcast/mads-og-a-holdet/id1575533784?l=da",
+    apple_show_id: "1575533784",
+    enabled: false
+  },
   "genstart": {
     podcast_key: "genstart",
     source: "dr_genstart_rss",
