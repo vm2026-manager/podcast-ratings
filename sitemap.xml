@@ -1,6 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  <url>
-    <loc>https://podcastlisten.dk/</loc>
-  </url>
+  <url><loc>https://podcastlisten.dk/</loc></url>
+  <url><loc>https://podcastlisten.dk/podcast/moerkeland/</loc></url>
+  <url><loc>https://podcastlisten.dk/podcast/genstart/</loc></url>
+  <url><loc>https://podcastlisten.dk/podcast/millionaerklubben/</loc></url>
+  <url><loc>https://podcastlisten.dk/podcast/sagen-genabnet/</loc></url>
+  <url><loc>https://podcastlisten.dk/podcast/borgerlig-tabloid/</loc></url>
+  <url><loc>https://podcastlisten.dk/podcast/det-vi-taler-om/</loc></url>
+  <url><loc>https://podcastlisten.dk/podcast/langt-fra-loegnen/</loc></url>
+  <url><loc>https://podcastlisten.dk/podcast/mads-og-a-holdet/</loc></url>
+  <url><loc>https://podcastlisten.dk/podcast/vanvittig-verdenshistorie/</loc></url>
+  <url><loc>https://podcastlisten.dk/podcast/afhoert/</loc></url>
 </urlset>

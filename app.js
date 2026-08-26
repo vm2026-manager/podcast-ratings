@@ -20787,6 +20787,7 @@ function renderAfterPodcastDataRefresh({ initial = false } = {}) {
 
   if (initial) {
     render();
+    openPodcastFromQueryIfRequested();
     startFeaturedRotation();
     return;
   }
@@ -20803,6 +20804,15 @@ function renderAfterPodcastDataRefresh({ initial = false } = {}) {
 
   renderFeaturedReview();
   startFeaturedRotation();
+}
+
+function openPodcastFromQueryIfRequested() {
+  if (state.openedPodcastFromQuery) return;
+  const podcastId = new URLSearchParams(window.location.search).get("podcast") || "";
+  const podcast = state.podcastById[podcastId];
+  if (!podcast) return;
+  state.openedPodcastFromQuery = true;
+  openPodcastDetailSheet(podcast, null, { allowDesktop: true });
 }
 
 function refreshExploreUnderratedRotationIfNeeded({ force = false } = {}) {
