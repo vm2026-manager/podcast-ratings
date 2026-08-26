@@ -22424,7 +22424,8 @@ html body.page-profil .profile-suggestion-action--danger {
     display: flex;
     gap: 10px;
     align-items: flex-start;
-    max-width: 15.8rem;
+    width: min(100%, 10.5rem);
+    max-width: 10.5rem;
     margin-top: 14px;
     padding: 10px 12px;
     border: 1px solid rgba(255, 92, 22, 0.2);
