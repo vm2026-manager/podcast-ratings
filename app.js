@@ -3166,8 +3166,10 @@ function createGenreChips() {
   elements.genreChips.innerHTML = "";
 
   GENRES.forEach((genre) => {
-    const button = document.createElement("button");
-    button.type = "button";
+    const isTrueCrime = genre === "True Crime";
+    const button = document.createElement(isTrueCrime ? "a" : "button");
+    if (isTrueCrime) button.href = "/genre/true-crime/";
+    else button.type = "button";
     button.className = "genre-chip";
     button.dataset.genre = genre;
     button.textContent = genre;
@@ -3176,7 +3178,8 @@ function createGenreChips() {
       button.classList.add("active");
     }
 
-    button.addEventListener("click", () => {
+    button.addEventListener("click", (event) => {
+      if (isTrueCrime) event.preventDefault();
       if (genre === "Alle") {
         clearActiveFilter();
       } else {
