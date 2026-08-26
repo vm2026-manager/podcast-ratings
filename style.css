@@ -14413,12 +14413,12 @@ body:not(.page-ranglister) .site-footer {
 
   body.page-ranglister .genre-nav,
   body.page-ranglister .sort-field,
-  body.page-ranglister .rating-filter-section {
+  body.page-ranglister .rating-filter-section,
+  body.page-ranglister .ranking-mobile-filter-summary__rating {
     display: none !important;
   }
 
-  body.page-ranglister.ranking-filters-open .genre-nav,
-  body.page-ranglister.ranking-filters-open .rating-filter-section {
+  body.page-ranglister.ranking-filters-open .genre-nav {
     display: block !important;
   }
 
@@ -14443,10 +14443,6 @@ body:not(.page-ranglister) .site-footer {
     min-height: 29px !important;
     padding: 0 7px !important;
     font-size: 0.74rem !important;
-  }
-
-  body.page-ranglister.ranking-filters-open .rating-filter-section {
-    order: 4;
   }
 
   body.page-ranglister #resultsText {
