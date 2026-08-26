@@ -22273,7 +22273,7 @@ html body.page-profil .profile-suggestion-action--danger {
     width: calc(100% + 68px) !important;
     min-width: 0 !important;
     height: 52px !important;
-    margin: 0 0 10px -34px !important;
+    margin: -8px 0 10px -34px !important;
     padding: 0 34px !important;
     border: 0;
     border-radius: 0;
@@ -22439,12 +22439,12 @@ html body.page-profil .profile-suggestion-action--danger {
   html body.page-forside.page-forside #pageIntroPanel .home-hero__welcome {
     display: flex;
     gap: 10px;
-    align-items: flex-start;
+    align-items: center;
     width: min(100%, 12.5rem);
     max-width: 12.5rem;
-    min-height: 62px;
-    margin-top: 12px;
-    padding: 8px 10px;
+    min-height: 42px;
+    margin-top: 6px;
+    padding: 7px 10px;
     border: 1px solid rgba(255, 92, 22, 0.2);
     border-radius: 12px;
     color: #5b3423;
@@ -22455,7 +22455,7 @@ html body.page-profil .profile-suggestion-action--danger {
 
   html body.page-forside.page-forside #pageIntroPanel .home-hero__welcome > span { color: var(--accent); font-size: 1.5rem; line-height: 1; }
   html body.page-forside.page-forside #pageIntroPanel .home-hero__welcome strong { display: block; font-size: .82rem; }
-  html body.page-forside.page-forside #pageIntroPanel .home-hero__welcome p { margin: 2px 0 0; }
+  html body.page-forside.page-forside #pageIntroPanel .home-hero__welcome p { display: none !important; }
 
   html body.page-forside.page-forside #pageIntroPanel .home-hero .intro,
   html body.page-forside.page-forside #pageIntroPanel .home-hero .intro::after {
