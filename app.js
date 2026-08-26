@@ -19413,7 +19413,7 @@ function renderRoute() {
           </p>
           ${
             loggedIn
-              ? `<div class="home-hero__welcome" aria-label="Velkommen tilbage"><span aria-hidden="true">✦</span><div><strong>Velkommen tilbage!</strong><p>Se dine gemte og anbefalinger</p></div></div>`
+              ? `<div class="home-hero__welcome" aria-label="Velkommen tilbage"><span aria-hidden="true">✦</span><strong>Velkommen tilbage!</strong></div>`
               : `<button class="home-hero__signup" type="button" ${state.authConfigured ? "" : "disabled"}>Opret gratis konto</button>`
           }
           <div class="home-mobile-actions" aria-label="Hurtige handlinger">
