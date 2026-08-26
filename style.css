@@ -22269,14 +22269,15 @@ html body.page-profil .profile-suggestion-action--danger {
     display: flex !important;
     align-items: center !important;
     justify-content: space-between !important;
-    width: 100% !important;
+    box-sizing: border-box;
+    width: calc(100% + 68px) !important;
     min-width: 0 !important;
-    height: 44px !important;
-    margin: 0 0 4px !important;
-    padding: 0 10px !important;
-    border: 1px solid rgba(225, 207, 188, 0.72);
-    border-radius: 14px;
-    background: rgba(255, 248, 241, 0.78);
+    height: 52px !important;
+    margin: 0 0 10px -34px !important;
+    padding: 0 34px !important;
+    border: 0;
+    border-radius: 0;
+    background: rgba(255, 242, 231, 0.72);
   }
 
   html body.page-forside.page-forside #pageIntroPanel .home-hero__header .eyebrow {
@@ -22284,7 +22285,7 @@ html body.page-profil .profile-suggestion-action--danger {
     align-items: center !important;
     flex: 1 1 auto !important;
     min-width: 0 !important;
-    height: 44px !important;
+    height: 52px !important;
     margin: 0 !important;
     color: transparent !important;
     font-size: 0 !important;
