@@ -21027,11 +21027,12 @@ function loadVisitorCount() {
 }
 
 let initialSupabaseStartup = null;
+let initialPodcastStartup = null;
 
 function runSecondaryStartup() {
   loadVisitorCount();
-  initialSupabaseStartup
-    ?.then(() => {
+  Promise.all([initialSupabaseStartup, initialPodcastStartup])
+    .then(() => {
       if (!state.supabase) return;
       return refreshSupabaseState();
     })
@@ -21056,7 +21057,7 @@ window.addEventListener("pageshow", (event) => {
 window.setTimeout(() => {
   clearSearchInput({ rerender: true });
 }, 120);
-loadPodcasts();
+initialPodcastStartup = loadPodcasts();
 
 if ("requestIdleCallback" in window) {
   window.requestIdleCallback(runSecondaryStartup, { timeout: 1500 });
