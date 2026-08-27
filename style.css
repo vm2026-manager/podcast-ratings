@@ -22465,6 +22465,15 @@ html body.page-profil .profile-suggestion-action--danger {
     line-height: 1;
   }
 
+  html body.page-forside.page-forside #pageIntroPanel .home-hero__auth-placeholder {
+    display: inline-flex;
+    width: min(100%, 12.5rem);
+    min-height: 40px;
+    margin-top: 14px;
+    border-radius: 12px;
+    background: rgba(255, 239, 225, 0.56);
+  }
+
   html body.page-forside.page-forside #pageIntroPanel .home-hero .intro,
   html body.page-forside.page-forside #pageIntroPanel .home-hero .intro::after {
     max-width: min(100%, 12.5rem) !important;
@@ -26202,6 +26211,15 @@ body.page-ranglister .search-field__clear:focus-visible {
     display: inline-flex !important;
     align-items: center !important;
     justify-content: center !important;
+  }
+
+  html body.page-forside #pageIntroPanel .home-hero__auth-placeholder {
+    display: inline-flex !important;
+    width: min(100%, 12.5rem) !important;
+    min-height: 48px !important;
+    margin: 0 !important;
+    border-radius: 999px !important;
+    background: rgba(255, 239, 225, 0.56) !important;
   }
 
   html body.page-forside #pageIntroPanel .page-intro-panel__actions {

@@ -6056,6 +6056,8 @@ async function initSupabase() {
 
   if (!state.authConfigured) {
     state.communityStatsStatus = "error";
+    state.authReady = true;
+    render();
     if (document.body.classList.contains("page-ranglister")) renderPodcastGrid();
     return;
   }
@@ -6064,7 +6066,9 @@ async function initSupabase() {
 
   if (!supabaseLib?.createClient) {
     state.communityStatsStatus = "error";
+    state.authReady = true;
     setAuthMessage("Supabase-klienten kunne ikke indlæses i browseren.", "error", "hero");
+    render();
     if (document.body.classList.contains("page-ranglister")) renderPodcastGrid();
     return;
   }
@@ -6096,15 +6100,19 @@ async function initSupabase() {
     }
   });
 
-  const {
-    data: { session },
-    error
-  } = isExplicitRecovery
-    ? await state.supabase.auth.setSession({ access_token: recoveryAccessToken, refresh_token: recoveryRefreshToken })
-    : await state.supabase.auth.getSession();
-
-  window.PODCAST_RECOVERY_PROVENANCE = null;
-
+  let session = null;
+  let error = null;
+  try {
+    const result = isExplicitRecovery
+      ? await state.supabase.auth.setSession({ access_token: recoveryAccessToken, refresh_token: recoveryRefreshToken })
+      : await state.supabase.auth.getSession();
+    session = result.data?.session || null;
+    error = result.error;
+  } catch (sessionError) {
+    error = sessionError;
+  } finally {
+    window.PODCAST_RECOVERY_PROVENANCE = null;
+  }
 
   if (error) {
     console.error(error);
@@ -6121,9 +6129,9 @@ async function initSupabase() {
     else handlePasswordRecoveryEvent(session);
   }
 
-  await refreshSupabaseState();
-  renderAuthPanel();
-
+  // Keep the normal subscription separate from the recovery subscription above.
+  // The initial session has already been resolved explicitly, so its INITIAL_SESSION
+  // event must not trigger a second full user-state refresh.
   state.supabase.auth.onAuthStateChange(async (event, sessionUpdate) => {
     const previousUserId = state.authUser?.id || "";
     const nextUserId = sessionUpdate?.user?.id || "";
@@ -6139,6 +6147,11 @@ async function initSupabase() {
 
     if (event === "PASSWORD_RECOVERY") {
       handlePasswordRecoveryEvent(sessionUpdate);
+    }
+
+    if (event === "INITIAL_SESSION") {
+      renderAuthPanel();
+      return;
     }
 
     // Supabase kan udsende de samme session-events igen, når fanen får fokus.
@@ -6174,6 +6187,9 @@ async function initSupabase() {
     }
   });
 
+  // The hero must update as soon as the session is known; ratings and saved-podcast
+  // data remain on the secondary startup path below.
+  render();
 }
 
 async function handleAuthAction(mode) {
@@ -19363,8 +19379,15 @@ function renderRoute() {
       </svg>
     `;
 
+    const authPending = state.authConfigured && !state.authReady;
+    const heroAuthMarkup = authPending
+      ? '<div class="home-hero__auth-placeholder" aria-hidden="true"></div>'
+      : loggedIn
+        ? '<div class="home-hero__welcome" aria-label="Velkommen tilbage"><span aria-hidden="true">✦</span><strong>Velkommen tilbage!</strong></div>'
+        : `<button class="home-hero__signup" type="button" ${state.authConfigured ? "" : "disabled"}>Opret gratis konto</button>`;
+
     elements.pageIntroPanel.innerHTML = `
-      <div class="home-hero home-hero--${loggedIn ? "logged-in" : "logged-out"}">
+      <div class="home-hero home-hero--${loggedIn ? "logged-in" : "logged-out"}${authPending ? " home-hero--auth-pending" : ""}">
         <div class="home-hero__header">
           <p class="eyebrow"><a class="mobile-brand-word" href="#forside" aria-label="G\u00e5 til forsiden">Podcast<span class="mobile-brand-accent">listen</span></a>Personlige podcastfavoritter</p>
           ${
@@ -19411,11 +19434,7 @@ function renderRoute() {
           >
             ${escapeHtml(mobileHeroIntro)}
           </p>
-          ${
-            loggedIn
-              ? `<div class="home-hero__welcome" aria-label="Velkommen tilbage"><span aria-hidden="true">✦</span><strong>Velkommen tilbage!</strong></div>`
-              : `<button class="home-hero__signup" type="button" ${state.authConfigured ? "" : "disabled"}>Opret gratis konto</button>`
-          }
+          ${heroAuthMarkup}
           <div class="home-mobile-actions" aria-label="Hurtige handlinger">
             <a class="home-mobile-action home-mobile-action--primary" href="#ranglister">Se ranglisten</a>
           </div>
@@ -21007,9 +21026,19 @@ function loadVisitorCount() {
     }, 250);
 }
 
+let initialSupabaseStartup = null;
+
 function runSecondaryStartup() {
-  initSupabase();
   loadVisitorCount();
+  initialSupabaseStartup
+    ?.then(() => {
+      if (!state.supabase) return;
+      return refreshSupabaseState();
+    })
+    .catch((error) => {
+      console.error(error);
+      setAuthMessage("Supabase-data kunne ikke indlæses endnu.", "error", "hero");
+    });
 }
 
 ensureLoadMoreControls();
@@ -21018,6 +21047,7 @@ setupMobileViewportOffsets();
 setupEvents();
 updateAuthPasswordToggle();
 restoreNormalViewportMeta();
+initialSupabaseStartup = initSupabase();
 renderRoute();
 stabilizeFreshForsideScroll();
 window.addEventListener("pageshow", (event) => {
