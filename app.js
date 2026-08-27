@@ -7556,7 +7556,7 @@ function getPodcastDetailDynamicRecommendations(podcast, validated) {
       const isManual = manualCandidateKeys.has(candidateKey);
       const ratingDistance = Math.abs((Number(podcast.ratingValue) || 0) - (Number(candidatePodcast.ratingValue) || 0));
       const score =
-        (isManual ? 70 : 0) +
+        (isManual ? 15 : 0) +
         (sameSeries ? 45 : 0) +
         Math.min(sharedTopics.length, 3) * 18 +
         (sameGenre ? 18 : 0) +
