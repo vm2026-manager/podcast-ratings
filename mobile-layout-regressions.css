@@ -167,9 +167,9 @@ html body .home-podcast-search { display: none; }
 
   /* Four or more: show about 3.3 cards so the next item peeks in. */
   html body.page-udforsk .explore-personal-modules .explore-grid > .explore-card {
-    flex: 0 0 28.5% !important;
-    width: 28.5% !important;
-    min-width: 28.5% !important;
+    flex: 0 0 34% !important;
+    width: 34% !important;
+    min-width: 34% !important;
     padding: 0 !important;
     border: 0 !important;
     background: transparent !important;
