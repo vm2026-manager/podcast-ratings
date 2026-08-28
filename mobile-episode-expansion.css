@@ -95,7 +95,7 @@
   html body #podcastDetailSheet.is-episode-workspace .podcast-detail-sheet__episode-table thead { display: none !important; }
   html body #podcastDetailSheet.is-episode-workspace .podcast-detail-sheet__episode-table tr {
     display: grid !important;
-    grid-template-columns: 26px minmax(0, 1fr) minmax(72px, auto) !important;
+    grid-template-columns: 26px minmax(0, 1fr) minmax(94px, auto) !important;
     grid-template-rows: auto auto !important;
     column-gap: 8px !important;
     row-gap: 4px !important;
@@ -133,8 +133,7 @@
     -webkit-line-clamp: 2 !important;
     font: 800 1rem/1.24 "Manrope", sans-serif !important;
   }
-  html body #podcastDetailSheet.is-episode-workspace .podcast-detail-sheet__episode-source-score,
-  html body #podcastDetailSheet.is-episode-workspace .podcast-detail-sheet__episode-own-score {
+  html body #podcastDetailSheet.is-episode-workspace .podcast-detail-sheet__episode-source-score {
     display: inline-flex !important;
     align-items: baseline !important;
     gap: 3px !important;
@@ -145,9 +144,59 @@
     color: #75675d !important;
   }
   html body #podcastDetailSheet.is-episode-workspace .podcast-detail-sheet__episode-source-score::before { content: "Brugere:"; font: 700 .68rem/1 "Manrope", sans-serif !important; }
-  html body #podcastDetailSheet.is-episode-workspace .podcast-detail-sheet__episode-own-score::before { content: "Din vurdering"; display: block; color: #75675d; font: 700 .64rem/1.1 "Manrope", sans-serif; }
   html body #podcastDetailSheet.is-episode-workspace .podcast-detail-sheet__episode-source-score strong,
   html body #podcastDetailSheet.is-episode-workspace .podcast-detail-sheet__episode-own-score strong { color: #342a24 !important; font-size: .82rem !important; }
   html body #podcastDetailSheet.is-episode-workspace .podcast-detail-sheet__episode-source-score em { display: none !important; }
-  html body #podcastDetailSheet.is-episode-workspace .podcast-detail-sheet__episode-own-score { display: grid !important; justify-items: end !important; gap: 4px !important; }
+  html body #podcastDetailSheet.is-episode-workspace .podcast-detail-sheet__episode-own-score {
+    width: 100% !important;
+    min-width: 94px !important;
+    min-height: 44px !important;
+    padding: 5px 8px !important;
+    display: grid !important;
+    grid-template-columns: 17px minmax(0, 1fr) !important;
+    grid-template-rows: minmax(0, 1fr) minmax(0, 1fr) !important;
+    column-gap: 6px !important;
+    align-items: center !important;
+    justify-items: start !important;
+    border: 1px solid rgba(255, 92, 22, .38) !important;
+    border-radius: 12px !important;
+    background: #fff5ed !important;
+    color: #c64d17 !important;
+    box-shadow: 0 3px 10px rgba(255, 92, 22, .07) !important;
+    cursor: pointer !important;
+  }
+  html body #podcastDetailSheet.is-episode-workspace .podcast-detail-sheet__episode-own-score::before {
+    content: "★";
+    grid-column: 1 !important;
+    grid-row: 1 / -1 !important;
+    color: #ff5c16 !important;
+    font: 900 1rem/1 "Manrope", sans-serif !important;
+  }
+  html body #podcastDetailSheet.is-episode-workspace .podcast-detail-sheet__episode-own-score.is-empty::before { content: "☆"; }
+  html body #podcastDetailSheet.is-episode-workspace .podcast-detail-sheet__episode-own-score strong {
+    grid-column: 2 !important;
+    grid-row: 1 !important;
+    color: #a64118 !important;
+    font: 850 .86rem/1 "Manrope", sans-serif !important;
+    white-space: nowrap !important;
+  }
+  html body #podcastDetailSheet.is-episode-workspace .podcast-detail-sheet__episode-own-score.is-empty strong {
+    grid-row: 1 / -1 !important;
+    color: #c64d17 !important;
+  }
+  html body #podcastDetailSheet.is-episode-workspace .podcast-detail-sheet__episode-own-score:not(.is-empty)::after {
+    content: "Rediger";
+    grid-column: 2 !important;
+    grid-row: 2 !important;
+    color: #8a6856 !important;
+    font: 750 .6rem/1 "Manrope", sans-serif !important;
+  }
+  html body #podcastDetailSheet.is-episode-workspace .podcast-detail-sheet__episode-own-score small {
+    font-size: .6rem !important;
+    font-weight: 750 !important;
+  }
+  html body #podcastDetailSheet.is-episode-workspace .podcast-detail-sheet__episode-own-score:focus-visible {
+    outline: 2px solid rgba(255, 92, 22, .48) !important;
+    outline-offset: 2px !important;
+  }
 }

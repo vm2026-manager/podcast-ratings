@@ -6580,7 +6580,11 @@ function updatePodcastEpisodeOverviewRatingRow(episodeId) {
   );
   if (!ratingButton) return;
 
-  const episode = getGenstartEpisodeById(normalizedEpisodeId);
+  const activePodcast = state.podcastByKey[state.activePodcastDetailKey];
+  const episode = getGenstartEpisodeById(normalizedEpisodeId)
+    || (activePodcast
+      ? getPodcastManualEpisodes(activePodcast).find((item) => normalizeText(getEpisodeKey(item)) === normalizedEpisodeId)
+      : null);
   if (!episode) return;
 
   const userRating = getEpisodeUserRating(normalizedEpisodeId);
@@ -6590,7 +6594,8 @@ function updatePodcastEpisodeOverviewRatingRow(episodeId) {
     `${userRating === null ? "Vurder" : "Rediger vurderingen af"} ${episode.title || "episoden"}`
   );
   const ownScore = ratingButton.querySelector("strong");
-  if (ownScore) ownScore.innerHTML = formatEpisodeOverviewScore(userRating);
+  if (ownScore) ownScore.innerHTML = formatEpisodeOverviewOwnScore(userRating);
+  ratingButton.closest("tr")?.classList.toggle("is-user-rated", userRating !== null);
 
   const stat = getEpisodeStat(normalizedEpisodeId);
   const sourceScore = parseNumber(stat?.averageRating);
@@ -9431,6 +9436,10 @@ function formatEpisodeOverviewScore(value) {
   return `${numeric === null ? "\u2014" : formatCompactRating(numeric)} <small>/10</small>`;
 }
 
+function formatEpisodeOverviewOwnScore(value) {
+  return value === null ? "Vurder" : formatEpisodeOverviewScore(value);
+}
+
 function getEpisodeWorkspaceEpisodes(podcast) {
   const episodeState = getPodcastEpisodeState(podcast);
   const searchTerm = normalizeText(episodeState.searchTerm);
@@ -9562,7 +9571,7 @@ function renderPodcastEpisodeOverviewRows(podcast) {
                 episode.title || `episode ${episodeNumber}`
               )}"
             >
-              <strong>${userRating === null ? "0–10" : formatEpisodeOverviewScore(userRating)}</strong>
+              <strong>${formatEpisodeOverviewOwnScore(userRating)}</strong>
             </button>
           </td>
         </tr>
@@ -9628,7 +9637,7 @@ function renderManualPodcastEpisodeOverviewRows(podcast) {
                 episode.title || `episode ${episodeNumber}`
               )}"
             >
-              <strong>${userRating === null ? "0–10" : formatEpisodeOverviewScore(userRating)}</strong>
+              <strong>${formatEpisodeOverviewOwnScore(userRating)}</strong>
             </button>
           </td>
         </tr>
