@@ -3049,7 +3049,7 @@ function clearDesktopMainSeriesFilter() {
   scrollToRankingStart();
 }
 
-function setActiveFilter(type, value) {
+function setActiveFilter(type, value, { render: shouldRender = true } = {}) {
   if (type === "publisher") {
     state.activePublisherFilter = normalizeText(value);
   } else if (type === "mainSeries") {
@@ -3059,7 +3059,33 @@ function setActiveFilter(type, value) {
   }
   resetVisibleCount();
   createGenreChips();
-  render();
+  if (shouldRender) render();
+}
+
+function consumePendingRankingGenre() {
+  let pendingGenre = "";
+
+  try {
+    pendingGenre = normalizeText(window.sessionStorage?.getItem("podcastRankingGenre"));
+  } catch (error) {
+    return;
+  }
+
+  if (!pendingGenre) return;
+
+  const genre = GENRES.find(
+    (candidate) =>
+      candidate !== "Alle" &&
+      normalizeComparable(candidate) === normalizeComparable(pendingGenre)
+  );
+
+  try {
+    window.sessionStorage?.removeItem("podcastRankingGenre");
+  } catch (error) {
+    // Session storage is optional; the in-memory ranking filter still works.
+  }
+
+  if (genre) setActiveFilter("genre", genre, { render: false });
 }
 
 function clearActiveFilter() {
@@ -13009,6 +13035,10 @@ function render() {
 
   if (routeChanged && nextRouteInfo.route === "ranglister" && isMobileViewport()) {
     resetVisibleCount();
+  }
+
+  if (nextRouteInfo.route === "ranglister") {
+    consumePendingRankingGenre();
   }
 
   resolveRankingSourceForRoute(nextRouteInfo.route);
