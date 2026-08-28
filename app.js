@@ -5801,7 +5801,7 @@ function getProfileSavedPreviewPodcasts() {
     return savedPodcasts;
   }
 
-  return getRecentlySavedPodcasts(isMobileViewport() ? 3 : 5);
+  return getRecentlySavedPodcasts(isMobileViewport() ? 4 : 5);
 }
 
 function renderProfileSavedPreview() {
