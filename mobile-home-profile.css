@@ -39,9 +39,9 @@
   }
 
   html body.page-profil .profile-header--dashboard .profile-avatar {
-    width: 98px !important;
-    height: 98px !important;
-    min-width: 98px !important;
+    width: 78px !important;
+    height: 78px !important;
+    min-width: 78px !important;
   }
 
   html body.page-profil .profile-header--dashboard .profile-header__copy {
@@ -106,7 +106,7 @@
   html body.page-profil .profile-stat-card--suggestions strong {
     margin: 0 !important;
     color: #171411 !important;
-    font-size: clamp(1.3rem, 6.1vw, 1.48rem) !important;
+    font-size: clamp(1.25rem, 5.4vw, 1.35rem) !important;
     font-weight: 850 !important;
     line-height: 1 !important;
   }
@@ -178,11 +178,8 @@
   }
 
   html body.page-profil .profile-stat-card--average .profile-stat-card__icon svg {
-    fill: none !important;
-    stroke: currentColor !important;
-    stroke-width: 2 !important;
-    stroke-linecap: round !important;
-    stroke-linejoin: round !important;
+    fill: currentColor !important;
+    stroke: none !important;
   }
 
   html body.page-profil .profile-stat-card--genre .profile-stat-card__label,
