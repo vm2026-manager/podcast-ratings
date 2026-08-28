@@ -33,15 +33,15 @@
      style.css; this file owns the dashboard's mobile structure. */
   html body.page-profil .profile-header--dashboard {
     display: grid !important;
-    grid-template-columns: 98px minmax(0, 1fr) !important;
-    gap: 6px 12px !important;
-    padding: 10px !important;
+    grid-template-columns: 76px minmax(0, 1fr) !important;
+    gap: 8px 12px !important;
+    padding: 12px !important;
   }
 
   html body.page-profil .profile-header--dashboard .profile-avatar {
-    width: 78px !important;
-    height: 78px !important;
-    min-width: 78px !important;
+    width: 70px !important;
+    height: 70px !important;
+    min-width: 70px !important;
   }
 
   html body.page-profil .profile-header--dashboard .profile-header__copy {
@@ -64,7 +64,7 @@
     grid-column: 1 / -1 !important;
     display: grid !important;
     grid-template-columns: repeat(6, minmax(0, 1fr)) !important;
-    gap: 6px !important;
+    gap: 8px !important;
     width: 100% !important;
     margin-top: 0 !important;
     padding: 0 !important;
@@ -80,8 +80,8 @@
   html body.page-profil .profile-stat-card--suggestions {
     grid-column: span 2 !important;
     min-width: 0 !important;
-    min-height: 90px !important;
-    height: 90px !important;
+    min-height: 86px !important;
+    height: 86px !important;
     padding: 6px !important;
     display: grid !important;
     grid-template-rows: 20px minmax(0, 1fr) 15px !important;
@@ -137,12 +137,29 @@
     font-size: 0.9rem !important;
   }
 
+  html body.page-profil .profile-stat-card--ratings .profile-stat-card__icon svg,
+  html body.page-profil .profile-stat-card--saved .profile-stat-card__icon svg,
+  html body.page-profil .profile-stat-card--suggestions .profile-stat-card__icon svg {
+    width: 17px !important;
+    height: 17px !important;
+    fill: none !important;
+    stroke: currentColor !important;
+    stroke-width: 2 !important;
+    stroke-linecap: round !important;
+    stroke-linejoin: round !important;
+  }
+
+  html body.page-profil .profile-stat-card--saved .profile-stat-card__icon svg {
+    width: 18px !important;
+    height: 18px !important;
+  }
+
   html body.page-profil .profile-stat-card--genre,
   html body.page-profil .profile-stat-card--average {
     grid-column: span 3 !important;
     min-width: 0 !important;
-    min-height: 86px !important;
-    height: 86px !important;
+    min-height: 78px !important;
+    height: 78px !important;
     padding: 8px !important;
     display: grid !important;
     grid-template-columns: 26px minmax(0, 1fr) !important;
@@ -185,8 +202,8 @@
   }
 
   html body.page-profil .profile-stat-card--average .profile-stat-card__icon svg {
-    width: 18px !important;
-    height: 18px !important;
+    width: 21px !important;
+    height: 21px !important;
     fill: currentColor !important;
     stroke: none !important;
   }
@@ -205,6 +222,19 @@
     white-space: normal !important;
     overflow-wrap: normal !important;
     word-break: normal !important;
+  }
+
+  html body.page-profil .profile-stat-card--genre .profile-stat-card__icon {
+    background: transparent !important;
+  }
+
+  html body.page-profil .profile-stat-card--genre .profile-stat-card__icon svg {
+    width: 17px !important;
+    height: 17px !important;
+    fill: none !important;
+    stroke: currentColor !important;
+    stroke-width: 1.8 !important;
+    stroke-linejoin: round !important;
   }
 
   html body.page-profil .profile-stat-card--genre .profile-stat-card__label::after,
@@ -233,7 +263,7 @@
   html body.page-profil .profile-header--dashboard .profile-header__edit {
     grid-column: 1 / -1 !important;
     width: 100% !important;
-    min-height: 46px !important;
+    min-height: 40px !important;
     margin-top: 0 !important;
     display: inline-flex !important;
     align-items: center !important;

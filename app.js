@@ -14257,7 +14257,15 @@ function getProfileStatIconMarkup(type) {
     average:
       '<svg viewBox="0 0 24 24" focusable="false"><path d="M5 18.5V13"></path><path d="M10 18.5V9"></path><path d="M15 18.5V5.5"></path><path d="M20 18.5V11"></path><path d="M4 18.5h17"></path></svg>',
     rating:
-      '<svg viewBox="0 0 24 24" focusable="false"><path d="m12 3.5 2.6 5.3 5.9.9-4.3 4.2 1 5.9-5.2-2.8-5.2 2.8 1-5.9-4.3-4.2 5.9-.9Z"></path></svg>'
+      '<svg viewBox="0 0 24 24" focusable="false"><path d="m12 3.5 2.6 5.3 5.9.9-4.3 4.2 1 5.9-5.2-2.8-5.2 2.8 1-5.9-4.3-4.2 5.9-.9Z"></path></svg>',
+    ratingOutline:
+      '<svg viewBox="0 0 24 24" focusable="false"><path d="m12 3.2 2.65 5.38 5.94.86-4.3 4.2 1.02 5.92L12 13.72l-5.3 2.78 1.02-5.92-4.3-4.2 5.94-.86Z"></path></svg>',
+    savedMobile:
+      '<svg viewBox="0 0 20 20" focusable="false"><path d="M4 2.5h12v15l-6-3.7-6 3.7Z"></path></svg>',
+    submittedMobile:
+      '<svg viewBox="0 0 24 24" focusable="false"><path d="m21 3-8.5 18-3-7.1L3 10.8 21 3Z"></path><path d="m9.5 13.9 4.3-4.3"></path></svg>',
+    genreMobile:
+      '<svg viewBox="0 0 24 24" focusable="false"><path d="m12 3 9 9-9 9-9-9Z"></path></svg>'
   };
   return icons[type] || "";
 }
@@ -15114,22 +15122,22 @@ function renderProfilePage() {
         </div>
         <div class="profile-stats profile-stats--overview" aria-label="Profilstatistik">
           <button class="profile-stat-card profile-stat-card--ratings profile-stat-card--action" type="button" data-profile-scroll="profileRatings">
-            <span class="profile-stat-card__icon" aria-hidden="true">☆</span>
+            <span class="profile-stat-card__icon" aria-hidden="true">${getProfileStatIconMarkup("ratingOutline")}</span>
             <strong>${ratingCount}</strong>
             <span class="profile-stat-card__label">Vurderinger</span>
           </button>
           <button class="profile-stat-card profile-stat-card--saved profile-stat-card--action" type="button" data-profile-scroll="profileSaved">
-            <span class="profile-stat-card__icon" aria-hidden="true">▯</span>
+            <span class="profile-stat-card__icon" aria-hidden="true">${getProfileStatIconMarkup("savedMobile")}</span>
             <strong data-profile-saved-count>${savedCount}</strong>
             <span class="profile-stat-card__label">Gemte</span>
           </button>
           <button class="profile-stat-card profile-stat-card--suggestions profile-stat-card--action" type="button" data-profile-scroll="profileSuggestions">
-            <span class="profile-stat-card__icon" aria-hidden="true">↗</span>
+            <span class="profile-stat-card__icon" aria-hidden="true">${getProfileStatIconMarkup("submittedMobile")}</span>
             <strong data-profile-suggestions-stat-count>${suggestionCount === null ? "&ndash;" : suggestionCount}</strong>
             <span class="profile-stat-card__label">Forslag</span>
           </button>
           <article class="profile-stat-card profile-stat-card--genre">
-            <span class="profile-stat-card__icon" aria-hidden="true">◇</span>
+            <span class="profile-stat-card__icon" aria-hidden="true">${getProfileStatIconMarkup("genreMobile")}</span>
             <strong class="profile-stat-card__text-value">${escapeHtml(profileFavoriteGenre)}</strong>
             <span class="profile-stat-card__label">Mest vurderede genre</span>
           </article>
