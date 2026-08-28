@@ -145,7 +145,6 @@ html body .home-podcast-search { display: none; }
 /* UDFORSK MOBILE CLEAN CARDS START */
 @media (max-width: 768px) {
 
-  /* Mere luft mellem Udforsk-sektionerne */
   html body.page-udforsk .explore-personal-modules {
     gap: 12px !important;
   }
@@ -158,7 +157,6 @@ html body .home-podcast-search { display: none; }
     border-radius: 18px !important;
   }
 
-  /* Maks. fire fulde podcastkort i bredden */
   html body.page-udforsk .explore-personal-modules .explore-grid {
     width: 100% !important;
     max-width: 100% !important;
@@ -167,10 +165,11 @@ html body .home-podcast-search { display: none; }
     scroll-snap-type: x proximity !important;
   }
 
+  /* Four or more: show about 3.3 cards so the next item peeks in. */
   html body.page-udforsk .explore-personal-modules .explore-grid > .explore-card {
-    flex: 0 0 calc((100% - 30px) / 4) !important;
-    width: calc((100% - 30px) / 4) !important;
-    min-width: calc((100% - 30px) / 4) !important;
+    flex: 0 0 28.5% !important;
+    width: 28.5% !important;
+    min-width: 28.5% !important;
     padding: 0 !important;
     border: 0 !important;
     background: transparent !important;
@@ -178,11 +177,20 @@ html body .home-podcast-search { display: none; }
     scroll-snap-align: start !important;
   }
 
+  /* Three or fewer: use the full available width. */
+  html body.page-udforsk
+  .explore-personal-modules
+  .explore-grid:not(:has(> .explore-card:nth-child(4)))
+  > .explore-card {
+    flex: 1 1 0 !important;
+    width: auto !important;
+    min-width: 0 !important;
+  }
+
   html body.page-udforsk .explore-card__cover {
     border-radius: 11px !important;
   }
 
-  /* Mindre og tydeligere bogm?rke */
   html body.page-udforsk .explore-card__favorite {
     top: 5px !important;
     right: 5px !important;
@@ -203,14 +211,12 @@ html body .home-podcast-search { display: none; }
     height: 18px !important;
   }
 
-  /* Gemt tilstand skal v?re meget tydelig */
   html body.page-udforsk .explore-card__favorite.is-saved {
     color: #ffffff !important;
     border-color: #ff5c16 !important;
     background: #ff5c16 !important;
   }
 
-  /* Fjern den gentagne tekst "Podcastlisten" fra ratings */
   html body.page-udforsk
   .explore-card__rating[data-score-source="Podcastlisten"]
   .explore-card__community-score
