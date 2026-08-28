@@ -14255,7 +14255,9 @@ function getProfileStatIconMarkup(type) {
     genre:
       '<svg viewBox="0 0 24 24" focusable="false"><path d="M4.5 11.2V5.5h5.7l8.8 8.8-5.7 5.7Z"></path><circle cx="8.2" cy="8.2" r="1.2"></circle></svg>',
     average:
-      '<svg viewBox="0 0 24 24" focusable="false"><path d="M5 18.5V13"></path><path d="M10 18.5V9"></path><path d="M15 18.5V5.5"></path><path d="M20 18.5V11"></path><path d="M4 18.5h17"></path></svg>'
+      '<svg viewBox="0 0 24 24" focusable="false"><path d="M5 18.5V13"></path><path d="M10 18.5V9"></path><path d="M15 18.5V5.5"></path><path d="M20 18.5V11"></path><path d="M4 18.5h17"></path></svg>',
+    rating:
+      '<svg viewBox="0 0 24 24" focusable="false"><path d="m12 3.5 2.6 5.3 5.9.9-4.3 4.2 1 5.9-5.2-2.8-5.2 2.8 1-5.9-4.3-4.2 5.9-.9Z"></path></svg>'
   };
   return icons[type] || "";
 }
@@ -15132,12 +15134,12 @@ function renderProfilePage() {
             <span class="profile-stat-card__label">Mest vurderede genre</span>
           </article>
           <article class="profile-stat-card profile-stat-card--average">
-            <span class="profile-stat-card__icon" aria-hidden="true">↗</span>
+            <span class="profile-stat-card__icon" aria-hidden="true">${getProfileStatIconMarkup("rating")}</span>
             <strong>${profileAverageRating === null ? "–" : escapeHtml(formatCompactRating(profileAverageRating))}</strong>
             <span class="profile-stat-card__label">Gennemsnitlig bedømmelse</span>
           </article>
         </div>
-        <a class="profile-header__edit" href="#profil-indstillinger">Rediger profil</a>
+        <a class="profile-header__edit" href="#profil-indstillinger"><span class="profile-header__edit-icon" aria-hidden="true">${getProfilePanelIconMarkup("edit")}</span>Rediger profil</a>
       </header>
 
       <div class="profile-dashboard">

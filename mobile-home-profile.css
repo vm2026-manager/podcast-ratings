@@ -33,9 +33,15 @@
      style.css; this file owns the dashboard's mobile structure. */
   html body.page-profil .profile-header--dashboard {
     display: grid !important;
-    grid-template-columns: 64px minmax(0, 1fr) !important;
-    gap: 12px !important;
-    padding: 16px !important;
+    grid-template-columns: 110px minmax(0, 1fr) !important;
+    gap: 8px 14px !important;
+    padding: 12px !important;
+  }
+
+  html body.page-profil .profile-header--dashboard .profile-avatar {
+    width: 110px !important;
+    height: 110px !important;
+    min-width: 110px !important;
   }
 
   html body.page-profil .profile-header--dashboard .profile-header__copy {
@@ -43,18 +49,24 @@
   }
 
   html body.page-profil .profile-header--dashboard .profile-header__intro {
-    margin: 4px 0 0 !important;
-    font-size: 0.82rem !important;
-    line-height: 1.34 !important;
+    margin: 3px 0 0 !important;
+    font-size: 0.78rem !important;
+    line-height: 1.28 !important;
+  }
+
+  html body.page-profil .profile-header--dashboard .profile-header__copy h2 {
+    margin-bottom: 3px !important;
+    font-size: 1.38rem !important;
+    font-weight: 850 !important;
   }
 
   html body.page-profil .profile-stats--overview {
     grid-column: 1 / -1 !important;
     display: grid !important;
     grid-template-columns: repeat(6, minmax(0, 1fr)) !important;
-    gap: 10px !important;
+    gap: 8px !important;
     width: 100% !important;
-    margin-top: 4px !important;
+    margin-top: 0 !important;
     padding: 0 !important;
     border: 0 !important;
     border-radius: 0 !important;
@@ -68,13 +80,13 @@
   html body.page-profil .profile-stat-card--suggestions {
     grid-column: span 2 !important;
     min-width: 0 !important;
-    min-height: 102px !important;
-    height: 102px !important;
-    padding: 12px 6px !important;
+    min-height: 96px !important;
+    height: 96px !important;
+    padding: 8px 6px !important;
     display: grid !important;
-    grid-template-rows: 26px minmax(0, 1fr) 18px !important;
+    grid-template-rows: 22px minmax(0, 1fr) 16px !important;
     place-items: center !important;
-    gap: 4px !important;
+    gap: 2px !important;
     border: 1px solid rgba(225, 207, 190, 0.84) !important;
     border-radius: 16px !important;
     background: rgba(255, 253, 249, 0.9) !important;
@@ -94,7 +106,7 @@
   html body.page-profil .profile-stat-card--suggestions strong {
     margin: 0 !important;
     color: #171411 !important;
-    font-size: clamp(1.48rem, 7vw, 1.72rem) !important;
+    font-size: clamp(1.38rem, 6.4vw, 1.56rem) !important;
     font-weight: 850 !important;
     line-height: 1 !important;
   }
@@ -104,7 +116,7 @@
   html body.page-profil .profile-stat-card--suggestions .profile-stat-card__label {
     min-height: 0 !important;
     color: #4a4038 !important;
-    font-size: 0.74rem !important;
+    font-size: 0.7rem !important;
     font-weight: 700 !important;
     line-height: 1.1 !important;
     white-space: nowrap !important;
@@ -117,18 +129,26 @@
     content: none !important;
   }
 
+  html body.page-profil .profile-stat-card--ratings .profile-stat-card__icon,
+  html body.page-profil .profile-stat-card--saved .profile-stat-card__icon,
+  html body.page-profil .profile-stat-card--suggestions .profile-stat-card__icon {
+    width: 24px !important;
+    height: 24px !important;
+    font-size: 0.9rem !important;
+  }
+
   html body.page-profil .profile-stat-card--genre,
   html body.page-profil .profile-stat-card--average {
     grid-column: span 3 !important;
     min-width: 0 !important;
-    min-height: 106px !important;
-    height: 106px !important;
-    padding: 14px !important;
+    min-height: 94px !important;
+    height: 94px !important;
+    padding: 10px !important;
     display: grid !important;
-    grid-template-columns: 30px minmax(0, 1fr) !important;
+    grid-template-columns: 28px minmax(0, 1fr) !important;
     grid-template-rows: auto minmax(0, 1fr) !important;
-    column-gap: 9px !important;
-    row-gap: 4px !important;
+    column-gap: 8px !important;
+    row-gap: 2px !important;
     align-items: center !important;
     justify-items: start !important;
     border: 1px solid rgba(225, 207, 190, 0.84) !important;
@@ -148,8 +168,8 @@
   html body.page-profil .profile-stat-card--average .profile-stat-card__icon {
     grid-column: 1 !important;
     grid-row: 1 / -1 !important;
-    width: 30px !important;
-    height: 30px !important;
+    width: 28px !important;
+    height: 28px !important;
     margin: 0 !important;
   }
 
@@ -159,9 +179,9 @@
     grid-row: 1 !important;
     min-height: 0 !important;
     color: #74695f !important;
-    font-size: 0.6rem !important;
+    font-size: 0.56rem !important;
     font-weight: 850 !important;
-    line-height: 1.16 !important;
+    line-height: 1.12 !important;
     letter-spacing: 0.045em !important;
     text-transform: uppercase !important;
     white-space: normal !important;
@@ -183,19 +203,20 @@
     min-width: 0 !important;
     margin: 0 !important;
     color: #171411 !important;
-    font-size: clamp(1.12rem, 5.5vw, 1.38rem) !important;
+    font-size: clamp(1.02rem, 4.9vw, 1.22rem) !important;
     font-weight: 850 !important;
     line-height: 1.1 !important;
     text-align: left !important;
-    white-space: normal !important;
-    overflow-wrap: anywhere !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
   }
 
   html body.page-profil .profile-header--dashboard .profile-header__edit {
     grid-column: 1 / -1 !important;
     width: 100% !important;
-    min-height: 42px !important;
-    margin-top: 2px !important;
+    min-height: 50px !important;
+    margin-top: 0 !important;
     display: inline-flex !important;
     align-items: center !important;
     justify-content: center !important;
@@ -207,6 +228,24 @@
     color: #d95017 !important;
     font-weight: 800 !important;
     text-decoration: none !important;
+  }
+
+  html body.page-profil .profile-header--dashboard .profile-header__edit-icon {
+    width: 17px !important;
+    height: 17px !important;
+    margin-right: 8px !important;
+    display: inline-grid !important;
+    place-items: center !important;
+  }
+
+  html body.page-profil .profile-header--dashboard .profile-header__edit-icon svg {
+    width: 17px !important;
+    height: 17px !important;
+    fill: none !important;
+    stroke: currentColor !important;
+    stroke-width: 2 !important;
+    stroke-linecap: round !important;
+    stroke-linejoin: round !important;
   }
 
   html body.page-profil .profile-saved-panel {
