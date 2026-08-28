@@ -29,26 +29,216 @@
     text-underline-offset: 3px !important;
   }
 
-  html body.page-profil .profile-stats {
-    grid-template-columns: repeat(6, minmax(0, 1fr)) !important;
-    gap: 8px !important;
+  /* Authoritative mobile Profile composition. The base Profile skin stays in
+     style.css; this file owns the dashboard's mobile structure. */
+  html body.page-profil .profile-header--dashboard {
+    display: grid !important;
+    grid-template-columns: 64px minmax(0, 1fr) !important;
+    gap: 12px !important;
+    padding: 16px !important;
   }
-  html body.page-profil .profile-stat-card { grid-column: span 2; }
-  html body.page-profil .profile-stat-card:nth-child(4) { grid-column: 2 / span 2; }
-  html body.page-profil .profile-stat-card:nth-child(5) { grid-column: 4 / span 2; }
-  html body.page-profil .profile-stat-card__label { overflow-wrap: anywhere; }
-  html body.page-profil .profile-header__edit,
-  html body.page-profil .profile-intro-card__actions .profile-header__edit {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    min-height: 42px;
-    padding: 0 14px;
-    border: 1px solid rgba(187, 133, 94, .42);
-    border-radius: 999px;
-    background: rgba(255, 252, 247, .9);
-    color: #5b3721;
-    font-weight: 750;
-    text-decoration: none;
+
+  html body.page-profil .profile-header--dashboard .profile-header__copy {
+    min-width: 0 !important;
+  }
+
+  html body.page-profil .profile-header--dashboard .profile-header__intro {
+    margin: 4px 0 0 !important;
+    font-size: 0.82rem !important;
+    line-height: 1.34 !important;
+  }
+
+  html body.page-profil .profile-stats--overview {
+    grid-column: 1 / -1 !important;
+    display: grid !important;
+    grid-template-columns: repeat(6, minmax(0, 1fr)) !important;
+    gap: 10px !important;
+    width: 100% !important;
+    margin-top: 4px !important;
+    padding: 0 !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    backdrop-filter: none !important;
+  }
+
+  html body.page-profil .profile-stat-card--ratings,
+  html body.page-profil .profile-stat-card--saved,
+  html body.page-profil .profile-stat-card--suggestions {
+    grid-column: span 2 !important;
+    min-width: 0 !important;
+    min-height: 102px !important;
+    height: 102px !important;
+    padding: 12px 6px !important;
+    display: grid !important;
+    grid-template-rows: 26px minmax(0, 1fr) 18px !important;
+    place-items: center !important;
+    gap: 4px !important;
+    border: 1px solid rgba(225, 207, 190, 0.84) !important;
+    border-radius: 16px !important;
+    background: rgba(255, 253, 249, 0.9) !important;
+    box-shadow: 0 6px 16px rgba(76, 52, 30, 0.045) !important;
+    text-align: center !important;
+  }
+
+  html body.page-profil .profile-stat-card--ratings::before,
+  html body.page-profil .profile-stat-card--saved::before,
+  html body.page-profil .profile-stat-card--suggestions::before {
+    display: none !important;
+    content: none !important;
+  }
+
+  html body.page-profil .profile-stat-card--ratings strong,
+  html body.page-profil .profile-stat-card--saved strong,
+  html body.page-profil .profile-stat-card--suggestions strong {
+    margin: 0 !important;
+    color: #171411 !important;
+    font-size: clamp(1.48rem, 7vw, 1.72rem) !important;
+    font-weight: 850 !important;
+    line-height: 1 !important;
+  }
+
+  html body.page-profil .profile-stat-card--ratings .profile-stat-card__label,
+  html body.page-profil .profile-stat-card--saved .profile-stat-card__label,
+  html body.page-profil .profile-stat-card--suggestions .profile-stat-card__label {
+    min-height: 0 !important;
+    color: #4a4038 !important;
+    font-size: 0.74rem !important;
+    font-weight: 700 !important;
+    line-height: 1.1 !important;
+    white-space: nowrap !important;
+  }
+
+  html body.page-profil .profile-stat-card--ratings .profile-stat-card__label::after,
+  html body.page-profil .profile-stat-card--saved .profile-stat-card__label::after,
+  html body.page-profil .profile-stat-card--suggestions .profile-stat-card__label::after {
+    display: none !important;
+    content: none !important;
+  }
+
+  html body.page-profil .profile-stat-card--genre,
+  html body.page-profil .profile-stat-card--average {
+    grid-column: span 3 !important;
+    min-width: 0 !important;
+    min-height: 106px !important;
+    height: 106px !important;
+    padding: 14px !important;
+    display: grid !important;
+    grid-template-columns: 30px minmax(0, 1fr) !important;
+    grid-template-rows: auto minmax(0, 1fr) !important;
+    column-gap: 9px !important;
+    row-gap: 4px !important;
+    align-items: center !important;
+    justify-items: start !important;
+    border: 1px solid rgba(225, 207, 190, 0.84) !important;
+    border-radius: 16px !important;
+    background: rgba(255, 253, 249, 0.9) !important;
+    box-shadow: 0 6px 16px rgba(76, 52, 30, 0.045) !important;
+    text-align: left !important;
+  }
+
+  html body.page-profil .profile-stat-card--genre::before,
+  html body.page-profil .profile-stat-card--average::before {
+    display: none !important;
+    content: none !important;
+  }
+
+  html body.page-profil .profile-stat-card--genre .profile-stat-card__icon,
+  html body.page-profil .profile-stat-card--average .profile-stat-card__icon {
+    grid-column: 1 !important;
+    grid-row: 1 / -1 !important;
+    width: 30px !important;
+    height: 30px !important;
+    margin: 0 !important;
+  }
+
+  html body.page-profil .profile-stat-card--genre .profile-stat-card__label,
+  html body.page-profil .profile-stat-card--average .profile-stat-card__label {
+    grid-column: 2 !important;
+    grid-row: 1 !important;
+    min-height: 0 !important;
+    color: #74695f !important;
+    font-size: 0.6rem !important;
+    font-weight: 850 !important;
+    line-height: 1.16 !important;
+    letter-spacing: 0.045em !important;
+    text-transform: uppercase !important;
+    white-space: normal !important;
+    overflow-wrap: normal !important;
+    word-break: normal !important;
+  }
+
+  html body.page-profil .profile-stat-card--genre .profile-stat-card__label::after,
+  html body.page-profil .profile-stat-card--average .profile-stat-card__label::after {
+    display: none !important;
+    content: none !important;
+  }
+
+  html body.page-profil .profile-stat-card--genre strong,
+  html body.page-profil .profile-stat-card--average strong {
+    grid-column: 2 !important;
+    grid-row: 2 !important;
+    align-self: start !important;
+    min-width: 0 !important;
+    margin: 0 !important;
+    color: #171411 !important;
+    font-size: clamp(1.12rem, 5.5vw, 1.38rem) !important;
+    font-weight: 850 !important;
+    line-height: 1.1 !important;
+    text-align: left !important;
+    white-space: normal !important;
+    overflow-wrap: anywhere !important;
+  }
+
+  html body.page-profil .profile-header--dashboard .profile-header__edit {
+    grid-column: 1 / -1 !important;
+    width: 100% !important;
+    min-height: 42px !important;
+    margin-top: 2px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    padding: 0 14px !important;
+    border: 1px solid rgba(255, 92, 22, 0.68) !important;
+    border-radius: 999px !important;
+    background: rgba(255, 253, 249, 0.72) !important;
+    box-shadow: none !important;
+    color: #d95017 !important;
+    font-weight: 800 !important;
+    text-decoration: none !important;
+  }
+
+  html body.page-profil .profile-saved-panel {
+    padding: 16px !important;
+  }
+
+  html body.page-profil .profile-saved-panel .profile-panel__header {
+    grid-template-columns: minmax(0, 1fr) auto !important;
+    align-items: center !important;
+    gap: 10px !important;
+    margin-bottom: 12px !important;
+  }
+
+  html body.page-profil .profile-saved-panel .profile-panel__header .profile-eyebrow {
+    display: none !important;
+  }
+
+  html body.page-profil .profile-saved-panel .profile-panel__tools {
+    flex-wrap: nowrap !important;
+    align-items: center !important;
+    gap: 7px !important;
+  }
+
+  html body.page-profil .profile-saved-panel .profile-panel__toggle {
+    min-height: 34px !important;
+    padding: 0 11px !important;
+    border-color: rgba(255, 92, 22, 0.38) !important;
+    border-radius: 999px !important;
+    background: rgba(255, 253, 249, 0.68) !important;
+    color: #bd4515 !important;
+    font-size: 0.74rem !important;
+    font-weight: 800 !important;
+    white-space: nowrap !important;
   }
 }

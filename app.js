@@ -14963,27 +14963,27 @@ function renderProfilePage() {
         </header>
 
         <section class="profile-stats-card" aria-label="Profilstatistik">
-          <button class="profile-stat-card profile-stat-card--action" type="button" data-profile-scroll="profileRatings">
+          <button class="profile-stat-card profile-stat-card--ratings profile-stat-card--action" type="button" data-profile-scroll="profileRatings">
             <span class="profile-stat-card__icon" aria-hidden="true">${getProfileStatIconMarkup("ratings")}</span>
             <strong>${ratingCount}</strong>
             <span class="profile-stat-card__label">Vurderinger</span>
           </button>
-          <button class="profile-stat-card profile-stat-card--action" type="button" data-profile-scroll="profileSaved">
+          <button class="profile-stat-card profile-stat-card--saved profile-stat-card--action" type="button" data-profile-scroll="profileSaved">
             <span class="profile-stat-card__icon" aria-hidden="true">${getProfileStatIconMarkup("saved")}</span>
             <strong data-profile-saved-count>${savedCount}</strong>
             <span class="profile-stat-card__label">Gemte podcasts</span>
           </button>
-          <button class="profile-stat-card profile-stat-card--action" type="button" data-profile-scroll="profileSuggestions">
+          <button class="profile-stat-card profile-stat-card--suggestions profile-stat-card--action" type="button" data-profile-scroll="profileSuggestions">
             <span class="profile-stat-card__icon" aria-hidden="true">${getProfileStatIconMarkup("submitted")}</span>
             <strong data-profile-suggestions-stat-count>${suggestionCount === null ? "&ndash;" : suggestionCount}</strong>
             <span class="profile-stat-card__label">Indsendte podcasts</span>
           </button>
-          <article class="profile-stat-card">
+          <article class="profile-stat-card profile-stat-card--genre">
             <span class="profile-stat-card__icon" aria-hidden="true">${getGenreIconMarkup(profileFavoriteGenre)}</span>
             <strong class="profile-stat-card__text-value">${escapeHtml(profileFavoriteGenre)}</strong>
             <span class="profile-stat-card__label">Yndlingsgenre</span>
           </article>
-          <article class="profile-stat-card">
+          <article class="profile-stat-card profile-stat-card--average">
             <span class="profile-stat-card__icon" aria-hidden="true">${getProfileStatIconMarkup("average")}</span>
             <strong>${profileAverageRating === null ? "&ndash;" : escapeHtml(formatCompactRating(profileAverageRating))}</strong>
             <span class="profile-stat-card__label">Gns. vurdering</span>
@@ -15111,30 +15111,30 @@ function renderProfilePage() {
           <p class="profile-header__intro">Dit personlige overblik over gemte podcasts, vurderinger og indsendte forslag.</p>
         </div>
         <div class="profile-stats profile-stats--overview" aria-label="Profilstatistik">
-          <button class="profile-stat-card profile-stat-card--action" type="button" data-profile-scroll="profileRatings">
+          <button class="profile-stat-card profile-stat-card--ratings profile-stat-card--action" type="button" data-profile-scroll="profileRatings">
             <span class="profile-stat-card__icon" aria-hidden="true">☆</span>
             <strong>${ratingCount}</strong>
             <span class="profile-stat-card__label">Vurderinger</span>
           </button>
-          <button class="profile-stat-card profile-stat-card--action" type="button" data-profile-scroll="profileSaved">
+          <button class="profile-stat-card profile-stat-card--saved profile-stat-card--action" type="button" data-profile-scroll="profileSaved">
             <span class="profile-stat-card__icon" aria-hidden="true">▯</span>
             <strong data-profile-saved-count>${savedCount}</strong>
-            <span class="profile-stat-card__label">Gemte podcasts</span>
+            <span class="profile-stat-card__label">Gemte</span>
           </button>
-          <button class="profile-stat-card profile-stat-card--action" type="button" data-profile-scroll="profileSuggestions">
+          <button class="profile-stat-card profile-stat-card--suggestions profile-stat-card--action" type="button" data-profile-scroll="profileSuggestions">
             <span class="profile-stat-card__icon" aria-hidden="true">↗</span>
             <strong data-profile-suggestions-stat-count>${suggestionCount === null ? "&ndash;" : suggestionCount}</strong>
-            <span class="profile-stat-card__label">Indsendte podcasts</span>
+            <span class="profile-stat-card__label">Forslag</span>
           </button>
-          <article class="profile-stat-card">
+          <article class="profile-stat-card profile-stat-card--genre">
             <span class="profile-stat-card__icon" aria-hidden="true">◇</span>
             <strong class="profile-stat-card__text-value">${escapeHtml(profileFavoriteGenre)}</strong>
-            <span class="profile-stat-card__label">Yndlingsgenre</span>
+            <span class="profile-stat-card__label">Mest vurderede genre</span>
           </article>
-          <article class="profile-stat-card">
+          <article class="profile-stat-card profile-stat-card--average">
             <span class="profile-stat-card__icon" aria-hidden="true">↗</span>
             <strong>${profileAverageRating === null ? "–" : escapeHtml(formatCompactRating(profileAverageRating))}</strong>
-            <span class="profile-stat-card__label">Gns. vurdering</span>
+            <span class="profile-stat-card__label">Gennemsnitlig bedømmelse</span>
           </article>
         </div>
         <a class="profile-header__edit" href="#profil-indstillinger">Rediger profil</a>
