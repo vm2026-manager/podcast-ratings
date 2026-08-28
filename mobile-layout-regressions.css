@@ -225,3 +225,33 @@ html body .home-podcast-search { display: none; }
   }
 }
 /* UDFORSK MOBILE CLEAN CARDS END */
+
+/* EXPLORE SEED PODCAST LINK START */
+.page-udforsk .explore-seed-podcast-link {
+  display: inline;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: #df5410;
+  font: inherit;
+  font-weight: inherit;
+  line-height: inherit;
+  text-align: inherit;
+  text-transform: inherit;
+  vertical-align: baseline;
+  cursor: pointer;
+}
+
+.page-udforsk .explore-seed-podcast-link:hover,
+.page-udforsk .explore-seed-podcast-link:focus-visible {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.page-udforsk .explore-seed-podcast-link:focus-visible {
+  outline: 2px solid rgba(223, 84, 16, 0.35);
+  outline-offset: 2px;
+  border-radius: 3px;
+}
+/* EXPLORE SEED PODCAST LINK END */

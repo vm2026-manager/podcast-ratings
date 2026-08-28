@@ -416,7 +416,7 @@ const AUTH_PERSISTENCE_STORAGE_KEY = "podcast-ratings-auth-persistence";
 const PROFILE_PREFERENCES_STORAGE_KEY = "podcast-ratings-profile-preferences";
 const EXPLORE_PERSONAL_SEED_HISTORY_STORAGE_KEY =
   "podcast-ratings-explore-personal-seed-history-v1";
-const UDFORSK_RECOMMENDATION_VERSION = 3;
+const UDFORSK_RECOMMENDATION_VERSION = 4;
 const EXPLORE_PERSONAL_SNAPSHOT_STORAGE_KEY =
   "podcast-ratings-explore-personal-snapshots-v2";
 const EXPLORE_PERSONAL_MINIMUM_GROUP_SIZE = 3;
@@ -16443,6 +16443,10 @@ function persistExplorePersonalSnapshot(sections, { dayKey, fingerprint }) {
         eyebrow: section.eyebrow,
         title: section.title,
         note: section.note || "",
+        seedPodcastKey: section.seedPodcastKey || "",
+        seedPodcastTitle: section.seedPodcastTitle || "",
+        seedSource: section.seedSource || "",
+        seedRating: section.seedRating ?? null,
         items: section.items
           .map((item) => ({ key: getPodcastKey(item.podcast || item), reason: item.reason || "" }))
           .filter((item) => item.key)
@@ -17140,6 +17144,10 @@ function getExplorePersonalSections({
     const pushed = pushSection({
       eyebrow: "Personlig anbefaling",
       title: getExploreSeedTitle(seed),
+      seedPodcastKey: getPodcastKey(seed.podcast),
+      seedPodcastTitle: seed.podcast.title,
+      seedSource: seed.source,
+      seedRating: seed.rating,
       items
     });
 
@@ -18812,7 +18820,26 @@ function renderExplorePage() {
           <header class="explore-section-header">
             <div>
               <p class="explore-eyebrow">${escapeHtml(section.eyebrow)}</p>
-              <h2 id="${headingId}">${escapeHtml(section.title)}</h2>
+              <h2 id="${headingId}">
+                ${
+                  section.seedPodcastKey && section.seedPodcastTitle
+                    ? `${
+                        section.seedSource === "saved"
+                          ? "Fordi du gemte "
+                          : "Fordi du gav "
+                      }<button
+                        class="explore-seed-podcast-link"
+                        type="button"
+                        data-explore-seed-podcast="${escapeHtml(section.seedPodcastKey)}"
+                        aria-label="&#197;bn ${escapeHtml(section.seedPodcastTitle)}"
+                      >${escapeHtml(section.seedPodcastTitle)}</button>${
+                        section.seedSource === "saved"
+                          ? ""
+                          : ` ${escapeHtml(formatCompactRating(section.seedRating))}/10`
+                      }`
+                    : escapeHtml(section.title)
+                }
+              </h2>
               ${
                 section.note
                   ? `<p class="explore-section-lead">${escapeHtml(section.note)}</p>`
@@ -18822,6 +18849,21 @@ function renderExplorePage() {
           </header>
           <div class="explore-grid"></div>
         `;
+
+        sectionElement
+          .querySelector("[data-explore-seed-podcast]")
+          ?.addEventListener("click", (event) => {
+            event.preventDefault();
+            event.stopPropagation();
+
+            const key = event.currentTarget.dataset.exploreSeedPodcast;
+            const podcast = key ? state.podcastByKey[key] : null;
+            if (!podcast) return;
+
+            openPodcastDetailSheet(podcast, event.currentTarget, {
+              allowDesktop: true
+            });
+          });
 
         appendExploreCards(sectionElement.querySelector(".explore-grid"), items, {
           className: "explore-card--recommended"
