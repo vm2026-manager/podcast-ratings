@@ -10461,8 +10461,8 @@ html body #podcastDetailSheet .podcast-detail-sheet__inline-rating-save { min-wi
 
   /* Få elementer udnytter pladsen uden at blive urimeligt enorme. */
   html body.page-udforsk .explore-grid.has-one-item > .explore-card {
-    flex-basis: min(460px, 100%) !important;
-    width: min(460px, 100%) !important;
+    flex-basis: 100% !important;
+    width: 100% !important;
   }
 
   html body.page-udforsk .explore-grid.has-two-items > .explore-card {
@@ -10475,6 +10475,13 @@ html body #podcastDetailSheet .podcast-detail-sheet__inline-rating-save { min-wi
     flex-basis: calc((100% - 24px) / 3) !important;
     width: calc((100% - 24px) / 3) !important;
     min-width: 270px !important;
+  }
+
+  /* Keep a complete four-card personal row from inheriting the five-card carousel width. */
+  html body.page-udforsk .explore-personal-modules .explore-grid:has(> .explore-card:nth-child(4)):not(:has(> .explore-card:nth-child(5))) > .explore-card {
+    flex-basis: calc((100% - 36px) / 4) !important;
+    width: calc((100% - 36px) / 4) !important;
+    min-width: 0 !important;
   }
 
   /* Genreanbefalinger får en genkendelig, men diskret tone. */
