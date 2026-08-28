@@ -11590,7 +11590,9 @@ html body.page-udforsk .explore-card__host + .explore-card__publisher {
   }
 }
 
-@media (max-width: 1100px) {
+/* This is the compact desktop/tablet dashboard. Mobile owns its dashboard
+   composition in mobile-home-profile.css. */
+@media (min-width: 769px) and (max-width: 1100px) {
   html body.page-profil .profile-header--dashboard {
     min-height: 0 !important;
     padding: 18px !important;
