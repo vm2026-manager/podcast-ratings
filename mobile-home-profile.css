@@ -139,7 +139,7 @@
   }
 
   html body.page-profil .profile-stat-card:nth-child(5) .profile-stat-card__label::after {
-    content: "Gennemsnitlig bed?mmelse" !important;
+    content: "Gennemsnitlig bedømmelse" !important;
   }
 
   html body.page-profil .profile-stat-card:nth-child(4) strong,
