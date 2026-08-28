@@ -5877,6 +5877,14 @@ body.page-ranglister .search-field__clear:focus-visible {
     box-shadow 0.18s ease;
 }
 
+/* True Crime remains a crawlable link, but visually follows the shared chip UI. */
+body.page-ranglister a.genre-chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+}
+
 .genre-chip:hover {
   transform: translateY(-1px);
   background: #fff;
