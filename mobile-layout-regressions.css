@@ -141,3 +141,81 @@ html body .home-podcast-search { display: none; }
     text-decoration: none !important;
   }
 }
+
+/* UDFORSK MOBILE CLEAN CARDS START */
+@media (max-width: 768px) {
+
+  /* Mere luft mellem Udforsk-sektionerne */
+  html body.page-udforsk .explore-personal-modules {
+    gap: 12px !important;
+  }
+
+  html body.page-udforsk .explore-personal-modules > section,
+  html body.page-udforsk .explore-personal-modules > .explore-recommendations,
+  html body.page-udforsk .explore-personal-modules > .explore-popular,
+  html body.page-udforsk .explore-personal-modules > .explore-gems {
+    border-top-width: 1px !important;
+    border-radius: 18px !important;
+  }
+
+  /* Maks. fire fulde podcastkort i bredden */
+  html body.page-udforsk .explore-personal-modules .explore-grid {
+    width: 100% !important;
+    max-width: 100% !important;
+    gap: 10px !important;
+    padding-right: 0 !important;
+    scroll-snap-type: x proximity !important;
+  }
+
+  html body.page-udforsk .explore-personal-modules .explore-grid > .explore-card {
+    flex: 0 0 calc((100% - 30px) / 4) !important;
+    width: calc((100% - 30px) / 4) !important;
+    min-width: calc((100% - 30px) / 4) !important;
+    padding: 0 !important;
+    border: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    scroll-snap-align: start !important;
+  }
+
+  html body.page-udforsk .explore-card__cover {
+    border-radius: 11px !important;
+  }
+
+  /* Mindre og tydeligere bogm?rke */
+  html body.page-udforsk .explore-card__favorite {
+    top: 5px !important;
+    right: 5px !important;
+    width: 34px !important;
+    min-width: 34px !important;
+    height: 34px !important;
+    min-height: 34px !important;
+    padding: 0 !important;
+    border: 1px solid rgba(80, 68, 58, 0.22) !important;
+    border-radius: 9px !important;
+    color: #514840 !important;
+    background: rgba(255, 252, 248, 0.94) !important;
+    box-shadow: 0 2px 7px rgba(54, 38, 25, 0.10) !important;
+  }
+
+  html body.page-udforsk .explore-card__favorite > span:first-child {
+    width: 18px !important;
+    height: 18px !important;
+  }
+
+  /* Gemt tilstand skal v?re meget tydelig */
+  html body.page-udforsk .explore-card__favorite.is-saved {
+    color: #ffffff !important;
+    border-color: #ff5c16 !important;
+    background: #ff5c16 !important;
+  }
+
+  /* Fjern den gentagne tekst "Podcastlisten" fra ratings */
+  html body.page-udforsk
+  .explore-card__rating[data-score-source="Podcastlisten"]
+  .explore-card__community-score
+  > span:not(.explore-card__community-star) {
+    display: none !important;
+  }
+}
+/* UDFORSK MOBILE CLEAN CARDS END */
