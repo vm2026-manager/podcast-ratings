@@ -19511,7 +19511,15 @@ function renderRoute() {
             <a class="home-mobile-action home-mobile-action--primary" href="#ranglister">Se ranglisten</a>
           </div>
           <div class="page-intro-panel__actions">
-            <a class="page-intro-panel__button" href="#udforsk">Udforsk podcasts</a>
+            ${
+              loggedIn
+                ? '<a class="page-intro-panel__button" href="#udforsk">Udforsk podcasts</a>'
+                : `<button
+                    class="page-intro-panel__button home-hero__signup"
+                    type="button"
+                    ${state.authConfigured ? "" : "disabled"}
+                  >Opret dig</button>`
+            }
             <a
               class="page-intro-panel__button page-intro-panel__button--secondary"
               href="#ranglister"
