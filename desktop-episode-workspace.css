@@ -16,8 +16,6 @@
   html body #podcastDetailSheet.is-episode-workspace .episode-title { font: 800 1rem/1.35 "Manrope", sans-serif !important; overflow-wrap: anywhere; }
   html body #podcastDetailSheet.is-episode-workspace .episode-title--long { font-size: .94rem !important; }
   html body #podcastDetailSheet.is-episode-workspace .episode-title--very-long { font-size: .88rem !important; }
-  html body #podcastDetailSheet.is-episode-workspace tr.is-community-rated td { background: rgba(255, 92, 22, .045); }
-  html body #podcastDetailSheet.is-episode-workspace tr.is-community-rated td:first-child { box-shadow: inset 3px 0 0 #f26f21; }
   html body #podcastDetailSheet.is-episode-workspace tr.is-community-rated .podcast-detail-sheet__episode-source-score > strong { color: #d84b11 !important; font-size: .96rem !important; }
   html body #podcastDetailSheet.is-episode-workspace tr.is-user-rated .podcast-detail-sheet__episode-own-score { border-color: rgba(242, 111, 33, .62) !important; background: #fff3e9 !important; }
   html body #podcastDetailSheet.is-episode-workspace tr.is-user-rated .podcast-detail-sheet__episode-own-score > strong { color: #a64118 !important; font-size: .96rem !important; }

@@ -6819,12 +6819,14 @@ async function deleteActiveEpisodeRating() {
       if (!deleteLocalEpisodeRating(podcastKey, episodeId)) {
         throw new Error("Kunne ikke fjerne episodevurderingen lokalt.");
       }
+      closeRatingDialog();
+      updatePodcastEpisodeOverviewRatingRow(episodeId);
+      updateOpenEpisodeDetailScores();
       await synchronizeEpisodeDerivedParentRating(
         podcastKey,
         previousEffectiveParentRating,
         { local: true }
       );
-      closeRatingDialog();
       updatePodcastEpisodeOverview(document.getElementById("podcastDetailSheet"));
       refreshOpenPodcastDetailSheet();
       setAuthMessage("Din episodevurdering er fjernet.", "success");
@@ -6842,11 +6844,13 @@ async function deleteActiveEpisodeRating() {
 
     episodeState.userRatingsById[episodeId] = null;
     updateProfileEpisodeRatingAfterDelete(episodeId);
+    closeRatingDialog();
+    updatePodcastEpisodeOverviewRatingRow(episodeId);
+    updateOpenEpisodeDetailScores();
     await synchronizeEpisodeDerivedParentRating(
       podcastKey,
       previousEffectiveParentRating
     );
-    closeRatingDialog();
     await refreshSingleEpisodeStat(episodeId);
     updateGenstartEpisodeSection();
     updateOpenEpisodeDetailScores();
@@ -6879,6 +6883,8 @@ async function deleteActiveEpisodeRating() {
           });
       }
     }
+    updatePodcastEpisodeOverviewRatingRow(episodeId);
+    updateOpenEpisodeDetailScores();
     console.error(error);
     updateRatingDialogMessage(error.message || "Kunne ikke fjerne episodevurderingen.", "error");
   } finally {

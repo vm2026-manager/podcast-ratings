@@ -16,7 +16,7 @@ const migratedKeys = {
   "vi ser på det": "vi ser pa det",
   "vågn lidt op": "vagn lidt op"
 };
-const appSource = await readFile(path.join(root, "app.js"), "utf8");
+const appSource = (await readFile(path.join(root, "app.js"), "utf8")).replace(/\r\n/g, "\n");
 const payload = JSON.parse(await readFile(path.join(root, "data", "podcasts.json"), "utf8"));
 const rows = Array.isArray(payload) ? payload : payload.rows;
 
