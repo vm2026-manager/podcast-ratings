@@ -776,6 +776,7 @@ const state = {
     error: ""
   },
   mobileRankingFiltersOpen: false,
+  desktopRankingFiltersOpen: false,
   desktopView: readDesktopViewPreference(),
   desktopRankingLayout: readDesktopRankingLayoutPreference(),
   hasExpandedInitialList: false,
@@ -5135,7 +5136,11 @@ function syncDesktopRankingSearchPlacement() {
   const mainColumn = document.querySelector(".ranking-main-column");
   const listPanel = document.querySelector(".ranking-list-panel");
   const podcastGrid = document.getElementById("podcastGrid");
-  if (!searchStrip || !mainColumn || !listPanel || !podcastGrid) return;
+  const filterPanel = document.querySelector(".ranking-filter-panel");
+  const filterSidebar = document.querySelector(".ranking-sidebar-column");
+  const filterPanelHeader = document.querySelector(".ranking-filter-panel__header");
+  const authPanel = document.getElementById("authPanel");
+  if (!searchStrip || !mainColumn || !listPanel || !podcastGrid || !filterPanel) return;
 
   if (elements.clearFilterButton) {
     elements.clearFilterButton.textContent =
@@ -5150,12 +5155,72 @@ function syncDesktopRankingSearchPlacement() {
     if (searchStrip.parentElement !== listPanel || searchStrip.nextElementSibling !== podcastGrid) {
       listPanel.insertBefore(searchStrip, podcastGrid);
     }
+
+    let filterButton = searchStrip.querySelector("[data-desktop-ranking-filter-toggle]");
+    if (!filterButton) {
+      filterButton = document.createElement("button");
+      filterButton.className = "desktop-ranking-filter-toggle";
+      filterButton.type = "button";
+      filterButton.dataset.desktopRankingFilterToggle = "true";
+      filterButton.setAttribute("aria-controls", "desktopRankingFilterPopover");
+      searchStrip.appendChild(filterButton);
+    }
+
+    if (filterPanel.parentElement !== searchStrip) {
+      searchStrip.appendChild(filterPanel);
+    }
+    filterPanel.id = "desktopRankingFilterPopover";
+    filterPanel.classList.add("ranking-filter-panel--desktop-popover");
+    syncDesktopRankingFilterPopoverState();
     return;
   }
+
+  state.desktopRankingFiltersOpen = false;
+  searchStrip.querySelector("[data-desktop-ranking-filter-toggle]")?.remove();
+  searchStrip.querySelector(".desktop-ranking-active-filters")?.remove();
+  filterPanel.classList.remove("ranking-filter-panel--desktop-popover", "is-open");
+  filterPanel.removeAttribute("aria-hidden");
+  filterPanel.removeAttribute("id");
+  if (filterSidebar && filterPanel.parentElement !== filterSidebar) {
+    filterSidebar.insertBefore(filterPanel, authPanel || null);
+  }
+  if (elements.clearFilterButton && filterPanelHeader && elements.clearFilterButton.parentElement !== filterPanelHeader) {
+    filterPanelHeader.appendChild(elements.clearFilterButton);
+  }
+  if (elements.clearFilterButton) elements.clearFilterButton.hidden = false;
 
   if (searchStrip.parentElement !== mainColumn) {
     mainColumn.insertBefore(searchStrip, listPanel);
   }
+}
+
+function getDesktopRankingActiveFilters() {
+  const filters = getActiveCategoryFilters();
+  if (state.minimumRating > 0) {
+    filters.push({
+      type: "rating",
+      label: "Vurdering",
+      value: formatMinimumRating(state.minimumRating)
+    });
+  }
+  return filters;
+}
+
+function syncDesktopRankingFilterPopoverState() {
+  const filterPanel = document.getElementById("desktopRankingFilterPopover");
+  const filterButton = document.querySelector("[data-desktop-ranking-filter-toggle]");
+  if (!filterPanel || !filterButton) return;
+
+  const filterCount = getDesktopRankingActiveFilters().length;
+  const isOpen = Boolean(state.desktopRankingFiltersOpen);
+  filterButton.innerHTML = `<span aria-hidden="true">☷</span><span>Filtre${filterCount ? ` <b>${filterCount}</b>` : ""}</span>`;
+  filterButton.setAttribute("aria-expanded", String(isOpen));
+  filterButton.setAttribute(
+    "aria-label",
+    `${isOpen ? "Luk" : "Åbn"} filtre${filterCount ? `, ${filterCount} aktive` : ""}`
+  );
+  filterPanel.classList.toggle("is-open", isOpen);
+  filterPanel.setAttribute("aria-hidden", String(!isOpen));
 }
 
 function getDesktopRankingScore(podcast) {
@@ -5468,8 +5533,8 @@ function updateDesktopRankingSourceContext() {
 
   let note = toolbar.querySelector(".desktop-ranking-source-note");
   let layoutToggle = toolbar.querySelector(".desktop-ranking-layout-toggle");
-  const filterPanelHeader = document.querySelector(".ranking-filter-panel__header");
-  let activeFilters = filterPanelHeader?.querySelector(".desktop-ranking-active-filters");
+  const searchStrip = document.querySelector(".ranking-search-strip");
+  let activeFilters = searchStrip?.querySelector(".desktop-ranking-active-filters");
   if (!isDesktopRankingViewport()) {
     note?.remove();
     layoutToggle?.remove();
@@ -5505,9 +5570,11 @@ function updateDesktopRankingSourceContext() {
     renderPodcastGrid();
   };
 
-  const categoryFilters = getActiveCategoryFilters();
-  if (!filterPanelHeader || !categoryFilters.length) {
+  const categoryFilters = getDesktopRankingActiveFilters();
+  if (!searchStrip || !categoryFilters.length) {
     activeFilters?.remove();
+    if (elements.clearFilterButton) elements.clearFilterButton.hidden = true;
+    syncDesktopRankingFilterPopoverState();
     return;
   }
 
@@ -5515,7 +5582,7 @@ function updateDesktopRankingSourceContext() {
     activeFilters = document.createElement("div");
     activeFilters.className = "desktop-ranking-active-filters";
     activeFilters.setAttribute("aria-label", "Aktive filtre");
-    filterPanelHeader.insertBefore(activeFilters, elements.clearFilterButton || null);
+    searchStrip.appendChild(activeFilters);
   }
 
   activeFilters.innerHTML = `
@@ -5538,6 +5605,10 @@ function updateDesktopRankingSourceContext() {
         .join("")}
     </div>
   `;
+  if (elements.clearFilterButton) {
+    elements.clearFilterButton.hidden = false;
+    activeFilters.appendChild(elements.clearFilterButton);
+  }
   activeFilters.onclick = (event) => {
     const button = event.target.closest("[data-clear-category-filter]");
     if (!button) return;
@@ -5546,10 +5617,13 @@ function updateDesktopRankingSourceContext() {
       clearDesktopPublisherFilter();
     } else if (type === "mainSeries") {
       clearDesktopMainSeriesFilter();
+    } else if (type === "rating") {
+      setMinimumRating(0);
     } else {
       clearCategoryFilter(type);
     }
   };
+  syncDesktopRankingFilterPopoverState();
 }
 
 function renderDesktopRanking(podcasts) {
@@ -5603,13 +5677,9 @@ function renderDesktopRanking(podcasts) {
           title="Sortér efter ${escapeHtml(activeScoreLabel)}"
         >
           <span>${escapeHtml(activeScoreLabel)}</span>
-          ${
-            !isOwnRatingSort
-              ? `<span class="desktop-ranking-score-sort__indicator" aria-hidden="true">${
-                  isDescendingScore ? "↓" : "↑"
-                }</span>`
-              : ""
-          }
+          <span class="desktop-ranking-score-sort__indicator${
+            !isOwnRatingSort ? "" : " is-neutral"
+          }" aria-hidden="true">${!isOwnRatingSort ? (isDescendingScore ? "↓" : "↑") : "↕"}</span>
         </button>
       </span>
       <span role="columnheader" aria-sort="${
@@ -5625,13 +5695,9 @@ function renderDesktopRanking(podcasts) {
           title="Sortér efter Min vurdering"
         >
           <span>Min vurdering</span>
-          ${
-            isOwnRatingSort
-              ? `<span class="desktop-ranking-score-sort__indicator" aria-hidden="true">${
-                  isDescendingOwnScore ? "↓" : "↑"
-                }</span>`
-              : ""
-          }
+          <span class="desktop-ranking-score-sort__indicator${
+            isOwnRatingSort ? "" : " is-neutral"
+          }" aria-hidden="true">${isOwnRatingSort ? (isDescendingOwnScore ? "↓" : "↑") : "↕"}</span>
         </button>
       </span>
       <span role="columnheader"><span class="sr-only">Handlinger</span></span>
@@ -20514,6 +20580,29 @@ function setupEvents() {
     if (document.body.classList.contains("page-ranglister")) {
       renderPodcastGrid();
     }
+  });
+  document.addEventListener("click", (event) => {
+    const searchStrip = document.querySelector(".ranking-search-strip");
+    const filterToggle = event.target.closest("[data-desktop-ranking-filter-toggle]");
+    if (filterToggle) {
+      state.desktopRankingFiltersOpen = !state.desktopRankingFiltersOpen;
+      syncDesktopRankingFilterPopoverState();
+      return;
+    }
+    if (
+      !state.desktopRankingFiltersOpen ||
+      searchStrip?.contains(event.target)
+    ) {
+      return;
+    }
+    state.desktopRankingFiltersOpen = false;
+    syncDesktopRankingFilterPopoverState();
+  });
+  document.addEventListener("keydown", (event) => {
+    if (event.key !== "Escape" || !state.desktopRankingFiltersOpen) return;
+    state.desktopRankingFiltersOpen = false;
+    syncDesktopRankingFilterPopoverState();
+    document.querySelector("[data-desktop-ranking-filter-toggle]")?.focus();
   });
 
   elements.ratingFilter?.addEventListener("input", (event) => {
