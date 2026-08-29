@@ -17091,6 +17091,27 @@ html body #podcastDetailSheet [data-podcast-detail-placement]:empty {
     font-size: 0.9rem !important;
   }
 
+  html body.page-ranglister .ranking-search-strip.has-desktop-ranking-filters {
+    width: 100% !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 12px !important;
+  }
+
+  html body.page-ranglister .ranking-search-strip.has-desktop-ranking-filters .search-field {
+    flex: 0 0 500px !important;
+    width: 500px !important;
+  }
+
+  html body.page-ranglister .desktop-ranking-search-filter-summary {
+    min-width: 0 !important;
+    display: flex !important;
+    flex: 1 1 auto !important;
+    flex-wrap: wrap !important;
+    align-items: center !important;
+    gap: 7px !important;
+  }
+
   html body.page-ranglister .genre-nav {
     order: 3 !important;
     padding: 10px 0 18px !important;
@@ -17685,9 +17706,13 @@ html body #podcastDetailSheet [data-podcast-detail-placement]:empty {
   }
 
   html body.page-ranglister .desktop-ranking-score-sort__indicator {
-    color: #f0520a !important;
+    color: #978a80 !important;
     font-size: 1.05rem !important;
     line-height: 1 !important;
+  }
+
+  html body.page-ranglister .desktop-ranking-score-sort.is-active .desktop-ranking-score-sort__indicator {
+    color: #f0520a !important;
   }
 
   html body.page-ranglister .desktop-ranking-score-sort:hover {

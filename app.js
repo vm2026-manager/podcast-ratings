@@ -5464,16 +5464,20 @@ function createDesktopRankingTableRowElement(podcast, displayRank = null) {
 
 function updateDesktopRankingSourceContext() {
   const toolbar = document.querySelector(".ranking-toolbar");
+  const searchStrip = document.querySelector(".ranking-search-strip");
   if (!toolbar) return;
 
   let note = toolbar.querySelector(".desktop-ranking-source-note");
   let layoutToggle = toolbar.querySelector(".desktop-ranking-layout-toggle");
   const filterPanelHeader = document.querySelector(".ranking-filter-panel__header");
   let activeFilters = filterPanelHeader?.querySelector(".desktop-ranking-active-filters");
+  let searchFilters = searchStrip?.querySelector(".desktop-ranking-search-filter-summary");
   if (!isDesktopRankingViewport()) {
     note?.remove();
     layoutToggle?.remove();
     activeFilters?.remove();
+    searchFilters?.remove();
+    searchStrip?.classList.remove("has-desktop-ranking-filters");
     return;
   }
 
@@ -5508,17 +5512,15 @@ function updateDesktopRankingSourceContext() {
   const categoryFilters = getActiveCategoryFilters();
   if (!filterPanelHeader || !categoryFilters.length) {
     activeFilters?.remove();
-    return;
-  }
+  } else {
+    if (!activeFilters) {
+      activeFilters = document.createElement("div");
+      activeFilters.className = "desktop-ranking-active-filters";
+      activeFilters.setAttribute("aria-label", "Aktive filtre");
+      filterPanelHeader.insertBefore(activeFilters, elements.clearFilterButton || null);
+    }
 
-  if (!activeFilters) {
-    activeFilters = document.createElement("div");
-    activeFilters.className = "desktop-ranking-active-filters";
-    activeFilters.setAttribute("aria-label", "Aktive filtre");
-    filterPanelHeader.insertBefore(activeFilters, elements.clearFilterButton || null);
-  }
-
-  activeFilters.innerHTML = `
+    activeFilters.innerHTML = `
     <span class="desktop-ranking-active-filters__label">Aktive filtre</span>
     <div class="desktop-ranking-active-filters__chips">
       ${categoryFilters
@@ -5538,9 +5540,75 @@ function updateDesktopRankingSourceContext() {
         .join("")}
     </div>
   `;
-  activeFilters.onclick = (event) => {
-    const button = event.target.closest("[data-clear-category-filter]");
+    activeFilters.onclick = (event) => {
+      const button = event.target.closest("[data-clear-category-filter]");
+      if (!button) return;
+      const type = button.dataset.clearCategoryFilter || "";
+      if (type === "publisher") {
+        clearDesktopPublisherFilter();
+      } else if (type === "mainSeries") {
+        clearDesktopMainSeriesFilter();
+      } else {
+        clearCategoryFilter(type);
+      }
+    };
+  }
+
+  const searchFilterItems = [
+    ...categoryFilters.map((filter) => ({
+      ...filter,
+      label:
+        filter.type === "genre"
+          ? filter.value
+          : filter.type === "mainSeries"
+            ? `Serie: ${filter.value}`
+            : `${filter.label}: ${filter.value}`
+    })),
+    ...(state.minimumRating > 0
+      ? [{ type: "minimumRating", label: `Min. vurdering: ${formatMinimumRating(state.minimumRating)}` }]
+      : [])
+  ];
+
+  if (!searchStrip || !searchFilterItems.length) {
+    searchFilters?.remove();
+    searchStrip?.classList.remove("has-desktop-ranking-filters");
+    return;
+  }
+
+  if (!searchFilters) {
+    searchFilters = document.createElement("div");
+    searchFilters.className = "desktop-ranking-search-filter-summary";
+    searchFilters.setAttribute("aria-label", "Aktive filtre");
+    searchStrip.appendChild(searchFilters);
+  }
+
+  searchStrip.classList.add("has-desktop-ranking-filters");
+  searchFilters.innerHTML = searchFilterItems
+    .map(
+      (filter) => `
+        <button
+          class="desktop-ranking-active-filter-chip"
+          type="button"
+          ${
+            filter.type === "minimumRating"
+              ? "data-clear-minimum-rating"
+              : `data-clear-category-filter="${escapeHtml(filter.type)}"`
+          }
+          aria-label="Fjern filteret ${escapeHtml(filter.label)}"
+        >
+          <span class="desktop-ranking-active-filter-chip__text">${escapeHtml(filter.label)}</span>
+          <span aria-hidden="true">×</span>
+        </button>
+      `
+    )
+    .join("");
+  searchFilters.onclick = (event) => {
+    const button = event.target.closest("button");
     if (!button) return;
+    if (button.hasAttribute("data-clear-minimum-rating")) {
+      setMinimumRating(0);
+      return;
+    }
     const type = button.dataset.clearCategoryFilter || "";
     if (type === "publisher") {
       clearDesktopPublisherFilter();
@@ -5603,13 +5671,9 @@ function renderDesktopRanking(podcasts) {
           title="Sortér efter ${escapeHtml(activeScoreLabel)}"
         >
           <span>${escapeHtml(activeScoreLabel)}</span>
-          ${
-            !isOwnRatingSort
-              ? `<span class="desktop-ranking-score-sort__indicator" aria-hidden="true">${
-                  isDescendingScore ? "↓" : "↑"
-                }</span>`
-              : ""
-          }
+          <span class="desktop-ranking-score-sort__indicator" aria-hidden="true">${
+            !isOwnRatingSort ? (isDescendingScore ? "↓" : "↑") : "↕"
+          }</span>
         </button>
       </span>
       <span role="columnheader" aria-sort="${
@@ -5625,13 +5689,9 @@ function renderDesktopRanking(podcasts) {
           title="Sortér efter Min vurdering"
         >
           <span>Min vurdering</span>
-          ${
-            isOwnRatingSort
-              ? `<span class="desktop-ranking-score-sort__indicator" aria-hidden="true">${
-                  isDescendingOwnScore ? "↓" : "↑"
-                }</span>`
-              : ""
-          }
+          <span class="desktop-ranking-score-sort__indicator" aria-hidden="true">${
+            isOwnRatingSort ? (isDescendingOwnScore ? "↓" : "↑") : "↕"
+          }</span>
         </button>
       </span>
       <span role="columnheader"><span class="sr-only">Handlinger</span></span>
