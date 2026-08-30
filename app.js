@@ -396,11 +396,25 @@ const EPISODE_PODCAST_CONFIG = {
     displayName: "Bomben",
     source: "radio4",
     dataSource: "local",
-    persistence: "local",
+    persistence: "supabase",
     episodeCount: 10,
     teaserExcluded: true
   }
 };
+const MANUAL_CATALOGUE_SOURCE = "manual_catalogue_v1";
+const REVIEWED_LEGACY_MANUAL_CATALOGUE_SOURCE = "manual_sheet";
+const BOMBEN_LEGACY_EPISODE_ID_TO_CANONICAL_ID = Object.freeze({
+  "bomben-01": "c7599019-1106-5e7e-a5f1-893306e57790",
+  "bomben-02": "00a1b3cb-40ae-52de-8276-4d45ebf4f4c0",
+  "bomben-03": "c150d333-7b03-5bcc-8c47-48c97e32d48a",
+  "bomben-04": "2df98b7c-0a87-50eb-bf10-069e03e57225",
+  "bomben-05": "95715ea8-c123-5bbb-b14c-e2c65f2ade81",
+  "bomben-06": "8e19963d-335b-52a8-916e-c2b30d9fe466",
+  "bomben-07": "12a33e5c-865a-57fb-8202-d55a2e658c01",
+  "bomben-08": "faeb474e-fb2c-50c1-b5d0-bbf8de49ca1b",
+  "bomben-09": "9ea45188-e72e-557f-a4bc-7796fa6781e5",
+  "bomben-10": "f5428bc3-1e71-5af6-8363-93cd13708f70"
+});
 const EPISODE_PAGE_SIZE = 20;
 const EPISODE_WORKSPACE_PAGE_SIZE = 16;
 const MINIMUM_RATEABLE_EPISODE_COUNT = 2;
@@ -740,6 +754,11 @@ const state = {
   episodeParentRatingSyncSignatures: {},
   episodeParentRatingSyncPendingKeys: new Set(),
   localEpisodeDataPromise: null,
+  // Keyed by immutable manual_episode_key so a reviewed legacy canonical row
+  // can retain its pre-existing Supabase UUID while the catalogue keeps its
+  // historical v1 local identity as a read-only fallback alias.
+  manualCanonicalEpisodeMappings: new Map(),
+  manualCanonicalResolutionLoadingKeys: new Set(),
   podcastEpisodesByKey: {
     genstart: {
     items: [],
@@ -8241,20 +8260,29 @@ function getPodcastDetailPlacementText(podcast) {
   return placementText === "\u2014" ? "" : placementText;
 }
 
-function parseManualEpisodeTitles(value) {
-  const rawTitles = Array.isArray(value) ? value : String(value ?? "").split(";");
-  const titles = [];
+function parseManualEpisodeEntries(value) {
+  const rawEntries = Array.isArray(value) ? value : String(value ?? "").split(";");
+  const entries = [];
   const seen = new Set();
 
-  rawTitles.forEach((value) => {
-    const title = normalizeText(value);
+  rawEntries.forEach((value) => {
+    const title = normalizeText(typeof value === "object" ? value?.title : value);
     if (!title || seen.has(title)) return;
 
     seen.add(title);
-    titles.push(title);
+    entries.push({
+      title,
+      manualEpisodeKey: normalizeText(
+        typeof value === "object" ? value?.manual_episode_key || value?.manualEpisodeKey : ""
+      )
+    });
   });
 
-  return titles;
+  return entries;
+}
+
+function parseManualEpisodeTitles(value) {
+  return parseManualEpisodeEntries(value).map((entry) => entry.title);
 }
 
 function getPodcastManualEpisodeTitles(podcast) {
@@ -8299,6 +8327,25 @@ function createStableManualEpisodeUuid(podcastKey, episodeNumber, title) {
   ].join("-");
 }
 
+function createStableManualCatalogueEpisodeUuid(podcastKey, manualEpisodeKey) {
+  const source = `podcastlisten-manual-catalogue-v2|${normalizeText(podcastKey)}|${normalizeText(manualEpisodeKey)}`;
+  const hex = [
+    hashStringToEightHex(source, 0x51),
+    hashStringToEightHex(source, 0x52),
+    hashStringToEightHex(source, 0x53),
+    hashStringToEightHex(source, 0x54)
+  ].join("");
+  const variantNibble = ((parseInt(hex.slice(16, 17), 16) & 0x3) | 0x8).toString(16);
+
+  return [
+    hex.slice(0, 8),
+    hex.slice(8, 12),
+    `5${hex.slice(13, 16)}`,
+    `${variantNibble}${hex.slice(17, 20)}`,
+    hex.slice(20, 32)
+  ].join("-");
+}
+
 function getPodcastManualEpisodes(podcast) {
   const podcastKey = getLocalEpisodePodcastKey(podcast) || "podcast";
   const legacyPodcastKey = getLegacyPodcastKey(podcast);
@@ -8306,23 +8353,50 @@ function getPodcastManualEpisodes(podcast) {
     Boolean(legacyPodcastKey) &&
     getPodcastId(resolvePodcastByStoredKey(legacyPodcastKey)) === podcastKey;
 
-  return getPodcastManualEpisodeTitles(podcast).map((title, index) => {
+  return parseManualEpisodeEntries(
+    podcast?.manualEpisodes || podcast?.manual_episodes || podcast?.["Episoder"] || ""
+  ).map((entry, index) => {
+    const title = entry.title;
     const episodeNumber = index + 1;
     const legacyEpisodeId = canReadLegacyEpisodeIds
       ? createStableManualEpisodeUuid(legacyPodcastKey, episodeNumber, title)
       : "";
+    const legacyCanonicalEpisodeId = createStableManualEpisodeUuid(podcastKey, episodeNumber, title);
+    const hasImmutableManualKey = Boolean(entry.manualEpisodeKey);
+    const canonicalEpisodeId = hasImmutableManualKey
+      ? createStableManualCatalogueEpisodeUuid(podcastKey, entry.manualEpisodeKey)
+      : legacyCanonicalEpisodeId;
+    const manualEpisodeKey = hasImmutableManualKey
+      ? `manual-catalogue-v2:${podcastKey}:${entry.manualEpisodeKey}`
+      : `manual-catalogue-v1:${canonicalEpisodeId}`;
 
     return {
-      id: createStableManualEpisodeUuid(podcastKey, episodeNumber, title),
-      legacy_manual_episode_id: legacyEpisodeId,
-      manual_episode_key: `manual:${podcastKey}:${episodeNumber}:${encodeURIComponent(title)}`,
+      id: canonicalEpisodeId,
+      legacy_manual_episode_id: legacyEpisodeId || legacyCanonicalEpisodeId,
+      manual_episode_key: manualEpisodeKey,
       podcast_key: podcastKey,
       title,
       episode_number: episodeNumber,
       is_active: true,
+      source: MANUAL_CATALOGUE_SOURCE,
       dataSource: "manual"
     };
   });
+}
+
+function resolveManualCatalogueEpisodeFromLocalRow(podcastKey, episode) {
+  const legacyEpisodeId = normalizeText(episode?.id);
+  const canonicalEpisodeId = BOMBEN_LEGACY_EPISODE_ID_TO_CANONICAL_ID[legacyEpisodeId] || legacyEpisodeId;
+
+  return {
+    ...episode,
+    id: canonicalEpisodeId,
+    podcast_key: normalizeText(episode?.podcast_key) || normalizeText(podcastKey),
+    legacy_manual_episode_id: legacyEpisodeId && legacyEpisodeId !== canonicalEpisodeId ? legacyEpisodeId : "",
+    manual_episode_key: `manual-catalogue-v1:${canonicalEpisodeId}`,
+    source: MANUAL_CATALOGUE_SOURCE,
+    dataSource: "manual"
+  };
 }
 
 function getEpisodePodcastConfig(podcastOrKey) {
@@ -8388,18 +8462,20 @@ function getEpisodePodcastConfig(podcastOrKey) {
 }
 
 function getEpisodeRatingPersistenceConfig(podcastOrKey, episode) {
-  const config = getEpisodePodcastConfig(podcastOrKey);
-  if (config) return config;
-
-  // Manual episode lists have no imported podcast_episodes rows. Their stable
-  // client IDs are for local rating storage only and must never be sent to the
-  // database foreign key used by episode_ratings.
+  // A manual episode becomes Supabase-backed only after the canonical mapping
+  // row has been read. This prevents a partially applied catalogue migration
+  // from breaking an otherwise usable legacy catalogue.
   if (episode?.dataSource === "manual") {
     return {
       podcastKey: normalizeText(episode.podcast_key) || getEpisodePodcastKey(podcastOrKey),
-      persistence: "local"
+      persistence: state.manualCanonicalEpisodeMappings.has(normalizeText(episode.manual_episode_key))
+        ? "supabase"
+        : "local"
     };
   }
+
+  const config = getEpisodePodcastConfig(podcastOrKey);
+  if (config) return config;
 
   return null;
 }
@@ -8410,10 +8486,7 @@ function usesLocalEpisodePersistence(podcastOrKey) {
       ? podcastOrKey
       : resolvePodcastByStoredKey(podcastOrKey);
   const config = getEpisodePodcastConfig(podcast || podcastOrKey);
-  return Boolean(
-    config?.persistence === "local" ||
-      (!config && podcast && podcastHasManualEpisodeList(podcast))
-  );
+  return Boolean(config?.persistence === "local");
 }
 
 function getEpisodeDatabasePodcastKey(configOrPodcast) {
@@ -8552,6 +8625,23 @@ function hydrateLocalEpisodeRatingState(podcastKey, episodes) {
   });
 }
 
+function applyLegacyLocalEpisodeRatingFallback(podcastKey, episodeIds) {
+  if (!state.authUser) return;
+
+  const localPodcastKey = getLocalEpisodePodcastKey(podcastKey);
+  if (!localPodcastKey) return;
+
+  const episodeState = getPodcastEpisodeState(localPodcastKey);
+  const ratings = readLocalEpisodeRatingStore()[state.authUser.id] || {};
+  const ids = new Set((episodeIds || []).map(normalizeText).filter(Boolean));
+
+  episodeState.items.forEach((episode) => {
+    const episodeId = getEpisodeKey(episode);
+    if (!episodeId || !ids.has(episodeId) || episodeState.userRatingsById[episodeId] !== null) return;
+    episodeState.userRatingsById[episodeId] = parseNumber(getStoredLocalEpisodeRating(ratings, episode)?.rating);
+  });
+}
+
 function saveLocalEpisodeRating(podcastKey, episodeId, rating) {
   if (!state.authUser) return false;
   const localPodcastKey = getLocalEpisodePodcastKey(podcastKey);
@@ -8654,6 +8744,11 @@ function isGenstartEpisodeCacheFresh() {
 }
 
 function getEpisodeKey(episode) {
+  const manualEpisodeKey = normalizeText(episode?.manual_episode_key);
+  const manualMapping = manualEpisodeKey
+    ? state.manualCanonicalEpisodeMappings.get(manualEpisodeKey)
+    : null;
+  if (manualMapping?.episodeId) return manualMapping.episodeId;
   return normalizeText(episode?.id || episode?.external_guid || "");
 }
 
@@ -8741,6 +8836,53 @@ function getEpisodeIdsForQuery(episodes) {
   );
 }
 
+async function fetchManualCanonicalEpisodeMappings(episodes) {
+  if (!state.supabase) return;
+
+  const manualEpisodeKeys = [...new Set((episodes || [])
+    .filter((episode) => episode?.dataSource === "manual")
+    .map((episode) => normalizeText(episode.manual_episode_key))
+    .filter(Boolean))]
+    .filter((key) => !state.manualCanonicalEpisodeMappings.has(key) && !state.manualCanonicalResolutionLoadingKeys.has(key));
+  if (!manualEpisodeKeys.length) return;
+
+  manualEpisodeKeys.forEach((key) => state.manualCanonicalResolutionLoadingKeys.add(key));
+  try {
+    const { data, error } = await state.supabase
+      .from("manual_catalogue_episode_map")
+      .select("manual_episode_key,episode_id,canonical_source")
+      .in("manual_episode_key", manualEpisodeKeys)
+      .eq("is_active", true);
+    if (error) throw error;
+    (data || []).forEach((row) => {
+      const manualEpisodeKey = normalizeText(row.manual_episode_key);
+      const episodeId = normalizeText(row.episode_id);
+      const canonicalSource = normalizeText(row.canonical_source);
+      if (!manualEpisodeKey || !episodeId) return;
+      if (canonicalSource !== MANUAL_CATALOGUE_SOURCE && canonicalSource !== REVIEWED_LEGACY_MANUAL_CATALOGUE_SOURCE) return;
+      state.manualCanonicalEpisodeMappings.set(manualEpisodeKey, { episodeId, canonicalSource });
+    });
+  } catch (error) {
+    // The migration may not have been applied yet. Keep unresolved episodes on
+    // the legacy local path rather than attempting an invalid foreign-key write.
+    console.error("Kunne ikke bekræfte kanoniske manuelle episoder.", error);
+  } finally {
+    manualEpisodeKeys.forEach((key) => state.manualCanonicalResolutionLoadingKeys.delete(key));
+  }
+}
+
+async function refreshManualEpisodeRatingData(podcastKey, episodes) {
+  await fetchManualCanonicalEpisodeMappings(episodes);
+  const canonical = (episodes || []).filter((episode) =>
+    state.manualCanonicalEpisodeMappings.has(normalizeText(episode.manual_episode_key))
+  );
+  const unresolved = (episodes || []).filter((episode) =>
+    !state.manualCanonicalEpisodeMappings.has(normalizeText(episode.manual_episode_key))
+  );
+  if (unresolved.length) hydrateLocalEpisodeRatingState(podcastKey, unresolved);
+  if (canonical.length) await fetchEpisodeRatingMetaForEpisodes(canonical, { update: false });
+}
+
 async function fetchEpisodeStatsForIds(ids, { force = false, podcastKey = "" } = {}) {
   const episodeState = podcastKey ? getPodcastEpisodeState(podcastKey) : getActivePodcastEpisodeState();
   const queryIds = getEpisodeIdsForQuery(ids.map((id) => ({ id }))).filter((id) => {
@@ -8810,6 +8952,7 @@ async function fetchEpisodeUserRatingsForIds(ids, { force = false, podcastKey = 
         episodeState.userRatingsById[id] = null;
       }
     });
+    applyLegacyLocalEpisodeRatingFallback(podcastKey, queryIds.filter((id) => !returnedIds.has(id)));
   } catch (error) {
     console.error(error);
   } finally {
@@ -9215,7 +9358,9 @@ async function fetchGenstartEpisodes({ append = false } = {}) {
     try {
       const payload = await loadLocalEpisodeData();
       const entry = payload?.podcasts?.[config.podcastKey];
-      const rows = Array.isArray(entry?.episodes) ? entry.episodes : [];
+      const rows = Array.isArray(entry?.episodes)
+        ? entry.episodes.map((episode) => resolveManualCatalogueEpisodeFromLocalRow(config.podcastKey, episode))
+        : [];
       episodeState.items = getRateablePodcastEpisodes(mergeEpisodes([], rows)).sort(
         (left, right) => Number(left.episode_number || 0) - Number(right.episode_number || 0)
       );
@@ -9223,7 +9368,12 @@ async function fetchGenstartEpisodes({ append = false } = {}) {
       episodeState.hasMore = false;
       episodeState.totalCount = episodeState.items.length;
       episodeState.fetchedAt = Date.now();
-      hydrateLocalEpisodeRatingState(config.podcastKey, episodeState.items);
+      refreshManualEpisodeRatingData(config.podcastKey, episodeState.items)
+        .then(() => {
+          updateGenstartEpisodeSection();
+          updateOpenEpisodeDetailScores();
+        })
+        .catch(console.error);
     } catch (error) {
       console.error(error);
       episodeState.error = "Episoderne kunne ikke hentes lige nu.";
@@ -9679,10 +9829,6 @@ function ensureManualPodcastEpisodeState(podcast) {
   episodeState.error = "";
   episodeState.fetchedAt = Date.now();
 
-  if (podcastKey) {
-    hydrateLocalEpisodeRatingState(podcastKey, episodes);
-  }
-
   episodes.forEach((episode) => {
     const episodeId = getEpisodeKey(episode);
     if (episodeId) {
@@ -9906,8 +10052,13 @@ function renderPodcastEpisodeOverviewContent(dialog, podcast) {
 
   if (!getEpisodePodcastConfig(podcast) && podcastHasManualEpisodeList(podcast)) {
     const manualEpisodes = ensureManualPodcastEpisodeState(podcast);
-    if (manualEpisodes.length && state.supabase) {
-      fetchEpisodeRatingMetaForEpisodes(manualEpisodes).catch(console.error);
+    if (manualEpisodes.length) {
+      refreshManualEpisodeRatingData(getLocalEpisodePodcastKey(podcast), manualEpisodes)
+        .then(() => {
+          updatePodcastEpisodeOverview(dialog);
+          updateOpenEpisodeDetailScores();
+        })
+        .catch(console.error);
     }
     return;
   }

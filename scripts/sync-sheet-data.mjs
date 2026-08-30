@@ -72,6 +72,7 @@ const PODCAST_FIELDS = [
 const SECONDARY_GENRE_FIELDS = ["2. genre"];
 const TOPIC_FIELDS = ["Emner"];
 const MANUAL_EPISODES_FIELDS = ["Episoder", "Manual episodes", "ManualEpisodes"];
+const MANUAL_EPISODE_KEYS_FIELDS = ["Manual episode keys", "ManualEpisodeKeys"];
 const SUPPLEMENTARY_SIMILARITIES_HEADER = "Supplerende ligheder";
 const SUPPLEMENTARY_SIMILARITIES_COLUMN_INDEX = 19;
 
@@ -266,18 +267,36 @@ function parseTopics(value) {
   return topics;
 }
 
-function parseManualEpisodes(value) {
+function parseManualEpisodeKeys(value) {
+  return String(value ?? "")
+    .split(";")
+    .map((key) => normalizeText(key))
+    .filter(Boolean);
+}
+
+function parseManualEpisodes(value, keyValue = "") {
   const episodes = [];
   const seen = new Set();
-
-  String(value ?? "")
+  const keys = parseManualEpisodeKeys(keyValue);
+  const hasExplicitKeys = keys.length > 0;
+  const titles = String(value ?? "")
     .split(";")
-    .forEach((part) => {
-      const title = normalizeText(part);
-      if (!title || seen.has(title)) return;
+    .map((part) => normalizeText(part))
+    .filter(Boolean);
+
+  if (hasExplicitKeys && keys.length !== titles.length) {
+    throw new Error("Manual episode keys skal have præcis samme antal værdier som episoder.");
+  }
+
+  titles.forEach((title, index) => {
+      if (seen.has(title)) return;
 
       seen.add(title);
-      episodes.push(title);
+      episodes.push(
+        hasExplicitKeys
+          ? { title, manual_episode_key: keys[index] }
+          : title
+      );
     });
 
   return episodes;
@@ -429,7 +448,10 @@ async function slimPodcastRows(rows) {
     });
     podcast.secondaryGenre = getField(row, SECONDARY_GENRE_FIELDS);
     podcast.topics = parseTopics(getField(row, TOPIC_FIELDS));
-    const manualEpisodes = parseManualEpisodes(getField(row, MANUAL_EPISODES_FIELDS));
+    const manualEpisodes = parseManualEpisodes(
+      getField(row, MANUAL_EPISODES_FIELDS),
+      getField(row, MANUAL_EPISODE_KEYS_FIELDS)
+    );
     if (manualEpisodes.length) {
       podcast.manualEpisodes = manualEpisodes;
     }
@@ -545,6 +567,7 @@ export {
   parseCsv,
   parseSupplementarySimilarities,
   parseManualEpisodes,
+  parseManualEpisodeKeys,
   parseTopics,
   rowsToObjects,
   slimPodcastRows,

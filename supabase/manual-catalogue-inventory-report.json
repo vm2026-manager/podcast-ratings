@@ -1,0 +1,247 @@
+{
+  "generated_at": "2026-08-30T12:24:23.350Z",
+  "source": "data/podcasts.json",
+  "inventory": {
+    "manual_catalogue_episodes": 1028,
+    "rateable_manual_catalogue_episodes": 1027,
+    "excluded_single_episode_entries": 1,
+    "excluded_teaser_or_trailer_entries": 0,
+    "canonical_rows_planned": 1012,
+    "mapping_rows_planned": 1027,
+    "verified_reusable_existing_rows": [
+      {
+        "podcast_key": "kvinden med den tunge kuffert",
+        "title": "En ny klostergæst",
+        "manual_episode_key": "manual-catalogue-v1:d88167e1-eeec-5300-894c-9e7385765732",
+        "source": "manual_sheet",
+        "expected_episode_id": null
+      },
+      {
+        "podcast_key": "kvinden med den tunge kuffert",
+        "title": "Fra vin til vand",
+        "manual_episode_key": "manual-catalogue-v1:bf6488e0-58fc-5f53-80ee-e54ea3ce21a1",
+        "source": "manual_sheet",
+        "expected_episode_id": null
+      },
+      {
+        "podcast_key": "kvinden med den tunge kuffert",
+        "title": "Sporet",
+        "manual_episode_key": "manual-catalogue-v1:82c388e8-fd78-5443-bf08-578a5d1e78f5",
+        "source": "manual_sheet",
+        "expected_episode_id": null
+      },
+      {
+        "podcast_key": "kvinden med den tunge kuffert",
+        "title": "Sønnen-i-kisten-fidusen",
+        "manual_episode_key": "manual-catalogue-v1:98517354-6244-5a31-a8fa-5142528ebd77",
+        "source": "manual_sheet",
+        "expected_episode_id": null
+      },
+      {
+        "podcast_key": "kvinden med den tunge kuffert",
+        "title": "En fremkaldt vildfarelse",
+        "manual_episode_key": "manual-catalogue-v1:1ced5de3-9cc5-5344-9f90-594d61c4c6a6",
+        "source": "manual_sheet",
+        "expected_episode_id": null
+      },
+      {
+        "podcast_key": "kvinden med den tunge kuffert",
+        "title": "Tre Tips",
+        "manual_episode_key": "manual-catalogue-v1:9d85f05b-3b62-525c-b3cd-10d1f28ef1a2",
+        "source": "manual_sheet",
+        "expected_episode_id": null
+      },
+      {
+        "podcast_key": "kvinden med den tunge kuffert",
+        "title": "Præstnet",
+        "manual_episode_key": "manual-catalogue-v1:55bdc08d-7f42-5fce-a5fe-128b2e561e84",
+        "source": "manual_sheet",
+        "expected_episode_id": null
+      },
+      {
+        "podcast_key": "kvinden med den tunge kuffert",
+        "title": "Mødet",
+        "manual_episode_key": "manual-catalogue-v1:93f2fc5e-ecfc-502f-b40d-4ccc6fd3459d",
+        "source": "manual_sheet",
+        "expected_episode_id": null
+      },
+      {
+        "podcast_key": "den forunderlige dr kavousi",
+        "title": "Den falske doktor",
+        "manual_episode_key": "manual-catalogue-v1:418a330a-cd5b-5b93-a095-c77cfefecadd",
+        "source": "manual_sheet",
+        "expected_episode_id": "418a330a-cd5b-5b93-a095-c77cfefecadd"
+      },
+      {
+        "podcast_key": "den forunderlige dr kavousi",
+        "title": "Tusindkunstneren",
+        "manual_episode_key": "manual-catalogue-v1:3489ae85-b48d-5976-9560-b9877d23b160",
+        "source": "manual_sheet",
+        "expected_episode_id": null
+      },
+      {
+        "podcast_key": "den forunderlige dr kavousi",
+        "title": "Nedsmeltningen indefra",
+        "manual_episode_key": "manual-catalogue-v1:79808ec0-821c-5803-9725-541edf8d91d9",
+        "source": "manual_sheet",
+        "expected_episode_id": null
+      },
+      {
+        "podcast_key": "den forunderlige dr kavousi",
+        "title": "The best is yet to come",
+        "manual_episode_key": "manual-catalogue-v1:7a727f19-891d-5f08-8a7a-af93764c562a",
+        "source": "manual_sheet",
+        "expected_episode_id": null
+      },
+      {
+        "podcast_key": "menneskedyret",
+        "title": "Barnet i laden",
+        "manual_episode_key": "manual-catalogue-v1:3868ad36-ef8d-58bd-8743-2ed8841e82f7",
+        "source": "manual_sheet",
+        "expected_episode_id": "3868ad36-ef8d-58bd-8743-2ed8841e82f7"
+      },
+      {
+        "podcast_key": "menneskedyret",
+        "title": "Den falske Harry Jensen",
+        "manual_episode_key": "manual-catalogue-v1:b93484a4-117a-5325-a119-c156c97cd8e7",
+        "source": "manual_sheet",
+        "expected_episode_id": null
+      },
+      {
+        "podcast_key": "menneskedyret",
+        "title": "En stædig mor",
+        "manual_episode_key": "manual-catalogue-v1:e9013911-5bb6-51b8-9a8b-3c0b202a213a",
+        "source": "manual_sheet",
+        "expected_episode_id": null
+      }
+    ],
+    "uuid_collisions": [],
+    "title_podcast_ambiguities": [
+      {
+        "title": "Afgørelsen",
+        "podcast_keys": [
+          "den døde pige i lægehuset",
+          "pa flugt fra min stalker"
+        ]
+      },
+      {
+        "title": "Brevet",
+        "podcast_keys": [
+          "barn med den forkerte sæson 2",
+          "rejsen til det røde hus"
+        ]
+      },
+      {
+        "title": "Del 1",
+        "podcast_keys": [
+          "general butt naked",
+          "tigerkongerne af næstved"
+        ]
+      },
+      {
+        "title": "Del 2",
+        "podcast_keys": [
+          "general butt naked",
+          "tigerkongerne af næstved"
+        ]
+      },
+      {
+        "title": "Det første møde",
+        "podcast_keys": [
+          "barn med den forkerte sæson 1",
+          "krigen pa isen"
+        ]
+      },
+      {
+        "title": "Dommen",
+        "podcast_keys": [
+          "agent frank",
+          "man kan aldrig vide",
+          "politichefens hemmelighed"
+        ]
+      },
+      {
+        "title": "Drabet",
+        "podcast_keys": [
+          "agent storm",
+          "krigen pa isen"
+        ]
+      },
+      {
+        "title": "Et hul i jorden",
+        "podcast_keys": [
+          "millionærerne der skred",
+          "worms skat"
+        ]
+      },
+      {
+        "title": "Geniet",
+        "podcast_keys": [
+          "doctor no",
+          "svindlerne"
+        ]
+      },
+      {
+        "title": "Hjertevejningen",
+        "podcast_keys": [
+          "musik i hjernen",
+          "third ear pa glyptoteket"
+        ]
+      },
+      {
+        "title": "I Gaius Caligulas tid",
+        "podcast_keys": [
+          "musik i hjernen",
+          "third ear pa glyptoteket"
+        ]
+      },
+      {
+        "title": "Mysteriet",
+        "podcast_keys": [
+          "det levende bevis",
+          "forsvundne katte"
+        ]
+      },
+      {
+        "title": "Opklaringen",
+        "podcast_keys": [
+          "danmarks første terrorangreb",
+          "golden state killer"
+        ]
+      },
+      {
+        "title": "Oprindelsen",
+        "podcast_keys": [
+          "kvinden med den tunge kuffert det sidste kapitel",
+          "ruths hus"
+        ]
+      },
+      {
+        "title": "Oraklet i Delfi",
+        "podcast_keys": [
+          "musik i hjernen",
+          "third ear pa glyptoteket"
+        ]
+      },
+      {
+        "title": "Prolog",
+        "podcast_keys": [
+          "i skyggen af den gule trøje",
+          "ltf den forbudte bande"
+        ]
+      },
+      {
+        "title": "Ransagningen",
+        "podcast_keys": [
+          "barn med den forkerte sæson 1",
+          "svindlerne"
+        ]
+      }
+    ],
+    "unresolved_entries": []
+  },
+  "limitations": [
+    "The 15 manual_sheet rows are a read-only production-reviewed allowlist. The migration maps only exact podcast_key + source + title identities and asserts the two supplied IDs.",
+    "The migration never reuses an RSS/API/Apple row and never updates or deletes an existing episode or rating."
+  ]
+}

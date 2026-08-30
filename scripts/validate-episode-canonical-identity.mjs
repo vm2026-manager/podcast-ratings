@@ -77,7 +77,14 @@ assert(dynamicDatabaseKey(original) === dynamicDatabaseKey(renamed), "Titelskift
 const ambiguousAgenterne = rows.filter((row) => normalizeText(row.Titel) === "Agenterne");
 assert(new Set(ambiguousAgenterne.map((row) => normalizeText(row["Podcast-ID"]))).size === 2, "Agenterne er ikke isoleret i kataloget");
 assert(!appSource.includes('  agenterne: {'), "Ambiguous Agenterne må ikke have en title-baseret episode config");
-assert(appSource.includes('  bomben: {') && appSource.includes('persistence: "local"'), "Bomben lokal episode-konfiguration mangler");
+assert(
+  appSource.includes('  bomben: {') && appSource.includes('persistence: "supabase"'),
+  "Bomben skal bruge Supabase-persistens"
+);
+assert(
+  appSource.includes('"bomben-01": "c7599019-1106-5e7e-a5f1-893306e57790"'),
+  "Bomben canonical ID bridge mangler"
+);
 
 console.log(JSON.stringify({
   status: "PASS",
@@ -85,5 +92,5 @@ console.log(JSON.stringify({
   queryPaths: ["episode list", "episode search"],
   dynamicFeedConfig: "Podcast-ID only",
   titleChangeInvariant: "PASS",
-  controls: { genstart: "canonical", bomben: "local unchanged", agenterne: "ambiguous title isolated" }
+  controls: { genstart: "canonical", bomben: "canonical Supabase bridge", agenterne: "ambiguous title isolated" }
 }, null, 2));
