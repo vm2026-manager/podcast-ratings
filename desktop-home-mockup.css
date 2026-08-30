@@ -402,8 +402,19 @@
   }
 
   html body.page-forside #pageIntroPanel .page-intro-panel__button--secondary::before {
-    content: "▯" !important;
-    font-size: 1rem !important;
+    content: none !important;
+    display: none !important;
+  }
+
+  html body.page-forside #pageIntroPanel .page-intro-panel__ranking-icon {
+    width: 1rem !important;
+    height: 1rem !important;
+    flex: 0 0 auto !important;
+    fill: none !important;
+    stroke: currentColor !important;
+    stroke-width: 2.1 !important;
+    stroke-linecap: round !important;
+    stroke-linejoin: round !important;
   }
 
   html body.page-forside #pageIntroPanel .home-hero__visual {

@@ -19698,6 +19698,11 @@ function renderRoute() {
         <path d="m12 3.4 2.7 5.5 6.1.9-4.4 4.3 1 6.1-5.4-2.9-5.4 2.9 1-6.1-4.4-4.3 6.1-.9L12 3.4Z" />
       </svg>
     `;
+    const homeCtaRankingIcon = `
+      <svg class="page-intro-panel__ranking-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+        <path d="M5 20V11M12 20V5M19 20v-8" />
+      </svg>
+    `;
     const homeCtaSavedIcon = `
       <svg class="home-quick-card__outline-icon home-quick-card__outline-icon--mobile" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
         <path d="M7 4.5h10a1 1 0 0 1 1 1v15l-6-3.6-6 3.6v-15a1 1 0 0 1 1-1Z" />
@@ -19780,7 +19785,7 @@ function renderRoute() {
               class="page-intro-panel__button page-intro-panel__button--secondary"
               href="#ranglister"
             >
-              Se ranglister
+              ${homeCtaRankingIcon}Se ranglister
             </a>
           </div>
         </div>
