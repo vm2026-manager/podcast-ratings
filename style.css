@@ -14474,7 +14474,7 @@ body:not(.page-ranglister) .site-footer {
 
   body.page-ranglister .podcast-card {
     display: grid !important;
-    grid-template-columns: 40px 82px minmax(0, 1fr) 34px !important;
+    grid-template-columns: 84px 82px minmax(0, 1fr) 34px !important;
     grid-template-rows: auto auto !important;
     column-gap: 10px !important;
     row-gap: 2px !important;
@@ -14495,15 +14495,17 @@ body:not(.page-ranglister) .site-footer {
     position: static !important;
     grid-column: 1 !important;
     grid-row: 1 / span 2 !important;
-    width: 40px !important;
+    width: auto !important;
+    min-width: 40px !important;
     height: 40px !important;
     margin: 0 !important;
-    padding: 0 !important;
+    padding: 0 8px !important;
     box-sizing: border-box !important;
     align-self: center !important;
     justify-self: start !important;
     justify-content: center !important;
     border-radius: 12px !important;
+    white-space: nowrap !important;
   }
 
   body.page-ranglister .placement-value {
