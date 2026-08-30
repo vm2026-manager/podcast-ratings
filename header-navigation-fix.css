@@ -1,17 +1,21 @@
 /* Explicit desktop header grids prevent legacy rules from auto-placing controls. */
-@media (min-width: 1201px) {
+@media (min-width: 1300px) {
+  html body:is(.page-forside, .page-ranglister, .page-udforsk, .page-profil)[class*="page-"] .page-shell > .topbar {
+    grid-template-columns: minmax(400px, 1fr) max-content minmax(180px, 280px) minmax(270px, max-content) !important;
+  }
   html body:is(.page-forside, .page-ranglister, .page-udforsk, .page-profil) .page-shell > .topbar {
     display: grid !important;
     width: 100% !important;
     min-width: 0 !important;
-    grid-template-columns: minmax(220px, 1fr) auto minmax(260px, 360px) auto !important;
+    /* Reserve real space for the brand and account before sizing search. */
+    grid-template-columns: minmax(380px, 1fr) max-content minmax(180px, 280px) minmax(270px, max-content) !important;
     grid-template-areas: "brand nav search account" !important;
     grid-template-rows: 76px !important;
     column-gap: 16px !important;
     align-items: center !important;
     transition: grid-template-columns 220ms ease-out !important;
   }
-  html body:is(.page-forside, .page-ranglister, .page-udforsk, .page-profil) .page-shell > .topbar .sidebar-logo { grid-area: brand !important; }
+  html body:is(.page-forside, .page-ranglister, .page-udforsk, .page-profil) .page-shell > .topbar .sidebar-logo { grid-area: brand !important; min-width: 380px !important; }
   html body:is(.page-forside, .page-ranglister, .page-udforsk, .page-profil) .page-shell > .topbar .site-nav { grid-area: nav !important; width: max-content !important; display: flex !important; flex-wrap: nowrap !important; white-space: nowrap; }
   html body:is(.page-forside, .page-ranglister, .page-udforsk, .page-profil) .page-shell > .topbar #desktopHeaderSearch {
     grid-area: search !important;
@@ -77,17 +81,37 @@
 
 @media (min-width: 1366px) {
   html body:is(.page-forside, .page-ranglister, .page-udforsk, .page-profil) .page-shell > .topbar:has(#desktopHeaderSearch:focus-within) {
-    grid-template-columns: minmax(220px, 1fr) auto minmax(260px, min(430px, 36vw)) auto !important;
+    grid-template-columns: minmax(380px, 1fr) max-content minmax(180px, min(360px, 30vw)) minmax(270px, max-content) !important;
   }
 }
 
 @media (min-width: 1400px) {
   html body:is(.page-forside, .page-ranglister, .page-udforsk, .page-profil) .page-shell > .topbar {
-    grid-template-columns: minmax(220px, 1fr) auto minmax(300px, 360px) auto !important;
+    grid-template-columns: minmax(380px, 1fr) max-content minmax(180px, 280px) minmax(270px, max-content) !important;
   }
   html body:is(.page-forside, .page-ranglister, .page-udforsk, .page-profil) .page-shell > .topbar:has(#desktopHeaderSearch:focus-within) {
-    grid-template-columns: minmax(220px, 1fr) auto minmax(360px, min(540px, 42vw)) auto !important;
+    grid-template-columns: minmax(380px, 1fr) max-content minmax(180px, min(360px, 30vw)) minmax(270px, max-content) !important;
   }
+}
+
+/* Reuse the established two-row desktop header until the full-width grid fits. */
+@media (min-width: 901px) and (max-width: 1299px) {
+  html body:is(.page-forside, .page-ranglister, .page-udforsk, .page-profil) .page-shell > .topbar {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) minmax(220px, 280px) !important;
+    grid-template-areas:
+      "brand account"
+      "nav search" !important;
+    grid-template-rows: 52px 52px !important;
+    column-gap: 16px !important;
+    row-gap: 6px !important;
+    min-height: 104px !important;
+    align-items: center !important;
+  }
+  html body:is(.page-forside, .page-ranglister, .page-udforsk, .page-profil) .page-shell > .topbar .sidebar-logo { grid-area: brand !important; min-width: 0 !important; }
+  html body:is(.page-forside, .page-ranglister, .page-udforsk, .page-profil) .page-shell > .topbar .site-nav { grid-area: nav !important; justify-self: start !important; width: max-content !important; display: flex !important; flex-wrap: nowrap !important; white-space: nowrap !important; }
+  html body:is(.page-forside, .page-ranglister, .page-udforsk, .page-profil) .page-shell > .topbar #desktopHeaderSearch { grid-area: search !important; width: 100% !important; min-width: 220px !important; justify-self: end !important; }
+  html body:is(.page-forside, .page-ranglister, .page-udforsk, .page-profil) .page-shell > .topbar #desktopUserButton { grid-area: account !important; min-width: 250px !important; justify-self: end !important; }
 }
 
 /* Deliberate two-row desktop header before the mobile breakpoint. */
