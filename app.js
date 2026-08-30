@@ -20447,12 +20447,13 @@ function setupRankingScrollToBottomButton() {
   let lastRankingScrollY = Math.max(0, window.scrollY || document.documentElement.scrollTop || 0);
   let upwardDistance = 0;
   let isReturningToRankingTop = false;
+  let isGoingToRankingBottom = false;
   const nearTopThreshold = 24;
 
   const setControlVisibility = (control, visible) => {
     control.hidden = !visible;
     control.classList.toggle("is-visible", visible);
-    control.disabled = !visible;
+    control.disabled = !visible || (control === button && isGoingToRankingBottom);
     control.setAttribute("aria-hidden", String(!visible));
   };
 
@@ -20481,6 +20482,27 @@ function setupRankingScrollToBottomButton() {
       Math.max(document.body?.scrollHeight || 0, document.documentElement.scrollHeight) -
         window.innerHeight
     );
+
+  const waitForRankingLayout = async (expectedCardCount) => {
+    let stableBottomFrames = 0;
+    let previousBottom = -1;
+
+    // Rendering the complete mobile list is synchronous, but its layout is not
+    // guaranteed to have been measured by the next frame. Wait for both the
+    // expected cards and two consecutive stable layout frames before measuring
+    // the final scroll position.
+    for (let frame = 0; frame < 8; frame += 1) {
+      await new Promise((resolve) => window.requestAnimationFrame(resolve));
+
+      const cardsReady =
+        expectedCardCount === null || getMobileRankingCardCount() === expectedCardCount;
+      const documentBottom = getDocumentBottom();
+      stableBottomFrames = documentBottom === previousBottom ? stableBottomFrames + 1 : 0;
+      previousBottom = documentBottom;
+
+      if (cardsReady && stableBottomFrames >= 2) return;
+    }
+  };
 
   const updateRankingScrollControls = () => {
     updateTopControlOffset();
@@ -20522,26 +20544,55 @@ function setupRankingScrollToBottomButton() {
     setControlVisibility(topButton, shouldShowTop);
   };
 
-  button.addEventListener("click", () => {
-    if (!document.body.classList.contains("page-ranglister")) return;
+  button.addEventListener("pointerdown", (event) => {
+    // The control lives at document level. Keep a touch from falling through to
+    // any card/link interaction beneath it while the page starts to move.
+    event.stopPropagation();
+  });
+
+  button.addEventListener("click", async (event) => {
+    event.preventDefault();
+    event.stopPropagation();
+    event.stopImmediatePropagation();
+
+    if (!document.body.classList.contains("page-ranglister") || isGoingToRankingBottom) return;
+
+    isGoingToRankingBottom = true;
+    button.disabled = true;
+    button.setAttribute("aria-busy", "true");
+
     // Ranglister renders progressively. Expand the current filtered result first,
     // then measure the document so the target is the true page bottom, not the
     // bottom of the currently rendered batch.
-    state.rankingUsedGoToBottom = true;
-    const filteredCount = getFilteredPodcasts().length;
-    if (state.visibleCount < filteredCount) {
-      state.visibleCount = filteredCount;
-      renderPodcastGrid();
-    }
+    try {
+      state.rankingUsedGoToBottom = true;
+      const filteredCount = getFilteredPodcasts().length;
+      if (state.visibleCount < filteredCount) {
+        state.visibleCount = filteredCount;
+        renderPodcastGrid();
+      }
 
-    const reduceMotion = window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches;
-    window.requestAnimationFrame(() => {
+      const isMobileRanking = !isDesktopRankingViewport();
+      if (isMobileRanking) {
+        await waitForRankingLayout(filteredCount);
+      } else {
+        await new Promise((resolve) => window.requestAnimationFrame(resolve));
+      }
+
+      // A mobile smooth scroll keeps an earlier target when late layout work
+      // increases the page height, which is what previously left users short of
+      // the final cards. Keep the existing desktop motion unchanged.
+      const reduceMotion = window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches;
       window.scrollTo({
         top: getDocumentBottom(),
         left: 0,
-        behavior: reduceMotion ? "auto" : "smooth"
+        behavior: isMobileRanking || reduceMotion ? "auto" : "smooth"
       });
-    });
+    } finally {
+      isGoingToRankingBottom = false;
+      button.removeAttribute("aria-busy");
+      updateRankingScrollControls();
+    }
   });
 
   topButton.addEventListener("click", () => {
