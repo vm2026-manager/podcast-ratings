@@ -18260,7 +18260,7 @@ html body #podcastDetailSheet [data-podcast-detail-placement]:empty {
   html body.page-forside #pageIntroPanel .home-featured__title-row h3 { flex: 0 1 auto; width: fit-content !important; max-width: calc(100% - 70px); min-width: 0; min-height: 0; margin: 0 !important; }
   html body.page-forside #pageIntroPanel .home-featured__title-button { width: auto !important; max-width: 100%; }
   html body.page-forside #pageIntroPanel .home-featured__top-action-details { grid-area: cta; min-width: 0; display: flex; flex-direction: row; flex-wrap: wrap; align-items: center; justify-self: start; align-self: start; gap: 18px; margin-top: 16px; }
-  html body.page-forside #pageIntroPanel .home-featured__favorite { flex: 0 0 auto; align-self: center; width: 54px; height: 54px; margin: 0; padding: 0; display: grid; place-items: center; border: 1px solid rgba(45, 33, 24, .2); border-radius: 50%; color: #241b16; background: rgba(255, 253, 249, .58); box-shadow: 0 8px 18px rgba(31, 21, 14, .12); }
+  html body.page-forside #pageIntroPanel .home-featured__favorite { flex: 0 0 auto; align-self: center; width: 54px; height: 54px; margin: 0; padding: 0; display: grid; place-items: center; border: 1px solid var(--home-featured-bookmark-border); border-radius: 50%; color: var(--home-featured-bookmark-foreground); background: var(--home-featured-bookmark-surface); box-shadow: 0 8px 18px rgba(31, 21, 14, .12); }
   html body.page-forside #pageIntroPanel .home-featured__favorite > span { width: 22px; height: 22px; display: grid; place-items: center; }
   html body.page-forside #pageIntroPanel .home-featured__favorite .favorite-button__icon { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 1.8; }
   html body.page-forside #pageIntroPanel .home-featured__copy h3 { font-size: clamp(2.35rem, 3vw, 3.2rem) !important; line-height: 1.02 !important; }
@@ -18314,7 +18314,11 @@ html body #podcastDetailSheet [data-podcast-detail-placement]:empty {
   html body.page-forside #pageIntroPanel .home-featured__content--dark .home-featured__meta-link:hover,
   html body.page-forside #pageIntroPanel .home-featured__content--dark .home-featured__meta-link:focus-visible { border-color: rgba(255, 157, 105, .82) !important; color: #ffbe97 !important; background: rgba(238, 99, 35, .26) !important; }
   html body.page-forside #pageIntroPanel .home-featured__content--dark .home-featured__score-out-of { color: rgba(255, 245, 238, .74); }
-  html body.page-forside #pageIntroPanel .home-featured__content--dark .home-featured__favorite { border-color: rgba(255, 250, 245, .5); color: #fffaf5; background: rgba(24, 19, 15, .28); }
+  html body.page-forside #pageIntroPanel .home-featured__favorite:not(.is-saved) .favorite-button__icon path { fill: none; stroke: var(--home-featured-bookmark-foreground); }
+  html body.page-forside #pageIntroPanel .home-featured__favorite:not(.is-saved):hover { background: var(--home-featured-bookmark-surface-hover); }
+  html body.page-forside #pageIntroPanel .home-featured__favorite:not(.is-saved):focus-visible { outline: 2px solid var(--home-featured-bookmark-foreground); outline-offset: 3px; }
+  html body.page-forside #pageIntroPanel .home-featured__favorite.is-saved { border-color: rgba(255, 92, 22, .36); color: #ff5c16; background: rgba(255, 92, 22, .12); }
+  html body.page-forside #pageIntroPanel .home-featured__favorite.is-saved .favorite-button__icon path { fill: #ff5c16; stroke: #ff5c16; }
   html body.page-forside #pageIntroPanel .home-featured__content--dark .home-featured__indicator { background: rgba(255, 250, 245, .38); }
   html body.page-forside #pageIntroPanel .home-featured__content--dark .home-featured__indicator.is-active { background: #ff8a52; }
 

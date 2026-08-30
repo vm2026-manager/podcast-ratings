@@ -20384,6 +20384,41 @@ body.page-ranglister .podcast-card__main-series-mobile {
   stroke: #ff5c16;
 }
 
+/* The weekly recommendation samples its cover and adds --dark when needed. */
+html body.page-forside #pageIntroPanel .home-featured__content {
+  --home-featured-bookmark-foreground: #241b16;
+  --home-featured-bookmark-border: rgba(36, 27, 22, 0.54);
+  --home-featured-bookmark-surface: rgba(255, 253, 249, 0.58);
+  --home-featured-bookmark-surface-hover: rgba(255, 253, 249, 0.78);
+}
+
+html body.page-forside #pageIntroPanel .home-featured__content--dark {
+  --home-featured-bookmark-foreground: #fffaf5;
+  --home-featured-bookmark-border: rgba(255, 250, 245, 0.62);
+  --home-featured-bookmark-surface: rgba(24, 19, 15, 0.34);
+  --home-featured-bookmark-surface-hover: rgba(24, 19, 15, 0.54);
+}
+
+html body.page-forside #pageIntroPanel .home-featured__favorite:not(.is-saved) {
+  color: var(--home-featured-bookmark-foreground);
+  border-color: var(--home-featured-bookmark-border);
+  background: var(--home-featured-bookmark-surface);
+}
+
+html body.page-forside #pageIntroPanel .home-featured__favorite:not(.is-saved) .favorite-button__icon path {
+  fill: none;
+  stroke: var(--home-featured-bookmark-foreground);
+}
+
+html body.page-forside #pageIntroPanel .home-featured__favorite:not(.is-saved):hover {
+  background: var(--home-featured-bookmark-surface-hover);
+}
+
+html body.page-forside #pageIntroPanel .home-featured__favorite:not(.is-saved):focus-visible {
+  outline: 2px solid var(--home-featured-bookmark-foreground);
+  outline-offset: 3px;
+}
+
 .saved-button__heart {
   width: 1.1em;
   height: 1.1em;
