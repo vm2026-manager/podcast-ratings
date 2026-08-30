@@ -1088,6 +1088,14 @@
   }
 }
 
+/* Keep the logged-in welcome affordance on mobile, but do not reserve hero
+   space for it in the desktop composition. */
+@media (min-width: 1101px) {
+  html body.page-forside #pageIntroPanel .home-hero--logged-in .home-hero__welcome {
+    display: none !important;
+  }
+}
+
 
 /* Ranglister: fast, ruteafgr\u00e6nset genvej til den aktuelle listes bund. */
 .ranking-scroll-bottom-button {
