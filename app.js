@@ -3186,6 +3186,27 @@ function clearRankingFilters() {
   render();
 }
 
+function resetRankingFiltersForPodcastDetailNavigation(type, value) {
+  const nextValue = normalizeText(value);
+  if (!nextValue) return;
+
+  state.activeFilter = null;
+  state.activePublisherFilter = "";
+  state.activeMainSeriesFilter = "";
+  state.searchTerm = "";
+  state.minimumRating = 0;
+
+  if (elements.searchInput) elements.searchInput.value = "";
+
+  if (type === "publisher") state.activePublisherFilter = nextValue;
+  if (type === "mainSeries") state.activeMainSeriesFilter = nextValue;
+
+  updateSearchClearButton();
+  resetVisibleCount();
+  createGenreChips();
+  updateRatingFilterUi();
+}
+
 function createGenreChips() {
   if (!elements.genreChips) return;
 
@@ -10809,10 +10830,11 @@ function renderPodcastDetailSheetContent(
       closePodcastDetailSheet({ returnFocus: false });
 
       if (filterType === "publisher") {
-        setActiveFilter("publisher", value);
+        resetRankingFiltersForPodcastDetailNavigation("publisher", value);
         if (window.location.hash.slice(1).toLowerCase() !== "ranglister") {
           window.location.hash = "#ranglister";
         } else {
+          render();
           scrollToRankingStart();
         }
         return;
@@ -11058,9 +11080,7 @@ function navigatePodcastDetailToMainSeriesRanking(podcast, value) {
   );
 
   closePodcastDetailSheet({ returnFocus: false, preserveHistoryRestore: true });
-  state.activeFilter = null;
-  state.activePublisherFilter = "";
-  setActiveFilter("mainSeries", mainSeries);
+  resetRankingFiltersForPodcastDetailNavigation("mainSeries", mainSeries);
   window.history.pushState({}, "", "#ranglister");
   render();
   scrollToRankingStart();
