@@ -7704,7 +7704,7 @@ function getPodcastDetailDynamicRecommendations(podcast, validated) {
   });
 
   const seenTitles = new Set([currentTitle]);
-  return state.podcasts
+  const scoredCandidates = state.podcasts
     .filter((candidatePodcast) => {
       const candidateKey = getPodcastKey(candidatePodcast);
       const candidateTitle = normalizeComparable(candidatePodcast?.title);
@@ -7770,6 +7770,46 @@ function getPodcastDetailDynamicRecommendations(podcast, validated) {
       };
     })
     .sort((left, right) => right.score - left.score || left.index - right.index);
+
+  // Keep the strongest relationship signals ahead of broad catalogue matches:
+  // main-series first, then every resolved product candidate, then generic fill.
+  const selected = [];
+  const selectedKeys = new Set();
+  const selectedTitles = new Set([currentTitle]);
+  const appendPhase = (candidates, limit) => {
+    const available = candidates.filter((candidate) => {
+      const candidatePodcast = candidate?.item?.podcast;
+      const candidateKey = getPodcastKey(candidatePodcast);
+      const candidateTitle = normalizeComparable(candidatePodcast?.title);
+      return (
+        candidateKey &&
+        !selectedKeys.has(candidateKey) &&
+        !(candidateTitle && selectedTitles.has(candidateTitle))
+      );
+    });
+
+    selectPodcastDetailRecommendations(available, Math.max(0, limit - selected.length)).forEach(
+      (candidate) => {
+        const candidatePodcast = candidate?.item?.podcast;
+        const candidateKey = getPodcastKey(candidatePodcast);
+        const candidateTitle = normalizeComparable(candidatePodcast?.title);
+        if (!candidateKey || selectedKeys.has(candidateKey)) return;
+        selected.push(candidate);
+        selectedKeys.add(candidateKey);
+        if (candidateTitle) selectedTitles.add(candidateTitle);
+      }
+    );
+  };
+
+  appendPhase(scoredCandidates.filter((candidate) => candidate.sameSeries), 8);
+  appendPhase(
+    scoredCandidates.filter((candidate) =>
+      productCandidatesByKey.has(getPodcastKey(candidate?.item?.podcast))
+    ),
+    8
+  );
+  appendPhase(scoredCandidates, 8);
+  return selected;
 }
 
 function getRecommendationDiversityKey(candidate) {
