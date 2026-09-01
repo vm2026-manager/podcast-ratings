@@ -20560,25 +20560,49 @@ function setupRankingScrollToBottomButton() {
         window.innerHeight
     );
 
-  const waitForRankingLayout = async (expectedCardCount) => {
-    let stableBottomFrames = 0;
-    let previousBottom = -1;
+  let stopMobileRankingBottomAnchor = null;
 
-    // Rendering the complete mobile list is synchronous, but its layout is not
-    // guaranteed to have been measured by the next frame. Wait for both the
-    // expected cards and two consecutive stable layout frames before measuring
-    // the final scroll position.
-    for (let frame = 0; frame < 8; frame += 1) {
-      await new Promise((resolve) => window.requestAnimationFrame(resolve));
+  const anchorMobileRankingBottom = () => {
+    const rankingGrid = elements.podcastGrid;
+    const target = rankingGrid?.querySelector(".podcast-card:last-of-type") || rankingGrid?.lastElementChild;
+    if (!target) return false;
 
-      const cardsReady =
-        expectedCardCount === null || getMobileRankingCardCount() === expectedCardCount;
-      const documentBottom = getDocumentBottom();
-      stableBottomFrames = documentBottom === previousBottom ? stableBottomFrames + 1 : 0;
-      previousBottom = documentBottom;
+    stopMobileRankingBottomAnchor?.();
 
-      if (cardsReady && stableBottomFrames >= 2) return;
-    }
+    let frameId = null;
+    const scrollToCurrentBottom = () => {
+      frameId = null;
+      if (!document.body.classList.contains("page-ranglister")) return;
+
+      // The final card is a layout anchor. Re-run this only when the ranking
+      // grid actually changes size, rather than relying on an arbitrary delay.
+      target.scrollIntoView({ block: "end", inline: "nearest", behavior: "auto" });
+      window.scrollTo({ top: getDocumentBottom(), left: 0, behavior: "auto" });
+    };
+    const scheduleScroll = () => {
+      if (frameId !== null) return;
+      frameId = window.requestAnimationFrame(scrollToCurrentBottom);
+    };
+    const observer = new ResizeObserver(scheduleScroll);
+    observer.observe(rankingGrid);
+
+    const stop = () => {
+      observer.disconnect();
+      if (frameId !== null) window.cancelAnimationFrame(frameId);
+      frameId = null;
+      ["pointerdown", "touchstart", "wheel", "keydown"].forEach((type) =>
+        window.removeEventListener(type, stop, { capture: true })
+      );
+      if (stopMobileRankingBottomAnchor === stop) {
+        stopMobileRankingBottomAnchor = null;
+      }
+    };
+    ["pointerdown", "touchstart", "wheel", "keydown"].forEach((type) =>
+      window.addEventListener(type, stop, { capture: true, once: true, passive: true })
+    );
+    stopMobileRankingBottomAnchor = stop;
+    scrollToCurrentBottom();
+    return true;
   };
 
   const updateRankingScrollControls = () => {
@@ -20651,20 +20675,16 @@ function setupRankingScrollToBottomButton() {
 
       const isMobileRanking = !isDesktopRankingViewport();
       if (isMobileRanking) {
-        await waitForRankingLayout(filteredCount);
+        anchorMobileRankingBottom();
       } else {
         await new Promise((resolve) => window.requestAnimationFrame(resolve));
+        const reduceMotion = window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches;
+        window.scrollTo({
+          top: getDocumentBottom(),
+          left: 0,
+          behavior: reduceMotion ? "auto" : "smooth"
+        });
       }
-
-      // A mobile smooth scroll keeps an earlier target when late layout work
-      // increases the page height, which is what previously left users short of
-      // the final cards. Keep the existing desktop motion unchanged.
-      const reduceMotion = window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches;
-      window.scrollTo({
-        top: getDocumentBottom(),
-        left: 0,
-        behavior: isMobileRanking || reduceMotion ? "auto" : "smooth"
-      });
     } finally {
       isGoingToRankingBottom = false;
       button.removeAttribute("aria-busy");
