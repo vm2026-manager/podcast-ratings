@@ -21,6 +21,7 @@ const HOME_GENRES = GENRES.filter((genre) => genre !== "Alle");
 const FEATURED_ROTATION_MS = 8000;
 const INITIAL_VISIBLE_COUNT = 24;
 const MOBILE_RANKING_BATCH_SIZE = 20;
+const MOBILE_RANKING_TAIL_SIZE = 50;
 const DESKTOP_RANKING_BATCH_SIZE = 24;
 const VALID_RANKING_SOURCES = new Set(["mads", "users"]);
 const PODCAST_DATA_REFRESH_INTERVAL_MS = 60 * 60 * 1000;
@@ -835,6 +836,7 @@ const state = {
   desktopRankingLayout: readDesktopRankingLayoutPreference(),
   hasExpandedInitialList: false,
   visibleCount: INITIAL_VISIBLE_COUNT,
+  mobileRankingTailMode: false,
   autoExpandHandle: null,
   rankingListCache: new Map(),
   rankingListCacheVersion: 0,
@@ -2762,6 +2764,7 @@ function resetVisibleCount() {
   cancelAutoExpandPodcastGrid();
   disconnectMobileRankingObserver();
   state.hasExpandedInitialList = false;
+  state.mobileRankingTailMode = false;
   state.visibleCount = isMobileRankingRoute() ? MOBILE_RANKING_BATCH_SIZE : INITIAL_VISIBLE_COUNT;
 }
 
@@ -13082,7 +13085,11 @@ function renderPodcastGrid() {
   }
 
   const filtered = getFilteredPodcasts();
-  const visible = filtered.slice(0, state.visibleCount);
+  const isMobileTail = isMobileRankingRoute() && state.mobileRankingTailMode;
+  const visibleStart = isMobileTail ? Math.max(0, filtered.length - MOBILE_RANKING_TAIL_SIZE) : 0;
+  const visible = isMobileTail
+    ? filtered.slice(visibleStart)
+    : filtered.slice(0, state.visibleCount);
 
   elements.podcastGrid.setAttribute("aria-busy", "false");
 
@@ -13097,7 +13104,7 @@ function renderPodcastGrid() {
     const fragment = document.createDocumentFragment();
 
     visible.forEach((podcast, index) => {
-      fragment.appendChild(createPodcastCardElement(podcast, getRankingDisplayRank(index)));
+      fragment.appendChild(createPodcastCardElement(podcast, getRankingDisplayRank(visibleStart + index)));
     });
 
     elements.podcastGrid.appendChild(fragment);
@@ -13107,8 +13114,8 @@ function renderPodcastGrid() {
     elements.resultsText.textContent = getResultsText(filtered.length, visible.length);
   }
 
-  updateLoadMoreUi(filtered.length, visible.length);
-  setupMobileRankingAutoLoad(filtered.length, visible.length);
+  updateLoadMoreUi(filtered.length, isMobileTail ? filtered.length : visible.length);
+  setupMobileRankingAutoLoad(filtered.length, isMobileTail ? filtered.length : visible.length);
   scheduleAutoExpandPodcastGrid(filtered.length, visible.length);
 }
 
@@ -20675,12 +20682,16 @@ function setupRankingScrollToBottomButton() {
     try {
       state.rankingUsedGoToBottom = true;
       const filteredCount = getFilteredPodcasts().length;
-      if (state.visibleCount < filteredCount) {
+      const isMobileRanking = !isDesktopRankingViewport();
+      if (isMobileRanking) {
+        state.mobileRankingTailMode = true;
+        state.visibleCount = Math.min(MOBILE_RANKING_TAIL_SIZE, filteredCount);
+        renderPodcastGrid();
+      } else if (state.visibleCount < filteredCount) {
         state.visibleCount = filteredCount;
         renderPodcastGrid();
       }
 
-      const isMobileRanking = !isDesktopRankingViewport();
       if (isMobileRanking) {
         anchorMobileRankingBottom();
       } else {
@@ -20756,6 +20767,10 @@ function setupRankingScrollToBottomButton() {
   topButton.addEventListener("click", () => {
     if (!document.body.classList.contains("page-ranglister")) return;
     stopMobileRankingBottomAnchor?.();
+    if (!isDesktopRankingViewport() && state.mobileRankingTailMode) {
+      resetVisibleCount();
+      renderPodcastGrid();
+    }
     isReturningToRankingTop = true;
     upwardDistance = 0;
     lastRankingScrollY = 0;
