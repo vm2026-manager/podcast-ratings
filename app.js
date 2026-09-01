@@ -19837,7 +19837,7 @@ function renderRoute() {
           }
         </div>
         <div class="home-hero__copy">
-          <h1 data-mobile-title="${escapeHtml(mobileHeroTitle)}"><span class="home-hero__headline-line">Find din næste</span><span class="home-hero__headline-line home-hero__headline-line--accent">podcastfavorit</span></h1>
+          <h1 data-mobile-title="${escapeHtml(mobileHeroTitle)}"><span class="home-hero__headline-line">Find din næste</span> <span class="home-hero__headline-line home-hero__headline-line--accent">podcastfavorit</span></h1>
           <p
             class="intro"
             data-mobile-intro="${escapeHtml(mobileHeroIntro)}"
