@@ -3030,6 +3030,8 @@ function publisherMatchesExactFilter(publisher, filterValue) {
   const filterToken = getExactPublisherFilterToken(filterValue);
   if (!filterToken) return false;
 
+  if (getExactPublisherFilterToken(publisher) === filterToken) return true;
+
   return getDesktopPublisherDisplayTokens(publisher).some(
     (token) => getExactPublisherFilterToken(token) === filterToken
   );
