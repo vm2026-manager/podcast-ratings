@@ -120,6 +120,42 @@ const EPISODE_PODCAST_CONFIG = {
     source: "soundcloud",
     persistence: "supabase"
   },
+  "transfer talk": {
+    podcastKey: "transfer talk",
+    databasePodcastKey: "transfer talk",
+    enabled: true,
+    displayName: "Transfer Talk",
+    searchPlaceholder: "Søg i Transfer Talk-episoder",
+    source: "buzzsprout",
+    persistence: "supabase"
+  },
+  "spillet bag spillet": {
+    podcastKey: "spillet bag spillet",
+    databasePodcastKey: "spillet bag spillet",
+    enabled: true,
+    displayName: "Spillet bag spillet",
+    searchPlaceholder: "Søg i Spillet bag spillet-episoder",
+    source: "buzzsprout",
+    persistence: "supabase"
+  },
+  "superligaens sandheder": {
+    podcastKey: "superligaens sandheder",
+    databasePodcastKey: "superligaens sandheder",
+    enabled: true,
+    displayName: "Superligaens Sandheder",
+    searchPlaceholder: "Søg i Superligaens Sandheder-episoder",
+    source: "buzzsprout",
+    persistence: "supabase"
+  },
+  femtedommer: {
+    podcastKey: "femtedommer",
+    databasePodcastKey: "femtedommer",
+    enabled: true,
+    displayName: "Femtedommer",
+    searchPlaceholder: "Søg i Femtedommer-episoder",
+    source: "buzzsprout",
+    persistence: "supabase"
+  },
   "jagten pa det evige liv": {
     podcastKey: "jagten pa det evige liv",
     databasePodcastKey: "jagten pa det evige liv",
