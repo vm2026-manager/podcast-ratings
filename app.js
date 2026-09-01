@@ -20562,6 +20562,20 @@ function setupRankingScrollToBottomButton() {
 
   let stopMobileRankingBottomAnchor = null;
 
+  const getMobileRankingBottomClearance = () => {
+    const fixedNavigation = [...document.querySelectorAll(".topbar .site-nav, .site-nav")].find(
+      (navigation) => {
+        const style = window.getComputedStyle(navigation);
+        const rect = navigation.getBoundingClientRect();
+        return style.position === "fixed" && rect.bottom > 0 && rect.top < window.innerHeight;
+      }
+    );
+    if (!fixedNavigation) return 12;
+
+    const navTop = fixedNavigation.getBoundingClientRect().top;
+    return Math.ceil(Math.max(0, window.innerHeight - navTop) + 12);
+  };
+
   const anchorMobileRankingBottom = () => {
     const rankingGrid = elements.podcastGrid;
     const target = rankingGrid?.querySelector(".podcast-card:last-of-type") || rankingGrid?.lastElementChild;
@@ -20577,7 +20591,9 @@ function setupRankingScrollToBottomButton() {
       // The final card is a layout anchor. Re-run this only when the ranking
       // grid actually changes size, rather than relying on an arbitrary delay.
       target.scrollIntoView({ block: "end", inline: "nearest", behavior: "auto" });
-      window.scrollTo({ top: getDocumentBottom(), left: 0, behavior: "auto" });
+      const visibleBottom = window.innerHeight - getMobileRankingBottomClearance();
+      const targetBottom = target.getBoundingClientRect().bottom;
+      window.scrollBy({ top: targetBottom - visibleBottom, left: 0, behavior: "auto" });
     };
     const scheduleScroll = () => {
       if (frameId !== null) return;
@@ -20694,12 +20710,18 @@ function setupRankingScrollToBottomButton() {
 
   topButton.addEventListener("click", () => {
     if (!document.body.classList.contains("page-ranglister")) return;
+    stopMobileRankingBottomAnchor?.();
     isReturningToRankingTop = true;
     upwardDistance = 0;
     lastRankingScrollY = 0;
     setControlVisibility(topButton, false);
+    const isMobileRanking = !isDesktopRankingViewport();
     const reduceMotion = window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches;
-    window.scrollTo({ top: 0, left: 0, behavior: reduceMotion ? "auto" : "smooth" });
+    window.scrollTo({
+      top: 0,
+      left: 0,
+      behavior: isMobileRanking || reduceMotion ? "auto" : "smooth"
+    });
   });
 
   window.addEventListener("scroll", updateRankingScrollControls, { passive: true });
