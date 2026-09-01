@@ -23,3 +23,31 @@ Deno.test("runtime Feed parser matches static Apple semantics and rejects collis
   assertEquals(selectAppleFeedKeys(result.configs), ["apple_1843557403"]);
   assertEquals(Object.entries(result.configs).filter(([, config]) => config.enabled !== false).map(([key]) => key), ["genstart", "rss_permanent"]);
 });
+
+Deno.test("runtime feed audit reports duplicate feed URLs without silently treating them as routes", () => {
+  const result = mergeSheetFeedConfigs({ rows: [] }, {
+    first: { podcast_key: "first", source: "first_rss", feed_url: "https://example.test/shared" },
+    second: { podcast_key: "second", source: "second_rss", feed_url: "https://example.test/shared" }
+  });
+  assertEquals(result.audit.duplicate_feed_urls_detected, 1);
+  assertEquals(result.audit.duplicate_feed_urls, [{
+    feed_url: "https://example.test/shared", feed_keys: ["first", "second"]
+  }]);
+});
+
+Deno.test("a sheet feed cannot shadow an explicit static owner of the same URL", () => {
+  const result = mergeSheetFeedConfigs({ rows: [{
+    Titel: "Adfærd", "Podcast-ID": "adfærd",
+    Feed: "https://feeds.soundcloud.com/users/soundcloud:users:154832827/sounds.rss"
+  }] }, {
+    borgen: {
+      podcast_key: "borgen unplugged 2 0", source: "soundcloud_borgen_unplugged_rss",
+      feed_url: "https://feeds.soundcloud.com/users/soundcloud:users:154832827/sounds.rss"
+    }
+  });
+  assertEquals(result.configs.adfærd, undefined);
+  assertEquals(result.audit.duplicate_feed_urls_skipped, [{
+    feed_url: "https://feeds.soundcloud.com/users/soundcloud:users:154832827/sounds.rss",
+    skipped_feed_key: "adfærd"
+  }]);
+});

@@ -1,6 +1,23 @@
 export type FeedFormat = "rss" | "radio4_json" | "dr_lyd_next_data" | "apple_podcasts_html";
 
+export type FeedRouteMatcher = {
+  // Regular expressions are evaluated against normalized, case-folded text.
+  patterns?: RegExp[];
+  // Aliases are normalized and matched as literal phrases.
+  aliases?: string[];
+};
+
+export type FeedRoute = {
+  key: string;
+  // A null target marks a recognized series that must be reported but not persisted.
+  podcast_key: string | null;
+  title?: FeedRouteMatcher;
+  description?: FeedRouteMatcher;
+};
+
 export type FeedConfig = {
+  // Normal feeds use this as their episode destination. Umbrella feeds use it
+  // as their import-run label and route each item with `routes` instead.
   podcast_key: string;
   source: string;
   feed_url: string;
@@ -11,6 +28,7 @@ export type FeedConfig = {
   // Generated sheet entries are replaced from PODCASTS_JSON_URL at runtime.
   generated_from_sheet?: boolean;
   apple_show_id?: string;
+  routes?: FeedRoute[];
 };
 
 export type FeedConfigMap = Record<string, FeedConfig>;
@@ -54,6 +72,46 @@ export const FEED_CONFIGS: FeedConfigMap = {
     podcast_key: "borgen unplugged 2 0",
     source: "soundcloud_borgen_unplugged_rss",
     feed_url: "https://feeds.soundcloud.com/users/soundcloud:users:154832827/sounds.rss"
+  },
+
+  "tipsbladet_lyd": {
+    // The import-run table requires a podcast key. Episode destinations below
+    // are authoritative; this existing key is only the run's compatibility label.
+    podcast_key: "transfer talk",
+    source: "buzzsprout_tipsbladet_lyd_rss",
+    feed_url: "https://feeds.buzzsprout.com/2307562.rss",
+    routes: [
+      {
+        key: "transfer_talk",
+        podcast_key: "transfer talk",
+        title: { patterns: [/\btransfer\s*[- ]?\s*talk\b/i] },
+        description: { patterns: [/\btransfer\s*[- ]?\s*talk\b/i] }
+      },
+      {
+        key: "spillet_bag_spillet",
+        podcast_key: "spillet bag spillet",
+        title: { patterns: [/\bspillet\s+bag\s+spillet\b/i] },
+        description: { patterns: [/\bspillet\s+bag\s+spillet\b/i] }
+      },
+      {
+        key: "superligaens_sandheder",
+        podcast_key: "superligaens sandheder",
+        title: { patterns: [/\bsuperligaens\s+sandheder\b/i] },
+        description: { patterns: [/\bsuperligaens\s+sandheder\b/i] }
+      },
+      {
+        key: "femtedommer",
+        podcast_key: "femtedommer",
+        title: { patterns: [/\bfemtedommer\b/i] },
+        description: { patterns: [/\bfemtedommer\b/i] }
+      },
+      {
+        key: "trash_talk",
+        podcast_key: null,
+        title: { patterns: [/\btrash\s+talk\b/i] },
+        description: { patterns: [/\btrash\s+talk\b/i] }
+      }
+    ]
   },
 
   "jagten_paa_det_evige_liv": {
@@ -248,12 +306,6 @@ export const FEED_CONFIGS: FeedConfigMap = {
     podcast_key: "brinkmanns briks",
     source: "sheet_brinkmanns_briks_rss",
     feed_url: "https://api.dr.dk/podcasts/v1/feeds/brinkmanns-briks",
-    generated_from_sheet: true
-  },
-  "adfærd": {
-    podcast_key: "adfærd",
-    source: "sheet_adfærd_rss",
-    feed_url: "https://feeds.soundcloud.com/users/soundcloud:users:154832827/sounds.rss",
     generated_from_sheet: true
   },
   "tabloid": {

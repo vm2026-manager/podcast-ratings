@@ -7,6 +7,9 @@ export type FeedConfigAudit = {
   static_feed_count: number;
   dynamic_sheet_feed_count: number;
   duplicates_skipped: number;
+  duplicate_feed_urls_detected: number;
+  duplicate_feed_urls: Array<{ feed_url: string; feed_keys: string[] }>;
+  duplicate_feed_urls_skipped: Array<{ feed_url: string; skipped_feed_key: string }>;
   invalid_feed_urls_skipped: number;
   missing_podcast_ids_skipped: number;
   total_enabled_feeds: number;
@@ -56,6 +59,18 @@ function getManualStaticConfigs(configs: FeedConfigMap): FeedConfigMap {
   );
 }
 
+function findDuplicateFeedUrls(configs: FeedConfigMap): Array<{ feed_url: string; feed_keys: string[] }> {
+  const byUrl = new Map<string, string[]>();
+  for (const [feedKey, config] of Object.entries(configs)) {
+    const normalizedUrl = parseHttpFeed(config.feed_url)?.toLowerCase();
+    if (!normalizedUrl) continue;
+    byUrl.set(normalizedUrl, [...(byUrl.get(normalizedUrl) || []), feedKey]);
+  }
+  return [...byUrl.entries()]
+    .filter(([, feedKeys]) => feedKeys.length > 1)
+    .map(([feedUrl, feedKeys]) => ({ feed_url: feedUrl, feed_keys: feedKeys.sort() }));
+}
+
 export function mergeSheetFeedConfigs(
   sheetPayload: unknown,
   staticConfigs: FeedConfigMap = FEED_CONFIGS
@@ -65,8 +80,14 @@ export function mergeSheetFeedConfigs(
   const staticKeys = new Set(Object.keys(manualStaticConfigs));
   const staticPodcastKeys = getStaticPodcastKeys(manualStaticConfigs);
   const seenSources = new Set(Object.values(manualStaticConfigs).map((config) => config.source));
+  const seenFeedUrls = new Set(
+    Object.values(manualStaticConfigs)
+      .map((config) => parseHttpFeed(config.feed_url)?.toLowerCase())
+      .filter(Boolean)
+  );
   const seenAppleShowIds = new Set(Object.values(manualStaticConfigs).filter((config) => config.format === "apple_podcasts_html").map((config) => config.apple_show_id).filter(Boolean));
   const seenPodcastKeys = new Set(staticPodcastKeys);
+  const duplicateFeedUrlsSkipped: Array<{ feed_url: string; skipped_feed_key: string }> = [];
   let dynamicSheetFeedCount = 0;
   let duplicatesSkipped = 0;
   let invalidFeedUrlsSkipped = 0;
@@ -92,8 +113,12 @@ export function mergeSheetFeedConfigs(
 
     // Static configs own special adapters and always take precedence.
     const source = apple ? `apple_podcasts_${apple.appleShowId}` : `sheet_${feedKey}_rss`;
-    if (staticKeys.has(feedKey) || seenPodcastKeys.has(podcastKey) || seenSources.has(source) || (apple && seenAppleShowIds.has(apple.appleShowId))) {
+    const normalizedFeedUrl = feedUrl?.toLowerCase();
+    if (staticKeys.has(feedKey) || seenPodcastKeys.has(podcastKey) || seenSources.has(source) || (apple && seenAppleShowIds.has(apple.appleShowId)) || (!apple && normalizedFeedUrl && seenFeedUrls.has(normalizedFeedUrl))) {
       duplicatesSkipped += 1;
+      if (!apple && normalizedFeedUrl && seenFeedUrls.has(normalizedFeedUrl)) {
+        duplicateFeedUrlsSkipped.push({ feed_url: normalizedFeedUrl, skipped_feed_key: feedKey });
+      }
       continue;
     }
 
@@ -106,6 +131,7 @@ export function mergeSheetFeedConfigs(
     };
     seenPodcastKeys.add(podcastKey);
     seenSources.add(source);
+    if (normalizedFeedUrl) seenFeedUrls.add(normalizedFeedUrl);
     if (apple) seenAppleShowIds.add(apple.appleShowId);
     dynamicSheetFeedCount += 1;
   }
@@ -116,6 +142,9 @@ export function mergeSheetFeedConfigs(
       static_feed_count: Object.keys(manualStaticConfigs).length,
       dynamic_sheet_feed_count: dynamicSheetFeedCount,
       duplicates_skipped: duplicatesSkipped,
+      duplicate_feed_urls_detected: findDuplicateFeedUrls(configs).length,
+      duplicate_feed_urls: findDuplicateFeedUrls(configs),
+      duplicate_feed_urls_skipped: duplicateFeedUrlsSkipped,
       invalid_feed_urls_skipped: invalidFeedUrlsSkipped,
       missing_podcast_ids_skipped: missingPodcastIdsSkipped,
       total_enabled_feeds: Object.values(configs).filter((config) => config.enabled !== false).length
@@ -149,6 +178,9 @@ export async function loadRuntimeFeedConfigs(options: {
     static_feed_count: Object.keys(staticConfigs).length,
     dynamic_sheet_feed_count: 0,
     duplicates_skipped: 0,
+    duplicate_feed_urls_detected: findDuplicateFeedUrls(staticConfigs).length,
+    duplicate_feed_urls: findDuplicateFeedUrls(staticConfigs),
+    duplicate_feed_urls_skipped: [],
     invalid_feed_urls_skipped: 0,
     missing_podcast_ids_skipped: 0,
     total_enabled_feeds: Object.values(staticConfigs).filter((config) => config.enabled !== false).length,

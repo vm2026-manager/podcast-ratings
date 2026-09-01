@@ -44,6 +44,7 @@ function getManualConfigKeys(configSource) {
   const beforeGenerated = configSource.split(generatedStart)[0];
   const keys = new Set();
   const podcastKeys = new Set();
+  const feedUrls = new Set();
   const entryPattern = /^\s{2}"([^"]+)"\s*:\s*\{([\s\S]*?)^\s{2}\},?$/gm;
   let match;
 
@@ -51,9 +52,11 @@ function getManualConfigKeys(configSource) {
     keys.add(match[1]);
     const podcastKeyMatch = match[2].match(/podcast_key:\s*"([^"]+)"/);
     if (podcastKeyMatch) podcastKeys.add(normalizePodcastKey(podcastKeyMatch[1]));
+    const feedUrlMatch = match[2].match(/feed_url:\s*"([^"]+)"/);
+    if (feedUrlMatch) feedUrls.add(feedUrlMatch[1].trim().toLowerCase());
   }
 
-  return { keys, podcastKeys };
+  return { keys, podcastKeys, feedUrls };
 }
 
 function escapeTsString(value) {
@@ -64,6 +67,7 @@ export function buildSheetFeedEntries(podcasts, configSource, { identity = "podc
   const manual = getManualConfigKeys(configSource);
   const seenFeedKeys = new Set();
   const seenSources = new Set();
+  const seenFeedUrls = new Set(manual.feedUrls);
   const seenAppleShowIds = new Set();
   const generated = [];
   const invalid = [];
@@ -100,13 +104,15 @@ export function buildSheetFeedEntries(podcasts, configSource, { identity = "podc
     }
 
     const source = apple ? `apple_podcasts_${apple.appleShowId}` : `sheet_${feedKey}_rss`;
-    if (seenFeedKeys.has(feedKey) || seenSources.has(source) || (apple && seenAppleShowIds.has(apple.appleShowId))) {
+    const normalizedFeedUrl = feedUrl?.toLowerCase();
+    if (seenFeedKeys.has(feedKey) || seenSources.has(source) || (apple && seenAppleShowIds.has(apple.appleShowId)) || (!apple && normalizedFeedUrl && seenFeedUrls.has(normalizedFeedUrl))) {
       duplicates.push({ title, feed: rawFeedUrl });
       continue;
     }
 
     seenFeedKeys.add(feedKey);
     seenSources.add(source);
+    if (normalizedFeedUrl) seenFeedUrls.add(normalizedFeedUrl);
     if (apple) seenAppleShowIds.add(apple.appleShowId);
     generated.push({
       feedKey,

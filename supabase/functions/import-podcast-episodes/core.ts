@@ -1,4 +1,4 @@
-import { FEED_CONFIGS, type FeedConfig, type FeedConfigMap } from "./feed-config.ts";
+import { FEED_CONFIGS, type FeedConfig, type FeedConfigMap, type FeedRouteMatcher } from "./feed-config.ts";
 import { mapApplePodcastHtmlEpisodes } from "./apple-podcasts.ts";
 
 export const FEED_TIMEOUT_MS = 15000;
@@ -33,6 +33,98 @@ export type PodcastEpisodeRow = {
   is_active: boolean;
   metadata: Record<string, unknown>;
 };
+
+export type RoutingIssue = {
+  external_guid: string;
+  title: string;
+  route_keys?: string[];
+};
+
+export type EpisodeRoutingReport = {
+  enabled: boolean;
+  routed_count: number;
+  route_counts: Record<string, number>;
+  known_no_destination_counts: Record<string, number>;
+  unmatched: RoutingIssue[];
+  ambiguous: RoutingIssue[];
+  known_no_destination: RoutingIssue[];
+};
+
+function normalizeRouteText(value: unknown): string {
+  return String(value || "")
+    .normalize("NFKD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLocaleLowerCase("da-DK")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function matcherMatches(value: string, matcher: FeedRouteMatcher | undefined): boolean {
+  if (!matcher || !value) return false;
+  const normalized = normalizeRouteText(value);
+  if (!normalized) return false;
+  const aliases = matcher.aliases || [];
+  if (aliases.some((alias) => {
+    const normalizedAlias = normalizeRouteText(alias);
+    return Boolean(normalizedAlias) && normalized.includes(normalizedAlias);
+  })) return true;
+  return (matcher.patterns || []).some((pattern) => {
+    const flags = [...new Set(`${pattern.flags.replace(/[gy]/g, "")}iu`.split(""))].join("");
+    return new RegExp(pattern.source, flags).test(normalized);
+  });
+}
+
+/**
+ * Routes an umbrella feed without guessing. Title matches always take precedence
+ * over description matches, so a descriptive mention cannot override a branded title.
+ */
+export function routeEpisodes(episodes: PodcastEpisodeRow[], config: FeedConfig): {
+  episodes: PodcastEpisodeRow[];
+  report: EpisodeRoutingReport | null;
+} {
+  if (!config.routes?.length) return { episodes, report: null };
+
+  const report: EpisodeRoutingReport = {
+    enabled: true,
+    routed_count: 0,
+    route_counts: {},
+    known_no_destination_counts: {},
+    unmatched: [],
+    ambiguous: [],
+    known_no_destination: []
+  };
+  const routed: PodcastEpisodeRow[] = [];
+
+  for (const episode of episodes) {
+    const titleMatches = config.routes.filter((route) => matcherMatches(episode.title, route.title));
+    const matches = titleMatches.length
+      ? titleMatches
+      : config.routes.filter((route) => matcherMatches(episode.description || "", route.description));
+    const issue = { external_guid: episode.external_guid, title: episode.title };
+
+    if (!matches.length) {
+      report.unmatched.push(issue);
+      continue;
+    }
+    if (matches.length > 1) {
+      report.ambiguous.push({ ...issue, route_keys: matches.map((route) => route.key) });
+      continue;
+    }
+
+    const route = matches[0];
+    if (!route.podcast_key) {
+      report.known_no_destination_counts[route.key] = (report.known_no_destination_counts[route.key] || 0) + 1;
+      report.known_no_destination.push({ ...issue, route_keys: [route.key] });
+      continue;
+    }
+
+    report.routed_count += 1;
+    report.route_counts[route.key] = (report.route_counts[route.key] || 0) + 1;
+    routed.push({ ...episode, podcast_key: route.podcast_key });
+  }
+
+  return { episodes: routed, report };
+}
 
 export type ImportSummary = {
   status: "success" | "partial" | "failed";
@@ -683,13 +775,14 @@ export async function runEpisodeImport(options: {
       : config.format === "dr_lyd_next_data"
         ? mapDrLydEpisodes(parseDrLydEpisodes(content), config, now())
         : mapEpisodes(parseFeed(content), config, now());
+    const routing = routeEpisodes(mapped.episodes, config);
     const existing = await options.repository.loadExistingEpisodes(
       config.source,
-      mapped.episodes.map((episode) => episode.external_guid)
+      routing.episodes.map((episode) => episode.external_guid)
     );
     const episodesForClassification =
       config.format === "dr_lyd_next_data"
-        ? mapped.episodes.map((episode) => {
+        ? routing.episodes.map((episode) => {
             const current = existing.find(
               (row) => row.external_guid === episode.external_guid
             );
@@ -706,9 +799,33 @@ export async function runEpisodeImport(options: {
               }
             };
           })
-        : mapped.episodes;
+        : routing.episodes;
 
-    const classified = classifyEpisodes(episodesForClassification, existing);
+    const existingByGuid = new Map(existing.map((episode) => [episode.external_guid, episode]));
+    const routingConflicts = config.routes?.length
+      ? episodesForClassification.filter((episode) => {
+          const current = existingByGuid.get(episode.external_guid);
+          return current && current.podcast_key !== episode.podcast_key;
+        })
+      : [];
+    const safeEpisodesForClassification = routingConflicts.length
+      ? episodesForClassification.filter((episode) => !routingConflicts.some((conflict) => conflict.external_guid === episode.external_guid))
+      : episodesForClassification;
+    if (routing.report && (routing.report.unmatched.length || routing.report.ambiguous.length || routing.report.known_no_destination.length || routingConflicts.length)) {
+      console.warn("[episode-import] routing review required", JSON.stringify({
+        source: config.source,
+        unmatched: routing.report.unmatched,
+        ambiguous: routing.report.ambiguous,
+        known_no_destination: routing.report.known_no_destination,
+        routing_conflicts: routingConflicts.map((episode) => ({
+          external_guid: episode.external_guid,
+          title: episode.title,
+          requested_podcast_key: episode.podcast_key,
+          existing_podcast_key: existingByGuid.get(episode.external_guid)?.podcast_key || null
+        }))
+      }));
+    }
+    const classified = classifyEpisodes(safeEpisodesForClassification, existing);
     const writeRows = classified.inserted.concat(classified.updated);
     const batches = chunk(writeRows);
     let batchErrors = 0;
@@ -722,9 +839,14 @@ export async function runEpisodeImport(options: {
     }
 
     const itemErrors = mapped.errors.length;
-    const error_count = itemErrors + batchErrors;
+    const routingConflictCount = routingConflicts.length;
+    const error_count = itemErrors + batchErrors + routingConflictCount;
     const hasWarnings = mapped.warnings.length > 0;
-    const status = error_count > 0 ? (writeRows.length > batchErrors ? "partial" : "failed") : hasWarnings ? "partial" : "success";
+    const status = routingConflictCount > 0
+      ? "partial"
+      : error_count > 0
+        ? (writeRows.length > batchErrors ? "partial" : "failed")
+        : hasWarnings ? "partial" : "success";
     const summary: ImportSummary = {
       status,
       source: config.source,
@@ -742,9 +864,35 @@ export async function runEpisodeImport(options: {
         batch_count: batches.length,
         warning_count: mapped.warnings.length,
         invalid_item_count: itemErrors,
-        excluded_entry_count: mapped.eligibility.excludedEntries,
-        active_rateable_episode_count: mapped.eligibility.activeRateableEpisodes,
-        episode_feature_enabled: mapped.eligibility.episodeFeatureEnabled,
+        excluded_entry_count: config.routes?.length
+          ? getEpisodeFeatureEligibility(routing.episodes).excludedEntries
+          : mapped.eligibility.excludedEntries,
+        active_rateable_episode_count: config.routes?.length
+          ? getEpisodeFeatureEligibility(routing.episodes).activeRateableEpisodes
+          : mapped.eligibility.activeRateableEpisodes,
+        episode_feature_enabled: config.routes?.length
+          ? getEpisodeFeatureEligibility(routing.episodes).episodeFeatureEnabled
+          : mapped.eligibility.episodeFeatureEnabled,
+        routing: routing.report
+          ? {
+              routed_count: routing.report.routed_count,
+              route_counts: routing.report.route_counts,
+              known_no_destination_counts: routing.report.known_no_destination_counts,
+              unmatched_count: routing.report.unmatched.length,
+              ambiguous_count: routing.report.ambiguous.length,
+              known_no_destination_count: routing.report.known_no_destination.length,
+              unmatched: routing.report.unmatched.slice(0, 10),
+              ambiguous: routing.report.ambiguous.slice(0, 10),
+              known_no_destination: routing.report.known_no_destination.slice(0, 10),
+              routing_conflict_count: routingConflictCount,
+              routing_conflicts: routingConflicts.slice(0, 10).map((episode) => ({
+                external_guid: episode.external_guid,
+                title: episode.title,
+                requested_podcast_key: episode.podcast_key,
+                existing_podcast_key: existingByGuid.get(episode.external_guid)?.podcast_key || null
+              }))
+            }
+          : undefined,
         errors: mapped.errors.slice(0, 5),
         warnings: mapped.warnings.slice(0, 5)
       }
