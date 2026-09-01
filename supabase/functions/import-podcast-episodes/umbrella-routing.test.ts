@@ -63,6 +63,30 @@ function episode(external_guid: string, title: string, description = ""): Podcas
   };
 }
 
+async function runUmbrellaStatus(options: {
+  routes: NonNullable<FeedConfig["routes"]>;
+  title: string;
+  description?: string;
+  existing?: PodcastEpisodeRow[];
+}) {
+  const writes: PodcastEpisodeRow[][] = [];
+  const logs: Record<string, unknown>[] = [];
+  const repository = {
+    createImportRun: async () => ({ id: "run-1" }),
+    loadExistingEpisodes: async () => options.existing || [],
+    upsertEpisodes: async (rows: PodcastEpisodeRow[]) => { writes.push(rows); },
+    updateImportRun: async (_id: string, input: Record<string, unknown>) => { logs.push(input); }
+  };
+  const config: FeedConfig = {
+    podcast_key: "umbrella", source: "umbrella_rss", feed_url: "https://example.test/feed", routes: options.routes
+  };
+  const result = await runEpisodeImport({
+    feedKey: "umbrella", repository, feedConfigs: { umbrella: config }, now: () => "2026-09-01T00:00:00.000Z",
+    fetchText: async () => `<rss><channel><title>Umbrella</title><item><guid>guid-1</guid><title>${options.title}</title><description>${options.description || ""}</description></item></channel></rss>`
+  });
+  return { result, writes, logs };
+}
+
 Deno.test("Tipsbladet Lyd's 49 inspected episodes route deterministically", () => {
   const routed = routeEpisodes(tipsbladetHistory.map(([guid, title, description]) => episode(guid, title, description)), FEED_CONFIGS.tipsbladet_lyd);
   const report = routed.report!;
@@ -83,22 +107,50 @@ Deno.test("normal feeds retain their direct podcast destination", () => {
   assertEquals(routeEpisodes([original], directConfig), { episodes: [original], report: null });
 });
 
+Deno.test("clean deterministic umbrella routing reports success", async () => {
+  const { result, writes } = await runUmbrellaStatus({
+    title: "Clean title", routes: [{ key: "clean", podcast_key: "target", title: { aliases: ["clean title"] } }]
+  });
+  assertEquals(result.status, "success");
+  assertEquals(result.error_count, 0);
+  assertEquals(writes.length, 1);
+});
+
+Deno.test("known no-destination routing remains successful without persistence", async () => {
+  const { result, writes } = await runUmbrellaStatus({
+    title: "Known title", routes: [{ key: "known", podcast_key: null, title: { aliases: ["known title"] } }]
+  });
+  assertEquals(result.status, "success");
+  assertEquals(result.error_count, 0);
+  assertEquals(writes, []);
+});
+
+Deno.test("unmatched umbrella routing reports partial without persistence", async () => {
+  const { result, writes } = await runUmbrellaStatus({
+    title: "Absent episode", routes: [{ key: "known", podcast_key: "target", title: { aliases: ["known title"] } }]
+  });
+  assertEquals(result.status, "partial");
+  assertEquals(result.error_count, 1);
+  assertEquals(writes, []);
+});
+
+Deno.test("ambiguous umbrella routing reports partial without persistence", async () => {
+  const { result, writes } = await runUmbrellaStatus({
+    title: "Shared title",
+    routes: [
+      { key: "first", podcast_key: "first", title: { aliases: ["shared title"] } },
+      { key: "second", podcast_key: "second", title: { aliases: ["shared title"] } }
+    ]
+  });
+  assertEquals(result.status, "partial");
+  assertEquals(result.error_count, 1);
+  assertEquals(writes, []);
+});
+
 Deno.test("an umbrella routing conflict is reported and never upserted", async () => {
-  const writes: PodcastEpisodeRow[][] = [];
-  const logs: Record<string, unknown>[] = [];
-  const repository = {
-    createImportRun: async () => ({ id: "run-1" }),
-    loadExistingEpisodes: async () => [episode("guid-1", "Transfer Talk", "")],
-    upsertEpisodes: async (rows: PodcastEpisodeRow[]) => { writes.push(rows); },
-    updateImportRun: async (_id: string, input: Record<string, unknown>) => { logs.push(input); }
-  };
-  const config: FeedConfig = {
-    podcast_key: "umbrella", source: "umbrella_rss", feed_url: "https://example.test/feed",
+  const { result, writes, logs } = await runUmbrellaStatus({
+    title: "Transfer Talk", existing: [episode("guid-1", "Transfer Talk", "")],
     routes: [{ key: "target", podcast_key: "correct target", title: { aliases: ["Transfer Talk"] } }]
-  };
-  const result = await runEpisodeImport({
-    feedKey: "umbrella", repository, feedConfigs: { umbrella: config }, now: () => "2026-09-01T00:00:00.000Z",
-    fetchText: async () => "<rss><channel><title>Umbrella</title><item><guid>guid-1</guid><title>Transfer Talk</title></item></channel></rss>"
   });
   assertEquals(writes, []);
   assertEquals(result.status, "partial");

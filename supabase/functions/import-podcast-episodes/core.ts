@@ -840,9 +840,12 @@ export async function runEpisodeImport(options: {
 
     const itemErrors = mapped.errors.length;
     const routingConflictCount = routingConflicts.length;
-    const error_count = itemErrors + batchErrors + routingConflictCount;
+    const unmatchedCount = routing.report?.unmatched.length || 0;
+    const ambiguousCount = routing.report?.ambiguous.length || 0;
+    const routingIssueCount = unmatchedCount + ambiguousCount + routingConflictCount;
+    const error_count = itemErrors + batchErrors + routingIssueCount;
     const hasWarnings = mapped.warnings.length > 0;
-    const status = routingConflictCount > 0
+    const status = routingIssueCount > 0
       ? "partial"
       : error_count > 0
         ? (writeRows.length > batchErrors ? "partial" : "failed")
