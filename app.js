@@ -9928,8 +9928,7 @@ function renderPodcastEpisodeOverview(podcast) {
       <div class="podcast-detail-sheet__episode-overview-toolbar">
         <button class="podcast-detail-sheet__episode-back" type="button" data-podcast-episode-overview-back>
           <span aria-hidden="true">&larr;</span>
-          <span class="podcast-detail-sheet__episode-back-label podcast-detail-sheet__episode-back-label--mobile">Tilbage</span>
-          <span class="podcast-detail-sheet__episode-back-label podcast-detail-sheet__episode-back-label--desktop">Tilbage til podcasten</span>
+          <span>Tilbage til podcasten</span>
         </button>
         <h2 class="podcast-detail-sheet__episode-workspace-title">Episoder</h2>
         <label class="podcast-detail-sheet__episode-search">
