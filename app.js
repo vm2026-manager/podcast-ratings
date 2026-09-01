@@ -20525,6 +20525,7 @@ function setupRankingScrollToBottomButton() {
   let upwardDistance = 0;
   let isReturningToRankingTop = false;
   let isGoingToRankingBottom = false;
+  let skipNextBottomTouchClick = false;
   const nearTopThreshold = 24;
 
   const setControlVisibility = (control, visible) => {
@@ -20661,17 +20662,7 @@ function setupRankingScrollToBottomButton() {
     setControlVisibility(topButton, shouldShowTop);
   };
 
-  button.addEventListener("pointerdown", (event) => {
-    // The control lives at document level. Keep a touch from falling through to
-    // any card/link interaction beneath it while the page starts to move.
-    event.stopPropagation();
-  });
-
-  button.addEventListener("click", async (event) => {
-    event.preventDefault();
-    event.stopPropagation();
-    event.stopImmediatePropagation();
-
+  const goToRankingBottom = async () => {
     if (!document.body.classList.contains("page-ranglister") || isGoingToRankingBottom) return;
 
     isGoingToRankingBottom = true;
@@ -20706,6 +20697,60 @@ function setupRankingScrollToBottomButton() {
       button.removeAttribute("aria-busy");
       updateRankingScrollControls();
     }
+  };
+
+  button.addEventListener("pointerdown", (event) => {
+    // On touch screens the control moves/hides as part of its action. Own the
+    // gesture before that happens so iOS cannot retarget its compatibility tap
+    // to a ranking-card link now exposed at the same coordinate.
+    event.stopPropagation();
+    if (event.pointerType !== "touch") {
+      skipNextBottomTouchClick = false;
+      return;
+    }
+
+    event.preventDefault();
+    event.stopImmediatePropagation();
+    skipNextBottomTouchClick = false;
+    try {
+      button.setPointerCapture(event.pointerId);
+    } catch {
+      // Pointer capture is a guard, not a requirement for the native button.
+    }
+  });
+
+  button.addEventListener("pointerup", (event) => {
+    if (event.pointerType !== "touch") return;
+
+    event.preventDefault();
+    event.stopPropagation();
+    event.stopImmediatePropagation();
+    skipNextBottomTouchClick = true;
+    try {
+      button.releasePointerCapture(event.pointerId);
+    } catch {
+      // The capture may already have been released by the browser.
+    }
+    void goToRankingBottom();
+  });
+
+  button.addEventListener("pointercancel", (event) => {
+    if (event.pointerType !== "touch") return;
+    skipNextBottomTouchClick = false;
+  });
+
+  button.addEventListener("click", (event) => {
+    event.preventDefault();
+    event.stopPropagation();
+    event.stopImmediatePropagation();
+
+    // A touch pointerup above owns the action. This remains a defensive
+    // consume in case a browser still emits a compatibility click.
+    if (skipNextBottomTouchClick && event.detail > 0) {
+      skipNextBottomTouchClick = false;
+      return;
+    }
+    void goToRankingBottom();
   });
 
   topButton.addEventListener("click", () => {
