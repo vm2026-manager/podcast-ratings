@@ -950,6 +950,37 @@
     grid-column: auto !important;
     grid-template-rows: auto minmax(0, 1fr) auto !important;
   }
+  /* Keep the score itself on one shared row. The user count and own-rating
+     helper text may differ, but must never vertically shift the three values. */
+  html body #podcastDetailSheet .podcast-detail-sheet__ratings > .podcast-detail-sheet__rating-cell {
+    grid-template-rows: 20px 24px 19px minmax(0, 1fr) !important;
+    align-content: start !important;
+  }
+  html body #podcastDetailSheet .podcast-detail-sheet__rating-cell--mads > .podcast-detail-sheet__rating-icon,
+  html body #podcastDetailSheet .podcast-detail-sheet__rating-cell--users > .podcast-detail-sheet__rating-icon {
+    grid-row: 1 !important;
+  }
+  html body #podcastDetailSheet .podcast-detail-sheet__rating-label {
+    grid-row: 2 !important;
+  }
+  html body #podcastDetailSheet .podcast-detail-sheet__rating-cell--mads > strong,
+  html body #podcastDetailSheet .podcast-detail-sheet__rating-cell--users > strong {
+    grid-row: 3 !important;
+  }
+  html body #podcastDetailSheet .podcast-detail-sheet__rating-cell--users > em {
+    grid-row: 4 !important;
+  }
+  html body #podcastDetailSheet .podcast-detail-sheet__rating-cell--own {
+    grid-template-rows: 20px 24px 19px minmax(0, 1fr) !important;
+    align-content: start !important;
+  }
+  html body #podcastDetailSheet .podcast-detail-sheet__own-rating-reveal,
+  html body #podcastDetailSheet .podcast-detail-sheet__own-rating-display {
+    grid-row: 3 / span 2 !important;
+    min-height: 0 !important;
+    grid-template-rows: 19px auto !important;
+    align-content: start !important;
+  }
   html body #podcastDetailSheet .podcast-detail-sheet__rating-label {
     font-size: .64rem !important;
     line-height: 1.12 !important;
