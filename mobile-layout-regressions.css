@@ -253,3 +253,21 @@ html body .home-podcast-search { display: none; }
     text-wrap: pretty;
   }
 }
+
+/* Mobile Explore section headers share the card-content edge without the
+   decorative marker; swipe and dot carousel navigation remain available. */
+@media (max-width: 768px) {
+  html body.page-udforsk .explore-section-header {
+    grid-template-columns: minmax(0, 1fr) auto !important;
+    column-gap: 8px !important;
+  }
+
+  html body.page-udforsk .explore-section-header::before {
+    content: none !important;
+    display: none !important;
+  }
+
+  html body.page-udforsk .explore-carousel-arrow {
+    display: none !important;
+  }
+}
