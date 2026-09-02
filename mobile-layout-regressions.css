@@ -25,7 +25,7 @@ html body .home-podcast-search { display: none; }
   html body.has-home-search-focus.page-forside .home-podcast-search.is-focused {
     position: fixed;
     z-index: 1800;
-    top: 12px;
+    top: var(--home-search-viewport-top, 12px);
     right: max(16px, env(safe-area-inset-right, 0px));
     left: max(16px, env(safe-area-inset-left, 0px));
     width: auto;

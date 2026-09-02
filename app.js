@@ -1328,6 +1328,7 @@ function deactivateHomePodcastSearchFocus() {
   const { form } = getHomeSearchElements();
   form?.classList.remove("is-focused");
   form?.style.removeProperty("--home-search-results-height");
+  form?.style.removeProperty("--home-search-viewport-top");
 }
 
 function activateHomePodcastSearchFocus() {
@@ -1344,6 +1345,7 @@ function activateHomePodcastSearchFocus() {
   const updateViewport = () => {
     const viewport = window.visualViewport;
     const viewportHeight = viewport?.height || window.innerHeight;
+    const viewportTop = Math.max(0, viewport?.offsetTop || 0);
     const referenceHeight = Math.max(
       homeSearchState.focusViewportHeight,
       window.innerHeight,
@@ -1353,10 +1355,12 @@ function activateHomePodcastSearchFocus() {
       viewport && viewport.height < referenceHeight - 120
     );
     const bottomClearance = keyboardOpen ? 12 : 88;
+    form.style.setProperty("--home-search-viewport-top", `${Math.round(viewportTop + 12)}px`);
     const formBottom = form.getBoundingClientRect().bottom;
+    const visibleBottom = viewportTop + viewportHeight;
     const resultsHeight = Math.max(
       120,
-      Math.floor(viewportHeight - formBottom - bottomClearance - 7)
+      Math.floor(visibleBottom - formBottom - bottomClearance - 7)
     );
 
     form.style.setProperty("--home-search-results-height", `${resultsHeight}px`);
@@ -1453,6 +1457,11 @@ function bindHomePodcastSearch() {
   input.addEventListener("focus", () => {
     activateHomePodcastSearchFocus();
     renderHomePodcastSearchResults();
+  });
+  input.addEventListener("blur", () => {
+    window.requestAnimationFrame(() => {
+      if (!form.contains(document.activeElement)) closeHomePodcastSearch({ exitFocus: true });
+    });
   });
   input.addEventListener("keydown", (event) => {
     if (event.key === "Escape") {
