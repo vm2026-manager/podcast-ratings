@@ -21543,7 +21543,6 @@ async function loadPodcasts() {
     startPodcastDataRefreshTimer();
     scheduleHomeHeroRotation();
     scheduleBackgroundRouteWarmup();
-    loadPodcastSimilarityProductData();
   }
 }
 
