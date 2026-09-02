@@ -9855,7 +9855,9 @@ function renderPodcastEpisodeOverviewRows(podcast) {
     .map((episode, index) => {
       const episodeId = getEpisodeKey(episode);
       const episodeNumber = Number(episode.episode_number || index + 1);
-      const publicationDate = formatEpisodeDate(episode.published_at) || "—";
+      // Only surface an upstream publication date when the episode actually has
+      // one. Manual catalogue entries intentionally have no inferred date.
+      const publicationDate = showPublicationDate ? formatEpisodeDate(episode.published_at) : "";
       const stat = getEpisodeStat(episodeId);
       const userRating = getEpisodeUserRating(episodeId);
       const sourceScore = parseNumber(stat?.averageRating);
@@ -9876,11 +9878,11 @@ function renderPodcastEpisodeOverviewRows(podcast) {
           ${
             showPublicationDate
               ? `<td class="episode-publication-date-cell" data-label="Udgivelsesdato" aria-label="Udgivelsesdato ${escapeHtml(
-                  publicationDate
-                )}">${escapeHtml(publicationDate)}</td>`
+                  publicationDate || "ukendt"
+                )}">${escapeHtml(publicationDate || "—")}</td>`
               : `<td data-label="#">${escapeHtml(String(episodeNumber))}</td>`
           }
-          <td data-label="Episode">
+          <td data-label="Episode" data-published-date="${escapeHtml(publicationDate)}">
             <strong class="episode-title${titleLengthClass}">${escapeHtml(title)}</strong>
           </td>
           <td data-label="Brugere">
