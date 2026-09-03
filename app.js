@@ -8002,43 +8002,46 @@ function getPodcastDetailDynamicRecommendations(podcast, validated) {
 
   // Keep the strongest relationship signals ahead of broad catalogue matches:
   // main-series first, then every resolved product candidate, then generic fill.
-  const selected = [];
+  // Build the complete pool before applying diversity so same-series candidates
+  // cannot consume every visible slot ahead of validated product matches.
+  const candidatePool = [];
   const selectedKeys = new Set();
   const selectedTitles = new Set([currentTitle]);
-  const appendPhase = (candidates, limit) => {
-    const available = candidates.filter((candidate) => {
+  const appendPhase = (candidates) => {
+    candidates.forEach((candidate) => {
       const candidatePodcast = candidate?.item?.podcast;
       const candidateKey = getPodcastKey(candidatePodcast);
       const candidateTitle = normalizeComparable(candidatePodcast?.title);
-      return (
-        candidateKey &&
-        !selectedKeys.has(candidateKey) &&
-        !(candidateTitle && selectedTitles.has(candidateTitle))
-      );
+      if (!candidateKey || selectedKeys.has(candidateKey)) return;
+      if (candidateTitle && selectedTitles.has(candidateTitle)) return;
+      candidatePool.push(candidate);
+      selectedKeys.add(candidateKey);
+      if (candidateTitle) selectedTitles.add(candidateTitle);
     });
-
-    selectPodcastDetailRecommendations(available, Math.max(0, limit - selected.length)).forEach(
-      (candidate) => {
-        const candidatePodcast = candidate?.item?.podcast;
-        const candidateKey = getPodcastKey(candidatePodcast);
-        const candidateTitle = normalizeComparable(candidatePodcast?.title);
-        if (!candidateKey || selectedKeys.has(candidateKey)) return;
-        selected.push(candidate);
-        selectedKeys.add(candidateKey);
-        if (candidateTitle) selectedTitles.add(candidateTitle);
-      }
-    );
   };
 
-  appendPhase(scoredCandidates.filter((candidate) => candidate.sameSeries), 8);
+  const sameSeriesCandidates = scoredCandidates.filter((candidate) => candidate.sameSeries);
+  const manuallyValidatedCandidates = scoredCandidates.filter((candidate) =>
+    manualCandidateKeys.has(getPodcastKey(candidate?.item?.podcast))
+  );
+
+  // A manually validated same-series match may lead. The complete same-series
+  // pool still follows before broader candidates, while its validated external
+  // counterparts remain available for the diversity pass.
+  appendPhase(
+    sameSeriesCandidates.filter((candidate) =>
+      manualCandidateKeys.has(getPodcastKey(candidate?.item?.podcast))
+    )
+  );
+  appendPhase(sameSeriesCandidates);
+  appendPhase(manuallyValidatedCandidates);
   appendPhase(
     scoredCandidates.filter((candidate) =>
       productCandidatesByKey.has(getPodcastKey(candidate?.item?.podcast))
-    ),
-    8
+    )
   );
-  appendPhase(scoredCandidates, 8);
-  return selected;
+  appendPhase(scoredCandidates);
+  return selectPodcastDetailRecommendations(candidatePool, 8);
 }
 
 function getRecommendationDiversityKey(candidate) {
