@@ -3550,8 +3550,8 @@ function getRankingListCacheKey() {
   return [
     state.rankingListCacheVersion,
     state.rankingSource,
-    state.rankingSource === "users" ? state.userRankingSort : "",
-    state.rankingSource === "users" ? state.userRankingDirection : "",
+    hasDesktopUserRankingSort() ? state.userRankingSort : "",
+    hasDesktopUserRankingSort() ? state.userRankingDirection : "",
     state.sort,
     activeFilter,
     getExactPublisherFilterToken(state.activePublisherFilter),
@@ -3629,10 +3629,9 @@ function getFilteredPodcasts() {
       return queryParts.every((part) => podcast.searchText.includes(part));
     })
     .sort((a, b) => {
-      const isUserCountSort =
-        state.rankingSource === "users" &&
-        state.userRankingSort === "count";
-      const isUserSortAscending = state.userRankingDirection === "asc";
+      const usesDesktopUserRankingSort = hasDesktopUserRankingSort();
+      const isUserCountSort = usesDesktopUserRankingSort && state.userRankingSort === "count";
+      const isUserSortAscending = usesDesktopUserRankingSort && state.userRankingDirection === "asc";
 
       if (isUserCountSort) {
         const aStat = getCommunityStat(getPodcastKey(a));
@@ -3665,7 +3664,7 @@ function getFilteredPodcasts() {
 
       const ratingDelta = aRating - bRating;
       if (ratingDelta !== 0) {
-        if (state.rankingSource === "users") {
+        if (usesDesktopUserRankingSort) {
           return isUserSortAscending ? ratingDelta : -ratingDelta;
         }
         return state.sort === "placement-desc" ? ratingDelta : -ratingDelta;
@@ -3909,7 +3908,7 @@ function updateRankingSourceUi() {
     }
   });
 
-  const showUserSort = state.rankingSource === "users";
+  const showUserSort = hasDesktopUserRankingSort();
   if (elements.rankingUserSortField) {
     elements.rankingUserSortField.hidden = !showUserSort;
     elements.rankingUserSortField.setAttribute("aria-hidden", String(!showUserSort));
@@ -5474,6 +5473,10 @@ function isDesktopRankingViewport() {
     typeof window !== "undefined" &&
       window.matchMedia?.("(min-width: 1101px)").matches
   );
+}
+
+function hasDesktopUserRankingSort() {
+  return isDesktopRankingViewport() && state.rankingSource === "users";
 }
 
 function syncDesktopRankingSearchPlacement() {
@@ -21212,6 +21215,7 @@ function setupEvents() {
 
   elements.rankingUserSortButtons?.forEach((button) => {
     button.addEventListener("click", () => {
+      if (!hasDesktopUserRankingSort()) return;
       const nextSort = button.dataset.rankingUserSort;
       if (nextSort !== "rating" && nextSort !== "count") return;
       if (state.userRankingSort === nextSort) return;
@@ -21230,6 +21234,7 @@ function setupEvents() {
   window.matchMedia?.("(min-width: 1101px)").addEventListener?.("change", () => {
     syncDesktopRankingSearchPlacement();
     if (document.body.classList.contains("page-ranglister")) {
+      updateRankingSourceUi();
       renderPodcastGrid();
     }
   });
