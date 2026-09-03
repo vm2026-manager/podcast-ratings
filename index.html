@@ -39,7 +39,7 @@
     <link rel="stylesheet" href="mobile-profile-settings.css?v=20260820-mobile-profile-settings-v1" />
     <link rel="stylesheet" href="mobile-featured-detail.css?v=20260902-mobile-rating-summary-align-v1" />
     <link rel="stylesheet" href="header-navigation-fix.css?v=20260831-header-breakpoint-fix-v1" />
-    <link rel="stylesheet" href="mobile-layout-regressions.css?v=20260902-explore-mobile-section-polish-v1" />
+    <link rel="stylesheet" href="mobile-layout-regressions.css?v=20260903-mobile-search-overlay-v1" />
 
     <script
       data-goatcounter="https://podcastratings.goatcounter.com/count"
@@ -61,7 +61,7 @@
       })();
     </script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
-    <script src="app.js?v=20260903-udforsk-similarity-gate-v1" defer></script>
+    <script src="app.js?v=20260903-mobile-search-overlay-v1" defer></script>
   </head>
 
   <body>
@@ -728,5 +728,26 @@
         </div>
       </div>
     </div>
+
+    <section
+      id="mobileHomeSearchOverlay"
+      class="mobile-home-search-overlay"
+      role="dialog"
+      aria-modal="true"
+      aria-label="Søg podcasts"
+      aria-hidden="true"
+      hidden
+    >
+      <div class="mobile-home-search-overlay__header">
+        <button id="mobileHomeSearchOverlayClose" class="mobile-home-search-overlay__close" type="button" aria-label="Luk søgning">
+          Tilbage
+        </button>
+        <form id="mobileHomeSearchOverlayForm" class="mobile-home-search-overlay__form" role="search" aria-label="Søg podcasts">
+          <svg class="mobile-home-search-overlay__icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="10.8" cy="10.8" r="6.4"></circle><path d="m16 16 4.2 4.2"></path></svg>
+          <input id="mobileHomeSearchOverlayInput" class="mobile-home-search-overlay__input" type="search" autocomplete="off" autocapitalize="none" spellcheck="false" placeholder="Søg efter podcasts..." aria-label="Søg efter podcasts" aria-autocomplete="list" aria-controls="mobileHomeSearchOverlayResults" aria-expanded="false" />
+        </form>
+      </div>
+      <div id="mobileHomeSearchOverlayResults" class="mobile-home-search-overlay__results" role="listbox" aria-label="Søgeresultater"></div>
+    </section>
 </body>
 </html>

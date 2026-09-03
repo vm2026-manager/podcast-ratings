@@ -913,6 +913,11 @@ const elements = {
   featuredParams: document.getElementById("featuredParams"),
   featuredDots: document.getElementById("featuredDots"),
   pageIntroPanel: document.getElementById("pageIntroPanel"),
+  mobileHomeSearchOverlay: document.getElementById("mobileHomeSearchOverlay"),
+  mobileHomeSearchOverlayClose: document.getElementById("mobileHomeSearchOverlayClose"),
+  mobileHomeSearchOverlayForm: document.getElementById("mobileHomeSearchOverlayForm"),
+  mobileHomeSearchOverlayInput: document.getElementById("mobileHomeSearchOverlayInput"),
+  mobileHomeSearchOverlayResults: document.getElementById("mobileHomeSearchOverlayResults"),
   pageLinks: document.querySelectorAll("[data-page-link]"),
   authPanel: document.getElementById("authPanel"),
   authLoggedOut: document.getElementById("authLoggedOut"),
@@ -968,6 +973,13 @@ const homeSearchState = {
   activeIndex: -1,
   viewportCleanup: null,
   focusViewportHeight: 0
+};
+
+const mobileHomeSearchOverlayState = {
+  matches: [],
+  activeIndex: -1,
+  viewportCleanup: null,
+  viewportFrame: 0
 };
 
 function applyViewModePreference() {
@@ -1453,8 +1465,17 @@ function bindHomePodcastSearch() {
     event.preventDefault();
     if (homeSearchState.matches.length) openHomePodcastSearchResult(homeSearchState.activeIndex >= 0 ? homeSearchState.activeIndex : 0);
   });
+  input.addEventListener("pointerdown", (event) => {
+    if (!isMobileViewport()) return;
+    event.preventDefault();
+    openMobileHomeSearchOverlay();
+  });
   input.addEventListener("input", () => renderHomePodcastSearchResults({ exitFocusOnEmpty: true }));
   input.addEventListener("focus", () => {
+    if (isMobileViewport()) {
+      openMobileHomeSearchOverlay();
+      return;
+    }
     activateHomePodcastSearchFocus();
     renderHomePodcastSearchResults();
   });
@@ -1484,6 +1505,202 @@ function bindHomePodcastSearch() {
   results.addEventListener("click", (event) => {
     const result = event.target.closest("[data-home-search-index]");
     if (result) openHomePodcastSearchResult(Number(result.dataset.homeSearchIndex));
+  });
+}
+
+function clearMobileHomeSearchOverlayResults({ clearInput = false } = {}) {
+  const { mobileHomeSearchOverlayInput: input, mobileHomeSearchOverlayResults: results } = elements;
+  mobileHomeSearchOverlayState.matches = [];
+  mobileHomeSearchOverlayState.activeIndex = -1;
+  results?.replaceChildren();
+  input?.setAttribute("aria-expanded", "false");
+  input?.removeAttribute("aria-activedescendant");
+  if (clearInput && input) input.value = "";
+}
+
+function scheduleMobileHomeSearchOverlayGeometry() {
+  if (!document.body.classList.contains("mobile-home-search-overlay-open")) return;
+  if (mobileHomeSearchOverlayState.viewportFrame) return;
+
+  mobileHomeSearchOverlayState.viewportFrame = window.requestAnimationFrame(() => {
+    mobileHomeSearchOverlayState.viewportFrame = 0;
+    const { mobileHomeSearchOverlay: overlay } = elements;
+    if (!overlay || overlay.hidden) return;
+
+    const viewport = window.visualViewport;
+    const top = Math.max(0, viewport?.offsetTop || 0);
+    const height = Math.max(0, viewport?.height || window.innerHeight);
+    overlay.style.setProperty("--mobile-search-overlay-top", `${Math.round(top)}px`);
+    overlay.style.setProperty("--mobile-search-overlay-height", `${Math.floor(height)}px`);
+  });
+}
+
+function closeMobileHomeSearchOverlay({ clearInput = true } = {}) {
+  const {
+    mobileHomeSearchOverlay: overlay,
+    mobileHomeSearchOverlayInput: input
+  } = elements;
+  if (!overlay) return;
+
+  mobileHomeSearchOverlayState.viewportCleanup?.();
+  mobileHomeSearchOverlayState.viewportCleanup = null;
+  if (mobileHomeSearchOverlayState.viewportFrame) {
+    window.cancelAnimationFrame(mobileHomeSearchOverlayState.viewportFrame);
+  }
+  mobileHomeSearchOverlayState.viewportFrame = 0;
+  clearMobileHomeSearchOverlayResults({ clearInput });
+  input?.blur();
+  overlay.hidden = true;
+  overlay.setAttribute("aria-hidden", "true");
+  overlay.style.removeProperty("--mobile-search-overlay-top");
+  overlay.style.removeProperty("--mobile-search-overlay-height");
+  document.body.classList.remove("mobile-home-search-overlay-open");
+}
+
+function openMobileHomeSearchOverlay() {
+  if (!isMobileViewport()) return false;
+
+  const {
+    mobileHomeSearchOverlay: overlay,
+    mobileHomeSearchOverlayInput: input
+  } = elements;
+  if (!overlay || !input) return false;
+
+  deactivateHomePodcastSearchFocus();
+  overlay.hidden = false;
+  overlay.setAttribute("aria-hidden", "false");
+  document.body.classList.add("mobile-home-search-overlay-open");
+  scheduleMobileHomeSearchOverlayGeometry();
+
+  if (!mobileHomeSearchOverlayState.viewportCleanup) {
+    const updateGeometry = () => scheduleMobileHomeSearchOverlayGeometry();
+    window.visualViewport?.addEventListener("resize", updateGeometry);
+    window.visualViewport?.addEventListener("scroll", updateGeometry);
+    mobileHomeSearchOverlayState.viewportCleanup = () => {
+      window.visualViewport?.removeEventListener("resize", updateGeometry);
+      window.visualViewport?.removeEventListener("scroll", updateGeometry);
+    };
+  }
+
+  input.focus({ preventScroll: true });
+  return true;
+}
+
+function renderMobileHomeSearchOverlayResults() {
+  const {
+    mobileHomeSearchOverlayInput: input,
+    mobileHomeSearchOverlayResults: results
+  } = elements;
+  if (!input || !results) return;
+
+  const query = input.value.trim();
+  if (normalizeSearchValue(query).length < 2) {
+    clearMobileHomeSearchOverlayResults();
+    scheduleMobileHomeSearchOverlayGeometry();
+    return;
+  }
+
+  const matches = getHeaderSearchMatches(query);
+  mobileHomeSearchOverlayState.matches = matches;
+  mobileHomeSearchOverlayState.activeIndex = -1;
+  if (!matches.length) {
+    results.innerHTML = '<p class="mobile-home-search-overlay__empty" role="status">Ingen podcasts matcher din søgning.</p>';
+  } else {
+    results.innerHTML = matches.map(({ podcast, matchLabel }, index) => {
+      const metadata = [podcast.host, podcast.publisher, podcast.genre].filter(Boolean).join(" · ");
+      return `
+        <button id="mobileHomeSearchOverlayResult-${index}" class="mobile-home-search-overlay__result" type="button" role="option" aria-selected="false" data-mobile-home-search-index="${index}">
+          <span class="mobile-home-search-overlay__cover"><img alt="" /></span>
+          <span class="mobile-home-search-overlay__copy"><strong>${escapeHtml(podcast.title)}</strong><span>${escapeHtml(metadata || matchLabel)}</span></span>
+          <span class="mobile-home-search-overlay__match">${escapeHtml(matchLabel)}</span>
+        </button>`;
+    }).join("");
+    results.querySelectorAll(".mobile-home-search-overlay__cover").forEach((cover, index) => {
+      const podcast = matches[index]?.podcast;
+      setImage(cover, getPodcastImageSources(podcast), podcast?.title || "Podcastcover");
+    });
+  }
+
+  input.setAttribute("aria-expanded", "true");
+  scheduleMobileHomeSearchOverlayGeometry();
+}
+
+function setMobileHomeSearchOverlayActiveIndex(index) {
+  const { mobileHomeSearchOverlayInput: input, mobileHomeSearchOverlayResults: results } = elements;
+  if (!mobileHomeSearchOverlayState.matches.length || !results) return;
+
+  const nextIndex = (index + mobileHomeSearchOverlayState.matches.length) % mobileHomeSearchOverlayState.matches.length;
+  mobileHomeSearchOverlayState.activeIndex = nextIndex;
+  results.querySelectorAll("[data-mobile-home-search-index]").forEach((option, optionIndex) => {
+    const isActive = optionIndex === nextIndex;
+    option.classList.toggle("is-active", isActive);
+    option.setAttribute("aria-selected", String(isActive));
+  });
+  input?.setAttribute("aria-activedescendant", `mobileHomeSearchOverlayResult-${nextIndex}`);
+}
+
+function openMobileHomeSearchOverlayResult(index) {
+  const match = mobileHomeSearchOverlayState.matches[index];
+  if (!match) return;
+
+  const navigationKeys = mobileHomeSearchOverlayState.matches
+    .map(({ podcast }) => getPodcastKey(podcast))
+    .filter(Boolean);
+  const { input: returnFocus } = getHomeSearchElements();
+  closeMobileHomeSearchOverlay();
+  openPodcastDetailSheet(match.podcast, returnFocus, {
+    allowDesktop: true,
+    navigationKeys
+  });
+}
+
+function bindMobileHomeSearchOverlay() {
+  const {
+    mobileHomeSearchOverlay: overlay,
+    mobileHomeSearchOverlayClose: closeButton,
+    mobileHomeSearchOverlayForm: form,
+    mobileHomeSearchOverlayInput: input,
+    mobileHomeSearchOverlayResults: results
+  } = elements;
+  if (!overlay || !closeButton || !form || !input || !results) return;
+
+  closeButton.addEventListener("click", () => closeMobileHomeSearchOverlay());
+  form.addEventListener("submit", (event) => {
+    event.preventDefault();
+    if (mobileHomeSearchOverlayState.matches.length) {
+      openMobileHomeSearchOverlayResult(
+        mobileHomeSearchOverlayState.activeIndex >= 0 ? mobileHomeSearchOverlayState.activeIndex : 0
+      );
+    }
+  });
+  input.addEventListener("input", renderMobileHomeSearchOverlayResults);
+  input.addEventListener("keydown", (event) => {
+    if (event.key === "Escape") {
+      event.preventDefault();
+      closeMobileHomeSearchOverlay();
+      return;
+    }
+    if (!mobileHomeSearchOverlayState.matches.length) return;
+    if (event.key === "ArrowDown") {
+      event.preventDefault();
+      setMobileHomeSearchOverlayActiveIndex(mobileHomeSearchOverlayState.activeIndex + 1);
+    } else if (event.key === "ArrowUp") {
+      event.preventDefault();
+      setMobileHomeSearchOverlayActiveIndex(
+        mobileHomeSearchOverlayState.activeIndex < 0
+          ? mobileHomeSearchOverlayState.matches.length - 1
+          : mobileHomeSearchOverlayState.activeIndex - 1
+      );
+    } else if (event.key === "Enter") {
+      event.preventDefault();
+      openMobileHomeSearchOverlayResult(
+        mobileHomeSearchOverlayState.activeIndex >= 0 ? mobileHomeSearchOverlayState.activeIndex : 0
+      );
+    }
+  });
+  results.addEventListener("click", (event) => {
+    const result = event.target.closest("[data-mobile-home-search-index]");
+    if (result) openMobileHomeSearchOverlayResult(Number(result.dataset.mobileHomeSearchIndex));
   });
 }
 
@@ -19641,6 +19858,7 @@ function renderExplorePage() {
 }
 
 function renderRoute() {
+  closeMobileHomeSearchOverlay({ clearInput: false });
   deactivateHomePodcastSearchFocus();
   const { rawRoute, route } = getRouteInfoFromHash();
 
@@ -20819,6 +21037,7 @@ function updateRankingScrollToBottomButton() {
 
 function setupEvents() {
   setupRankingScrollToBottomButton();
+  bindMobileHomeSearchOverlay();
   const handleRouteHistoryChange = () => {
     render();
     restorePodcastDetailFromHistory();
