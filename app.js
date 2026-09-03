@@ -10212,10 +10212,16 @@ function renderPodcastEpisodeOverview(podcast) {
       </div>
       <p class="podcast-detail-sheet__episode-workspace-summary" data-episode-workspace-summary aria-live="polite">${escapeHtml(getEpisodeWorkspaceSummary(podcast))}</p>
       <div class="podcast-detail-sheet__episode-table-wrap">
-        <table class="podcast-detail-sheet__episode-table${isManualEpisodeList ? " podcast-detail-sheet__episode-table--manual" : ""}">
+        <table class="podcast-detail-sheet__episode-table${isManualEpisodeList ? " podcast-detail-sheet__episode-table--manual" : ""}${firstColumnLabel === "Udgivelsesdato" ? " podcast-detail-sheet__episode-table--publication-date" : ""}">
           <caption class="sr-only" id="podcastEpisodeOverviewTitle">Episoder i ${escapeHtml(
             podcast.title || "podcasten"
           )}</caption>
+          <colgroup>
+            <col />
+            <col />
+            <col />
+            <col />
+          </colgroup>
           <thead>
             <tr>
               <th scope="col"${

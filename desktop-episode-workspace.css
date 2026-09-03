@@ -2,21 +2,27 @@
 @media (min-width: 1100px) {
   html body #podcastDetailSheet.is-episode-workspace .podcast-detail-sheet__episode-table { table-layout: fixed; }
 
-  /* Keep the number column compact. Published-date feeds retain a practical width. */
-  html body #podcastDetailSheet.is-episode-workspace .podcast-detail-sheet__episode-table th:first-child:not(.episode-publication-date-header),
-  html body #podcastDetailSheet.is-episode-workspace .podcast-detail-sheet__episode-table td:first-child:not(.episode-publication-date-cell) { width: 4rem !important; min-width: 4rem !important; }
-  html body #podcastDetailSheet.is-episode-workspace .podcast-detail-sheet__episode-table th:first-child.episode-publication-date-header,
-  html body #podcastDetailSheet.is-episode-workspace .podcast-detail-sheet__episode-table td:first-child.episode-publication-date-cell { width: 8.5rem !important; min-width: 8.5rem !important; }
-  html body #podcastDetailSheet.is-episode-workspace .podcast-detail-sheet__episode-table th:nth-child(2) { width: auto !important; }
-  html body #podcastDetailSheet.is-episode-workspace .podcast-detail-sheet__episode-table th:nth-child(3),
-  html body #podcastDetailSheet.is-episode-workspace .podcast-detail-sheet__episode-table td:nth-child(3) { width: 11rem !important; }
-  html body #podcastDetailSheet.is-episode-workspace .podcast-detail-sheet__episode-table th:nth-child(4),
-  html body #podcastDetailSheet.is-episode-workspace .podcast-detail-sheet__episode-table td:nth-child(4) { width: 9.5rem !important; }
+  /* A colgroup gives every row and its matching header the same four-column
+     geometry. The title column receives the remaining width. */
+  html body #podcastDetailSheet.is-episode-workspace .podcast-detail-sheet__episode-table:not(.podcast-detail-sheet__episode-table--publication-date) col:nth-child(1) { width: 4rem !important; }
+  /* 30. september 2026 measures about 157px at this type scale; 12rem leaves
+     room for the cell's horizontal padding and a clear gap before the title. */
+  html body #podcastDetailSheet.is-episode-workspace .podcast-detail-sheet__episode-table--publication-date col:nth-child(1) { width: 12rem !important; }
+  html body #podcastDetailSheet.is-episode-workspace .podcast-detail-sheet__episode-table col:nth-child(2) { width: auto !important; }
+  html body #podcastDetailSheet.is-episode-workspace .podcast-detail-sheet__episode-table col:nth-child(3) { width: 12rem !important; }
+  html body #podcastDetailSheet.is-episode-workspace .podcast-detail-sheet__episode-table col:nth-child(4) { width: 10rem !important; }
+
+  /* The colgroup is the only column-width authority. This clears the older
+     cell widths so they cannot compress or widen a column independently. */
+  html body #podcastDetailSheet.is-episode-workspace .podcast-detail-sheet__episode-table th,
+  html body #podcastDetailSheet.is-episode-workspace .podcast-detail-sheet__episode-table td { width: auto !important; min-width: 0 !important; max-width: none !important; }
 
   html body #podcastDetailSheet.is-episode-workspace .podcast-detail-sheet__episode-table th { padding: 15px 14px !important; font-size: 1rem !important; font-weight: 850 !important; }
   html body #podcastDetailSheet.is-episode-workspace .podcast-detail-sheet__episode-table td { padding: 17px 14px !important; }
   html body #podcastDetailSheet.is-episode-workspace .podcast-detail-sheet__episode-table td:first-child { font-size: 1rem !important; font-weight: 800 !important; }
-  html body #podcastDetailSheet.is-episode-workspace .episode-title { font: 800 1.08rem/1.38 "Manrope", sans-serif !important; overflow-wrap: anywhere; }
+  html body #podcastDetailSheet.is-episode-workspace .episode-publication-date-header,
+  html body #podcastDetailSheet.is-episode-workspace .episode-publication-date-cell { white-space: nowrap !important; }
+  html body #podcastDetailSheet.is-episode-workspace .episode-title { display: block !important; min-width: 0 !important; max-width: 100% !important; font: 800 1.08rem/1.38 "Manrope", sans-serif !important; overflow-wrap: anywhere; }
   html body #podcastDetailSheet.is-episode-workspace .episode-title--long { font-size: 1rem !important; }
   html body #podcastDetailSheet.is-episode-workspace .episode-title--very-long { font-size: .94rem !important; }
   html body #podcastDetailSheet.is-episode-workspace .podcast-detail-sheet__episode-source-score > strong,
@@ -33,15 +39,18 @@
 /* Preserve useful title width in the intermediate desktop/tablet workspace. */
 @media (min-width: 769px) and (max-width: 1099px) {
   html body #podcastDetailSheet.is-episode-workspace .podcast-detail-sheet__episode-table { table-layout: fixed; }
-  html body #podcastDetailSheet.is-episode-workspace .podcast-detail-sheet__episode-table th:first-child:not(.episode-publication-date-header),
-  html body #podcastDetailSheet.is-episode-workspace .podcast-detail-sheet__episode-table td:first-child:not(.episode-publication-date-cell) { width: 3.25rem !important; min-width: 3.25rem !important; }
-  html body #podcastDetailSheet.is-episode-workspace .podcast-detail-sheet__episode-table th:first-child.episode-publication-date-header,
-  html body #podcastDetailSheet.is-episode-workspace .podcast-detail-sheet__episode-table td:first-child.episode-publication-date-cell { width: 7.25rem !important; min-width: 7.25rem !important; }
-  html body #podcastDetailSheet.is-episode-workspace .podcast-detail-sheet__episode-table th:nth-child(2) { width: auto !important; }
-  html body #podcastDetailSheet.is-episode-workspace .podcast-detail-sheet__episode-table th:nth-child(3),
-  html body #podcastDetailSheet.is-episode-workspace .podcast-detail-sheet__episode-table td:nth-child(3) { width: 8.5rem !important; }
-  html body #podcastDetailSheet.is-episode-workspace .podcast-detail-sheet__episode-table th:nth-child(4),
-  html body #podcastDetailSheet.is-episode-workspace .podcast-detail-sheet__episode-table td:nth-child(4) { width: 7.5rem !important; }
+  html body #podcastDetailSheet.is-episode-workspace .podcast-detail-sheet__episode-table:not(.podcast-detail-sheet__episode-table--publication-date) col:nth-child(1) { width: 3.25rem !important; }
+  /* At the compact table scale the date is smaller, but still needs 11rem
+     including padding to keep the longest Danish label in its own column. */
+  html body #podcastDetailSheet.is-episode-workspace .podcast-detail-sheet__episode-table--publication-date col:nth-child(1) { width: 11rem !important; }
+  html body #podcastDetailSheet.is-episode-workspace .podcast-detail-sheet__episode-table col:nth-child(2) { width: auto !important; }
+  html body #podcastDetailSheet.is-episode-workspace .podcast-detail-sheet__episode-table col:nth-child(3) { width: 8.5rem !important; }
+  html body #podcastDetailSheet.is-episode-workspace .podcast-detail-sheet__episode-table col:nth-child(4) { width: 7.5rem !important; }
+  /* Keep cell constraints neutral; the colgroup above owns this geometry. */
+  html body #podcastDetailSheet.is-episode-workspace .podcast-detail-sheet__episode-table th,
+  html body #podcastDetailSheet.is-episode-workspace .podcast-detail-sheet__episode-table td { width: auto !important; min-width: 0 !important; max-width: none !important; }
+  html body #podcastDetailSheet.is-episode-workspace .episode-publication-date-header,
+  html body #podcastDetailSheet.is-episode-workspace .episode-publication-date-cell { white-space: nowrap !important; }
 
   html body #podcastDetailSheet.is-episode-workspace .podcast-detail-sheet__episode-table th { padding: 13px 10px !important; font-size: .9rem !important; font-weight: 850 !important; }
   html body #podcastDetailSheet.is-episode-workspace .podcast-detail-sheet__episode-table td { padding: 14px 10px !important; }
@@ -49,7 +58,7 @@
   html body #podcastDetailSheet.is-episode-workspace .podcast-detail-sheet__episode-source-score > strong,
   html body #podcastDetailSheet.is-episode-workspace .podcast-detail-sheet__episode-own-score,
   html body #podcastDetailSheet.is-episode-workspace .podcast-detail-sheet__episode-own-score > strong { font-size: .94rem !important; }
-  html body #podcastDetailSheet.is-episode-workspace .episode-title { font: 800 1rem/1.35 "Manrope", sans-serif !important; overflow-wrap: anywhere; }
+  html body #podcastDetailSheet.is-episode-workspace .episode-title { display: block !important; min-width: 0 !important; max-width: 100% !important; font: 800 1rem/1.35 "Manrope", sans-serif !important; overflow-wrap: anywhere; }
   html body #podcastDetailSheet.is-episode-workspace .episode-title--long { font-size: .94rem !important; }
   html body #podcastDetailSheet.is-episode-workspace .episode-title--very-long { font-size: .9rem !important; }
   html body #podcastDetailSheet.is-episode-workspace .podcast-detail-sheet__episode-workspace-title { font-size: 1.15rem !important; }
