@@ -467,7 +467,7 @@ const AUTH_PERSISTENCE_STORAGE_KEY = "podcast-ratings-auth-persistence";
 const PROFILE_PREFERENCES_STORAGE_KEY = "podcast-ratings-profile-preferences";
 const EXPLORE_PERSONAL_SEED_HISTORY_STORAGE_KEY =
   "podcast-ratings-explore-personal-seed-history-v1";
-const UDFORSK_RECOMMENDATION_VERSION = 4;
+const UDFORSK_RECOMMENDATION_VERSION = 5;
 const EXPLORE_PERSONAL_SNAPSHOT_STORAGE_KEY =
   "podcast-ratings-explore-personal-snapshots-v2";
 const EXPLORE_PERSONAL_MINIMUM_GROUP_SIZE = 3;
@@ -17205,6 +17205,8 @@ function getExploreSeedSectionItems(
   seed,
   { limit = 4, searchParts = [], genre = "Alle", usedKeys = new Set() } = {}
 ) {
+  if (state.podcastSimilarityProductStatus !== "ready") return [];
+
   const productItems = getExploreProductSimilarityItems(seed, {
     limit,
     searchParts,
@@ -17491,7 +17493,10 @@ function getExplorePersonalSections({
   const profile = getExplorePreferenceProfile();
   const seedPool = getExploreDailySeedPool(profile, { searchParts, genre });
   const fingerprint = getExploreRecommendationInputFingerprint();
-  const canUseSnapshot = !searchParts.length && genre === "Alle";
+  const canUseSnapshot =
+    state.podcastSimilarityProductStatus === "ready" &&
+    !searchParts.length &&
+    genre === "Alle";
   const cachedSections = canUseSnapshot
     ? readExplorePersonalSnapshot({ dayKey: seedPool.dayKey, fingerprint })
     : null;
@@ -19007,6 +19012,13 @@ function renderExploreGenreSections(container, { searchTerm = "", genre = "Alle"
 function renderExplorePage() {
   const container = elements.pageIntroPanel;
   if (!container) return;
+  if (
+    isLoggedIn() &&
+    state.podcastSimilarityProductStatus === "idle" &&
+    getExploreSeedPodcasts().length
+  ) {
+    loadPodcastSimilarityProductData();
+  }
   const isMobileExplore = isMobileViewport();
   const exploreIntroText = isLoggedIn()
     ? "Find podcasts udvalgt ud fra dine vurderinger, gemte favoritter og det, du allerede kan lide."
