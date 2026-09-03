@@ -29578,3 +29578,6 @@ html body [data-suggestion-id].is-notification-target {
   0%, 100% { outline-color: rgba(255, 92, 22, 0.35); }
   30%, 65% { outline-color: rgba(255, 92, 22, 0.95); }
 }
+.ranking-user-sort-field[hidden] {
+  display: none !important;
+}

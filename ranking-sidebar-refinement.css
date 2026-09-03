@@ -1,0 +1,202 @@
+/* Approved desktop refinement for the existing Ranglister filter sidebar. */
+@media (min-width: 901px) {
+  html body.page-ranglister .ranking-filter-panel {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 22px !important;
+    padding: 26px 28px 24px !important;
+    border: 1px solid rgba(224, 207, 190, 0.82) !important;
+    border-radius: 22px !important;
+    background: rgba(255, 252, 248, 0.72) !important;
+    box-shadow: 0 12px 28px rgba(66, 41, 20, 0.045) !important;
+  }
+
+  /* The visible sidebar starts with Kilde; the reset is the closing action. */
+  html body.page-ranglister .ranking-filter-panel__header {
+    display: contents !important;
+  }
+
+  html body.page-ranglister .ranking-filter-panel__header h2 {
+    display: none !important;
+  }
+
+  /* Category filters are represented beside search; do not duplicate them here. */
+  html body.page-ranglister .ranking-filter-panel__header .desktop-ranking-active-filters {
+    display: none !important;
+  }
+
+  html body.page-ranglister .ranking-filter-controls {
+    order: 1;
+    gap: 18px !important;
+  }
+
+  html body.page-ranglister .ranking-user-sort-field[hidden] {
+    display: none !important;
+  }
+
+  html body.page-ranglister .genre-nav {
+    order: 2;
+    gap: 10px !important;
+  }
+
+  html body.page-ranglister .rating-filter-section {
+    order: 3;
+    gap: 11px !important;
+    padding-top: 0 !important;
+    border-top: 0 !important;
+  }
+
+  html body.page-ranglister .controls-sidebar {
+    order: 4;
+  }
+
+  html body.page-ranglister .clear-filter-button {
+    order: 5;
+    width: 100% !important;
+    min-height: 48px !important;
+    margin: 2px 0 0 !important;
+    border: 1px solid rgba(255, 92, 22, 0.42) !important;
+    border-radius: 14px !important;
+    background: rgba(255, 250, 246, 0.74) !important;
+    box-shadow: none !important;
+    color: #d84b11 !important;
+    font: 800 0.84rem/1 "Manrope", Inter, system-ui, sans-serif !important;
+  }
+
+  html body.page-ranglister .ranking-source-field {
+    gap: 9px !important;
+  }
+
+  html body.page-ranglister .ranking-source-field > span,
+  html body.page-ranglister .genre-nav-header h3,
+  html body.page-ranglister .rating-filter-topline h3 {
+    color: #756258 !important;
+    font-size: 0.73rem !important;
+    letter-spacing: 0.095em !important;
+  }
+
+  html body.page-ranglister .ranking-source-toggle {
+    min-height: 52px !important;
+    padding: 4px !important;
+    border-color: rgba(225, 211, 197, 0.92) !important;
+    border-radius: 15px !important;
+    background: rgba(255, 255, 255, 0.72) !important;
+  }
+
+  html body.page-ranglister .ranking-source-button {
+    min-height: 42px !important;
+    padding: 0 8px !important;
+    border-radius: 11px !important;
+    color: #342b26 !important;
+    font-size: 0.82rem !important;
+    line-height: 1.18 !important;
+  }
+
+  html body.page-ranglister .ranking-source-button.active {
+    background: linear-gradient(180deg, #ff6a1a, #f45110) !important;
+    box-shadow: 0 4px 10px rgba(223, 84, 16, 0.16) !important;
+  }
+
+  /* Match the user-first source order shown in the approved desktop design. */
+  html body.page-ranglister .ranking-source-button[data-ranking-source="users"] {
+    order: -1;
+  }
+
+  html body.page-ranglister .genre-helper {
+    display: none !important;
+  }
+
+  html body.page-ranglister .genre-chips {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 9px 10px !important;
+  }
+
+  html body.page-ranglister .genre-chip {
+    order: 0;
+    grid-column: auto !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    min-height: 40px !important;
+    padding: 0 10px !important;
+    border-color: rgba(225, 211, 197, 0.88) !important;
+    border-radius: 12px !important;
+    background: rgba(255, 255, 255, 0.64) !important;
+    color: #342b26 !important;
+    font-size: 0.8rem !important;
+    justify-content: center !important;
+    text-align: center !important;
+  }
+
+  html body.page-ranglister .genre-chip[data-genre="Underholdning"] {
+    order: 1;
+    grid-column: 1 / -1 !important;
+  }
+
+  html body.page-ranglister .genre-chip.active,
+  html body.page-ranglister .genre-chip.is-active {
+    border-color: #ff5c16 !important;
+    background: #ff5c16 !important;
+    color: #fff !important;
+    box-shadow: 0 4px 10px rgba(223, 84, 16, 0.13) !important;
+  }
+
+  html body.page-ranglister .rating-filter-topline {
+    align-items: center !important;
+  }
+
+  html body.page-ranglister .rating-filter-value {
+    min-width: 0 !important;
+    padding: 5px 10px !important;
+    border: 1px solid rgba(255, 92, 22, 0.22) !important;
+    border-radius: 999px !important;
+    background: rgba(255, 92, 22, 0.07) !important;
+    color: #d84b11 !important;
+    font-size: 0.78rem !important;
+  }
+
+  html body.page-ranglister .rating-filter-slider-row {
+    padding: 2px 0 0 !important;
+  }
+
+  html body.page-ranglister .rating-filter-endpoints {
+    color: #756258 !important;
+    font-size: 0.76rem !important;
+  }
+
+  /* The table controls only direction for the sidebar-selected user metric. */
+  html body.page-ranglister .desktop-ranking-score-direction {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 5px !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    color: inherit !important;
+    font: inherit !important;
+    letter-spacing: inherit !important;
+    text-transform: inherit !important;
+    white-space: nowrap !important;
+    cursor: pointer !important;
+  }
+
+  html body.page-ranglister .desktop-ranking-score-direction:hover,
+  html body.page-ranglister .desktop-ranking-score-direction:focus-visible {
+    color: #d84b11 !important;
+  }
+
+  html body.page-ranglister .desktop-ranking-score-direction:focus-visible {
+    outline: 2px solid rgba(255, 92, 22, 0.38) !important;
+    outline-offset: 3px !important;
+  }
+
+  html body.page-ranglister .desktop-ranking-score-direction__indicator {
+    color: #f0520a !important;
+    font-size: 1.05em !important;
+    font-weight: 900 !important;
+    line-height: 1 !important;
+  }
+}

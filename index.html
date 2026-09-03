@@ -27,7 +27,7 @@
       rel="stylesheet"
     />
 
-    <link rel="stylesheet" href="style.css?v=20260830-mobile-ranking-badge-v1" />
+    <link rel="stylesheet" href="style.css?v=20260903-user-ranking-sort-v1" />
     <link rel="stylesheet" href="explore-mobile-stack.css?v=2026-07-19-desktop-home-package-02" />
     <link rel="stylesheet" href="mobile-home-ranking-polish.css?v=20260813-mobile-podcast-modal-breakpoint-fix" />
     <link rel="stylesheet" href="desktop-home-mockup.css?v=20260901-detail-tag-filter-selector-v1" />
@@ -40,6 +40,7 @@
     <link rel="stylesheet" href="mobile-featured-detail.css?v=20260902-mobile-rating-summary-align-v1" />
     <link rel="stylesheet" href="header-navigation-fix.css?v=20260831-header-breakpoint-fix-v1" />
     <link rel="stylesheet" href="mobile-layout-regressions.css?v=20260903-mobile-search-overlay-v1" />
+    <link rel="stylesheet" href="ranking-sidebar-refinement.css?v=20260903-ranking-sidebar-refinement-v4" />
 
     <script
       data-goatcounter="https://podcastratings.goatcounter.com/count"
@@ -61,7 +62,7 @@
       })();
     </script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
-    <script src="app.js?v=20260903-mobile-search-overlay-v1" defer></script>
+    <script src="app.js?v=20260903-ranking-sort-single-control-v2" defer></script>
   </head>
 
   <body>
@@ -291,6 +292,18 @@
                       data-ranking-source="users"
                     >
                       Brugere
+                    </button>
+                  </div>
+                </div>
+
+                <div class="ranking-source-field ranking-user-sort-field" data-ranking-user-sort-field hidden>
+                  <span>Sortering</span>
+                  <div class="ranking-source-toggle" role="group" aria-label="Sortér brugerranglisten">
+                    <button type="button" class="ranking-source-button" data-ranking-user-sort="rating">
+                      Højeste vurdering
+                    </button>
+                    <button type="button" class="ranking-source-button" data-ranking-user-sort="count">
+                      Flest vurderinger
                     </button>
                   </div>
                 </div>

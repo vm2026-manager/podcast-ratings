@@ -759,9 +759,10 @@ const state = {
   minimumRating: 0,
   rankingSource: "mads",
   rankingSourceTouched: false,
+  userRankingSort: "rating",
+  userRankingDirection: "desc",
   sort: "placement-asc",
   sortTouched: false,
-  desktopOwnRatingSort: null,
   profilePreferences: readProfilePreferences(),
   rankingPositionMode: "dynamic",
   profileSettingsBusy: false,
@@ -886,6 +887,8 @@ const elements = {
   mobileSortToggle: document.getElementById("mobileSortToggle"),
   rankingSourceButtons: document.querySelectorAll("[data-ranking-source]"),
   rankingSourceToggle: document.querySelector(".ranking-source-toggle"),
+  rankingUserSortField: document.querySelector("[data-ranking-user-sort-field]"),
+  rankingUserSortButtons: document.querySelectorAll("[data-ranking-user-sort]"),
   resultsText: document.getElementById("resultsText"),
   rankingToolbar: document.querySelector(".ranking-toolbar"),
   podcastGrid: document.getElementById("podcastGrid"),
@@ -3446,6 +3449,11 @@ function getPodcastRatingForActiveSource(podcast) {
   return parseNumber(podcast.ratingValue);
 }
 
+function getCommunityRatingCount(podcast) {
+  const count = Number(getCommunityStat(getPodcastKey(podcast))?.ratingCount || 0);
+  return Number.isFinite(count) && count > 0 ? Math.floor(count) : 0;
+}
+
 function setMinimumRating(value) {
   const nextRating = Math.max(0, Math.min(10, parseNumber(value) ?? 0));
   if (state.minimumRating === nextRating) return;
@@ -3462,6 +3470,11 @@ function clearRankingFilters() {
   state.activeMainSeriesFilter = "";
   state.searchTerm = "";
   state.minimumRating = 0;
+  if (state.rankingSource === "users") {
+    state.userRankingSort = "rating";
+    state.userRankingDirection = "desc";
+    state.sort = "placement-asc";
+  }
   if (elements.searchInput) {
     elements.searchInput.value = "";
   }
@@ -3537,8 +3550,9 @@ function getRankingListCacheKey() {
   return [
     state.rankingListCacheVersion,
     state.rankingSource,
+    state.rankingSource === "users" ? state.userRankingSort : "",
+    state.rankingSource === "users" ? state.userRankingDirection : "",
     state.sort,
-    isDesktopRankingViewport() ? state.desktopOwnRatingSort || "" : "",
     activeFilter,
     getExactPublisherFilterToken(state.activePublisherFilter),
     getExactMainSeriesFilterToken(state.activeMainSeriesFilter),
@@ -3615,16 +3629,29 @@ function getFilteredPodcasts() {
       return queryParts.every((part) => podcast.searchText.includes(part));
     })
     .sort((a, b) => {
-      const ownRatingSortDirection = isDesktopRankingViewport()
-        ? state.desktopOwnRatingSort
-        : null;
-      const isOwnRatingSort = ownRatingSortDirection === "asc" || ownRatingSortDirection === "desc";
-      const aRating = isOwnRatingSort
-        ? getDesktopRankingOwnScore(a)
-        : getPodcastRatingForActiveSource(a);
-      const bRating = isOwnRatingSort
-        ? getDesktopRankingOwnScore(b)
-        : getPodcastRatingForActiveSource(b);
+      const isUserCountSort =
+        state.rankingSource === "users" &&
+        state.userRankingSort === "count";
+      const isUserSortAscending = state.userRankingDirection === "asc";
+
+      if (isUserCountSort) {
+        const aStat = getCommunityStat(getPodcastKey(a));
+        const bStat = getCommunityStat(getPodcastKey(b));
+        const aCount = getCommunityRatingCount(a);
+        const bCount = getCommunityRatingCount(b);
+        if (bCount !== aCount) {
+          return isUserSortAscending ? aCount - bCount : bCount - aCount;
+        }
+
+        const aAverage = parseNumber(aStat?.averageRating) ?? -1;
+        const bAverage = parseNumber(bStat?.averageRating) ?? -1;
+        if (bAverage !== aAverage) return bAverage - aAverage;
+
+        return comparePodcastsByActiveRankingOrder(a, b);
+      }
+
+      const aRating = getPodcastRatingForActiveSource(a);
+      const bRating = getPodcastRatingForActiveSource(b);
       const aHasRating = aRating !== null;
       const bHasRating = bRating !== null;
 
@@ -3638,8 +3665,8 @@ function getFilteredPodcasts() {
 
       const ratingDelta = aRating - bRating;
       if (ratingDelta !== 0) {
-        if (isOwnRatingSort) {
-          return ownRatingSortDirection === "asc" ? ratingDelta : -ratingDelta;
+        if (state.rankingSource === "users") {
+          return isUserSortAscending ? ratingDelta : -ratingDelta;
         }
         return state.sort === "placement-desc" ? ratingDelta : -ratingDelta;
       }
@@ -3880,6 +3907,18 @@ function updateRankingSourceUi() {
     if (button.dataset.rankingSource === "mads") {
       button.setAttribute("aria-label", "Podcastlisten");
     }
+  });
+
+  const showUserSort = state.rankingSource === "users";
+  if (elements.rankingUserSortField) {
+    elements.rankingUserSortField.hidden = !showUserSort;
+    elements.rankingUserSortField.setAttribute("aria-hidden", String(!showUserSort));
+  }
+
+  elements.rankingUserSortButtons?.forEach((button) => {
+    const active = showUserSort && button.dataset.rankingUserSort === state.userRankingSort;
+    button.classList.toggle("active", active);
+    button.setAttribute("aria-pressed", String(active));
   });
 }
 
@@ -5932,6 +5971,8 @@ function renderDesktopRanking(podcasts) {
     state.rankingSource === "users"
       ? "Brugernes vurdering"
       : "Podcastlistens vurdering";
+  const canToggleUserSortDirection = state.rankingSource === "users";
+  const userSortDirection = state.userRankingDirection === "asc" ? "asc" : "desc";
   const showsCards = state.desktopRankingLayout === "cards";
 
   if (showsCards) {
@@ -5956,51 +5997,19 @@ function renderDesktopRanking(podcasts) {
     "aria-label",
     "Hele ranglisten som liste"
   );
-  const isOwnRatingSort =
-    state.desktopOwnRatingSort === "asc" || state.desktopOwnRatingSort === "desc";
-  const isDescendingScore = state.sort !== "placement-desc";
-  const isDescendingOwnScore = state.desktopOwnRatingSort !== "asc";
   table.innerHTML = `
     <div class="desktop-ranking-table__head" role="row">
       <span role="columnheader">#</span>
       <span role="columnheader">Podcast</span>
       <span role="columnheader">Udgiver</span>
-      <span role="columnheader" aria-sort="${
-        !isOwnRatingSort ? (isDescendingScore ? "descending" : "ascending") : "none"
-      }">
-        <button
-          class="desktop-ranking-score-sort${!isOwnRatingSort ? " is-active" : ""}"
-          type="button"
-          data-ranking-score-sort
-          aria-label="Sortér efter ${escapeHtml(activeScoreLabel)}${
-            !isOwnRatingSort ? `: ${isDescendingScore ? "højeste først" : "laveste først"}` : ""
-          }"
-          title="Sortér efter ${escapeHtml(activeScoreLabel)}"
-        >
-          <span>${escapeHtml(activeScoreLabel)}</span>
-          <span class="desktop-ranking-score-sort__indicator" aria-hidden="true">${
-            !isOwnRatingSort ? (isDescendingScore ? "↓" : "↑") : "↕"
-          }</span>
-        </button>
-      </span>
-      <span role="columnheader" aria-sort="${
-        isOwnRatingSort ? (isDescendingOwnScore ? "descending" : "ascending") : "none"
-      }">
-        <button
-          class="desktop-ranking-score-sort${isOwnRatingSort ? " is-active" : ""}"
-          type="button"
-          data-ranking-own-score-sort
-          aria-label="Sortér efter Min vurdering${
-            isOwnRatingSort ? `: ${isDescendingOwnScore ? "højeste først" : "laveste først"}` : ""
-          }"
-          title="Sortér efter Min vurdering"
-        >
-          <span>Min vurdering</span>
-          <span class="desktop-ranking-score-sort__indicator" aria-hidden="true">${
-            isOwnRatingSort ? (isDescendingOwnScore ? "↓" : "↑") : "↕"
-          }</span>
-        </button>
-      </span>
+      <span role="columnheader"${
+        canToggleUserSortDirection ? ` aria-sort="${userSortDirection === "asc" ? "ascending" : "descending"}"` : ""
+      }>${
+        canToggleUserSortDirection
+          ? `<button class="desktop-ranking-score-direction" type="button" data-ranking-user-direction-toggle aria-label="Sortér ${escapeHtml(activeScoreLabel)}: ${userSortDirection === "asc" ? "laveste først" : "højeste først"}"><span>${escapeHtml(activeScoreLabel)}</span><span class="desktop-ranking-score-direction__indicator" aria-hidden="true">${userSortDirection === "asc" ? "↑" : "↓"}</span></button>`
+          : escapeHtml(activeScoreLabel)
+      }</span>
+      <span role="columnheader">Min vurdering</span>
       <span role="columnheader"><span class="sr-only">Handlinger</span></span>
     </div>
   `;
@@ -6011,26 +6020,12 @@ function renderDesktopRanking(podcasts) {
   });
   elements.podcastGrid.appendChild(table);
 
-  table.querySelector("[data-ranking-score-sort]")?.addEventListener("click", () => {
-    state.sortTouched = true;
-    const wasOwnRatingSort = state.desktopOwnRatingSort !== null;
-    state.desktopOwnRatingSort = null;
-    state.sort = wasOwnRatingSort
-      ? "placement-asc"
-      : state.sort === "placement-asc"
-        ? "placement-desc"
-        : "placement-asc";
+  table.querySelector("[data-ranking-user-direction-toggle]")?.addEventListener("click", () => {
+    state.userRankingDirection = state.userRankingDirection === "asc" ? "desc" : "asc";
     resetVisibleCount();
-    render();
+    renderPodcastGrid();
   });
 
-  table.querySelector("[data-ranking-own-score-sort]")?.addEventListener("click", () => {
-    state.sortTouched = true;
-    state.desktopOwnRatingSort =
-      state.desktopOwnRatingSort === "desc" ? "asc" : "desc";
-    resetVisibleCount();
-    render();
-  });
 }
 
 function isPodcastSaved(podcastKey) {
@@ -21214,6 +21209,21 @@ function setupEvents() {
       render();
     });
   }
+
+  elements.rankingUserSortButtons?.forEach((button) => {
+    button.addEventListener("click", () => {
+      const nextSort = button.dataset.rankingUserSort;
+      if (nextSort !== "rating" && nextSort !== "count") return;
+      if (state.userRankingSort === nextSort) return;
+
+      state.userRankingSort = nextSort;
+      state.userRankingDirection = "desc";
+      if (nextSort === "rating") state.sort = "placement-asc";
+      resetVisibleCount();
+      updateRankingSourceUi();
+      renderPodcastGrid();
+    });
+  });
 
   elements.rankingSourceToggle?.addEventListener("pointerup", handleRankingSourceToggleEvent);
   elements.rankingSourceToggle?.addEventListener("click", handleRankingSourceToggleEvent);
