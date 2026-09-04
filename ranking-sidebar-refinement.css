@@ -34,24 +34,40 @@
     display: none !important;
   }
 
+  html body.page-ranglister .ranking-user-sort-field .ranking-source-button:disabled {
+    border-color: rgba(185, 196, 205, 0.72) !important;
+    background: rgba(226, 233, 238, 0.82) !important;
+    box-shadow: none !important;
+    color: #7e8992 !important;
+    cursor: not-allowed !important;
+    opacity: 1 !important;
+  }
+
+  html body.page-ranglister .ranking-user-sort-field .ranking-source-button:disabled:hover,
+  html body.page-ranglister .ranking-user-sort-field .ranking-source-button:disabled:focus-visible {
+    background: rgba(226, 233, 238, 0.82) !important;
+    box-shadow: none !important;
+    color: #7e8992 !important;
+  }
+
   html body.page-ranglister .genre-nav {
     order: 2;
     gap: 10px !important;
   }
 
   html body.page-ranglister .rating-filter-section {
-    order: 3;
+    order: 4;
     gap: 11px !important;
     padding-top: 0 !important;
     border-top: 0 !important;
   }
 
   html body.page-ranglister .controls-sidebar {
-    order: 4;
+    order: 5;
   }
 
   html body.page-ranglister .clear-filter-button {
-    order: 5;
+    order: 6;
     width: 100% !important;
     min-height: 48px !important;
     margin: 2px 0 0 !important;
@@ -104,6 +120,29 @@
 
   html body.page-ranglister .genre-helper {
     display: none !important;
+  }
+
+  html body.page-ranglister .ranking-free-only-filter {
+    order: 3;
+    display: inline-flex !important;
+    align-items: center;
+    gap: 9px;
+    width: 100%;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: #342b26;
+    cursor: pointer;
+    font: 700 0.8rem/1.2 "Manrope", Inter, system-ui, sans-serif;
+  }
+
+  html body.page-ranglister .ranking-free-only-filter input {
+    width: 20px;
+    height: 20px;
+    margin: 0;
+    accent-color: #ff5c16;
+    cursor: pointer;
   }
 
   html body.page-ranglister .genre-chips {

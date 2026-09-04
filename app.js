@@ -757,6 +757,7 @@ const state = {
   activeMainSeriesFilter: "",
   searchTerm: "",
   minimumRating: 0,
+  freeOnly: false,
   rankingSource: "mads",
   rankingSourceTouched: false,
   userRankingSort: "rating",
@@ -903,6 +904,7 @@ const elements = {
   clearFilterButton: document.getElementById("clearFilterButton"),
   ratingFilter: document.getElementById("ratingFilter"),
   ratingFilterValue: document.getElementById("ratingFilterValue"),
+  rankingFreeOnly: document.getElementById("rankingFreeOnly"),
   rankingMobileFilterSummary: document.getElementById("rankingMobileFilterSummary"),
   rankingMobileActiveFilterRemove: document.getElementById("rankingMobileActiveFilterRemove"),
   rankingMobileFilterToggle: document.getElementById("rankingMobileFilterToggle"),
@@ -3473,12 +3475,29 @@ function setMinimumRating(value) {
   render();
 }
 
+function updateFreeOnlyFilterUi() {
+  if (elements.rankingFreeOnly) {
+    elements.rankingFreeOnly.checked = state.freeOnly;
+  }
+}
+
+function setFreeOnly(value) {
+  const nextValue = Boolean(value);
+  if (state.freeOnly === nextValue) return;
+
+  state.freeOnly = nextValue;
+  resetVisibleCount();
+  updateFreeOnlyFilterUi();
+  render();
+}
+
 function clearRankingFilters() {
   state.activeFilter = null;
   state.activePublisherFilter = "";
   state.activeMainSeriesFilter = "";
   state.searchTerm = "";
   state.minimumRating = 0;
+  state.freeOnly = false;
   if (state.rankingSource === "users") {
     state.userRankingSort = "rating";
     state.userRankingDirection = "desc";
@@ -3491,6 +3510,7 @@ function clearRankingFilters() {
   resetVisibleCount();
   createGenreChips();
   updateRatingFilterUi();
+  updateFreeOnlyFilterUi();
   render();
 }
 
@@ -3503,6 +3523,7 @@ function resetRankingFiltersForPodcastDetailNavigation(type, value) {
   state.activeMainSeriesFilter = "";
   state.searchTerm = "";
   state.minimumRating = 0;
+  state.freeOnly = false;
 
   if (elements.searchInput) elements.searchInput.value = "";
 
@@ -3513,6 +3534,7 @@ function resetRankingFiltersForPodcastDetailNavigation(type, value) {
   resetVisibleCount();
   createGenreChips();
   updateRatingFilterUi();
+  updateFreeOnlyFilterUi();
 }
 
 function createGenreChips() {
@@ -3566,6 +3588,7 @@ function getRankingListCacheKey() {
     getExactPublisherFilterToken(state.activePublisherFilter),
     getExactMainSeriesFilterToken(state.activeMainSeriesFilter),
     state.minimumRating,
+    state.freeOnly,
     state.searchTerm,
     savedFilterKeys
   ].join("||");
@@ -3625,6 +3648,10 @@ function getFilteredPodcasts() {
         if (rating === null || rating < state.minimumRating) {
           return false;
         }
+      }
+
+      if (state.freeOnly && podcast.accessType !== "free") {
+        return false;
       }
 
       if (!state.searchTerm) return true;
@@ -3836,6 +3863,9 @@ function updateMobileRankingFilterUi() {
   const categoryFilters = getActiveCategoryFilters();
   const isSavedFilter = state.activeFilter?.type === "saved";
   const ratingLabel = `Vurdering: ${formatMinimumRating(state.minimumRating)}`;
+  const freeOnlyMarkup = state.freeOnly
+    ? '<span class="ranking-mobile-filter-summary__free">Kun gratis</span>'
+    : "";
 
   const categoryMarkup = categoryFilters
     .map(
@@ -3860,6 +3890,7 @@ function updateMobileRankingFilterUi() {
   elements.rankingMobileFilterSummary.innerHTML = `
     ${baseLabel}
     ${categoryMarkup}
+    ${freeOnlyMarkup}
     <span class="ranking-mobile-filter-summary__rating">${escapeHtml(ratingLabel)}</span>
   `;
 
@@ -3868,6 +3899,7 @@ function updateMobileRankingFilterUi() {
       isSavedFilter ||
       categoryFilters.length > 0 ||
       state.minimumRating > 0 ||
+      state.freeOnly ||
       Boolean(state.searchTerm);
     elements.rankingMobileActiveFilterRemove.textContent = "Nulstil";
     elements.rankingMobileActiveFilterRemove.setAttribute(
@@ -3917,16 +3949,19 @@ function updateRankingSourceUi() {
     }
   });
 
-  const showUserSort = hasDesktopUserRankingSort();
+  const showUserSort = isDesktopRankingViewport();
+  const userSortEnabled = showUserSort && state.rankingSource === "users";
   if (elements.rankingUserSortField) {
     elements.rankingUserSortField.hidden = !showUserSort;
     elements.rankingUserSortField.setAttribute("aria-hidden", String(!showUserSort));
   }
 
   elements.rankingUserSortButtons?.forEach((button) => {
-    const active = showUserSort && button.dataset.rankingUserSort === state.userRankingSort;
+    const active = userSortEnabled && button.dataset.rankingUserSort === state.userRankingSort;
     button.classList.toggle("active", active);
     button.setAttribute("aria-pressed", String(active));
+    button.disabled = !userSortEnabled;
+    button.setAttribute("aria-disabled", String(!userSortEnabled));
   });
 }
 
@@ -5596,6 +5631,95 @@ function getPodcastAccessIndicatorMarkup(podcast, { detail = false } = {}) {
   }
 
   return `<span class="podcast-access-indicator" role="img" aria-label="Ikke fuldt gratis – kræver abonnement">${iconMarkup}</span>`;
+}
+
+let podcastAccessTooltip = null;
+let activePodcastAccessIndicator = null;
+
+function canShowPodcastAccessTooltip() {
+  return Boolean(
+    window.matchMedia?.("(hover: hover) and (pointer: fine)").matches
+  );
+}
+
+function getPodcastAccessTooltip() {
+  if (podcastAccessTooltip?.isConnected) return podcastAccessTooltip;
+
+  podcastAccessTooltip = document.getElementById("podcastAccessTooltip");
+  if (!podcastAccessTooltip) {
+    podcastAccessTooltip = document.createElement("div");
+    podcastAccessTooltip.id = "podcastAccessTooltip";
+    podcastAccessTooltip.className = "podcast-access-tooltip";
+    podcastAccessTooltip.setAttribute("role", "tooltip");
+    podcastAccessTooltip.textContent = "Kræver abonnement";
+    document.body.appendChild(podcastAccessTooltip);
+  }
+
+  return podcastAccessTooltip;
+}
+
+function hidePodcastAccessTooltip() {
+  activePodcastAccessIndicator = null;
+  if (!podcastAccessTooltip) return;
+
+  podcastAccessTooltip.classList.remove("is-visible");
+  podcastAccessTooltip.hidden = true;
+}
+
+function showPodcastAccessTooltip(indicator) {
+  if (!canShowPodcastAccessTooltip() || !indicator?.isConnected) return;
+
+  const tooltip = getPodcastAccessTooltip();
+  const indicatorRect = indicator.getBoundingClientRect();
+  const edgeMargin = 8;
+  const offset = 8;
+
+  tooltip.hidden = false;
+  tooltip.classList.remove("is-visible");
+  tooltip.style.left = "0px";
+  tooltip.style.top = "0px";
+
+  const tooltipRect = tooltip.getBoundingClientRect();
+  let left = indicatorRect.left + indicatorRect.width / 2 - tooltipRect.width / 2;
+  let top = indicatorRect.top - tooltipRect.height - offset;
+
+  if (top < edgeMargin) {
+    top = indicatorRect.bottom + offset;
+  }
+
+  left = Math.max(
+    edgeMargin,
+    Math.min(left, window.innerWidth - tooltipRect.width - edgeMargin)
+  );
+
+  tooltip.style.left = `${Math.round(left)}px`;
+  tooltip.style.top = `${Math.round(top)}px`;
+  tooltip.classList.add("is-visible");
+  activePodcastAccessIndicator = indicator;
+}
+
+function bindPodcastAccessTooltip() {
+  document.addEventListener("pointerover", (event) => {
+    if (!canShowPodcastAccessTooltip() || !(event.target instanceof Element)) return;
+
+    const indicator = event.target.closest(".podcast-access-indicator");
+    if (!indicator || indicator === activePodcastAccessIndicator) return;
+    showPodcastAccessTooltip(indicator);
+  });
+
+  document.addEventListener("pointerout", (event) => {
+    if (!(event.target instanceof Element)) return;
+
+    const indicator = event.target.closest(".podcast-access-indicator");
+    if (!indicator || indicator.contains(event.relatedTarget)) return;
+    hidePodcastAccessTooltip();
+  });
+
+  window.addEventListener("scroll", hidePodcastAccessTooltip, {
+    capture: true,
+    passive: true
+  });
+  window.addEventListener("resize", hidePodcastAccessTooltip, { passive: true });
 }
 
 function getDesktopRankingTitleParts(podcast) {
@@ -13604,6 +13728,10 @@ function render() {
     previousRoute !== nextRouteInfo.route || previousRawRoute !== nextRouteInfo.rawRoute;
   const mainRouteChanged = previousRoute && previousRoute !== nextRouteInfo.route;
 
+  if (routeChanged) {
+    hidePodcastAccessTooltip();
+  }
+
   if (mainRouteChanged) {
     resetVisualZoomForMainRouteChange();
   }
@@ -21068,6 +21196,7 @@ function updateRankingScrollToBottomButton() {
 function setupEvents() {
   setupRankingScrollToBottomButton();
   bindMobileHomeSearchOverlay();
+  bindPodcastAccessTooltip();
   const handleRouteHistoryChange = () => {
     render();
     restorePodcastDetailFromHistory();
@@ -21273,6 +21402,10 @@ function setupEvents() {
 
   elements.ratingFilter?.addEventListener("input", (event) => {
     setMinimumRating(event.target.value);
+  });
+
+  elements.rankingFreeOnly?.addEventListener("change", (event) => {
+    setFreeOnly(event.target.checked);
   });
 
   elements.rankingMobileFilterToggle?.addEventListener("click", () => {

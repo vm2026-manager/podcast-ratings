@@ -4,6 +4,7 @@
   width: 13px;
   height: 13px;
   margin-inline-start: 5px;
+  overflow: visible;
   vertical-align: -0.1em;
   color: #e55717;
 }
@@ -17,6 +18,33 @@
   stroke-width: 1.9;
   stroke-linecap: round;
   stroke-linejoin: round;
+}
+
+.podcast-access-indicator svg {
+  transform: scale(1.22);
+  transform-origin: center;
+}
+
+.podcast-access-tooltip {
+  position: fixed;
+  z-index: 10000;
+  max-width: min(220px, calc(100vw - 16px));
+  padding: 5px 8px;
+  border: 1px solid rgba(229, 87, 23, 0.34);
+  border-radius: 7px;
+  background: #fffaf4;
+  box-shadow: 0 4px 12px rgba(68, 43, 23, 0.12);
+  color: #382d26;
+  font: 700 0.72rem/1.2 "Manrope", Inter, system-ui, sans-serif;
+  pointer-events: none;
+  white-space: nowrap;
+  visibility: hidden;
+  opacity: 0;
+}
+
+.podcast-access-tooltip.is-visible {
+  visibility: visible;
+  opacity: 1;
 }
 
 .podcast-access-detail {

@@ -39,9 +39,9 @@
     <link rel="stylesheet" href="mobile-profile-settings.css?v=20260820-mobile-profile-settings-v1" />
     <link rel="stylesheet" href="mobile-featured-detail.css?v=20260902-mobile-rating-summary-align-v1" />
     <link rel="stylesheet" href="header-navigation-fix.css?v=20260831-header-breakpoint-fix-v1" />
-    <link rel="stylesheet" href="mobile-layout-regressions.css?v=20260903-mobile-search-overlay-v1" />
-    <link rel="stylesheet" href="ranking-sidebar-refinement.css?v=20260903-ranking-sidebar-refinement-v4" />
-    <link rel="stylesheet" href="access-status.css?v=20260904-access-status-v1" />
+    <link rel="stylesheet" href="mobile-layout-regressions.css?v=20260904-ranking-free-filter-v1" />
+    <link rel="stylesheet" href="ranking-sidebar-refinement.css?v=20260904-ranking-free-filter-v1" />
+    <link rel="stylesheet" href="access-status.css?v=20260904-access-tooltip-v1" />
 
     <script
       data-goatcounter="https://podcastratings.goatcounter.com/count"
@@ -63,7 +63,7 @@
       })();
     </script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
-    <script src="app.js?v=20260904-access-status-v1" defer></script>
+    <script src="app.js?v=20260904-access-tooltip-v1" defer></script>
   </head>
 
   <body>
@@ -211,6 +211,11 @@
                 <p class="genre-helper">Filtrer p&#229; genre</p>
                 <div id="genreChips" class="genre-chips"><a class="genre-chip" href="/genre/true-crime/">True Crime</a></div>
               </section>
+
+              <label class="sidebar-section ranking-free-only-filter" for="rankingFreeOnly">
+                <input id="rankingFreeOnly" type="checkbox" />
+                <span>Vis kun gratis</span>
+              </label>
 
               <section class="sidebar-section rating-filter-section" aria-labelledby="ratingFilterHeading">
                 <div class="rating-filter-topline">

@@ -162,6 +162,27 @@ html body .mobile-home-search-overlay { display: none; }
     padding: 0 7px !important;
     font-size: 0.74rem !important;
   }
+
+  body.page-ranglister .ranking-filter-panel .ranking-free-only-filter {
+    display: inline-flex !important;
+    align-items: center;
+    order: 3 !important;
+    gap: 8px;
+    width: 100% !important;
+    margin: 2px 0 0 !important;
+    padding: 0 !important;
+    border: 0 !important;
+    background: transparent !important;
+    color: #342b26 !important;
+    font-size: 0.78rem !important;
+  }
+
+  body.page-ranglister .ranking-filter-panel .ranking-free-only-filter input {
+    width: 18px;
+    height: 18px;
+    margin: 0;
+    accent-color: #ff5c16;
+  }
 }
 /* MOBILE RANKING GENRES ALWAYS VISIBLE END */
 
