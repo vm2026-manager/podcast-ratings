@@ -75,6 +75,15 @@ const MANUAL_EPISODES_FIELDS = ["Episoder", "Manual episodes", "ManualEpisodes"]
 const MANUAL_EPISODE_KEYS_FIELDS = ["Manual episode keys", "ManualEpisodeKeys"];
 const SUPPLEMENTARY_SIMILARITIES_HEADER = "Supplerende ligheder";
 const SUPPLEMENTARY_SIMILARITIES_COLUMN_INDEX = 19;
+const ACCESS_TYPE_FIELDS = ["Adgang"];
+const ACCESS_EVIDENCE_URL_FIELDS = ["Kilde"];
+const ACCESS_CHECKED_AT_FIELDS = ["Tjekket dato"];
+
+const ACCESS_TYPE_VALUES = new Map([
+  ["gratis", "free"],
+  ["delvist", "partial"],
+  ["betaling", "paid"]
+]);
 
 const FEATURED_FIELDS = [
   { output: "Aktiv", candidates: ["Aktiv"] },
@@ -245,6 +254,91 @@ function getField(row, candidates) {
   }
 
   return "";
+}
+
+function formatEditorialRowLabel(title) {
+  return title ? ` for ${JSON.stringify(title)}` : "";
+}
+
+function mapAccessType(value, title) {
+  const normalizedValue = normalizeText(value);
+  if (!normalizedValue) return "";
+
+  const accessType = ACCESS_TYPE_VALUES.get(
+    normalizedValue.toLocaleLowerCase("da-DK")
+  );
+  if (!accessType) {
+    throw new Error(
+      `Ugyldig værdi i Adgang${formatEditorialRowLabel(title)}: ${JSON.stringify(normalizedValue)}.`
+    );
+  }
+
+  return accessType;
+}
+
+function validateAccessEvidenceUrl(value, title) {
+  const normalizedValue = normalizeText(value);
+  if (!normalizedValue) return "";
+
+  let parsedUrl;
+  try {
+    parsedUrl = new URL(normalizedValue);
+  } catch {
+    throw new Error(
+      `Ugyldig URL i Kilde${formatEditorialRowLabel(title)}: ${JSON.stringify(normalizedValue)}.`
+    );
+  }
+
+  if (parsedUrl.protocol !== "https:" && parsedUrl.protocol !== "http:") {
+    throw new Error(
+      `Kilde skal bruge http eller https${formatEditorialRowLabel(title)}: ${JSON.stringify(normalizedValue)}.`
+    );
+  }
+
+  return normalizedValue;
+}
+
+function validateAccessCheckedAt(value, title) {
+  const normalizedValue = normalizeText(value);
+  if (!normalizedValue) return "";
+
+  const match = normalizedValue.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (!match) {
+    throw new Error(
+      `Tjekket dato skal have formatet YYYY-MM-DD${formatEditorialRowLabel(title)}: ${JSON.stringify(normalizedValue)}.`
+    );
+  }
+
+  const [, year, month, day] = match;
+  const parsedDate = new Date(`${normalizedValue}T00:00:00.000Z`);
+  if (
+    Number.isNaN(parsedDate.getTime()) ||
+    parsedDate.getUTCFullYear() !== Number(year) ||
+    parsedDate.getUTCMonth() + 1 !== Number(month) ||
+    parsedDate.getUTCDate() !== Number(day)
+  ) {
+    throw new Error(
+      `Tjekket dato skal være en gyldig dato${formatEditorialRowLabel(title)}: ${JSON.stringify(normalizedValue)}.`
+    );
+  }
+
+  return normalizedValue;
+}
+
+function applyEditorialAccessMetadata(podcast, row, title) {
+  const accessType = mapAccessType(getField(row, ACCESS_TYPE_FIELDS), title);
+  const accessEvidenceUrl = validateAccessEvidenceUrl(
+    getField(row, ACCESS_EVIDENCE_URL_FIELDS),
+    title
+  );
+  const accessCheckedAt = validateAccessCheckedAt(
+    getField(row, ACCESS_CHECKED_AT_FIELDS),
+    title
+  );
+
+  if (accessType) podcast.accessType = accessType;
+  if (accessEvidenceUrl) podcast.accessEvidenceUrl = accessEvidenceUrl;
+  if (accessCheckedAt) podcast.accessCheckedAt = accessCheckedAt;
 }
 
 function parseTopics(value) {
@@ -448,6 +542,7 @@ async function slimPodcastRows(rows) {
     });
     podcast.secondaryGenre = getField(row, SECONDARY_GENRE_FIELDS);
     podcast.topics = parseTopics(getField(row, TOPIC_FIELDS));
+    applyEditorialAccessMetadata(podcast, row, title);
     const manualEpisodes = parseManualEpisodes(
       getField(row, MANUAL_EPISODES_FIELDS),
       getField(row, MANUAL_EPISODE_KEYS_FIELDS)
@@ -563,6 +658,8 @@ export {
   buildPodcastPayload,
   createCatalogueId,
   getField,
+  applyEditorialAccessMetadata,
+  mapAccessType,
   normalizeHeader,
   parseCsv,
   parseSupplementarySimilarities,
@@ -571,5 +668,7 @@ export {
   parseTopics,
   rowsToObjects,
   slimPodcastRows,
+  validateAccessCheckedAt,
+  validateAccessEvidenceUrl,
   validateSupplementarySimilaritiesColumn
 };

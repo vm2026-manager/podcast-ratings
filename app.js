@@ -1292,7 +1292,7 @@ function renderHeaderSearchResults() {
               <span class="image-placeholder" hidden aria-hidden="true"></span>
             </span>
             <span class="desktop-header-search__copy">
-              <strong>${escapeHtml(podcast.title)}</strong>
+              <strong>${escapeHtml(podcast.title)}${getPodcastAccessIndicatorMarkup(podcast)}</strong>
               <span>${escapeHtml(metadata || matchLabel)}</span>
             </span>
             <span class="desktop-header-search__match">${escapeHtml(matchLabel)}</span>
@@ -1436,7 +1436,7 @@ function renderHomePodcastSearchResults({ exitFocusOnEmpty = false } = {}) {
       return `
         <button id="homePodcastSearchResult-${index}" class="home-podcast-search__result" type="button" role="option" aria-selected="false" data-home-search-index="${index}">
           <span class="home-podcast-search__cover"><img alt="" /></span>
-          <span class="home-podcast-search__copy"><strong>${escapeHtml(podcast.title)}</strong><span>${escapeHtml(metadata || matchLabel)}</span></span>
+          <span class="home-podcast-search__copy"><strong>${escapeHtml(podcast.title)}${getPodcastAccessIndicatorMarkup(podcast)}</strong><span>${escapeHtml(metadata || matchLabel)}</span></span>
           <span class="home-podcast-search__match">${escapeHtml(matchLabel)}</span>
         </button>`;
     }).join("");
@@ -1614,7 +1614,7 @@ function renderMobileHomeSearchOverlayResults() {
       return `
         <button id="mobileHomeSearchOverlayResult-${index}" class="mobile-home-search-overlay__result" type="button" role="option" aria-selected="false" data-mobile-home-search-index="${index}">
           <span class="mobile-home-search-overlay__cover"><img alt="" /></span>
-          <span class="mobile-home-search-overlay__copy"><strong>${escapeHtml(podcast.title)}</strong><span>${escapeHtml(metadata || matchLabel)}</span></span>
+          <span class="mobile-home-search-overlay__copy"><strong>${escapeHtml(podcast.title)}${getPodcastAccessIndicatorMarkup(podcast)}</strong><span>${escapeHtml(metadata || matchLabel)}</span></span>
           <span class="mobile-home-search-overlay__match">${escapeHtml(matchLabel)}</span>
         </button>`;
     }).join("");
@@ -2576,6 +2576,12 @@ function mapPodcast(row, index) {
   const rawGenre = getField(row, ["Genre"]);
   const rawSecondaryGenre = getField(row, ["secondaryGenre", "Secondary genre", "Sekundærgenre"]);
   const rawPublisher = getField(row, ["Udgiver", "Publisher"]);
+  const accessTypeValue = normalizeText(getField(row, ["accessType"])).toLowerCase();
+  const accessType = ["free", "partial", "paid", "unknown"].includes(accessTypeValue)
+    ? accessTypeValue
+    : "";
+  const accessEvidenceUrl = normalizeText(getField(row, ["accessEvidenceUrl"]));
+  const accessCheckedAt = normalizeText(getField(row, ["accessCheckedAt"]));
   const podcastId = normalizeText(getField(row, ["Podcast-ID", "Podcast ID", "PodcastID"]));
   const topics = (Array.isArray(row?.topics) ? row.topics : String(getField(row, ["topics", "Topics", "Emner"]) || "").split(/[;,]/))
     .map(normalizeText)
@@ -2668,6 +2674,9 @@ function mapPodcast(row, index) {
     topics,
     rawPublisher,
     publisher,
+    accessType,
+    accessEvidenceUrl,
+    accessCheckedAt,
     mainSeries,
     episodes,
     manualEpisodes,
@@ -5576,6 +5585,19 @@ function escapeRegularExpression(value) {
   return String(value || "").replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
+function getPodcastAccessIndicatorMarkup(podcast, { detail = false } = {}) {
+  if (podcast?.accessType !== "partial" && podcast?.accessType !== "paid") {
+    return "";
+  }
+
+  const iconMarkup = `<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="5" y="10" width="14" height="10" rx="2"></rect><path d="M8 10V7a4 4 0 0 1 8 0v3"></path></svg>`;
+  if (detail) {
+    return `<span class="podcast-access-detail" role="img" aria-label="Ikke fuldt gratis – kræver abonnement">${iconMarkup}<span>Kræver abonnement</span></span>`;
+  }
+
+  return `<span class="podcast-access-indicator" role="img" aria-label="Ikke fuldt gratis – kræver abonnement">${iconMarkup}</span>`;
+}
+
 function getDesktopRankingTitleParts(podcast) {
   const series = normalizeText(podcast?.mainSeries);
   const title = normalizeText(podcast?.title);
@@ -5622,7 +5644,7 @@ function getDesktopRankingTitleMarkup(podcast, variant) {
   if (!series) {
     return `
       <button class="${titleClass}" type="button" data-action="open-details">
-        ${escapeHtml(displayText)}
+        ${escapeHtml(displayText)}${getPodcastAccessIndicatorMarkup(podcast)}
       </button>
     `;
   }
@@ -5640,7 +5662,7 @@ function getDesktopRankingTitleMarkup(podcast, variant) {
         type="button"
         data-action="open-details"
         aria-label="Vis detaljer om ${escapeHtml(displayText)}"
-      >${escapeHtml(titleText)}</button>` : ""}
+      >${escapeHtml(titleText)}${getPodcastAccessIndicatorMarkup(podcast)}</button>` : getPodcastAccessIndicatorMarkup(podcast)}
     </span>
   `;
 }
@@ -11062,6 +11084,7 @@ function renderPodcastDetailSheetContent(
           <span class="podcast-detail-sheet__header-action-icons"><button class="favorite-button podcast-detail-sheet__header-favorite" type="button" data-podcast-detail-favorite aria-label="Gem podcast"><span aria-hidden="true"></span></button>${externalLinkMarkup}</span>
         </div>
         <h2 id="podcastDetailTitle">${escapeHtml(podcast.title || "Podcast")}</h2>
+        ${getPodcastAccessIndicatorMarkup(podcast, { detail: true })}
         ${meta ? `<p class="podcast-detail-sheet__meta">${escapeHtml(meta)}</p>` : ""}
         <div class="podcast-detail-sheet__chips">
           ${episodeEntryMarkup}
@@ -11631,7 +11654,7 @@ function createHomePopularCardElement(podcast, options = {}) {
   copy.className = "home-popular-card__copy";
   copy.innerHTML = `
     <span class="home-popular-card__rank">${rank ? `#${rank}` : ""}</span>
-    <h3>${escapeHtml(podcast.title)}</h3>
+    <h3>${escapeHtml(podcast.title)}${getPodcastAccessIndicatorMarkup(podcast)}</h3>
     <p class="home-popular-card__metadata${hostLabel ? "" : " home-popular-card__metadata--hostless"}">
       <span class="home-popular-card__metadata-host">${escapeHtml(hostLabel)}</span>${
         hostLabel && publisherLabel && publisherLabel !== hostLabel
@@ -12044,7 +12067,7 @@ function renderHomeFeatured(container) {
             class="home-featured__title-button"
             type="button"
             data-home-featured-open
-          >${escapeHtml(featuredTitle)}</button>
+          >${escapeHtml(featuredTitle)}${podcast ? getPodcastAccessIndicatorMarkup(podcast) : ""}</button>
         </h3>
           ${featuredPodcastKey ? '<button class="favorite-button home-featured__favorite" type="button" aria-label="Gem podcast"><span aria-hidden="true"></span></button>' : ""}
         </div>
@@ -12433,7 +12456,7 @@ function createHomeRecentCardElement(podcast) {
   const copy = document.createElement("div");
   copy.className = "home-recent-card__copy";
   copy.innerHTML = `
-    <h3>${escapeHtml(podcast.title)}</h3>
+    <h3>${escapeHtml(podcast.title)}${getPodcastAccessIndicatorMarkup(podcast)}</h3>
     <p class="home-recent-card__host">${escapeHtml(
       podcast.host || podcast.publisher || ""
     )}</p>
@@ -12556,7 +12579,7 @@ function createHomeGenreCardElement(podcast, genre) {
   copy.className = "home-genres-card__copy";
   copy.innerHTML = `
     <p class="home-genres-card__genre">${escapeHtml(genre)}</p>
-    <h3>${escapeHtml(podcast.title)}</h3>
+    <h3>${escapeHtml(podcast.title)}${getPodcastAccessIndicatorMarkup(podcast)}</h3>
     <p class="home-genres-card__host">${escapeHtml(
       podcast.host || podcast.publisher || ""
     )}</p>
@@ -12673,7 +12696,9 @@ function setHomeHeroCover(container, selector, item) {
   );
   cover.setAttribute("title", podcastTitle);
 
-  if (title) title.textContent = podcastTitle;
+  if (title) {
+    title.innerHTML = `${escapeHtml(podcastTitle)}${getPodcastAccessIndicatorMarkup(item)}`;
+  }
   if (genre) genre.textContent = item.genre || item.publisher || "Podcast";
   if (rating) rating.textContent = ratingLabel;
 
@@ -13172,7 +13197,7 @@ function createPodcastCardElement(podcast, displayRank = null) {
   if (seoPilotRoute) {
     const titleLink = document.createElement("a");
     titleLink.href = seoPilotRoute;
-    titleLink.innerHTML = getMainSeriesTitleMarkup(podcast);
+    titleLink.innerHTML = `${getMainSeriesTitleMarkup(podcast)}${getPodcastAccessIndicatorMarkup(podcast)}`;
     titleLink.style.color = "inherit";
     titleLink.style.textDecoration = "none";
     titleLink.addEventListener("click", (event) => {
@@ -13182,7 +13207,7 @@ function createPodcastCardElement(podcast, displayRank = null) {
     });
     title.replaceChildren(titleLink);
   } else {
-    title.innerHTML = getMainSeriesTitleMarkup(podcast);
+    title.innerHTML = `${getMainSeriesTitleMarkup(podcast)}${getPodcastAccessIndicatorMarkup(podcast)}`;
   }
   title.classList.remove("is-medium-title", "is-long-title");
   const mobileTitleLengthClass = getMobileTitleLengthClass(
@@ -18938,7 +18963,7 @@ function createExplorePodcastCardElement(podcast, { reason = "", extraClassName 
   copy.className = "explore-card__copy";
   copy.innerHTML = `
     <p class="explore-card__genre">${escapeHtml(podcast.genre || "Podcast")}</p>
-    <h3>${getMainSeriesTitleMarkup(podcast)}</h3>
+    <h3>${getMainSeriesTitleMarkup(podcast)}${getPodcastAccessIndicatorMarkup(podcast)}</h3>
     ${hostLabel ? `<p class="explore-card__host">${escapeHtml(hostLabel)}</p>` : ""}
     ${publisherLabel ? `<button class="explore-card__publisher" type="button" data-explore-filter="publisher" data-value="${escapeHtml(publisherLabel)}" aria-label="Vis podcasts fra ${escapeHtml(publisherLabel)}">${escapeHtml(publisherLabel)}</button>` : ""}
     ${getExploreScoreMarkup(podcast, "explore-card__rating")}
@@ -19100,7 +19125,7 @@ function createExploreGenreCardElement(podcast) {
   copy.className = "explore-genre-card__copy";
   copy.innerHTML = `
     <p class="explore-genre-card__genre">${escapeHtml(podcast.genre)}</p>
-    <h3>${escapeHtml(podcast.title)}</h3>
+    <h3>${escapeHtml(podcast.title)}${getPodcastAccessIndicatorMarkup(podcast)}</h3>
     <p class="explore-genre-card__host">${escapeHtml(
       podcast.host || podcast.publisher || ""
     )}</p>

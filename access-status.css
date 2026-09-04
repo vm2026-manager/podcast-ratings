@@ -1,0 +1,56 @@
+/* Editorial access metadata: only subscriptions and partial access need a cue. */
+.podcast-access-indicator {
+  display: inline-flex;
+  width: 13px;
+  height: 13px;
+  margin-inline-start: 5px;
+  vertical-align: -0.1em;
+  color: #e55717;
+}
+
+.podcast-access-indicator svg,
+.podcast-access-detail svg {
+  width: 100%;
+  height: 100%;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.9;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.podcast-access-detail {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  margin: 0 0 7px;
+  color: #b84413;
+  font-size: 0.78rem;
+  font-weight: 800;
+  line-height: 1.2;
+}
+
+.podcast-access-detail svg {
+  width: 15px;
+  height: 15px;
+  flex: 0 0 15px;
+}
+
+@media (max-width: 768px) {
+  .podcast-access-indicator {
+    width: 11px;
+    height: 11px;
+    margin-inline-start: 4px;
+  }
+
+  .podcast-access-detail {
+    margin-bottom: 6px;
+    font-size: 0.72rem;
+  }
+
+  .podcast-access-detail svg {
+    width: 13px;
+    height: 13px;
+    flex-basis: 13px;
+  }
+}
