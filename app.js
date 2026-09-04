@@ -15717,14 +15717,22 @@ function renderProfilePage() {
 
       <div class="profile-dashboard">
         <section class="profile-panel profile-saved-panel is-expanded" id="profileSaved" aria-labelledby="profileSavedHeading">
-          <header class="profile-panel__header" data-profile-panel-header>
+          <header class="profile-panel__header" ${isMobileViewport() ? "" : "data-profile-panel-header"}>
             <div>
               <p class="profile-eyebrow">Dit bibliotek</p>
               <h2 id="profileSavedHeading">Mine gemte podcasts</h2>
             </div>
             <div class="profile-panel__tools">
               <span data-profile-saved-count>${savedCount}</span>
-              <button class="profile-panel__toggle" type="button" data-profile-panel-toggle aria-expanded="true">Fold sammen</button>
+              <button
+                class="profile-panel__toggle"
+                type="button"
+                ${
+                  isMobileViewport()
+                    ? `data-profile-saved-toggle aria-expanded="${state.profileSavedExpanded}"`
+                    : "data-profile-panel-toggle aria-expanded=\"true\""
+                }
+              >${isMobileViewport() ? (state.profileSavedExpanded ? "Fold sammen" : "Fold ud") : "Fold sammen"}</button>
             </div>
           </header>
           ${
@@ -15740,25 +15748,15 @@ function renderProfilePage() {
           }
           <div class="saved-grid profile-saved-grid" data-profile-saved></div>
           ${
-            savedPodcasts.length > 3
+            savedPodcasts.length > 3 && !isMobileViewport()
               ? `
                 <button
                   class="profile-expand-button profile-expand-button--link"
                   type="button"
-                  ${
-                    isMobileViewport()
-                      ? `data-profile-saved-toggle aria-expanded="${state.profileSavedExpanded}"`
-                      : `data-profile-modal="saved"`
-                  }
+                  data-profile-modal="saved"
                   aria-controls="profileSavedList"
                 >
-                  ${
-                    isMobileViewport()
-                      ? state.profileSavedExpanded
-                        ? "Vis f&aelig;rre"
-                        : "Se alle gemte"
-                      : "Vis alle gemte podcasts"
-                  }
+                  Vis alle gemte podcasts
                 </button>
               `
               : ""
