@@ -7765,7 +7765,7 @@ function renderPodcastSimilarityProductSection(title, items) {
     <section class="podcast-detail-sheet__related-section" data-podcast-similarity-section="recommendations">
       <div class="podcast-detail-sheet__related-heading">
         <h3>${escapeHtml(title)}</h3>
-        <button class="podcast-detail-sheet__related-show-all" type="button" data-podcast-similarity-scroll="1">Se alle</button>
+        <button class="podcast-detail-sheet__related-show-all" type="button" data-podcast-similarity-scroll="1">${isMobileViewport() ? "Se flere" : "Se alle"}</button>
         <div class="podcast-detail-sheet__related-controls" aria-label="Naviger i ${sectionLabel}">
           <button type="button" data-podcast-similarity-scroll="-1" aria-label="Rul tilbage i ${sectionLabel}">‹</button>
           <button type="button" data-podcast-similarity-scroll="1" aria-label="Rul frem i ${sectionLabel}">›</button>
