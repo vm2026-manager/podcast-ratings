@@ -329,6 +329,16 @@
     white-space: nowrap !important;
   }
 
+  /* The panel toggle controls the saved-panel body; the separate list toggle
+     continues to control only the four-item/all-items preview. */
+  html body.page-profil .profile-saved-panel.is-collapsed > :not(.profile-panel__header) {
+    display: none !important;
+  }
+
+  html body.page-profil .profile-saved-panel.is-collapsed .profile-panel__header {
+    margin-bottom: 0 !important;
+  }
+
   /* The existing saved-card component becomes the compact four-cover preview
      from the approved mobile Profile composition. */
   html body.page-profil .profile-saved-grid {
