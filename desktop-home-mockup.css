@@ -1099,6 +1099,36 @@
   }
 }
 
+/* Compact desktop overview for configured podcast display groups. */
+@media (min-width: 769px) {
+  html body #podcastDetailSheet .podcast-detail-sheet__content--display-group { gap: 18px !important; padding-right: 10px !important; }
+  html body #podcastDetailSheet .podcast-detail-sheet__content--display-group .podcast-detail-sheet__series-header--display-group { display: grid !important; grid-template-columns: clamp(170px, 15vw, 220px) minmax(0, 1fr) !important; align-items: center !important; gap: 28px !important; min-height: 220px !important; padding: 4px 0 !important; }
+  html body #podcastDetailSheet .podcast-detail-sheet__content--display-group .podcast-detail-sheet__series-hero-cover { width: clamp(170px, 15vw, 220px) !important; height: clamp(170px, 15vw, 220px) !important; overflow: hidden !important; border-radius: 18px !important; box-shadow: 0 14px 28px rgba(35, 22, 12, .13) !important; }
+  html body #podcastDetailSheet .podcast-detail-sheet__content--display-group .podcast-detail-sheet__series-hero-cover img, html body #podcastDetailSheet .podcast-detail-sheet__content--display-group .podcast-detail-sheet__series-cover img { width: 100% !important; height: 100% !important; display: block !important; object-fit: cover !important; }
+  html body #podcastDetailSheet .podcast-detail-sheet__content--display-group .podcast-detail-sheet__series-heading { min-width: 0 !important; display: grid !important; align-content: center !important; gap: 8px !important; }
+  html body #podcastDetailSheet .podcast-detail-sheet__content--display-group .podcast-detail-sheet__series-heading > span { width: max-content !important; min-height: 24px !important; display: inline-flex !important; align-items: center !important; padding: 0 10px !important; border-radius: 999px !important; color: #a64118 !important; background: rgba(255, 92, 22, .1) !important; font: 900 .72rem/1 "Manrope", sans-serif !important; }
+  html body #podcastDetailSheet .podcast-detail-sheet__content--display-group .podcast-detail-sheet__series-heading h2 { margin: 0 !important; color: #181614 !important; font: 950 clamp(2rem, 3vw, 3.1rem)/.98 "Manrope", sans-serif !important; letter-spacing: -.045em !important; }
+  html body #podcastDetailSheet .podcast-detail-sheet__content--display-group .podcast-detail-sheet__series-heading p { margin: 0 !important; color: #6b625a !important; font: 750 .98rem/1.3 "Manrope", sans-serif !important; }
+  html body #podcastDetailSheet .podcast-detail-sheet__content--display-group .podcast-detail-sheet__series-ratings { width: min(680px, 100%) !important; min-height: 0 !important; grid-template-columns: repeat(2, minmax(0, 1fr)) !important; gap: 0 !important; margin: -4px 0 0 !important; border: 1px solid rgba(222, 205, 191, .82) !important; border-radius: 16px !important; background: rgba(255, 253, 249, .75) !important; }
+  html body #podcastDetailSheet .podcast-detail-sheet__content--display-group .podcast-detail-sheet__series-ratings > div { min-height: 104px !important; padding: 34px 16px 12px !important; }
+  html body #podcastDetailSheet .podcast-detail-sheet__content--display-group .podcast-detail-sheet__series-ratings strong { font-size: 1.7rem !important; }
+  html body #podcastDetailSheet .podcast-detail-sheet__content--display-group .podcast-detail-sheet__series-ratings span { font-size: .78rem !important; }
+  html body #podcastDetailSheet .podcast-detail-sheet__content--display-group .podcast-detail-sheet__series-ratings em { font-size: .72rem !important; }
+  html body #podcastDetailSheet .podcast-detail-sheet__content--display-group .podcast-detail-sheet__series-list { display: grid !important; gap: 8px !important; padding-bottom: 4px !important; }
+  html body #podcastDetailSheet .podcast-detail-sheet__content--display-group .podcast-detail-sheet__series-list h3 { margin: 4px 0 2px !important; color: #231d19 !important; font: 950 1.08rem/1.1 "Manrope", sans-serif !important; }
+  html body #podcastDetailSheet .podcast-detail-sheet__content--display-group .podcast-detail-sheet__series-row--display-group { width: 100% !important; min-width: 0 !important; min-height: 94px !important; display: grid !important; grid-template-columns: 70px minmax(0, 1fr) 20px !important; align-items: center !important; gap: 14px !important; padding: 10px 14px 10px 10px !important; border: 1px solid rgba(219, 200, 181, .78) !important; border-radius: 14px !important; color: inherit !important; background: rgba(255, 253, 249, .84) !important; box-shadow: none !important; cursor: pointer !important; text-align: left !important; transition: border-color 150ms ease, background-color 150ms ease, transform 150ms ease !important; }
+  html body #podcastDetailSheet .podcast-detail-sheet__content--display-group .podcast-detail-sheet__series-row--display-group:hover { border-color: rgba(255, 92, 22, .38) !important; background: #fff8f3 !important; transform: translateX(2px) !important; }
+  html body #podcastDetailSheet .podcast-detail-sheet__content--display-group .podcast-detail-sheet__series-row--display-group:focus-visible { outline: 3px solid rgba(255, 92, 22, .28) !important; outline-offset: 2px !important; }
+  html body #podcastDetailSheet .podcast-detail-sheet__content--display-group .podcast-detail-sheet__series-cover { width: 70px !important; height: 70px !important; overflow: hidden !important; border-radius: 10px !important; background: rgba(255, 92, 22, .1) !important; }
+  html body #podcastDetailSheet .podcast-detail-sheet__content--display-group .podcast-detail-sheet__series-copy { min-width: 0 !important; display: grid !important; gap: 2px !important; }
+  html body #podcastDetailSheet .podcast-detail-sheet__content--display-group .podcast-detail-sheet__series-season-label { color: #211a16 !important; font: 950 1rem/1.18 "Manrope", sans-serif !important; }
+  html body #podcastDetailSheet .podcast-detail-sheet__content--display-group .podcast-detail-sheet__series-title { overflow: hidden !important; color: #62574f !important; font: 700 .79rem/1.2 "Manrope", sans-serif !important; display: -webkit-box !important; -webkit-box-orient: vertical !important; -webkit-line-clamp: 2 !important; }
+  html body #podcastDetailSheet .podcast-detail-sheet__content--display-group .podcast-detail-sheet__series-host { overflow: hidden !important; color: #887b71 !important; font: 700 .75rem/1.18 "Manrope", sans-serif !important; text-overflow: ellipsis !important; white-space: nowrap !important; }
+  html body #podcastDetailSheet .podcast-detail-sheet__content--display-group .podcast-detail-sheet__series-scores { display: flex !important; flex-wrap: wrap !important; gap: 10px !important; margin-top: 3px !important; }
+  html body #podcastDetailSheet .podcast-detail-sheet__content--display-group .podcast-detail-sheet__series-scores em { color: #a64118 !important; font: 900 .72rem/1.2 "Manrope", sans-serif !important; font-style: normal !important; }
+  html body #podcastDetailSheet .podcast-detail-sheet__content--display-group .podcast-detail-sheet__series-chevron { color: #b34a1d !important; font: 900 1.8rem/1 "Manrope", sans-serif !important; text-align: right !important; }
+}
+
 /* Keep the logged-in welcome affordance on mobile, but do not reserve hero
    space for it in the desktop composition. */
 @media (min-width: 1101px) {

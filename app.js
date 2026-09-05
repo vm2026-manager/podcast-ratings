@@ -11291,14 +11291,18 @@ function renderPodcastDisplayGroupContent(dialog, displayGroup) {
   const userCount = Number(displayGroup.userRatingCount || 0);
   const rowsMarkup = members.map((podcast, index) => {
     const stat = getCommunityStat(getPodcastKey(podcast));
+    const seasonNumber = getDisplayGroupSeasonNumber(podcast);
+    const seasonLabel = Number.isSafeInteger(seasonNumber) ? `Sæson ${seasonNumber}` : podcast.title;
     return `
-      <button class="podcast-detail-sheet__series-row" type="button" data-display-group-member-index="${index}" aria-label="Vis ${escapeHtml(podcast.title)}">
+      <button class="podcast-detail-sheet__series-row podcast-detail-sheet__series-row--display-group" type="button" data-display-group-member-index="${index}" aria-label="Vis ${escapeHtml(podcast.title)}">
         <span class="podcast-detail-sheet__series-cover" data-display-group-member-cover-index="${index}" aria-hidden="true"><img alt="" loading="lazy" /></span>
         <span class="podcast-detail-sheet__series-copy">
-          <strong>${escapeHtml(podcast.title)}</strong>
-          ${podcast.host ? `<span>${escapeHtml(podcast.host)}</span>` : ""}
+          <strong class="podcast-detail-sheet__series-season-label">${escapeHtml(seasonLabel)}</strong>
+          <span class="podcast-detail-sheet__series-title">${escapeHtml(podcast.title)}</span>
+          ${podcast.host ? `<span class="podcast-detail-sheet__series-host">${escapeHtml(podcast.host)}</span>` : ""}
           <span class="podcast-detail-sheet__series-scores"><em>Podcastlisten ${escapeHtml(formatCompactRating(podcast.ratingValue))}</em><em>Brugere ${hasCommunityRating(stat) ? escapeHtml(formatCompactRating(stat.averageRating)) : "—"}</em></span>
         </span>
+        <span class="podcast-detail-sheet__series-chevron" aria-hidden="true">›</span>
       </button>`;
   }).join("");
 
@@ -11307,9 +11311,9 @@ function renderPodcastDisplayGroupContent(dialog, displayGroup) {
   state.podcastDetailView = "displayGroup";
   state.activePodcastDetailKey = getPodcastKey(displayGroup);
   content.innerHTML = `
-    <header class="podcast-detail-sheet__series-header">
+    <header class="podcast-detail-sheet__series-header podcast-detail-sheet__series-header--display-group">
       <div class="podcast-detail-sheet__series-hero-cover" aria-hidden="true"><img alt="" loading="lazy" /></div>
-      <div class="podcast-detail-sheet__series-heading"><span>Podcast</span><h2 id="podcastDetailTitle">${escapeHtml(displayGroup.title)}</h2><p>Samlet overblik over sæsoner</p></div>
+      <div class="podcast-detail-sheet__series-heading"><span>Podcast</span><h2 id="podcastDetailTitle">${escapeHtml(displayGroup.title)}</h2><p>${members.length} vurderede sæsoner</p></div>
     </header>
     <section class="podcast-detail-sheet__ratings podcast-detail-sheet__series-ratings" aria-label="Podcastens vurderinger">
       <div><span>Podcastlistens vurdering</span><strong>${escapeHtml(formatCompactRating(displayGroup.ratingValue))}<small>/10</small></strong><em>${editorialCount} sæsoner med score</em></div>
