@@ -10890,6 +10890,7 @@ function updateGenstartEpisodeSection() {
     updatePodcastEpisodeOverview(dialog);
     return;
   }
+
   if (state.podcastDetailView !== "detail") return;
 
   const podcast = state.podcastByKey[state.activePodcastDetailKey];
@@ -11274,66 +11275,60 @@ function getDisplayGroupSeasonNumber(podcast) {
   return match ? Number(match[1]) : Number.MAX_SAFE_INTEGER;
 }
 
+function getDisplayGroupSeasonLabel(podcast) {
+  const seasonNumber = getDisplayGroupSeasonNumber(podcast);
+  return Number.isSafeInteger(seasonNumber) ? `Sæson ${seasonNumber}` : podcast?.title || "Sæson";
+}
+
+function getDisplayGroupOwnRatingStats(members) {
+  const ratings = members.map((member) => parseNumber(getUserRating(getPodcastKey(member)))).filter((rating) => rating !== null);
+  return { average: averageNumbers(ratings), count: ratings.length };
+}
+
+function renderPodcastDisplayGroupSeasonWorkspace(dialog, displayGroup) {
+  const content = dialog.querySelector("[data-podcast-detail-content]");
+  if (!content) return;
+  const members = [...(displayGroup.displayGroupMembers || [])].sort((a, b) => getDisplayGroupSeasonNumber(a) - getDisplayGroupSeasonNumber(b));
+  state.podcastDetailView = "seasons";
+  dialog.classList.add("is-episode-workspace");
+  dialog.querySelector("[data-podcast-detail-toolbar-actions]")?.replaceChildren();
+  content.classList.add("podcast-detail-sheet__content--episode-overview");
+  content.innerHTML = `<section class="podcast-detail-sheet__episode-overview" data-podcast-season-overview aria-labelledby="podcastSeasonOverviewTitle">
+    <div class="podcast-detail-sheet__episode-overview-toolbar"><button class="podcast-detail-sheet__episode-back" type="button" data-podcast-seasons-back><span aria-hidden="true">&larr;</span><span>Tilbage til podcasten</span></button><h2 class="podcast-detail-sheet__episode-workspace-title">Sæsoner</h2></div>
+    <p class="podcast-detail-sheet__episode-workspace-summary">${members.length} vurderede sæsoner</p>
+    <div class="podcast-detail-sheet__episode-table-wrap"><table class="podcast-detail-sheet__episode-table podcast-detail-sheet__season-table"><caption class="sr-only" id="podcastSeasonOverviewTitle">Sæsoner i ${escapeHtml(displayGroup.title)}</caption><thead><tr><th scope="col">Sæson</th><th scope="col">Podcastlisten</th><th scope="col">Brugerne</th><th scope="col">Din vurdering</th></tr></thead><tbody>${members.map((member, index) => { const stat = getCommunityStat(getPodcastKey(member)); const own = getUserRating(getPodcastKey(member)); return `<tr><td data-label="Sæson"><button class="podcast-detail-sheet__season-title" type="button" data-podcast-season-open="${index}"><strong>${escapeHtml(getDisplayGroupSeasonLabel(member))}</strong><small>${escapeHtml(member.title)}</small></button></td><td data-label="Podcastlisten"><strong>${escapeHtml(formatCompactRating(member.ratingValue))}</strong></td><td data-label="Brugerne"><span class="podcast-detail-sheet__episode-source-score"><strong>${hasCommunityRating(stat) ? escapeHtml(formatCompactRating(stat.averageRating)) : "—"}</strong><em>${stat?.ratingCount ? escapeHtml(formatUserRatingCount(stat.ratingCount)) : ""}</em></span></td><td data-label="Din vurdering"><button class="podcast-detail-sheet__episode-own-score${own === null || own === undefined ? " is-empty" : ""}" type="button" data-podcast-season-rate="${index}" aria-label="Vurder ${escapeHtml(member.title)}"><strong>${own === null || own === undefined ? "Vurder" : escapeHtml(formatCompactRating(own))}</strong></button></td></tr>`; }).join("")}</tbody></table></div></section>`;
+  content.querySelector("[data-podcast-seasons-back]")?.addEventListener("click", () => renderPodcastDisplayGroupContent(dialog, displayGroup));
+  content.querySelectorAll("[data-podcast-season-rate]").forEach((button) => button.addEventListener("click", () => openRatingDialog(members[Number(button.dataset.podcastSeasonRate)])));
+  content.querySelectorAll("[data-podcast-season-open]").forEach((button) => button.addEventListener("click", () => openPodcastDetailFromModal(members[Number(button.dataset.podcastSeasonOpen)], button)));
+}
+
 function renderPodcastDisplayGroupContent(dialog, displayGroup) {
   const content = dialog.querySelector("[data-podcast-detail-content]");
   if (!content) return;
-
   dialog.classList.remove("is-episode-workspace");
-  content.classList.remove(
-    "podcast-detail-sheet__content--episodes",
-    "podcast-detail-sheet__content--episode-overview"
-  );
+  content.classList.remove("podcast-detail-sheet__content--episodes", "podcast-detail-sheet__content--episode-overview");
   content.classList.add("podcast-detail-sheet__content--display-group");
-  const members = [...(displayGroup.displayGroupMembers || [])].sort(
-    (a, b) => getDisplayGroupSeasonNumber(a) - getDisplayGroupSeasonNumber(b)
-  );
+  const members = [...(displayGroup.displayGroupMembers || [])].sort((a, b) => getDisplayGroupSeasonNumber(a) - getDisplayGroupSeasonNumber(b));
   const editorialCount = members.filter((podcast) => parseNumber(podcast.ratingValue) !== null).length;
   const userCount = Number(displayGroup.userRatingCount || 0);
-  const rowsMarkup = members.map((podcast, index) => {
-    const stat = getCommunityStat(getPodcastKey(podcast));
-    const seasonNumber = getDisplayGroupSeasonNumber(podcast);
-    const seasonLabel = Number.isSafeInteger(seasonNumber) ? `Sæson ${seasonNumber}` : podcast.title;
-    return `
-      <button class="podcast-detail-sheet__series-row podcast-detail-sheet__series-row--display-group" type="button" data-display-group-member-index="${index}" aria-label="Vis ${escapeHtml(podcast.title)}">
-        <span class="podcast-detail-sheet__series-cover" data-display-group-member-cover-index="${index}" aria-hidden="true"><img alt="" loading="lazy" /></span>
-        <span class="podcast-detail-sheet__series-copy">
-          <strong class="podcast-detail-sheet__series-season-label">${escapeHtml(seasonLabel)}</strong>
-          <span class="podcast-detail-sheet__series-title">${escapeHtml(podcast.title)}</span>
-          ${podcast.host ? `<span class="podcast-detail-sheet__series-host">${escapeHtml(podcast.host)}</span>` : ""}
-          <span class="podcast-detail-sheet__series-scores"><em>Podcastlisten ${escapeHtml(formatCompactRating(podcast.ratingValue))}</em><em>Brugere ${hasCommunityRating(stat) ? escapeHtml(formatCompactRating(stat.averageRating)) : "—"}</em></span>
-        </span>
-        <span class="podcast-detail-sheet__series-chevron" aria-hidden="true">›</span>
-      </button>`;
-  }).join("");
-
+  const own = getDisplayGroupOwnRatingStats(members);
   dialog.querySelector("[data-podcast-detail-toolbar-actions]")?.replaceChildren();
   setPodcastDetailPlacementControl(dialog);
   state.podcastDetailView = "displayGroup";
   state.activePodcastDetailKey = getPodcastKey(displayGroup);
   content.innerHTML = `
-    <header class="podcast-detail-sheet__series-header podcast-detail-sheet__series-header--display-group">
-      <div class="podcast-detail-sheet__series-hero-cover" aria-hidden="true"><img alt="" loading="lazy" /></div>
-      <div class="podcast-detail-sheet__series-heading"><span>Podcast</span><h2 id="podcastDetailTitle">${escapeHtml(displayGroup.title)}</h2><p>${members.length} vurderede sæsoner</p></div>
+    <header class="podcast-detail-sheet__header">
+      <div class="podcast-detail-sheet__cover"><img class="podcast-detail-sheet__image" alt="" loading="lazy" /></div>
+      <div class="podcast-detail-sheet__intro"><h2 id="podcastDetailTitle">${escapeHtml(displayGroup.title)}</h2><p class="podcast-detail-sheet__meta">${members.length} vurderede sæsoner</p><div class="podcast-detail-sheet__chips"><span class="podcast-detail-sheet__episode-entry"><button class="podcast-detail-sheet__episode-entry-button" type="button" data-podcast-seasons-open aria-describedby="podcastSeasonEntryTooltip"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="3" width="14" height="18" rx="2"></rect><path d="M9 8h6M9 12h6M9 16h4"></path></svg><span>Vurder sæsoner</span></button><span class="podcast-detail-sheet__episode-entry-tooltip" id="podcastSeasonEntryTooltip" role="tooltip">Se alle sæsoner og bedøm dem én for én.</span></span></div><section class="podcast-detail-sheet__description podcast-detail-sheet__description--desktop"><h3>Om podcasten</h3><p>Samlet overblik over ${members.length} vurderede sæsoner.</p></section></div>
+      <section class="podcast-detail-sheet__description podcast-detail-sheet__description--mobile"><h3>Om podcasten</h3><p>Samlet overblik over ${members.length} vurderede sæsoner.</p></section>
     </header>
-    <section class="podcast-detail-sheet__ratings podcast-detail-sheet__series-ratings" aria-label="Podcastens vurderinger">
+    <section class="podcast-detail-sheet__ratings" aria-label="Vurderinger">
       <div><span>Podcastlistens vurdering</span><strong>${escapeHtml(formatCompactRating(displayGroup.ratingValue))}<small>/10</small></strong><em>${editorialCount} sæsoner med score</em></div>
       <div><span>Brugernes vurdering</span><strong>${displayGroup.userAverageRating === null ? "—" : escapeHtml(formatCompactRating(displayGroup.userAverageRating))}<small>/10</small></strong><em>${userCount ? escapeHtml(formatUserRatingCount(userCount)) : "Ingen brugervurderinger endnu"}</em></div>
-    </section>
-    <section class="podcast-detail-sheet__series-list" aria-label="Sæsoner"><h3>Sæsoner</h3>${rowsMarkup}</section>`;
-
-  const heroCover = content.querySelector(".podcast-detail-sheet__series-hero-cover");
-  setImage(heroCover, getPodcastImageSources(displayGroup), displayGroup.title);
-  content.querySelectorAll("[data-display-group-member-cover-index]").forEach((cover) => {
-    const podcast = members[Number(cover.dataset.displayGroupMemberCoverIndex)];
-    if (podcast) setImageWithFallbackSource(cover, getPodcastImageSources(podcast), getPodcastImageSources(displayGroup), podcast.title);
-  });
-  content.querySelectorAll("[data-display-group-member-index]").forEach((button) => {
-    button.addEventListener("click", (event) => {
-      event.preventDefault();
-      const podcast = members[Number(button.dataset.displayGroupMemberIndex)];
-      if (podcast) openPodcastDetailFromModal(podcast, button);
-    });
-  });
+      <div class="podcast-detail-sheet__rating-cell podcast-detail-sheet__rating-cell--own"><span class="podcast-detail-sheet__rating-label">Din vurdering</span><span class="podcast-detail-sheet__own-rating-display"><strong>${own.average === null ? "—" : escapeHtml(formatCompactRating(own.average))}<small>/10</small></strong><small>${own.count ? `Beregnet fra ${own.count} sæsonvurderinger` : "Ingen sæsoner vurderet"}</small></span></div>
+    </section>`;
+  setImage(content.querySelector(".podcast-detail-sheet__cover"), getPodcastImageSources(displayGroup), displayGroup.title);
+  content.querySelector("[data-podcast-seasons-open]")?.addEventListener("click", () => renderPodcastDisplayGroupSeasonWorkspace(dialog, displayGroup));
 }
 
 async function savePodcastDetailInlineRating(dialog, podcast, input, message) {
@@ -11881,7 +11876,7 @@ function refreshOpenPodcastDetailSheet() {
   const dialog = document.getElementById("podcastDetailSheet");
   if (!dialog || dialog.classList.contains("is-hidden")) return;
 
-  const podcast = state.podcastByKey[state.activePodcastDetailKey];
+  const podcast = getRankingDisplayItemByKey(state.activePodcastDetailKey);
   if (!podcast) return;
 
   const content = dialog.querySelector("[data-podcast-detail-content]");
@@ -11910,6 +11905,18 @@ function refreshOpenPodcastDetailSheet() {
 
   if (state.podcastDetailView === "episodes") {
     renderPodcastEpisodeOverviewContent(dialog, podcast);
+    content?.scrollTo?.({ top: scrollTop, left: 0, behavior: "auto" });
+    return;
+  }
+
+  if (state.podcastDetailView === "seasons") {
+    renderPodcastDisplayGroupSeasonWorkspace(dialog, podcast);
+    content?.scrollTo?.({ top: scrollTop, left: 0, behavior: "auto" });
+    return;
+  }
+
+  if (state.podcastDetailView === "displayGroup") {
+    renderPodcastDisplayGroupContent(dialog, podcast);
     content?.scrollTo?.({ top: scrollTop, left: 0, behavior: "auto" });
     return;
   }
