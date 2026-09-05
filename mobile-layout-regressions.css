@@ -141,16 +141,29 @@ html body .mobile-home-search-overlay { display: none; }
     display: block !important;
     min-width: 0;
     margin: 0 !important;
+    padding: 0 !important;
   }
 
   body.page-ranglister .ranking-search-strip #searchInput {
+    display: block;
+    box-sizing: border-box;
+    height: 46px;
     min-height: 46px !important;
     padding: 0 12px 0 38px !important;
     font-size: 0.95rem !important;
   }
 
   body.page-ranglister .ranking-mobile-filter-bar {
-    display: block !important;
+    display: flex !important;
+    align-items: stretch;
+    width: auto !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    box-sizing: border-box;
   }
 
   body.page-ranglister .ranking-mobile-filter-summary,
@@ -160,6 +173,7 @@ html body .mobile-home-search-overlay { display: none; }
 
   body.page-ranglister .ranking-mobile-filter-toggle {
     min-width: 76px;
+    height: 46px;
     min-height: 46px;
     display: inline-flex;
     align-items: center;
@@ -172,6 +186,7 @@ html body .mobile-home-search-overlay { display: none; }
     color: #6a3d26;
     font: 800 0.78rem/1 "Manrope", Inter, system-ui, sans-serif;
     white-space: nowrap;
+    box-sizing: border-box;
   }
 
   body.page-ranglister .ranking-mobile-filter-count {
@@ -240,6 +255,25 @@ html body .mobile-home-search-overlay { display: none; }
 
   body.page-ranglister .ranking-source-field > span {
     display: none !important;
+  }
+
+  html body.page-ranglister .ranking-filter-panel .ranking-source-toggle,
+  body.page-ranglister .ranking-language-toggle {
+    min-height: 42px !important;
+    padding: 3px !important;
+    gap: 3px !important;
+    border-color: rgba(225, 211, 197, 0.92) !important;
+    border-radius: 12px !important;
+    background: rgba(255, 255, 255, 0.72) !important;
+    box-shadow: none !important;
+    box-sizing: border-box;
+  }
+
+  html body.page-ranglister .ranking-filter-panel .ranking-source-button,
+  body.page-ranglister .ranking-language-button {
+    min-height: 36px !important;
+    border-radius: 9px !important;
+    box-sizing: border-box;
   }
 
   body.page-ranglister .genre-nav-header h3,
@@ -363,9 +397,11 @@ html body .mobile-home-search-overlay { display: none; }
   body.page-ranglister .ranking-filter-panel .ranking-free-only-filter {
     display: inline-flex !important;
     align-items: center;
+    justify-content: space-between;
     order: 4 !important;
     gap: 8px;
     width: 100% !important;
+    min-height: 36px;
     margin: 2px 0 0 !important;
     padding: 0 !important;
     border: 0 !important;
@@ -374,11 +410,51 @@ html body .mobile-home-search-overlay { display: none; }
     font-size: 0.78rem !important;
   }
 
+  body.page-ranglister .ranking-filter-panel .ranking-free-only-filter span {
+    order: 1;
+  }
+
   body.page-ranglister .ranking-filter-panel .ranking-free-only-filter input {
-    width: 18px;
-    height: 18px;
+    order: 2;
+    flex: 0 0 36px;
+    width: 36px;
+    height: 22px;
     margin: 0;
-    accent-color: #ff5c16;
+    appearance: none;
+    -webkit-appearance: none;
+    border: 1px solid rgba(126, 104, 84, 0.3);
+    border-radius: 999px;
+    background: rgba(224, 214, 203, 0.88);
+    cursor: pointer;
+    position: relative;
+    transition: background-color 140ms ease, border-color 140ms ease;
+  }
+
+  body.page-ranglister .ranking-filter-panel .ranking-free-only-filter input::before {
+    content: "";
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: #fff;
+    box-shadow: 0 1px 3px rgba(66, 41, 20, 0.2);
+    transition: transform 140ms ease;
+  }
+
+  body.page-ranglister .ranking-filter-panel .ranking-free-only-filter input:checked {
+    border-color: #f45110;
+    background: #f45110;
+  }
+
+  body.page-ranglister .ranking-filter-panel .ranking-free-only-filter input:checked::before {
+    transform: translateX(14px);
+  }
+
+  body.page-ranglister .ranking-filter-panel .ranking-free-only-filter input:focus-visible {
+    outline: 2px solid rgba(255, 92, 22, 0.58);
+    outline-offset: 3px;
   }
 
   body.page-ranglister .rating-filter-section,
