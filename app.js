@@ -11357,6 +11357,16 @@ function renderPodcastDetailSheetContent(
   if (isMobileViewport() && toolbarActions && headerActions) toolbarActions.replaceChildren(headerActions);
   else toolbarActions?.replaceChildren();
 
+  if (isMobileViewport()) {
+    const intro = content.querySelector(".podcast-detail-sheet__intro");
+    const meta = intro?.querySelector(".podcast-detail-sheet__meta");
+    const episodeEntry = intro?.querySelector(".podcast-detail-sheet__episode-entry");
+    const chips = intro?.querySelector(".podcast-detail-sheet__chips");
+    const access = intro?.querySelector(".podcast-access-detail");
+    if (episodeEntry && meta) meta.after(episodeEntry);
+    if (access && chips) chips.after(access);
+  }
+
   const cover = content.querySelector(".podcast-detail-sheet__cover");
   const image = content.querySelector(".podcast-detail-sheet__image");
   setImage(cover, getPodcastImageSources(podcast), podcast.title);
