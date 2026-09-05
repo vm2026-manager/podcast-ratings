@@ -20869,10 +20869,11 @@ function setupMobileViewportOffsets() {
     let topOffset = 0;
 
     if (viewport) {
-      const occludedBottom = Math.max(0, window.innerHeight - viewport.height - viewport.offsetTop);
+      const viewportTop = Math.max(0, viewport.offsetTop || 0);
+      const occludedBottom = Math.max(0, window.innerHeight - viewport.height - viewportTop);
       const keyboardLikelyOpen = occludedBottom > 160 || viewport.height < window.innerHeight * 0.75;
       bottomOffset = keyboardLikelyOpen ? 0 : occludedBottom;
-      topOffset = Math.max(0, viewport.offsetTop || 0);
+      topOffset = viewportTop;
     }
 
     root.style.setProperty("--mobile-browser-bottom-offset", `${Math.round(bottomOffset)}px`);

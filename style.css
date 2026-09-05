@@ -841,7 +841,7 @@ body.page-ranglister .search-field__clear:focus-visible {
   outline-offset: -4px !important;
 }
 
-/* Final mobile bottom navigation offset for dynamic iOS browser chrome. */
+/* Retain browser-chrome clearance for content; fixed nav is visual-viewport anchored. */
 :root {
   --mobile-browser-bottom-offset: 0px;
   --mobile-visual-top: 0px;
@@ -861,17 +861,9 @@ body.page-ranglister .search-field__clear:focus-visible {
 
   html body .topbar .site-nav,
   html body .site-nav {
-    bottom: var(--mobile-browser-bottom-offset, 0px) !important;
+    bottom: 0 !important;
     height: var(--mobile-nav-height) !important;
     padding-bottom: calc(8px + env(safe-area-inset-bottom, 0px)) !important;
-    transition: bottom 80ms linear;
-  }
-
-  html body.has-dialog-open .topbar .site-nav,
-  html body.has-dialog-open .site-nav,
-  html body.has-suggestion-dialog-open .topbar .site-nav,
-  html body.has-suggestion-dialog-open .site-nav {
-    transition: none !important;
   }
 }
 
@@ -1009,17 +1001,9 @@ body.page-ranglister .search-field__clear:focus-visible {
 
   html body .topbar .site-nav,
   html body .site-nav {
-    bottom: var(--mobile-browser-bottom-offset, 0px) !important;
+    bottom: 0 !important;
     height: var(--mobile-nav-height) !important;
     padding-bottom: calc(8px + env(safe-area-inset-bottom, 0px)) !important;
-    transition: bottom 80ms linear;
-  }
-
-  html body.has-dialog-open .topbar .site-nav,
-  html body.has-dialog-open .site-nav,
-  html body.has-suggestion-dialog-open .topbar .site-nav,
-  html body.has-suggestion-dialog-open .site-nav {
-    transition: none !important;
   }
 }
 
@@ -25899,7 +25883,7 @@ body.page-ranglister .search-field__clear:focus-visible {
   outline-offset: -4px !important;
 }
 
-/* Final mobile bottom navigation offset for dynamic iOS browser chrome. */
+/* Retain browser-chrome clearance for content; fixed nav is visual-viewport anchored. */
 :root {
   --mobile-browser-bottom-offset: 0px;
   --mobile-nav-height: calc(76px + env(safe-area-inset-bottom, 0px));
@@ -25918,17 +25902,9 @@ body.page-ranglister .search-field__clear:focus-visible {
 
   html body .topbar .site-nav,
   html body .site-nav {
-    bottom: var(--mobile-browser-bottom-offset, 0px) !important;
+    bottom: 0 !important;
     height: var(--mobile-nav-height) !important;
     padding-bottom: calc(8px + env(safe-area-inset-bottom, 0px)) !important;
-    transition: bottom 80ms linear;
-  }
-
-  html body.has-dialog-open .topbar .site-nav,
-  html body.has-dialog-open .site-nav,
-  html body.has-suggestion-dialog-open .topbar .site-nav,
-  html body.has-suggestion-dialog-open .site-nav {
-    transition: none !important;
   }
 }
 /* Final mobile Forside: remove the old Nye fund wrapper panel. */
