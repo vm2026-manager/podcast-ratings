@@ -8380,6 +8380,33 @@ function hydratePodcastSimilarityProduct(dialog, podcast) {
     });
   });
 
+  const getDesktopRelatedCarouselPageOffsets = (track) => {
+    const firstCard = track.querySelector(".podcast-detail-sheet__related-card");
+    if (!firstCard) return [0];
+
+    const styles = window.getComputedStyle(track);
+    const gap = Number.parseFloat(styles.columnGap || styles.gap) || 0;
+    const cardStride = firstCard.getBoundingClientRect().width + gap;
+    const maxScrollLeft = Math.max(0, track.scrollWidth - track.clientWidth);
+    if (cardStride <= 0 || maxScrollLeft <= 0) return [0];
+
+    const visibleCardCount = Math.max(
+      1,
+      Math.floor((track.clientWidth + gap + 0.5) / cardStride)
+    );
+    const pageStride = visibleCardCount * cardStride;
+    const offsets = [0];
+
+    for (let offset = pageStride; offset < maxScrollLeft - 0.5; offset += pageStride) {
+      offsets.push(offset);
+    }
+    if (maxScrollLeft - offsets[offsets.length - 1] > 0.5) {
+      offsets.push(maxScrollLeft);
+    }
+
+    return offsets;
+  };
+
   container.querySelectorAll("[data-podcast-similarity-scroll]").forEach((button) => {
     button.addEventListener("click", (event) => {
       event.preventDefault();
@@ -8387,6 +8414,23 @@ function hydratePodcastSimilarityProduct(dialog, podcast) {
       const section = button.closest("[data-podcast-similarity-section]");
       const track = section?.querySelector(".podcast-detail-sheet__related-track");
       const direction = Number(button.dataset.podcastSimilarityScroll) || 1;
+      const isDesktopArrow =
+        isDesktopRankingViewport() &&
+        button.closest(".podcast-detail-sheet__related-controls");
+
+      if (track && isDesktopArrow) {
+        const pageOffsets = getDesktopRelatedCarouselPageOffsets(track);
+        const scrollLeft = track.scrollLeft;
+        const target =
+          direction > 0
+            ? pageOffsets.find((offset) => offset > scrollLeft + 0.5) ??
+              pageOffsets[pageOffsets.length - 1]
+            : [...pageOffsets].reverse().find((offset) => offset < scrollLeft - 0.5) ?? 0;
+
+        track.scrollTo({ left: target, behavior: "smooth" });
+        return;
+      }
+
       track?.scrollBy?.({
         left: direction * Math.max(220, track.clientWidth * 0.8),
         behavior: "smooth"
