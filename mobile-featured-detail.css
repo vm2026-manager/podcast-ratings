@@ -819,14 +819,14 @@
     gap: 10px !important;
   }
   html body #podcastDetailSheet .podcast-detail-sheet__header {
-    grid-template-columns: clamp(124px, 34.9vw, 136px) minmax(0, 1fr) !important;
+    grid-template-columns: clamp(110px, 30vw, 120px) minmax(0, 1fr) !important;
     column-gap: 12px !important;
     row-gap: 0 !important;
   }
   html body #podcastDetailSheet .podcast-detail-sheet__cover {
     grid-row: 1 !important;
-    width: calc(clamp(124px, 34.9vw, 136px) - 4px) !important;
-    height: calc(clamp(124px, 34.9vw, 136px) - 4px) !important;
+    width: calc(clamp(110px, 30vw, 120px) - 2px) !important;
+    height: calc(clamp(110px, 30vw, 120px) - 2px) !important;
     border-radius: 18px !important;
   }
   html body #podcastDetailSheet .podcast-detail-sheet__intro {
@@ -835,7 +835,7 @@
   }
   html body #podcastDetailSheet .podcast-detail-sheet__intro h2 {
     margin: 0 0 9px !important;
-    font-size: clamp(1.36rem, 5.2vw, 1.5rem) !important;
+    font-size: clamp(1.28rem, 4.8vw, 1.42rem) !important;
     font-weight: 850 !important;
     line-height: 1.08 !important;
     letter-spacing: -0.015em !important;
@@ -910,7 +910,7 @@
     width: 100% !important;
     row-gap: 6px !important;
     column-gap: 5px !important;
-    margin: 11px 0 0 !important;
+    margin: 10px 0 0 !important;
     justify-content: flex-start !important;
   }
   html body #podcastDetailSheet .podcast-detail-sheet__episode-entry-button {
@@ -950,7 +950,7 @@
   }
   html body #podcastDetailSheet .podcast-detail-sheet__description--mobile {
     grid-column: 1 / -1 !important;
-    margin-top: 18px !important;
+    margin-top: 15px !important;
     padding-top: 0 !important;
   }
   html body #podcastDetailSheet .podcast-detail-sheet__description--mobile h3 {
@@ -1136,10 +1136,10 @@
   html body.page-forside #pageIntroPanel .home-featured__surface {
     padding-inline: 20px !important;
   }
-  html body #podcastDetailSheet .podcast-detail-sheet__header { grid-template-columns: 124px minmax(0, 1fr) !important; }
-  html body #podcastDetailSheet .podcast-detail-sheet__cover { width: 120px !important; height: 120px !important; }
+  html body #podcastDetailSheet .podcast-detail-sheet__header { grid-template-columns: 110px minmax(0, 1fr) !important; }
+  html body #podcastDetailSheet .podcast-detail-sheet__cover { width: 108px !important; height: 108px !important; }
   html body #podcastDetailSheet .podcast-detail-sheet__header-favorite,
   html body #podcastDetailSheet .podcast-detail-sheet__header-link { width: 40px !important; height: 40px !important; min-width: 40px !important; min-height: 40px !important; }
-  html body #podcastDetailSheet .podcast-detail-sheet__intro h2 { font-size: 1.42rem !important; }
+  html body #podcastDetailSheet .podcast-detail-sheet__intro h2 { font-size: 1.32rem !important; }
   html body #podcastDetailSheet .podcast-detail-sheet__meta { font-size: .9rem !important; }
 }

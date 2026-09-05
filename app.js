@@ -11354,6 +11354,7 @@ function renderPodcastDetailSheetContent(
 
   const toolbarActions = dialog.querySelector("[data-podcast-detail-toolbar-actions]");
   const headerActions = content.querySelector(".podcast-detail-sheet__header-action-icons");
+  renderFavoriteButton(headerActions?.querySelector("[data-podcast-detail-favorite]"), key);
   if (isMobileViewport() && toolbarActions && headerActions) toolbarActions.replaceChildren(headerActions);
   else toolbarActions?.replaceChildren();
 
