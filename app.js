@@ -24,6 +24,7 @@ const MOBILE_RANKING_BATCH_SIZE = 20;
 const MOBILE_RANKING_TAIL_SIZE = 50;
 const DESKTOP_RANKING_BATCH_SIZE = 24;
 const VALID_RANKING_SOURCES = new Set(["mads", "users"]);
+const VALID_LANGUAGE_FILTERS = new Set(["all", "danish", "english"]);
 const PODCAST_DATA_REFRESH_INTERVAL_MS = 60 * 60 * 1000;
 const HOME_HERO_COVER_COUNT = 12;
 const HOME_ROTATION_TOP_LIMIT = 50;
@@ -758,6 +759,7 @@ const state = {
   searchTerm: "",
   minimumRating: 0,
   freeOnly: false,
+  languageFilter: "all",
   rankingSource: "mads",
   rankingSourceTouched: false,
   userRankingSort: "rating",
@@ -905,6 +907,7 @@ const elements = {
   ratingFilter: document.getElementById("ratingFilter"),
   ratingFilterValue: document.getElementById("ratingFilterValue"),
   rankingFreeOnly: document.getElementById("rankingFreeOnly"),
+  rankingLanguageButtons: document.querySelectorAll("[data-ranking-language]"),
   rankingMobileFilterSummary: document.getElementById("rankingMobileFilterSummary"),
   rankingMobileActiveFilterRemove: document.getElementById("rankingMobileActiveFilterRemove"),
   rankingMobileFilterToggle: document.getElementById("rankingMobileFilterToggle"),
@@ -3501,6 +3504,24 @@ function setFreeOnly(value) {
   render();
 }
 
+function updateLanguageFilterUi() {
+  elements.rankingLanguageButtons?.forEach((button) => {
+    const active = button.dataset.rankingLanguage === state.languageFilter;
+    button.classList.toggle("active", active);
+    button.setAttribute("aria-pressed", String(active));
+  });
+}
+
+function setLanguageFilter(value) {
+  const nextValue = VALID_LANGUAGE_FILTERS.has(value) ? value : "all";
+  if (state.languageFilter === nextValue) return;
+
+  state.languageFilter = nextValue;
+  resetVisibleCount();
+  updateLanguageFilterUi();
+  render();
+}
+
 function clearRankingFilters() {
   state.activeFilter = null;
   state.activePublisherFilter = "";
@@ -3508,6 +3529,7 @@ function clearRankingFilters() {
   state.searchTerm = "";
   state.minimumRating = 0;
   state.freeOnly = false;
+  state.languageFilter = "all";
   if (state.rankingSource === "users") {
     state.userRankingSort = "rating";
     state.userRankingDirection = "desc";
@@ -3521,6 +3543,7 @@ function clearRankingFilters() {
   createGenreChips();
   updateRatingFilterUi();
   updateFreeOnlyFilterUi();
+  updateLanguageFilterUi();
   render();
 }
 
@@ -3534,6 +3557,7 @@ function resetRankingFiltersForPodcastDetailNavigation(type, value) {
   state.searchTerm = "";
   state.minimumRating = 0;
   state.freeOnly = false;
+  state.languageFilter = "all";
 
   if (elements.searchInput) elements.searchInput.value = "";
 
@@ -3545,6 +3569,7 @@ function resetRankingFiltersForPodcastDetailNavigation(type, value) {
   createGenreChips();
   updateRatingFilterUi();
   updateFreeOnlyFilterUi();
+  updateLanguageFilterUi();
 }
 
 function createGenreChips() {
@@ -3599,6 +3624,7 @@ function getRankingListCacheKey() {
     getExactMainSeriesFilterToken(state.activeMainSeriesFilter),
     state.minimumRating,
     state.freeOnly,
+    state.languageFilter,
     state.searchTerm,
     savedFilterKeys
   ].join("||");
@@ -3661,6 +3687,14 @@ function getFilteredPodcasts() {
       }
 
       if (state.freeOnly && podcast.accessType !== "free") {
+        return false;
+      }
+
+      if (state.languageFilter === "english" && podcast.isEnglish !== true) {
+        return false;
+      }
+
+      if (state.languageFilter === "danish" && podcast.isEnglish !== false) {
         return false;
       }
 
@@ -3876,6 +3910,12 @@ function updateMobileRankingFilterUi() {
   const freeOnlyMarkup = state.freeOnly
     ? '<span class="ranking-mobile-filter-summary__free">Kun gratis</span>'
     : "";
+  const languageMarkup =
+    state.languageFilter === "danish"
+      ? '<span class="ranking-mobile-filter-summary__language">Dansk</span>'
+      : state.languageFilter === "english"
+        ? '<span class="ranking-mobile-filter-summary__language">Engelsk</span>'
+        : "";
 
   const categoryMarkup = categoryFilters
     .map(
@@ -3900,6 +3940,7 @@ function updateMobileRankingFilterUi() {
   elements.rankingMobileFilterSummary.innerHTML = `
     ${baseLabel}
     ${categoryMarkup}
+    ${languageMarkup}
     ${freeOnlyMarkup}
     <span class="ranking-mobile-filter-summary__rating">${escapeHtml(ratingLabel)}</span>
   `;
@@ -3910,6 +3951,7 @@ function updateMobileRankingFilterUi() {
       categoryFilters.length > 0 ||
       state.minimumRating > 0 ||
       state.freeOnly ||
+      state.languageFilter !== "all" ||
       Boolean(state.searchTerm);
     elements.rankingMobileActiveFilterRemove.textContent = "Nulstil";
     elements.rankingMobileActiveFilterRemove.setAttribute(
@@ -4053,6 +4095,12 @@ function getResultsText(filteredCount, visibleCount) {
 
   if (state.activeMainSeriesFilter) {
     suffixes.push(`Hovedserie: ${state.activeMainSeriesFilter}.`);
+  }
+
+  if (state.languageFilter === "danish") {
+    suffixes.push("Sprog: Dansk.");
+  } else if (state.languageFilter === "english") {
+    suffixes.push("Sprog: Engelsk.");
   }
 
   return suffixes.length ? `${baseText} ${suffixes.join(" ")}` : baseText;
@@ -21452,6 +21500,12 @@ function setupEvents() {
 
   elements.rankingFreeOnly?.addEventListener("change", (event) => {
     setFreeOnly(event.target.checked);
+  });
+
+  elements.rankingLanguageButtons?.forEach((button) => {
+    button.addEventListener("click", () => {
+      setLanguageFilter(button.dataset.rankingLanguage);
+    });
   });
 
   elements.rankingMobileFilterToggle?.addEventListener("click", () => {

@@ -56,18 +56,18 @@
   }
 
   html body.page-ranglister .rating-filter-section {
-    order: 4;
+    order: 5;
     gap: 11px !important;
     padding-top: 0 !important;
     border-top: 0 !important;
   }
 
   html body.page-ranglister .controls-sidebar {
-    order: 5;
+    order: 6;
   }
 
   html body.page-ranglister .clear-filter-button {
-    order: 6;
+    order: 7;
     width: 100% !important;
     min-height: 48px !important;
     margin: 2px 0 0 !important;
@@ -85,6 +85,7 @@
 
   html body.page-ranglister .ranking-source-field > span,
   html body.page-ranglister .genre-nav-header h3,
+  html body.page-ranglister .ranking-language-filter h3,
   html body.page-ranglister .rating-filter-topline h3 {
     color: #756258 !important;
     font-size: 0.73rem !important;
@@ -123,7 +124,7 @@
   }
 
   html body.page-ranglister .ranking-free-only-filter {
-    order: 3;
+    order: 4;
     display: inline-flex !important;
     align-items: center;
     gap: 9px;
@@ -143,6 +144,47 @@
     margin: 0;
     accent-color: #ff5c16;
     cursor: pointer;
+  }
+
+  html body.page-ranglister .ranking-language-filter {
+    order: 3;
+    display: flex;
+    flex-direction: column;
+    gap: 9px;
+  }
+
+  html body.page-ranglister .ranking-language-filter h3 {
+    margin: 0;
+  }
+
+  html body.page-ranglister .ranking-language-toggle {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 4px;
+    width: 100%;
+    min-height: 52px;
+    padding: 4px;
+    border: 1px solid rgba(225, 211, 197, 0.92);
+    border-radius: 15px;
+    background: rgba(255, 255, 255, 0.72);
+  }
+
+  html body.page-ranglister .ranking-language-button {
+    min-width: 0;
+    min-height: 42px;
+    padding: 0 6px;
+    border: 0;
+    border-radius: 11px;
+    background: transparent;
+    color: #342b26;
+    font: 700 0.78rem/1.18 "Manrope", Inter, system-ui, sans-serif;
+    cursor: pointer;
+  }
+
+  html body.page-ranglister .ranking-language-button.active {
+    background: linear-gradient(180deg, #ff6a1a, #f45110);
+    box-shadow: 0 4px 10px rgba(223, 84, 16, 0.16);
+    color: #fff;
   }
 
   html body.page-ranglister .genre-chips {

@@ -39,8 +39,8 @@
     <link rel="stylesheet" href="mobile-profile-settings.css?v=20260820-mobile-profile-settings-v1" />
     <link rel="stylesheet" href="mobile-featured-detail.css?v=20260905-mobile-detail-scroll-touch-v1" />
     <link rel="stylesheet" href="header-navigation-fix.css?v=20260831-header-breakpoint-fix-v1" />
-    <link rel="stylesheet" href="mobile-layout-regressions.css?v=20260904-ranking-free-filter-v1" />
-    <link rel="stylesheet" href="ranking-sidebar-refinement.css?v=20260904-ranking-free-filter-v1" />
+    <link rel="stylesheet" href="mobile-layout-regressions.css?v=20260905-ranking-language-filter-v1" />
+    <link rel="stylesheet" href="ranking-sidebar-refinement.css?v=20260905-ranking-language-filter-v1" />
     <link rel="stylesheet" href="access-status.css?v=20260904-access-tooltip-v1" />
 
     <script
@@ -63,7 +63,7 @@
       })();
     </script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
-    <script src="app.js?v=20260905-english-language-data-v1" defer></script>
+    <script src="app.js?v=20260905-ranking-language-filter-v1" defer></script>
   </head>
 
   <body>
@@ -210,6 +210,15 @@
                 </div>
                 <p class="genre-helper">Filtrer p&#229; genre</p>
                 <div id="genreChips" class="genre-chips"><a class="genre-chip" href="/genre/true-crime/">True Crime</a></div>
+              </section>
+
+              <section class="sidebar-section ranking-language-filter" aria-labelledby="rankingLanguageHeading">
+                <h3 id="rankingLanguageHeading">Sprog</h3>
+                <div class="ranking-language-toggle" role="group" aria-label="Vælg sprog">
+                  <button type="button" class="ranking-language-button active" data-ranking-language="all" aria-pressed="true">Alle</button>
+                  <button type="button" class="ranking-language-button" data-ranking-language="danish" aria-pressed="false">Dansk</button>
+                  <button type="button" class="ranking-language-button" data-ranking-language="english" aria-pressed="false">Engelsk</button>
+                </div>
               </section>
 
               <label class="sidebar-section ranking-free-only-filter" for="rankingFreeOnly">

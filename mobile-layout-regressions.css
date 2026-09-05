@@ -166,7 +166,7 @@ html body .mobile-home-search-overlay { display: none; }
   body.page-ranglister .ranking-filter-panel .ranking-free-only-filter {
     display: inline-flex !important;
     align-items: center;
-    order: 3 !important;
+    order: 4 !important;
     gap: 8px;
     width: 100% !important;
     margin: 2px 0 0 !important;
@@ -182,6 +182,54 @@ html body .mobile-home-search-overlay { display: none; }
     height: 18px;
     margin: 0;
     accent-color: #ff5c16;
+  }
+
+  body.page-ranglister .ranking-filter-panel .ranking-language-filter {
+    display: flex !important;
+    flex-direction: column;
+    order: 3 !important;
+    gap: 6px;
+    width: 100% !important;
+    margin: 2px 0 0 !important;
+    padding: 0 !important;
+    border: 0 !important;
+    background: transparent !important;
+  }
+
+  body.page-ranglister .ranking-filter-panel .ranking-language-filter h3 {
+    margin: 0;
+    color: #756258;
+    font-size: 0.7rem;
+    letter-spacing: 0.095em;
+    text-transform: uppercase;
+  }
+
+  body.page-ranglister .ranking-filter-panel .ranking-language-toggle {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 3px;
+    width: 100%;
+    min-height: 42px;
+    padding: 3px;
+    border: 1px solid rgba(225, 211, 197, 0.92);
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.72);
+  }
+
+  body.page-ranglister .ranking-filter-panel .ranking-language-button {
+    min-width: 0;
+    min-height: 36px;
+    padding: 0 4px;
+    border: 0;
+    border-radius: 9px;
+    background: transparent;
+    color: #342b26;
+    font: 700 0.72rem/1.1 "Manrope", Inter, system-ui, sans-serif;
+  }
+
+  body.page-ranglister .ranking-filter-panel .ranking-language-button.active {
+    background: linear-gradient(180deg, #ff6a1a, #f45110);
+    color: #fff;
   }
 }
 /* MOBILE RANKING GENRES ALWAYS VISIBLE END */
