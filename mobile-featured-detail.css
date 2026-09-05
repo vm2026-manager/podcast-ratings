@@ -1103,8 +1103,7 @@
     background: transparent !important;
   }
   html body #podcastDetailSheet .podcast-detail-sheet__own-rating-reveal > span,
-  html body #podcastDetailSheet .podcast-detail-sheet__own-rating-reveal strong,
-  html body #podcastDetailSheet .podcast-detail-sheet__own-rating-display strong {
+  html body #podcastDetailSheet .podcast-detail-sheet__own-rating-reveal strong {
     font-size: 1.05rem !important;
     letter-spacing: 0 !important;
     line-height: 1 !important;
