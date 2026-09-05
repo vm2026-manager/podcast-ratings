@@ -11358,13 +11358,16 @@ function renderPodcastDetailSheetContent(
   else toolbarActions?.replaceChildren();
 
   if (isMobileViewport()) {
+    const header = content.querySelector(".podcast-detail-sheet__header");
     const intro = content.querySelector(".podcast-detail-sheet__intro");
     const meta = intro?.querySelector(".podcast-detail-sheet__meta");
     const episodeEntry = intro?.querySelector(".podcast-detail-sheet__episode-entry");
     const chips = intro?.querySelector(".podcast-detail-sheet__chips");
     const access = intro?.querySelector(".podcast-access-detail");
+    const mobileDescription = header?.querySelector(".podcast-detail-sheet__description--mobile");
     if (episodeEntry && meta) meta.after(episodeEntry);
-    if (access && chips) chips.after(access);
+    if (header && chips && mobileDescription) header.insertBefore(chips, mobileDescription);
+    if (header && access && mobileDescription) header.insertBefore(access, mobileDescription);
   }
 
   const cover = content.querySelector(".podcast-detail-sheet__cover");
