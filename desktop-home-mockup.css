@@ -18114,6 +18114,7 @@ html body #podcastDetailSheet [data-podcast-detail-placement]:empty {
   html body #podcastDetailSheet .podcast-detail-sheet__top-left-controls .podcast-detail-sheet__modal-back { min-height: 36px !important; }
   html body #podcastDetailSheet .podcast-detail-sheet__close { top: 3px !important; width: 42px !important; height: 42px !important; font-size: 1.65rem !important; }
   html body #podcastDetailSheet .podcast-detail-sheet__content { gap: 8px !important; padding: 0 2px 2px 0 !important; overflow: visible !important; scrollbar-gutter: auto !important; }
+  html body #podcastDetailSheet .podcast-detail-sheet__content--display-group { overflow-y: auto !important; overscroll-behavior: contain !important; }
   html body #podcastDetailSheet .podcast-detail-sheet__header, html body #podcastDetailSheet .podcast-detail-sheet__header:has(.podcast-detail-sheet__placement) { grid-template-columns: clamp(240px, 15vw, 280px) minmax(0, 1fr) !important; gap: 24px !important; padding-top: 0 !important; }
   html body #podcastDetailSheet .podcast-detail-sheet__cover { position: relative !important; width: clamp(240px, 15vw, 280px) !important; max-width: clamp(240px, 15vw, 280px) !important; height: clamp(240px, 15vw, 280px) !important; overflow: visible !important; aspect-ratio: auto !important; border-radius: 18px !important; }
   html body #podcastDetailSheet .podcast-detail-sheet__image { border-radius: 18px !important; }

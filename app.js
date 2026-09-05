@@ -11278,16 +11278,22 @@ function renderPodcastDisplayGroupContent(dialog, displayGroup) {
   const content = dialog.querySelector("[data-podcast-detail-content]");
   if (!content) return;
 
+  dialog.classList.remove("is-episode-workspace");
+  content.classList.remove(
+    "podcast-detail-sheet__content--episodes",
+    "podcast-detail-sheet__content--episode-overview"
+  );
+  content.classList.add("podcast-detail-sheet__content--display-group");
   const members = [...(displayGroup.displayGroupMembers || [])].sort(
     (a, b) => getDisplayGroupSeasonNumber(a) - getDisplayGroupSeasonNumber(b)
   );
   const editorialCount = members.filter((podcast) => parseNumber(podcast.ratingValue) !== null).length;
   const userCount = Number(displayGroup.userRatingCount || 0);
-  const rowsMarkup = members.map((podcast) => {
+  const rowsMarkup = members.map((podcast, index) => {
     const stat = getCommunityStat(getPodcastKey(podcast));
     return `
-      <button class="podcast-detail-sheet__series-row" type="button" data-display-group-member-key="${escapeHtml(getPodcastKey(podcast))}" aria-label="Vis ${escapeHtml(podcast.title)}">
-        <span class="podcast-detail-sheet__series-cover" data-display-group-cover="${escapeHtml(getPodcastKey(podcast))}" aria-hidden="true"><img alt="" loading="lazy" /></span>
+      <button class="podcast-detail-sheet__series-row" type="button" data-display-group-member-index="${index}" aria-label="Vis ${escapeHtml(podcast.title)}">
+        <span class="podcast-detail-sheet__series-cover" data-display-group-member-cover-index="${index}" aria-hidden="true"><img alt="" loading="lazy" /></span>
         <span class="podcast-detail-sheet__series-copy">
           <strong>${escapeHtml(podcast.title)}</strong>
           ${podcast.host ? `<span>${escapeHtml(podcast.host)}</span>` : ""}
@@ -11313,14 +11319,14 @@ function renderPodcastDisplayGroupContent(dialog, displayGroup) {
 
   const heroCover = content.querySelector(".podcast-detail-sheet__series-hero-cover");
   setImage(heroCover, getPodcastImageSources(displayGroup), displayGroup.title);
-  content.querySelectorAll("[data-display-group-cover]").forEach((cover) => {
-    const podcast = state.podcastByKey[cover.dataset.displayGroupCover];
+  content.querySelectorAll("[data-display-group-member-cover-index]").forEach((cover) => {
+    const podcast = members[Number(cover.dataset.displayGroupMemberCoverIndex)];
     if (podcast) setImageWithFallbackSource(cover, getPodcastImageSources(podcast), getPodcastImageSources(displayGroup), podcast.title);
   });
-  content.querySelectorAll("[data-display-group-member-key]").forEach((button) => {
+  content.querySelectorAll("[data-display-group-member-index]").forEach((button) => {
     button.addEventListener("click", (event) => {
       event.preventDefault();
-      const podcast = state.podcastByKey[button.dataset.displayGroupMemberKey];
+      const podcast = members[Number(button.dataset.displayGroupMemberIndex)];
       if (podcast) openPodcastDetailFromModal(podcast, button);
     });
   });
@@ -11393,7 +11399,10 @@ function renderPodcastDetailSheetContent(
   state.activePodcastDetailKey = getPodcastKey(podcast);
   const supportsEpisodes = podcastSupportsEpisodes(podcast);
   content.classList.toggle("podcast-detail-sheet__content--episodes", supportsEpisodes);
-  content.classList.remove("podcast-detail-sheet__content--episode-overview");
+  content.classList.remove(
+    "podcast-detail-sheet__content--episode-overview",
+    "podcast-detail-sheet__content--display-group"
+  );
 
   const key = getPodcastKey(podcast);
   const rating = getPodcastDetailRatingData(podcast);
