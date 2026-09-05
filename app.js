@@ -11520,7 +11520,7 @@ function renderPodcastDetailSheetContent(
     showInlineToast("Brugeranmeldelser kommer snart.");
   });
 
-  content.querySelectorAll("[data-podcast-detail-favorite]").forEach((favoriteButton) => {
+  dialog.querySelectorAll("[data-podcast-detail-favorite]").forEach((favoriteButton) => {
     renderFavoriteButton(favoriteButton, key);
     favoriteButton.addEventListener("click", async (event) => {
       await handleFavoriteToggle(event, podcast);
