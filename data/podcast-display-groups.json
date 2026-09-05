@@ -1,0 +1,25 @@
+{
+  "version": 1,
+  "groups": [
+    {
+      "id": "narkobetjenten",
+      "title": "Narkobetjenten",
+      "representativeMemberLegacyKey": "narkobetjenten sæson 15",
+      "rankingEnabled": true,
+      "memberLegacyKeys": [
+        "narkobetjenten og den kriminelle underverden sæson 1",
+        "narkobetjenten og den kriminelle underverden sæson 2",
+        "narkobetjenten og den kriminelle underverden sæson 3",
+        "narkobetjenten og den kriminelle underverden sæson 6",
+        "narkobetjenten sæson 7",
+        "narkobetjenten sæson 9",
+        "narkobetjenten sæson 10",
+        "narkobetjenten sæson 11",
+        "narkobetjenten sæson 12",
+        "narkobetjenten sæson 13",
+        "narkobetjenten sæson 14",
+        "narkobetjenten sæson 15"
+      ]
+    }
+  ]
+}

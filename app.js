@@ -4,6 +4,7 @@ const COVER_MANIFEST_URL = "data/podcast-cover-manifest.json";
 const LOCAL_EPISODE_DATA_URL = "data/podcast-episodes.json";
 const RECOMMENDATION_METADATA_URL = "data/recommendation-metadata.json";
 const PODCAST_SIMILARITY_PRODUCT_URL = "data/podcast-similarity-product-v1.3.json";
+const PODCAST_DISPLAY_GROUPS_URL = "data/podcast-display-groups.json";
 
 const GENRES = [
   "Alle",
@@ -697,6 +698,8 @@ const state = {
   podcastByKey: {},
   podcastById: {},
   podcastByLegacyKey: {},
+  podcastDisplayGroups: [],
+  podcastDisplayGroupById: {},
   coverManifestByKey: {},
   coverMetaByPrimarySrc: {},
   coverManifestWarningShown: false,
@@ -3469,6 +3472,11 @@ function invalidateRankingListCache() {
 }
 
 function getPodcastRatingForActiveSource(podcast) {
+  if (podcast?.isDisplayGroup) {
+    return state.rankingSource === "users"
+      ? parseNumber(podcast.userAverageRating)
+      : parseNumber(podcast.ratingValue);
+  }
   if (state.rankingSource === "users") {
     const key = getPodcastKey(podcast);
     const stat = getCommunityStat(key);
@@ -3479,6 +3487,7 @@ function getPodcastRatingForActiveSource(podcast) {
 }
 
 function getCommunityRatingCount(podcast) {
+  if (podcast?.isDisplayGroup) return Number(podcast.userRatingCount || 0);
   const count = Number(getCommunityStat(getPodcastKey(podcast))?.ratingCount || 0);
   return Number.isFinite(count) && count > 0 ? Math.floor(count) : 0;
 }
@@ -3636,12 +3645,93 @@ function getRankingListCacheKey() {
   ].join("||");
 }
 
+function getDisplayGroupMemberPodcasts(group) {
+  const members = Array.isArray(group?.memberLegacyKeys) ? group.memberLegacyKeys : [];
+  return members.map((legacyKey) => {
+    const normalizedKey = normalizeMatchKey(legacyKey);
+    const matches = state.podcasts.filter(
+      (podcast) => getLegacyPodcastKey(podcast) === normalizedKey
+    );
+    return matches.length === 1 ? matches[0] : null;
+  }).filter(Boolean);
+}
+
+function getDisplayGroupUserStats(members) {
+  const stats = members
+    .map((podcast) => getCommunityStat(getPodcastKey(podcast)))
+    .map((stat) => ({
+      averageRating: parseNumber(stat?.averageRating),
+      ratingCount: Number(stat?.ratingCount || 0)
+    }))
+    .filter((stat) => stat.averageRating !== null && stat.ratingCount > 0);
+  const ratingCount = stats.reduce((sum, stat) => sum + stat.ratingCount, 0);
+  const weightedTotal = stats.reduce(
+    (sum, stat) => sum + stat.averageRating * stat.ratingCount,
+    0
+  );
+  return {
+    averageRating: ratingCount ? weightedTotal / ratingCount : null,
+    ratingCount
+  };
+}
+
+function createRankingDisplayGroup(group) {
+  const members = getDisplayGroupMemberPodcasts(group);
+  const representative =
+    members.find(
+      (podcast) => getLegacyPodcastKey(podcast) === normalizeMatchKey(group.representativeMemberLegacyKey)
+    ) ||
+    members.find((podcast) => podcast.image) ||
+    members[0];
+  if (!representative || members.length !== group.memberLegacyKeys.length) return null;
+
+  const editorialRatings = members
+    .map((podcast) => parseNumber(podcast.ratingValue))
+    .filter((rating) => rating !== null);
+  const userStats = getDisplayGroupUserStats(members);
+  return {
+    ...representative,
+    title: group.title,
+    legacyKey: `display-group:${group.id}`,
+    podcastId: "",
+    isDisplayGroup: true,
+    displayGroupId: group.id,
+    displayGroupMemberKeys: group.memberLegacyKeys.slice(),
+    displayGroupMembers: members,
+    ratingValue: averageNumbers(editorialRatings),
+    userAverageRating: userStats.averageRating,
+    userRatingCount: userStats.ratingCount,
+    searchText: buildSearchText([group.title, ...members.map((podcast) => podcast.title)])
+  };
+}
+
+function getRankingCandidates() {
+  const activeGroups = state.podcastDisplayGroups.filter((group) => group.rankingEnabled);
+  const memberKeys = new Set(
+    activeGroups.flatMap((group) => group.memberLegacyKeys.map(normalizeMatchKey))
+  );
+  const ordinary = state.podcasts.filter(
+    (podcast) => !memberKeys.has(getLegacyPodcastKey(podcast))
+  );
+  return activeGroups
+    .map(createRankingDisplayGroup)
+    .filter(Boolean)
+    .concat(ordinary);
+}
+
+function getRankingDisplayItemByKey(key) {
+  const normalizedKey = normalizeText(key);
+  if (!normalizedKey.startsWith("display-group:")) return state.podcastByKey[normalizedKey] || null;
+  const group = state.podcastDisplayGroupById[normalizedKey.slice("display-group:".length)];
+  return group ? createRankingDisplayGroup(group) : null;
+}
+
 function getFilteredPodcasts() {
   const cacheKey = getRankingListCacheKey();
   const cached = state.rankingListCache.get(cacheKey);
   if (cached) return cached;
 
-  const filtered = state.podcasts
+  const filtered = getRankingCandidates()
     .filter((podcast) => {
       if (
         state.activePublisherFilter &&
@@ -5193,6 +5283,13 @@ function renderAuthPanel() {
 }
 
 function getCommunityStat(podcastKey) {
+  const displayGroupId = normalizeText(podcastKey).replace(/^display-group:/, "");
+  if (normalizeText(podcastKey).startsWith("display-group:")) {
+    const displayGroup = createRankingDisplayGroup(state.podcastDisplayGroupById[displayGroupId]);
+    return displayGroup
+      ? { averageRating: displayGroup.userAverageRating, ratingCount: displayGroup.userRatingCount }
+      : null;
+  }
   const canonicalKey = resolveCanonicalPodcastId(podcastKey) || normalizeText(podcastKey);
   if (state.communityStatsByKey[canonicalKey]) {
     return state.communityStatsByKey[canonicalKey];
@@ -5668,7 +5765,9 @@ function syncDesktopRankingSearchPlacement() {
 }
 
 function getDesktopRankingScore(podcast) {
-  const communityStat = getCommunityStat(getPodcastKey(podcast));
+  const communityStat = podcast?.isDisplayGroup
+    ? { averageRating: podcast.userAverageRating, ratingCount: podcast.userRatingCount }
+    : getCommunityStat(getPodcastKey(podcast));
   const isUserRanking = state.rankingSource === "users";
   const value = isUserRanking
     ? parseNumber(communityStat?.averageRating ?? podcast.userAverageRating)
@@ -5686,6 +5785,7 @@ function getDesktopRankingScore(podcast) {
 }
 
 function getDesktopRankingOwnScore(podcast) {
+  if (podcast?.isDisplayGroup) return null;
   if (!isLoggedIn()) return null;
   return parseNumber(getUserRatingForPodcast(podcast));
 }
@@ -5924,13 +6024,13 @@ function createDesktopRankingTopCardElement(podcast, displayRank = null) {
     <span class="desktop-ranking-rank" aria-label="Placering ${escapeHtml(String(rankText))}">
       ${escapeHtml(rankLabel)}
     </span>
-    <button
+    ${podcast.isDisplayGroup ? "" : `<button
       class="favorite-button desktop-ranking-top-card__favorite"
       type="button"
       aria-label="Gem som favorit"
     >
       <span aria-hidden="true"></span>
-    </button>
+    </button>`}
     <button
       class="desktop-ranking-cover"
       type="button"
@@ -5955,7 +6055,7 @@ function createDesktopRankingTopCardElement(podcast, displayRank = null) {
       ${getDesktopRankingScoreMarkup(score)}
     </div>
     <div class="desktop-ranking-top-card__actions">
-      <button
+      ${podcast.isDisplayGroup ? "" : `<button
         class="desktop-ranking-own-score"
         type="button"
         data-action="open-rating"
@@ -5967,7 +6067,7 @@ function createDesktopRankingTopCardElement(podcast, displayRank = null) {
         </svg>
         <span>Din vurdering</span>
         <strong>${escapeHtml(ownScoreText)}</strong>
-      </button>
+      </button>`}
       <button class="desktop-ranking-open" type="button" data-action="open-details">
         <span aria-hidden="true">\u25b6</span> \u00c5bn
       </button>
@@ -5975,7 +6075,7 @@ function createDesktopRankingTopCardElement(podcast, displayRank = null) {
   `;
 
   setDesktopRankingCover(article, podcast);
-  renderFavoriteButton(article.querySelector(".favorite-button"), key);
+  if (!podcast.isDisplayGroup) renderFavoriteButton(article.querySelector(".favorite-button"), key);
   return article;
 }
 
@@ -6032,7 +6132,7 @@ function createDesktopRankingTableRowElement(podcast, displayRank = null) {
           : ""
       }
     </span>
-    <button
+    ${podcast.isDisplayGroup ? `<span class="desktop-ranking-row__own is-empty" role="cell"><span class="desktop-ranking-row__own-star" aria-hidden="true">★</span><strong>—</strong><small>/ 10</small></span>` : `<button
       class="desktop-ranking-row__own${ownScore === null ? " is-empty" : ""}"
       type="button"
       data-action="open-rating"
@@ -6042,7 +6142,7 @@ function createDesktopRankingTableRowElement(podcast, displayRank = null) {
       <span class="desktop-ranking-row__own-star" aria-hidden="true">\u2605</span>
       <strong>${escapeHtml(ownScoreText)}</strong>
       <small>/ 10</small>
-    </button>
+    </button>`}
     <span class="desktop-ranking-row__actions" role="cell">
       <button
         class="desktop-ranking-row__external-link"
@@ -6062,14 +6162,14 @@ function createDesktopRankingTableRowElement(podcast, displayRank = null) {
           <path d="M19 13v5a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1h5"></path>
         </svg>
       </button>
-      <button class="favorite-button" type="button" aria-label="Gem som favorit" data-tooltip="Gem til senere">
+      ${podcast.isDisplayGroup ? "" : `<button class="favorite-button" type="button" aria-label="Gem som favorit" data-tooltip="Gem til senere">
         <span aria-hidden="true"></span>
-      </button>
+      </button>`}
     </span>
   `;
 
   setDesktopRankingCover(article, podcast);
-  renderFavoriteButton(article.querySelector(".favorite-button"), key);
+  if (!podcast.isDisplayGroup) renderFavoriteButton(article.querySelector(".favorite-button"), key);
   return article;
 }
 
@@ -8622,7 +8722,7 @@ function openPodcastDetailFromModal(podcast, triggerElement = null) {
   const dialog = document.getElementById("podcastDetailSheet");
   const currentKey = normalizeText(state.activePodcastDetailKey);
   const nextKey = getPodcastKey(podcast);
-  const currentPodcast = currentKey ? state.podcastByKey[currentKey] : null;
+  const currentPodcast = currentKey ? getRankingDisplayItemByKey(currentKey) : null;
 
   if (!dialog || dialog.classList.contains("is-hidden") || !currentPodcast || !nextKey || nextKey === currentKey) {
     return false;
@@ -8642,7 +8742,7 @@ function openPodcastDetailFromModal(podcast, triggerElement = null) {
 function navigatePodcastDetailHistoryBack() {
   const dialog = document.getElementById("podcastDetailSheet");
   const previousKey = state.podcastDetailNavigationHistory.pop();
-  const previousPodcast = previousKey ? state.podcastByKey[previousKey] : null;
+  const previousPodcast = previousKey ? getRankingDisplayItemByKey(previousKey) : null;
 
   if (!dialog || dialog.classList.contains("is-hidden") || !previousPodcast) {
     updatePodcastDetailNavigationHistoryButton(dialog);
@@ -8703,13 +8803,13 @@ function updatePodcastDetailRankingNavigation(dialog) {
 
 function navigatePodcastDetailRanking(direction) {
   const dialog = document.getElementById("podcastDetailSheet");
-  if (!dialog || dialog.classList.contains("is-hidden") || state.podcastDetailView !== "detail") {
+  if (!dialog || dialog.classList.contains("is-hidden") || !["detail", "displayGroup"].includes(state.podcastDetailView)) {
     return false;
   }
 
   const nextIndex = state.podcastDetailRankingIndex + direction;
   const nextKey = state.podcastDetailRankingKeys[nextIndex];
-  const podcast = nextKey ? state.podcastByKey[nextKey] : null;
+  const podcast = nextKey ? getRankingDisplayItemByKey(nextKey) : null;
   if (!podcast) return false;
 
   state.podcastDetailRankingIndex = nextIndex;
@@ -8721,7 +8821,8 @@ function navigatePodcastDetailRanking(direction) {
   state.podcastDetailEpisodeId = null;
   state.podcastDetailEpisodeScrollTop = 0;
 
-  renderPodcastDetailSheetContent(dialog, podcast);
+  if (podcast.isDisplayGroup) renderPodcastDisplayGroupContent(dialog, podcast);
+  else renderPodcastDetailSheetContent(dialog, podcast);
   dialog
     .querySelector("[data-podcast-detail-content]")
     ?.scrollTo?.({ top: 0, left: 0, behavior: "auto" });
@@ -11168,6 +11269,63 @@ function renderPodcastDetailMainSeriesContent(dialog, sourcePodcast, mainSeries)
   });
 }
 
+function getDisplayGroupSeasonNumber(podcast) {
+  const match = normalizeComparable(podcast?.title).match(/sæson\s+(\d+)/);
+  return match ? Number(match[1]) : Number.MAX_SAFE_INTEGER;
+}
+
+function renderPodcastDisplayGroupContent(dialog, displayGroup) {
+  const content = dialog.querySelector("[data-podcast-detail-content]");
+  if (!content) return;
+
+  const members = [...(displayGroup.displayGroupMembers || [])].sort(
+    (a, b) => getDisplayGroupSeasonNumber(a) - getDisplayGroupSeasonNumber(b)
+  );
+  const editorialCount = members.filter((podcast) => parseNumber(podcast.ratingValue) !== null).length;
+  const userCount = Number(displayGroup.userRatingCount || 0);
+  const rowsMarkup = members.map((podcast) => {
+    const stat = getCommunityStat(getPodcastKey(podcast));
+    return `
+      <button class="podcast-detail-sheet__series-row" type="button" data-display-group-member-key="${escapeHtml(getPodcastKey(podcast))}" aria-label="Vis ${escapeHtml(podcast.title)}">
+        <span class="podcast-detail-sheet__series-cover" data-display-group-cover="${escapeHtml(getPodcastKey(podcast))}" aria-hidden="true"><img alt="" loading="lazy" /></span>
+        <span class="podcast-detail-sheet__series-copy">
+          <strong>${escapeHtml(podcast.title)}</strong>
+          ${podcast.host ? `<span>${escapeHtml(podcast.host)}</span>` : ""}
+          <span class="podcast-detail-sheet__series-scores"><em>Podcastlisten ${escapeHtml(formatCompactRating(podcast.ratingValue))}</em><em>Brugere ${hasCommunityRating(stat) ? escapeHtml(formatCompactRating(stat.averageRating)) : "—"}</em></span>
+        </span>
+      </button>`;
+  }).join("");
+
+  dialog.querySelector("[data-podcast-detail-toolbar-actions]")?.replaceChildren();
+  setPodcastDetailPlacementControl(dialog);
+  state.podcastDetailView = "displayGroup";
+  state.activePodcastDetailKey = getPodcastKey(displayGroup);
+  content.innerHTML = `
+    <header class="podcast-detail-sheet__series-header">
+      <div class="podcast-detail-sheet__series-hero-cover" aria-hidden="true"><img alt="" loading="lazy" /></div>
+      <div class="podcast-detail-sheet__series-heading"><span>Podcast</span><h2 id="podcastDetailTitle">${escapeHtml(displayGroup.title)}</h2><p>Samlet overblik over sæsoner</p></div>
+    </header>
+    <section class="podcast-detail-sheet__ratings podcast-detail-sheet__series-ratings" aria-label="Podcastens vurderinger">
+      <div><span>Podcastlistens vurdering</span><strong>${escapeHtml(formatCompactRating(displayGroup.ratingValue))}<small>/10</small></strong><em>${editorialCount} sæsoner med score</em></div>
+      <div><span>Brugernes vurdering</span><strong>${displayGroup.userAverageRating === null ? "—" : escapeHtml(formatCompactRating(displayGroup.userAverageRating))}<small>/10</small></strong><em>${userCount ? escapeHtml(formatUserRatingCount(userCount)) : "Ingen brugervurderinger endnu"}</em></div>
+    </section>
+    <section class="podcast-detail-sheet__series-list" aria-label="Sæsoner"><h3>Sæsoner</h3>${rowsMarkup}</section>`;
+
+  const heroCover = content.querySelector(".podcast-detail-sheet__series-hero-cover");
+  setImage(heroCover, getPodcastImageSources(displayGroup), displayGroup.title);
+  content.querySelectorAll("[data-display-group-cover]").forEach((cover) => {
+    const podcast = state.podcastByKey[cover.dataset.displayGroupCover];
+    if (podcast) setImageWithFallbackSource(cover, getPodcastImageSources(podcast), getPodcastImageSources(displayGroup), podcast.title);
+  });
+  content.querySelectorAll("[data-display-group-member-key]").forEach((button) => {
+    button.addEventListener("click", (event) => {
+      event.preventDefault();
+      const podcast = state.podcastByKey[button.dataset.displayGroupMemberKey];
+      if (podcast) openPodcastDetailFromModal(podcast, button);
+    });
+  });
+}
+
 async function savePodcastDetailInlineRating(dialog, podcast, input, message) {
   if (getPodcastEpisodeUserRatingSummary(podcast).count > 0) {
     return;
@@ -11775,7 +11933,11 @@ function openPodcastDetailSheet(
     state.podcastDetailReturnFocus = triggerElement || document.activeElement;
     state.podcastDetailScrollY = Math.max(0, window.scrollY || document.documentElement.scrollTop || 0);
   }
-  renderPodcastDetailSheetContent(dialog, podcast);
+  if (podcast.isDisplayGroup) {
+    renderPodcastDisplayGroupContent(dialog, podcast);
+  } else {
+    renderPodcastDetailSheetContent(dialog, podcast);
+  }
   resetPodcastDetailDragStyles(dialog);
 
   dialog.classList.remove("is-hidden");
@@ -13545,9 +13707,14 @@ function createPodcastCardElement(podcast, displayRank = null) {
     reviewButton.classList.add("is-hidden");
   }
 
-  rateButton.dataset.action = "open-rating";
-  renderRateButton(rateButton, key);
-  renderFavoriteButton(favoriteButton, key);
+  if (podcast.isDisplayGroup) {
+    rateButton.classList.add("is-hidden");
+    favoriteButton.classList.add("is-hidden");
+  } else {
+    rateButton.dataset.action = "open-rating";
+    renderRateButton(rateButton, key);
+    renderFavoriteButton(favoriteButton, key);
+  }
 
   populateCardSummaries(article, podcast);
 
@@ -20855,7 +21022,7 @@ function handlePodcastGridClick(event) {
   if (!actionTarget || !elements.podcastGrid.contains(actionTarget)) {
     const card = event.target.closest(".podcast-card");
     const key = card?.dataset.key;
-    const podcast = key ? state.podcastByKey[key] : null;
+    const podcast = key ? getRankingDisplayItemByKey(key) : null;
     if (card && podcast) {
       if (!handleMobilePodcastCardOpen(event, podcast, card)) {
         event.preventDefault();
@@ -20868,7 +21035,7 @@ function handlePodcastGridClick(event) {
 
   const card = actionTarget.closest(".podcast-card");
   const key = card?.dataset.key;
-  const podcast = key ? state.podcastByKey[key] : null;
+  const podcast = key ? getRankingDisplayItemByKey(key) : null;
 
   if (!podcast) return;
 
@@ -20938,11 +21105,13 @@ function handlePodcastGridClick(event) {
   }
 
   if (action === "open-rating") {
+    if (podcast.isDisplayGroup) return;
     openRatingDialog(podcast);
     return;
   }
 
   if (action === "toggle-favorite" || action === "toggle-save") {
+    if (podcast.isDisplayGroup) return;
     handleFavoriteToggle(event, podcast);
     return;
   }
@@ -21938,6 +22107,23 @@ async function loadFeaturedReviewObjectsFromJson() {
   );
 }
 
+async function loadPodcastDisplayGroups() {
+  const response = await fetch(`${PODCAST_DISPLAY_GROUPS_URL}?v=${DATA_VERSION}`, {
+    cache: "no-store"
+  });
+  if (!response.ok) throw new Error("Kunne ikke hente podcast-display-groups.json.");
+  const data = await response.json();
+  if (data?.version !== 1 || !Array.isArray(data.groups)) {
+    throw new Error("podcast-display-groups.json har ikke forventet format.");
+  }
+  return data.groups.filter((group) =>
+    normalizeText(group?.id) &&
+    normalizeText(group?.title) &&
+    normalizeText(group?.representativeMemberLegacyKey) &&
+    Array.isArray(group?.memberLegacyKeys)
+  );
+}
+
 async function loadCoverManifestFromJson() {
   try {
     const response = await fetch(`${COVER_MANIFEST_URL}?v=${DATA_VERSION}`, {
@@ -21982,7 +22168,7 @@ function buildPodcastLookups(podcasts) {
   return { byId, byLegacyKey };
 }
 
-function applyPodcastDataRefresh(podcastRows, featuredRows, coverManifestLookup = {}) {
+function applyPodcastDataRefresh(podcastRows, featuredRows, coverManifestLookup = {}, displayGroups = []) {
   const mappedPodcasts = podcastRows.map(mapPodcast).filter(isUsefulPodcast);
 
   state.podcasts = deduplicatePodcasts(mappedPodcasts);
@@ -21993,6 +22179,10 @@ function applyPodcastDataRefresh(podcastRows, featuredRows, coverManifestLookup 
   state.podcastById = lookups.byId;
   state.podcastByLegacyKey = lookups.byLegacyKey;
   state.podcastByKey = { ...lookups.byLegacyKey, ...lookups.byId };
+  state.podcastDisplayGroups = displayGroups;
+  state.podcastDisplayGroupById = Object.fromEntries(
+    displayGroups.map((group) => [normalizeText(group.id), group])
+  );
   if (
     state.podcastSimilarityProductStatus === "ready" &&
     state.podcastSimilarityMetadataPayload
@@ -22109,16 +22299,17 @@ async function refreshPodcastData({ initial = false, force = false } = {}) {
   }
 
   try {
-    const [podcastRows, featuredRows, coverManifestLookup] = await Promise.all([
+    const [podcastRows, featuredRows, coverManifestLookup, displayGroups] = await Promise.all([
       loadPodcastObjectsFromJson(),
       loadFeaturedReviewObjectsFromJson().catch((error) => {
         console.warn("Udvalgte vurderinger blev ikke indlæst:", error);
         return [];
       }),
-      loadCoverManifestFromJson()
+      loadCoverManifestFromJson(),
+      loadPodcastDisplayGroups()
     ]);
 
-    applyPodcastDataRefresh(podcastRows, featuredRows, coverManifestLookup);
+    applyPodcastDataRefresh(podcastRows, featuredRows, coverManifestLookup, displayGroups);
     state.podcastDataStatus = "ready";
     state.lastSuccessfulPodcastDataRefreshAt = Date.now();
     renderAfterPodcastDataRefresh({ initial });
