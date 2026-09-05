@@ -39,7 +39,7 @@
     <link rel="stylesheet" href="mobile-profile-settings.css?v=20260820-mobile-profile-settings-v1" />
     <link rel="stylesheet" href="mobile-featured-detail.css?v=20260905-mobile-detail-scroll-touch-v1" />
     <link rel="stylesheet" href="header-navigation-fix.css?v=20260831-header-breakpoint-fix-v1" />
-    <link rel="stylesheet" href="mobile-layout-regressions.css?v=20260905-ranking-language-filter-v1" />
+    <link rel="stylesheet" href="mobile-layout-regressions.css?v=20260905-mobile-ranking-collapsible-filters-v1" />
     <link rel="stylesheet" href="ranking-sidebar-refinement.css?v=20260905-ranking-language-filter-v1" />
     <link rel="stylesheet" href="access-status.css?v=20260904-access-tooltip-v1" />
 
@@ -63,7 +63,7 @@
       })();
     </script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
-    <script src="app.js?v=20260905-ranking-language-filter-v1" defer></script>
+    <script src="app.js?v=20260905-mobile-ranking-collapsible-filters-v1" defer></script>
   </head>
 
   <body>
@@ -196,7 +196,7 @@
             <div id="featuredDots" class="featured-dots"></div>
             </aside>
 
-            <section class="ranking-filter-panel" aria-label="Filtrer ranglisten">
+            <section id="rankingFilterPanel" class="ranking-filter-panel" aria-label="Filtrer ranglisten">
               <div class="ranking-filter-panel__header">
                 <h2>Filtrer</h2>
                 <button id="clearFilterButton" class="clear-filter-button" type="button">
@@ -268,28 +268,6 @@
                 </div>
               </section>
 
-              <div class="ranking-mobile-filter-bar">
-                <span id="rankingMobileFilterSummary" class="ranking-mobile-filter-summary">
-                  Alle genrer
-                </span>
-                <button
-                  id="rankingMobileActiveFilterRemove"
-                  class="ranking-mobile-filter-remove is-hidden"
-                  type="button"
-                  aria-label="Fjern aktivt filter"
-                >
-                  <span aria-hidden="true">&#215;</span>
-                </button>
-                <button
-                  id="rankingMobileFilterToggle"
-                  class="ranking-mobile-filter-toggle"
-                  type="button"
-                  aria-expanded="false"
-                >
-                  Filtre
-                </button>
-              </div>
-
               <div class="ranking-filter-controls">
                 <div class="ranking-source-field">
                   <span>Kilde</span>
@@ -321,6 +299,13 @@
                       Flest vurderinger
                     </button>
                   </div>
+                </div>
+
+                <div class="ranking-source-field mobile-ranking-sort-field">
+                  <span>Placering</span>
+                  <button id="mobileSortToggle" class="mobile-sort-toggle" type="button">
+                    &#8645; Lavest
+                  </button>
                 </div>
 
               </div>
@@ -426,15 +411,37 @@
                   </svg>
                 </button>
               </label>
+              <div class="ranking-mobile-filter-bar">
+                <span id="rankingMobileFilterSummary" class="ranking-mobile-filter-summary" hidden>
+                  Alle genrer
+                </span>
+                <button
+                  id="rankingMobileActiveFilterRemove"
+                  class="ranking-mobile-filter-remove is-hidden"
+                  type="button"
+                  aria-label="Fjern aktivt filter"
+                  hidden
+                >
+                  <span aria-hidden="true">&#215;</span>
+                </button>
+                <button
+                  id="rankingMobileFilterToggle"
+                  class="ranking-mobile-filter-toggle"
+                  type="button"
+                  aria-controls="rankingFilterPanel"
+                  aria-expanded="false"
+                >
+                  <span>Filtre</span>
+                  <span id="rankingMobileFilterCount" class="ranking-mobile-filter-count" hidden></span>
+                  <span class="ranking-mobile-filter-chevron" aria-hidden="true"></span>
+                </button>
+              </div>
             </div>
 
             <section class="ranking-list-panel" aria-labelledby="rankingListHeading">
               <section class="ranking-toolbar" aria-live="polite">
                 <h2 id="rankingListHeading">Rangliste over podcasts</h2>
                 <p id="resultsText">Indl&#230;ser podcasts...</p>
-                <button id="mobileSortToggle" class="mobile-sort-toggle" type="button">
-                  &#8645; Lavest
-                </button>
               </section>
 
               <section

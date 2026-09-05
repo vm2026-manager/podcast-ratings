@@ -117,31 +117,176 @@ html body .mobile-home-search-overlay { display: none; }
   }
 }
 
-/* MOBILE RANKING GENRES ALWAYS VISIBLE START */
+/* MOBILE RANKING COLLAPSIBLE FILTERS */
 @media (max-width: 768px) {
-  /* Den gamle "Alle genrer / Filtre / Skjul"-række bruges ikke længere. */
+  body.page-ranglister .ranking-main-column {
+    gap: 8px !important;
+  }
+
+  body.page-ranglister .ranking-search-strip {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: stretch;
+    gap: 8px;
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    background: transparent !important;
+    border: 0 !important;
+    box-shadow: none !important;
+    order: 1 !important;
+  }
+
+  body.page-ranglister .ranking-search-strip .search-field {
+    display: block !important;
+    min-width: 0;
+    margin: 0 !important;
+  }
+
+  body.page-ranglister .ranking-search-strip #searchInput {
+    min-height: 46px !important;
+    padding: 0 40px 0 13px !important;
+    font-size: 0.82rem !important;
+  }
+
   body.page-ranglister .ranking-mobile-filter-bar {
+    display: block !important;
+  }
+
+  body.page-ranglister .ranking-mobile-filter-summary,
+  body.page-ranglister .ranking-mobile-filter-remove {
     display: none !important;
   }
 
-  /* Vurderingsfilter og desktop-sortering skal fortsat være skjult på mobil. */
-  body.page-ranglister .rating-filter-section,
-  body.page-ranglister .sort-field {
+  body.page-ranglister .ranking-mobile-filter-toggle {
+    min-width: 82px;
+    min-height: 46px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    padding: 0 10px;
+    border: 1px solid rgba(214, 153, 108, 0.72);
+    border-radius: 13px;
+    background: rgba(255, 251, 246, 0.94);
+    color: #6a3d26;
+    font: 800 0.78rem/1 "Manrope", Inter, system-ui, sans-serif;
+    white-space: nowrap;
+  }
+
+  body.page-ranglister .ranking-mobile-filter-count {
+    min-width: 18px;
+    height: 18px;
+    display: inline-grid;
+    place-items: center;
+    padding: 0 4px;
+    border-radius: 999px;
+    background: #f45110;
+    color: #fff;
+    font-size: 0.68rem;
+    line-height: 1;
+  }
+
+  body.page-ranglister .ranking-mobile-filter-count[hidden] {
     display: none !important;
   }
 
-  /* Genrevalgene er altid synlige direkte under Podcastlisten/Brugere. */
+  body.page-ranglister .ranking-mobile-filter-chevron {
+    width: 7px;
+    height: 7px;
+    margin: -3px 0 0 1px;
+    border-right: 1.5px solid currentColor;
+    border-bottom: 1.5px solid currentColor;
+    transform: rotate(45deg);
+    transition: transform 160ms ease;
+  }
+
+  body.page-ranglister .ranking-mobile-filter-toggle[aria-expanded="true"] .ranking-mobile-filter-chevron {
+    margin-top: 3px;
+    transform: rotate(225deg);
+  }
+
+  body.page-ranglister .ranking-filter-panel[hidden] {
+    display: none !important;
+  }
+
+  body.page-ranglister .ranking-filter-panel {
+    display: flex !important;
+    flex-direction: column;
+    gap: 14px !important;
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 14px !important;
+    border: 1px solid rgba(224, 207, 190, 0.82) !important;
+    border-radius: 17px !important;
+    background: rgba(255, 252, 248, 0.84) !important;
+    box-shadow: 0 8px 20px rgba(66, 41, 20, 0.04) !important;
+    order: 2 !important;
+  }
+
+  body.page-ranglister .ranking-filter-controls {
+    display: flex !important;
+    flex-direction: column;
+    order: 1 !important;
+    gap: 12px !important;
+    width: 100% !important;
+  }
+
+  body.page-ranglister .ranking-source-field {
+    gap: 7px !important;
+  }
+
+  body.page-ranglister .ranking-source-field > span,
+  body.page-ranglister .genre-nav-header h3,
+  body.page-ranglister .ranking-language-filter h3 {
+    color: #756258 !important;
+    font-size: 0.7rem !important;
+    letter-spacing: 0.095em !important;
+  }
+
+  body.page-ranglister .ranking-source-toggle {
+    min-height: 44px !important;
+    padding: 3px !important;
+    border-radius: 12px !important;
+  }
+
+  body.page-ranglister .ranking-source-button {
+    min-height: 38px !important;
+    padding: 0 7px !important;
+    font-size: 0.74rem !important;
+  }
+
+  body.page-ranglister .ranking-user-sort-field[hidden] {
+    display: none !important;
+  }
+
+  body.page-ranglister .mobile-ranking-sort-field {
+    display: grid !important;
+  }
+
+  body.page-ranglister .mobile-ranking-sort-field .mobile-sort-toggle {
+    position: static !important;
+    display: inline-flex !important;
+    align-items: center;
+    justify-content: center;
+    width: 100% !important;
+    min-height: 42px !important;
+    margin: 0 !important;
+  }
+
   body.page-ranglister .ranking-filter-panel .genre-nav {
     display: block !important;
     order: 2 !important;
     width: 100% !important;
-    max-width: none !important;
     margin: 0 !important;
     padding: 0 !important;
     border: 0 !important;
-    border-radius: 0 !important;
     background: transparent !important;
     box-shadow: none !important;
+  }
+
+  body.page-ranglister .ranking-filter-panel .genre-helper {
+    display: none !important;
   }
 
   body.page-ranglister .ranking-filter-panel .genre-chips {
@@ -149,62 +294,41 @@ html body .mobile-home-search-overlay { display: none; }
     flex-wrap: wrap !important;
     gap: 6px 5px !important;
     width: 100% !important;
-    max-width: 100% !important;
     margin: 0 !important;
     padding: 0 !important;
     overflow: visible !important;
   }
 
   body.page-ranglister .ranking-filter-panel .genre-chip {
-    flex: 0 0 auto !important;
-    max-width: calc(50% - 4px) !important;
-    min-height: 29px !important;
+    flex: 1 0 calc(50% - 4px) !important;
+    max-width: calc(50% - 3px) !important;
+    min-height: 32px !important;
     padding: 0 7px !important;
     font-size: 0.74rem !important;
   }
 
-  body.page-ranglister .ranking-filter-panel .ranking-free-only-filter {
-    display: inline-flex !important;
-    align-items: center;
-    order: 4 !important;
-    gap: 8px;
-    width: 100% !important;
-    margin: 2px 0 0 !important;
-    padding: 0 !important;
-    border: 0 !important;
-    background: transparent !important;
-    color: #342b26 !important;
-    font-size: 0.78rem !important;
+  body.page-ranglister .ranking-filter-panel .genre-chip[data-genre="Underholdning"] {
+    flex-basis: 100% !important;
+    max-width: none !important;
   }
 
-  body.page-ranglister .ranking-filter-panel .ranking-free-only-filter input {
-    width: 18px;
-    height: 18px;
-    margin: 0;
-    accent-color: #ff5c16;
-  }
-
-  body.page-ranglister .ranking-filter-panel .ranking-language-filter {
+  body.page-ranglister .ranking-language-filter {
     display: flex !important;
     flex-direction: column;
     order: 3 !important;
     gap: 6px;
     width: 100% !important;
-    margin: 2px 0 0 !important;
+    margin: 0 !important;
     padding: 0 !important;
     border: 0 !important;
     background: transparent !important;
   }
 
-  body.page-ranglister .ranking-filter-panel .ranking-language-filter h3 {
+  body.page-ranglister .ranking-language-filter h3 {
     margin: 0;
-    color: #756258;
-    font-size: 0.7rem;
-    letter-spacing: 0.095em;
-    text-transform: uppercase;
   }
 
-  body.page-ranglister .ranking-filter-panel .ranking-language-toggle {
+  body.page-ranglister .ranking-language-toggle {
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 3px;
@@ -216,7 +340,7 @@ html body .mobile-home-search-overlay { display: none; }
     background: rgba(255, 255, 255, 0.72);
   }
 
-  body.page-ranglister .ranking-filter-panel .ranking-language-button {
+  body.page-ranglister .ranking-language-button {
     min-width: 0;
     min-height: 36px;
     padding: 0 4px;
@@ -227,12 +351,58 @@ html body .mobile-home-search-overlay { display: none; }
     font: 700 0.72rem/1.1 "Manrope", Inter, system-ui, sans-serif;
   }
 
-  body.page-ranglister .ranking-filter-panel .ranking-language-button.active {
+  body.page-ranglister .ranking-language-button.active {
     background: linear-gradient(180deg, #ff6a1a, #f45110);
     color: #fff;
   }
+
+  body.page-ranglister .ranking-free-only-filter {
+    display: inline-flex !important;
+    align-items: center;
+    order: 4 !important;
+    gap: 8px;
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: 0 !important;
+    background: transparent !important;
+    color: #342b26 !important;
+    font-size: 0.78rem !important;
+  }
+
+  body.page-ranglister .ranking-free-only-filter input {
+    width: 18px;
+    height: 18px;
+    margin: 0;
+    accent-color: #ff5c16;
+  }
+
+  body.page-ranglister .rating-filter-section,
+  body.page-ranglister .sort-field,
+  body.page-ranglister .controls-sidebar {
+    display: none !important;
+  }
+
+  body.page-ranglister .ranking-filter-panel__header {
+    display: flex !important;
+    align-items: center;
+    justify-content: flex-end;
+    order: 6 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: 0 !important;
+  }
+
+  body.page-ranglister .ranking-filter-panel__header h2 {
+    display: none !important;
+  }
+
+  body.page-ranglister .clear-filter-button {
+    min-height: 38px !important;
+    padding: 0 12px !important;
+    font-size: 0.74rem !important;
+  }
 }
-/* MOBILE RANKING GENRES ALWAYS VISIBLE END */
 
 /* MOBILE GENRE CHIP LINK NORMALIZATION */
 @media (max-width: 768px) {

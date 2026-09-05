@@ -911,6 +911,11 @@ const elements = {
   rankingMobileFilterSummary: document.getElementById("rankingMobileFilterSummary"),
   rankingMobileActiveFilterRemove: document.getElementById("rankingMobileActiveFilterRemove"),
   rankingMobileFilterToggle: document.getElementById("rankingMobileFilterToggle"),
+  rankingMobileFilterCount: document.getElementById("rankingMobileFilterCount"),
+  rankingFilterPanel: document.getElementById("rankingFilterPanel"),
+  rankingSearchStrip: document.querySelector(".ranking-search-strip"),
+  rankingSidebarColumn: document.querySelector(".ranking-sidebar-column"),
+  rankingMainColumn: document.querySelector(".ranking-main-column"),
   featuredPanel: document.getElementById("featuredReviewPanel"),
   featuredImage: document.getElementById("featuredImage"),
   featuredTitle: document.getElementById("featuredTitle"),
@@ -3530,10 +3535,11 @@ function clearRankingFilters() {
   state.minimumRating = 0;
   state.freeOnly = false;
   state.languageFilter = "all";
+  state.sortTouched = false;
+  state.sort = state.profilePreferences.defaultSort;
   if (state.rankingSource === "users") {
     state.userRankingSort = "rating";
     state.userRankingDirection = "desc";
-    state.sort = "placement-asc";
   }
   if (elements.searchInput) {
     elements.searchInput.value = "";
@@ -3886,23 +3892,68 @@ function updateSortToggleUi() {
   }
 }
 
-function updateMobileRankingFilterUi() {
-  document.body.classList.toggle(
-    "ranking-filters-open",
-    state.mobileRankingFiltersOpen
+function isMobileRankingFiltersViewport() {
+  return (
+    isMobileViewport() &&
+    document.body.classList.contains("page-ranglister") &&
+    !document.body.classList.contains("force-desktop-view")
   );
+}
 
-  if (elements.rankingMobileFilterToggle) {
-    elements.rankingMobileFilterToggle.textContent = state.mobileRankingFiltersOpen
-      ? "Skjul"
-      : "Filtre";
-    elements.rankingMobileFilterToggle.setAttribute(
-      "aria-expanded",
-      String(state.mobileRankingFiltersOpen)
-    );
+function syncMobileRankingFilterPlacement() {
+  const panel = elements.rankingFilterPanel;
+  if (!panel || !elements.rankingSidebarColumn || !elements.rankingMainColumn) return;
+
+  if (isMobileRankingFiltersViewport()) {
+    if (panel.parentElement !== elements.rankingMainColumn) {
+      elements.rankingSearchStrip?.after(panel);
+    }
+    return;
   }
 
-  if (!elements.rankingMobileFilterSummary) return;
+  if (panel.parentElement !== elements.rankingSidebarColumn) {
+    elements.featuredPanel?.after(panel);
+  }
+}
+
+function getMobileRankingActiveFilterCount() {
+  let count = 0;
+  const defaultSource = state.profilePreferences?.defaultRankingSource || "mads";
+  const defaultSort = state.profilePreferences?.defaultSort || "placement-asc";
+
+  if (state.rankingSource !== defaultSource) count += 1;
+  if (state.rankingSource === "users" && state.userRankingSort !== "rating") count += 1;
+  if (getActiveCategoryFilters().length) count += 1;
+  if (state.minimumRating > 0) count += 1;
+  if (state.languageFilter !== "all") count += 1;
+  if (state.freeOnly) count += 1;
+  if (state.sort !== defaultSort) count += 1;
+
+  return count;
+}
+
+function updateMobileRankingFilterUi() {
+  syncMobileRankingFilterPlacement();
+
+  const isMobileRanking = isMobileRankingFiltersViewport();
+  const isOpen = isMobileRanking && state.mobileRankingFiltersOpen;
+  document.body.classList.toggle("ranking-filters-open", isOpen);
+  if (elements.rankingFilterPanel) {
+    elements.rankingFilterPanel.hidden = isMobileRanking && !state.mobileRankingFiltersOpen;
+  }
+
+  if (elements.rankingMobileFilterToggle) {
+    elements.rankingMobileFilterToggle.setAttribute(
+      "aria-expanded",
+      String(isOpen)
+    );
+    elements.rankingMobileFilterToggle.setAttribute(
+      "aria-label",
+      getMobileRankingActiveFilterCount()
+        ? `Filtre, ${getMobileRankingActiveFilterCount()} aktive`
+        : "Filtre"
+    );
+  }
 
   const categoryFilters = getActiveCategoryFilters();
   const isSavedFilter = state.activeFilter?.type === "saved";
@@ -3937,13 +3988,21 @@ function updateMobileRankingFilterUi() {
     : categoryFilters.length
       ? ""
       : '<span class="ranking-mobile-filter-summary__base">Alle genrer</span>';
-  elements.rankingMobileFilterSummary.innerHTML = `
-    ${baseLabel}
-    ${categoryMarkup}
-    ${languageMarkup}
-    ${freeOnlyMarkup}
-    <span class="ranking-mobile-filter-summary__rating">${escapeHtml(ratingLabel)}</span>
-  `;
+  if (elements.rankingMobileFilterSummary) {
+    elements.rankingMobileFilterSummary.innerHTML = `
+      ${baseLabel}
+      ${categoryMarkup}
+      ${languageMarkup}
+      ${freeOnlyMarkup}
+      <span class="ranking-mobile-filter-summary__rating">${escapeHtml(ratingLabel)}</span>
+    `;
+  }
+
+  if (elements.rankingMobileFilterCount) {
+    const count = getMobileRankingActiveFilterCount();
+    elements.rankingMobileFilterCount.hidden = count === 0;
+    elements.rankingMobileFilterCount.textContent = count ? String(count) : "";
+  }
 
   if (elements.rankingMobileActiveFilterRemove) {
     const hasRemovableFilter =
@@ -4001,7 +4060,9 @@ function updateRankingSourceUi() {
     }
   });
 
-  const showUserSort = isDesktopRankingViewport();
+  const showUserSort =
+    isDesktopRankingViewport() ||
+    (isMobileRankingFiltersViewport() && state.mobileRankingFiltersOpen);
   const userSortEnabled = showUserSort && state.rankingSource === "users";
   if (elements.rankingUserSortField) {
     elements.rankingUserSortField.hidden = !showUserSort;
@@ -4042,6 +4103,7 @@ function handleRankingSourceChange(source) {
   state.rankingSource = nextSource;
   resetVisibleCount();
   updateRankingSourceUi();
+  updateMobileRankingFilterUi();
   scheduleRankingSourceGridRender();
 }
 
@@ -5578,7 +5640,7 @@ function isDesktopRankingViewport() {
 }
 
 function hasDesktopUserRankingSort() {
-  return isDesktopRankingViewport() && state.rankingSource === "users";
+  return (isDesktopRankingViewport() || isMobileViewport()) && state.rankingSource === "users";
 }
 
 function syncDesktopRankingSearchPlacement() {
@@ -13836,6 +13898,7 @@ function render() {
   }
 
   if (routeChanged && nextRouteInfo.route === "ranglister" && isMobileViewport()) {
+    state.mobileRankingFiltersOpen = false;
     resetVisibleCount();
   }
 
@@ -21480,6 +21543,7 @@ function setupEvents() {
       if (nextSort === "rating") state.sort = "placement-asc";
       resetVisibleCount();
       updateRankingSourceUi();
+      updateMobileRankingFilterUi();
       renderPodcastGrid();
     });
   });
@@ -21501,6 +21565,10 @@ function setupEvents() {
   elements.rankingFreeOnly?.addEventListener("change", (event) => {
     setFreeOnly(event.target.checked);
   });
+  window.matchMedia?.("(max-width: 768px)").addEventListener?.("change", () => {
+    updateMobileRankingFilterUi();
+    updateRankingSourceUi();
+  });
 
   elements.rankingLanguageButtons?.forEach((button) => {
     button.addEventListener("click", () => {
@@ -21511,6 +21579,7 @@ function setupEvents() {
   elements.rankingMobileFilterToggle?.addEventListener("click", () => {
     state.mobileRankingFiltersOpen = !state.mobileRankingFiltersOpen;
     updateMobileRankingFilterUi();
+    updateRankingSourceUi();
   });
 
   elements.rankingMobileActiveFilterRemove?.addEventListener("click", clearRankingFilters);
