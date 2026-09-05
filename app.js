@@ -8395,6 +8395,7 @@ function ensurePodcastDetailSheet() {
       aria-labelledby="podcastDetailTitle"
     >
       <div class="podcast-detail-sheet__drag-header" data-detail-sheet-drag-handle>
+        <div class="podcast-detail-sheet__toolbar-actions" data-podcast-detail-toolbar-actions></div>
         <div class="podcast-detail-sheet__handle" aria-hidden="true"></div>
         <div class="podcast-detail-sheet__top-left-controls">
           <span data-podcast-detail-placement></span>
@@ -10501,6 +10502,7 @@ function updatePodcastEpisodeOverview(dialog = document.getElementById("podcastD
 function renderPodcastEpisodeOverviewContent(dialog, podcast) {
   renderPodcastDetailSheetContent(dialog, podcast, { skipEpisodeLoad: true });
   state.podcastDetailView = "episodes";
+  dialog.querySelector("[data-podcast-detail-toolbar-actions]")?.replaceChildren();
   dialog.classList.add("is-episode-workspace");
   resetEpisodeWorkspaceSearch(podcast);
 
@@ -10677,6 +10679,8 @@ function renderPodcastEpisodeDetailContent(dialog, podcast, episode, { backLabel
   const content = dialog.querySelector("[data-podcast-detail-content]");
   if (!content) return;
 
+  dialog.querySelector("[data-podcast-detail-toolbar-actions]")?.replaceChildren();
+
   state.podcastDetailView = "episode";
   state.podcastDetailEpisodeId = getEpisodeKey(episode);
 
@@ -10781,6 +10785,8 @@ function renderPodcastDetailReviewContent(dialog, podcast, review) {
   const content = dialog.querySelector("[data-podcast-detail-content]");
   if (!content) return;
 
+  dialog.querySelector("[data-podcast-detail-toolbar-actions]")?.replaceChildren();
+
   state.podcastDetailView = "review";
 
   const paramsMarkup = (review.params || [])
@@ -10867,6 +10873,8 @@ function setPodcastDetailPlacementControl(dialog, placementText = "") {
 function renderPodcastDetailMainSeriesContent(dialog, sourcePodcast, mainSeries) {
   const content = dialog.querySelector("[data-podcast-detail-content]");
   if (!content) return;
+
+  dialog.querySelector("[data-podcast-detail-toolbar-actions]")?.replaceChildren();
 
   setPodcastDetailPlacementControl(dialog);
 
@@ -11193,6 +11201,10 @@ function renderPodcastDetailSheetContent(
   const externalLinkMarkup = hasLink
     ? `<a class="podcast-detail-sheet__header-link" href="${escapeHtml(podcast.link)}" target="_blank" rel="noopener noreferrer" aria-label="Link til podcasten" title="Link til podcasten" data-tooltip="Link til podcasten"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 5h5v5M19 5l-9 9"></path><path d="M19 14v4a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1h4"></path></svg></a>`
     : "";
+  const toolbarActions = dialog.querySelector("[data-podcast-detail-toolbar-actions]");
+  if (toolbarActions) {
+    toolbarActions.innerHTML = `<span class="podcast-detail-sheet__header-action-icons"><button class="favorite-button podcast-detail-sheet__header-favorite" type="button" data-podcast-detail-favorite aria-label="Gem podcast"><span aria-hidden="true"></span></button>${externalLinkMarkup}</span>`;
+  }
   const reviewStatusMarkup = hasPodcastlistenReview
     ? `<button class="podcast-detail-sheet__review-status" type="button" data-podcast-detail-review><span class="podcast-detail-sheet__review-status-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="5" y="3" width="14" height="18" rx="2"></rect><path d="M8 8h8M8 12h8M8 16h5"></path></svg></span><span><strong>Podcastlisten har anmeldt</strong><small>Læs den redaktionelle anmeldelse</small></span></button>`
     : `<div class="podcast-detail-sheet__review-status" aria-label="Ingen anmeldelse endnu"><span class="podcast-detail-sheet__review-status-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="5" y="3" width="14" height="18" rx="2"></rect><path d="M8 8h8M8 12h8M8 16h5"></path></svg></span><span><strong>Ingen anmeldelse endnu</strong><small>Podcastlisten har ikke anmeldt podcasten</small></span></div>`;
@@ -11204,9 +11216,6 @@ function renderPodcastDetailSheetContent(
         <img class="podcast-detail-sheet__image" alt="" loading="lazy" />
       </div>
       <div class="podcast-detail-sheet__intro">
-        <div class="podcast-detail-sheet__intro-actions">
-          <span class="podcast-detail-sheet__header-action-icons"><button class="favorite-button podcast-detail-sheet__header-favorite" type="button" data-podcast-detail-favorite aria-label="Gem podcast"><span aria-hidden="true"></span></button>${externalLinkMarkup}</span>
-        </div>
         <h2 id="podcastDetailTitle">${escapeHtml(podcast.title || "Podcast")}</h2>
         ${getPodcastAccessIndicatorMarkup(podcast, { detail: true })}
         ${meta ? `<p class="podcast-detail-sheet__meta">${escapeHtml(meta)}</p>` : ""}
