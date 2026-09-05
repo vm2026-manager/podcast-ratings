@@ -16260,10 +16260,10 @@ function renderProfilePage() {
         button.textContent =
           type === "suggestions"
             ? isExpanded
-              ? "Vis f&aelig;rre"
+              ? "Vis færre"
               : "Se alle forslag"
             : isExpanded
-              ? "Vis f&aelig;rre"
+              ? "Vis færre"
               : "Se alle vurderinger";
         return;
       }
