@@ -3919,7 +3919,6 @@ function syncMobileRankingFilterPlacement() {
 function getMobileRankingActiveFilterCount() {
   let count = 0;
   const defaultSource = state.profilePreferences?.defaultRankingSource || "mads";
-  const defaultSort = state.profilePreferences?.defaultSort || "placement-asc";
 
   if (state.rankingSource !== defaultSource) count += 1;
   if (state.rankingSource === "users" && state.userRankingSort !== "rating") count += 1;
@@ -3927,7 +3926,6 @@ function getMobileRankingActiveFilterCount() {
   if (state.minimumRating > 0) count += 1;
   if (state.languageFilter !== "all") count += 1;
   if (state.freeOnly) count += 1;
-  if (state.sort !== defaultSort) count += 1;
 
   return count;
 }

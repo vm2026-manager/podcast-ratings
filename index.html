@@ -39,7 +39,7 @@
     <link rel="stylesheet" href="mobile-profile-settings.css?v=20260820-mobile-profile-settings-v1" />
     <link rel="stylesheet" href="mobile-featured-detail.css?v=20260905-mobile-detail-scroll-touch-v1" />
     <link rel="stylesheet" href="header-navigation-fix.css?v=20260831-header-breakpoint-fix-v1" />
-    <link rel="stylesheet" href="mobile-layout-regressions.css?v=20260905-mobile-ranking-filter-restore-v1" />
+    <link rel="stylesheet" href="mobile-layout-regressions.css?v=20260905-mobile-ranking-sort-row-v1" />
     <link rel="stylesheet" href="ranking-sidebar-refinement.css?v=20260905-ranking-language-filter-v1" />
     <link rel="stylesheet" href="access-status.css?v=20260904-access-tooltip-v1" />
 
@@ -63,7 +63,7 @@
       })();
     </script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
-    <script src="app.js?v=20260905-mobile-ranking-filter-restore-v1" defer></script>
+    <script src="app.js?v=20260905-mobile-ranking-sort-row-v1" defer></script>
   </head>
 
   <body>
@@ -301,13 +301,6 @@
                   </div>
                 </div>
 
-                <div class="ranking-source-field mobile-ranking-sort-field">
-                  <span>Placering</span>
-                  <button id="mobileSortToggle" class="mobile-sort-toggle" type="button">
-                    &#8645; Lavest
-                  </button>
-                </div>
-
               </div>
             </section>
 
@@ -442,6 +435,9 @@
               <section class="ranking-toolbar" aria-live="polite">
                 <h2 id="rankingListHeading">Rangliste over podcasts</h2>
                 <p id="resultsText">Indl&#230;ser podcasts...</p>
+                <button id="mobileSortToggle" class="mobile-sort-toggle" type="button">
+                  &#8645; Lavest
+                </button>
               </section>
 
               <section

@@ -253,17 +253,28 @@ html body .mobile-home-search-overlay { display: none; }
     display: none !important;
   }
 
-  body.page-ranglister .mobile-ranking-sort-field {
-    display: flex !important;
-    order: 5 !important;
-    width: auto !important;
+  body.page-ranglister .ranking-list-panel .ranking-toolbar {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    column-gap: 8px;
   }
 
-  body.page-ranglister .mobile-ranking-sort-field .mobile-sort-toggle {
+  body.page-ranglister .ranking-toolbar #resultsText {
+    grid-column: 1;
+    min-width: 0;
+    margin: 0 !important;
+    overflow: visible !important;
+    text-overflow: clip !important;
+    white-space: normal !important;
+  }
+
+  body.page-ranglister .ranking-toolbar .mobile-sort-toggle {
     position: static !important;
     display: inline-flex !important;
     align-items: center;
     justify-content: center;
+    grid-column: 2;
     width: auto !important;
     min-height: 34px !important;
     padding: 0 12px !important;
