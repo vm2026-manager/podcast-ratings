@@ -790,8 +790,6 @@ const state = {
   podcastDetailNavigationHistory: [],
   podcastDetailRankingKeys: [],
   podcastDetailRankingIndex: -1,
-  podcastDetailNavigationContext: null,
-  savedSwipeDebugSnapshot: null,
   episodeParentRatingSyncSignatures: {},
   episodeParentRatingSyncPendingKeys: new Set(),
   localEpisodeDataPromise: null,
@@ -8444,7 +8442,6 @@ function ensurePodcastDetailSheet() {
 function clearPodcastDetailRankingContext() {
   state.podcastDetailRankingKeys = [];
   state.podcastDetailRankingIndex = -1;
-  state.podcastDetailNavigationContext = null;
 }
 
 function clearPodcastDetailNavigationHistory() {
@@ -8500,21 +8497,10 @@ function navigatePodcastDetailHistoryBack() {
   return opened;
 }
 
-function setPodcastDetailRankingContext(podcast, navigationKeys = null, navigationContext = null) {
+function setPodcastDetailRankingContext(podcast, navigationKeys = null) {
   const suppliedKeys = Array.isArray(navigationKeys)
     ? navigationKeys.map((key) => normalizeText(key)).filter(Boolean)
     : [];
-  const activeKey = getPodcastKey(podcast);
-  const suppliedIndex = suppliedKeys.indexOf(activeKey);
-
-  if (navigationContext === "saved" && suppliedIndex >= 0) {
-    state.podcastDetailRankingKeys = suppliedKeys;
-    state.podcastDetailRankingIndex = suppliedIndex;
-    state.podcastDetailNavigationContext = "saved";
-    state.savedSwipeDebugSnapshot = null;
-    return;
-  }
-
   const isRankingRoute = getRouteInfoFromHash().route === "ranglister";
   if (!suppliedKeys.length && !isRankingRoute) {
     clearPodcastDetailRankingContext();
@@ -8524,26 +8510,11 @@ function setPodcastDetailRankingContext(podcast, navigationKeys = null, navigati
   const keys = suppliedKeys.length
     ? suppliedKeys
     : getFilteredPodcasts().map((item) => getPodcastKey(item)).filter(Boolean);
+  const activeKey = getPodcastKey(podcast);
   const index = keys.indexOf(activeKey);
 
   state.podcastDetailRankingKeys = index >= 0 ? keys : [];
   state.podcastDetailRankingIndex = index;
-  state.podcastDetailNavigationContext = index >= 0 ? "ranking" : null;
-}
-
-function getPodcastDetailNavigationTargetIndex(direction) {
-  const step = direction < 0 ? -1 : 1;
-  for (
-    let index = state.podcastDetailRankingIndex + step;
-    index >= 0 && index < state.podcastDetailRankingKeys.length;
-    index += step
-  ) {
-    const key = state.podcastDetailRankingKeys[index];
-    if (!key || !state.podcastByKey[key]) continue;
-    if (state.podcastDetailNavigationContext === "saved" && !isPodcastSaved(key)) continue;
-    return index;
-  }
-  return -1;
 }
 
 function updatePodcastDetailRankingNavigation(dialog) {
@@ -8553,8 +8524,10 @@ function updatePodcastDetailRankingNavigation(dialog) {
     state.podcastDetailView === "detail" &&
     state.podcastDetailRankingIndex >= 0 &&
     state.podcastDetailRankingKeys.length > 0;
-  const canGoPrevious = hasContext && getPodcastDetailNavigationTargetIndex(-1) >= 0;
-  const canGoNext = hasContext && getPodcastDetailNavigationTargetIndex(1) >= 0;
+  const canGoPrevious = hasContext && state.podcastDetailRankingIndex > 0;
+  const canGoNext =
+    hasContext &&
+    state.podcastDetailRankingIndex < state.podcastDetailRankingKeys.length - 1;
 
   [
     [previousButton, canGoPrevious],
@@ -8574,7 +8547,7 @@ function navigatePodcastDetailRanking(direction) {
     return false;
   }
 
-  const nextIndex = getPodcastDetailNavigationTargetIndex(direction);
+  const nextIndex = state.podcastDetailRankingIndex + direction;
   const nextKey = state.podcastDetailRankingKeys[nextIndex];
   const podcast = nextKey ? state.podcastByKey[nextKey] : null;
   if (!podcast) return false;
@@ -8593,7 +8566,6 @@ function navigatePodcastDetailRanking(direction) {
     .querySelector("[data-podcast-detail-content]")
     ?.scrollTo?.({ top: 0, left: 0, behavior: "auto" });
   updatePodcastDetailRankingNavigation(dialog);
-  updateSavedSwipeDebugOverlay(dialog);
 
   const focusTarget =
     direction < 0
@@ -8698,119 +8670,6 @@ function initPodcastDetailSheetDrag(dialog) {
   panel.addEventListener("pointercancel", finishDrag);
 }
 
-function isSavedSwipeDebugEnabled() {
-  return new URLSearchParams(window.location.search).get("debugSavedSwipe") === "1";
-}
-
-function updateSavedSwipeDebugOverlay(dialog) {
-  const overlay = dialog?.querySelector("[data-saved-swipe-debug]");
-  const isActive =
-    isSavedSwipeDebugEnabled() &&
-    state.podcastDetailNavigationContext === "saved" &&
-    !dialog?.classList.contains("is-hidden");
-  if (!isActive) {
-    overlay?.remove();
-    return;
-  }
-
-  const panel = overlay || document.createElement("pre");
-  if (!overlay) {
-    panel.dataset.savedSwipeDebug = "true";
-    panel.setAttribute("aria-hidden", "true");
-    panel.style.cssText = [
-      "position:fixed",
-      "left:12px",
-      "right:12px",
-      "bottom:calc(68px + env(safe-area-inset-bottom, 0px))",
-      "z-index:100",
-      "max-height:42vh",
-      "overflow:hidden",
-      "margin:0",
-      "padding:8px 10px",
-      "box-sizing:border-box",
-      "border-radius:8px",
-      "background:rgba(20, 18, 16, .82)",
-      "color:#fff",
-      "font:11px/1.35 ui-monospace, SFMono-Regular, Menlo, monospace",
-      "white-space:pre-wrap",
-      "pointer-events:none"
-    ].join(";");
-    dialog.appendChild(panel);
-  }
-
-  const snapshot = state.savedSwipeDebugSnapshot;
-  if (!snapshot) {
-    panel.textContent = "Saved swipe debug\nAwaiting a qualifying saved-detail swipe.";
-    return;
-  }
-
-  const target = snapshot.target
-    ? `${snapshot.target.index}: ${snapshot.target.title} (${snapshot.target.key})`
-    : "none";
-  const order = snapshot.savedOrder
-    .map((item) => `${item.index}: ${item.title} (${item.key})`)
-    .join("\n");
-  panel.textContent = [
-    "Saved swipe debug",
-    `GESTURE: ${snapshot.gesture}`,
-    `POINTER: ${snapshot.pointerType} / ${snapshot.pointerId}`,
-    `clientX: ${snapshot.start.clientX} -> ${snapshot.end.clientX} (Δ ${snapshot.deltaX})`,
-    `pageX: ${snapshot.start.pageX} -> ${snapshot.end.pageX} (Δ ${snapshot.pageDeltaX})`,
-    `screenX: ${snapshot.start.screenX} -> ${snapshot.end.screenX} (Δ ${snapshot.screenDeltaX})`,
-    `clientY: ${snapshot.start.clientY} -> ${snapshot.end.clientY} (Δ ${snapshot.deltaY})`,
-    `context: ${snapshot.context}`,
-    `current: ${snapshot.current.index}: ${snapshot.current.title} (${snapshot.current.key})`,
-    `direction: ${snapshot.direction}; target: ${target}`,
-    "saved order:",
-    order
-  ].join("\n");
-}
-
-function captureSavedSwipeDebugSnapshot(swipeStart, event, deltaX, deltaY, direction) {
-  if (!isSavedSwipeDebugEnabled() || state.podcastDetailNavigationContext !== "saved") return;
-
-  const currentIndex = state.podcastDetailRankingIndex;
-  const currentKey = state.podcastDetailRankingKeys[currentIndex] || "";
-  const currentPodcast = currentKey ? state.podcastByKey[currentKey] : null;
-  const targetIndex = getPodcastDetailNavigationTargetIndex(direction);
-  const targetKey = targetIndex >= 0 ? state.podcastDetailRankingKeys[targetIndex] : "";
-  const targetPodcast = targetKey ? state.podcastByKey[targetKey] : null;
-  const pageDeltaX = event.pageX - swipeStart.pageX;
-  const screenDeltaX = event.screenX - swipeStart.screenX;
-
-  state.savedSwipeDebugSnapshot = {
-    pointerType: event.pointerType,
-    pointerId: event.pointerId,
-    start: swipeStart,
-    end: {
-      clientX: event.clientX,
-      clientY: event.clientY,
-      pageX: event.pageX,
-      screenX: event.screenX
-    },
-    deltaX,
-    deltaY,
-    pageDeltaX,
-    screenDeltaX,
-    gesture: deltaX < 0 ? "RIGHT -> LEFT" : deltaX > 0 ? "LEFT -> RIGHT" : "NONE",
-    context: state.podcastDetailNavigationContext,
-    current: {
-      index: currentIndex,
-      key: currentKey,
-      title: currentPodcast?.title || "Unknown"
-    },
-    direction,
-    target: targetPodcast
-      ? { index: targetIndex, key: targetKey, title: targetPodcast.title }
-      : null,
-    savedOrder: state.podcastDetailRankingKeys.slice(0, 6).map((key, index) => ({
-      index,
-      key,
-      title: state.podcastByKey[key]?.title || "Unknown"
-    }))
-  };
-}
-
 function initPodcastDetailRankingSwipe(dialog) {
   if (!dialog || dialog.dataset.rankingSwipeReady === "true") return;
   dialog.dataset.rankingSwipeReady = "true";
@@ -8822,27 +8681,15 @@ function initPodcastDetailRankingSwipe(dialog) {
   content.addEventListener("pointerdown", (event) => {
     if (!isMobileViewport() || event.pointerType === "mouse") return;
     if (event.target.closest("button, a, input, select, textarea, [data-action]")) return;
-    swipeStart = {
-      pointerId: event.pointerId,
-      clientX: event.clientX,
-      clientY: event.clientY,
-      pageX: event.pageX,
-      screenX: event.screenX
-    };
+    swipeStart = { pointerId: event.pointerId, x: event.clientX, y: event.clientY };
   });
   content.addEventListener("pointerup", (event) => {
     if (!swipeStart || event.pointerId !== swipeStart.pointerId) return;
-    const start = swipeStart;
-    const deltaX = event.clientX - start.clientX;
-    const deltaY = event.clientY - start.clientY;
+    const deltaX = event.clientX - swipeStart.x;
+    const deltaY = event.clientY - swipeStart.y;
     swipeStart = null;
     if (Math.abs(deltaX) < 54 || Math.abs(deltaX) < Math.abs(deltaY) * 1.35) return;
-    const direction =
-      state.podcastDetailNavigationContext === "saved"
-        ? deltaX > 0 ? 1 : -1
-        : deltaX < 0 ? 1 : -1;
-    captureSavedSwipeDebugSnapshot(start, event, deltaX, deltaY, direction);
-    navigatePodcastDetailRanking(direction);
+    navigatePodcastDetailRanking(deltaX < 0 ? 1 : -1);
   });
   content.addEventListener("pointercancel", () => {
     swipeStart = null;
@@ -8851,7 +8698,6 @@ function initPodcastDetailRankingSwipe(dialog) {
 
 function getPodcastDetailPlacementText(podcast) {
   const hasRankingContext =
-    state.podcastDetailNavigationContext === "ranking" &&
     state.podcastDetailRankingIndex >= 0 &&
     state.podcastDetailRankingKeys[state.podcastDetailRankingIndex] === getPodcastKey(podcast);
 
@@ -11746,7 +11592,7 @@ function refreshOpenPodcastDetailSheet() {
 function openPodcastDetailSheet(
   podcast,
   triggerElement = null,
-  { allowDesktop = false, preserveModalHistory = false, navigationKeys = null, navigationContext = null } = {}
+  { allowDesktop = false, preserveModalHistory = false, navigationKeys = null } = {}
 ) {
   if ((!isMobileViewport() && !allowDesktop) || !podcast) return false;
 
@@ -11756,7 +11602,7 @@ function openPodcastDetailSheet(
   if (!isInternalModalNavigation) {
     clearPodcastDetailNavigationHistory();
   }
-  setPodcastDetailRankingContext(podcast, navigationKeys, navigationContext);
+  setPodcastDetailRankingContext(podcast, navigationKeys);
   state.activePodcastDetailKey = getPodcastKey(podcast);
   state.podcastDetailView = "detail";
   state.podcastDetailMainSeriesValue = "";
@@ -11776,7 +11622,6 @@ function openPodcastDetailSheet(
   dialog.setAttribute("aria-hidden", "false");
   dialog.querySelector("[data-podcast-detail-content]")?.scrollTo?.({ top: 0, left: 0, behavior: "auto" });
   updatePodcastDetailNavigationHistoryButton(dialog);
-  updateSavedSwipeDebugOverlay(dialog);
   document.body.style.setProperty("--podcast-detail-scroll-y", `${state.podcastDetailScrollY}px`);
   document.body.classList.add("has-dialog-open", "has-podcast-detail-open");
 
@@ -11803,7 +11648,6 @@ function closePodcastDetailSheet({ returnFocus = true, preserveHistoryRestore = 
   state.podcastDetailEpisodeScrollTop = 0;
   clearPodcastDetailNavigationHistory();
   clearPodcastDetailRankingContext();
-  updateSavedSwipeDebugOverlay(dialog);
 
   const hasOtherDialogOpen =
     elements.ratingDialog?.getAttribute("aria-hidden") === "false" ||
@@ -14092,10 +13936,6 @@ function getRecentlySavedPodcasts(limit = 3) {
   return getRecentlySavedPodcastEntries()
     .slice(0, limit)
     .map((item) => item.podcast);
-}
-
-function getRecentlySavedPodcastKeys() {
-  return getRecentlySavedPodcastEntries().map((item) => item.key);
 }
 
 function getRecentlySavedPodcastEntries() {
@@ -16720,26 +16560,17 @@ function createSavedPodcastCardElement(podcast, { compactLibrary = false } = {})
   card.append(cover, copy);
   if (compactLibrary && featuredScore !== null) card.appendChild(scores);
   card.appendChild(actions);
-  const openSavedPodcastDetails = () => {
-    const savedNavigation = isMobileViewport()
-      ? {
-          navigationKeys: getRecentlySavedPodcastKeys(),
-          navigationContext: "saved"
-        }
-      : {};
-    openPodcastDetailSheet(podcast, card, { allowDesktop: true, ...savedNavigation });
-  };
   card.addEventListener("click", (event) => {
     if (isInteractivePodcastDetailTarget(event.target)) return;
     event.preventDefault();
     event.stopPropagation();
-    openSavedPodcastDetails();
+    openPodcastDetailSheet(podcast, card, { allowDesktop: true });
   });
   card.addEventListener("keydown", (event) => {
     if (event.key !== "Enter" && event.key !== " ") return;
     if (isInteractivePodcastDetailTarget(event.target)) return;
     event.preventDefault();
-    openSavedPodcastDetails();
+    openPodcastDetailSheet(podcast, card, { allowDesktop: true });
   });
   return card;
 }

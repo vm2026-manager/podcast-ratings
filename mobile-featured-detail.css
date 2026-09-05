@@ -488,8 +488,8 @@
 
   html body #podcastDetailSheet .podcast-detail-sheet__header-favorite.is-saved {
     color: #f25a18 !important;
-    border-color: rgba(242, 90, 24, .5) !important;
-    background: #fff0e7 !important;
+    border-color: transparent !important;
+    background: transparent !important;
   }
   html body #podcastDetailSheet .podcast-detail-sheet__header-link {
     color: #89796d !important;
@@ -876,26 +876,58 @@
   html body #podcastDetailSheet .podcast-detail-sheet__header-action-icons {
     display: flex !important;
     align-items: center !important;
-    gap: 6px !important;
+    gap: 4px !important;
   }
   html body #podcastDetailSheet .podcast-detail-sheet__header-favorite,
   html body #podcastDetailSheet .podcast-detail-sheet__header-link {
-    width: 40px !important;
-    height: 40px !important;
-    min-width: 40px !important;
-    min-height: 40px !important;
-    border-radius: 12px !important;
-    border: 1px solid rgba(214, 187, 166, .72) !important;
-    background: rgba(255, 248, 243, .9) !important;
+    position: relative !important;
+    width: 44px !important;
+    height: 44px !important;
+    min-width: 44px !important;
+    min-height: 44px !important;
+    display: grid !important;
+    place-items: center !important;
+    padding: 0 !important;
+    border: 0 !important;
+    background: transparent !important;
+  }
+  html body #podcastDetailSheet .podcast-detail-sheet__header-favorite::before,
+  html body #podcastDetailSheet .podcast-detail-sheet__header-link::before {
+    content: "";
+    position: absolute;
+    width: 35px;
+    height: 35px;
+    border: 1px solid rgba(214, 187, 166, .72);
+    border-radius: 11px;
+    background: rgba(255, 248, 243, .9);
+  }
+  html body #podcastDetailSheet .podcast-detail-sheet__header-favorite::before {
+    border-color: rgba(242, 90, 24, .32);
+  }
+  html body #podcastDetailSheet .podcast-detail-sheet__header-favorite.is-saved::before {
+    border-color: rgba(242, 90, 24, .5);
+    background: #fff0e7;
+  }
+  html body #podcastDetailSheet .podcast-detail-sheet__header-link::before {
+    border-color: rgba(195, 171, 152, .28);
+    background: rgba(255, 250, 247, .16);
   }
   html body #podcastDetailSheet .podcast-detail-sheet__header-favorite > span {
+    position: relative !important;
+    z-index: 1;
     display: block !important;
-    width: 20px !important;
-    height: 20px !important;
+    width: 17px !important;
+    height: 17px !important;
   }
   html body #podcastDetailSheet .podcast-detail-sheet__header-favorite .favorite-button__icon {
-    width: 20px !important;
-    height: 20px !important;
+    width: 17px !important;
+    height: 17px !important;
+  }
+  html body #podcastDetailSheet .podcast-detail-sheet__header-link svg {
+    position: relative !important;
+    z-index: 1;
+    width: 17px !important;
+    height: 17px !important;
   }
   html body #podcastDetailSheet .podcast-detail-sheet__header-favorite:not(.is-saved) .favorite-button__icon path {
     fill: none !important;
@@ -1138,8 +1170,6 @@
   }
   html body #podcastDetailSheet .podcast-detail-sheet__header { grid-template-columns: 110px minmax(0, 1fr) !important; }
   html body #podcastDetailSheet .podcast-detail-sheet__cover { width: 108px !important; height: 108px !important; }
-  html body #podcastDetailSheet .podcast-detail-sheet__header-favorite,
-  html body #podcastDetailSheet .podcast-detail-sheet__header-link { width: 40px !important; height: 40px !important; min-width: 40px !important; min-height: 40px !important; }
   html body #podcastDetailSheet .podcast-detail-sheet__intro h2 { font-size: 1.32rem !important; }
   html body #podcastDetailSheet .podcast-detail-sheet__meta { font-size: .9rem !important; }
 }
