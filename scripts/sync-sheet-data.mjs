@@ -73,6 +73,7 @@ const SECONDARY_GENRE_FIELDS = ["2. genre"];
 const TOPIC_FIELDS = ["Emner"];
 const MANUAL_EPISODES_FIELDS = ["Episoder", "Manual episodes", "ManualEpisodes"];
 const MANUAL_EPISODE_KEYS_FIELDS = ["Manual episode keys", "ManualEpisodeKeys"];
+const ENGLISH_FIELDS = ["Engelsk"];
 const SUPPLEMENTARY_SIMILARITIES_HEADER = "Supplerende ligheder";
 const SUPPLEMENTARY_SIMILARITIES_COLUMN_INDEX = 19;
 const ACCESS_TYPE_FIELDS = ["Adgang"];
@@ -258,6 +259,19 @@ function getField(row, candidates) {
 
 function formatEditorialRowLabel(title) {
   return title ? ` for ${JSON.stringify(title)}` : "";
+}
+
+function parseEnglishFlag(value, title) {
+  const normalizedValue = normalizeText(value);
+  if (!normalizedValue) return false;
+
+  if (normalizedValue.toLocaleLowerCase("da-DK") === "x") {
+    return true;
+  }
+
+  throw new Error(
+    `Ugyldig værdi i Engelsk${formatEditorialRowLabel(title)}: ${JSON.stringify(normalizedValue)}.`
+  );
 }
 
 function mapAccessType(value, title) {
@@ -542,6 +556,7 @@ async function slimPodcastRows(rows) {
     });
     podcast.secondaryGenre = getField(row, SECONDARY_GENRE_FIELDS);
     podcast.topics = parseTopics(getField(row, TOPIC_FIELDS));
+    podcast.isEnglish = parseEnglishFlag(getField(row, ENGLISH_FIELDS), title);
     applyEditorialAccessMetadata(podcast, row, title);
     const manualEpisodes = parseManualEpisodes(
       getField(row, MANUAL_EPISODES_FIELDS),
@@ -661,6 +676,7 @@ export {
   applyEditorialAccessMetadata,
   mapAccessType,
   normalizeHeader,
+  parseEnglishFlag,
   parseCsv,
   parseSupplementarySimilarities,
   parseManualEpisodes,

@@ -2562,6 +2562,12 @@ function getCompletenessScore(podcast) {
   return score;
 }
 
+function normalizeEnglishFlag(value) {
+  if (value === true) return true;
+  if (value === false) return false;
+  return normalizeText(value).toLocaleLowerCase("da-DK") === "x";
+}
+
 function mapPodcast(row, index) {
   const title = getField(row, ["Titel", "Title"]);
   const host = getField(row, ["V\u00e6rt", "Vaert", "Host", "V\u00e6rter"]);
@@ -2578,6 +2584,9 @@ function mapPodcast(row, index) {
   const rawGenre = getField(row, ["Genre"]);
   const rawSecondaryGenre = getField(row, ["secondaryGenre", "Secondary genre", "Sekundærgenre"]);
   const rawPublisher = getField(row, ["Udgiver", "Publisher"]);
+  const isEnglish = normalizeEnglishFlag(
+    row?.isEnglish ?? getField(row, ["Engelsk"])
+  );
   const accessTypeValue = normalizeText(getField(row, ["accessType"])).toLowerCase();
   const accessType = ["free", "partial", "paid", "unknown"].includes(accessTypeValue)
     ? accessTypeValue
@@ -2676,6 +2685,7 @@ function mapPodcast(row, index) {
     topics,
     rawPublisher,
     publisher,
+    isEnglish,
     accessType,
     accessEvidenceUrl,
     accessCheckedAt,

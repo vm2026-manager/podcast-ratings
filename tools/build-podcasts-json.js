@@ -12,6 +12,20 @@ function normalizeHeader(value) {
   return normalizeText(value).toLocaleLowerCase("da-DK").replace(/\s+/g, " ");
 }
 
+function parseEnglishFlag(value, title = "") {
+  const normalizedValue = normalizeText(value);
+  if (!normalizedValue) return false;
+
+  if (normalizedValue.toLocaleLowerCase("da-DK") === "x") {
+    return true;
+  }
+
+  const titleLabel = title ? ` for ${JSON.stringify(title)}` : "";
+  throw new Error(
+    `Ugyldig værdi i Engelsk${titleLabel}: ${JSON.stringify(normalizedValue)}.`
+  );
+}
+
 function parseTopics(value) {
   const topics = [];
   const seen = new Set();
@@ -93,9 +107,14 @@ function rowsToObjects(rows) {
   }
 
   const headers = rows[0].map((header) => normalizeText(header));
+  const titleIndex = headers.findIndex((header) => {
+    const normalizedHeader = normalizeHeader(header);
+    return normalizedHeader === "titel" || normalizedHeader === "title";
+  });
 
   return rows.slice(1).map((row) => {
     const item = {};
+    const title = normalizeText(row[titleIndex] || "");
 
     headers.forEach((header, index) => {
       const value = normalizeText(row[index] || "");
@@ -105,6 +124,8 @@ function rowsToObjects(rows) {
         item.secondaryGenre = value;
       } else if (normalizedHeader === "emner") {
         item.topics = parseTopics(value);
+      } else if (normalizedHeader === "engelsk") {
+        item.isEnglish = parseEnglishFlag(value, title);
       } else {
         item[header] = value;
       }
@@ -112,6 +133,7 @@ function rowsToObjects(rows) {
 
     if (!Object.hasOwn(item, "secondaryGenre")) item.secondaryGenre = "";
     if (!Object.hasOwn(item, "topics")) item.topics = [];
+    if (!Object.hasOwn(item, "isEnglish")) item.isEnglish = false;
 
     return item;
   });
@@ -155,6 +177,7 @@ if (require.main === module) {
 
 module.exports = {
   normalizeHeader,
+  parseEnglishFlag,
   parseCsv,
   parseTopics,
   rowsToObjects
