@@ -8716,7 +8716,7 @@ function initPodcastDetailRankingSwipe(dialog) {
     if (Math.abs(deltaX) < 54 || Math.abs(deltaX) < Math.abs(deltaY) * 1.35) return;
     const direction =
       state.podcastDetailNavigationContext === "saved"
-        ? deltaX < 0 ? 1 : -1
+        ? deltaX > 0 ? 1 : -1
         : deltaX < 0 ? 1 : -1;
     navigatePodcastDetailRanking(direction);
   });
