@@ -790,6 +790,7 @@ const state = {
   podcastDetailNavigationHistory: [],
   podcastDetailRankingKeys: [],
   podcastDetailRankingIndex: -1,
+  podcastDetailNavigationContext: null,
   episodeParentRatingSyncSignatures: {},
   episodeParentRatingSyncPendingKeys: new Set(),
   localEpisodeDataPromise: null,
@@ -6307,9 +6308,9 @@ function updateProfileSavedCounts() {
 
 
 function getProfileSavedPreviewPodcasts() {
-  const savedPodcasts = getSavedPodcasts();
-  if (isMobileViewport() && state.profileSavedExpanded) {
-    return savedPodcasts;
+  if (isMobileViewport()) {
+    const savedPodcasts = getRecentlySavedPodcasts(Infinity);
+    return state.profileSavedExpanded ? savedPodcasts : savedPodcasts.slice(0, 4);
   }
 
   return getRecentlySavedPodcasts(isMobileViewport() ? 4 : 5);
@@ -8442,6 +8443,7 @@ function ensurePodcastDetailSheet() {
 function clearPodcastDetailRankingContext() {
   state.podcastDetailRankingKeys = [];
   state.podcastDetailRankingIndex = -1;
+  state.podcastDetailNavigationContext = null;
 }
 
 function clearPodcastDetailNavigationHistory() {
@@ -8497,10 +8499,20 @@ function navigatePodcastDetailHistoryBack() {
   return opened;
 }
 
-function setPodcastDetailRankingContext(podcast, navigationKeys = null) {
+function setPodcastDetailRankingContext(podcast, navigationKeys = null, navigationContext = null) {
   const suppliedKeys = Array.isArray(navigationKeys)
     ? navigationKeys.map((key) => normalizeText(key)).filter(Boolean)
     : [];
+  const activeKey = getPodcastKey(podcast);
+  const suppliedIndex = suppliedKeys.indexOf(activeKey);
+
+  if (navigationContext === "saved" && suppliedIndex >= 0) {
+    state.podcastDetailRankingKeys = suppliedKeys;
+    state.podcastDetailRankingIndex = suppliedIndex;
+    state.podcastDetailNavigationContext = "saved";
+    return;
+  }
+
   const isRankingRoute = getRouteInfoFromHash().route === "ranglister";
   if (!suppliedKeys.length && !isRankingRoute) {
     clearPodcastDetailRankingContext();
@@ -8510,11 +8522,26 @@ function setPodcastDetailRankingContext(podcast, navigationKeys = null) {
   const keys = suppliedKeys.length
     ? suppliedKeys
     : getFilteredPodcasts().map((item) => getPodcastKey(item)).filter(Boolean);
-  const activeKey = getPodcastKey(podcast);
   const index = keys.indexOf(activeKey);
 
   state.podcastDetailRankingKeys = index >= 0 ? keys : [];
   state.podcastDetailRankingIndex = index;
+  state.podcastDetailNavigationContext = index >= 0 ? "ranking" : null;
+}
+
+function getPodcastDetailNavigationTargetIndex(direction) {
+  const step = direction < 0 ? -1 : 1;
+  for (
+    let index = state.podcastDetailRankingIndex + step;
+    index >= 0 && index < state.podcastDetailRankingKeys.length;
+    index += step
+  ) {
+    const key = state.podcastDetailRankingKeys[index];
+    if (!key || !state.podcastByKey[key]) continue;
+    if (state.podcastDetailNavigationContext === "saved" && !isPodcastSaved(key)) continue;
+    return index;
+  }
+  return -1;
 }
 
 function updatePodcastDetailRankingNavigation(dialog) {
@@ -8524,10 +8551,8 @@ function updatePodcastDetailRankingNavigation(dialog) {
     state.podcastDetailView === "detail" &&
     state.podcastDetailRankingIndex >= 0 &&
     state.podcastDetailRankingKeys.length > 0;
-  const canGoPrevious = hasContext && state.podcastDetailRankingIndex > 0;
-  const canGoNext =
-    hasContext &&
-    state.podcastDetailRankingIndex < state.podcastDetailRankingKeys.length - 1;
+  const canGoPrevious = hasContext && getPodcastDetailNavigationTargetIndex(-1) >= 0;
+  const canGoNext = hasContext && getPodcastDetailNavigationTargetIndex(1) >= 0;
 
   [
     [previousButton, canGoPrevious],
@@ -8547,7 +8572,7 @@ function navigatePodcastDetailRanking(direction) {
     return false;
   }
 
-  const nextIndex = state.podcastDetailRankingIndex + direction;
+  const nextIndex = getPodcastDetailNavigationTargetIndex(direction);
   const nextKey = state.podcastDetailRankingKeys[nextIndex];
   const podcast = nextKey ? state.podcastByKey[nextKey] : null;
   if (!podcast) return false;
@@ -8689,7 +8714,11 @@ function initPodcastDetailRankingSwipe(dialog) {
     const deltaY = event.clientY - swipeStart.y;
     swipeStart = null;
     if (Math.abs(deltaX) < 54 || Math.abs(deltaX) < Math.abs(deltaY) * 1.35) return;
-    navigatePodcastDetailRanking(deltaX < 0 ? 1 : -1);
+    const direction =
+      state.podcastDetailNavigationContext === "saved"
+        ? deltaX > 0 ? 1 : -1
+        : deltaX < 0 ? 1 : -1;
+    navigatePodcastDetailRanking(direction);
   });
   content.addEventListener("pointercancel", () => {
     swipeStart = null;
@@ -8698,6 +8727,7 @@ function initPodcastDetailRankingSwipe(dialog) {
 
 function getPodcastDetailPlacementText(podcast) {
   const hasRankingContext =
+    state.podcastDetailNavigationContext === "ranking" &&
     state.podcastDetailRankingIndex >= 0 &&
     state.podcastDetailRankingKeys[state.podcastDetailRankingIndex] === getPodcastKey(podcast);
 
@@ -11592,7 +11622,7 @@ function refreshOpenPodcastDetailSheet() {
 function openPodcastDetailSheet(
   podcast,
   triggerElement = null,
-  { allowDesktop = false, preserveModalHistory = false, navigationKeys = null } = {}
+  { allowDesktop = false, preserveModalHistory = false, navigationKeys = null, navigationContext = null } = {}
 ) {
   if ((!isMobileViewport() && !allowDesktop) || !podcast) return false;
 
@@ -11602,7 +11632,7 @@ function openPodcastDetailSheet(
   if (!isInternalModalNavigation) {
     clearPodcastDetailNavigationHistory();
   }
-  setPodcastDetailRankingContext(podcast, navigationKeys);
+  setPodcastDetailRankingContext(podcast, navigationKeys, navigationContext);
   state.activePodcastDetailKey = getPodcastKey(podcast);
   state.podcastDetailView = "detail";
   state.podcastDetailMainSeriesValue = "";
@@ -13933,19 +13963,32 @@ function getSavedPodcasts() {
 }
 
 function getRecentlySavedPodcasts(limit = 3) {
-  return Array.from(state.savedPodcastKeys)
-    .map((key) => ({
-      key,
-      podcast: state.podcastByKey[key],
-      savedAt: Date.parse(state.savedPodcastMetaByKey[key]?.savedAt || "") || 0
-    }))
-    .filter((item) => item.podcast)
-    .sort((a, b) => {
-      if (b.savedAt !== a.savedAt) return b.savedAt - a.savedAt;
-      return a.podcast.title.localeCompare(b.podcast.title, "da", { sensitivity: "base" });
-    })
+  return getRecentlySavedPodcastEntries()
     .slice(0, limit)
     .map((item) => item.podcast);
+}
+
+function getRecentlySavedPodcastKeys() {
+  return getRecentlySavedPodcastEntries().map((item) => item.key);
+}
+
+function getRecentlySavedPodcastEntries() {
+  return Array.from(state.savedPodcastKeys)
+    .map((key) => {
+      const savedAt = Date.parse(state.savedPodcastMetaByKey[key]?.savedAt || "");
+      return {
+        key,
+        podcast: state.podcastByKey[key],
+        savedAt,
+        hasSavedAt: Number.isFinite(savedAt)
+      };
+    })
+    .filter((item) => item.podcast)
+    .sort((a, b) => {
+      if (a.hasSavedAt !== b.hasSavedAt) return a.hasSavedAt ? -1 : 1;
+      if (b.savedAt !== a.savedAt) return b.savedAt - a.savedAt;
+      return a.podcast.title.localeCompare(b.podcast.title, "da", { sensitivity: "base" });
+    });
 }
 
 function bindAuthPromptButtons(container) {
@@ -16551,17 +16594,26 @@ function createSavedPodcastCardElement(podcast, { compactLibrary = false } = {})
   card.append(cover, copy);
   if (compactLibrary && featuredScore !== null) card.appendChild(scores);
   card.appendChild(actions);
+  const openSavedPodcastDetails = () => {
+    const savedNavigation = isMobileViewport()
+      ? {
+          navigationKeys: getRecentlySavedPodcastKeys(),
+          navigationContext: "saved"
+        }
+      : {};
+    openPodcastDetailSheet(podcast, card, { allowDesktop: true, ...savedNavigation });
+  };
   card.addEventListener("click", (event) => {
     if (isInteractivePodcastDetailTarget(event.target)) return;
     event.preventDefault();
     event.stopPropagation();
-    openPodcastDetailSheet(podcast, card, { allowDesktop: true });
+    openSavedPodcastDetails();
   });
   card.addEventListener("keydown", (event) => {
     if (event.key !== "Enter" && event.key !== " ") return;
     if (isInteractivePodcastDetailTarget(event.target)) return;
     event.preventDefault();
-    openPodcastDetailSheet(podcast, card, { allowDesktop: true });
+    openSavedPodcastDetails();
   });
   return card;
 }
