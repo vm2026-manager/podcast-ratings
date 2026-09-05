@@ -145,8 +145,8 @@ html body .mobile-home-search-overlay { display: none; }
 
   body.page-ranglister .ranking-search-strip #searchInput {
     min-height: 46px !important;
-    padding: 0 40px 0 13px !important;
-    font-size: 0.82rem !important;
+    padding: 0 12px 0 38px !important;
+    font-size: 0.95rem !important;
   }
 
   body.page-ranglister .ranking-mobile-filter-bar {
@@ -159,7 +159,7 @@ html body .mobile-home-search-overlay { display: none; }
   }
 
   body.page-ranglister .ranking-mobile-filter-toggle {
-    min-width: 82px;
+    min-width: 76px;
     min-height: 46px;
     display: inline-flex;
     align-items: center;
@@ -213,30 +213,35 @@ html body .mobile-home-search-overlay { display: none; }
   body.page-ranglister .ranking-filter-panel {
     display: flex !important;
     flex-direction: column;
-    gap: 14px !important;
+    gap: 7px !important;
     width: 100% !important;
     margin: 0 !important;
-    padding: 14px !important;
-    border: 1px solid rgba(224, 207, 190, 0.82) !important;
-    border-radius: 17px !important;
-    background: rgba(255, 252, 248, 0.84) !important;
-    box-shadow: 0 8px 20px rgba(66, 41, 20, 0.04) !important;
+    padding: 0 !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
     order: 2 !important;
   }
 
   body.page-ranglister .ranking-filter-controls {
-    display: flex !important;
-    flex-direction: column;
-    order: 1 !important;
-    gap: 12px !important;
-    width: 100% !important;
+    display: contents !important;
   }
 
   body.page-ranglister .ranking-source-field {
-    gap: 7px !important;
+    order: 1 !important;
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
   }
 
-  body.page-ranglister .ranking-source-field > span,
+  body.page-ranglister .ranking-source-field > span {
+    display: none !important;
+  }
+
   body.page-ranglister .genre-nav-header h3,
   body.page-ranglister .ranking-language-filter h3 {
     color: #756258 !important;
@@ -244,24 +249,14 @@ html body .mobile-home-search-overlay { display: none; }
     letter-spacing: 0.095em !important;
   }
 
-  body.page-ranglister .ranking-source-toggle {
-    min-height: 44px !important;
-    padding: 3px !important;
-    border-radius: 12px !important;
-  }
-
-  body.page-ranglister .ranking-source-button {
-    min-height: 38px !important;
-    padding: 0 7px !important;
-    font-size: 0.74rem !important;
-  }
-
   body.page-ranglister .ranking-user-sort-field[hidden] {
     display: none !important;
   }
 
   body.page-ranglister .mobile-ranking-sort-field {
-    display: grid !important;
+    display: flex !important;
+    order: 5 !important;
+    width: auto !important;
   }
 
   body.page-ranglister .mobile-ranking-sort-field .mobile-sort-toggle {
@@ -269,9 +264,12 @@ html body .mobile-home-search-overlay { display: none; }
     display: inline-flex !important;
     align-items: center;
     justify-content: center;
-    width: 100% !important;
-    min-height: 42px !important;
+    width: auto !important;
+    min-height: 34px !important;
+    padding: 0 12px !important;
     margin: 0 !important;
+    border-radius: 14px !important;
+    font-size: 0.78rem !important;
   }
 
   body.page-ranglister .ranking-filter-panel .genre-nav {
@@ -300,35 +298,30 @@ html body .mobile-home-search-overlay { display: none; }
   }
 
   body.page-ranglister .ranking-filter-panel .genre-chip {
-    flex: 1 0 calc(50% - 4px) !important;
-    max-width: calc(50% - 3px) !important;
-    min-height: 32px !important;
+    flex: 0 0 auto !important;
+    max-width: calc(50% - 4px) !important;
+    min-height: 29px !important;
     padding: 0 7px !important;
     font-size: 0.74rem !important;
   }
 
-  body.page-ranglister .ranking-filter-panel .genre-chip[data-genre="Underholdning"] {
-    flex-basis: 100% !important;
-    max-width: none !important;
-  }
-
-  body.page-ranglister .ranking-language-filter {
+  body.page-ranglister .ranking-filter-panel .ranking-language-filter {
     display: flex !important;
     flex-direction: column;
     order: 3 !important;
     gap: 6px;
     width: 100% !important;
-    margin: 0 !important;
+    margin: 2px 0 0 !important;
     padding: 0 !important;
     border: 0 !important;
     background: transparent !important;
   }
 
-  body.page-ranglister .ranking-language-filter h3 {
+  body.page-ranglister .ranking-filter-panel .ranking-language-filter h3 {
     margin: 0;
   }
 
-  body.page-ranglister .ranking-language-toggle {
+  body.page-ranglister .ranking-filter-panel .ranking-language-toggle {
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 3px;
@@ -340,7 +333,7 @@ html body .mobile-home-search-overlay { display: none; }
     background: rgba(255, 255, 255, 0.72);
   }
 
-  body.page-ranglister .ranking-language-button {
+  body.page-ranglister .ranking-filter-panel .ranking-language-button {
     min-width: 0;
     min-height: 36px;
     padding: 0 4px;
@@ -351,18 +344,18 @@ html body .mobile-home-search-overlay { display: none; }
     font: 700 0.72rem/1.1 "Manrope", Inter, system-ui, sans-serif;
   }
 
-  body.page-ranglister .ranking-language-button.active {
+  body.page-ranglister .ranking-filter-panel .ranking-language-button.active {
     background: linear-gradient(180deg, #ff6a1a, #f45110);
     color: #fff;
   }
 
-  body.page-ranglister .ranking-free-only-filter {
+  body.page-ranglister .ranking-filter-panel .ranking-free-only-filter {
     display: inline-flex !important;
     align-items: center;
     order: 4 !important;
     gap: 8px;
     width: 100% !important;
-    margin: 0 !important;
+    margin: 2px 0 0 !important;
     padding: 0 !important;
     border: 0 !important;
     background: transparent !important;
@@ -370,7 +363,7 @@ html body .mobile-home-search-overlay { display: none; }
     font-size: 0.78rem !important;
   }
 
-  body.page-ranglister .ranking-free-only-filter input {
+  body.page-ranglister .ranking-filter-panel .ranking-free-only-filter input {
     width: 18px;
     height: 18px;
     margin: 0;
@@ -384,23 +377,7 @@ html body .mobile-home-search-overlay { display: none; }
   }
 
   body.page-ranglister .ranking-filter-panel__header {
-    display: flex !important;
-    align-items: center;
-    justify-content: flex-end;
-    order: 6 !important;
-    margin: 0 !important;
-    padding: 0 !important;
-    border: 0 !important;
-  }
-
-  body.page-ranglister .ranking-filter-panel__header h2 {
     display: none !important;
-  }
-
-  body.page-ranglister .clear-filter-button {
-    min-height: 38px !important;
-    padding: 0 12px !important;
-    font-size: 0.74rem !important;
   }
 }
 

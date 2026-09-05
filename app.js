@@ -4060,9 +4060,7 @@ function updateRankingSourceUi() {
     }
   });
 
-  const showUserSort =
-    isDesktopRankingViewport() ||
-    (isMobileRankingFiltersViewport() && state.mobileRankingFiltersOpen);
+  const showUserSort = isDesktopRankingViewport();
   const userSortEnabled = showUserSort && state.rankingSource === "users";
   if (elements.rankingUserSortField) {
     elements.rankingUserSortField.hidden = !showUserSort;
@@ -5640,7 +5638,7 @@ function isDesktopRankingViewport() {
 }
 
 function hasDesktopUserRankingSort() {
-  return (isDesktopRankingViewport() || isMobileViewport()) && state.rankingSource === "users";
+  return isDesktopRankingViewport() && state.rankingSource === "users";
 }
 
 function syncDesktopRankingSearchPlacement() {
