@@ -409,4 +409,10 @@
   html body.page-profil .profile-saved-grid .saved-card__actions {
     display: none !important;
   }
+
+  html body.page-profil #profileSuggestions.is-collapsed > .profile-suggest-button,
+  html body.page-profil #profileSuggestions.is-collapsed > .profile-suggestion-list,
+  html body.page-profil #profileSuggestions.is-collapsed > [data-profile-expand="suggestions"] {
+    display: none !important;
+  }
 }

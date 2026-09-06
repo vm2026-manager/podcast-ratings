@@ -733,9 +733,11 @@ const state = {
   profileSuggestionsLoadedFor: null,
   profileSuggestionsLoading: false,
   profileSuggestionsError: "",
+  profileSuggestionsExpanded: true,
   suggestionNotificationTarget: null,
   suggestionResponseDialogOpen: false,
   suggestionResponseDialogReturnFocus: null,
+  suggestionResponseDialogSuggestion: null,
   suggestionResponseDialogRetryTimer: null,
   adminPodcastSuggestions: [],
   adminPodcastSuggestionsLoadedFor: null,
@@ -4729,19 +4731,36 @@ function navigateToSuggestionNotification() {
   window.location.hash = isPodcastSuggestionAdmin() ? "#moderator" : "#profil";
 }
 
-async function markSuggestionNotificationTargetSeen(target) {
+async function markSuggestionNotificationTargetSeen(target, { optimistic = false } = {}) {
   if (!target?.id || !state.supabase) return;
   const rpc = target.moderator
     ? "mark_podcast_suggestion_seen_by_moderator"
     : "mark_podcast_suggestion_response_seen";
-  const { error } = await state.supabase.rpc(rpc, { p_suggestion_id: target.id });
-  if (error) return;
   const list = target.moderator ? state.adminPodcastSuggestions : state.profileSuggestions;
   const field = target.moderator ? "moderator_seen_at" : "user_seen_response_at";
+  const itemId = normalizeText(target.id);
+  const originalItem = list.find((item) => normalizeText(item.id) === itemId);
+  if (!originalItem) return;
   const seenAt = new Date().toISOString();
-  const next = list.map((item) => normalizeText(item.id) === normalizeText(target.id) ? { ...item, [field]: seenAt } : item);
-  if (target.moderator) state.adminPodcastSuggestions = next; else state.profileSuggestions = next;
-  renderSuggestionNotificationBadges();
+  const applySeenState = () => {
+    const next = list.map((item) => normalizeText(item.id) === itemId ? { ...item, [field]: seenAt } : item);
+    if (target.moderator) state.adminPodcastSuggestions = next; else state.profileSuggestions = next;
+    renderSuggestionNotificationBadges();
+  };
+
+  if (optimistic) applySeenState();
+  const { error } = await state.supabase.rpc(rpc, { p_suggestion_id: target.id });
+  if (error) {
+    if (optimistic) {
+      const currentList = target.moderator ? state.adminPodcastSuggestions : state.profileSuggestions;
+      const restored = currentList.map((item) => normalizeText(item.id) === itemId && item[field] === seenAt ? originalItem : item);
+      if (target.moderator) state.adminPodcastSuggestions = restored; else state.profileSuggestions = restored;
+      renderSuggestionNotificationBadges();
+    }
+    return false;
+  }
+  if (!optimistic) applySeenState();
+  return true;
 }
 
 function isProfileSuggestionResponseRoute() {
@@ -4758,18 +4777,28 @@ function hasOtherDialogOpen() {
   );
 }
 
-function closeSuggestionResponseDialog({ returnFocus = true } = {}) {
+function closeSuggestionResponseDialog({ returnFocus = true, acknowledge = true, continueQueue = true } = {}) {
   const dialog = document.getElementById("suggestionResponseDialog");
   if (!dialog || dialog.classList.contains("is-hidden")) return;
 
   dialog.classList.add("is-hidden");
   dialog.setAttribute("aria-hidden", "true");
   state.suggestionResponseDialogOpen = false;
+  const suggestion = state.suggestionResponseDialogSuggestion;
+  state.suggestionResponseDialogSuggestion = null;
   if (!hasOtherDialogOpen()) document.body.classList.remove("has-dialog-open", "has-suggestion-dialog-open");
 
   const returnTarget = state.suggestionResponseDialogReturnFocus;
   state.suggestionResponseDialogReturnFocus = null;
   if (returnFocus && returnTarget?.isConnected) returnTarget.focus();
+
+  if (acknowledge && suggestion?.id) {
+    markSuggestionNotificationTargetSeen({ id: suggestion.id, moderator: false }, { optimistic: true })
+      .catch((error) => console.error(error));
+    if (continueQueue) scheduleUnreadSuggestionResponseDialog();
+  } else if (continueQueue) {
+    scheduleUnreadSuggestionResponseDialog();
+  }
 }
 
 function ensureSuggestionResponseDialog() {
@@ -4839,16 +4868,12 @@ function openSuggestionResponseDialog(suggestion) {
 
   state.suggestionResponseDialogOpen = true;
   state.suggestionResponseDialogReturnFocus = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+  state.suggestionResponseDialogSuggestion = suggestion;
   dialog.classList.remove("is-hidden");
   dialog.setAttribute("aria-hidden", "false");
   document.body.classList.add("has-dialog-open", "has-suggestion-dialog-open");
   dialog.querySelector("[data-suggestion-response-close]")?.focus();
 
-  window.requestAnimationFrame(() => {
-    if (dialog.getAttribute("aria-hidden") === "false") {
-      markSuggestionNotificationTargetSeen({ id: suggestion.id, moderator: false });
-    }
-  });
   return true;
 }
 
@@ -14590,10 +14615,11 @@ function clearUserScopedState({ clearUi = false } = {}) {
   state.profileSuggestionsLoadedFor = null;
   state.profileSuggestionsLoading = false;
   state.profileSuggestionsError = "";
+  state.profileSuggestionsExpanded = true;
   state.suggestionNotificationTarget = null;
   window.clearTimeout(state.suggestionResponseDialogRetryTimer);
   state.suggestionResponseDialogRetryTimer = null;
-  closeSuggestionResponseDialog({ returnFocus: false });
+  closeSuggestionResponseDialog({ returnFocus: false, acknowledge: false, continueQueue: false });
   state.adminPodcastSuggestions = [];
   state.adminPodcastSuggestionsLoadedFor = null;
   state.adminPodcastSuggestionsLoading = false;
@@ -16618,7 +16644,7 @@ function renderProfilePage() {
           </button>
         </section>
 
-        <section class="profile-panel profile-suggestions-panel is-expanded" id="profileSuggestions" aria-labelledby="profileSuggestionsHeading">
+        <section class="profile-panel profile-suggestions-panel ${state.profileSuggestionsExpanded ? "is-expanded" : "is-collapsed"}" id="profileSuggestions" aria-labelledby="profileSuggestionsHeading">
           <header class="profile-panel__header" data-profile-panel-header>
             <div>
               <p class="profile-eyebrow">Dine indsendelser</p>
@@ -16626,7 +16652,7 @@ function renderProfilePage() {
             </div>
             <div class="profile-panel__tools">
               <span data-profile-suggestions-count></span>
-              <button class="profile-panel__toggle" type="button" data-profile-panel-toggle aria-expanded="true">Fold sammen</button>
+              <button class="profile-panel__toggle" type="button" data-profile-suggestions-toggle aria-expanded="${state.profileSuggestionsExpanded}">${state.profileSuggestionsExpanded ? "Fold sammen" : "Fold ud"}</button>
             </div>
           </header>
           <button class="profile-suggest-button profile-suggest-button--wide" type="button" data-explore-suggest-open>
@@ -16831,6 +16857,16 @@ function renderProfilePage() {
       fetchPodcastSuggestionsForAdmin();
     }
   }
+
+  container.querySelector("[data-profile-suggestions-toggle]")?.addEventListener("click", () => {
+    state.profileSuggestionsExpanded = !state.profileSuggestionsExpanded;
+    renderProfilePage();
+    if (!state.profileSuggestionsExpanded) {
+      window.requestAnimationFrame(() => {
+        document.getElementById("profileSuggestionsHeading")?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+      });
+    }
+  });
 
   const toggleProfilePanel = (panel) => {
     if (!panel) return;
