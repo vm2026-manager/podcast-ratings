@@ -8528,8 +8528,7 @@ function hydratePodcastSimilarityProduct(dialog, podcast) {
     const recommendationId = card.dataset.podcastSimilarityCard;
     const podcastKey = card.dataset.podcastSimilarityPodcastKey;
     const candidatePodcast =
-      state.podcastByKey[podcastKey] ||
-      state.podcasts.find((candidate) => getPodcastKey(candidate) === podcastKey) ||
+      getRankingDisplayItemByKey(podcastKey) ||
       state.podcastSimilarityPodcastByRecommendationId[recommendationId];
     if (!candidatePodcast) return;
     const cover = card.querySelector(".podcast-detail-sheet__related-cover");
@@ -22087,8 +22086,7 @@ function setupEvents() {
     const recommendationId = relatedCard.dataset.podcastSimilarityCard;
     const podcastKey = relatedCard.dataset.podcastSimilarityPodcastKey;
     const podcast =
-      state.podcastByKey[podcastKey] ||
-      state.podcasts.find((candidate) => getPodcastKey(candidate) === podcastKey) ||
+      getRankingDisplayItemByKey(podcastKey) ||
       state.podcastSimilarityPodcastByRecommendationId[recommendationId];
     if (!podcast) return;
 
