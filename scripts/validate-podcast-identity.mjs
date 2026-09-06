@@ -29,15 +29,22 @@ const payload = JSON.parse(
 const rows = payload.rows;
 const byId = new Map();
 const idsByLegacyKey = new Map();
+const podcastIds = new Set();
 
 for (const row of rows) {
   const podcastId = normalizeText(row["Podcast-ID"]);
   const key = legacyKey(row.Titel || row.Title);
   assert(podcastId, `Mangler Podcast-ID: ${row.Titel || row.Title}`);
+  podcastIds.add(podcastId);
   if (!byId.has(podcastId)) byId.set(podcastId, row);
   if (!idsByLegacyKey.has(key)) idsByLegacyKey.set(key, new Set());
   idsByLegacyKey.get(key).add(podcastId);
 }
+
+assert(
+  rows.length === podcastIds.size,
+  `Podcast-ID'er er ikke unikke: ${rows.length} rækker, ${podcastIds.size} unikke Podcast-ID'er`
+);
 
 const ambiguousLegacyKeys = [...idsByLegacyKey.entries()]
   .filter(([, ids]) => ids.size > 1)
@@ -61,19 +68,11 @@ const beforeTitleChange = { "Podcast-ID": "kapret", Titel: "Kapret" };
 const afterTitleChange = { ...beforeTitleChange, Titel: "Kapret – historien fortsætter" };
 assert(beforeTitleChange["Podcast-ID"] === afterTitleChange["Podcast-ID"], "Titelændring ændrer Podcast-ID");
 
-const sameIdDuplicateChecks = ["Nu snakker vi om det", "En helvedes fortid"].map((title) => {
-  const matchingRows = rows.filter((row) => normalizeText(row.Titel) === title);
-  const ids = new Set(matchingRows.map((row) => normalizeText(row["Podcast-ID"])));
-  assert(matchingRows.length > 1 && ids.size === 1, `${title} er ikke en sikker same-ID-duplikat`);
-  return { title, rawRows: matchingRows.length, renderedRows: 1, podcastId: [...ids][0] };
-});
-
 console.log(JSON.stringify({
   rawRows: rows.length,
   renderedCatalogueCount: byId.size,
-  canonicalIdsUnique: byId.size === new Set(byId.keys()).size,
+  canonicalIdsUnique: rows.length === podcastIds.size,
   ambiguousLegacyKeys,
-  sameIdDuplicateChecks,
   sameTitleStateIsolation: "PASS",
   titleChangeInvariant: "PASS"
 }, null, 2));
