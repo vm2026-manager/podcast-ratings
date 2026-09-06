@@ -6729,7 +6729,7 @@ function renderProfileSavedPreview() {
   }
 
   savedContainer.innerHTML = `
-    <div class="saved-empty-state profile-saved-empty">
+    <div class="saved-empty-state profile-saved-empty profile-empty-state--compact">
       <h2>${savedCount ? "Ingen gemte podcasts kan vises" : "Ingen gemte podcasts endnu"}</h2>
       <p>${
         savedCount
@@ -10149,7 +10149,7 @@ function renderProfileEpisodeRatingsSectionContent(container = document) {
     `;
   } else if (!count) {
     ratingsContainer.innerHTML = `
-      <div class="profile-empty-state">
+      <div class="profile-empty-state profile-empty-state--compact">
         <h3>Du har endnu ikke vurderet nogen episoder.</h3>
         <p>Vurder en episode, s&aring; samler vi den her.</p>
       </div>
@@ -16820,7 +16820,7 @@ function renderProfilePage() {
     }
   } else if (ratingCount === 0) {
     ratingsContainer.innerHTML = `
-      <div class="profile-empty-state">
+      <div class="profile-empty-state profile-empty-state--compact">
         <h3>Ingen vurderinger endnu</h3>
         <p>Find en podcast i ranglisten og giv den din egen score.</p>
         <a class="profile-button profile-button--quiet" href="#ranglister">Find podcasts</a>

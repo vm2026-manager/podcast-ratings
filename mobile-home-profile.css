@@ -343,8 +343,8 @@
     grid-column: 1 / -1 !important;
     width: 100% !important;
     min-width: 0 !important;
-    min-height: 90px !important;
-    padding: 14px !important;
+    min-height: 0 !important;
+    padding: 2px 0 !important;
     display: grid !important;
     align-content: center !important;
     justify-items: start !important;
@@ -414,5 +414,63 @@
   html body.page-profil #profileSuggestions.is-collapsed > .profile-suggestion-list,
   html body.page-profil #profileSuggestions.is-collapsed > [data-profile-expand="suggestions"] {
     display: none !important;
+  }
+
+  html body.page-profil .profile-saved-empty.profile-empty-state--compact,
+  html body.page-profil .profile-ratings-panel .profile-empty-state--compact,
+  html body.page-profil .profile-episode-ratings-panel .profile-empty-state--compact {
+    min-height: 90px !important;
+    padding: 14px !important;
+    display: grid !important;
+    align-content: center !important;
+    justify-items: start !important;
+    gap: 5px !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    box-sizing: border-box !important;
+  }
+
+  html body.page-profil .profile-empty-state--compact h2,
+  html body.page-profil .profile-empty-state--compact h3 {
+    margin: 0 !important;
+    color: #2b221d !important;
+    font: 800 0.98rem / 1.15 "Manrope", sans-serif !important;
+  }
+
+  html body.page-profil .profile-empty-state--compact p {
+    margin: 0 !important;
+    color: #7a6d64 !important;
+    font: 560 0.74rem / 1.35 "Manrope", sans-serif !important;
+  }
+
+  html body.page-profil #profileEpisodeRatings.is-collapsed > .profile-panel__note,
+  html body.page-profil #profileEpisodeRatings.is-collapsed > .profile-episode-list,
+  html body.page-profil #profileEpisodeRatings.is-collapsed > [data-profile-episode-ratings-more] {
+    display: none !important;
+  }
+
+  html body.page-profil #profileEpisodeRatings .profile-panel__header {
+    grid-template-columns: minmax(0, 1fr) auto !important;
+    gap: 6px !important;
+  }
+
+  html body.page-profil #profileEpisodeRatings .profile-panel__header h2 {
+    font-size: 0.94rem !important;
+    letter-spacing: -0.025em !important;
+    white-space: nowrap;
+  }
+
+  html body.page-profil #profileEpisodeRatings .profile-panel__tools {
+    gap: 4px !important;
+    flex-wrap: nowrap !important;
+  }
+
+  html body.page-profil #profileEpisodeRatings .profile-panel__toggle {
+    min-height: 32px !important;
+    padding: 0 8px !important;
+    font-size: 0.7rem !important;
+    white-space: nowrap !important;
   }
 }
