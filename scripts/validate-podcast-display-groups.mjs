@@ -75,6 +75,22 @@ assert.equal(JSON.stringify(rawRanking), rawSnapshot, "Ranking transformation mu
 const publicSearchCatalogue = groupedRanking;
 assert.equal(publicSearchCatalogue.filter((item) => narkobetjenten.memberLegacyKeys.includes(item.legacyKey)).length, 0, "Public search must exclude raw group members");
 assert.equal(publicSearchCatalogue.filter((item) => item.displayGroupId === "narkobetjenten").length, 1, "Public search must include the group once");
+const collapsePublicCandidates = (sourceKey, candidates, toPublicKey) => {
+  const seen = new Set();
+  return candidates.filter((candidate) => {
+    const publicKey = toPublicKey(candidate);
+    if (publicKey === sourceKey || seen.has(publicKey)) return false;
+    seen.add(publicKey);
+    return true;
+  });
+};
+const rawRecommendationKeys = [narkobetjenten.memberLegacyKeys[0], "ordinary-x", narkobetjenten.memberLegacyKeys[6], "ordinary-y", narkobetjenten.memberLegacyKeys[11], "ordinary-z"];
+const rawRecommendationSnapshot = JSON.stringify(rawRecommendationKeys);
+const collapsedRecommendationKeys = collapsePublicCandidates("ordinary-source", rawRecommendationKeys, (key) =>
+  narkobetjenten.memberLegacyKeys.includes(key) ? "display-group:narkobetjenten" : key
+);
+assert.deepEqual(collapsedRecommendationKeys, [narkobetjenten.memberLegacyKeys[0], "ordinary-x", "ordinary-y", "ordinary-z"], "Public recommendations must keep first occurrence and collapse group members");
+assert.equal(JSON.stringify(rawRecommendationKeys), rawRecommendationSnapshot, "Recommendation collapsing must not mutate source candidates");
 
 const seasonNumbers = narkobetjenten.memberLegacyKeys.map((key) => Number(key.match(/sæson (\d+)/)?.[1]));
 assert.deepEqual([...seasonNumbers].sort((a, b) => a - b), [1, 2, 3, 6, 7, 9, 10, 11, 12, 13, 14, 15], "Season ordering must be numeric");

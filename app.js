@@ -3710,6 +3710,7 @@ function createRankingDisplayGroup(group) {
   return {
     ...representative,
     title: group.title,
+    description: normalizeText(group.description),
     legacyKey: `display-group:${group.id}`,
     podcastId: "",
     isDisplayGroup: true,
@@ -8455,13 +8456,55 @@ function selectPodcastDetailRecommendations(candidates, limit = 4) {
   return selected;
 }
 
+function resolvePublicPodcastDisplayItem(podcast) {
+  if (!podcast || podcast.isDisplayGroup) return podcast || null;
+  const podcastKey = getPodcastKey(podcast);
+  const group = state.podcastDisplayGroups.find((candidateGroup) =>
+    candidateGroup.rankingEnabled && getDisplayGroupMemberPodcasts(candidateGroup).some(
+      (member) => getPodcastKey(member) === podcastKey
+    )
+  );
+  return group ? createRankingDisplayGroup(group) : podcast;
+}
+
+function collapseRecommendationCandidatesForPublicDisplay(sourcePodcast, candidates) {
+  const sourcePublicKey = getPodcastKey(resolvePublicPodcastDisplayItem(sourcePodcast));
+  const seenKeys = new Set();
+  return candidates.reduce((publicCandidates, recommendation) => {
+    const publicPodcast = resolvePublicPodcastDisplayItem(recommendation?.item?.podcast);
+    const publicKey = getPodcastKey(publicPodcast);
+    if (!publicPodcast || !publicKey || publicKey === sourcePublicKey || seenKeys.has(publicKey)) {
+      return publicCandidates;
+    }
+    seenKeys.add(publicKey);
+    const sourceCandidate = recommendation.item.candidate || {};
+    publicCandidates.push({
+      ...recommendation,
+      item: {
+        ...recommendation.item,
+        podcast: publicPodcast,
+        candidate: {
+          ...sourceCandidate,
+          title: publicPodcast.title,
+          primaryGenre: publicPodcast.genre,
+          editorialScore: publicPodcast.ratingValue
+        }
+      }
+    });
+    return publicCandidates;
+  }, []);
+}
+
 function getPodcastSimilarityProductMarkup(podcast) {
   if (state.podcastSimilarityProductStatus === "idle") {
     loadPodcastSimilarityProductData();
   }
   const validated = getValidatedPodcastSimilarityProduct(podcast);
   const completedRecommendations = selectPodcastDetailRecommendations(
-    getPodcastDetailDynamicRecommendations(podcast, validated),
+    collapseRecommendationCandidatesForPublicDisplay(
+      podcast,
+      getPodcastDetailDynamicRecommendations(podcast, validated)
+    ),
     8
   );
 
@@ -11373,7 +11416,10 @@ function getDisplayGroupRecommendations(displayGroup, members) {
 }
 
 function getDisplayGroupSimilarityMarkup(displayGroup, members) {
-  const recommendations = getDisplayGroupRecommendations(displayGroup, members);
+  const recommendations = collapseRecommendationCandidatesForPublicDisplay(
+    displayGroup,
+    getDisplayGroupRecommendations(displayGroup, members)
+  );
   if (!recommendations.length) return "";
   return `<div class="podcast-detail-sheet__related" data-podcast-similarity-product>${renderPodcastSimilarityProductSection("Mere som dette", recommendations)}</div>`;
 }
