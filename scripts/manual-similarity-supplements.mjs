@@ -51,8 +51,16 @@ export function resolveSupplementarySimilarities({ source, catalog }) {
     ? source.supplementarySimilarities
     : parseSupplementarySimilarities(rawValue);
   const byTitle = new Map();
+  const byPodcastId = new Map();
 
   for (const candidate of catalog) {
+    const podcastIdKey = normalizeManualSimilarityIdentity(candidate.podcastId);
+    if (podcastIdKey) {
+      const podcastIdMatches = byPodcastId.get(podcastIdKey) || [];
+      podcastIdMatches.push(candidate);
+      byPodcastId.set(podcastIdKey, podcastIdMatches);
+    }
+
     const titleKey = normalizeManualSimilarityIdentity(candidate.title);
     if (!titleKey) continue;
     const matches = byTitle.get(titleKey) || [];
@@ -66,12 +74,31 @@ export function resolveSupplementarySimilarities({ source, catalog }) {
 
   references.forEach((reference, offset) => {
     const position = offset + 1;
-    const matches = byTitle.get(normalizeManualSimilarityIdentity(reference.title)) || [];
     const qualifierKey = reference.hostQualifier
       ? normalizeManualSimilarityIdentity(reference.hostQualifier)
       : "";
+    let candidate = null;
+    let status = "";
 
-    if (!matches.length) {
+    if (!qualifierKey) {
+      const podcastIdMatches =
+        byPodcastId.get(normalizeManualSimilarityIdentity(reference.title)) || [];
+      if (podcastIdMatches.length > 1) {
+        audit.push(
+          auditRow(source, rawValue, reference, position, "ambiguous_podcast_id", {
+            rejectionReason: "multiple_exact_podcast_id_matches"
+          })
+        );
+        return;
+      }
+      if (podcastIdMatches.length === 1) {
+        candidate = podcastIdMatches[0];
+        status = "resolved_podcast_id";
+      }
+    }
+
+    const matches = byTitle.get(normalizeManualSimilarityIdentity(reference.title)) || [];
+    if (!candidate && !matches.length) {
       audit.push(
         auditRow(source, rawValue, reference, position, "unresolved_title", {
           rejectionReason: "no_exact_title_match"
@@ -80,9 +107,7 @@ export function resolveSupplementarySimilarities({ source, catalog }) {
       return;
     }
 
-    let candidate = null;
-    let status = "";
-    if (matches.length === 1) {
+    if (!candidate && matches.length === 1) {
       candidate = matches[0];
       if (qualifierKey && qualifierKey !== normalizeManualSimilarityIdentity(candidate.host)) {
         audit.push(
@@ -93,7 +118,7 @@ export function resolveSupplementarySimilarities({ source, catalog }) {
         return;
       }
       status = qualifierKey ? "resolved_title_and_host" : "resolved_unique_title";
-    } else {
+    } else if (!candidate) {
       if (!qualifierKey) {
         audit.push(
           auditRow(source, rawValue, reference, position, "ambiguous_title", {
@@ -127,6 +152,9 @@ export function resolveSupplementarySimilarities({ source, catalog }) {
 
     if (
       candidate.recommendationId === source.recommendationId ||
+      (normalizeManualSimilarityIdentity(source.podcastId) &&
+        normalizeManualSimilarityIdentity(source.podcastId) ===
+          normalizeManualSimilarityIdentity(candidate.podcastId)) ||
       normalizeManualSimilarityIdentity(candidate.title) ===
         normalizeManualSimilarityIdentity(source.title)
     ) {
