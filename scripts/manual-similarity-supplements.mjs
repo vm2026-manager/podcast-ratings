@@ -150,13 +150,17 @@ export function resolveSupplementarySimilarities({ source, catalog }) {
       status = "resolved_title_and_host";
     }
 
+    const sourcePodcastId = normalizeManualSimilarityIdentity(source.podcastId);
+    const candidatePodcastId = normalizeManualSimilarityIdentity(candidate.podcastId);
+    const samePodcastId = sourcePodcastId && candidatePodcastId && sourcePodcastId === candidatePodcastId;
+    const needsLegacyTitleFallback = !sourcePodcastId || !candidatePodcastId;
+    const sameTitle =
+      normalizeManualSimilarityIdentity(candidate.title) ===
+      normalizeManualSimilarityIdentity(source.title);
     if (
       candidate.recommendationId === source.recommendationId ||
-      (normalizeManualSimilarityIdentity(source.podcastId) &&
-        normalizeManualSimilarityIdentity(source.podcastId) ===
-          normalizeManualSimilarityIdentity(candidate.podcastId)) ||
-      normalizeManualSimilarityIdentity(candidate.title) ===
-        normalizeManualSimilarityIdentity(source.title)
+      samePodcastId ||
+      (needsLegacyTitleFallback && sameTitle)
     ) {
       audit.push(
         auditRow(source, rawValue, reference, position, "self_reference", {

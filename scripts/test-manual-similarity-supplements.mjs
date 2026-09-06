@@ -68,6 +68,33 @@ assert.equal(
 // A source cannot point at itself by Podcast-ID, even if its title differs.
 assert.equal(resolve("source-id").audit[0].status, "self_reference");
 
+// Distinct Podcast-IDs remain distinct even when the display titles match.
+const fodboldFmBt = row("fodbold-fm-bt", "Fodbold FM", "fodbold fm bt");
+const fodboldFm24Syv = row("fodbold-fm-24syv", "Fodbold FM", "fodbold fm 24syv");
+const fodboldResolution = resolve(
+  "fodbold fm 24syv",
+  fodboldFmBt,
+  [fodboldFmBt, fodboldFm24Syv]
+);
+assert.equal(fodboldResolution.audit[0].status, "resolved_podcast_id");
+assert.equal(fodboldResolution.resolved[0].candidate.recommendationId, "fodbold-fm-24syv");
+
+// The same Podcast-ID remains a self-reference even when titles differ.
+const sameIdSource = row("same-id-source", "Original title", "same-podcast-id");
+const sameIdCandidate = row("same-id-candidate", "Target title", "same-podcast-id");
+assert.equal(
+  resolve("Target title", sameIdSource, [sameIdSource, sameIdCandidate]).audit[0].status,
+  "self_reference"
+);
+
+// Legacy rows without Podcast-IDs retain the conservative title fallback.
+const legacySource = row("legacy-source", "Dobbeltgænger", "", "Third Ear");
+const legacyCandidate = row("legacy-candidate", "Dobbeltgænger", "", "Zetland");
+assert.equal(
+  resolve("Dobbeltgænger [Zetland]", legacySource, [legacySource, legacyCandidate]).audit[0].status,
+  "self_reference"
+);
+
 // Semicolon-separated legacy references retain their ordering and resolution.
 assert.deepEqual(
   resolve("Historien om alt; Gidselforhandleren [Per Lysholt]").resolved.map(
