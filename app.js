@@ -7557,6 +7557,9 @@ async function saveActiveEpisodeRating() {
   const episodeId = state.activeEpisodeRatingId;
   const episode = getGenstartEpisodeById(episodeId);
   const podcastKey = normalizeText(episode?.podcast_key) || getEpisodePodcastKey(state.activePodcastDetailKey);
+  const manualMappingResolved =
+    episode?.dataSource !== "manual" ||
+    (await fetchManualCanonicalEpisodeMappings([episode]));
   const config = getEpisodeRatingPersistenceConfig(podcastKey, episode);
   const isLocalEpisodeRating = config?.persistence === "local";
   const episodeState = getPodcastEpisodeState(podcastKey);
@@ -7571,6 +7574,10 @@ async function saveActiveEpisodeRating() {
   updateRatingDialogMessage("");
 
   try {
+    if (episode?.dataSource === "manual" && !manualMappingResolved) {
+      throw new Error("Episodevurderingen kunne ikke bekræftes. Prøv igen om et øjeblik.");
+    }
+
     if (previousEpisodeSummary.count === 0 && !getEpisodeParentRatingBackup(podcastKey, { local: isLocalEpisodeRating })) {
       captureEpisodeParentRatingBackup(podcastKey, { local: isLocalEpisodeRating });
       if (!getEpisodeParentRatingBackup(podcastKey, { local: isLocalEpisodeRating })) {
@@ -7712,6 +7719,9 @@ async function deleteActiveEpisodeRating() {
   const episodeId = state.activeEpisodeRatingId;
   const episode = getGenstartEpisodeById(episodeId);
   const podcastKey = normalizeText(episode?.podcast_key) || getEpisodePodcastKey(state.activePodcastDetailKey);
+  const manualMappingResolved =
+    episode?.dataSource !== "manual" ||
+    (await fetchManualCanonicalEpisodeMappings([episode]));
   const config = getEpisodeRatingPersistenceConfig(podcastKey, episode);
   const episodeState = getPodcastEpisodeState(podcastKey);
   const previousUserRating = episodeState.userRatingsById[episodeId];
@@ -7722,6 +7732,10 @@ async function deleteActiveEpisodeRating() {
   updateRatingDialogMessage("");
 
   try {
+    if (episode?.dataSource === "manual" && !manualMappingResolved) {
+      throw new Error("Episodevurderingen kunne ikke bekræftes. Prøv igen om et øjeblik.");
+    }
+
     if (config?.persistence === "local") {
       if (!deleteLocalEpisodeRating(podcastKey, episodeId)) {
         throw new Error("Kunne ikke fjerne episodevurderingen lokalt.");
@@ -9774,14 +9788,14 @@ function getEpisodeIdsForQuery(episodes) {
 }
 
 async function fetchManualCanonicalEpisodeMappings(episodes) {
-  if (!state.supabase) return;
+  if (!state.supabase) return false;
 
   const manualEpisodeKeys = [...new Set((episodes || [])
     .filter((episode) => episode?.dataSource === "manual")
     .map((episode) => normalizeText(episode.manual_episode_key))
     .filter(Boolean))]
-    .filter((key) => !state.manualCanonicalEpisodeMappings.has(key) && !state.manualCanonicalResolutionLoadingKeys.has(key));
-  if (!manualEpisodeKeys.length) return;
+    .filter((key) => !state.manualCanonicalEpisodeMappings.has(key));
+  if (!manualEpisodeKeys.length) return true;
 
   manualEpisodeKeys.forEach((key) => state.manualCanonicalResolutionLoadingKeys.add(key));
   try {
@@ -9803,9 +9817,12 @@ async function fetchManualCanonicalEpisodeMappings(episodes) {
     // The migration may not have been applied yet. Keep unresolved episodes on
     // the legacy local path rather than attempting an invalid foreign-key write.
     console.error("Kunne ikke bekræfte kanoniske manuelle episoder.", error);
+    return false;
   } finally {
     manualEpisodeKeys.forEach((key) => state.manualCanonicalResolutionLoadingKeys.delete(key));
   }
+
+  return true;
 }
 
 async function refreshManualEpisodeRatingData(podcastKey, episodes) {
