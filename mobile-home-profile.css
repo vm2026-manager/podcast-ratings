@@ -475,6 +475,11 @@
     display: none !important;
   }
 
+  html body.page-profil .profile-dashboard > #profileEpisodeRatings {
+    display: block !important;
+    grid-column: 1 / -1 !important;
+  }
+
   html body.page-profil #profileEpisodeRatings .profile-panel__header {
     grid-template-columns: minmax(0, 1fr) auto !important;
     gap: 6px !important;
