@@ -973,7 +973,8 @@ function failedImportSummary(feedKey: string, error: unknown, feedConfigs: FeedC
 }
 
 // Imports in small batches to keep the all-feeds cron invocation bounded while
-// avoiding an unthrottled burst of RSS and database requests.
+// avoiding an unthrottled burst of RSS and database requests. A failed feed is
+// converted to its own summary so later batches always continue.
 export async function runEpisodeImports(options: {
   feedKeys?: string[];
   repository: ImportRepository;

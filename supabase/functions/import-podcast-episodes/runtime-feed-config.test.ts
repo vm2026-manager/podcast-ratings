@@ -51,3 +51,40 @@ Deno.test("a sheet feed cannot shadow an explicit static owner of the same URL",
     skipped_feed_key: "adfærd"
   }]);
 });
+
+Deno.test("the runtime catalogue enables Valley Heat while keeping static adapters and Apple HTML feeds out of normal all", () => {
+  const staticConfigs = {
+    genstart: {
+      podcast_key: "genstart",
+      source: "dr_genstart_rss",
+      feed_url: "https://example.test/genstart",
+      format: "dr_lyd_next_data" as const
+    }
+  };
+  const result = mergeSheetFeedConfigs({ rows: [
+    {
+      Titel: "Valley Heat",
+      "Podcast-ID": "valley heat",
+      Feed: "https://feeds.simplecast.com/kKMR_wuB"
+    },
+    {
+      Titel: "Apple-only feed",
+      "Podcast-ID": "apple-only feed",
+      Feed: "APPLE:1530344328"
+    }
+  ] }, staticConfigs);
+  const normalAllFeedKeys = Object.entries(result.configs)
+    .filter(([, config]) => config.enabled !== false)
+    .map(([feedKey]) => feedKey);
+
+  assertEquals(result.configs.genstart, staticConfigs.genstart);
+  assertEquals(result.configs.valley_heat, {
+    podcast_key: "valley heat",
+    source: "sheet_valley_heat_rss",
+    feed_url: "https://feeds.simplecast.com/kKMR_wuB",
+    format: "rss",
+    enabled: true
+  });
+  assertEquals(result.configs.apple_1530344328?.enabled, false);
+  assertEquals(normalAllFeedKeys, ["genstart", "valley_heat"]);
+});
