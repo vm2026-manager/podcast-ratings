@@ -39,6 +39,10 @@ assert.ok(Array.isArray(config.groups), "Config groups must be an array");
 assert.equal(new Set(config.groups.map((group) => group.id)).size, config.groups.length, "Group IDs must be unique");
 const activeMemberKeys = new Set();
 for (const group of config.groups) {
+  if (group.description !== undefined) {
+    assert.equal(typeof group.description, "string", `${group.id} description must be a string`);
+    assert.ok(group.description.trim(), `${group.id} description must not be empty`);
+  }
   assert.equal(new Set(group.memberLegacyKeys).size, group.memberLegacyKeys.length, `${group.id} has duplicate members`);
   assert.ok(group.memberLegacyKeys.includes(group.representativeMemberLegacyKey), `${group.id} representative must be a member`);
   for (const key of group.memberLegacyKeys) {

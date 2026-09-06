@@ -11285,6 +11285,56 @@ function getDisplayGroupOwnRatingStats(members) {
   return { average: averageNumbers(ratings), count: ratings.length };
 }
 
+function getDisplayGroupSharedMetadata(members) {
+  const sharedValue = (field) => {
+    const values = members.map((member) => String(member?.[field] || "").trim()).filter(Boolean);
+    if (!values.length) return "";
+    const normalized = new Set(values.map(normalizeComparable));
+    return normalized.size === 1 ? values[0] : "";
+  };
+  return {
+    genre: sharedValue("genre"),
+    publisher: sharedValue("publisher"),
+    host: sharedValue("host"),
+    access: sharedValue("access"),
+    language: sharedValue("language")
+  };
+}
+
+function getDisplayGroupRecommendations(displayGroup, members) {
+  if (state.podcastSimilarityProductStatus === "idle") loadPodcastSimilarityProductData();
+  const memberKeys = new Set(members.map(getPodcastKey));
+  const candidates = new Map();
+  members.forEach((member) => {
+    const recommendations = getPodcastDetailDynamicRecommendations(
+      member,
+      getValidatedPodcastSimilarityProduct(member)
+    );
+    recommendations.forEach((recommendation, rank) => {
+      const candidate = recommendation?.item?.podcast;
+      const candidateKey = getPodcastKey(candidate);
+      if (!candidateKey || memberKeys.has(candidateKey) || candidates.has(`group:${candidateKey}`)) return;
+      const current = candidates.get(candidateKey) || { recommendation, candidateKey, memberVotes: new Set(), rankScore: 0, bestRank: Number.MAX_SAFE_INTEGER };
+      current.memberVotes.add(getPodcastKey(member));
+      current.rankScore += 1 / (rank + 1);
+      current.bestRank = Math.min(current.bestRank, rank);
+      candidates.set(candidateKey, current);
+    });
+  });
+  return selectPodcastDetailRecommendations(
+    [...candidates.values()]
+      .sort((left, right) => right.memberVotes.size - left.memberVotes.size || right.rankScore - left.rankScore || left.bestRank - right.bestRank || left.candidateKey.localeCompare(right.candidateKey, "da"))
+      .map((entry) => entry.recommendation),
+    8
+  );
+}
+
+function getDisplayGroupSimilarityMarkup(displayGroup, members) {
+  const recommendations = getDisplayGroupRecommendations(displayGroup, members);
+  if (!recommendations.length) return "";
+  return `<div class="podcast-detail-sheet__related" data-podcast-similarity-product>${renderPodcastSimilarityProductSection("Mere som dette", recommendations)}</div>`;
+}
+
 function renderPodcastDisplayGroupSeasonWorkspace(dialog, displayGroup) {
   const content = dialog.querySelector("[data-podcast-detail-content]");
   if (!content) return;
@@ -11312,6 +11362,9 @@ function renderPodcastDisplayGroupContent(dialog, displayGroup) {
   const editorialCount = members.filter((podcast) => parseNumber(podcast.ratingValue) !== null).length;
   const userCount = Number(displayGroup.userRatingCount || 0);
   const own = getDisplayGroupOwnRatingStats(members);
+  const metadata = getDisplayGroupSharedMetadata(members);
+  const description = String(displayGroup.description || "").trim() || `Samlet overblik over ${members.length} vurderede sæsoner.`;
+  const relatedMarkup = getDisplayGroupSimilarityMarkup(displayGroup, members);
   dialog.querySelector("[data-podcast-detail-toolbar-actions]")?.replaceChildren();
   setPodcastDetailPlacementControl(dialog);
   state.podcastDetailView = "displayGroup";
@@ -11319,15 +11372,17 @@ function renderPodcastDisplayGroupContent(dialog, displayGroup) {
   content.innerHTML = `
     <header class="podcast-detail-sheet__header">
       <div class="podcast-detail-sheet__cover"><img class="podcast-detail-sheet__image" alt="" loading="lazy" /></div>
-      <div class="podcast-detail-sheet__intro"><h2 id="podcastDetailTitle">${escapeHtml(displayGroup.title)}</h2><p class="podcast-detail-sheet__meta">${members.length} vurderede sæsoner</p><div class="podcast-detail-sheet__chips"><span class="podcast-detail-sheet__episode-entry"><button class="podcast-detail-sheet__episode-entry-button" type="button" data-podcast-seasons-open aria-describedby="podcastSeasonEntryTooltip"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="3" width="14" height="18" rx="2"></rect><path d="M9 8h6M9 12h6M9 16h4"></path></svg><span>Vurder sæsoner</span></button><span class="podcast-detail-sheet__episode-entry-tooltip" id="podcastSeasonEntryTooltip" role="tooltip">Se alle sæsoner og bedøm dem én for én.</span></span></div><section class="podcast-detail-sheet__description podcast-detail-sheet__description--desktop"><h3>Om podcasten</h3><p>Samlet overblik over ${members.length} vurderede sæsoner.</p></section></div>
-      <section class="podcast-detail-sheet__description podcast-detail-sheet__description--mobile"><h3>Om podcasten</h3><p>Samlet overblik over ${members.length} vurderede sæsoner.</p></section>
+      <div class="podcast-detail-sheet__intro"><h2 id="podcastDetailTitle">${escapeHtml(displayGroup.title)}</h2><p class="podcast-detail-sheet__meta">${escapeHtml(metadata.host || metadata.publisher || `${members.length} vurderede sæsoner`)}</p><div class="podcast-detail-sheet__chips"><span class="podcast-detail-sheet__episode-entry"><button class="podcast-detail-sheet__episode-entry-button" type="button" data-podcast-seasons-open aria-describedby="podcastSeasonEntryTooltip"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="3" width="14" height="18" rx="2"></rect><path d="M9 8h6M9 12h6M9 16h4"></path></svg><span>Vurder sæsoner</span></button><span class="podcast-detail-sheet__episode-entry-tooltip" id="podcastSeasonEntryTooltip" role="tooltip">Se alle sæsoner og bedøm dem én for én.</span></span>${metadata.genre ? `<span class="podcast-detail-sheet__genre">${escapeHtml(metadata.genre)}</span>` : ""}${metadata.publisher ? `<span class="podcast-detail-sheet__chip podcast-detail-sheet__publisher">${escapeHtml(metadata.publisher)}</span>` : ""}</div><section class="podcast-detail-sheet__description podcast-detail-sheet__description--desktop"><h3>Om podcasten</h3><p>${escapeHtml(description)}</p></section></div>
+      <section class="podcast-detail-sheet__description podcast-detail-sheet__description--mobile"><h3>Om podcasten</h3><p data-podcast-detail-description>${escapeHtml(description)}</p><button class="podcast-detail-sheet__description-toggle" type="button" data-podcast-detail-description-toggle aria-expanded="false">Læs mere</button></section>
     </header>
     <section class="podcast-detail-sheet__ratings" aria-label="Vurderinger">
       <div><span>Podcastlistens vurdering</span><strong>${escapeHtml(formatCompactRating(displayGroup.ratingValue))}<small>/10</small></strong><em>${editorialCount} sæsoner med score</em></div>
       <div><span>Brugernes vurdering</span><strong>${displayGroup.userAverageRating === null ? "—" : escapeHtml(formatCompactRating(displayGroup.userAverageRating))}<small>/10</small></strong><em>${userCount ? escapeHtml(formatUserRatingCount(userCount)) : "Ingen brugervurderinger endnu"}</em></div>
       <div class="podcast-detail-sheet__rating-cell podcast-detail-sheet__rating-cell--own podcast-detail-sheet__rating-cell--group-own"><span class="podcast-detail-sheet__rating-label">Din vurdering</span><strong>${own.average === null ? "—" : escapeHtml(formatCompactRating(own.average))}<small>/10</small></strong><em>${own.count ? `Beregnet fra ${own.count} sæsonvurderinger` : "Ingen sæsoner vurderet"}</em></div>
-    </section>`;
+    </section>
+    <div class="podcast-detail-sheet__recommendation-row">${relatedMarkup}<div class="podcast-detail-sheet__review-status" aria-label="Sæsoner vurderet"><span class="podcast-detail-sheet__review-status-icon" aria-hidden="true">★</span><span><strong>${members.length} sæsoner vurderet</strong><small>Se vurderingerne under Vurder sæsoner</small></span></div></div>`;
   setImage(content.querySelector(".podcast-detail-sheet__cover"), getPodcastImageSources(displayGroup), displayGroup.title);
+  hydratePodcastSimilarityProduct(dialog, displayGroup);
   content.querySelector("[data-podcast-seasons-open]")?.addEventListener("click", () => renderPodcastDisplayGroupSeasonWorkspace(dialog, displayGroup));
 }
 
