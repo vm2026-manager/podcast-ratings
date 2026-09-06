@@ -6042,13 +6042,13 @@ function createDesktopRankingTopCardElement(podcast, displayRank = null) {
     <span class="desktop-ranking-rank" aria-label="Placering ${escapeHtml(String(rankText))}">
       ${escapeHtml(rankLabel)}
     </span>
-    ${podcast.isDisplayGroup ? "" : `<button
+    <button
       class="favorite-button desktop-ranking-top-card__favorite"
       type="button"
       aria-label="Gem som favorit"
     >
       <span aria-hidden="true"></span>
-    </button>`}
+    </button>
     <button
       class="desktop-ranking-cover"
       type="button"
@@ -6093,7 +6093,7 @@ function createDesktopRankingTopCardElement(podcast, displayRank = null) {
   `;
 
   setDesktopRankingCover(article, podcast);
-  if (!podcast.isDisplayGroup) renderFavoriteButton(article.querySelector(".favorite-button"), key);
+  renderFavoriteButton(article.querySelector(".favorite-button"), key);
   return article;
 }
 
@@ -6180,14 +6180,14 @@ function createDesktopRankingTableRowElement(podcast, displayRank = null) {
           <path d="M19 13v5a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1h5"></path>
         </svg>
       </button>
-      ${podcast.isDisplayGroup ? "" : `<button class="favorite-button" type="button" aria-label="Gem som favorit" data-tooltip="Gem til senere">
+      <button class="favorite-button" type="button" aria-label="Gem som favorit" data-tooltip="Gem til senere">
         <span aria-hidden="true"></span>
-      </button>`}
+      </button>
     </span>
   `;
 
   setDesktopRankingCover(article, podcast);
-  if (!podcast.isDisplayGroup) renderFavoriteButton(article.querySelector(".favorite-button"), key);
+  renderFavoriteButton(article.querySelector(".favorite-button"), key);
   return article;
 }
 
@@ -13811,12 +13811,11 @@ function createPodcastCardElement(podcast, displayRank = null) {
 
   if (podcast.isDisplayGroup) {
     rateButton.classList.add("is-hidden");
-    favoriteButton.classList.add("is-hidden");
   } else {
     rateButton.dataset.action = "open-rating";
     renderRateButton(rateButton, key);
-    renderFavoriteButton(favoriteButton, key);
   }
+  renderFavoriteButton(favoriteButton, key);
 
   populateCardSummaries(article, podcast);
 
@@ -21213,7 +21212,6 @@ function handlePodcastGridClick(event) {
   }
 
   if (action === "toggle-favorite" || action === "toggle-save") {
-    if (podcast.isDisplayGroup) return;
     handleFavoriteToggle(event, podcast);
     return;
   }
