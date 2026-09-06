@@ -29557,3 +29557,31 @@ html body [data-suggestion-id].is-notification-target {
 .ranking-user-sort-field[hidden] {
   display: none !important;
 }
+
+@media (max-width: 768px) {
+  html body.page-profil #suggestionResponseDialog [data-suggestion-response-content] {
+    min-width: 0;
+    padding: 4px 14px calc(18px + env(safe-area-inset-bottom)) !important;
+    overflow-wrap: anywhere;
+  }
+
+  html body.page-profil #suggestionResponseDialog .explore-suggestion-form__actions {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+
+  html body.page-profil #suggestionResponseDialog .explore-suggestion-form__actions > :only-child {
+    grid-column: 1 / -1;
+    width: 100%;
+  }
+
+  html body.page-profil #suggestionResponseDialog .explore-suggestion-form__actions > button {
+    width: 100%;
+  }
+
+  html body.page-profil #suggestionResponseDialog .explore-suggestion-dialog__close {
+    top: 9px !important;
+    right: 9px !important;
+    width: 44px !important;
+    height: 44px !important;
+  }
+}
