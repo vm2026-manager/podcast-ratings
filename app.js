@@ -4981,28 +4981,36 @@ function bindHomeAccountMenu(root = elements.pageIntroPanel) {
   });
 }
 
+function getMobileHomeAccountMenuMarkup(extraClass = "") {
+  if (!isLoggedIn()) return "";
+
+  const initial = (state.authUser?.email || "?").trim().charAt(0).toUpperCase() || "?";
+  const unreadCount = getSuggestionUnreadCount();
+  const unreadLabel = unreadCount ? `${formatSuggestionUnreadCount(unreadCount)} ulæste podcastforslag` : "";
+  return `
+    <div class="home-account-menu${extraClass ? ` ${extraClass}` : ""}">
+      <button
+        class="home-account-menu__toggle"
+        type="button"
+        aria-label="${unreadLabel ? `Åbn profilmenu, ${unreadLabel}` : "Åbn profilmenu"}"
+        aria-expanded="false"
+        data-home-account-toggle
+      >
+        ${escapeHtml(initial)}<span class="suggestion-notification-badge${unreadCount ? "" : " is-hidden"}" aria-label="${escapeHtml(unreadLabel)}">${unreadCount ? formatSuggestionUnreadCount(unreadCount) : ""}</span>
+      </button>
+      <div class="home-account-menu__panel" data-home-account-menu hidden>
+        <a class="home-account-menu__item" href="#profil" data-suggestion-profile-link>Gå til profil</a>
+        <button class="home-account-menu__item home-account-menu__item--logout" type="button" data-home-logout>
+          Log ud
+        </button>
+      </div>
+    </div>
+  `;
+}
+
 function getMobileToplineProfileMarkup() {
   if (isLoggedIn()) {
-    const initial = (state.authUser?.email || "?").trim().charAt(0).toUpperCase() || "?";
-    return `
-      <div class="home-account-menu mobile-page-topline__account">
-        <button
-          class="home-account-menu__toggle"
-          type="button"
-          aria-label="\u00c5bn profilmenu"
-          aria-expanded="false"
-          data-home-account-toggle
-        >
-          ${escapeHtml(initial)}<span class="suggestion-notification-badge${getSuggestionUnreadCount() ? "" : " is-hidden"}" aria-label="${getSuggestionUnreadCount() ? `${formatSuggestionUnreadCount(getSuggestionUnreadCount())} ulæste podcastforslag` : ""}">${getSuggestionUnreadCount() ? formatSuggestionUnreadCount(getSuggestionUnreadCount()) : ""}</span>
-        </button>
-        <div class="home-account-menu__panel" data-home-account-menu hidden>
-          <a class="home-account-menu__item" href="#profil" data-suggestion-profile-link>G\u00e5 til profil</a>
-          <button class="home-account-menu__item home-account-menu__item--logout" type="button" data-home-logout>
-            Log ud
-          </button>
-        </div>
-      </div>
-    `;
+    return getMobileHomeAccountMenuMarkup("mobile-page-topline__account");
   }
 
   return `
@@ -20849,25 +20857,7 @@ function renderRoute() {
           <p class="eyebrow"><a class="mobile-brand-word" href="#forside" aria-label="G\u00e5 til forsiden">Podcast<span class="mobile-brand-accent">listen</span></a>Personlige podcastfavoritter</p>
           ${
             loggedIn
-              ? `
-                <div class="home-account-menu">
-                  <button
-                    class="home-account-menu__toggle"
-                    type="button"
-                    aria-label="\u00c5bn profilmenu"
-                    aria-expanded="false"
-                    data-home-account-toggle
-                  >
-                    ${escapeHtml((state.authUser?.email || "?").trim().charAt(0).toUpperCase() || "?")}
-                  </button>
-                  <div class="home-account-menu__panel" data-home-account-menu hidden>
-                    <a class="home-account-menu__item" href="#profil">G\u00e5 til profil</a>
-                    <button class="home-account-menu__item home-account-menu__item--logout" type="button" data-home-logout>
-                      Log ud
-                    </button>
-                  </div>
-                </div>
-              `
+              ? getMobileHomeAccountMenuMarkup()
               : `
                 <button
                   class="home-profile-button"
@@ -20915,25 +20905,7 @@ function renderRoute() {
         </div>
         ${
           loggedIn
-            ? `
-              <div class="home-account-menu">
-                <button
-                  class="home-account-menu__toggle"
-                  type="button"
-                  aria-label="Åbn profilmenu"
-                  aria-expanded="false"
-                  data-home-account-toggle
-                >
-                  ${escapeHtml((state.authUser?.email || "?").trim().charAt(0).toUpperCase() || "?")}
-                </button>
-                <div class="home-account-menu__panel" data-home-account-menu hidden>
-                  <a class="home-account-menu__item" href="#profil">Gå til profil</a>
-                  <button class="home-account-menu__item home-account-menu__item--logout" type="button" data-home-logout>
-                    Log ud
-                  </button>
-                </div>
-              </div>
-            `
+            ? getMobileHomeAccountMenuMarkup()
             : ""
         }
         <div class="home-hero__visual home-hero__visual--scroller" aria-label="Bedst vurderede podcasts, udvalget skifter hver time">
