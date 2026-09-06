@@ -2485,7 +2485,7 @@ function getRouteWarmupPodcasts(route) {
 
   if (route === "profil") {
     const saved = Array.from(state.savedPodcastKeys)
-      .map((key) => state.podcastByKey[key])
+      .map((key) => getRankingDisplayItemByKey(key))
       .filter(Boolean);
     const rated = Object.keys(state.userRatingsByKey || {})
       .map((key) => state.podcastByKey[key])
@@ -2969,6 +2969,14 @@ function resolvePodcastByStoredKey(key) {
 
 function resolveCanonicalPodcastId(key) {
   return getPodcastId(resolvePodcastByStoredKey(key));
+}
+
+function resolveSavedPodcastKey(key) {
+  const normalizedKey = normalizeText(key);
+  if (normalizedKey.startsWith("display-group:")) {
+    return getRankingDisplayItemByKey(normalizedKey) ? normalizedKey : null;
+  }
+  return resolveCanonicalPodcastId(normalizedKey);
 }
 
 function findPodcastByCatalogueId(catalogueId) {
@@ -6394,7 +6402,7 @@ function renderDesktopRanking(podcasts) {
 }
 
 function isPodcastSaved(podcastKey) {
-  const canonicalKey = resolveCanonicalPodcastId(podcastKey) || normalizeText(podcastKey);
+  const canonicalKey = resolveSavedPodcastKey(podcastKey) || normalizeText(podcastKey);
   return state.savedPodcastKeys.has(canonicalKey);
 }
 
@@ -6771,15 +6779,15 @@ async function fetchUserState() {
   } else {
     const localMeta = readSavedPodcastMeta();
     state.savedPodcastKeys = new Set(
-      (saved || []).map((item) => resolveCanonicalPodcastId(item.podcast_key)).filter(Boolean)
+      (saved || []).map((item) => resolveSavedPodcastKey(item.podcast_key)).filter(Boolean)
     );
     state.savedPodcastMetaByKey = Object.fromEntries(
       Object.entries(localMeta)
-        .map(([key, value]) => [resolveCanonicalPodcastId(key), value])
+        .map(([key, value]) => [resolveSavedPodcastKey(key), value])
         .filter(([podcastId]) => podcastId)
     );
     (saved || []).forEach((item) => {
-      const podcastId = resolveCanonicalPodcastId(item.podcast_key);
+      const podcastId = resolveSavedPodcastKey(item.podcast_key);
       if (!podcastId) return;
       const savedAt = item.saved_at || item.created_at || localMeta[item.podcast_key]?.savedAt || "";
       if (savedAt) {
@@ -11285,6 +11293,31 @@ function getDisplayGroupOwnRatingStats(members) {
   return { average: averageNumbers(ratings), count: ratings.length };
 }
 
+function bindPodcastDetailFilterButtons(content, podcast) {
+  content.querySelectorAll("[data-podcast-detail-filter]").forEach((button) => {
+    button.addEventListener("click", (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      const value = button.dataset.value || "";
+      const filterType = button.dataset.podcastDetailFilter;
+      if (filterType === "mainSeries") {
+        navigatePodcastDetailToMainSeriesRanking(podcast, value);
+        return;
+      }
+      closePodcastDetailSheet({ returnFocus: false });
+      if (filterType === "publisher") {
+        resetRankingFiltersForPodcastDetailNavigation("publisher", value);
+        if (window.location.hash.slice(1).toLowerCase() !== "ranglister") window.location.hash = "#ranglister";
+        else { render(); scrollToRankingStart(); }
+        return;
+      }
+      setActiveFilter("genre", value);
+      if (window.location.hash.slice(1).toLowerCase() !== "ranglister") window.location.hash = "#ranglister";
+      else scrollToRankingStart();
+    });
+  });
+}
+
 function getDisplayGroupSharedMetadata(members) {
   const sharedValue = (field) => {
     const values = members.map((member) => String(member?.[field] || "").trim()).filter(Boolean);
@@ -11313,7 +11346,7 @@ function getDisplayGroupRecommendations(displayGroup, members) {
     recommendations.forEach((recommendation, rank) => {
       const candidate = recommendation?.item?.podcast;
       const candidateKey = getPodcastKey(candidate);
-      if (!candidateKey || memberKeys.has(candidateKey) || candidates.has(`group:${candidateKey}`)) return;
+      if (!candidateKey || memberKeys.has(candidateKey)) return;
       const current = candidates.get(candidateKey) || { recommendation, candidateKey, memberVotes: new Set(), rankScore: 0, bestRank: Number.MAX_SAFE_INTEGER };
       current.memberVotes.add(getPodcastKey(member));
       current.rankScore += 1 / (rank + 1);
@@ -11372,7 +11405,7 @@ function renderPodcastDisplayGroupContent(dialog, displayGroup) {
   content.innerHTML = `
     <header class="podcast-detail-sheet__header">
       <div class="podcast-detail-sheet__cover"><img class="podcast-detail-sheet__image" alt="" loading="lazy" /></div>
-      <div class="podcast-detail-sheet__intro"><h2 id="podcastDetailTitle">${escapeHtml(displayGroup.title)}</h2><p class="podcast-detail-sheet__meta">${escapeHtml(metadata.host || metadata.publisher || `${members.length} vurderede sæsoner`)}</p><div class="podcast-detail-sheet__chips"><span class="podcast-detail-sheet__episode-entry"><button class="podcast-detail-sheet__episode-entry-button" type="button" data-podcast-seasons-open aria-describedby="podcastSeasonEntryTooltip"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="3" width="14" height="18" rx="2"></rect><path d="M9 8h6M9 12h6M9 16h4"></path></svg><span>Vurder sæsoner</span></button><span class="podcast-detail-sheet__episode-entry-tooltip" id="podcastSeasonEntryTooltip" role="tooltip">Se alle sæsoner og bedøm dem én for én.</span></span>${metadata.genre ? `<span class="podcast-detail-sheet__genre">${escapeHtml(metadata.genre)}</span>` : ""}${metadata.publisher ? `<span class="podcast-detail-sheet__chip podcast-detail-sheet__publisher">${escapeHtml(metadata.publisher)}</span>` : ""}</div><section class="podcast-detail-sheet__description podcast-detail-sheet__description--desktop"><h3>Om podcasten</h3><p>${escapeHtml(description)}</p></section></div>
+      <div class="podcast-detail-sheet__intro"><div class="podcast-detail-sheet__intro-actions"><span class="podcast-detail-sheet__header-action-icons"><button class="favorite-button podcast-detail-sheet__header-favorite" type="button" data-podcast-detail-favorite aria-label="Gem podcast"><span aria-hidden="true"></span></button></span></div><h2 id="podcastDetailTitle">${escapeHtml(displayGroup.title)}</h2><p class="podcast-detail-sheet__meta">${escapeHtml(metadata.host || metadata.publisher || `${members.length} vurderede sæsoner`)}</p><div class="podcast-detail-sheet__chips"><span class="podcast-detail-sheet__episode-entry"><button class="podcast-detail-sheet__episode-entry-button" type="button" data-podcast-seasons-open aria-describedby="podcastSeasonEntryTooltip"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="3" width="14" height="18" rx="2"></rect><path d="M9 8h6M9 12h6M9 16h4"></path></svg><span>Vurder sæsoner</span></button><span class="podcast-detail-sheet__episode-entry-tooltip" id="podcastSeasonEntryTooltip" role="tooltip">Se alle sæsoner og bedøm dem én for én.</span></span>${metadata.genre ? `<button class="podcast-detail-sheet__genre" type="button" data-podcast-detail-filter="genre" data-value="${escapeHtml(metadata.genre)}">${escapeHtml(metadata.genre)}</button>` : ""}${metadata.publisher ? `<button class="podcast-detail-sheet__chip podcast-detail-sheet__publisher" type="button" data-podcast-detail-filter="publisher" data-value="${escapeHtml(metadata.publisher)}">${escapeHtml(metadata.publisher)}</button>` : ""}</div><section class="podcast-detail-sheet__description podcast-detail-sheet__description--desktop"><h3>Om podcasten</h3><p>${escapeHtml(description)}</p></section></div>
       <section class="podcast-detail-sheet__description podcast-detail-sheet__description--mobile"><h3>Om podcasten</h3><p data-podcast-detail-description>${escapeHtml(description)}</p><button class="podcast-detail-sheet__description-toggle" type="button" data-podcast-detail-description-toggle aria-expanded="false">Læs mere</button></section>
     </header>
     <section class="podcast-detail-sheet__ratings" aria-label="Vurderinger">
@@ -11383,6 +11416,22 @@ function renderPodcastDisplayGroupContent(dialog, displayGroup) {
     <div class="podcast-detail-sheet__recommendation-row">${relatedMarkup}<div class="podcast-detail-sheet__review-status" aria-label="Sæsoner vurderet"><span class="podcast-detail-sheet__review-status-icon" aria-hidden="true">★</span><span><strong>${members.length} sæsoner vurderet</strong><small>Se vurderingerne under Vurder sæsoner</small></span></div></div>`;
   setImage(content.querySelector(".podcast-detail-sheet__cover"), getPodcastImageSources(displayGroup), displayGroup.title);
   hydratePodcastSimilarityProduct(dialog, displayGroup);
+  bindPodcastDetailFilterButtons(content, displayGroup);
+  const favoriteButton = content.querySelector("[data-podcast-detail-favorite]");
+  renderFavoriteButton(favoriteButton, getPodcastKey(displayGroup));
+  favoriteButton?.addEventListener("click", (event) => handleFavoriteToggle(event, displayGroup));
+  if (isMobileViewport()) {
+    const headerActions = content.querySelector(".podcast-detail-sheet__header-action-icons");
+    dialog.querySelector("[data-podcast-detail-toolbar-actions]")?.replaceChildren(headerActions);
+  }
+  const mobileDescription = content.querySelector("[data-podcast-detail-description]");
+  const descriptionToggle = content.querySelector("[data-podcast-detail-description-toggle]");
+  if (descriptionToggle) descriptionToggle.hidden = !isMobileViewport() || mobileDescription.textContent.trim().length <= 220;
+  descriptionToggle?.addEventListener("click", () => {
+    const expanded = mobileDescription?.classList.toggle("is-expanded") || false;
+    descriptionToggle.setAttribute("aria-expanded", String(expanded));
+    descriptionToggle.textContent = expanded ? "Vis mindre" : "Læs mere";
+  });
   content.querySelector("[data-podcast-seasons-open]")?.addEventListener("click", () => renderPodcastDisplayGroupSeasonWorkspace(dialog, displayGroup));
 }
 
@@ -11835,39 +11884,7 @@ function renderPodcastDetailSheetContent(
     submitInlineRating(event);
   });
 
-  content.querySelectorAll("[data-podcast-detail-filter]").forEach((button) => {
-    button.addEventListener("click", (event) => {
-      event.preventDefault();
-      event.stopPropagation();
-      const value = button.dataset.value || "";
-      const filterType = button.dataset.podcastDetailFilter;
-
-      if (filterType === "mainSeries") {
-        navigatePodcastDetailToMainSeriesRanking(podcast, value);
-        return;
-      }
-
-      closePodcastDetailSheet({ returnFocus: false });
-
-      if (filterType === "publisher") {
-        resetRankingFiltersForPodcastDetailNavigation("publisher", value);
-        if (window.location.hash.slice(1).toLowerCase() !== "ranglister") {
-          window.location.hash = "#ranglister";
-        } else {
-          render();
-          scrollToRankingStart();
-        }
-        return;
-      }
-
-      setActiveFilter("genre", value);
-      if (window.location.hash.slice(1).toLowerCase() !== "ranglister") {
-        window.location.hash = "#ranglister";
-      } else {
-        scrollToRankingStart();
-      }
-    });
-  });
+  bindPodcastDetailFilterButtons(content, podcast);
 
   content.querySelector("[data-podcast-detail-review]")?.addEventListener("click", (event) => {
     event.preventDefault();
@@ -14330,7 +14347,7 @@ function getProfileRatedPodcasts() {
 
 function getSavedPodcasts() {
   return Array.from(state.savedPodcastKeys)
-    .map((key) => state.podcastByKey[key])
+    .map((key) => getRankingDisplayItemByKey(key))
     .filter(Boolean)
     .sort((a, b) => a.title.localeCompare(b.title, "da", { sensitivity: "base" }));
 }
@@ -14347,7 +14364,7 @@ function getRecentlySavedPodcastEntries() {
       const savedAt = Date.parse(state.savedPodcastMetaByKey[key]?.savedAt || "");
       return {
         key,
-        podcast: state.podcastByKey[key],
+        podcast: getRankingDisplayItemByKey(key),
         savedAt,
         hasSavedAt: Number.isFinite(savedAt)
       };
