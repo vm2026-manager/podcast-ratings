@@ -733,7 +733,7 @@ const state = {
   profileSuggestionsLoadedFor: null,
   profileSuggestionsLoading: false,
   profileSuggestionsError: "",
-  profileSuggestionsExpanded: true,
+  profileSuggestionsExpanded: false,
   suggestionNotificationTarget: null,
   suggestionResponseDialogOpen: false,
   suggestionResponseDialogReturnFocus: null,
@@ -14615,7 +14615,7 @@ function clearUserScopedState({ clearUi = false } = {}) {
   state.profileSuggestionsLoadedFor = null;
   state.profileSuggestionsLoading = false;
   state.profileSuggestionsError = "";
-  state.profileSuggestionsExpanded = true;
+  state.profileSuggestionsExpanded = false;
   state.suggestionNotificationTarget = null;
   window.clearTimeout(state.suggestionResponseDialogRetryTimer);
   state.suggestionResponseDialogRetryTimer = null;
@@ -20740,6 +20740,10 @@ function renderRoute() {
     document.body.classList.remove("has-suggestion-dialog-open");
     document.body.classList.remove("explore-gate-active");
     document.body.classList.remove("explore-logged-out-preview");
+  }
+
+  if (route !== "profil") {
+    state.profileSuggestionsExpanded = false;
   }
 
   elements.pageLinks.forEach((link) => {
