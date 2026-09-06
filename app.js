@@ -734,6 +734,9 @@ const state = {
   profileSuggestionsLoading: false,
   profileSuggestionsError: "",
   suggestionNotificationTarget: null,
+  suggestionResponseDialogOpen: false,
+  suggestionResponseDialogReturnFocus: null,
+  suggestionResponseDialogRetryTimer: null,
   adminPodcastSuggestions: [],
   adminPodcastSuggestionsLoadedFor: null,
   adminPodcastSuggestionsLoading: false,
@@ -4741,6 +4744,126 @@ async function markSuggestionNotificationTargetSeen(target) {
   renderSuggestionNotificationBadges();
 }
 
+function isProfileSuggestionResponseRoute() {
+  return window.location.hash.slice(1).toLowerCase() === "profil";
+}
+
+function hasOtherDialogOpen() {
+  return Boolean(
+    elements.authDialog?.getAttribute("aria-hidden") === "false" ||
+    elements.ratingDialog?.getAttribute("aria-hidden") === "false" ||
+    document.body.classList.contains("has-podcast-detail-open") ||
+    document.querySelector(".profile-list-dialog") ||
+    document.querySelector(".explore-suggestion-dialog:not(.is-hidden)")
+  );
+}
+
+function closeSuggestionResponseDialog({ returnFocus = true } = {}) {
+  const dialog = document.getElementById("suggestionResponseDialog");
+  if (!dialog || dialog.classList.contains("is-hidden")) return;
+
+  dialog.classList.add("is-hidden");
+  dialog.setAttribute("aria-hidden", "true");
+  state.suggestionResponseDialogOpen = false;
+  if (!hasOtherDialogOpen()) document.body.classList.remove("has-dialog-open", "has-suggestion-dialog-open");
+
+  const returnTarget = state.suggestionResponseDialogReturnFocus;
+  state.suggestionResponseDialogReturnFocus = null;
+  if (returnFocus && returnTarget?.isConnected) returnTarget.focus();
+}
+
+function ensureSuggestionResponseDialog() {
+  let dialog = document.getElementById("suggestionResponseDialog");
+  if (dialog) return dialog;
+
+  dialog = document.createElement("div");
+  dialog.id = "suggestionResponseDialog";
+  dialog.className = "explore-suggestion-dialog is-hidden";
+  dialog.setAttribute("aria-hidden", "true");
+  dialog.innerHTML = `
+    <div class="explore-suggestion-dialog__backdrop" data-suggestion-response-close></div>
+    <section class="explore-suggestion-dialog__panel" role="dialog" aria-modal="true" aria-labelledby="suggestionResponseDialogTitle">
+      <header class="explore-suggestion-dialog__header">
+        <button class="explore-suggestion-dialog__close" type="button" aria-label="Luk opdatering" data-suggestion-response-close>&times;</button>
+        <p class="explore-eyebrow">Podcastforslag</p>
+        <h2 id="suggestionResponseDialogTitle">Opdatering på dit podcastforslag</h2>
+      </header>
+      <div class="explore-suggestion-success" data-suggestion-response-content></div>
+    </section>
+  `;
+  dialog.querySelectorAll("[data-suggestion-response-close]").forEach((button) => {
+    button.addEventListener("click", () => closeSuggestionResponseDialog());
+  });
+  dialog.addEventListener("keydown", (event) => {
+    if (event.key === "Escape") {
+      event.preventDefault();
+      closeSuggestionResponseDialog();
+    }
+  });
+  document.body.appendChild(dialog);
+  return dialog;
+}
+
+function openSuggestionResponseDialog(suggestion) {
+  if (!suggestion?.id || state.suggestionResponseDialogOpen || hasOtherDialogOpen()) return false;
+
+  const dialog = ensureSuggestionResponseDialog();
+  const content = dialog.querySelector("[data-suggestion-response-content]");
+  const linkedPodcast = normalizeComparable(suggestion.status) === "approved"
+    ? findPodcastByCatalogueId(suggestion.catalogue_podcast_id)
+    : null;
+  const submittedDate = formatSuggestionDateTime(suggestion.created_at);
+  const reviewedDate = formatSuggestionDateTime(suggestion.reviewed_at);
+  const response = normalizeText(suggestion.admin_note);
+
+  content.innerHTML = `
+    <h3>${escapeHtml(suggestion.title || "Podcast uden titel")}</h3>
+    <p><strong>Status:</strong> ${escapeHtml(getSuggestionStatusLabel(suggestion.status))}</p>
+    ${submittedDate ? `<p>Indsendt: ${escapeHtml(submittedDate)}</p>` : ""}
+    ${reviewedDate ? `<p>Behandlet: ${escapeHtml(reviewedDate)}</p>` : ""}
+    ${response ? `<section class="profile-suggestion-card__response"><strong>Svar fra Podcastlisten</strong><p>${escapeHtml(response)}</p></section>` : ""}
+    <div class="explore-suggestion-form__actions">
+      ${linkedPodcast ? `<button class="profile-button profile-button--quiet" type="button" data-suggestion-response-podcast="${escapeHtml(linkedPodcast.catalogueId)}">Se podcast</button>` : ""}
+      <button class="profile-button profile-button--primary" type="button" data-suggestion-response-close>OK</button>
+    </div>
+  `;
+  content.querySelectorAll("[data-suggestion-response-close]").forEach((button) => {
+    button.addEventListener("click", () => closeSuggestionResponseDialog());
+  });
+  content.querySelector("[data-suggestion-response-podcast]")?.addEventListener("click", (event) => {
+    const podcast = findPodcastByCatalogueId(event.currentTarget.dataset.suggestionResponsePodcast);
+    if (!podcast) return;
+    closeSuggestionResponseDialog({ returnFocus: false });
+    openPodcastDetailSheet(podcast, event.currentTarget, { allowDesktop: true });
+  });
+
+  state.suggestionResponseDialogOpen = true;
+  state.suggestionResponseDialogReturnFocus = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+  dialog.classList.remove("is-hidden");
+  dialog.setAttribute("aria-hidden", "false");
+  document.body.classList.add("has-dialog-open", "has-suggestion-dialog-open");
+  dialog.querySelector("[data-suggestion-response-close]")?.focus();
+
+  window.requestAnimationFrame(() => {
+    if (dialog.getAttribute("aria-hidden") === "false") {
+      markSuggestionNotificationTargetSeen({ id: suggestion.id, moderator: false });
+    }
+  });
+  return true;
+}
+
+function scheduleUnreadSuggestionResponseDialog() {
+  window.clearTimeout(state.suggestionResponseDialogRetryTimer);
+  state.suggestionResponseDialogRetryTimer = null;
+  if (isPodcastSuggestionAdmin() || !isProfileSuggestionResponseRoute() || state.suggestionResponseDialogOpen) return;
+
+  const unread = getUnreadSuggestionItems()[0];
+  if (!unread) return;
+  if (openSuggestionResponseDialog(unread)) return;
+
+  state.suggestionResponseDialogRetryTimer = window.setTimeout(scheduleUnreadSuggestionResponseDialog, 150);
+}
+
 function revealSuggestionNotificationTarget() {
   const target = state.suggestionNotificationTarget;
   if (!target) return;
@@ -4753,6 +4876,11 @@ function revealSuggestionNotificationTarget() {
   card.scrollIntoView({ behavior: prefersReducedMotion ? "auto" : "smooth", block: "center" });
   card.classList.add("is-notification-target");
   window.setTimeout(() => card.classList.remove("is-notification-target"), 2000);
+
+  if (!target.moderator) {
+    scheduleUnreadSuggestionResponseDialog();
+    return;
+  }
 
   let targetingFrames = 0;
   const markWhenTargeted = () => {
@@ -14455,6 +14583,9 @@ function clearUserScopedState({ clearUi = false } = {}) {
   state.profileSuggestionsLoading = false;
   state.profileSuggestionsError = "";
   state.suggestionNotificationTarget = null;
+  window.clearTimeout(state.suggestionResponseDialogRetryTimer);
+  state.suggestionResponseDialogRetryTimer = null;
+  closeSuggestionResponseDialog({ returnFocus: false });
   state.adminPodcastSuggestions = [];
   state.adminPodcastSuggestionsLoadedFor = null;
   state.adminPodcastSuggestionsLoading = false;
@@ -14814,6 +14945,7 @@ function renderProfileSuggestionsSectionContent(container = document) {
   });
 
   window.requestAnimationFrame(revealSuggestionNotificationTarget);
+  window.requestAnimationFrame(scheduleUnreadSuggestionResponseDialog);
 
 }
 
