@@ -15,13 +15,13 @@
 
   /* A colgroup gives every row and its matching header the same four-column
      geometry. The title column receives the remaining width. */
-  html body #podcastDetailSheet.is-episode-workspace .podcast-detail-sheet__episode-table:not(.podcast-detail-sheet__episode-table--publication-date) col:nth-child(1) { width: 4rem !important; }
+  html body #podcastDetailSheet.is-episode-workspace .podcast-detail-sheet__episode-table:not(.podcast-detail-sheet__season-table):not(.podcast-detail-sheet__episode-table--publication-date) col:nth-child(1) { width: 4rem !important; }
   /* 30. september 2026 measures about 157px at this type scale; 12rem leaves
      room for the cell's horizontal padding and a clear gap before the title. */
-  html body #podcastDetailSheet.is-episode-workspace .podcast-detail-sheet__episode-table--publication-date col:nth-child(1) { width: 12rem !important; }
-  html body #podcastDetailSheet.is-episode-workspace .podcast-detail-sheet__episode-table col:nth-child(2) { width: auto !important; }
-  html body #podcastDetailSheet.is-episode-workspace .podcast-detail-sheet__episode-table col:nth-child(3) { width: 12rem !important; }
-  html body #podcastDetailSheet.is-episode-workspace .podcast-detail-sheet__episode-table col:nth-child(4) { width: 10rem !important; }
+  html body #podcastDetailSheet.is-episode-workspace .podcast-detail-sheet__episode-table--publication-date:not(.podcast-detail-sheet__season-table) col:nth-child(1) { width: 12rem !important; }
+  html body #podcastDetailSheet.is-episode-workspace .podcast-detail-sheet__episode-table:not(.podcast-detail-sheet__season-table) col:nth-child(2) { width: auto !important; }
+  html body #podcastDetailSheet.is-episode-workspace .podcast-detail-sheet__episode-table:not(.podcast-detail-sheet__season-table) col:nth-child(3) { width: 12rem !important; }
+  html body #podcastDetailSheet.is-episode-workspace .podcast-detail-sheet__episode-table:not(.podcast-detail-sheet__season-table) col:nth-child(4) { width: 10rem !important; }
 
   /* The colgroup is the only column-width authority. This clears the older
      cell widths so they cannot compress or widen a column independently. */
@@ -50,13 +50,13 @@
 /* Preserve useful title width in the intermediate desktop/tablet workspace. */
 @media (min-width: 769px) and (max-width: 1099px) {
   html body #podcastDetailSheet.is-episode-workspace .podcast-detail-sheet__episode-table { table-layout: fixed; }
-  html body #podcastDetailSheet.is-episode-workspace .podcast-detail-sheet__episode-table:not(.podcast-detail-sheet__episode-table--publication-date) col:nth-child(1) { width: 3.25rem !important; }
+  html body #podcastDetailSheet.is-episode-workspace .podcast-detail-sheet__episode-table:not(.podcast-detail-sheet__season-table):not(.podcast-detail-sheet__episode-table--publication-date) col:nth-child(1) { width: 3.25rem !important; }
   /* At the compact table scale the date is smaller, but still needs 11rem
      including padding to keep the longest Danish label in its own column. */
-  html body #podcastDetailSheet.is-episode-workspace .podcast-detail-sheet__episode-table--publication-date col:nth-child(1) { width: 11rem !important; }
-  html body #podcastDetailSheet.is-episode-workspace .podcast-detail-sheet__episode-table col:nth-child(2) { width: auto !important; }
-  html body #podcastDetailSheet.is-episode-workspace .podcast-detail-sheet__episode-table col:nth-child(3) { width: 8.5rem !important; }
-  html body #podcastDetailSheet.is-episode-workspace .podcast-detail-sheet__episode-table col:nth-child(4) { width: 7.5rem !important; }
+  html body #podcastDetailSheet.is-episode-workspace .podcast-detail-sheet__episode-table--publication-date:not(.podcast-detail-sheet__season-table) col:nth-child(1) { width: 11rem !important; }
+  html body #podcastDetailSheet.is-episode-workspace .podcast-detail-sheet__episode-table:not(.podcast-detail-sheet__season-table) col:nth-child(2) { width: auto !important; }
+  html body #podcastDetailSheet.is-episode-workspace .podcast-detail-sheet__episode-table:not(.podcast-detail-sheet__season-table) col:nth-child(3) { width: 8.5rem !important; }
+  html body #podcastDetailSheet.is-episode-workspace .podcast-detail-sheet__episode-table:not(.podcast-detail-sheet__season-table) col:nth-child(4) { width: 7.5rem !important; }
   /* Keep cell constraints neutral; the colgroup above owns this geometry. */
   html body #podcastDetailSheet.is-episode-workspace .podcast-detail-sheet__episode-table th,
   html body #podcastDetailSheet.is-episode-workspace .podcast-detail-sheet__episode-table td { width: auto !important; min-width: 0 !important; max-width: none !important; }
