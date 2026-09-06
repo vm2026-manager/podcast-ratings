@@ -72,6 +72,17 @@ assert.equal(JSON.stringify(rawRanking), rawSnapshot, "Ranking transformation mu
 const seasonNumbers = narkobetjenten.memberLegacyKeys.map((key) => Number(key.match(/sæson (\d+)/)?.[1]));
 assert.deepEqual([...seasonNumbers].sort((a, b) => a - b), [1, 2, 3, 6, 7, 9, 10, 11, 12, 13, 14, 15], "Season ordering must be numeric");
 
+const getDerivedOwnRating = (ratings) => ratings.length
+  ? ratings.reduce((sum, rating) => sum + rating, 0) / ratings.length
+  : null;
+assert.equal(getDerivedOwnRating([8, 7, 9]), 8, "Derived own rating must be the arithmetic mean");
+assert.equal(getDerivedOwnRating([]), null, "No season ratings must yield no derived own rating");
+const getSeasonLabel = (title) => {
+  const match = normalizeComparable(title).match(/sæson\s+(\d+)/);
+  return match ? `Sæson ${Number(match[1])}` : title;
+};
+assert.equal(getSeasonLabel("Podcast uden sæsonnummer"), "Podcast uden sæsonnummer", "Season display fallback must not expose MAX_SAFE_INTEGER");
+
 const weightedStats = [{ averageRating: 8, ratingCount: 2 }, { averageRating: 6, ratingCount: 3 }];
 assert.equal(weightedStats.reduce((sum, item) => sum + item.averageRating * item.ratingCount, 0) / 5, 6.8, "User ratings must be count-weighted");
 console.log("Podcast display groups validation passed.");

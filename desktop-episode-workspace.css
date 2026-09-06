@@ -1,5 +1,16 @@
 /* Readability pass for the existing desktop episode-rating workspace. */
 @media (min-width: 1100px) {
+  html body #podcastDetailSheet.is-episode-workspace .podcast-detail-sheet__season-table col.season-column-title { width: 46% !important; }
+  html body #podcastDetailSheet.is-episode-workspace .podcast-detail-sheet__season-table col.season-column-editorial { width: 16% !important; }
+  html body #podcastDetailSheet.is-episode-workspace .podcast-detail-sheet__season-table col.season-column-community { width: 16% !important; }
+  html body #podcastDetailSheet.is-episode-workspace .podcast-detail-sheet__season-table col.season-column-own { width: 22% !important; }
+  html body #podcastDetailSheet.is-episode-workspace .podcast-detail-sheet__season-table td { vertical-align: middle !important; }
+  html body #podcastDetailSheet.is-episode-workspace .podcast-detail-sheet__season-title { width: 100% !important; min-width: 0 !important; display: grid !important; gap: 4px !important; padding: 0 !important; border: 0 !important; color: inherit !important; background: transparent !important; text-align: left !important; }
+  html body #podcastDetailSheet.is-episode-workspace .podcast-detail-sheet__season-title strong { color: #201b18 !important; font: 850 1rem/1.2 "Manrope", sans-serif !important; }
+  html body #podcastDetailSheet.is-episode-workspace .podcast-detail-sheet__season-title small { overflow: hidden !important; color: #786d64 !important; font: 700 .8rem/1.2 "Manrope", sans-serif !important; text-overflow: ellipsis !important; white-space: nowrap !important; }
+  html body #podcastDetailSheet.is-episode-workspace .podcast-detail-sheet__season-table td:nth-child(2),
+  html body #podcastDetailSheet.is-episode-workspace .podcast-detail-sheet__season-table td:nth-child(3),
+  html body #podcastDetailSheet.is-episode-workspace .podcast-detail-sheet__season-table td:nth-child(4) { text-align: center !important; }
   html body #podcastDetailSheet.is-episode-workspace .podcast-detail-sheet__episode-table { table-layout: fixed; }
 
   /* A colgroup gives every row and its matching header the same four-column

@@ -11226,6 +11226,41 @@ html body #podcastDetailSheet .podcast-detail-sheet__episode-note {
   }
 }
 
+@media (max-width: 768px) {
+  html body #podcastDetailSheet .podcast-detail-sheet__season-table tr {
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  }
+
+  html body #podcastDetailSheet .podcast-detail-sheet__season-table td:nth-child(1) {
+    grid-column: 1 / -1 !important;
+    grid-row: auto !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: none !important;
+    white-space: normal !important;
+  }
+
+  html body #podcastDetailSheet .podcast-detail-sheet__season-table td:nth-child(2),
+  html body #podcastDetailSheet .podcast-detail-sheet__season-table td:nth-child(3),
+  html body #podcastDetailSheet .podcast-detail-sheet__season-table td:nth-child(4) {
+    grid-column: auto !important;
+  }
+
+  html body #podcastDetailSheet .podcast-detail-sheet__season-table td::before {
+    content: attr(data-label) !important;
+    display: block !important;
+    margin-bottom: 5px !important;
+    color: #887a70 !important;
+    font: 800 .65rem/1 "Manrope", sans-serif !important;
+    text-transform: uppercase !important;
+    letter-spacing: .04em !important;
+  }
+
+  html body #podcastDetailSheet .podcast-detail-sheet__season-title { width: 100% !important; min-width: 0 !important; display: grid !important; gap: 4px !important; padding: 0 !important; border: 0 !important; background: transparent !important; text-align: left !important; }
+  html body #podcastDetailSheet .podcast-detail-sheet__season-title small { overflow: hidden !important; text-overflow: ellipsis !important; white-space: nowrap !important; }
+  html body #podcastDetailSheet .podcast-detail-sheet__season-table .podcast-detail-sheet__episode-own-score { min-height: 44px !important; padding: 0 8px !important; }
+}
+
 
 /* =========================================================
    UDFORSK: MERE IØJNEFALDENDE SEKTIONSOVERSKRIFTER
