@@ -1,5 +1,5 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.4";
-import { fetchFeedText, jsonResponse, runEpisodeImport, runEpisodeImports, safeErrorMessage, selectAppleFeedKeys, validateImportRequest } from "./core.ts";
+import { fetchFeedText, jsonResponse, runEpisodeImport, runEpisodeImports, safeErrorMessage, selectAppleFeedKeys, selectNormalFeedKeys, selectNormalFeedShard, validateImportRequest } from "./core.ts";
 import { mapApplePodcastHtmlEpisodes } from "./apple-podcasts.ts";
 import { FEED_CONFIGS } from "./feed-config.ts";
 import { createSupabaseImportRepository } from "./repository.ts";
@@ -50,8 +50,13 @@ Deno.serve(async (request) => {
     const repository = createSupabaseImportRepository(client);
     const runtimeFeeds = await loadRuntimeFeedConfigs();
     console.log("[episode-import] feed configuration", JSON.stringify(runtimeFeeds.audit));
+    const allFeedKeys = validation.feed === "all"
+      ? validation.shardIndex !== null
+        ? selectNormalFeedShard(runtimeFeeds.configs, validation.shardIndex, validation.shardCount!)
+        : selectNormalFeedKeys(runtimeFeeds.configs)
+      : undefined;
     const summary = validation.feed === "all"
-      ? await runEpisodeImports({ repository, feedConfigs: runtimeFeeds.configs })
+      ? await runEpisodeImports({ repository, feedConfigs: runtimeFeeds.configs, feedKeys: allFeedKeys })
       : validation.feed === "apple_all"
       ? await runEpisodeImports({
           repository,
@@ -60,7 +65,13 @@ Deno.serve(async (request) => {
         })
       : await runEpisodeImport({ feedKey: validation.feed, repository, feedConfigs: runtimeFeeds.configs });
     const status = summary.status === "failed" ? 500 : summary.status === "partial" ? 207 : 200;
-    return jsonResponse({ ...summary, feed_config_audit: runtimeFeeds.audit }, status);
+    return jsonResponse({
+      ...summary,
+      feed_config_audit: runtimeFeeds.audit,
+      ...(validation.feed === "all" && validation.shardIndex !== null
+        ? { shard_index: validation.shardIndex, shard_count: validation.shardCount }
+        : {})
+    }, status);
   } catch (error) {
     const status = typeof (error as { status?: unknown }).status === "number" ? (error as { status: number }).status : 500;
     return jsonResponse({ status: "failed", error: safeErrorMessage(error) }, status);

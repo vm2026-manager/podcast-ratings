@@ -1,8 +1,52 @@
 import { assertEquals } from "https://deno.land/std@0.224.0/assert/mod.ts";
-import { runEpisodeImports, type ImportRepository, type PodcastEpisodeRow } from "./core.ts";
+import { runEpisodeImports, selectAppleFeedKeys, selectNormalFeedKeys, selectNormalFeedShard, validateImportRequest, type ImportRepository, type PodcastEpisodeRow } from "./core.ts";
 import type { FeedConfigMap } from "./feed-config.ts";
 
 const RSS = "<rss><channel><title>Test</title><item><guid>episode-1</guid><title>Episode</title></item></channel></rss>";
+
+Deno.test("normal all-feed shards are sorted, complete, disjoint, and exclude Apple HTML feeds", () => {
+  const feedConfigs: FeedConfigMap = {
+    epsilon: { podcast_key: "epsilon", source: "epsilon_rss", feed_url: "https://example.test/epsilon" },
+    zeta: { podcast_key: "zeta", source: "zeta_rss", feed_url: "https://example.test/zeta" },
+    alpha: { podcast_key: "alpha", source: "alpha_rss", feed_url: "https://example.test/alpha" },
+    apple_disabled: { podcast_key: "apple disabled", source: "apple_disabled", feed_url: "https://example.test/apple-disabled", format: "apple_podcasts_html", enabled: false },
+    valley_heat: { podcast_key: "valley heat", source: "sheet_valley_heat_rss", feed_url: "https://feeds.simplecast.com/kKMR_wuB" },
+    genstart: { podcast_key: "genstart", source: "dr_genstart", feed_url: "https://example.test/genstart", format: "dr_lyd_next_data" },
+    beta: { podcast_key: "beta", source: "beta_rss", feed_url: "https://example.test/beta" },
+    delta: { podcast_key: "delta", source: "delta_rss", feed_url: "https://example.test/delta" },
+    eta: { podcast_key: "eta", source: "eta_rss", feed_url: "https://example.test/eta" },
+    apple_accidentally_enabled: { podcast_key: "apple enabled", source: "apple_enabled", feed_url: "https://example.test/apple-enabled", format: "apple_podcasts_html" }
+  };
+  const normalKeys = selectNormalFeedKeys(feedConfigs);
+  const shards = [0, 1, 2, 3, 4, 5].map((shardIndex) => selectNormalFeedShard(feedConfigs, shardIndex, 6));
+  const assigned = shards.flat();
+
+  assertEquals(normalKeys, ["alpha", "beta", "delta", "epsilon", "eta", "genstart", "valley_heat", "zeta"]);
+  assertEquals(shards, [["alpha", "valley_heat"], ["beta", "zeta"], ["delta"], ["epsilon"], ["eta"], ["genstart"]]);
+  assertEquals([...assigned].sort(), normalKeys);
+  assertEquals(new Set(assigned).size, normalKeys.length);
+  assertEquals(assigned.includes("valley_heat"), true);
+  assertEquals(selectAppleFeedKeys(feedConfigs), ["apple_disabled", "apple_accidentally_enabled"]);
+});
+
+Deno.test("single-feed requests remain compatible and shards are limited to feed=all", async () => {
+  const headers = { authorization: "Bearer test-secret", "content-type": "application/json" };
+  const single = await validateImportRequest(new Request("https://example.test", {
+    method: "POST", headers, body: JSON.stringify({ feed: "genstart" })
+  }), "test-secret");
+  const shard = await validateImportRequest(new Request("https://example.test", {
+    method: "POST", headers, body: JSON.stringify({ feed: "all", shard_index: 2, shard_count: 6 })
+  }), "test-secret");
+  const invalid = await validateImportRequest(new Request("https://example.test", {
+    method: "POST", headers, body: JSON.stringify({ feed: "genstart", shard_index: 0, shard_count: 6 })
+  }), "test-secret");
+
+  assertEquals(single.ok, true);
+  if (single.ok) assertEquals({ feed: single.feed, shardIndex: single.shardIndex, shardCount: single.shardCount }, { feed: "genstart", shardIndex: null, shardCount: null });
+  assertEquals(shard.ok, true);
+  if (shard.ok) assertEquals({ feed: shard.feed, shardIndex: shard.shardIndex, shardCount: shard.shardCount }, { feed: "all", shardIndex: 2, shardCount: 6 });
+  assertEquals(invalid.ok, false);
+});
 
 Deno.test("all-feed imports stay bounded, continue after failures, and finalize every created run", async () => {
   const created: string[] = [];

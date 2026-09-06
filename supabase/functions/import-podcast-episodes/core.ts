@@ -202,7 +202,20 @@ export async function validateImportRequest(request: Request, expectedSecret: st
     if (!feed) {
       return { ok: false as const, status: 400, body: { status: "failed", error: "Missing feed" } };
     }
-    return { ok: true as const, feed, dryRun: body.dry_run === true };
+    const hasShardIndex = body.shard_index !== undefined;
+    const hasShardCount = body.shard_count !== undefined;
+    if (hasShardIndex !== hasShardCount || (hasShardIndex && feed !== "all")) {
+      return { ok: false as const, status: 400, body: { status: "failed", error: "Shards are available only for feed=all" } };
+    }
+    if (hasShardIndex) {
+      const shardIndex = body.shard_index;
+      const shardCount = body.shard_count;
+      if (!Number.isInteger(shardIndex) || !Number.isInteger(shardCount) || shardCount < 1 || shardIndex < 0 || shardIndex >= shardCount) {
+        return { ok: false as const, status: 400, body: { status: "failed", error: "Invalid all-feed shard" } };
+      }
+      return { ok: true as const, feed, dryRun: body.dry_run === true, shardIndex, shardCount };
+    }
+    return { ok: true as const, feed, dryRun: body.dry_run === true, shardIndex: null, shardCount: null };
   } catch (_error) {
     return { ok: false as const, status: 400, body: { status: "failed", error: "Invalid JSON body" } };
   }
@@ -1035,4 +1048,25 @@ export function selectAppleFeedKeys(feedConfigs: FeedConfigMap): string[] {
   return Object.entries(feedConfigs)
     .filter(([, config]) => config.format === "apple_podcasts_html")
     .map(([feedKey]) => feedKey);
+}
+
+// Normal all-feed requests intentionally exclude Apple HTML feeds even if a
+// future configuration accidentally marks one enabled. Sorting by the raw key
+// avoids locale-dependent ordering changes between Edge Function workers.
+export function selectNormalFeedKeys(feedConfigs: FeedConfigMap): string[] {
+  return Object.entries(feedConfigs)
+    .filter(([, config]) => config.enabled !== false && config.format !== "apple_podcasts_html")
+    .map(([feedKey]) => feedKey)
+    .sort((left, right) => left < right ? -1 : left > right ? 1 : 0);
+}
+
+export function selectNormalFeedShard(
+  feedConfigs: FeedConfigMap,
+  shardIndex: number,
+  shardCount: number
+): string[] {
+  if (!Number.isInteger(shardIndex) || !Number.isInteger(shardCount) || shardCount < 1 || shardIndex < 0 || shardIndex >= shardCount) {
+    throw Object.assign(new Error("Invalid all-feed shard"), { status: 400 });
+  }
+  return selectNormalFeedKeys(feedConfigs).filter((_, index) => index % shardCount === shardIndex);
 }
