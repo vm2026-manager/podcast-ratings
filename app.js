@@ -16526,15 +16526,19 @@ function renderProfilePage() {
             </div>
             <div class="profile-panel__tools">
               <span data-profile-saved-count>${savedCount}</span>
-              <button
-                class="profile-panel__toggle"
-                type="button"
-                ${
-                  isMobileViewport()
-                    ? `data-profile-saved-toggle aria-expanded="${state.profileSavedExpanded}"`
-                    : "data-profile-panel-toggle aria-expanded=\"true\""
-                }
-              >${isMobileViewport() ? (state.profileSavedExpanded ? "Fold sammen" : "Fold ud") : "Fold sammen"}</button>
+              ${
+                !isMobileViewport() || savedCount > 0
+                  ? `<button
+                      class="profile-panel__toggle"
+                      type="button"
+                      ${
+                        isMobileViewport()
+                          ? `data-profile-saved-toggle aria-expanded="${state.profileSavedExpanded}"`
+                          : "data-profile-panel-toggle aria-expanded=\"true\""
+                      }
+                    >${isMobileViewport() ? (state.profileSavedExpanded ? "Fold sammen" : "Fold ud") : "Fold sammen"}</button>`
+                  : ""
+              }
             </div>
           </header>
           ${

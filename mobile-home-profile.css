@@ -339,6 +339,32 @@
     padding: 0 !important;
   }
 
+  html body.page-profil .profile-saved-grid .profile-saved-empty {
+    grid-column: 1 / -1 !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    min-height: 90px !important;
+    padding: 14px !important;
+    display: grid !important;
+    align-content: center !important;
+    justify-items: start !important;
+    gap: 5px !important;
+    box-sizing: border-box !important;
+  }
+
+  html body.page-profil .profile-saved-grid .profile-saved-empty h2 {
+    margin: 0 !important;
+    color: #2b221d !important;
+    font: 800 0.98rem / 1.15 "Manrope", sans-serif !important;
+    white-space: nowrap;
+  }
+
+  html body.page-profil .profile-saved-grid .profile-saved-empty p {
+    margin: 0 !important;
+    color: #7a6d64 !important;
+    font: 560 0.74rem / 1.35 "Manrope", sans-serif !important;
+  }
+
   html body.page-profil .profile-saved-grid .saved-card {
     display: block !important;
     min-width: 0 !important;
