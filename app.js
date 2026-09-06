@@ -10071,7 +10071,7 @@ function createProfileEpisodeRatingCardElement(item) {
   placeholder.textContent = "Episode";
   placeholder.hidden = true;
   cover.append(image, placeholder);
-  setImageWithFallbackSource(cover, episode?.image_url, podcast?.image, title);
+  setImageWithFallbackSource(cover, episode?.image_url, getPodcastImageSources(podcast), title);
 
   const meta = [date, duration].filter(Boolean).join(" · ");
   const copy = document.createElement("div");
