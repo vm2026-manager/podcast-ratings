@@ -1165,16 +1165,23 @@ function searchVariantsMatch(queryVariants, fieldVariants) {
   );
 }
 
+function getPublicSearchPodcasts() {
+  return getRankingCandidates();
+}
+
 function getHeaderSearchMatches(rawQuery) {
   const query = normalizeSearchValue(rawQuery);
   if (query.length < 2) return [];
 
   const queryVariants = normalizeSearchVariants(rawQuery);
 
-  return state.podcasts
+  return getPublicSearchPodcasts()
     .map((podcast) => {
       const fields = {
         title: normalizeSearchVariants(podcast.title),
+        memberAliases: normalizeSearchVariants(
+          podcast.isDisplayGroup ? podcast.displayGroupMembers.map((member) => member.title).join(" ") : ""
+        ),
         host: normalizeSearchVariants(podcast.host),
         mainSeries: normalizeSearchVariants(podcast.mainSeries),
         publisher: normalizeSearchVariants(podcast.publisher),
@@ -1201,6 +1208,9 @@ function getHeaderSearchMatches(rawQuery) {
         matchLabel = "Titel";
       } else if (matchesField(fields.title)) {
         score = 350;
+        matchLabel = "Titel";
+      } else if (matchesField(fields.memberAliases)) {
+        score = 340;
         matchLabel = "Titel";
       } else if (matchesField(fields.host)) {
         score = 300;

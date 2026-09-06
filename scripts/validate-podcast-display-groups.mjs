@@ -72,6 +72,9 @@ groupedRanking.push({ isDisplayGroup: true, displayGroupId: narkobetjenten.id })
 assert.equal(groupedRanking.filter((item) => item.displayGroupId === "narkobetjenten").length, 1, "Ranking must contain one display group");
 assert.equal(rawRanking.length - groupedRanking.length, 11, "Grouping must reduce ranking by 11 items");
 assert.equal(JSON.stringify(rawRanking), rawSnapshot, "Ranking transformation must not mutate source podcasts");
+const publicSearchCatalogue = groupedRanking;
+assert.equal(publicSearchCatalogue.filter((item) => narkobetjenten.memberLegacyKeys.includes(item.legacyKey)).length, 0, "Public search must exclude raw group members");
+assert.equal(publicSearchCatalogue.filter((item) => item.displayGroupId === "narkobetjenten").length, 1, "Public search must include the group once");
 
 const seasonNumbers = narkobetjenten.memberLegacyKeys.map((key) => Number(key.match(/sæson (\d+)/)?.[1]));
 assert.deepEqual([...seasonNumbers].sort((a, b) => a - b), [1, 2, 3, 6, 7, 9, 10, 11, 12, 13, 14, 15], "Season ordering must be numeric");
