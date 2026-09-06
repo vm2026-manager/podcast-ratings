@@ -1,4 +1,6 @@
-name: Update podcasts JSON
+# Legacy rollback workflow: it writes the same catalogue files through obsolete builders.
+# Retained temporarily during the migration; do not run for normal catalogue updates.
+name: LEGACY - Update podcasts JSON (do not run)
 
 on:
   workflow_dispatch:

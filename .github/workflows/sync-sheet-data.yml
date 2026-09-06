@@ -1,9 +1,9 @@
-name: Sync podcast sheet data
+name: Sync Podcastlisten catalogue
 
 on:
   workflow_dispatch:
   schedule:
-    - cron: "7 * * * *"
+    - cron: "7,37 * * * *"
 
 permissions:
   contents: write
@@ -27,6 +27,12 @@ jobs:
 
       - name: Sync JSON from Google Sheets
         run: node scripts/sync-sheet-data.mjs
+
+      - name: Validate catalogue outputs
+        run: |
+          node -e "const fs=require('fs'); JSON.parse(fs.readFileSync('data/podcasts.json','utf8')); JSON.parse(fs.readFileSync('data/featured-reviews.json','utf8')); console.log('Catalogue JSON files are valid')"
+          node scripts/audit-podcast-ids.mjs
+          node scripts/validate-podcast-identity.mjs
 
       - name: Commit updated JSON files
         uses: stefanzweifel/git-auto-commit-action@v5
