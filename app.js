@@ -8557,7 +8557,8 @@ function getPodcastDetailDynamicRecommendations(podcast, validated) {
     .sort((left, right) => right.score - left.score || left.index - right.index);
 
   // Keep the strongest relationship signals ahead of broad catalogue matches:
-  // main-series first, then every resolved product candidate, then generic fill.
+  // main-series first, then manual editorial links, then automatic matches, then
+  // generic fill. The single public list must preserve those source priorities.
   // Build the complete pool before applying diversity so same-series candidates
   // cannot consume every visible slot ahead of validated product matches.
   const candidatePool = [];
@@ -8597,7 +8598,7 @@ function getPodcastDetailDynamicRecommendations(podcast, validated) {
     )
   );
   appendPhase(scoredCandidates);
-  return selectPodcastDetailRecommendations(candidatePool, 8);
+  return selectPodcastDetailRecommendations(candidatePool, 8, { preservePriority: true });
 }
 
 function getRecommendationDiversityKey(candidate) {
@@ -8616,7 +8617,9 @@ function getRecommendationDiversityKey(candidate) {
   return normalizedTitle ? `title:${normalizedTitle}` : "";
 }
 
-function selectPodcastDetailRecommendations(candidates, limit = 4) {
+function selectPodcastDetailRecommendations(candidates, limit = 4, { preservePriority = false } = {}) {
+  if (preservePriority) return candidates.slice(0, limit);
+
   const selected = [];
   const remaining = [...candidates];
 
@@ -8680,7 +8683,8 @@ function getPodcastSimilarityProductMarkup(podcast) {
       podcast,
       getPodcastDetailDynamicRecommendations(podcast, validated)
     ),
-    8
+    8,
+    { preservePriority: true }
   );
 
   if (!completedRecommendations.length) return "";
@@ -18265,17 +18269,20 @@ function getExploreProductSimilarityItems(
     }
   };
 
-  // The product already carries the canonical automatic-first ordering. Manual
-  // supplementary results are intentionally considered only after automatic
-  // matches leave open card slots.
-  appendCandidates(
-    validated.product.automaticSimilarResults,
-    "Matcher din smag"
-  );
+  // One combined list: same series first, then manually curated supplementary
+  // links, then automatic matches. appendCandidates owns the shared limit and
+  // deduplication, so lower-priority sources only fill open slots.
+  appendCandidates(validated.product.sameSeriesResults, "Fra samme serie");
   if (items.length < limit) {
     appendCandidates(
       validated.product.manualSupplementaryResults,
       "Supplerende lighed"
+    );
+  }
+  if (items.length < limit) {
+    appendCandidates(
+      validated.product.automaticSimilarResults,
+      "Matcher din smag"
     );
   }
 
