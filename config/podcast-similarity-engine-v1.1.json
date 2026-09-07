@@ -1,0 +1,57 @@
+{
+  "version": 1.1,
+  "weights": {
+    "topics": 85,
+    "genres": 15
+  },
+  "topicPositionWeights": [1, 0.8, 0.65, 0.5, 0.4],
+  "topicSpecificity": {
+    "smoothing": 1,
+    "minimum": 0.4,
+    "scale": 0.6
+  },
+  "topicAggregation": {
+    "strongestMatchWeight": 0.65,
+    "secondMatchWeight": 0.25,
+    "remainingMatchesWeight": 0.1,
+    "oneSharedTopicCoverageBase": 0.4,
+    "oneSharedTopicSpecificityScale": 0.4,
+    "twoSharedTopicsCoverage": 0.9,
+    "threeOrMoreSharedTopicsCoverage": 1
+  },
+  "genreSignals": {
+    "samePrimary": 1,
+    "primarySecondaryCrossMatch": 0.6,
+    "sameSecondary": 0.4
+  },
+  "credibleResultRules": {
+    "minimumAdjustedCentrality": 0.55,
+    "minimumTopicSpecificity": 0.65,
+    "singleTopicWithGenreMinimumScore": 50,
+    "meaningfulGenreMinimumScore": 6
+  },
+  "candidateRules": {
+    "auditResultLimit": 20,
+    "displayLimit": 8
+  },
+  "diversity": {
+    "maximumPerNormalizedDisplayTitle": 1,
+    "maximumPerMainSeries": 1,
+    "maximumPerPublisherInDisplay": 2
+  },
+  "similarityClasses": {
+    "veryHighMinimum": 75,
+    "veryHighMinimumSharedTopics": 2,
+    "veryHighMinimumAdjustedContribution": 0.65,
+    "highMinimum": 55,
+    "highMinimumSharedTopics": 2,
+    "singleTopicHighMaximumPosition": 2,
+    "singleTopicHighMinimumSpecificity": 0.75,
+    "mediumMinimum": 35
+  },
+  "diagnostics": {
+    "broadTopicSpecificityMaximum": 0.65,
+    "peripheralTopicPositionMinimum": 4,
+    "lowEditorialRatingMaximum": 6.4
+  }
+}

@@ -1,0 +1,124 @@
+{
+  "version": 1,
+  "aliases": [
+    {
+      "alias": "dansk fodbold",
+      "canonical": "Dansk fodbold",
+      "type": "capitalization",
+      "status": "approved",
+      "note": "Kun forskel i store og små bogstaver; den hyppigste eksisterende skrivemåde er valgt."
+    },
+    {
+      "alias": "dansk politik",
+      "canonical": "Dansk politik",
+      "type": "capitalization",
+      "status": "approved",
+      "note": "Kun forskel i store og små bogstaver; den hyppigste eksisterende skrivemåde er valgt."
+    },
+    {
+      "alias": "dødsfald under uklare omstændigheder",
+      "canonical": "Dødsfald under uklare omstændigheder",
+      "type": "capitalization",
+      "status": "approved",
+      "note": "Kun forskel i store og små bogstaver; stort begyndelsesbogstav afgør en lige hyppighed."
+    },
+    {
+      "alias": "efterretningstjenester",
+      "canonical": "Efterretningstjenester",
+      "type": "capitalization",
+      "status": "approved",
+      "note": "Kun forskel i store og små bogstaver; stort begyndelsesbogstav afgør en lige hyppighed."
+    },
+    {
+      "alias": "falske fortællinger",
+      "canonical": "Falske fortællinger",
+      "type": "capitalization",
+      "status": "approved",
+      "note": "Kun forskel i store og små bogstaver; stort begyndelsesbogstav afgør en lige hyppighed."
+    },
+    {
+      "alias": "falske meritter",
+      "canonical": "Falske meritter",
+      "type": "capitalization",
+      "status": "approved",
+      "note": "Kun forskel i store og små bogstaver; den hyppigste eksisterende skrivemåde er valgt."
+    },
+    {
+      "alias": "Fodboldøkonomi",
+      "canonical": "fodboldøkonomi",
+      "type": "capitalization",
+      "status": "approved",
+      "note": "Kun forskel i store og små bogstaver; den hyppigste eksisterende skrivemåde er valgt."
+    },
+    {
+      "alias": "gidseltagning",
+      "canonical": "Gidseltagning",
+      "type": "capitalization",
+      "status": "approved",
+      "note": "Kun forskel i store og små bogstaver; stort begyndelsesbogstav afgør en lige hyppighed."
+    },
+    {
+      "alias": "kendisliv",
+      "canonical": "Kendisliv",
+      "type": "capitalization",
+      "status": "approved",
+      "note": "Kun forskel i store og små bogstaver; den hyppigste eksisterende skrivemåde er valgt."
+    },
+    {
+      "alias": "Kriminelle miljøer",
+      "canonical": "kriminelle miljøer",
+      "type": "capitalization",
+      "status": "approved",
+      "note": "Kun forskel i store og små bogstaver; den hyppigste eksisterende skrivemåde er valgt."
+    },
+    {
+      "alias": "Kærlighedsbedrag",
+      "canonical": "kærlighedsbedrag",
+      "type": "capitalization",
+      "status": "approved",
+      "note": "Kun forskel i store og små bogstaver; den hyppigste eksisterende skrivemåde er valgt."
+    },
+    {
+      "alias": "mediekritik",
+      "canonical": "Mediekritik",
+      "type": "capitalization",
+      "status": "approved",
+      "note": "Kun forskel i store og små bogstaver; den hyppigste eksisterende skrivemåde er valgt."
+    },
+    {
+      "alias": "Politisk satire",
+      "canonical": "politisk satire",
+      "type": "capitalization",
+      "status": "approved",
+      "note": "Kun forskel i store og små bogstaver; den hyppigste eksisterende skrivemåde er valgt."
+    },
+    {
+      "alias": "Rockermiljøer",
+      "canonical": "rockermiljøer",
+      "type": "capitalization",
+      "status": "approved",
+      "note": "Kun forskel i store og små bogstaver; den hyppigste eksisterende skrivemåde er valgt."
+    },
+    {
+      "alias": "Spionage",
+      "canonical": "spionage",
+      "type": "capitalization",
+      "status": "approved",
+      "note": "Kun forskel i store og små bogstaver; den hyppigste eksisterende skrivemåde er valgt."
+    },
+    {
+      "alias": "Transfermarkedet",
+      "canonical": "transfermarkedet",
+      "type": "capitalization",
+      "status": "approved",
+      "note": "Kun forskel i store og små bogstaver; den hyppigste eksisterende skrivemåde er valgt."
+    },
+    {
+      "alias": "undercoverarbejde",
+      "canonical": "Undercoverarbejde",
+      "type": "capitalization",
+      "status": "approved",
+      "note": "Kun forskel i store og små bogstaver; stort begyndelsesbogstav afgør en lige hyppighed."
+    }
+  ]
+}

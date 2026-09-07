@@ -1,0 +1,32 @@
+{
+  "version": 1.3,
+  "contentSourceVersion": 1.1,
+  "similarResults": {
+    "minimumToShow": 3,
+    "maximumResults": 8
+  },
+  "sameSeriesResults": {
+    "minimumToShow": 1,
+    "maximumResults": 4
+  },
+  "authoritativeMainSeries": {
+    "sourceFields": [
+      "Hovedserie",
+      "Hoved serie",
+      "mainSeries"
+    ],
+    "placeholderValues": [
+      "-",
+      "–",
+      "—",
+      "ingen",
+      "n/a",
+      "na",
+      "null"
+    ]
+  },
+  "identity": {
+    "duplicateDisplayTitleLimit": 1,
+    "requireExactLinkForDuplicateExistingId": true
+  }
+}

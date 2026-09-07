@@ -34,8 +34,30 @@ jobs:
           node scripts/audit-podcast-ids.mjs
           node scripts/validate-podcast-identity.mjs
 
+      - name: Detect catalogue changes
+        id: catalogue
+        run: |
+          if git diff --quiet -- data/podcasts.json; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Regenerate recommendation product
+        if: steps.catalogue.outputs.changed == 'true'
+        run: |
+          node scripts/build-recommendation-metadata.mjs
+          node scripts/build-current-podcast-similarity-product-v1.3.mjs
+
+      - name: Validate regenerated recommendation product
+        if: steps.catalogue.outputs.changed == 'true'
+        run: |
+          node scripts/test-recommendation-metadata.mjs
+          node scripts/test-current-podcast-similarity-product-v1.3.mjs
+          node scripts/validate-recommendation-product-sync.mjs
+
       - name: Commit updated JSON files
         uses: stefanzweifel/git-auto-commit-action@v5
         with:
           commit_message: "chore: sync podcast data from Google Sheets"
-          file_pattern: data/podcasts.json data/featured-reviews.json
+          file_pattern: data/podcasts.json data/featured-reviews.json data/recommendation-metadata.json data/podcast-similarity-product-v1.3.json

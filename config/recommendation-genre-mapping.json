@@ -1,0 +1,358 @@
+{
+  "version": 1,
+  "allowedGenres": [
+    "True Crime",
+    "Historie",
+    "Samfund",
+    "Sport",
+    "Dokumentar",
+    "Viden",
+    "Underholdning",
+    "Sladder"
+  ],
+  "technicalAliases": [
+    {
+      "source": "Unholdning",
+      "target": "Underholdning",
+      "type": "spelling",
+      "status": "approved",
+      "note": "Konstateret stavefejl i de rå podcastdata."
+    }
+  ],
+  "directMappings": [
+    {
+      "source": "Politik",
+      "target": "Samfund",
+      "type": "direct",
+      "status": "approved",
+      "note": "Fast godkendt konvertering."
+    },
+    {
+      "source": "Nyheder",
+      "target": "Samfund",
+      "type": "direct",
+      "status": "approved",
+      "note": "Fast godkendt konvertering."
+    },
+    {
+      "source": "Erhverv",
+      "target": "Samfund",
+      "type": "direct",
+      "status": "approved",
+      "note": "Fast godkendt konvertering."
+    },
+    {
+      "source": "Økonomi",
+      "target": "Samfund",
+      "type": "direct",
+      "status": "approved",
+      "note": "Fast godkendt konvertering."
+    },
+    {
+      "source": "Erhverv & økonomi",
+      "target": "Samfund",
+      "type": "direct",
+      "status": "approved",
+      "note": "Fast godkendt konvertering."
+    },
+    {
+      "source": "Finans",
+      "target": "Samfund",
+      "type": "direct",
+      "status": "approved",
+      "note": "Fast godkendt konvertering."
+    },
+    {
+      "source": "Aktier",
+      "target": "Samfund",
+      "type": "direct",
+      "status": "approved",
+      "note": "Fast godkendt konvertering."
+    },
+    {
+      "source": "Business",
+      "target": "Samfund",
+      "type": "direct",
+      "status": "approved",
+      "note": "Fast godkendt konvertering."
+    },
+    {
+      "source": "Teknologi",
+      "target": "Viden",
+      "type": "direct",
+      "status": "approved",
+      "note": "Fast godkendt konvertering."
+    },
+    {
+      "source": "Forskning",
+      "target": "Viden",
+      "type": "direct",
+      "status": "approved",
+      "note": "Fast godkendt konvertering."
+    },
+    {
+      "source": "Videnskab",
+      "target": "Viden",
+      "type": "direct",
+      "status": "approved",
+      "note": "Fast godkendt konvertering."
+    },
+    {
+      "source": "Psykologi",
+      "target": "Viden",
+      "type": "direct",
+      "status": "approved",
+      "note": "Fast godkendt konvertering."
+    },
+    {
+      "source": "Filosofi",
+      "target": "Viden",
+      "type": "direct",
+      "status": "approved",
+      "note": "Fast godkendt konvertering."
+    },
+    {
+      "source": "Naturvidenskab",
+      "target": "Viden",
+      "type": "direct",
+      "status": "approved",
+      "note": "Fast godkendt konvertering."
+    },
+    {
+      "source": "Medicin",
+      "target": "Viden",
+      "type": "direct",
+      "status": "approved",
+      "note": "Fast godkendt konvertering."
+    },
+    {
+      "source": "Sundhed",
+      "target": "Viden",
+      "type": "direct",
+      "status": "approved",
+      "note": "Fast godkendt konvertering."
+    },
+    {
+      "source": "Historisk dokumentar",
+      "target": "Historie",
+      "type": "direct",
+      "status": "approved",
+      "note": "Fast godkendt konvertering."
+    },
+    {
+      "source": "Krig",
+      "target": "Historie",
+      "type": "direct",
+      "status": "approved",
+      "note": "Fast godkendt konvertering."
+    },
+    {
+      "source": "Militærhistorie",
+      "target": "Historie",
+      "type": "direct",
+      "status": "approved",
+      "note": "Fast godkendt konvertering."
+    },
+    {
+      "source": "Samfundsdokumentar",
+      "target": "Dokumentar",
+      "type": "direct",
+      "status": "approved",
+      "note": "Fast godkendt konvertering."
+    },
+    {
+      "source": "Reportage",
+      "target": "Dokumentar",
+      "type": "direct",
+      "status": "approved",
+      "note": "Fast godkendt konvertering."
+    },
+    {
+      "source": "Kriminaljournalistik",
+      "target": "True Crime",
+      "type": "direct",
+      "status": "approved",
+      "note": "Fast godkendt konvertering."
+    },
+    {
+      "source": "Svindel",
+      "target": "True Crime",
+      "type": "direct",
+      "status": "approved",
+      "note": "Fast godkendt konvertering."
+    },
+    {
+      "source": "Bedrag",
+      "target": "True Crime",
+      "type": "direct",
+      "status": "approved",
+      "note": "Fast godkendt konvertering."
+    },
+    {
+      "source": "Retssager",
+      "target": "True Crime",
+      "type": "direct",
+      "status": "approved",
+      "note": "Fast godkendt konvertering."
+    },
+    {
+      "source": "Politi",
+      "target": "True Crime",
+      "type": "direct",
+      "status": "approved",
+      "note": "Fast godkendt konvertering."
+    },
+    {
+      "source": "Efterforskning",
+      "target": "True Crime",
+      "type": "direct",
+      "status": "approved",
+      "note": "Fast godkendt konvertering."
+    },
+    {
+      "source": "Mord",
+      "target": "True Crime",
+      "type": "direct",
+      "status": "approved",
+      "note": "Fast godkendt konvertering."
+    },
+    {
+      "source": "Organiseret kriminalitet",
+      "target": "True Crime",
+      "type": "direct",
+      "status": "approved",
+      "note": "Fast godkendt konvertering."
+    },
+    {
+      "source": "Fodbold",
+      "target": "Sport",
+      "type": "direct",
+      "status": "approved",
+      "note": "Fast godkendt konvertering."
+    },
+    {
+      "source": "Cykling",
+      "target": "Sport",
+      "type": "direct",
+      "status": "approved",
+      "note": "Fast godkendt konvertering."
+    },
+    {
+      "source": "Håndbold",
+      "target": "Sport",
+      "type": "direct",
+      "status": "approved",
+      "note": "Fast godkendt konvertering."
+    },
+    {
+      "source": "Tennis",
+      "target": "Sport",
+      "type": "direct",
+      "status": "approved",
+      "note": "Fast godkendt konvertering."
+    },
+    {
+      "source": "Motorsport",
+      "target": "Sport",
+      "type": "direct",
+      "status": "approved",
+      "note": "Fast godkendt konvertering."
+    },
+    {
+      "source": "E-sport",
+      "target": "Sport",
+      "type": "direct",
+      "status": "approved",
+      "note": "Fast godkendt konvertering."
+    },
+    {
+      "source": "Komedie",
+      "target": "Underholdning",
+      "type": "direct",
+      "status": "approved",
+      "note": "Fast godkendt konvertering."
+    },
+    {
+      "source": "Satire",
+      "target": "Underholdning",
+      "type": "direct",
+      "status": "approved",
+      "note": "Fast godkendt konvertering."
+    },
+    {
+      "source": "Snakke",
+      "target": "Underholdning",
+      "type": "direct",
+      "status": "approved",
+      "note": "Fast godkendt konvertering."
+    },
+    {
+      "source": "Talk",
+      "target": "Underholdning",
+      "type": "direct",
+      "status": "approved",
+      "note": "Fast godkendt konvertering."
+    },
+    {
+      "source": "Popkultur",
+      "target": "Underholdning",
+      "type": "direct",
+      "status": "approved",
+      "note": "Fast godkendt konvertering."
+    },
+    {
+      "source": "Reality",
+      "target": "Underholdning",
+      "type": "direct",
+      "status": "approved",
+      "note": "Fast godkendt konvertering."
+    },
+    {
+      "source": "Kendte",
+      "target": "Sladder",
+      "type": "direct",
+      "status": "approved",
+      "note": "Fast godkendt konvertering."
+    },
+    {
+      "source": "Gossip",
+      "target": "Sladder",
+      "type": "direct",
+      "status": "approved",
+      "note": "Fast godkendt konvertering."
+    },
+    {
+      "source": "Kongehus",
+      "target": "Sladder",
+      "type": "direct",
+      "status": "approved",
+      "note": "Fast godkendt konvertering."
+    }
+  ],
+  "conditionalMappings": [
+    {
+      "source": "Biografi",
+      "target": "Dokumentar",
+      "type": "conditional_default",
+      "status": "approved",
+      "reviewReason": "biography_may_be_history",
+      "note": "Standardmapping; historisk hovedfokus kan senere begrunde Historie."
+    },
+    {
+      "source": "Undersøgende journalistik",
+      "target": "Dokumentar",
+      "type": "conditional_default",
+      "status": "approved",
+      "reviewReason": "investigative_journalism_may_be_true_crime",
+      "note": "Standardmapping; kriminalitet som hovedemne kan senere begrunde True Crime."
+    },
+    {
+      "source": "Interview",
+      "target": "Underholdning",
+      "type": "conditional_default",
+      "status": "approved",
+      "reviewReason": "interview_may_follow_subject_genre",
+      "note": "Standardmapping; emnets genre kan senere begrunde en anden kanonisk genre."
+    }
+  ]
+}
