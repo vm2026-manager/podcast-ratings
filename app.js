@@ -2687,6 +2687,17 @@ function mapPodcast(row, index) {
   const manualEpisodes = parseManualEpisodeTitles(
     row?.manualEpisodes || row?.manual_episodes || getField(row, ["Episoder", "Manual episodes", "ManualEpisodes"])
   );
+  const supplementarySimilaritiesRaw = normalizeText(
+    row?.supplementarySimilaritiesRaw ?? getField(row, ["Supplerende ligheder"])
+  );
+  const supplementarySimilarities = Array.isArray(row?.supplementarySimilarities)
+    ? row.supplementarySimilarities
+        .map((reference) => ({
+          title: normalizeText(reference?.title),
+          hostQualifier: normalizeText(reference?.hostQualifier) || null
+        }))
+        .filter((reference) => reference.title)
+    : null;
 
   const genre = normalizeGenre(rawGenre);
   const secondaryGenre = normalizeGenre(rawSecondaryGenre);
@@ -2718,6 +2729,8 @@ function mapPodcast(row, index) {
     mainSeries,
     episodes,
     manualEpisodes,
+    supplementarySimilaritiesRaw,
+    supplementarySimilarities,
     yearPlayed,
     link,
     feedUrl,
@@ -8457,6 +8470,75 @@ function getPodcastTopicKeys(podcast) {
   return new Set((Array.isArray(podcast?.topics) ? podcast.topics : []).map(normalizeComparable).filter(Boolean));
 }
 
+function getCatalogueManualSupplementaryReferences(podcast) {
+  if (Array.isArray(podcast?.supplementarySimilarities)) {
+    return podcast.supplementarySimilarities
+      .map((reference) => ({
+        title: normalizeText(reference?.title),
+        hostQualifier: normalizeText(reference?.hostQualifier) || null
+      }))
+      .filter((reference) => reference.title);
+  }
+
+  return normalizeText(podcast?.supplementarySimilaritiesRaw)
+    .split(";")
+    .map((value) => normalizeText(value))
+    .filter(Boolean)
+    .map((value) => {
+      const qualifier = value.match(/^(.*?)\s+\[([^\[\]]+)\]\s*$/u);
+      return {
+        title: normalizeText(qualifier ? qualifier[1] : value),
+        hostQualifier: normalizeText(qualifier?.[2]) || null
+      };
+    })
+    .filter((reference) => reference.title);
+}
+
+function getCatalogueManualSupplementaryPodcasts(podcast) {
+  const currentKey = getPodcastKey(podcast);
+  const byPodcastId = new Map();
+  const byTitle = new Map();
+
+  state.podcasts.forEach((candidate) => {
+    const podcastId = normalizeComparable(getPodcastId(candidate));
+    if (podcastId && !byPodcastId.has(podcastId)) byPodcastId.set(podcastId, candidate);
+
+    const title = normalizeComparable(candidate?.title);
+    if (!title) return;
+    const matches = byTitle.get(title) || [];
+    matches.push(candidate);
+    byTitle.set(title, matches);
+  });
+
+  const selectedKeys = new Set();
+  return getCatalogueManualSupplementaryReferences(podcast).reduce((selected, reference) => {
+    const referenceKey = normalizeComparable(reference.title);
+    let candidate = byPodcastId.get(referenceKey) || null;
+
+    // Older catalogue values may contain a title rather than a Podcast-ID.
+    // Only accept an unambiguous title fallback, respecting a supplied host.
+    if (!candidate) {
+      const titleMatches = byTitle.get(referenceKey) || [];
+      const qualifiedMatches = reference.hostQualifier
+        ? titleMatches.filter(
+            (entry) =>
+              normalizeComparable(entry?.host) === normalizeComparable(reference.hostQualifier)
+          )
+        : titleMatches;
+      candidate = qualifiedMatches.length === 1 ? qualifiedMatches[0] : null;
+    }
+
+    const candidateKey = getPodcastKey(candidate);
+    if (!candidateKey || candidateKey === currentKey || selectedKeys.has(candidateKey)) {
+      return selected;
+    }
+
+    selectedKeys.add(candidateKey);
+    selected.push(candidate);
+    return selected;
+  }, []);
+}
+
 function getPodcastDetailDynamicRecommendations(podcast, validated) {
   const currentKey = getPodcastKey(podcast);
   const currentTitle = normalizeComparable(podcast?.title);
@@ -8466,13 +8548,16 @@ function getPodcastDetailDynamicRecommendations(podcast, validated) {
   const currentPublisher = normalizeComparable(podcast?.publisher);
   const currentTopics = getPodcastTopicKeys(podcast);
   const productCandidatesByKey = new Map();
-  const manualCandidateKeys = new Set();
+  const manualSupplementaryPodcasts = getCatalogueManualSupplementaryPodcasts(podcast);
+  const manualCandidateKeys = new Set(
+    manualSupplementaryPodcasts.map(getPodcastKey)
+  );
   const resolveCandidate = (candidate) =>
     state.podcastSimilarityPodcastByRecommendationId[candidate?.recommendationId] ||
     state.podcasts.find((entry) => normalizeComparable(entry.title) === normalizeComparable(candidate?.title));
 
   [
-    ...(validated?.product?.combinedSimilarResults || []),
+    ...(validated?.product?.automaticSimilarResults || []),
     ...(validated?.product?.sameSeriesResults || [])
   ].forEach((candidate) => {
     const candidatePodcast = resolveCandidate(candidate);
@@ -8480,12 +8565,6 @@ function getPodcastDetailDynamicRecommendations(podcast, validated) {
     if (candidateKey && !productCandidatesByKey.has(candidateKey)) {
       productCandidatesByKey.set(candidateKey, candidate);
     }
-  });
-
-  (validated?.product?.manualSupplementaryResults || []).forEach((candidate) => {
-    const candidatePodcast = resolveCandidate(candidate);
-    const candidateKey = getPodcastKey(candidatePodcast);
-    if (candidateKey) manualCandidateKeys.add(candidateKey);
   });
 
   const seenTitles = new Set([currentTitle]);
@@ -8578,20 +8657,15 @@ function getPodcastDetailDynamicRecommendations(podcast, validated) {
   };
 
   const sameSeriesCandidates = scoredCandidates.filter((candidate) => candidate.sameSeries);
-  const manuallyValidatedCandidates = scoredCandidates.filter((candidate) =>
-    manualCandidateKeys.has(getPodcastKey(candidate?.item?.podcast))
+  const scoredCandidatesByKey = new Map(
+    scoredCandidates.map((candidate) => [getPodcastKey(candidate?.item?.podcast), candidate])
   );
+  const manualCandidatesInCatalogueOrder = manualSupplementaryPodcasts
+    .map((candidate) => scoredCandidatesByKey.get(getPodcastKey(candidate)))
+    .filter(Boolean);
 
-  // A manually validated same-series match may lead. The complete same-series
-  // pool still follows before broader candidates, while its validated external
-  // counterparts remain available for the diversity pass.
-  appendPhase(
-    sameSeriesCandidates.filter((candidate) =>
-      manualCandidateKeys.has(getPodcastKey(candidate?.item?.podcast))
-    )
-  );
   appendPhase(sameSeriesCandidates);
-  appendPhase(manuallyValidatedCandidates);
+  appendPhase(manualCandidatesInCatalogueOrder);
   appendPhase(
     scoredCandidates.filter((candidate) =>
       productCandidatesByKey.has(getPodcastKey(candidate?.item?.podcast))
