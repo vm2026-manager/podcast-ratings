@@ -2,7 +2,7 @@
   "version": 1,
   "source": {
     "path": "data/podcasts.json",
-    "generatedAt": "2026-09-08T06:05:14.303Z",
+    "generatedAt": "2026-09-08T06:19:22.372Z",
     "count": 1254,
     "topicAliases": "config/recommendation-topic-aliases.json",
     "topicAliasVersion": 1,
@@ -11140,7 +11140,7 @@
     {
       "id": "eksplosionen der maske ændrede verden",
       "recommendationId": "rec-eksplosionen-der-maaske-aendrede-verden-39e1348c4c57be910849364b8207a188",
-      "recommendationIdentityBasis": "title+mainSeries+publisher+hosts+year+episodes",
+      "recommendationIdentityBasis": "title+link",
       "identityDuplicateGroup": "",
       "title": "Eksplosionen der (måske) ændrede verden",
       "mainSeries": "Katastrofe",
@@ -13405,7 +13405,7 @@
     {
       "id": "hindenburgluftkatastrofen",
       "recommendationId": "rec-hindenburgluftkatastrofen-69811c3be50dff289d0ab164cd2b8e45",
-      "recommendationIdentityBasis": "title+mainSeries+publisher+hosts+year+episodes",
+      "recommendationIdentityBasis": "title+link",
       "identityDuplicateGroup": "",
       "title": "Hindenburgluftkatastrofen",
       "mainSeries": "Katastrofe",
@@ -18104,7 +18104,7 @@
     {
       "id": "nedskydningen af den iranske airbus 1988",
       "recommendationId": "rec-nedskydningen-af-den-iranske-airbus-1988-c0400f39e9f96a997f67ec10a6856915",
-      "recommendationIdentityBasis": "title+mainSeries+publisher+hosts+year+episodes",
+      "recommendationIdentityBasis": "title+link",
       "identityDuplicateGroup": "",
       "title": "Nedskydningen af den iranske Airbus 1988",
       "mainSeries": "Katastrofe",
