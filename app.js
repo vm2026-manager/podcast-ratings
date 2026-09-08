@@ -8714,7 +8714,27 @@ function getPodcastDetailDynamicRecommendations(podcast, validated) {
     )
   );
   appendPhase(scoredCandidates);
-  return selectPodcastDetailRecommendations(candidatePool, 8, { preservePriority: true });
+  // Keep the complete priority-ordered pool available until after public
+  // display groups have been collapsed. Limiting here lets same-series entries
+  // consume the visible row before the diversity selector can interleave them.
+  return candidatePool;
+}
+
+function getPodcastDetailCanonicalGroupKey(podcast) {
+  if (!podcast) return "";
+  if (podcast.isDisplayGroup && podcast.displayGroupId) {
+    return `display-group:${podcast.displayGroupId}`;
+  }
+
+  const podcastKey = getPodcastKey(podcast);
+  const displayGroup = state.podcastDisplayGroups.find((group) =>
+    getDisplayGroupMemberPodcasts(group).some((member) => getPodcastKey(member) === podcastKey)
+  );
+  if (displayGroup?.id) return `display-group:${displayGroup.id}`;
+
+  const mainSeries = normalizeComparable(podcast.mainSeries);
+  if (mainSeries) return `series:${mainSeries}`;
+  return podcastKey ? `podcast:${podcastKey}` : "";
 }
 
 function getRecommendationDiversityKey(candidate) {
@@ -8733,8 +8753,47 @@ function getRecommendationDiversityKey(candidate) {
   return normalizedTitle ? `title:${normalizedTitle}` : "";
 }
 
-function selectPodcastDetailRecommendations(candidates, limit = 4, { preservePriority = false } = {}) {
-  if (preservePriority) return candidates.slice(0, limit);
+function selectPodcastDetailRecommendations(
+  candidates,
+  limit = 4,
+  { sourcePodcast = null, sameGroupLimit = 2 } = {}
+) {
+  if (sourcePodcast) {
+    const sourceGroupKey = getPodcastDetailCanonicalGroupKey(sourcePodcast);
+    const sameGroupCandidates = [];
+    const externalCandidates = [];
+
+    candidates.forEach((candidate) => {
+      const candidatePodcast = candidate?.item?.podcast || candidate?.podcast;
+      if (
+        sourceGroupKey &&
+        getPodcastDetailCanonicalGroupKey(candidatePodcast) === sourceGroupKey
+      ) {
+        if (sameGroupCandidates.length < sameGroupLimit) sameGroupCandidates.push(candidate);
+        return;
+      }
+      externalCandidates.push(candidate);
+    });
+
+    // Preserve the strong same-series lead while preventing a run of its
+    // siblings whenever an external match is available. External candidates
+    // retain their original manual-before-automatic priority order.
+    const selected = [];
+    if (sameGroupCandidates.length) selected.push(sameGroupCandidates.shift());
+    if (externalCandidates.length && selected.length < limit) {
+      selected.push(externalCandidates.shift());
+    }
+    if (sameGroupCandidates.length && selected.length < limit) {
+      selected.push(sameGroupCandidates.shift());
+    }
+    while (selected.length < limit && externalCandidates.length) {
+      selected.push(externalCandidates.shift());
+    }
+    while (selected.length < limit && sameGroupCandidates.length) {
+      selected.push(sameGroupCandidates.shift());
+    }
+    return selected;
+  }
 
   const selected = [];
   const remaining = [...candidates];
@@ -8800,7 +8859,7 @@ function getPodcastSimilarityProductMarkup(podcast) {
       getPodcastDetailDynamicRecommendations(podcast, validated)
     ),
     8,
-    { preservePriority: true }
+    { sourcePodcast: podcast }
   );
 
   if (!completedRecommendations.length) return "";
