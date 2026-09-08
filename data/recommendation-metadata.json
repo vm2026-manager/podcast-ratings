@@ -2,7 +2,7 @@
   "version": 1,
   "source": {
     "path": "data/podcasts.json",
-    "generatedAt": "2026-09-08T16:35:14.742Z",
+    "generatedAt": "2026-09-08T16:57:51.057Z",
     "count": 1255,
     "topicAliases": "config/recommendation-topic-aliases.json",
     "topicAliasVersion": 1,
@@ -36,11 +36,11 @@
     "recommendationMetadataEligible": 1235,
     "approvedAliases": 17,
     "podcastsWithAliasApplied": 97,
-    "rawTopicOccurrences": 4537,
-    "rawUniqueTopicForms": 2834,
-    "canonicalTopicOccurrences": 4537,
-    "canonicalUniqueTopics": 2601,
-    "normalizedTopicIdentities": 2601,
+    "rawTopicOccurrences": 4550,
+    "rawUniqueTopicForms": 2846,
+    "canonicalTopicOccurrences": 4550,
+    "canonicalUniqueTopics": 2613,
+    "normalizedTopicIdentities": 2613,
     "topicVariantGroups": 233,
     "topicCollisionGroups": 216,
     "approvedAliasTopicGroups": 17,
@@ -48,11 +48,11 @@
     "unsafeTopicCollisionGroups": 0,
     "podcastsAffectedByTopicNormalization": 348,
     "withinPodcastTopicDuplicatesRemoved": 0,
-    "canonicalTopicsUsedOnce": 1933,
-    "canonicalTopicsAtLeastThree": 335,
+    "canonicalTopicsUsedOnce": 1945,
+    "canonicalTopicsAtLeastThree": 337,
     "canonicalTopicsAtLeastFive": 148,
-    "canonicalTopicsAtLeastTen": 46,
-    "possibleStandaloneRows": 296,
+    "canonicalTopicsAtLeastTen": 47,
+    "possibleStandaloneRows": 298,
     "topicKeyCollisions": 0,
     "uniqueExistingIds": 1249,
     "duplicateStableIdValues": 6,
@@ -1034,7 +1034,7 @@
       "topicsCanonical": [
         "Nabokonflikter",
         "boligforeninger",
-        "chikane",
+        "Chikane",
         "retssager"
       ],
       "topicKeys": [
@@ -4169,22 +4169,25 @@
       "secondaryGenre": "Viden",
       "secondaryGenreValid": true,
       "topicsRaw": [
-        "Hjernerystelser",
-        "NFL",
-        "sportsmedicin",
-        "kontaktsport"
+        "Hjernerystelse",
+        "langvarige symptomer",
+        "behandling",
+        "sundhedssystem",
+        "neurologi"
       ],
       "topicsCanonical": [
-        "Hjernerystelser",
-        "NFL",
-        "sportsmedicin",
-        "kontaktsport"
+        "Hjernerystelse",
+        "langvarige symptomer",
+        "behandling",
+        "sundhedssystem",
+        "neurologi"
       ],
       "topicKeys": [
-        "hjernerystelser",
-        "nfl",
-        "sportsmedicin",
-        "kontaktsport"
+        "hjernerystelse",
+        "langvarige-symptomer",
+        "behandling",
+        "sundhedssystem",
+        "neurologi"
       ],
       "topicEligible": true,
       "genreEligible": true,
@@ -8287,19 +8290,25 @@
       "secondaryGenre": "Dokumentar",
       "secondaryGenreValid": true,
       "topicsRaw": [
-        "Religiøse fællesskaber",
-        "karismatiske ledere",
-        "loyalitetskonflikter"
+        "Chikane",
+        "tilhold",
+        "konflikt",
+        "stalking",
+        "salsamiljø"
       ],
       "topicsCanonical": [
-        "Religiøse fællesskaber",
-        "karismatiske ledere",
-        "loyalitetskonflikter"
+        "Chikane",
+        "tilhold",
+        "konflikt",
+        "Stalking",
+        "salsamiljø"
       ],
       "topicKeys": [
-        "religioese-faellesskaber",
-        "karismatiske-ledere",
-        "loyalitetskonflikter"
+        "chikane",
+        "tilhold",
+        "konflikt",
+        "stalking",
+        "salsamiljoe"
       ],
       "topicEligible": true,
       "genreEligible": true,
@@ -11998,15 +12007,24 @@
       "secondaryGenreValid": true,
       "topicsRaw": [
         "Dyreadfærd",
-        "kvægbrug"
+        "kvæg",
+        "landbrug",
+        "urin-drikning",
+        "naturmysterium"
       ],
       "topicsCanonical": [
         "Dyreadfærd",
-        "kvægbrug"
+        "kvæg",
+        "landbrug",
+        "urin-drikning",
+        "naturmysterium"
       ],
       "topicKeys": [
         "dyreadfaerd",
-        "kvaegbrug"
+        "kvaeg",
+        "landbrug",
+        "urin-drikning",
+        "naturmysterium"
       ],
       "topicEligible": true,
       "genreEligible": true,
@@ -16893,19 +16911,28 @@
       "secondaryGenre": "Dokumentar",
       "secondaryGenreValid": true,
       "topicsRaw": [
-        "Forsvindinger",
-        "skjulte identiteter",
-        "digitale spor"
+        "Somaliere",
+        "migration",
+        "integration",
+        "diaspora",
+        "Danmark",
+        "Europa"
       ],
       "topicsCanonical": [
-        "forsvindinger",
-        "skjulte identiteter",
-        "digitale spor"
+        "Somaliere",
+        "migration",
+        "integration",
+        "diaspora",
+        "Danmark",
+        "Europa"
       ],
       "topicKeys": [
-        "forsvindinger",
-        "skjulte-identiteter",
-        "digitale-spor"
+        "somaliere",
+        "migration",
+        "integration",
+        "diaspora",
+        "danmark",
+        "europa"
       ],
       "topicEligible": true,
       "genreEligible": true,
@@ -21187,22 +21214,25 @@
       "secondaryGenre": "Samfund",
       "secondaryGenreValid": true,
       "topicsRaw": [
-        "Lukkede religiøse miljøer",
-        "lederskifte",
-        "magtkampe",
-        "loyalitet"
+        "Dobbeltliv",
+        "familiehemmeligheder",
+        "skjult fortid",
+        "efterforskning",
+        "kriminalitet"
       ],
       "topicsCanonical": [
-        "lukkede religiøse miljøer",
-        "lederskifte",
-        "magtkampe",
-        "loyalitet"
+        "dobbeltliv",
+        "familiehemmeligheder",
+        "skjult fortid",
+        "efterforskning",
+        "kriminalitet"
       ],
       "topicKeys": [
-        "lukkede-religioese-miljoeer",
-        "lederskifte",
-        "magtkampe",
-        "loyalitet"
+        "dobbeltliv",
+        "familiehemmeligheder",
+        "skjult-fortid",
+        "efterforskning",
+        "kriminalitet"
       ],
       "topicEligible": true,
       "genreEligible": true,
@@ -24839,7 +24869,7 @@
         "Tro",
         "Religiøse ritualer",
         "åndelige erfaringer",
-        "Religiøse fællesskaber"
+        "religiøse fællesskaber"
       ],
       "topicKeys": [
         "tro",
@@ -31340,30 +31370,38 @@
       "primaryGenreMappingSource": "Samfund",
       "primaryGenreNeedsReview": false,
       "primaryGenreReviewReason": "",
-      "secondaryGenre": "Historie",
-      "secondaryGenreValid": true,
+      "secondaryGenre": "Kærlighed",
+      "secondaryGenreValid": false,
       "topicsRaw": [
-        "Generationer",
-        "ungdomsliv",
-        "livsvalg",
-        "samfundsforandringer"
+        "Sex",
+        "kærlighed",
+        "seksualitet",
+        "relationer",
+        "generationer",
+        "grænser"
       ],
       "topicsCanonical": [
-        "Generationer",
-        "ungdomsliv",
-        "livsvalg",
-        "samfundsforandringer"
+        "Sex",
+        "kærlighed",
+        "seksualitet",
+        "relationer",
+        "generationer",
+        "grænser"
       ],
       "topicKeys": [
+        "sex",
+        "kaerlighed",
+        "seksualitet",
+        "relationer",
         "generationer",
-        "ungdomsliv",
-        "livsvalg",
-        "samfundsforandringer"
+        "graenser"
       ],
       "topicEligible": true,
       "genreEligible": true,
       "recommendationMetadataEligible": true,
-      "metadataIssues": []
+      "metadataIssues": [
+        "invalid_secondary_genre"
+      ]
     },
     {
       "id": "information forklarer klimaet",
@@ -34373,7 +34411,7 @@
       "topicsCanonical": [
         "politiske idéer",
         "amerikansk politik",
-        "samfundsforandringer",
+        "Samfundsforandringer",
         "magt"
       ],
       "topicKeys": [
@@ -35065,22 +35103,25 @@
       "secondaryGenre": "Historie",
       "secondaryGenreValid": true,
       "topicsRaw": [
-        "Præstefamilier",
-        "familiehemmeligheder",
-        "fortielser",
-        "generationshistorie"
+        "Historisk drab",
+        "forgiftning",
+        "giftkomplot",
+        "retssag",
+        "Kerteminde"
       ],
       "topicsCanonical": [
-        "Præstefamilier",
-        "familiehemmeligheder",
-        "fortielser",
-        "generationshistorie"
+        "Historisk drab",
+        "forgiftning",
+        "giftkomplot",
+        "retssag",
+        "Kerteminde"
       ],
       "topicKeys": [
-        "praestefamilier",
-        "familiehemmeligheder",
-        "fortielser",
-        "generationshistorie"
+        "historisk-drab",
+        "forgiftning",
+        "giftkomplot",
+        "retssag",
+        "kerteminde"
       ],
       "topicEligible": true,
       "genreEligible": true,
@@ -40145,7 +40186,7 @@
         "fremtidens samfund"
       ],
       "topicsCanonical": [
-        "samfundsforandringer",
+        "Samfundsforandringer",
         "geopolitik",
         "idéhistorie",
         "fremtidens samfund"
