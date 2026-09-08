@@ -2,7 +2,7 @@
   "version": 1,
   "source": {
     "path": "data/podcasts.json",
-    "generatedAt": "2026-09-08T16:57:51.057Z",
+    "generatedAt": "2026-09-08T17:04:39.543Z",
     "count": 1255,
     "topicAliases": "config/recommendation-topic-aliases.json",
     "topicAliasVersion": 1,
@@ -31370,8 +31370,8 @@
       "primaryGenreMappingSource": "Samfund",
       "primaryGenreNeedsReview": false,
       "primaryGenreReviewReason": "",
-      "secondaryGenre": "Kærlighed",
-      "secondaryGenreValid": false,
+      "secondaryGenre": "Underholdning",
+      "secondaryGenreValid": true,
       "topicsRaw": [
         "Sex",
         "kærlighed",
@@ -31399,9 +31399,7 @@
       "topicEligible": true,
       "genreEligible": true,
       "recommendationMetadataEligible": true,
-      "metadataIssues": [
-        "invalid_secondary_genre"
-      ]
+      "metadataIssues": []
     },
     {
       "id": "information forklarer klimaet",
