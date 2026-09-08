@@ -1,4 +1,4 @@
-import { mkdir, writeFile } from "node:fs/promises";
+import { mkdir, rename, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { parseSupplementarySimilarities } from "./manual-similarity-supplements.mjs";
@@ -16,6 +16,10 @@ const SHEETS = [
     outputPath: "data/featured-reviews.json",
     sheetName: "Udvalgte vurderinger",
     gid: "1418051000"
+  },
+  {
+    outputPath: "data/explore-clusters.json",
+    sheetName: "Udforsk-klynger"
   }
 ];
 
@@ -79,6 +83,16 @@ const SUPPLEMENTARY_SIMILARITIES_COLUMN_INDEX = 19;
 const ACCESS_TYPE_FIELDS = ["Adgang"];
 const ACCESS_EVIDENCE_URL_FIELDS = ["Kilde"];
 const ACCESS_CHECKED_AT_FIELDS = ["Tjekket dato"];
+
+const EXPLORE_CLUSTER_HEADERS = [
+  "Klynge-ID",
+  "Titel",
+  "Beskrivelse",
+  "Podcast-ID'er",
+  "Aktiv",
+  "Specificitet",
+  "Sortering"
+];
 
 const ACCESS_TYPE_VALUES = new Map([
   ["gratis", "free"],
@@ -147,6 +161,26 @@ function normalizeHeader(value) {
 
 function buildSheetUrl(gid) {
   return `${SPREADSHEET_BASE_URL}?gid=${gid}&single=true&output=csv`;
+}
+
+async function resolveSheetGid(sheetName) {
+  const response = await fetch(SPREADSHEET_BASE_URL, {
+    headers: { "cache-control": "no-cache" }
+  });
+  if (!response.ok) {
+    throw new Error(`Kunne ikke hente Sheet-indekset (${response.status}).`);
+  }
+  const indexHtml = await response.text();
+  const escapedName = sheetName.replace(/[.*+?^${}()|[\]\\]/gu, "\\$&");
+  const match = indexHtml.match(
+    new RegExp(`name: "${escapedName}", pageUrl: [^,]+, gid: "(-?\\d+)"`, "u")
+  );
+  if (!match) {
+    throw new Error(
+      `Kunne ikke finde det publicerede Sheet-faneblad ${JSON.stringify(sheetName)}.`
+    );
+  }
+  return match[1];
 }
 
 function parseCsv(text) {
@@ -224,6 +258,71 @@ function rowsToObjects(rows) {
       return item;
     })
     .filter((row) => Object.values(row).some((value) => normalizeText(value) !== ""));
+}
+
+function validateRequiredHeaders(rows, requiredHeaders, sheetName) {
+  const normalizedHeaders = new Set((rows?.[0] || []).map(normalizeHeader));
+  const missingHeaders = requiredHeaders.filter(
+    (header) => !normalizedHeaders.has(normalizeHeader(header))
+  );
+  if (missingHeaders.length) {
+    throw new Error(
+      `${sheetName} mangler påkrævede kolonner: ${missingHeaders.join(", ")}.`
+    );
+  }
+}
+
+function parseClusterPodcastIds(value) {
+  return String(value ?? "")
+    .split(";")
+    .map(normalizeText)
+    .filter(Boolean);
+}
+
+function buildExploreClustersPayload(
+  clusterRows,
+  catalogueRows,
+  generatedAt = new Date().toISOString()
+) {
+  const errors = [];
+  const clusterIds = new Set();
+  const catalogueIdCounts = new Map();
+  for (const podcast of catalogueRows) {
+    const id = normalizeText(podcast["Podcast-ID"]);
+    if (id) catalogueIdCounts.set(id, (catalogueIdCounts.get(id) || 0) + 1);
+  }
+
+  const clusters = [];
+  clusterRows.forEach((row, index) => {
+    const rowNumber = index + 2;
+    const id = getField(row, ["Klynge-ID"]);
+    const title = getField(row, ["Titel"]);
+    const description = getField(row, ["Beskrivelse"]);
+    const active = getField(row, ["Aktiv"]).toLocaleUpperCase("da-DK");
+    const specificityValue = getField(row, ["Specificitet"]);
+    const sortOrderValue = getField(row, ["Sortering"]);
+    const podcastIds = parseClusterPodcastIds(getField(row, ["Podcast-ID'er"]));
+
+    if (!id) errors.push(`Række ${rowNumber}: Klynge-ID må ikke være tomt.`);
+    else if (clusterIds.has(id)) errors.push(`Række ${rowNumber}: Klynge-ID ${JSON.stringify(id)} er dubleret.`);
+    else clusterIds.add(id);
+    if (active !== "JA" && active !== "NEJ") errors.push(`Række ${rowNumber}: Aktiv skal være JA eller NEJ.`);
+    if (!/^[123]$/u.test(specificityValue)) errors.push(`Række ${rowNumber}: Specificitet skal være et heltal fra 1 til 3.`);
+    if (!sortOrderValue || !Number.isFinite(Number(sortOrderValue))) errors.push(`Række ${rowNumber}: Sortering skal være numerisk.`);
+    if (active !== "JA") return;
+    if (!id || !title || !description) errors.push(`Række ${rowNumber}: Aktiv klynge mangler id, titel eller beskrivelse.`);
+    if (podcastIds.length < 3) errors.push(`Række ${rowNumber}: Aktiv klynge skal indeholde mindst 3 podcast-ID'er.`);
+
+    const idsInCluster = new Set();
+    for (const podcastId of podcastIds) {
+      if (idsInCluster.has(podcastId)) errors.push(`Række ${rowNumber}: Podcast-ID ${JSON.stringify(podcastId)} forekommer flere gange i samme klynge.`);
+      idsInCluster.add(podcastId);
+      if (catalogueIdCounts.get(podcastId) !== 1) errors.push(`Række ${rowNumber}: Podcast-ID ${JSON.stringify(podcastId)} skal findes præcis én gang i det aktuelle katalog.`);
+    }
+    clusters.push({ id, title, description, specificity: Number(specificityValue), sortOrder: Number(sortOrderValue), podcastIds });
+  });
+  if (errors.length) throw new Error(`Udforsk-klynger validering fejlede:\n- ${errors.join("\n- ")}`);
+  return { version: 1, positiveRatingThreshold: 7, generatedAt, clusters };
 }
 
 function getColumnTHeader(rows) {
@@ -598,7 +697,8 @@ async function slimFeaturedRows(rows) {
 }
 
 async function fetchSheetCsv(sheet) {
-  const response = await fetch(buildSheetUrl(sheet.gid), {
+  const gid = sheet.gid || (await resolveSheetGid(sheet.sheetName));
+  const response = await fetch(buildSheetUrl(gid), {
     headers: {
       "cache-control": "no-cache"
     }
@@ -610,13 +710,15 @@ async function fetchSheetCsv(sheet) {
     );
   }
 
-  return response.text();
+  return { csv: await response.text(), gid };
 }
 
 async function writeJsonFile(outputPath, payload) {
   const absolutePath = path.join(repoRoot, outputPath);
+  const temporaryPath = `${absolutePath}.${process.pid}.${Date.now()}.tmp`;
   await mkdir(path.dirname(absolutePath), { recursive: true });
-  await writeFile(absolutePath, `${JSON.stringify(payload)}\n`, "utf8");
+  await writeFile(temporaryPath, `${JSON.stringify(payload)}\n`, "utf8");
+  await rename(temporaryPath, absolutePath);
 }
 
 function buildPodcastPayload(rows, source, generatedAt = new Date().toISOString()) {
@@ -628,13 +730,26 @@ function buildPodcastPayload(rows, source, generatedAt = new Date().toISOString(
   };
 }
 
-async function syncSheet(sheet) {
-  const csv = await fetchSheetCsv(sheet);
+async function loadSheet(sheet) {
+  const { csv, gid } = await fetchSheetCsv(sheet);
   const parsedRows = parseCsv(csv);
   if (sheet.sheetName === "Ark1") {
     validateSupplementarySimilaritiesColumn(parsedRows);
   }
-  const objects = rowsToObjects(parsedRows);
+  if (sheet.sheetName === "Udforsk-klynger") {
+    validateRequiredHeaders(parsedRows, EXPLORE_CLUSTER_HEADERS, sheet.sheetName);
+  }
+  return { gid, objects: rowsToObjects(parsedRows) };
+}
+
+async function syncSheet(sheet, loadedSheet, catalogueRows = []) {
+  const { gid, objects } = loadedSheet;
+  if (sheet.sheetName === "Udforsk-klynger") {
+    const payload = buildExploreClustersPayload(objects, catalogueRows);
+    await writeJsonFile(sheet.outputPath, payload);
+    console.log(`Skrev ${payload.clusters.length} klynger til ${sheet.outputPath}`);
+    return;
+  }
 
   const filteredRows =
     sheet.sheetName === "Udvalgte vurderinger"
@@ -649,7 +764,7 @@ async function syncSheet(sheet) {
   const payload =
     sheet.sheetName === "Udvalgte vurderinger"
       ? slimRows
-      : buildPodcastPayload(slimRows, buildSheetUrl(sheet.gid));
+      : buildPodcastPayload(slimRows, buildSheetUrl(gid));
 
   await writeJsonFile(sheet.outputPath, payload);
 
@@ -657,8 +772,21 @@ async function syncSheet(sheet) {
 }
 
 async function main() {
-  for (const sheet of SHEETS) {
-    await syncSheet(sheet);
+  const loadedSheets = await Promise.all(
+    SHEETS.map(async (sheet) => [sheet, await loadSheet(sheet)])
+  );
+  const podcastsSheet = loadedSheets.find(([sheet]) => sheet.sheetName === "Ark1");
+  const catalogueRows = await slimPodcastRows(filterPodcastRows(podcastsSheet[1].objects));
+  for (const [sheet, loadedSheet] of loadedSheets) {
+    if (sheet.sheetName === "Ark1") {
+      await writeJsonFile(
+        sheet.outputPath,
+        buildPodcastPayload(catalogueRows, buildSheetUrl(loadedSheet.gid))
+      );
+      console.log(`Skrev ${catalogueRows.length} rækker til ${sheet.outputPath}`);
+    } else {
+      await syncSheet(sheet, loadedSheet, catalogueRows);
+    }
   }
 }
 
@@ -671,6 +799,7 @@ if (process.argv[1] && path.resolve(process.argv[1]) === __filename) {
 
 export {
   buildPodcastPayload,
+  buildExploreClustersPayload,
   createCatalogueId,
   getField,
   applyEditorialAccessMetadata,
@@ -678,12 +807,14 @@ export {
   normalizeHeader,
   parseEnglishFlag,
   parseCsv,
+  parseClusterPodcastIds,
   parseSupplementarySimilarities,
   parseManualEpisodes,
   parseManualEpisodeKeys,
   parseTopics,
   rowsToObjects,
   slimPodcastRows,
+  validateRequiredHeaders,
   validateAccessCheckedAt,
   validateAccessEvidenceUrl,
   validateSupplementarySimilaritiesColumn

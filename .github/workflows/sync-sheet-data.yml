@@ -30,7 +30,7 @@ jobs:
 
       - name: Validate catalogue outputs
         run: |
-          node -e "const fs=require('fs'); JSON.parse(fs.readFileSync('data/podcasts.json','utf8')); JSON.parse(fs.readFileSync('data/featured-reviews.json','utf8')); console.log('Catalogue JSON files are valid')"
+          node -e "const fs=require('fs'); for (const path of ['data/podcasts.json', 'data/featured-reviews.json', 'data/explore-clusters.json']) JSON.parse(fs.readFileSync(path,'utf8')); console.log('Catalogue JSON files are valid')"
           node scripts/audit-podcast-ids.mjs
           node scripts/validate-podcast-identity.mjs
 
@@ -60,4 +60,4 @@ jobs:
         uses: stefanzweifel/git-auto-commit-action@v5
         with:
           commit_message: "chore: sync podcast data from Google Sheets"
-          file_pattern: data/podcasts.json data/featured-reviews.json data/recommendation-metadata.json data/podcast-similarity-product-v1.3.json
+          file_pattern: data/podcasts.json data/featured-reviews.json data/explore-clusters.json data/recommendation-metadata.json data/podcast-similarity-product-v1.3.json
