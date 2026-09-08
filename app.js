@@ -5,6 +5,7 @@ const LOCAL_EPISODE_DATA_URL = "data/podcast-episodes.json";
 const RECOMMENDATION_METADATA_URL = "data/recommendation-metadata.json";
 const PODCAST_SIMILARITY_PRODUCT_URL = "data/podcast-similarity-product-v1.3.json";
 const PODCAST_DISPLAY_GROUPS_URL = "data/podcast-display-groups.json";
+const EXPLORE_CLUSTERS_URL = "data/explore-clusters.json";
 
 const GENRES = [
   "Alle",
@@ -869,6 +870,10 @@ const state = {
   podcastSimilarityRecommendationIdByPodcastKey: {},
   podcastSimilarityPodcastByRecommendationId: {},
   podcastSimilarityWarningShown: false,
+  exploreClustersStatus: "idle",
+  exploreClustersPromise: null,
+  exploreClustersPayload: null,
+  exploreClusterUiIntegration: null,
   communityStatsStatus: "idle",
   lastSuccessfulPodcastDataRefreshAt: 0,
   exploreUnderratedHourBucket: null,
@@ -8260,6 +8265,43 @@ async function loadPodcastSimilarityProductData() {
     });
 
   return state.podcastSimilarityProductPromise;
+}
+
+async function loadExploreClusterIntegration() {
+  if (state.exploreClustersStatus === "ready") return true;
+  if (state.exploreClustersPromise) return state.exploreClustersPromise;
+
+  state.exploreClustersStatus = "loading";
+  state.exploreClustersPromise = Promise.all([
+    fetch(`${EXPLORE_CLUSTERS_URL}?v=${DATA_VERSION}`, { cache: "no-store" }),
+    import("./scripts/explore-cluster-ui-integration.mjs")
+  ])
+    .then(async ([response, integration]) => {
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      const payload = await response.json();
+      if (payload?.version !== 1 || !Array.isArray(payload.clusters)) {
+        throw new Error("explore-clusters.json har ikke forventet format.");
+      }
+      state.exploreClustersPayload = payload;
+      state.exploreClusterUiIntegration = integration;
+      state.exploreClustersStatus = "ready";
+      invalidateExplorePersonalSnapshot();
+      return true;
+    })
+    .catch((error) => {
+      // Clusters enrich the existing page only. Any loading error must leave
+      // the established personal recommendation rows available.
+      console.warn("Kunne ikke indlæse personlige udforsk-klynger.", error);
+      state.exploreClustersStatus = "error";
+      state.exploreClustersPayload = null;
+      state.exploreClusterUiIntegration = null;
+      return false;
+    })
+    .finally(() => {
+      state.exploreClustersPromise = null;
+      if (window.location.hash === "#udforsk") renderExplorePage();
+    });
+  return state.exploreClustersPromise;
 }
 
 function getValidatedPodcastSimilarityProduct(podcast) {
@@ -18644,6 +18686,33 @@ function getExploreDailySeedPool(profile, { searchParts = [], genre = "Alle" } =
   return { dayKey, seeds: ordered, diagnostics };
 }
 
+function getExploreClusterSections({ searchParts = [], genre = "Alle" } = {}) {
+  if (!isLoggedIn()) return [];
+  if (state.exploreClustersStatus === "idle") loadExploreClusterIntegration();
+  if (state.podcastSimilarityProductStatus === "idle") loadPodcastSimilarityProductData();
+  if (
+    state.exploreClustersStatus !== "ready" ||
+    state.podcastSimilarityProductStatus !== "ready" ||
+    !state.exploreClustersPayload ||
+    !state.exploreClusterUiIntegration
+  ) {
+    return [];
+  }
+  try {
+    return state.exploreClusterUiIntegration.buildExploreClusterSections({
+      clusters: state.exploreClustersPayload,
+      podcasts: state.podcasts,
+      ratings: state.userRatingsByKey,
+      similarityProduct: state.podcastSimilarityProductByRecommendationId,
+      displayGroups: state.podcastDisplayGroups,
+      matchesPodcast: (podcast) => matchesExploreFilters(podcast, searchParts, genre)
+    });
+  } catch (error) {
+    console.warn("Kunne ikke beregne personlige udforsk-klynger.", error);
+    return [];
+  }
+}
+
 function getExplorePersonalSections({
   limit = 4,
   maxSections = 5,
@@ -18654,7 +18723,10 @@ function getExplorePersonalSections({
 
   const profile = getExplorePreferenceProfile();
   const seedPool = getExploreDailySeedPool(profile, { searchParts, genre });
-  const fingerprint = getExploreRecommendationInputFingerprint();
+  const clusterSections = getExploreClusterSections({ searchParts, genre });
+  const fingerprint = `${getExploreRecommendationInputFingerprint()}:clusters-${
+    state.exploreClustersStatus === "ready" ? "v1" : "off"
+  }`;
   const canUseSnapshot =
     state.podcastSimilarityProductStatus === "ready" &&
     !searchParts.length &&
@@ -18664,10 +18736,15 @@ function getExplorePersonalSections({
     : null;
   if (cachedSections) return cachedSections;
   const seeds = seedPool.seeds;
-  const sections = [];
+  const sections = clusterSections.slice(0, Math.max(0, maxSections));
   const usedKeys = new Set();
-  const sectionTitles = new Set();
+  const sectionTitles = new Set(sections.map((section) => section.title));
   const renderedPersonalSeeds = [];
+  const absorbedSeedIds = new Set(sections.flatMap((section) => section.seedPodcastIds || []));
+
+  sections.forEach((section) => {
+    section.items.forEach((item) => usedKeys.add(getPodcastKey(item.podcast || item)));
+  });
 
   const pushSection = (section, { minItems = EXPLORE_PERSONAL_MINIMUM_GROUP_SIZE } = {}) => {
     if (!section?.items?.length || section.items.length < minItems) return false;
@@ -18682,6 +18759,7 @@ function getExplorePersonalSections({
   const maxSeedSections = Math.max(1, Math.min(maxSections, 4));
   for (const seed of seeds) {
     if (sections.length >= maxSeedSections) break;
+    if (absorbedSeedIds.has(getPodcastKey(seed.podcast))) continue;
     const items = getExploreSeedSectionItems(seed, {
       limit,
       searchParts,
@@ -20181,6 +20259,9 @@ function renderExplorePage() {
   ) {
     loadPodcastSimilarityProductData();
   }
+  if (isLoggedIn() && state.exploreClustersStatus === "idle") {
+    loadExploreClusterIntegration();
+  }
   const isMobileExplore = isMobileViewport();
   const exploreIntroText = isLoggedIn()
     ? "Find podcasts udvalgt ud fra dine vurderinger, gemte favoritter og det, du allerede kan lide."
@@ -20347,10 +20428,12 @@ function renderExplorePage() {
       const sectionsToRender = showPersonalFirst ? personalSections : [];
 
       const createPersonalSection = (section, index) => {
-        const items = prioritizeExploreItemsForPersonalSnapshot(
-          dedupeExploreItems(section.items, usedPersonalKeys),
-          `${index}:${section.title}`
-        );
+        const items = section.clusterId
+          ? section.items.slice(0, 12)
+          : prioritizeExploreItemsForPersonalSnapshot(
+              dedupeExploreItems(section.items, usedPersonalKeys),
+              `${index}:${section.title}`
+            );
         if (items.length < EXPLORE_PERSONAL_MINIMUM_GROUP_SIZE) return null;
 
         items.forEach((item) => {
@@ -20635,7 +20718,10 @@ function renderExplorePage() {
       });
 
       const shouldRotatePersonalSectionOrder =
-        isLoggedIn() && ratedKeys.size > 0 && personalModules.children.length > 1;
+        isLoggedIn() &&
+        ratedKeys.size > 0 &&
+        personalModules.children.length > 1 &&
+        !sectionsToRender.some((section) => section.clusterId);
       if (shouldRotatePersonalSectionOrder) {
         const orderedSections = orderExplorePersonalSectionsForSnapshot([...personalModules.children]);
         orderedSections.forEach((sectionElement) => {
