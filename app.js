@@ -8877,12 +8877,7 @@ function collapseRecommendationCandidatesForPublicDisplay(sourcePodcast, candida
   }, []);
 }
 
-function getPodcastSimilarityProductMarkup(podcast) {
-  if (state.podcastSimilarityProductStatus === "idle") {
-    loadPodcastSimilarityProductData();
-  }
-  const completedRecommendations = getPodcastDetailRecommendations(podcast);
-
+function renderPodcastSimilarityProductMarkup(completedRecommendations) {
   if (!completedRecommendations.length) return "";
   return `
     <div class="podcast-detail-sheet__related" data-podcast-similarity-product>
@@ -8892,6 +8887,18 @@ function getPodcastSimilarityProductMarkup(podcast) {
       )}
     </div>
   `;
+}
+
+function getCachedPodcastDetailRecommendations(podcast) {
+  const podcastKey = getPodcastKey(podcast);
+  return podcastKey ? state.podcastDetailRecommendationCache.get(podcastKey) || null : null;
+}
+
+function getPodcastSimilarityProductMarkup(podcast) {
+  if (state.podcastSimilarityProductStatus === "idle") {
+    loadPodcastSimilarityProductData();
+  }
+  return renderPodcastSimilarityProductMarkup(getPodcastDetailRecommendations(podcast));
 }
 
 function getPodcastDetailRecommendations(podcast) {
@@ -12088,11 +12095,14 @@ function renderPodcastDetailSheetContent(
     episodeRatingSummary.count === 1 ? "episodevurdering" : "episodevurderinger"
   }`;
   const episodesMarkup = "";
-  const podcastSimilarityMarkup = `
-    <div class="podcast-detail-sheet__related podcast-detail-sheet__related--loading" data-podcast-similarity-product aria-live="polite">
-      <p>Finder lignende podcasts …</p>
-    </div>
-  `;
+  const cachedRecommendations = getCachedPodcastDetailRecommendations(podcast);
+  const podcastSimilarityMarkup = cachedRecommendations
+    ? renderPodcastSimilarityProductMarkup(cachedRecommendations)
+    : `
+      <div class="podcast-detail-sheet__related podcast-detail-sheet__related--loading" data-podcast-similarity-product aria-live="polite">
+        <p>Finder lignende podcasts …</p>
+      </div>
+    `;
   const hasMainSeriesReturnContext =
     showMainSeriesBack ||
     state.podcastDetailMainSeriesValue &&
@@ -12303,7 +12313,8 @@ function renderPodcastDetailSheetContent(
   const cover = content.querySelector(".podcast-detail-sheet__cover");
   const image = content.querySelector(".podcast-detail-sheet__image");
   setImage(cover, getPodcastImageSources(podcast), podcast.title);
-  schedulePodcastDetailSimilarityProduct(dialog, podcast);
+  if (cachedRecommendations) hydratePodcastSimilarityProduct(dialog, podcast);
+  else schedulePodcastDetailSimilarityProduct(dialog, podcast);
 
   content.querySelector("[data-podcast-detail-main-series-back]")?.addEventListener("click", (event) => {
     event.preventDefault();

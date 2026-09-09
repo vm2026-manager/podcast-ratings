@@ -20,6 +20,9 @@ assert.doesNotMatch(
   /getPodcastSimilarityProductMarkup\(podcast\)/u,
   "full-catalogue recommendation work must not block the first detail render"
 );
+assert.match(detailRenderer, /getCachedPodcastDetailRecommendations\(podcast\)/u);
+assert.match(detailRenderer, /renderPodcastSimilarityProductMarkup\(cachedRecommendations\)/u);
+assert.match(detailRenderer, /if \(cachedRecommendations\) hydratePodcastSimilarityProduct/u);
 
 const scheduler = extractFunction("schedulePodcastDetailSimilarityProduct");
 assert.match(scheduler, /window\.requestAnimationFrame\(\(\) => \{/u);
