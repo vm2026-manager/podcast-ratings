@@ -5,30 +5,46 @@ import { fileURLToPath } from "node:url";
 const appPath = fileURLToPath(new URL("../app.js", import.meta.url));
 const app = await readFile(appPath, "utf8");
 
+function extractFunction(name) {
+  const start = app.indexOf(`function ${name}(`);
+  assert.ok(start >= 0, `${name} must exist`);
+  const next = app.indexOf("\nfunction ", start + 1);
+  return app.slice(start, next === -1 ? app.length : next);
+}
+
+const initialRenderState = new Function(
+  "state",
+  "isLoggedIn",
+  `${extractFunction("getExploreInitialRenderState")}\nreturn getExploreInitialRenderState;`
+)({}, () => true);
+
+const snapshot = {
+  podcastDataStatus: "ready",
+  authReady: true,
+  personalizationUserStateStatus: "ready",
+  communityStatsStatus: "ready",
+  podcastSimilarityProductStatus: "loading",
+  exploreClustersStatus: "loading"
+};
+
+// Reproduces production: the catalogue and user signals are ready, but the
+// product/cluster inputs which select the lead recommendation are not.
+assert.equal(initialRenderState({ stateSnapshot: snapshot }), "loading");
+snapshot.podcastSimilarityProductStatus = "ready";
+assert.equal(initialRenderState({ stateSnapshot: snapshot }), "loading");
+snapshot.exploreClustersStatus = "ready";
+assert.equal(initialRenderState({ stateSnapshot: snapshot }), "ready");
+
+// Optional failures are settled and may render the best valid fallback.
+snapshot.podcastSimilarityProductStatus = "error";
+assert.equal(initialRenderState({ stateSnapshot: snapshot }), "ready");
+
 const exploreStart = app.indexOf("function renderExplorePage() {");
-const exploreReadyPath = app.indexOf('if (state.podcastDataStatus !== "ready")', exploreStart);
-const exploreReadyMarkup = app.indexOf("const isMobileExplore = isMobileViewport();", exploreStart);
-assert.ok(exploreStart >= 0, "Explore renderer must exist");
-assert.ok(exploreReadyPath > exploreStart, "Explore must guard its DOM before building cards");
+const readinessGuard = app.indexOf("const initialRenderState = getExploreInitialRenderState();", exploreStart);
+const normalMarkup = app.indexOf("const isMobileExplore = isMobileViewport();", exploreStart);
 assert.ok(
-  exploreReadyPath < exploreReadyMarkup,
-  "The ready-state guard must run before catalogue-derived Explore markup is exposed"
+  readinessGuard > exploreStart && readinessGuard < normalMarkup,
+  "Explore must apply the readiness result before building personalized sections"
 );
 
-const refreshStart = app.indexOf("async function refreshPodcastData(");
-const refreshStatus = app.indexOf('state.podcastDataStatus = initial || !state.podcasts.length ? "loading" : "refreshing";', refreshStart);
-const loadingRender = app.indexOf('if (document.body.classList.contains("page-udforsk"))', refreshStart);
-const catalogueRequest = app.indexOf("const [podcastRows", refreshStart);
-const readyStatus = app.indexOf('state.podcastDataStatus = "ready";', refreshStart);
-const finalRender = app.indexOf("renderAfterPodcastDataRefresh({ initial });", refreshStart);
-
-assert.ok(
-  refreshStatus < loadingRender && loadingRender < catalogueRequest,
-  "An active Explore refresh must replace old cards with the neutral state before requesting data"
-);
-assert.ok(
-  catalogueRequest < readyStatus && readyStatus < finalRender,
-  "The current Explore DOM must be rendered only after the new catalogue is committed as ready"
-);
-
-console.log("Explore stale-content guard regression checks passed.");
+console.log("Explore personalization readiness regression checks passed.");

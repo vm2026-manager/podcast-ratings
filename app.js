@@ -874,6 +874,7 @@ const state = {
   exploreClustersPromise: null,
   exploreClustersPayload: null,
   exploreClusterUiIntegration: null,
+  personalizationUserStateStatus: "idle",
   communityStatsStatus: "idle",
   lastSuccessfulPodcastDataRefreshAt: 0,
   exploreUnderratedHourBucket: null,
@@ -6952,51 +6953,61 @@ async function fetchSavedPodcastRows() {
 
 async function fetchUserState() {
   clearUserScopedState();
+  state.personalizationUserStateStatus = "loading";
 
-  if (!state.supabase || !state.authUser) return;
-
-  const [{ data: ratings, error: ratingsError }, { data: saved, error: savedError }] =
-    await Promise.all([
-      state.supabase.from("user_ratings").select("podcast_key, rating"),
-      fetchSavedPodcastRows()
-    ]);
-
-  if (ratingsError) {
-    console.error(ratingsError);
-    setAuthMessage("Kunne ikke hente dine vurderinger endnu.", "error", "hero");
-  } else {
-    state.userRatingsByKey = Object.fromEntries(
-      (ratings || [])
-        .map((item) => [resolveCanonicalPodcastId(item.podcast_key), parseNumber(item.rating)])
-        .filter(([podcastId]) => podcastId)
-    );
+  if (!state.supabase || !state.authUser) {
+    state.personalizationUserStateStatus = "ready";
+    return;
   }
 
-  if (savedError) {
-    console.error(savedError);
-    setAuthMessage("Kunne ikke hente dine gemte podcasts endnu.", "error", "hero");
-  } else {
-    const localMeta = readSavedPodcastMeta();
-    state.savedPodcastKeys = new Set(
-      (saved || []).map((item) => resolveSavedPodcastKey(item.podcast_key)).filter(Boolean)
-    );
-    state.savedPodcastMetaByKey = Object.fromEntries(
-      Object.entries(localMeta)
-        .map(([key, value]) => [resolveSavedPodcastKey(key), value])
-        .filter(([podcastId]) => podcastId)
-    );
-    (saved || []).forEach((item) => {
-      const podcastId = resolveSavedPodcastKey(item.podcast_key);
-      if (!podcastId) return;
-      const savedAt = item.saved_at || item.created_at || localMeta[item.podcast_key]?.savedAt || "";
-      if (savedAt) {
-        state.savedPodcastMetaByKey[podcastId] = {
-          ...(state.savedPodcastMetaByKey[podcastId] || {}),
-          savedAt
-        };
-      }
-    });
-    persistSavedPodcastMeta();
+  try {
+    const [{ data: ratings, error: ratingsError }, { data: saved, error: savedError }] =
+      await Promise.all([
+        state.supabase.from("user_ratings").select("podcast_key, rating"),
+        fetchSavedPodcastRows()
+      ]);
+
+    if (ratingsError) {
+      console.error(ratingsError);
+      setAuthMessage("Kunne ikke hente dine vurderinger endnu.", "error", "hero");
+    } else {
+      state.userRatingsByKey = Object.fromEntries(
+        (ratings || [])
+          .map((item) => [resolveCanonicalPodcastId(item.podcast_key), parseNumber(item.rating)])
+          .filter(([podcastId]) => podcastId)
+      );
+    }
+
+    if (savedError) {
+      console.error(savedError);
+      setAuthMessage("Kunne ikke hente dine gemte podcasts endnu.", "error", "hero");
+    } else {
+      const localMeta = readSavedPodcastMeta();
+      state.savedPodcastKeys = new Set(
+        (saved || []).map((item) => resolveSavedPodcastKey(item.podcast_key)).filter(Boolean)
+      );
+      state.savedPodcastMetaByKey = Object.fromEntries(
+        Object.entries(localMeta)
+          .map(([key, value]) => [resolveSavedPodcastKey(key), value])
+          .filter(([podcastId]) => podcastId)
+      );
+      (saved || []).forEach((item) => {
+        const podcastId = resolveSavedPodcastKey(item.podcast_key);
+        if (!podcastId) return;
+        const savedAt = item.saved_at || item.created_at || localMeta[item.podcast_key]?.savedAt || "";
+        if (savedAt) {
+          state.savedPodcastMetaByKey[podcastId] = {
+            ...(state.savedPodcastMetaByKey[podcastId] || {}),
+            savedAt
+          };
+        }
+      });
+      persistSavedPodcastMeta();
+    }
+    state.personalizationUserStateStatus = ratingsError || savedError ? "error" : "ready";
+  } catch (error) {
+    state.personalizationUserStateStatus = "error";
+    throw error;
   }
   invalidateRankingListCache();
 }
@@ -8258,9 +8269,6 @@ async function loadPodcastSimilarityProductData() {
       state.podcastSimilarityProductStatus = "ready";
       state.podcastSimilarityWarningShown = false;
       refreshOpenPodcastDetailSheet();
-      if (document.body.classList.contains("page-udforsk")) {
-        renderExplorePage();
-      }
       return true;
     })
     .catch((error) => {
@@ -8271,6 +8279,9 @@ async function loadPodcastSimilarityProductData() {
       state.podcastSimilarityPodcastByRecommendationId = {};
       warnPodcastSimilarityProduct(error?.message || "ukendt valideringsfejl");
       return false;
+    })
+    .finally(() => {
+      if (window.location.hash === "#udforsk") renderExplorePage();
     });
 
   return state.podcastSimilarityProductPromise;
@@ -14809,6 +14820,7 @@ function clearUserScopedState({ clearUi = false } = {}) {
   state.userRatingsByKey = {};
   state.savedPodcastKeys = new Set();
   state.savedPodcastMetaByKey = {};
+  state.personalizationUserStateStatus = "idle";
   Object.values(state.podcastEpisodesByKey).forEach((episodeState) => {
     episodeState.userRatingsById = {};
     episodeState.userRatingLoadingIds = new Set();
@@ -20317,15 +20329,54 @@ function renderExploreGenreSections(container, { searchTerm = "", genre = "Alle"
   container.appendChild(fragment);
 }
 
+function getExploreInitialRenderState({
+  loggedIn = isLoggedIn(),
+  stateSnapshot = state
+} = {}) {
+  if (stateSnapshot.podcastDataStatus === "error") return "error";
+  if (["idle", "loading"].includes(stateSnapshot.podcastDataStatus)) return "loading";
+  if (!loggedIn) return "ready";
+
+  // These values all influence the first personalized section's seeds, order,
+  // or candidate scores. "error" is settled: rendering the valid fallback is
+  // preferable to trapping the page behind a failed optional request.
+  const requiredStatuses = [
+    stateSnapshot.authReady ? "ready" : "loading",
+    stateSnapshot.personalizationUserStateStatus,
+    stateSnapshot.communityStatsStatus,
+    stateSnapshot.podcastSimilarityProductStatus,
+    stateSnapshot.exploreClustersStatus
+  ];
+  return requiredStatuses.some((status) => status === "idle" || status === "loading")
+    ? "loading"
+    : "ready";
+}
+
 function renderExplorePage() {
   const container = elements.pageIntroPanel;
   if (!container) return;
 
-  // The router runs before the asynchronous catalogue refresh has completed.
-  // Never expose cards derived from the previous catalogue while that refresh is
-  // pending: the next visible Explore DOM must be built from the ready snapshot.
-  if (state.podcastDataStatus !== "ready") {
-    const isError = state.podcastDataStatus === "error";
+  if (
+    isLoggedIn() &&
+    state.podcastDataStatus === "ready" &&
+    state.podcastSimilarityProductStatus === "idle"
+  ) {
+    loadPodcastSimilarityProductData();
+  }
+  if (
+    isLoggedIn() &&
+    state.podcastDataStatus === "ready" &&
+    state.exploreClustersStatus === "idle"
+  ) {
+    loadExploreClusterIntegration();
+  }
+
+  const initialRenderState = getExploreInitialRenderState();
+  // The router and independent personalization requests can resolve in any
+  // order. Keep their provisional results out of the visible DOM until every
+  // input to the initial personalized snapshot has settled.
+  if (initialRenderState !== "ready") {
+    const isError = initialRenderState === "error";
     container.innerHTML = `
       <section class="explore-page explore-page--loading" aria-busy="${!isError}">
         <header class="explore-hero">
@@ -20347,16 +20398,6 @@ function renderExplorePage() {
     return;
   }
 
-  if (
-    isLoggedIn() &&
-    state.podcastSimilarityProductStatus === "idle" &&
-    getExploreSeedPodcasts().length
-  ) {
-    loadPodcastSimilarityProductData();
-  }
-  if (isLoggedIn() && state.exploreClustersStatus === "idle") {
-    loadExploreClusterIntegration();
-  }
   const isMobileExplore = isMobileViewport();
   const exploreIntroText = isLoggedIn()
     ? "Find podcasts udvalgt ud fra dine vurderinger, gemte favoritter og det, du allerede kan lide."
@@ -22868,9 +22909,12 @@ async function refreshPodcastData({ initial = false, force = false } = {}) {
   state.podcastDataRefreshInProgress = true;
   state.podcastDataStatus = initial || !state.podcasts.length ? "loading" : "refreshing";
 
-  // A refresh replaces the catalogue atomically below. If Explore is visible,
-  // replace its old derived cards with a neutral state before awaiting data.
-  if (document.body.classList.contains("page-udforsk")) {
+  // Initial catalogue loading has no valid snapshot. Background refreshes keep
+  // their already committed snapshot visible until the replacement is atomic.
+  if (
+    state.podcastDataStatus === "loading" &&
+    document.body.classList.contains("page-udforsk")
+  ) {
     renderExplorePage();
   }
 
