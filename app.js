@@ -1344,6 +1344,15 @@ function renderHeaderSearchResults() {
   input.setAttribute("aria-expanded", "true");
 }
 
+function refreshOpenHeaderSearchResults() {
+  const input = elements.desktopHeaderSearchInput;
+  const results = elements.desktopHeaderSearchResults;
+  if (!input || !results || results.classList.contains("is-hidden")) return;
+  if (normalizeSearchValue(input.value).length < 2) return;
+
+  renderHeaderSearchResults();
+}
+
 function openHeaderSearchResult(index) {
   const match = headerSearchState.matches[index];
   if (!match) return;
@@ -22738,10 +22747,11 @@ function applyPodcastDataRefresh(podcastRows, featuredRows, coverManifestLookup 
       state.podcastSimilarityProductStatus = "error";
       warnPodcastSimilarityProduct(error?.message || "dataopdateringen kunne ikke valideres");
     }
-  }
-  invalidateRankingListCache();
+    }
+    invalidateRankingListCache();
+    refreshOpenHeaderSearchResults();
 
-  state.allReviews = featuredRows
+    state.allReviews = featuredRows
     .map((row, index) => mapFeaturedReview(row, index))
     .filter(isUsableReview);
 
