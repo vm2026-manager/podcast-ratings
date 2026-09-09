@@ -22747,11 +22747,11 @@ function applyPodcastDataRefresh(podcastRows, featuredRows, coverManifestLookup 
       state.podcastSimilarityProductStatus = "error";
       warnPodcastSimilarityProduct(error?.message || "dataopdateringen kunne ikke valideres");
     }
-    }
-    invalidateRankingListCache();
-    refreshOpenHeaderSearchResults();
+  }
+  invalidateRankingListCache();
+  refreshOpenHeaderSearchResults();
 
-    state.allReviews = featuredRows
+  state.allReviews = featuredRows
     .map((row, index) => mapFeaturedReview(row, index))
     .filter(isUsableReview);
 
