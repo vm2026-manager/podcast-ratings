@@ -8276,7 +8276,7 @@ async function loadPodcastSimilarityProductData() {
         lookups.podcastByRecommendationId;
       state.podcastSimilarityProductStatus = "ready";
       state.podcastSimilarityWarningShown = false;
-      refreshOpenPodcastDetailSheet();
+      refreshPodcastDetailSimilarityProduct();
       return true;
     })
     .catch((error) => {
@@ -8979,6 +8979,49 @@ function hydratePodcastSimilarityProduct(dialog, podcast) {
       });
     });
   });
+}
+
+function renderPodcastDetailSimilarityProduct(dialog, podcast) {
+  const content = dialog?.querySelector("[data-podcast-detail-content]");
+  const container = content?.querySelector("[data-podcast-similarity-product]");
+  if (!container || state.activePodcastDetailKey !== getPodcastKey(podcast)) return;
+
+  const markup = getPodcastSimilarityProductMarkup(podcast);
+  if (!markup) {
+    container.replaceChildren();
+    return;
+  }
+
+  container.outerHTML = markup;
+  hydratePodcastSimilarityProduct(dialog, podcast);
+}
+
+function schedulePodcastDetailSimilarityProduct(dialog, podcast) {
+  const detailKey = getPodcastKey(podcast);
+  const content = dialog?.querySelector("[data-podcast-detail-content]");
+  if (!detailKey || !content) return;
+
+  // Let the shell paint first. Computing the recommendation pool scans and
+  // sorts the catalogue, but it is optional detail enrichment.
+  window.requestAnimationFrame(() => {
+    window.requestAnimationFrame(() => {
+      if (
+        dialog.classList.contains("is-hidden") ||
+        state.activePodcastDetailKey !== detailKey ||
+        dialog.querySelector("[data-podcast-detail-content]") !== content
+      ) {
+        return;
+      }
+      renderPodcastDetailSimilarityProduct(dialog, podcast);
+    });
+  });
+}
+
+function refreshPodcastDetailSimilarityProduct() {
+  const dialog = document.getElementById("podcastDetailSheet");
+  if (!dialog || dialog.classList.contains("is-hidden") || state.podcastDetailView !== "detail") return;
+  const podcast = getRankingDisplayItemByKey(state.activePodcastDetailKey);
+  if (podcast) schedulePodcastDetailSimilarityProduct(dialog, podcast);
 }
 
 function getPodcastCompactDescription(podcast) {
@@ -12033,7 +12076,11 @@ function renderPodcastDetailSheetContent(
     episodeRatingSummary.count === 1 ? "episodevurdering" : "episodevurderinger"
   }`;
   const episodesMarkup = "";
-  const podcastSimilarityMarkup = getPodcastSimilarityProductMarkup(podcast);
+  const podcastSimilarityMarkup = `
+    <div class="podcast-detail-sheet__related podcast-detail-sheet__related--loading" data-podcast-similarity-product aria-live="polite">
+      <p>Finder lignende podcasts …</p>
+    </div>
+  `;
   const hasMainSeriesReturnContext =
     showMainSeriesBack ||
     state.podcastDetailMainSeriesValue &&
@@ -12244,7 +12291,7 @@ function renderPodcastDetailSheetContent(
   const cover = content.querySelector(".podcast-detail-sheet__cover");
   const image = content.querySelector(".podcast-detail-sheet__image");
   setImage(cover, getPodcastImageSources(podcast), podcast.title);
-  hydratePodcastSimilarityProduct(dialog, podcast);
+  schedulePodcastDetailSimilarityProduct(dialog, podcast);
 
   content.querySelector("[data-podcast-detail-main-series-back]")?.addEventListener("click", (event) => {
     event.preventDefault();
