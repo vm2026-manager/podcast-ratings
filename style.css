@@ -29498,6 +29498,43 @@ html body.page-forside #pageIntroPanel .home-editorial-card__score small { color
   display: none !important;
 }
 
+/* Explore only exposes catalogue-derived cards after the catalogue snapshot is ready. */
+.explore-page--loading .explore-hero {
+  min-height: 180px;
+}
+
+.explore-loading-state {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+  min-height: 180px;
+  margin-top: 18px;
+}
+
+.explore-loading-state[role="alert"] {
+  display: block;
+  min-height: 0;
+  color: var(--text-muted, #6f6257);
+}
+
+.explore-loading-state span {
+  min-height: 156px;
+  border-radius: 18px;
+  background: linear-gradient(100deg, rgba(237, 226, 214, .72) 25%, rgba(250, 245, 238, .96) 50%, rgba(237, 226, 214, .72) 75%);
+  background-size: 200% 100%;
+  animation: explore-loading-shimmer 1.2s ease-in-out infinite;
+}
+
+@keyframes explore-loading-shimmer {
+  to { background-position: -200% 0; }
+}
+
+@media (max-width: 768px) {
+  .explore-page--loading .explore-hero { min-height: 142px; }
+  .explore-loading-state { gap: 10px; min-height: 130px; }
+  .explore-loading-state span { min-height: 120px; border-radius: 14px; }
+}
+
 html body .home-account-menu__toggle,
 html body .desktop-user-button,
 html body .desktop-user-button__avatar {

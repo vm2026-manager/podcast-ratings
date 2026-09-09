@@ -20320,6 +20320,33 @@ function renderExploreGenreSections(container, { searchTerm = "", genre = "Alle"
 function renderExplorePage() {
   const container = elements.pageIntroPanel;
   if (!container) return;
+
+  // The router runs before the asynchronous catalogue refresh has completed.
+  // Never expose cards derived from the previous catalogue while that refresh is
+  // pending: the next visible Explore DOM must be built from the ready snapshot.
+  if (state.podcastDataStatus !== "ready") {
+    const isError = state.podcastDataStatus === "error";
+    container.innerHTML = `
+      <section class="explore-page explore-page--loading" aria-busy="${!isError}">
+        <header class="explore-hero">
+          <div class="explore-hero__copy">
+            <p class="explore-eyebrow">Personligt udvalgt</p>
+            <h1>Udforsk for dig</h1>
+            <p>${isError ? "Udforsk kunne ikke indlæses lige nu." : "Indlæser podcasts til Udforsk."}</p>
+          </div>
+        </header>
+        ${
+          isError
+            ? '<p class="explore-loading-state" role="alert">Prøv at genindlæse siden.</p>'
+            : '<div class="explore-loading-state" role="status" aria-label="Indlæser Udforsk"><span></span><span></span><span></span></div>'
+        }
+      </section>
+    `;
+    container.classList.remove("is-hidden");
+    document.body.classList.remove("explore-gate-active", "explore-logged-out-preview");
+    return;
+  }
+
   if (
     isLoggedIn() &&
     state.podcastSimilarityProductStatus === "idle" &&
@@ -22839,8 +22866,12 @@ async function refreshPodcastData({ initial = false, force = false } = {}) {
   }
 
   state.podcastDataRefreshInProgress = true;
-  if (initial || !state.podcasts.length) {
-    state.podcastDataStatus = "loading";
+  state.podcastDataStatus = initial || !state.podcasts.length ? "loading" : "refreshing";
+
+  // A refresh replaces the catalogue atomically below. If Explore is visible,
+  // replace its old derived cards with a neutral state before awaiting data.
+  if (document.body.classList.contains("page-udforsk")) {
+    renderExplorePage();
   }
 
   try {
