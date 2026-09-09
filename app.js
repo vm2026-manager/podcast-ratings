@@ -694,70 +694,6 @@ function persistProfilePreferences(preferences) {
   }
 }
 
-const EXPLORE_DEBUG_ENABLED = new URLSearchParams(window.location.search).get("exploreDebug") === "1";
-let exploreDebugRenderCount = 0;
-let exploreDebugLeadHeading = "";
-
-function traceExplore(event, details = {}) {
-  if (!EXPLORE_DEBUG_ENABLED) return;
-  console.log("[EXPLORE-TRACE]", JSON.stringify({
-    time: Math.round(performance.now() * 10) / 10,
-    event,
-    ...details
-  }));
-}
-
-function traceExploreStates(event, details = {}) {
-  if (!EXPLORE_DEBUG_ENABLED) return;
-  traceExplore(event, {
-    route: window.location.hash || "#forside",
-    authReady: state.authReady,
-    personalizationUserStateStatus: state.personalizationUserStateStatus,
-    communityStatsStatus: state.communityStatsStatus,
-    podcastDataStatus: state.podcastDataStatus,
-    podcastSimilarityProductStatus: state.podcastSimilarityProductStatus,
-    exploreClustersStatus: state.exploreClustersStatus,
-    ...details
-  });
-}
-
-function traceExploreLoader(event, startedAt) {
-  if (!EXPLORE_DEBUG_ENABLED) return;
-  traceExploreStates(event, {
-    elapsedMs: Math.round((performance.now() - startedAt) * 10) / 10
-  });
-}
-
-function traceExploreResourceTiming(label, namePart) {
-  if (!EXPLORE_DEBUG_ENABLED) return;
-  const entries = performance
-    .getEntriesByType("resource")
-    .filter((entry) => entry.name.includes(namePart));
-  const entry = entries[entries.length - 1];
-  if (!entry) return;
-  traceExplore(label, { elapsedMs: Math.round(entry.duration * 10) / 10 });
-}
-
-function setupExploreDebugDomObserver() {
-  if (!EXPLORE_DEBUG_ENABLED || !elements.pageIntroPanel || setupExploreDebugDomObserver.started) return;
-  setupExploreDebugDomObserver.started = true;
-  const observeLead = () => {
-    if (!document.body.classList.contains("page-udforsk")) return;
-    const heading = normalizeText(
-      elements.pageIntroPanel.querySelector(".explore-personal-modules .explore-recommendations h2")?.textContent
-    );
-    if (!heading || heading === exploreDebugLeadHeading) return;
-    traceExploreStates("LEAD_CHANGED", { oldHeading: exploreDebugLeadHeading, newHeading: heading });
-    exploreDebugLeadHeading = heading;
-  };
-  new MutationObserver(observeLead).observe(elements.pageIntroPanel, {
-    childList: true,
-    subtree: true,
-    characterData: true
-  });
-  observeLead();
-}
-
 const state = {
   podcasts: [],
   podcastByKey: {},
@@ -2627,6 +2563,14 @@ function warmRouteAssets(route, { limit = 18 } = {}) {
   });
 
   uniquePodcasts.forEach(preloadPodcastCoverInBackground);
+
+  if (route === "udforsk") warmExploreRouteAssets();
+}
+
+function warmExploreRouteAssets() {
+  if (!isLoggedIn() || state.podcastDataStatus !== "ready") return;
+  loadPodcastSimilarityProductData();
+  loadExploreClusterIntegration();
 }
 
 function scheduleBackgroundRouteWarmup() {
@@ -6922,11 +6866,8 @@ function updateRatingDialogMessage(message = "", tone = "info") {
 }
 
 async function fetchCommunityStats() {
-  const traceStartedAt = EXPLORE_DEBUG_ENABLED ? performance.now() : 0;
-  traceExploreStates("community-stats:start");
   if (!state.supabase) {
     state.communityStatsStatus = "error";
-    traceExploreLoader("community-stats:error", traceStartedAt);
     return;
   }
 
@@ -6939,7 +6880,6 @@ async function fetchCommunityStats() {
   if (error) {
     console.error(error);
     state.communityStatsStatus = "error";
-    traceExploreLoader("community-stats:error", traceStartedAt);
     setAuthMessage("Kunne ikke hente brugernes snit fra Supabase.", "error", "hero");
     return;
   }
@@ -6957,7 +6897,6 @@ async function fetchCommunityStats() {
       ])
   );
   state.communityStatsStatus = "ready";
-  traceExploreLoader("community-stats:end", traceStartedAt);
   invalidateRankingListCache();
 }
 
@@ -7021,14 +6960,11 @@ async function fetchSavedPodcastRows() {
 }
 
 async function fetchUserState() {
-  const traceStartedAt = EXPLORE_DEBUG_ENABLED ? performance.now() : 0;
   clearUserScopedState();
   state.personalizationUserStateStatus = "loading";
-  traceExploreStates("user-state:start");
 
   if (!state.supabase || !state.authUser) {
     state.personalizationUserStateStatus = "ready";
-    traceExploreLoader("user-state:end", traceStartedAt);
     return;
   }
 
@@ -7077,13 +7013,8 @@ async function fetchUserState() {
       persistSavedPodcastMeta();
     }
     state.personalizationUserStateStatus = ratingsError || savedError ? "error" : "ready";
-    traceExploreLoader(
-      state.personalizationUserStateStatus === "ready" ? "user-state:end" : "user-state:error",
-      traceStartedAt
-    );
   } catch (error) {
     state.personalizationUserStateStatus = "error";
-    traceExploreLoader("user-state:error", traceStartedAt);
     throw error;
   }
   invalidateRankingListCache();
@@ -7092,26 +7023,18 @@ async function fetchUserState() {
 async function refreshSupabaseState() {
   if (!state.supabase) return;
 
-  const traceStartedAt = EXPLORE_DEBUG_ENABLED ? performance.now() : 0;
-  traceExploreStates("refresh-supabase:start");
-
-  await fetchCommunityStats();
-  await fetchUserState();
+  await Promise.all([fetchCommunityStats(), fetchUserState()]);
   rebuildUserRanks();
   render();
-  traceExploreLoader("refresh-supabase:end", traceStartedAt);
 }
 
 async function initSupabase() {
-  const traceStartedAt = EXPLORE_DEBUG_ENABLED ? performance.now() : 0;
-  traceExploreStates("init-supabase:start");
   state.authConfigured = hasSupabaseConfig();
   renderAuthPanel();
 
   if (!state.authConfigured) {
     state.communityStatsStatus = "error";
     state.authReady = true;
-    traceExploreLoader("init-supabase:end", traceStartedAt);
     render();
     if (document.body.classList.contains("page-ranglister")) renderPodcastGrid();
     return;
@@ -7122,7 +7045,6 @@ async function initSupabase() {
   if (!supabaseLib?.createClient) {
     state.communityStatsStatus = "error";
     state.authReady = true;
-    traceExploreLoader("init-supabase:end", traceStartedAt);
     setAuthMessage("Supabase-klienten kunne ikke indlæses i browseren.", "error", "hero");
     render();
     if (document.body.classList.contains("page-ranglister")) renderPodcastGrid();
@@ -7179,7 +7101,6 @@ async function initSupabase() {
   state.authUser = session?.user || null;
   syncRankingPositionModeForAuthUser();
   state.authReady = true;
-  traceExploreStates("auth-ready");
 
   if (isExplicitRecovery) {
     if (error || !session?.user) openPasswordRecoveryDialog("invalid");
@@ -7244,10 +7165,10 @@ async function initSupabase() {
     }
   });
 
-  // The hero must update as soon as the session is known; ratings and saved-podcast
-  // data remain on the secondary startup path below.
+  // The hero must update as soon as the session is known. Personalization starts
+  // independently, while its catalogue-dependent assets warm separately.
   render();
-  traceExploreLoader("init-supabase:end", traceStartedAt);
+  startInitialExplorePersonalization();
 }
 
 async function handleAuthAction(mode) {
@@ -8330,8 +8251,6 @@ async function loadPodcastSimilarityProductData() {
   }
 
   state.podcastSimilarityProductStatus = "loading";
-  const traceStartedAt = EXPLORE_DEBUG_ENABLED ? performance.now() : 0;
-  traceExploreStates("similarity-product:start");
   state.podcastSimilarityProductPromise = Promise.all([
     fetch(`${RECOMMENDATION_METADATA_URL}?v=${DATA_VERSION}`, { cache: "no-store" }),
     fetch(`${PODCAST_SIMILARITY_PRODUCT_URL}?v=${DATA_VERSION}`, { cache: "no-store" })
@@ -8356,16 +8275,12 @@ async function loadPodcastSimilarityProductData() {
       state.podcastSimilarityPodcastByRecommendationId =
         lookups.podcastByRecommendationId;
       state.podcastSimilarityProductStatus = "ready";
-      traceExploreLoader("similarity-product:end", traceStartedAt);
-      traceExploreResourceTiming("recommendation-metadata:resource", "recommendation-metadata.json");
-      traceExploreResourceTiming("similarity-product:resource", "podcast-similarity-product-v1.3.json");
       state.podcastSimilarityWarningShown = false;
       refreshOpenPodcastDetailSheet();
       return true;
     })
     .catch((error) => {
       state.podcastSimilarityProductStatus = "error";
-      traceExploreLoader("similarity-product:error", traceStartedAt);
       state.podcastSimilarityMetadataPayload = null;
       state.podcastSimilarityProductByRecommendationId = {};
       state.podcastSimilarityRecommendationIdByPodcastKey = {};
@@ -8385,8 +8300,6 @@ async function loadExploreClusterIntegration() {
   if (state.exploreClustersPromise) return state.exploreClustersPromise;
 
   state.exploreClustersStatus = "loading";
-  const traceStartedAt = EXPLORE_DEBUG_ENABLED ? performance.now() : 0;
-  traceExploreStates("explore-clusters:start");
   state.exploreClustersPromise = Promise.all([
     fetch(`${EXPLORE_CLUSTERS_URL}?v=${DATA_VERSION}`, { cache: "no-store" }),
     import("./scripts/explore-cluster-ui-integration.mjs")
@@ -8400,9 +8313,6 @@ async function loadExploreClusterIntegration() {
       state.exploreClustersPayload = payload;
       state.exploreClusterUiIntegration = integration;
       state.exploreClustersStatus = "ready";
-      traceExploreLoader("explore-clusters:end", traceStartedAt);
-      traceExploreResourceTiming("explore-clusters:resource", "explore-clusters.json");
-      traceExploreResourceTiming("explore-cluster-import:resource", "explore-cluster-ui-integration.mjs");
       invalidateExplorePersonalSnapshot();
       return true;
     })
@@ -8411,7 +8321,6 @@ async function loadExploreClusterIntegration() {
       // the established personal recommendation rows available.
       console.warn("Kunne ikke indlæse personlige udforsk-klynger.", error);
       state.exploreClustersStatus = "error";
-      traceExploreLoader("explore-clusters:error", traceStartedAt);
       state.exploreClustersPayload = null;
       state.exploreClusterUiIntegration = null;
       return false;
@@ -14701,7 +14610,6 @@ function render() {
   const previousRawRoute = state.currentRawRoute;
   const routeChanged =
     previousRoute !== nextRouteInfo.route || previousRawRoute !== nextRouteInfo.rawRoute;
-  if (routeChanged) traceExploreStates("route-change", { nextRoute: nextRouteInfo.route });
   const mainRouteChanged = previousRoute && previousRoute !== nextRouteInfo.route;
 
   if (routeChanged) {
@@ -20456,15 +20364,6 @@ function renderExplorePage() {
   const container = elements.pageIntroPanel;
   if (!container) return;
 
-  if (EXPLORE_DEBUG_ENABLED) {
-    exploreDebugRenderCount += 1;
-    traceExploreStates("render-explore", {
-      invocation: exploreDebugRenderCount,
-      initialRenderState: getExploreInitialRenderState(),
-      caller: String(new Error().stack || "").split("\n").slice(2, 5).join(" | ")
-    });
-  }
-
   if (
     isLoggedIn() &&
     state.podcastDataStatus === "ready" &&
@@ -21137,8 +21036,6 @@ function renderRoute() {
   closeMobileHomeSearchOverlay({ clearInput: false });
   deactivateHomePodcastSearchFocus();
   const { rawRoute, route } = getRouteInfoFromHash();
-  traceExploreStates("route-activate", { route });
-
   if (rawRoute === "gemte") {
     window.location.replace("#profil-gemte");
     return null;
@@ -23018,8 +22915,6 @@ async function refreshPodcastData({ initial = false, force = false } = {}) {
 
   state.podcastDataRefreshInProgress = true;
   state.podcastDataStatus = initial || !state.podcasts.length ? "loading" : "refreshing";
-  const traceStartedAt = EXPLORE_DEBUG_ENABLED ? performance.now() : 0;
-  traceExploreStates("podcast-catalogue:start");
 
   // Initial catalogue loading has no valid snapshot. Background refreshes keep
   // their already committed snapshot visible until the replacement is atomic.
@@ -23043,8 +22938,6 @@ async function refreshPodcastData({ initial = false, force = false } = {}) {
 
     applyPodcastDataRefresh(podcastRows, featuredRows, coverManifestLookup, displayGroups);
     state.podcastDataStatus = "ready";
-    traceExploreLoader("podcast-catalogue:end", traceStartedAt);
-    traceExploreResourceTiming("podcast-catalogue:resource", "podcasts.json");
     state.lastSuccessfulPodcastDataRefreshAt = Date.now();
     renderAfterPodcastDataRefresh({ initial });
     return true;
@@ -23052,7 +22945,6 @@ async function refreshPodcastData({ initial = false, force = false } = {}) {
     console.error(error);
     if (initial || !state.podcasts.length) {
       state.podcastDataStatus = "error";
-      traceExploreLoader("podcast-catalogue:error", traceStartedAt);
       showLoadError(
         "Kunne ikke indl\u00e6se podcasts. Tjek data/podcasts.json og data/featured-reviews.json."
       );
@@ -23155,27 +23047,37 @@ function loadVisitorCount() {
 
 let initialSupabaseStartup = null;
 let initialPodcastStartup = null;
+let initialExplorePersonalizationStartup = null;
 
-function runSecondaryStartup() {
-  traceExploreStates("secondary-startup:start");
-  loadVisitorCount();
-  Promise.all([initialSupabaseStartup, initialPodcastStartup])
-    .then(() => {
-      if (!state.supabase) return;
-      return refreshSupabaseState();
-    })
+function startInitialExplorePersonalization() {
+  if (!state.authUser) return null;
+  if (initialExplorePersonalizationStartup) return initialExplorePersonalizationStartup;
+
+  initialExplorePersonalizationStartup = Promise.all([
+    refreshSupabaseState(),
+    Promise.resolve()
+      .then(() => initialPodcastStartup)
+      .then(() => {
+        if (!state.authUser || state.podcastDataStatus !== "ready") return;
+        warmExploreRouteAssets();
+      })
+  ])
     .catch((error) => {
       console.error(error);
       setAuthMessage("Supabase-data kunne ikke indlæses endnu.", "error", "hero");
     });
+
+  return initialExplorePersonalizationStartup;
 }
 
-traceExplore("app-startup");
+function runSecondaryStartup() {
+  loadVisitorCount();
+}
+
 ensureLoadMoreControls();
 applyViewModePreference();
 setupMobileViewportOffsets();
 setupEvents();
-setupExploreDebugDomObserver();
 updateAuthPasswordToggle();
 restoreNormalViewportMeta();
 initialSupabaseStartup = initSupabase();
@@ -23190,10 +23092,8 @@ window.setTimeout(() => {
 initialPodcastStartup = loadPodcasts();
 
 if ("requestIdleCallback" in window) {
-  traceExplore("secondary-startup:scheduled", { scheduler: "requestIdleCallback", timeoutMs: 1500 });
   window.requestIdleCallback(runSecondaryStartup, { timeout: 1500 });
 } else {
-  traceExplore("secondary-startup:scheduled", { scheduler: "setTimeout", timeoutMs: 400 });
   window.setTimeout(runSecondaryStartup, 400);
 }
 
