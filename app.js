@@ -701,6 +701,10 @@ const state = {
   podcastByLegacyKey: {},
   podcastDisplayGroups: [],
   podcastDisplayGroupById: {},
+  podcastDetailDisplayGroupByPodcastKey: {},
+  podcastDetailPublicItemByPodcastKey: {},
+  podcastDetailCanonicalGroupKeyByPodcastKey: {},
+  podcastDetailRecommendationCache: new Map(),
   coverManifestByKey: {},
   coverMetaByPrimarySrc: {},
   coverManifestWarningShown: false,
@@ -8276,6 +8280,7 @@ async function loadPodcastSimilarityProductData() {
         lookups.podcastByRecommendationId;
       state.podcastSimilarityProductStatus = "ready";
       state.podcastSimilarityWarningShown = false;
+      state.podcastDetailRecommendationCache.clear();
       refreshPodcastDetailSimilarityProduct();
       return true;
     })
@@ -8285,6 +8290,7 @@ async function loadPodcastSimilarityProductData() {
       state.podcastSimilarityProductByRecommendationId = {};
       state.podcastSimilarityRecommendationIdByPodcastKey = {};
       state.podcastSimilarityPodcastByRecommendationId = {};
+      state.podcastDetailRecommendationCache.clear();
       warnPodcastSimilarityProduct(error?.message || "ukendt valideringsfejl");
       return false;
     })
@@ -8755,9 +8761,9 @@ function getPodcastDetailCanonicalGroupKey(podcast) {
   }
 
   const podcastKey = getPodcastKey(podcast);
-  const displayGroup = state.podcastDisplayGroups.find((group) =>
-    getDisplayGroupMemberPodcasts(group).some((member) => getPodcastKey(member) === podcastKey)
-  );
+  const cachedKey = state.podcastDetailCanonicalGroupKeyByPodcastKey[podcastKey];
+  if (cachedKey) return cachedKey;
+  const displayGroup = state.podcastDetailDisplayGroupByPodcastKey[podcastKey];
   if (displayGroup?.id) return `display-group:${displayGroup.id}`;
 
   const mainSeries = normalizeComparable(podcast.mainSeries);
@@ -8840,12 +8846,7 @@ function selectPodcastDetailRecommendations(
 function resolvePublicPodcastDisplayItem(podcast) {
   if (!podcast || podcast.isDisplayGroup) return podcast || null;
   const podcastKey = getPodcastKey(podcast);
-  const group = state.podcastDisplayGroups.find((candidateGroup) =>
-    candidateGroup.rankingEnabled && getDisplayGroupMemberPodcasts(candidateGroup).some(
-      (member) => getPodcastKey(member) === podcastKey
-    )
-  );
-  return group ? createRankingDisplayGroup(group) : podcast;
+  return state.podcastDetailPublicItemByPodcastKey[podcastKey] || podcast;
 }
 
 function collapseRecommendationCandidatesForPublicDisplay(sourcePodcast, candidates) {
@@ -8880,15 +8881,7 @@ function getPodcastSimilarityProductMarkup(podcast) {
   if (state.podcastSimilarityProductStatus === "idle") {
     loadPodcastSimilarityProductData();
   }
-  const validated = getValidatedPodcastSimilarityProduct(podcast);
-  const completedRecommendations = selectPodcastDetailRecommendations(
-    collapseRecommendationCandidatesForPublicDisplay(
-      podcast,
-      getPodcastDetailDynamicRecommendations(podcast, validated)
-    ),
-    8,
-    { sourcePodcast: podcast }
-  );
+  const completedRecommendations = getPodcastDetailRecommendations(podcast);
 
   if (!completedRecommendations.length) return "";
   return `
@@ -8899,6 +8892,25 @@ function getPodcastSimilarityProductMarkup(podcast) {
       )}
     </div>
   `;
+}
+
+function getPodcastDetailRecommendations(podcast) {
+  const podcastKey = getPodcastKey(podcast);
+  if (!podcastKey) return [];
+  const cached = state.podcastDetailRecommendationCache.get(podcastKey);
+  if (cached) return cached;
+
+  const validated = getValidatedPodcastSimilarityProduct(podcast);
+  const completedRecommendations = selectPodcastDetailRecommendations(
+    collapseRecommendationCandidatesForPublicDisplay(
+      podcast,
+      getPodcastDetailDynamicRecommendations(podcast, validated)
+    ),
+    8,
+    { sourcePodcast: podcast }
+  );
+  state.podcastDetailRecommendationCache.set(podcastKey, completedRecommendations);
+  return completedRecommendations;
 }
 
 function hydratePodcastSimilarityProduct(dialog, podcast) {
@@ -22834,6 +22846,36 @@ function buildPodcastLookups(podcasts) {
   return { byId, byLegacyKey };
 }
 
+function rebuildPodcastDetailRecommendationLookups() {
+  const displayGroupByPodcastKey = {};
+  const publicItemByPodcastKey = {};
+  const canonicalGroupKeyByPodcastKey = {};
+
+  state.podcasts.forEach((podcast) => {
+    const key = getPodcastKey(podcast);
+    if (!key) return;
+    const mainSeries = normalizeComparable(podcast.mainSeries);
+    canonicalGroupKeyByPodcastKey[key] = mainSeries ? `series:${mainSeries}` : `podcast:${key}`;
+  });
+
+  state.podcastDisplayGroups.forEach((group) => {
+    const members = getDisplayGroupMemberPodcasts(group);
+    const publicItem = group.rankingEnabled ? createRankingDisplayGroup(group) : null;
+    members.forEach((member) => {
+      const key = getPodcastKey(member);
+      if (!key) return;
+      displayGroupByPodcastKey[key] = group;
+      canonicalGroupKeyByPodcastKey[key] = `display-group:${group.id}`;
+      if (publicItem) publicItemByPodcastKey[key] = publicItem;
+    });
+  });
+
+  state.podcastDetailDisplayGroupByPodcastKey = displayGroupByPodcastKey;
+  state.podcastDetailPublicItemByPodcastKey = publicItemByPodcastKey;
+  state.podcastDetailCanonicalGroupKeyByPodcastKey = canonicalGroupKeyByPodcastKey;
+  state.podcastDetailRecommendationCache.clear();
+}
+
 function applyPodcastDataRefresh(podcastRows, featuredRows, coverManifestLookup = {}, displayGroups = []) {
   const mappedPodcasts = podcastRows.map(mapPodcast).filter(isUsefulPodcast);
 
@@ -22849,6 +22891,7 @@ function applyPodcastDataRefresh(podcastRows, featuredRows, coverManifestLookup 
   state.podcastDisplayGroupById = Object.fromEntries(
     displayGroups.map((group) => [normalizeText(group.id), group])
   );
+  rebuildPodcastDetailRecommendationLookups();
   if (
     state.podcastSimilarityProductStatus === "ready" &&
     state.podcastSimilarityMetadataPayload
