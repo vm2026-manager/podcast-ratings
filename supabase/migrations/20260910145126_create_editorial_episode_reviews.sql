@@ -6,7 +6,7 @@ create schema if not exists private;
 
 create table public.editorial_episode_reviews (
   id uuid primary key default gen_random_uuid(),
-  episode_id uuid null references public.podcast_episodes(id) on delete set null,
+  episode_id uuid null references public.podcast_episodes(id) on delete restrict,
   canonical_podcast_key text null,
   parent_label text null,
   parent_status text not null check (
@@ -66,6 +66,8 @@ create table private.editorial_episode_review_provenance (
 );
 
 alter table private.editorial_episode_review_provenance enable row level security;
+revoke all on schema private from public;
+revoke all on table private.editorial_episode_review_provenance from public;
 revoke all on schema private from anon, authenticated;
 revoke all on table private.editorial_episode_review_provenance from anon, authenticated;
 

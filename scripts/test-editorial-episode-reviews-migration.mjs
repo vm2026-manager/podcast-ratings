@@ -31,7 +31,10 @@ assert.match(migration, /execute function public\.set_updated_at\(\)/);
 assert.match(migration, /grant select on public\.editorial_episode_reviews to anon, authenticated/);
 assert.doesNotMatch(migration, /grant (insert|update|delete|all) on public\.editorial_episode_reviews to (anon|authenticated)/);
 assert.match(migration, /revoke all on table private\.editorial_episode_review_provenance from anon, authenticated/);
-assert.match(migration, /on delete set null/);
+assert.match(migration, /episode_id uuid null references public\.podcast_episodes\(id\) on delete restrict/);
+assert.doesNotMatch(migration, /episode_id uuid null references public\.podcast_episodes\(id\) on delete set null/);
+assert.match(migration, /revoke all on schema private from public/);
+assert.match(migration, /revoke all on table private\.editorial_episode_review_provenance from public/);
 
 for (const id of legacyIds) {
   assert.match(migration, new RegExp(`legacy_catalogue_podcast_id[^;]*${id}`, "s"));
