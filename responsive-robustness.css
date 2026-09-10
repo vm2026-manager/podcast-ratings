@@ -40,11 +40,6 @@ html body :is(.desktop-header-search__input, .desktop-user-button__copy,
     grid-template-columns: repeat(auto-fit, minmax(min(100%, 210px), 1fr)) !important;
   }
 
-  html body .podcast-detail-sheet {
-    width: min(1180px, calc(100vw - clamp(28px, 5vw, 72px))) !important;
-    max-width: 1180px !important;
-  }
-
   html body .podcast-detail-sheet__related-card {
     flex: 0 0 clamp(150px, 19vw, 205px) !important;
     min-width: 0 !important;
