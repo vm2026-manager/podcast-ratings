@@ -29313,12 +29313,8 @@ html body.page-profil #adminPodcastSuggestions .profile-suggestion-admin-decisio
   }
 }
 
-/* Reserve clearance for Profile/Udforsk/Ranglister's fixed mobile search control. */
+/* Reserve clearance for Udforsk/Ranglister's fixed mobile search control. */
 @media (max-width: 768px) {
-  html body.page-profil .mobile-page-topline__profile {
-    margin-right: 48px !important;
-  }
-
   html body.page-udforsk .mobile-page-topline__profile,
   html body.page-ranglister .mobile-page-topline__profile {
     margin-right: 36px !important;
