@@ -36,9 +36,6 @@
     grid-template-columns: 76px minmax(0, 1fr) !important;
     gap: 8px 12px !important;
     padding: 12px !important;
-    width: calc(100% - 16px) !important;
-    max-width: 336px !important;
-    margin: 0 auto !important;
     box-sizing: border-box !important;
   }
 
