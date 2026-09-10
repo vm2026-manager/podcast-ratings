@@ -1,5 +1,6 @@
 import { FEED_CONFIGS, type FeedConfig, type FeedConfigMap, type FeedRouteMatcher } from "./feed-config.ts";
 import { mapApplePodcastHtmlEpisodes } from "./apple-podcasts.ts";
+import { matchesExplicitTitlePrefix } from "./mediano-routing.mjs";
 
 export const FEED_TIMEOUT_MS = 15000;
 export const BATCH_SIZE = 200;
@@ -68,6 +69,7 @@ function matcherMatches(value: string, matcher: FeedRouteMatcher | undefined): b
     const normalizedAlias = normalizeRouteText(alias);
     return Boolean(normalizedAlias) && normalized.includes(normalizedAlias);
   })) return true;
+  if (matcher.prefixes?.length && matchesExplicitTitlePrefix(value, matcher.prefixes)) return true;
   return (matcher.patterns || []).some((pattern) => {
     const flags = [...new Set(`${pattern.flags.replace(/[gy]/g, "")}iu`.split(""))].join("");
     return new RegExp(pattern.source, flags).test(normalized);

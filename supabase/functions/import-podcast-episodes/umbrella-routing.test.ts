@@ -1,6 +1,7 @@
 import { assertEquals } from "https://deno.land/std@0.224.0/assert/mod.ts";
 import { runEpisodeImport, routeEpisodes, type PodcastEpisodeRow } from "./core.ts";
 import { FEED_CONFIGS, type FeedConfig } from "./feed-config.ts";
+import { MEDIANO_PUBLIC_ROUTE_DEFINITIONS } from "./mediano-routing.mjs";
 
 const transferDescription = "Velkommen til Tipsbladets Transfer Talk.";
 const tipsbladetHistory: Array<[string, string, string?]> = [
@@ -157,4 +158,28 @@ Deno.test("an umbrella routing conflict is reported and never upserted", async (
   assertEquals(result.error_count, 1);
   assertEquals((result.details?.routing as Record<string, unknown>).routing_conflict_count, 1);
   assertEquals(logs.length, 1);
+});
+
+Deno.test("Mediano public routes use explicit title prefixes and protect known exclusions", () => {
+  const config = FEED_CONFIGS.mediano_public;
+  const enabled = MEDIANO_PUBLIC_ROUTE_DEFINITIONS.filter((route) => route.status === "enabled");
+  const episodes = enabled.map((route, index) => episode(`mediano-${index}`, `${route.aliases[0]}: test`));
+  const routed = routeEpisodes(episodes, config);
+  assertEquals(routed.episodes.length, enabled.length);
+  assertEquals(routed.report?.unmatched.length, 0);
+  assertEquals(routed.report?.ambiguous.length, 0);
+  assertEquals(new Set(routed.episodes.map((entry) => entry.podcast_key)).size, enabled.length);
+
+  const curlyApostrophe = routeEpisodes([episode("curly", "Fodbold var bedre i 90’erne #1: test")], config);
+  assertEquals(curlyApostrophe.episodes[0].podcast_key, "fodbold var bedre i 90 erne");
+  const mentionedLater = routeEpisodes([episode("later", "Analyse med Mediano PL senere i udsendelsen")], config);
+  assertEquals(mentionedLater.episodes.length, 0);
+  assertEquals(mentionedLater.report?.unmatched.length, 1);
+  const genericSuperliga = routeEpisodes([episode("generic", "Superliga: analyse")], config);
+  assertEquals(genericSuperliga.episodes.length, 0);
+  const bonus = routeEpisodes([episode("bonus", "BONUS - MEDIANO PL: test")], config);
+  assertEquals(bonus.episodes.length, 0);
+  const fodboldministeriet = routeEpisodes([episode("ministeriet", "Fodboldministeriet: test")], config);
+  assertEquals(fodboldministeriet.episodes.length, 0);
+  assertEquals(fodboldministeriet.report?.known_no_destination_counts, { fodboldministeriet_source_overlap: 1 });
 });

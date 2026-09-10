@@ -1,4 +1,4 @@
-import { PUBLIC_MEDIANO_RSS_URL, MEDIANO_PUBLIC_ROUTES, routePublicMedianoTitle } from "./mediano-public-routing.mjs";
+import { PUBLIC_MEDIANO_RSS_URL, MEDIANO_PUBLIC_ROUTES, normalizeRouteText, routePublicMedianoTitle } from "./mediano-public-routing.mjs";
 
 function decodeXml(value) {
   return String(value ?? "")
@@ -56,7 +56,7 @@ export function auditMedianoFeedXml(xml, { feedUrl = PUBLIC_MEDIANO_RSS_URL, rou
       unmatched.push(item);
     }
   }
-  const fingerprintItems = items.map((item) => ({ ...item, fingerprint: `${item.title}|${item.publishedAt}|${item.duration}` }));
+  const fingerprintItems = items.map((item) => ({ ...item, fingerprint: `${normalizeRouteText(item.title)}|${item.publishedAt}|${item.duration}` }));
   return {
     dryRun: true,
     feedUrl,

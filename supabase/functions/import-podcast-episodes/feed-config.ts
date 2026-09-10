@@ -1,3 +1,5 @@
+import { PUBLIC_MEDIANO_RSS_URL, buildMedianoPublicFeedRoutes } from "./mediano-routing.mjs";
+
 export type FeedFormat = "rss" | "radio4_json" | "dr_lyd_next_data" | "apple_podcasts_html";
 
 export type FeedRouteMatcher = {
@@ -5,6 +7,8 @@ export type FeedRouteMatcher = {
   patterns?: RegExp[];
   // Aliases are normalized and matched as literal phrases.
   aliases?: string[];
+  // Prefixes require a title-start match and an explicit title separator.
+  prefixes?: string[];
 };
 
 export type FeedRoute = {
@@ -34,6 +38,13 @@ export type FeedConfig = {
 export type FeedConfigMap = Record<string, FeedConfig>;
 
 export const FEED_CONFIGS: FeedConfigMap = {
+  "mediano_public": {
+    // Import-run compatibility label; each destination is set by title routing.
+    podcast_key: "mediano superliga",
+    source: "mediano_public_rss",
+    feed_url: PUBLIC_MEDIANO_RSS_URL,
+    routes: buildMedianoPublicFeedRoutes()
+  },
   "apple_1575533784": {
     podcast_key: "mads og a holdet",
     source: "apple_podcasts_1575533784",
