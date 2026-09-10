@@ -25,8 +25,25 @@ jobs:
         with:
           node-version: "20"
 
-      - name: Sync JSON from Google Sheets
-        run: node scripts/sync-sheet-data.mjs
+      - name: Generate staged JSON from Google Sheets
+        run: node scripts/sync-sheet-data.mjs --output-dir .sync-stage
+
+      - name: Validate staged catalogue schema
+        run: |
+          node -e "const fs=require('fs'); for (const path of ['.sync-stage/data/podcasts.json', '.sync-stage/data/featured-reviews.json', '.sync-stage/data/explore-clusters.json']) JSON.parse(fs.readFileSync(path,'utf8')); console.log('Staged catalogue JSON files are valid')"
+
+      - name: Hard podcast identity integrity gate
+        env:
+          PODCAST_SUPABASE_URL: ${{ vars.PODCAST_SUPABASE_URL }}
+          PODCAST_SUPABASE_ANON_KEY: ${{ secrets.PODCAST_SUPABASE_ANON_KEY }}
+        run: node scripts/podcast-identity-integrity.mjs --before data/podcasts.json --candidate .sync-stage/data/podcasts.json --migrations data/podcast-id-migrations.json
+
+      - name: Promote validated staged JSON
+        run: |
+          cp .sync-stage/data/podcasts.json data/podcasts.json
+          cp .sync-stage/data/featured-reviews.json data/featured-reviews.json
+          cp .sync-stage/data/explore-clusters.json data/explore-clusters.json
+          if [ -d .sync-stage/data/covers ]; then cp -R .sync-stage/data/covers/. data/covers/; fi
 
       - name: Validate catalogue outputs
         run: |

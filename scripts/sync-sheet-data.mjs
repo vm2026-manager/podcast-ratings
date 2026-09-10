@@ -772,8 +772,14 @@ async function syncSheet(sheet, loadedSheet, catalogueRows = []) {
 }
 
 async function main() {
+  const outputDirectoryIndex = process.argv.indexOf("--output-dir");
+  const outputDirectory = outputDirectoryIndex === -1 ? "" : process.argv[outputDirectoryIndex + 1];
+  if (outputDirectoryIndex !== -1 && !outputDirectory) throw new Error("--output-dir kræver en mappe.");
+  const outputSheets = outputDirectory
+    ? SHEETS.map((sheet) => ({ ...sheet, outputPath: path.join(outputDirectory, sheet.outputPath) }))
+    : SHEETS;
   const loadedSheets = await Promise.all(
-    SHEETS.map(async (sheet) => [sheet, await loadSheet(sheet)])
+    outputSheets.map(async (sheet) => [sheet, await loadSheet(sheet)])
   );
   const podcastsSheet = loadedSheets.find(([sheet]) => sheet.sheetName === "Ark1");
   const catalogueRows = await slimPodcastRows(filterPodcastRows(podcastsSheet[1].objects));
