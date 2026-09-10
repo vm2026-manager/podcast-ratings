@@ -176,9 +176,10 @@
     padding: 8px !important;
     display: grid !important;
     grid-template-columns: 26px minmax(0, 1fr) !important;
-    grid-template-rows: auto minmax(0, 1fr) !important;
+    grid-template-rows: auto auto !important;
     column-gap: 7px !important;
-    row-gap: 2px !important;
+    row-gap: 3px !important;
+    align-content: center !important;
     align-items: center !important;
     justify-items: start !important;
     border: 1px solid rgba(225, 207, 190, 0.84) !important;
@@ -227,10 +228,10 @@
     grid-row: 1 !important;
     min-height: 0 !important;
     color: #74695f !important;
-    font-size: 0.56rem !important;
+    font-size: 0.48rem !important;
     font-weight: 850 !important;
     line-height: 1.12 !important;
-    letter-spacing: 0.045em !important;
+    letter-spacing: 0.025em !important;
     text-transform: uppercase !important;
     white-space: normal !important;
     overflow-wrap: normal !important;
@@ -261,11 +262,11 @@
   html body.page-profil .profile-stat-card--average strong {
     grid-column: 2 !important;
     grid-row: 2 !important;
-    align-self: start !important;
+    align-self: center !important;
     min-width: 0 !important;
     margin: 0 !important;
     color: #171411 !important;
-    font-size: clamp(1rem, 4.5vw, 1.1rem) !important;
+    font-size: clamp(0.94rem, 4.1vw, 1.02rem) !important;
     font-weight: 850 !important;
     line-height: 1.1 !important;
     text-align: left !important;
