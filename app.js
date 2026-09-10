@@ -23083,6 +23083,7 @@ async function loadPodcasts() {
     scheduleHomeHeroRotation();
     scheduleBackgroundRouteWarmup();
   }
+  return refreshed;
 }
 
 function loadVisitorCount() {
@@ -23148,21 +23149,46 @@ function loadVisitorCount() {
 
 let initialSupabaseStartup = null;
 let initialPodcastStartup = null;
+let initialRatingHydrationStartup = null;
 let initialExplorePersonalizationStartup = null;
+
+function startInitialRatingHydration() {
+  if (initialRatingHydrationStartup) return initialRatingHydrationStartup;
+
+  // Podcast keys from Supabase are resolved through the catalogue lookups. Both
+  // startup systems may begin in parallel, but do not canonicalize a response
+  // until the initial catalogue has successfully committed those lookups.
+  initialRatingHydrationStartup = Promise.allSettled([
+    initialSupabaseStartup,
+    initialPodcastStartup
+  ])
+    .then(([, catalogueResult]) => {
+      if (
+        !state.supabase ||
+        catalogueResult.status !== "fulfilled" ||
+        !catalogueResult.value ||
+        state.podcastDataStatus !== "ready"
+      ) return;
+      return refreshSupabaseState();
+    })
+    .catch((error) => {
+      console.error(error);
+      setAuthMessage("Supabase-data kunne ikke indlæses endnu.", "error", "hero");
+    });
+
+  return initialRatingHydrationStartup;
+}
 
 function startInitialExplorePersonalization() {
   if (!state.authUser) return null;
   if (initialExplorePersonalizationStartup) return initialExplorePersonalizationStartup;
 
-  initialExplorePersonalizationStartup = Promise.all([
-    refreshSupabaseState(),
-    Promise.resolve()
-      .then(() => initialPodcastStartup)
-      .then(() => {
-        if (!state.authUser || state.podcastDataStatus !== "ready") return;
-        warmExploreRouteAssets();
-      })
-  ])
+  initialExplorePersonalizationStartup = Promise.resolve()
+    .then(() => initialPodcastStartup)
+    .then(() => {
+      if (!state.authUser || state.podcastDataStatus !== "ready") return;
+      warmExploreRouteAssets();
+    })
     .catch((error) => {
       console.error(error);
       setAuthMessage("Supabase-data kunne ikke indlæses endnu.", "error", "hero");
@@ -23191,6 +23217,7 @@ window.setTimeout(() => {
   clearSearchInput({ rerender: true });
 }, 120);
 initialPodcastStartup = loadPodcasts();
+initialRatingHydrationStartup = startInitialRatingHydration();
 
 if ("requestIdleCallback" in window) {
   window.requestIdleCallback(runSecondaryStartup, { timeout: 1500 });

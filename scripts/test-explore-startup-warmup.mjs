@@ -36,7 +36,17 @@ assert.match(
 const startup = extractFunction("startInitialExplorePersonalization");
 assert.match(startup, /\.then\(\(\) => initialPodcastStartup\)/u);
 assert.match(startup, /warmExploreRouteAssets\(\);/u);
-assert.match(startup, /refreshSupabaseState\(\),/u);
+assert.doesNotMatch(
+  startup,
+  /refreshSupabaseState\(\)/u,
+  "Explore warming must not duplicate the one-shot initial rating hydration"
+);
+
+const ratingHydration = extractFunction("startInitialRatingHydration");
+assert.match(ratingHydration, /Promise\.allSettled\(\[/u);
+assert.match(ratingHydration, /initialSupabaseStartup/u);
+assert.match(ratingHydration, /initialPodcastStartup/u);
+assert.match(ratingHydration, /return refreshSupabaseState\(\);/u);
 
 assert.doesNotMatch(app, /EXPLORE-TRACE|exploreDebug|traceExplore/u, "temporary Explore diagnostics must be removed");
 
