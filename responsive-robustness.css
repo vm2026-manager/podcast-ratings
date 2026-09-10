@@ -1,0 +1,116 @@
+/*
+ * Shared responsive guardrails.  This file deliberately comes last: the site
+ * has accumulated page-specific desktop treatments, and these rules keep
+ * those treatments from retaining a wide-screen minimum at smaller CSS
+ * viewports (including those produced by browser zoom).
+ */
+
+html body :is(.content-shell, .page-intro-panel, .ranking-layout,
+  .ranking-sidebar-column, .ranking-main-column, .explore-page, .profile-page,
+  .hero, .section-header, .podcast-detail-sheet, .podcast-detail-sheet__body,
+  .podcast-detail-sheet__content, .podcast-detail-sheet__main,
+  .podcast-detail-sheet__related, .podcast-detail-sheet__episodes) {
+  min-width: 0;
+}
+
+html body :is(.podcast-grid, .recent-grid, .explore-grid, .explore-genre-grid,
+  .profile-grid, .profile-list-dialog__list, .podcast-detail-sheet__related-list) > * {
+  min-width: 0;
+}
+
+html body :is(.desktop-header-search__input, .desktop-user-button__copy,
+  .desktop-user-button__label, .desktop-user-button__meta, .site-nav,
+  .section-header > *, .podcast-detail-sheet__header-copy,
+  .podcast-detail-sheet__episode-copy, .podcast-detail-sheet__related-copy) {
+  min-width: 0;
+}
+
+/* Cards retain a useful reading width instead of squeezing into four or five
+ * columns as a desktop viewport narrows. */
+@media (min-width: 769px) {
+  html body .podcast-grid {
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr)) !important;
+  }
+
+  html body .recent-grid {
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 215px), 1fr)) !important;
+  }
+
+  html body :is(.explore-grid, .explore-genre-grid) {
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 210px), 1fr)) !important;
+  }
+
+  html body .podcast-detail-sheet {
+    width: min(1180px, calc(100vw - clamp(28px, 5vw, 72px))) !important;
+    max-width: 1180px !important;
+  }
+
+  html body .podcast-detail-sheet__related-card {
+    flex: 0 0 clamp(150px, 19vw, 205px) !important;
+    min-width: 0 !important;
+  }
+}
+
+/* Compact desktop: keep every header control visible by using its intentional
+ * two-row mode before the single-row layout runs out of room. */
+@media (min-width: 901px) and (max-width: 1280px) {
+  html body:is(.page-forside, .page-ranglister, .page-udforsk, .page-profil) .page-shell > .topbar {
+    grid-template-columns: minmax(0, 1fr) minmax(168px, 250px) !important;
+    grid-template-areas: "brand account" "nav search" !important;
+    grid-template-rows: 56px 52px !important;
+    column-gap: clamp(10px, 2vw, 18px) !important;
+    height: 108px !important;
+    min-height: 108px !important;
+    max-height: none !important;
+  }
+
+  html body .page-shell > .topbar .site-nav {
+    gap: clamp(9px, 1.5vw, 18px) !important;
+    width: 100% !important;
+    overflow: hidden;
+  }
+
+  html body .page-shell > .topbar .site-nav__link {
+    font-size: clamp(.82rem, 1.35vw, 1rem) !important;
+  }
+
+  html body .page-shell > .topbar #desktopHeaderSearch {
+    width: 100% !important;
+    min-width: 0 !important;
+  }
+
+  html body .page-shell > .topbar #desktopUserButton {
+    min-width: 0 !important;
+    width: min(100%, 250px) !important;
+  }
+
+  html body .page-shell > .topbar .desktop-user-button__copy {
+    overflow: hidden;
+  }
+
+  html body.page-ranglister .ranking-layout {
+    grid-template-columns: minmax(210px, 25%) minmax(0, 1fr) !important;
+    gap: clamp(18px, 2.5vw, 32px) !important;
+  }
+
+  html body.page-ranglister .ranking-sidebar-column {
+    width: auto !important;
+    min-width: 0 !important;
+  }
+
+  html body.page-ranglister .ranking-filter-panel {
+    padding: clamp(16px, 2vw, 24px) !important;
+  }
+
+  html body.page-ranglister .genre-chips {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+
+  html body.page-ranglister .genre-chip[data-genre="Underholdning"] {
+    grid-column: auto !important;
+  }
+
+  html body :is(.section-header, .ranking-toolbar, .podcast-detail-sheet__episodes-head) {
+    gap: 12px !important;
+  }
+}
