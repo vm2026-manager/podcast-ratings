@@ -69,6 +69,21 @@ const EPISODE_DATABASE_KEY_ALIASES = {
   "vaagn lidt op": "vagn lidt op",
   "vågn lidt op": "vagn lidt op"
 };
+// These database keys predate the stable catalogue IDs. They are deliberately
+// explicit: an unknown historical key must never be matched by title guesswork.
+const LEGACY_PODCAST_RATING_KEY_ALIASES = Object.freeze({
+  bedraget: "bedraget pa hvidovre hospital",
+  "et kapitel for sig bjarne corydon": "bjarne corydon",
+  "adfærd fa mere eventyr ind i hverdagen med morten kirckhoff fra 0 stjerner":
+    "fa mere eventyr ind i hverdagen",
+  "et kapitel for sig christian fuhlendorff": "christian fuhlendorff",
+  "et kapitel for sig joachim b olsen": "joachim b olsen",
+  "et kapitel for sig helle thorning": "helle thorning",
+  "tyran saddam hussein": "saddam hussein",
+  "mørklagt hvem bortførte vores børn": "hvem bortførte vores børn",
+  "et kapitel for sig anders fogh": "anders fogh"
+});
+
 const EPISODE_PODCAST_CONFIG = {
   "mads og a holdet": {
     podcastKey: "mads og a holdet",
@@ -732,6 +747,9 @@ const state = {
   exploreSuggestionDialogOpen: false,
   activeSuggestionEditId: null,
   userRatingsByKey: {},
+  // Canonical catalogue ID -> raw user_ratings.podcast_key. This preserves an
+  // existing legacy row when that user later edits or deletes their rating.
+  userRatingPersistedKeyByCanonical: {},
   communityStatsByKey: {},
   userRankByKey: {},
   profileSuggestions: [],
@@ -3023,7 +3041,90 @@ function resolvePodcastByStoredKey(key) {
 }
 
 function resolveCanonicalPodcastId(key) {
-  return getPodcastId(resolvePodcastByStoredKey(key));
+  const storedKey = normalizeText(key);
+  if (!storedKey) return "";
+
+  const directPodcast = resolvePodcastByStoredKey(storedKey);
+  if (directPodcast) return getPodcastId(directPodcast);
+
+  const aliasedKey = LEGACY_PODCAST_RATING_KEY_ALIASES[normalizeMatchKey(storedKey)];
+  return aliasedKey ? getPodcastId(resolvePodcastByStoredKey(aliasedKey)) : "";
+}
+
+function canonicalizeCommunityStats(rows) {
+  const totalsByKey = {};
+  const unresolvedKeys = [];
+
+  (rows || []).forEach((item) => {
+    const canonicalKey = resolveCanonicalPodcastId(item?.podcast_key);
+    if (!canonicalKey) {
+      unresolvedKeys.push(normalizeText(item?.podcast_key));
+      return;
+    }
+
+    const averageRating = parseNumber(item?.average_rating);
+    const ratingCount = Number(item?.rating_count || 0);
+    if (averageRating === null || ratingCount <= 0) return;
+
+    const totals = totalsByKey[canonicalKey] || { weightedRatingSum: 0, ratingCount: 0 };
+    totals.weightedRatingSum += averageRating * ratingCount;
+    totals.ratingCount += ratingCount;
+    totalsByKey[canonicalKey] = totals;
+  });
+
+  return {
+    statsByKey: Object.fromEntries(
+      Object.entries(totalsByKey).map(([canonicalKey, totals]) => [
+        canonicalKey,
+        {
+          averageRating: totals.weightedRatingSum / totals.ratingCount,
+          ratingCount: totals.ratingCount
+        }
+      ])
+    ),
+    unresolvedKeys
+  };
+}
+
+function canonicalizeUserRatingRows(rows) {
+  const ratingsByKey = {};
+  const persistedKeyByCanonical = {};
+  const duplicates = [];
+  const groupedRows = new Map();
+
+  (rows || []).forEach((item) => {
+    const rawKey = normalizeText(item?.podcast_key);
+    const canonicalKey = resolveCanonicalPodcastId(rawKey);
+    if (!canonicalKey) return;
+
+    const group = groupedRows.get(canonicalKey) || [];
+    group.push({ rawKey, rating: parseNumber(item?.rating) });
+    groupedRows.set(canonicalKey, group);
+  });
+
+  groupedRows.forEach((group, canonicalKey) => {
+    group.sort((left, right) => left.rawKey.localeCompare(right.rawKey));
+    const canonicalRow = group.find((item) => item.rawKey === canonicalKey);
+    const selected = canonicalRow || group[0];
+    ratingsByKey[canonicalKey] = selected.rating;
+    persistedKeyByCanonical[canonicalKey] = selected.rawKey;
+    if (group.length > 1) {
+      duplicates.push({
+        canonicalKey,
+        persistedKeys: group.map((item) => item.rawKey),
+        selectedPersistedKey: selected.rawKey
+      });
+    }
+  });
+
+  return { ratingsByKey, persistedKeyByCanonical, duplicates };
+}
+
+function getPersistedUserRatingKey(podcastKey) {
+  const canonicalKey = resolveCanonicalPodcastId(podcastKey);
+  return canonicalKey
+    ? state.userRatingPersistedKeyByCanonical[canonicalKey] || canonicalKey
+    : "";
 }
 
 function resolveSavedPodcastKey(key) {
@@ -5545,9 +5646,10 @@ function resetRatingDialogMode() {
 }
 
 function updateLocalCommunityStatForRating(podcastKey, nextRating, previousRating = null) {
-  if (!podcastKey) return;
+  const canonicalKey = resolveCanonicalPodcastId(podcastKey);
+  if (!canonicalKey) return;
 
-  const currentStat = getCommunityStat(podcastKey);
+  const currentStat = getCommunityStat(canonicalKey);
   const currentAverage = parseNumber(currentStat?.averageRating);
   const previousValue = parseNumber(previousRating);
   const nextValue = parseNumber(nextRating);
@@ -5559,12 +5661,12 @@ function updateLocalCommunityStatForRating(podcastKey, nextRating, previousRatin
 
     const nextCount = Math.max(0, currentCount - 1);
     if (!nextCount) {
-      delete state.communityStatsByKey[podcastKey];
+      delete state.communityStatsByKey[canonicalKey];
       invalidateRankingListCache();
       return;
     }
 
-    state.communityStatsByKey[podcastKey] = {
+    state.communityStatsByKey[canonicalKey] = {
       averageRating:
         currentAverage === null
           ? null
@@ -5577,7 +5679,7 @@ function updateLocalCommunityStatForRating(podcastKey, nextRating, previousRatin
 
   const nextCount = hadPrevious ? Math.max(1, currentCount || 1) : currentCount + 1;
   const baseAverage = currentAverage ?? 0;
-  state.communityStatsByKey[podcastKey] = {
+  state.communityStatsByKey[canonicalKey] = {
     averageRating: hadPrevious
       ? (baseAverage * nextCount - previousValue + nextValue) / nextCount
       : (baseAverage * currentCount + nextValue) / nextCount,
@@ -6888,18 +6990,11 @@ async function fetchCommunityStats() {
     return;
   }
 
-  state.communityStatsByKey = Object.fromEntries(
-    (data || [])
-      .map((item) => [resolveCanonicalPodcastId(item.podcast_key), item])
-      .filter(([podcastId]) => podcastId)
-      .map(([podcastId, item]) => [
-        podcastId,
-        {
-          averageRating: parseNumber(item.average_rating),
-          ratingCount: Number(item.rating_count || 0)
-        }
-      ])
-  );
+  const { statsByKey, unresolvedKeys } = canonicalizeCommunityStats(data);
+  state.communityStatsByKey = statsByKey;
+  if (unresolvedKeys.length) {
+    console.warn("Community rating rows without a current podcast identity were skipped:", unresolvedKeys);
+  }
   state.communityStatsStatus = "ready";
   invalidateRankingListCache();
 }
@@ -6983,11 +7078,15 @@ async function fetchUserState() {
       console.error(ratingsError);
       setAuthMessage("Kunne ikke hente dine vurderinger endnu.", "error", "hero");
     } else {
-      state.userRatingsByKey = Object.fromEntries(
-        (ratings || [])
-          .map((item) => [resolveCanonicalPodcastId(item.podcast_key), parseNumber(item.rating)])
-          .filter(([podcastId]) => podcastId)
-      );
+      const hydratedRatings = canonicalizeUserRatingRows(ratings);
+      state.userRatingsByKey = hydratedRatings.ratingsByKey;
+      state.userRatingPersistedKeyByCanonical = hydratedRatings.persistedKeyByCanonical;
+      hydratedRatings.duplicates.forEach((duplicate) => {
+        console.warn(
+          "Multiple persisted user ratings resolve to one podcast; the canonical row is preferred:",
+          duplicate
+        );
+      });
     }
 
     if (savedError) {
@@ -7715,10 +7814,12 @@ async function saveActiveRating() {
   updateRatingDialogMessage("");
 
   try {
+    const ratingKey = state.activeRatingKey;
+    const persistedKey = getPersistedUserRatingKey(ratingKey);
     const { error } = await state.supabase.from("user_ratings").upsert(
       {
         user_id: state.authUser.id,
-        podcast_key: state.activeRatingKey,
+        podcast_key: persistedKey,
         rating: numericValue
       },
       { onConflict: "user_id,podcast_key" }
@@ -7726,9 +7827,9 @@ async function saveActiveRating() {
 
     if (error) throw error;
 
-    const ratingKey = state.activeRatingKey;
     const previousRating = state.userRatingsByKey[ratingKey] ?? null;
     state.userRatingsByKey[ratingKey] = numericValue;
+    state.userRatingPersistedKeyByCanonical[ratingKey] = persistedKey;
     updateLocalCommunityStatForRating(ratingKey, numericValue, previousRating);
     invalidateExplorePersonalSnapshot();
     rebuildUserRanks();
@@ -7872,6 +7973,7 @@ async function deleteActiveRating() {
   if (!state.supabase || !state.authUser || !state.activeRatingKey) return;
 
   const deletedKey = state.activeRatingKey;
+  const persistedKey = getPersistedUserRatingKey(deletedKey);
 
   setAuthBusy(true);
   updateRatingDialogMessage("");
@@ -7881,12 +7983,13 @@ async function deleteActiveRating() {
       .from("user_ratings")
       .delete()
       .eq("user_id", state.authUser.id)
-      .eq("podcast_key", deletedKey);
+      .eq("podcast_key", persistedKey);
 
     if (error) throw error;
 
     const previousRating = state.userRatingsByKey[deletedKey] ?? null;
     delete state.userRatingsByKey[deletedKey];
+    delete state.userRatingPersistedKeyByCanonical[deletedKey];
     updateLocalCommunityStatForRating(deletedKey, null, previousRating);
     invalidateExplorePersonalSnapshot();
     rebuildUserRanks();
@@ -11959,7 +12062,8 @@ async function savePodcastDetailInlineRating(dialog, podcast, input, message) {
   }
 
   const podcastKey = getPodcastKey(podcast);
-  if (!state.supabase || !state.authUser || !podcastKey) return;
+  const persistedKey = getPersistedUserRatingKey(podcastKey);
+  if (!state.supabase || !state.authUser || !podcastKey || !persistedKey) return;
 
   if (message) {
     message.textContent = "Gemmer…";
@@ -11968,13 +12072,14 @@ async function savePodcastDetailInlineRating(dialog, podcast, input, message) {
 
   try {
     const { error } = await state.supabase.from("user_ratings").upsert(
-      { user_id: state.authUser.id, podcast_key: podcastKey, rating: numericValue },
+      { user_id: state.authUser.id, podcast_key: persistedKey, rating: numericValue },
       { onConflict: "user_id,podcast_key" }
     );
     if (error) throw error;
 
     const previousRating = state.userRatingsByKey[podcastKey] ?? null;
     state.userRatingsByKey[podcastKey] = numericValue;
+    state.userRatingPersistedKeyByCanonical[podcastKey] = persistedKey;
     updateLocalCommunityStatForRating(podcastKey, numericValue, previousRating);
     invalidateExplorePersonalSnapshot();
     rebuildUserRanks();
@@ -14896,6 +15001,7 @@ function bindAuthPromptButtons(container) {
 
 function clearUserScopedState({ clearUi = false } = {}) {
   state.userRatingsByKey = {};
+  state.userRatingPersistedKeyByCanonical = {};
   state.savedPodcastKeys = new Set();
   state.savedPodcastMetaByKey = {};
   state.personalizationUserStateStatus = "idle";
