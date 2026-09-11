@@ -72,7 +72,6 @@ const EPISODE_DATABASE_KEY_ALIASES = {
 // These database keys predate the stable catalogue IDs. They are deliberately
 // explicit: an unknown historical key must never be matched by title guesswork.
 const LEGACY_PODCAST_RATING_KEY_ALIASES = Object.freeze({
-  bedraget: "bedraget pa hvidovre hospital",
   "et kapitel for sig bjarne corydon": "bjarne corydon",
   "adfærd fa mere eventyr ind i hverdagen med morten kirckhoff fra 0 stjerner":
     "fa mere eventyr ind i hverdagen",
@@ -5923,46 +5922,11 @@ function getUserRating(podcastKey) {
   return state.userRatingsByKey[canonicalKey] ?? null;
 }
 
-function getLoosePodcastRatingKey(value) {
-  return normalizeMatchKey(String(value || "").replace(/\([^)]*\)/g, " "))
-    .replace(/\bsaeson\b|\bsæson\b|\bseason\b/g, " ")
-    .replace(/\b[0-9]+\b/g, " ")
-    .replace(/\s+/g, " ")
-    .trim();
-}
-
 function getUserRatingForPodcast(podcast) {
   if (!podcast) return null;
 
-  const keys = [
-    getPodcastKey(podcast),
-    podcast.key,
-    podcast.matchKey,
-    podcast.titleKey,
-    normalizeMatchKey(podcast.title)
-  ].filter(Boolean);
-
-  for (const key of Array.from(new Set(keys))) {
-    const rating = getUserRating(key);
-    if (rating !== null && rating !== undefined) return rating;
-  }
-
-  const looseKey = getLoosePodcastRatingKey(podcast.title);
-  if (!looseKey) return null;
-
-  for (const [ratingKey, rating] of Object.entries(state.userRatingsByKey)) {
-    const looseRatingKey = getLoosePodcastRatingKey(ratingKey);
-    if (
-      looseRatingKey &&
-      (looseRatingKey === looseKey ||
-        looseRatingKey.includes(looseKey) ||
-        looseKey.includes(looseRatingKey))
-    ) {
-      return rating;
-    }
-  }
-
-  return null;
+  const canonicalKey = resolveCanonicalPodcastId(getPodcastKey(podcast));
+  return canonicalKey ? state.userRatingsByKey[canonicalKey] ?? null : null;
 }
 
 function getMobileRankingRatingParts(podcast) {
