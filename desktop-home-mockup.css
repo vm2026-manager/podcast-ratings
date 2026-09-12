@@ -19081,6 +19081,35 @@ html body #podcastDetailSheet [data-podcast-detail-placement]:empty {
   html body.page-profil .profile-list-dialog--saved .saved-card--library .saved-card__image { transition: none !important; }
 }
 
+/* Keep the authenticated desktop profile's rating previews visually independent
+   from generic profile icon and list rules declared above. */
+@media (min-width: 1101px) {
+  html body.page-profil .profile-ratings-panel .profile-panel__icon,
+  html body.page-profil .profile-episode-ratings-panel .profile-panel__icon {
+    color: #f15a16 !important;
+    background: #fff0e7 !important;
+  }
+
+  html body.page-profil .profile-ratings-panel .profile-panel__icon svg,
+  html body.page-profil .profile-episode-ratings-panel .profile-panel__icon svg,
+  html body.page-profil .profile-ratings-panel .profile-panel__icon svg :is(path, circle),
+  html body.page-profil .profile-episode-ratings-panel .profile-panel__icon svg :is(path, circle) {
+    fill: none !important;
+    stroke: #f15a16 !important;
+    stroke-width: 1.8 !important;
+    stroke-linecap: round !important;
+    stroke-linejoin: round !important;
+  }
+
+  html body.page-profil .profile-episode-list > :nth-child(-n + 4) {
+    display: grid !important;
+  }
+
+  html body.page-profil .profile-episode-list > :nth-child(n + 5) {
+    display: none !important;
+  }
+}
+
 /* The global rating dialog is a nested layer when opened from Profile's rating list. */
 html body:has(#profileListDialog.profile-list-dialog--ratings) #ratingDialog:not(.is-hidden) {
   z-index: 4210 !important;
