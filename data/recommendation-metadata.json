@@ -2,7 +2,7 @@
   "version": 1,
   "source": {
     "path": "data/podcasts.json",
-    "generatedAt": "2026-09-12T17:26:11.346Z",
+    "generatedAt": "2026-09-12T19:37:16.625Z",
     "count": 1259,
     "topicAliases": "config/recommendation-topic-aliases.json",
     "topicAliasVersion": 1,
@@ -3289,6 +3289,45 @@
         "whistleblowere",
         "krigslaekager",
         "pressefrihed"
+      ],
+      "topicEligible": true,
+      "genreEligible": true,
+      "recommendationMetadataEligible": true,
+      "metadataIssues": []
+    },
+    {
+      "id": "da aids kom til danmark",
+      "recommendationId": "rec-da-aids-kom-til-danmark-e474c6b31e206c8f9ce908701f4a278a",
+      "recommendationIdentityBasis": "title+link",
+      "identityDuplicateGroup": "",
+      "title": "Da aids kom til Danmark",
+      "mainSeries": "Bakspejl",
+      "primaryGenreRaw": "Historie",
+      "primaryGenre": "Historie",
+      "primaryGenreValid": true,
+      "primaryGenreMappingType": "native",
+      "primaryGenreMappingSource": "Historie",
+      "primaryGenreNeedsReview": false,
+      "primaryGenreReviewReason": "",
+      "secondaryGenre": "Dokumentar",
+      "secondaryGenreValid": true,
+      "topicsRaw": [
+        "AIDS",
+        "HIV",
+        "homoseksuelles historie",
+        "sundhedshistorie"
+      ],
+      "topicsCanonical": [
+        "AIDS",
+        "HIV",
+        "homoseksuelles historie",
+        "sundhedshistorie"
+      ],
+      "topicKeys": [
+        "aids",
+        "hiv",
+        "homoseksuelles-historie",
+        "sundhedshistorie"
       ],
       "topicEligible": true,
       "genreEligible": true,
@@ -14934,6 +14973,45 @@
         "store-formuer",
         "investeringer",
         "virksomhedsstrategi"
+      ],
+      "topicEligible": true,
+      "genreEligible": true,
+      "recommendationMetadataEligible": true,
+      "metadataIssues": []
+    },
+    {
+      "id": "fjernsynsklubben",
+      "recommendationId": "rec-fjernsynsklubben-1ff96082029896da137b817ba199f244",
+      "recommendationIdentityBasis": "title+link",
+      "identityDuplicateGroup": "",
+      "title": "Fjernsynsklubben",
+      "mainSeries": "",
+      "primaryGenreRaw": "Underholdning",
+      "primaryGenre": "Underholdning",
+      "primaryGenreValid": true,
+      "primaryGenreMappingType": "native",
+      "primaryGenreMappingSource": "Underholdning",
+      "primaryGenreNeedsReview": false,
+      "primaryGenreReviewReason": "",
+      "secondaryGenre": "Samfund",
+      "secondaryGenreValid": true,
+      "topicsRaw": [
+        "Tv-serier",
+        "fjernsyn",
+        "populærkultur",
+        "samfund"
+      ],
+      "topicsCanonical": [
+        "Tv-serier",
+        "fjernsyn",
+        "populærkultur",
+        "samfund"
+      ],
+      "topicKeys": [
+        "tv-serier",
+        "fjernsyn",
+        "populaerkultur",
+        "samfund"
       ],
       "topicEligible": true,
       "genreEligible": true,
@@ -40240,45 +40318,6 @@
       "metadataIssues": []
     },
     {
-      "id": "da aids kom til danmark",
-      "recommendationId": "rec-da-aids-kom-til-danmark-e474c6b31e206c8f9ce908701f4a278a",
-      "recommendationIdentityBasis": "title+link",
-      "identityDuplicateGroup": "",
-      "title": "Da aids kom til Danmark",
-      "mainSeries": "Bakspejl",
-      "primaryGenreRaw": "Historie",
-      "primaryGenre": "Historie",
-      "primaryGenreValid": true,
-      "primaryGenreMappingType": "native",
-      "primaryGenreMappingSource": "Historie",
-      "primaryGenreNeedsReview": false,
-      "primaryGenreReviewReason": "",
-      "secondaryGenre": "Dokumentar",
-      "secondaryGenreValid": true,
-      "topicsRaw": [
-        "AIDS",
-        "HIV",
-        "homoseksuelles historie",
-        "sundhedshistorie"
-      ],
-      "topicsCanonical": [
-        "AIDS",
-        "HIV",
-        "homoseksuelles historie",
-        "sundhedshistorie"
-      ],
-      "topicKeys": [
-        "aids",
-        "hiv",
-        "homoseksuelles-historie",
-        "sundhedshistorie"
-      ],
-      "topicEligible": true,
-      "genreEligible": true,
-      "recommendationMetadataEligible": true,
-      "metadataIssues": []
-    },
-    {
       "id": "millionærerne der skred",
       "recommendationId": "rec-millionaererne-der-skred-102a17bfb9fbcd01c960898b3470ac2d",
       "recommendationIdentityBasis": "title+link",
@@ -41637,45 +41676,6 @@
         "kaerlighed",
         "koensroller",
         "relationer"
-      ],
-      "topicEligible": true,
-      "genreEligible": true,
-      "recommendationMetadataEligible": true,
-      "metadataIssues": []
-    },
-    {
-      "id": "fjernsynsklubben",
-      "recommendationId": "rec-fjernsynsklubben-1ff96082029896da137b817ba199f244",
-      "recommendationIdentityBasis": "title+link",
-      "identityDuplicateGroup": "",
-      "title": "Fjernsynsklubben",
-      "mainSeries": "",
-      "primaryGenreRaw": "Underholdning",
-      "primaryGenre": "Underholdning",
-      "primaryGenreValid": true,
-      "primaryGenreMappingType": "native",
-      "primaryGenreMappingSource": "Underholdning",
-      "primaryGenreNeedsReview": false,
-      "primaryGenreReviewReason": "",
-      "secondaryGenre": "Samfund",
-      "secondaryGenreValid": true,
-      "topicsRaw": [
-        "Tv-serier",
-        "fjernsyn",
-        "populærkultur",
-        "samfund"
-      ],
-      "topicsCanonical": [
-        "Tv-serier",
-        "fjernsyn",
-        "populærkultur",
-        "samfund"
-      ],
-      "topicKeys": [
-        "tv-serier",
-        "fjernsyn",
-        "populaerkultur",
-        "samfund"
       ],
       "topicEligible": true,
       "genreEligible": true,
