@@ -12509,18 +12509,25 @@ function renderPodcastDetailSheetContent(
     const episodeState = getPodcastEpisodeState(podcast);
 if ((!isGenstartEpisodeCacheFresh() || episodeState.items.length < MINIMUM_RATEABLE_EPISODE_COUNT) && !episodeState.loading) {
       fetchGenstartEpisodes().then(() => {
-        if (state.podcastDetailView === "detail") {
-          refreshOpenPodcastDetailSheet();
-          return;
-        }
-
-        updateGenstartEpisodeSection();
+        handlePodcastDetailEpisodeLoadCompletion(dialog, podcast);
       });
     }
   }
 
   updatePodcastDetailRankingNavigation(dialog);
   updatePodcastDetailNavigationHistoryButton(dialog);
+}
+
+function handlePodcastDetailEpisodeLoadCompletion(dialog, podcast) {
+  if (!dialog?.isConnected || dialog.classList.contains("is-hidden")) return;
+  if (state.activePodcastDetailKey !== getPodcastKey(podcast)) return;
+
+  // The detail view already has its episode entry. Rebuilding its entire DOM
+  // after an asynchronous episode query resets loaded covers and related cards.
+  // The workspace is the only view whose visible episode rows need updating.
+  if (state.podcastDetailView === "episodes") {
+    updatePodcastEpisodeOverview(dialog);
+  }
 }
 
 function refreshOpenPodcastDetailSheet() {
