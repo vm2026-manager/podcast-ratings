@@ -1140,6 +1140,80 @@
   html body #podcastDetailSheet .podcast-detail-sheet__own-rating-copy small {
     display: none !important;
   }
+  /* The compact editable picker intentionally hides its supporting chrome at
+     this width. A calculated rating is not editable, however, so retain the
+     icon, label context and /10 suffix as one centered locked presentation. */
+  html body #podcastDetailSheet .podcast-detail-sheet__rating-cell--own.is-episode-rating-locked {
+    grid-template-rows: 20px minmax(0, 1fr) auto !important;
+    align-content: stretch !important;
+  }
+  html body #podcastDetailSheet .podcast-detail-sheet__rating-cell--own.is-episode-rating-locked > .podcast-detail-sheet__rating-label {
+    grid-row: 1 !important;
+    align-self: center !important;
+  }
+  html body #podcastDetailSheet .podcast-detail-sheet__rating-cell--own.is-episode-rating-locked .podcast-detail-sheet__own-rating-picker {
+    grid-row: 2 !important;
+    width: 100% !important;
+    min-height: 48px !important;
+    grid-template-columns: 20px minmax(0, 1fr) auto !important;
+    justify-items: center !important;
+    gap: 4px !important;
+    padding: 4px !important;
+    border: 0 !important;
+    background: transparent !important;
+    cursor: pointer !important;
+  }
+  html body #podcastDetailSheet .podcast-detail-sheet__rating-cell--own.is-episode-rating-locked .podcast-detail-sheet__own-rating-picker:focus-within {
+    border: 0 !important;
+    box-shadow: none !important;
+  }
+  html body #podcastDetailSheet .podcast-detail-sheet__rating-cell--own.is-episode-rating-locked .podcast-detail-sheet__rating-icon,
+  html body #podcastDetailSheet .podcast-detail-sheet__rating-cell--own.is-episode-rating-locked .podcast-detail-sheet__own-rating-suffix,
+  html body #podcastDetailSheet .podcast-detail-sheet__rating-cell--own.is-episode-rating-locked .podcast-detail-sheet__own-rating-copy small {
+    display: grid !important;
+  }
+  html body #podcastDetailSheet .podcast-detail-sheet__rating-cell--own.is-episode-rating-locked .podcast-detail-sheet__rating-icon {
+    color: #89796d !important;
+    background: #f1ebe5 !important;
+  }
+  html body #podcastDetailSheet .podcast-detail-sheet__rating-cell--own.is-episode-rating-locked .podcast-detail-sheet__own-rating-copy {
+    width: auto !important;
+    justify-items: center !important;
+    text-align: center !important;
+  }
+  html body #podcastDetailSheet .podcast-detail-sheet__rating-cell--own.is-episode-rating-locked .podcast-detail-sheet__own-rating-input.is-episode-calculated {
+    width: auto !important;
+    min-width: 0 !important;
+    color: #675d56 !important;
+    background: transparent !important;
+    text-align: center !important;
+    pointer-events: none !important;
+  }
+  html body #podcastDetailSheet .podcast-detail-sheet__rating-cell--own.is-episode-rating-locked .podcast-detail-sheet__own-rating-suffix {
+    color: #675d56 !important;
+    align-self: center !important;
+  }
+  html body #podcastDetailSheet .podcast-detail-sheet__rating-cell--own.is-episode-rating-locked .podcast-detail-sheet__own-rating-copy small {
+    color: #89796d !important;
+    font-size: .54rem !important;
+    text-align: center !important;
+  }
+  html body #podcastDetailSheet .podcast-detail-sheet__rating-cell--own.is-episode-rating-locked .podcast-detail-sheet__episode-rating-lock-trigger:focus {
+    outline: 0 !important;
+  }
+  html body #podcastDetailSheet .podcast-detail-sheet__rating-cell--own.is-episode-rating-locked .podcast-detail-sheet__episode-rating-lock-trigger:focus-visible {
+    outline: 2px solid #66594f !important;
+    outline-offset: 2px !important;
+  }
+  html body #podcastDetailSheet .podcast-detail-sheet__rating-cell--own.is-episode-rating-lock-open .podcast-detail-sheet__episode-rating-lock-help {
+    display: block !important;
+    grid-column: 1 / -1 !important;
+    margin: 4px 0 0 !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    pointer-events: auto !important;
+    overflow-wrap: anywhere !important;
+  }
   html body #podcastDetailSheet .podcast-detail-sheet__own-rating-input {
     height: 26px !important;
     font-size: 16px !important;

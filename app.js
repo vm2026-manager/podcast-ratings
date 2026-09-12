@@ -12052,7 +12052,7 @@ function getPodcastDetailOwnRatingMarkup(podcast) {
         <span class="podcast-detail-sheet__own-rating-suffix">/10</span>
       </label>
       <em data-podcast-detail-inline-rating-message>Beregnes automatisk fra ${escapeHtml(countText)}</em>
-      <button class="podcast-detail-sheet__episode-rating-lock-trigger" type="button" aria-label="Hvorfor er din vurdering låst?" aria-describedby="podcastDetailEpisodeRatingLockHelp">i</button>
+      <button class="podcast-detail-sheet__episode-rating-lock-trigger" type="button" data-podcast-detail-episode-rating-lock-trigger aria-label="Hvorfor er din vurdering låst?" aria-describedby="podcastDetailEpisodeRatingLockHelp" aria-expanded="false">i</button>
       <div class="podcast-detail-sheet__episode-rating-lock-help" id="podcastDetailEpisodeRatingLockHelp" role="tooltip">
         Din vurdering er l&aring;st, fordi du har bed&oslash;mt episoder. Den beregnes automatisk som gennemsnittet. Fjerner du alle episodevurderinger, l&aring;ses den op igen.
       </div>`;
@@ -12087,7 +12087,27 @@ function bindPodcastDetailInlineRatingEvents(dialog, podcast) {
   const inlineRatingRevealButton = ratingCell.querySelector("[data-podcast-detail-inline-rating-reveal]");
   const inlineRatingMessage = ratingCell.querySelector("[data-podcast-detail-inline-rating-message]");
   const inlineRatingSaveButton = ratingCell.querySelector("[data-podcast-detail-inline-rating-save]");
+  const episodeRatingLockTrigger = ratingCell.querySelector("[data-podcast-detail-episode-rating-lock-trigger]");
   let inlineRatingSavePending = false;
+
+  ratingCell.classList.toggle("is-episode-rating-locked", Boolean(episodeRatingLockTrigger));
+  if (episodeRatingLockTrigger) {
+    const isCoarsePointer = () => globalThis.matchMedia?.("(hover: none), (pointer: coarse)")?.matches;
+    const setEpisodeRatingLockHelpOpen = (isOpen) => {
+      ratingCell.classList.toggle("is-episode-rating-lock-open", isOpen);
+      episodeRatingLockTrigger.setAttribute("aria-expanded", String(isOpen));
+    };
+    const toggleEpisodeRatingLockHelp = (event) => {
+      if (!isCoarsePointer()) return;
+      event?.preventDefault();
+      setEpisodeRatingLockHelpOpen(!ratingCell.classList.contains("is-episode-rating-lock-open"));
+    };
+    episodeRatingLockTrigger.addEventListener("click", toggleEpisodeRatingLockHelp);
+    ratingCell.addEventListener("click", (event) => {
+      if (episodeRatingLockTrigger.contains(event.target)) return;
+      toggleEpisodeRatingLockHelp(event);
+    });
+  }
 
   inlineRatingRevealButton?.addEventListener("click", () => {
     if (!canEditPodcastDetailInlineRating(podcast)) return;

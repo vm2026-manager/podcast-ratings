@@ -29,20 +29,32 @@ class FakeElement {
     this.disabled = false;
     this.dataset = {};
     this.focusCalls = 0;
+    this.attributes = new Map();
   }
   addEventListener(type, listener) { this.listeners.set(type, listener); }
   emit(type, event = {}) {
     const listener = this.listeners.get(type);
-    return listener?.({ preventDefault() {}, stopPropagation() {}, ...event });
+    return listener?.({ preventDefault() {}, stopPropagation() {}, target: this, ...event });
   }
-  setAttribute() {}
+  setAttribute(name, value) { this.attributes.set(name, String(value)); }
+  contains(node) { return node === this; }
   focus() { this.focusCalls += 1; }
 }
 
 class FakeRatingCell extends FakeElement {
   constructor() {
     super();
-    this.classList = { add() {} };
+    const classes = new Set();
+    this.classList = {
+      add: (...names) => names.forEach((name) => classes.add(name)),
+      toggle: (name, force) => {
+        const shouldAdd = force === undefined ? !classes.has(name) : Boolean(force);
+        if (shouldAdd) classes.add(name);
+        else classes.delete(name);
+        return shouldAdd;
+      },
+      contains: (name) => classes.has(name)
+    };
     this.nodes = new Map();
     this._innerHTML = "";
   }
@@ -53,7 +65,8 @@ class FakeRatingCell extends FakeElement {
       "data-podcast-detail-inline-rating-input",
       "data-podcast-detail-inline-rating-reveal",
       "data-podcast-detail-inline-rating-save",
-      "data-podcast-detail-inline-rating-message"
+      "data-podcast-detail-inline-rating-message",
+      "data-podcast-detail-episode-rating-lock-trigger"
     ]) {
       if (value.includes(name)) {
         const node = new FakeElement();
@@ -93,7 +106,7 @@ function createHarness({ eligible = false, ratings = {}, manualRating = null, ac
     },
     (podcast) => podcast.key,
     () => manualRating,
-    (value) => Number(value).toFixed(1),
+    (value) => Number(value).toFixed(1).replace(".", ","),
     (value) => String(value),
     async () => { saveCalls.push("save"); }
   );
@@ -136,18 +149,61 @@ function createHarness({ eligible = false, ratings = {}, manualRating = null, ac
 
 // Existing single and multiple episode ratings restore the historical muted, disabled control.
 for (const [ratings, expected] of [
-  [{ "episode-1": 7, "episode-2": null }, /7\.0/u],
-  [{ "episode-1": 7, "episode-2": 9 }, /8\.0/u],
-  [{ "episode-1": 7, "episode-2": 6.4, "episode-3": 7.5 }, /7\.0/u]
+  [{ "episode-1": 7, "episode-2": null }, /7,0/u],
+  [{ "episode-1": 7, "episode-2": 9 }, /8,0/u],
+  [{ "episode-1": 7, "episode-2": 6.4, "episode-3": 7.5 }, /7,0/u]
 ]) {
   const h = createHarness({ eligible: true, ratings });
   h.helpers.updatePodcastDetailOwnRatingCell(h.dialog, h.podcast);
   assert.match(h.ratingCell.innerHTML, expected);
   assert.match(h.ratingCell.innerHTML, /Beregnet fra episoder/u);
   assert.match(h.ratingCell.innerHTML, /is-episode-calculated/u, "historical muted locked styling is applied");
+  assert.match(h.ratingCell.innerHTML, /Din vurdering/u, "the own-rating label remains in the mobile markup");
+  assert.match(h.ratingCell.innerHTML, /own-rating-suffix">\/10/u, "the derived score keeps its /10 suffix");
+  assert.match(h.ratingCell.innerHTML, /podcast-detail-sheet__rating-icon/u, "the own-rating icon remains in the locked markup");
   assert.match(h.ratingCell.innerHTML, /role="tooltip"/u, "the locked state includes the keyboard-focusable explanation");
   assert.equal(h.ratingCell.querySelector("[data-podcast-detail-inline-rating-input]")?.disabled, true);
   assert.equal(h.ratingCell.querySelector("[data-podcast-detail-inline-rating-save]"), null);
+  assert.equal(h.ratingCell.classList.contains("is-episode-rating-locked"), true, "only the locked cell receives mobile lock styling");
+}
+
+// On a coarse pointer, the locked surface is informational: it never opens an
+// editor, but tapping it toggles the existing explanation for touch users.
+{
+  const originalMatchMedia = globalThis.matchMedia;
+  globalThis.matchMedia = () => ({ matches: true });
+  try {
+    const h = createHarness({ eligible: true, ratings: { "episode-1": 7, "episode-2": 6.4, "episode-3": 7.5 } });
+    h.helpers.updatePodcastDetailOwnRatingCell(h.dialog, h.podcast);
+    const trigger = h.ratingCell.querySelector("[data-podcast-detail-episode-rating-lock-trigger]");
+    assert.ok(trigger, "the historical info trigger remains available to touch users");
+    h.ratingCell.emit("click");
+    assert.equal(h.ratingCell.classList.contains("is-episode-rating-lock-open"), true, "a touch tap reveals the explanation");
+    assert.equal(trigger.attributes.get("aria-expanded"), "true");
+    h.ratingCell.emit("click");
+    assert.equal(h.ratingCell.classList.contains("is-episode-rating-lock-open"), false, "a second tap dismisses the explanation");
+    assert.equal(trigger.attributes.get("aria-expanded"), "false");
+    assert.equal(h.ratingCell.querySelector("[data-podcast-detail-inline-rating-save]"), null, "touching a lock never exposes editing");
+  } finally {
+    if (originalMatchMedia === undefined) delete globalThis.matchMedia;
+    else globalThis.matchMedia = originalMatchMedia;
+  }
+}
+
+// Fine-pointer/desktop activation keeps the established hover/focus tooltip
+// behavior; it does not opt into the mobile in-flow toggle.
+{
+  const originalMatchMedia = globalThis.matchMedia;
+  globalThis.matchMedia = () => ({ matches: false });
+  try {
+    const h = createHarness({ eligible: true, ratings: { "episode-1": 7 } });
+    h.helpers.updatePodcastDetailOwnRatingCell(h.dialog, h.podcast);
+    h.ratingCell.emit("click");
+    assert.equal(h.ratingCell.classList.contains("is-episode-rating-lock-open"), false, "desktop clicks preserve the existing tooltip interaction");
+  } finally {
+    if (originalMatchMedia === undefined) delete globalThis.matchMedia;
+    else globalThis.matchMedia = originalMatchMedia;
+  }
 }
 
 // A stale control cannot save after async hydration locks the podcast; removal unlocks it again.
