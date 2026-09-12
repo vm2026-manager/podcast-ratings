@@ -10654,16 +10654,13 @@ async function fetchGenstartEpisodes({ append = false } = {}) {
       episodeState.items = getRateablePodcastEpisodes(mergeEpisodes([], rows)).sort(
         (left, right) => Number(left.episode_number || 0) - Number(right.episode_number || 0)
       );
-      episodeState.eligibilityResolved = true;
       episodeState.hasMore = false;
       episodeState.totalCount = episodeState.items.length;
       episodeState.fetchedAt = Date.now();
-      refreshManualEpisodeRatingData(config.podcastKey, episodeState.items)
-        .then(() => {
-          updateGenstartEpisodeSection();
-          updateOpenEpisodeDetailScores();
-        })
-        .catch(console.error);
+      await refreshManualEpisodeRatingData(config.podcastKey, episodeState.items);
+      episodeState.eligibilityResolved = true;
+      updateGenstartEpisodeSection();
+      updateOpenEpisodeDetailScores();
     } catch (error) {
       console.error(error);
       episodeState.error = "Episoderne kunne ikke hentes lige nu.";
@@ -10701,13 +10698,13 @@ async function fetchGenstartEpisodes({ append = false } = {}) {
     episodeState.items = append
       ? mergeEpisodes(episodeState.items, rows)
       : mergeEpisodes([], rows);
-    episodeState.eligibilityResolved = true;
     episodeState.totalCount = Number.isFinite(count) ? count : null;
     episodeState.hasMore = fetchedRows.length === EPISODE_PAGE_SIZE && (
       episodeState.totalCount === null || offset + fetchedRows.length < episodeState.totalCount
     );
     episodeState.fetchedAt = Date.now();
-    fetchEpisodeRatingMetaForEpisodes(rows).catch(console.error);
+    await fetchEpisodeRatingMetaForEpisodes(rows);
+    episodeState.eligibilityResolved = true;
   } catch (error) {
     console.error(error);
     episodeState.error = "Episoderne kunne ikke hentes lige nu.";
@@ -12004,8 +12001,130 @@ function renderPodcastDisplayGroupContent(dialog, displayGroup) {
   content.querySelector("[data-podcast-seasons-open]")?.addEventListener("click", () => renderPodcastDisplayGroupSeasonWorkspace(dialog, displayGroup));
 }
 
+function getPodcastDetailEpisodeRatingState(podcast) {
+  if (!podcastSupportsEpisodes(podcast)) {
+    return { resolved: true, count: 0, average: null };
+  }
+
+  const episodeState = getPodcastEpisodeState(podcast);
+  const episodeIds = getEpisodeIdsForQuery(episodeState.items);
+  const resolved =
+    !state.authUser ||
+    (episodeState.eligibilityResolved &&
+      !episodeState.loading &&
+      episodeIds.every((episodeId) => episodeState.userRatingsById[episodeId] !== undefined));
+  const summary = getPodcastEpisodeUserRatingSummary(podcast);
+  return { resolved, ...summary };
+}
+
+function canEditPodcastDetailInlineRating(podcast) {
+  const episodeRatings = getPodcastDetailEpisodeRatingState(podcast);
+  return episodeRatings.resolved && episodeRatings.count === 0;
+}
+
+function getPodcastDetailOwnRatingMarkup(podcast) {
+  const episodeRatings = getPodcastDetailEpisodeRatingState(podcast);
+  const isOwnRatingLocked = episodeRatings.resolved && episodeRatings.count > 0;
+  const manualOwnRating = getUserRating(getPodcastKey(podcast));
+
+  if (!episodeRatings.resolved) {
+    return `
+      <span class="podcast-detail-sheet__own-rating-display" aria-live="polite">
+        <strong>—<small>/10</small></strong>
+        <small>Indlæser episodevurderinger …</small>
+      </span>
+      <em data-podcast-detail-inline-rating-message>Din samlede vurdering kan redigeres, når episodevurderingerne er indlæst.</em>`;
+  }
+
+  if (isOwnRatingLocked) {
+    const value = formatCompactRating(episodeRatings.average);
+    const countText = `${episodeRatings.count} ${
+      episodeRatings.count === 1 ? "episodevurdering" : "episodevurderinger"
+    }`;
+    return `
+      <span class="podcast-detail-sheet__own-rating-display">
+        <strong>${escapeHtml(value)}<small>/10</small></strong>
+        <small>Beregnet fra episoder</small>
+      </span>
+      <em data-podcast-detail-inline-rating-message>Beregnes automatisk fra ${escapeHtml(countText)}</em>
+      <button class="podcast-detail-sheet__episode-rating-lock-trigger" type="button" aria-label="Hvorfor er din vurdering låst?" aria-describedby="podcastDetailEpisodeRatingLockHelp">i</button>
+      <div class="podcast-detail-sheet__episode-rating-lock-help" id="podcastDetailEpisodeRatingLockHelp" role="tooltip">
+        Din vurdering er l&aring;st, fordi du har bed&oslash;mt episoder. Den beregnes automatisk som gennemsnittet. Fjerner du alle episodevurderinger, l&aring;ses den op igen.
+      </div>`;
+  }
+
+  const value = manualOwnRating === null || manualOwnRating === undefined ? "" : String(manualOwnRating);
+  const displayValue = value ? formatCompactRating(manualOwnRating) : "";
+  return `
+    <button class="podcast-detail-sheet__own-rating-reveal podcast-detail-sheet__own-rating-mobile-summary${
+      value ? " is-saved-rating" : ""
+    }" type="button" data-podcast-detail-inline-rating-reveal aria-expanded="false">
+      ${value ? `<strong>${escapeHtml(displayValue)}<small>/10</small></strong><small>Rediger</small>` : '<span aria-hidden="true">0–10</span><small>Vælg 0–10</small>'}
+    </button>
+    <div class="podcast-detail-sheet__own-rating-editor">
+      <label class="podcast-detail-sheet__own-rating-control podcast-detail-sheet__own-rating-picker">
+        <span class="podcast-detail-sheet__rating-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="4" y="3" width="16" height="18" rx="3"></rect><path d="M8 8h.01M12 8h.01M16 8h.01M8 12h.01M12 12h.01M16 12h.01M8 16h.01M12 16h.01M16 16h.01"></path></svg></span>
+        <span class="podcast-detail-sheet__own-rating-copy">
+          <input class="podcast-detail-sheet__own-rating-input" type="text" min="0" max="10" step="0.1" inputmode="decimal" pattern="[0-9]*[.,]?[0-9]*" autocomplete="off" enterkeyhint="done" placeholder="Vælg din score" value="${escapeHtml(value)}" data-podcast-detail-inline-rating-input aria-label="Din vurdering fra 0 til 10" />
+          <small>Tryk for at vælge 0–10</small>
+        </span>
+        <span class="podcast-detail-sheet__own-rating-suffix">/10</span>
+      </label>
+      <button class="podcast-detail-sheet__own-rating-save" type="button" data-podcast-detail-inline-rating-save>Gem din vurdering</button>
+    </div>
+    <em data-podcast-detail-inline-rating-message></em>`;
+}
+
+function bindPodcastDetailInlineRatingEvents(dialog, podcast) {
+  const ratingCell = dialog.querySelector(".podcast-detail-sheet__rating-cell--own");
+  if (!ratingCell) return;
+  const inlineRatingInput = ratingCell.querySelector("[data-podcast-detail-inline-rating-input]");
+  const inlineRatingRevealButton = ratingCell.querySelector("[data-podcast-detail-inline-rating-reveal]");
+  const inlineRatingMessage = ratingCell.querySelector("[data-podcast-detail-inline-rating-message]");
+  const inlineRatingSaveButton = ratingCell.querySelector("[data-podcast-detail-inline-rating-save]");
+  let inlineRatingSavePending = false;
+
+  inlineRatingRevealButton?.addEventListener("click", () => {
+    if (!canEditPodcastDetailInlineRating(podcast)) return;
+    ratingCell.classList.add("is-rating-entry-open");
+    inlineRatingRevealButton.hidden = true;
+    inlineRatingRevealButton.setAttribute("aria-expanded", "true");
+    inlineRatingInput?.focus({ preventScroll: true });
+  });
+  inlineRatingInput?.addEventListener("input", () => {
+    if (inlineRatingMessage) inlineRatingMessage.textContent = "";
+  });
+  const submitInlineRating = async (event) => {
+    event?.preventDefault();
+    event?.stopPropagation();
+    if (inlineRatingSavePending || !canEditPodcastDetailInlineRating(podcast)) return;
+    inlineRatingSavePending = true;
+    if (inlineRatingSaveButton) inlineRatingSaveButton.disabled = true;
+    try {
+      await savePodcastDetailInlineRating(dialog, podcast, inlineRatingInput, inlineRatingMessage);
+    } finally {
+      inlineRatingSavePending = false;
+      if (inlineRatingSaveButton?.isConnected) inlineRatingSaveButton.disabled = false;
+    }
+  };
+  inlineRatingSaveButton?.addEventListener("click", submitInlineRating);
+  inlineRatingInput?.addEventListener("keydown", (event) => {
+    if (event.key !== "Enter" || event.isComposing || event.repeat) return;
+    submitInlineRating(event);
+  });
+}
+
+function updatePodcastDetailOwnRatingCell(dialog, podcast) {
+  if (!dialog?.isConnected || dialog.classList.contains("is-hidden")) return;
+  if (state.activePodcastDetailKey !== getPodcastKey(podcast) || state.podcastDetailView !== "detail") return;
+  const ratingCell = dialog.querySelector(".podcast-detail-sheet__rating-cell--own");
+  if (!ratingCell) return;
+  ratingCell.innerHTML = `<span class="podcast-detail-sheet__rating-label">Din vurdering</span>${getPodcastDetailOwnRatingMarkup(podcast)}`;
+  bindPodcastDetailInlineRatingEvents(dialog, podcast);
+}
+
 async function savePodcastDetailInlineRating(dialog, podcast, input, message) {
-  if (getPodcastEpisodeUserRatingSummary(podcast).count > 0) {
+  if (!canEditPodcastDetailInlineRating(podcast)) {
     return;
   }
 
@@ -12125,44 +12244,12 @@ function renderPodcastDetailSheetContent(
       hydrateLocalEpisodeRatingState(key, localEpisodeState.items);
     }
   }
-  const episodeRatingSummary = supportsEpisodes
-    ? getPodcastEpisodeUserRatingSummary(podcast)
-    : { count: 0, average: null };
-  if (supportsEpisodes && episodeRatingSummary.count > 0 && state.authUser) {
+  const episodeRatingState = getPodcastDetailEpisodeRatingState(podcast);
+  if (supportsEpisodes && episodeRatingState.resolved && episodeRatingState.count > 0 && state.authUser) {
     window.queueMicrotask(() => {
       reconcileExistingEpisodeDerivedParentRating(key);
     });
   }
-  const isOwnRatingLocked = episodeRatingSummary.count > 0;
-  const manualOwnRating = getUserRating(key);
-  const ownRatingValue = isOwnRatingLocked
-    ? formatCompactRating(episodeRatingSummary.average)
-    : manualOwnRating === null || manualOwnRating === undefined
-      ? ""
-      : String(manualOwnRating);
-  const hasManualOwnRating = !isOwnRatingLocked && ownRatingValue !== "";
-  const ownRatingDisplayValue = isOwnRatingLocked
-    ? ownRatingValue
-    : hasManualOwnRating
-      ? formatCompactRating(manualOwnRating)
-      : "";
-  const ownRatingSummaryMarkup = isOwnRatingLocked
-    ? `<span class="podcast-detail-sheet__own-rating-display">
-        <strong>${escapeHtml(ownRatingDisplayValue)}<small>/10</small></strong>
-        <small>Beregnet fra episoder</small>
-      </span>`
-    : `<button class="podcast-detail-sheet__own-rating-reveal podcast-detail-sheet__own-rating-mobile-summary${
-        hasManualOwnRating ? " is-saved-rating" : ""
-      }" type="button" data-podcast-detail-inline-rating-reveal aria-expanded="false">
-        ${
-          hasManualOwnRating
-            ? `<strong>${escapeHtml(ownRatingDisplayValue)}<small>/10</small></strong><small>Rediger</small>`
-            : '<span aria-hidden="true">0–10</span><small>Vælg 0–10</small>'
-        }
-      </button>`;
-  const episodeRatingCountText = `${episodeRatingSummary.count} ${
-    episodeRatingSummary.count === 1 ? "episodevurdering" : "episodevurderinger"
-  }`;
   const episodesMarkup = "";
   const cachedRecommendations = getCachedPodcastDetailRecommendations(podcast);
   const podcastSimilarityMarkup = cachedRecommendations
@@ -12263,56 +12350,7 @@ function renderPodcastDetailSheetContent(
       </div>
       <div class="podcast-detail-sheet__rating-cell podcast-detail-sheet__rating-cell--own" aria-label="Din vurdering">
         <span class="podcast-detail-sheet__rating-label">Din vurdering</span>
-        ${ownRatingSummaryMarkup}
-        ${
-          isOwnRatingLocked
-            ? ""
-            : `<div class="podcast-detail-sheet__own-rating-editor">
-          <label class="podcast-detail-sheet__own-rating-control podcast-detail-sheet__own-rating-picker">
-          <span class="podcast-detail-sheet__rating-icon" aria-hidden="true">
-            <svg viewBox="0 0 24 24"><rect x="4" y="3" width="16" height="18" rx="3"></rect><path d="M8 8h.01M12 8h.01M16 8h.01M8 12h.01M12 12h.01M16 12h.01M8 16h.01M12 16h.01M16 16h.01"></path></svg>
-          </span>
-          <span class="podcast-detail-sheet__own-rating-copy">
-          <input
-            class="podcast-detail-sheet__own-rating-input${isOwnRatingLocked ? " is-episode-calculated" : ""}"
-            type="text"
-            min="0"
-            max="10"
-            step="0.1"
-            inputmode="decimal"
-            pattern="[0-9]*[.,]?[0-9]*"
-            autocomplete="off"
-            enterkeyhint="done"
-            placeholder="Vælg din score"
-            value="${escapeHtml(ownRatingValue)}"
-            data-podcast-detail-inline-rating-input
-            aria-label="Din vurdering fra 0 til 10"
-            ${isOwnRatingLocked ? 'disabled aria-describedby="podcastDetailEpisodeRatingLockHelp"' : ""}
-          />
-          <small>${isOwnRatingLocked ? "Beregnet fra episoder" : "Tryk for at vælge 0–10"}</small>
-          </span>
-          <span class="podcast-detail-sheet__own-rating-suffix">/10</span>
-          </label>
-        ${
-          isOwnRatingLocked
-            ? ""
-            : '<button class="podcast-detail-sheet__own-rating-save" type="button" data-podcast-detail-inline-rating-save>Gem din vurdering</button>'
-        }
-        </div>`
-        }
-        <em data-podcast-detail-inline-rating-message>${
-          isOwnRatingLocked
-            ? `Beregnes automatisk fra ${escapeHtml(episodeRatingCountText)}`
-            : ""
-        }</em>
-        ${
-          isOwnRatingLocked
-            ? `<button class="podcast-detail-sheet__episode-rating-lock-trigger" type="button" aria-label="Hvorfor er din vurdering låst?" aria-describedby="podcastDetailEpisodeRatingLockHelp">i</button>
-              <div class="podcast-detail-sheet__episode-rating-lock-help" id="podcastDetailEpisodeRatingLockHelp" role="tooltip">
-                Din vurdering er l&aring;st, fordi du har bed&oslash;mt episoder. Den beregnes automatisk som gennemsnittet. Fjerner du alle episodevurderinger, l&aring;ses den op igen.
-              </div>`
-            : ""
-        }
+        ${getPodcastDetailOwnRatingMarkup(podcast)}
       </div>
     </section>
     ${episodesMarkup}
@@ -12408,60 +12446,7 @@ function renderPodcastDetailSheetContent(
     });
   });
 
-  const inlineRatingInput = content.querySelector("[data-podcast-detail-inline-rating-input]");
-  const inlineRatingRevealButton = content.querySelector(
-    "[data-podcast-detail-inline-rating-reveal]"
-  );
-  const inlineRatingMessage = content.querySelector("[data-podcast-detail-inline-rating-message]");
-  const inlineRatingSaveButton = content.querySelector(
-    "[data-podcast-detail-inline-rating-save]"
-  );
-  let inlineRatingSavePending = false;
-
-  inlineRatingRevealButton?.addEventListener("click", () => {
-    const ratingCell = inlineRatingRevealButton.closest(
-      ".podcast-detail-sheet__rating-cell--own"
-    );
-    ratingCell?.classList.add("is-rating-entry-open");
-    inlineRatingRevealButton.hidden = true;
-    inlineRatingRevealButton.setAttribute("aria-expanded", "true");
-    inlineRatingInput?.focus({ preventScroll: true });
-  });
-
-  inlineRatingInput?.addEventListener("input", () => {
-    if (inlineRatingMessage) inlineRatingMessage.textContent = "";
-  });
-
-  const submitInlineRating = async (event) => {
-    event?.preventDefault();
-    event?.stopPropagation();
-
-    if (inlineRatingSavePending || getPodcastEpisodeUserRatingSummary(podcast).count > 0) return;
-
-    inlineRatingSavePending = true;
-    if (inlineRatingSaveButton) inlineRatingSaveButton.disabled = true;
-
-    try {
-      await savePodcastDetailInlineRating(
-        dialog,
-        podcast,
-        inlineRatingInput,
-        inlineRatingMessage
-      );
-    } finally {
-      inlineRatingSavePending = false;
-      if (inlineRatingSaveButton?.isConnected) {
-        inlineRatingSaveButton.disabled = false;
-      }
-    }
-  };
-
-  inlineRatingSaveButton?.addEventListener("click", submitInlineRating);
-
-  inlineRatingInput?.addEventListener("keydown", (event) => {
-    if (event.key !== "Enter" || event.isComposing || event.repeat) return;
-    submitInlineRating(event);
-  });
+  bindPodcastDetailInlineRatingEvents(dialog, podcast);
 
   bindPodcastDetailFilterButtons(content, podcast);
 
@@ -12522,9 +12507,12 @@ function handlePodcastDetailEpisodeLoadCompletion(dialog, podcast) {
   if (!dialog?.isConnected || dialog.classList.contains("is-hidden")) return;
   if (state.activePodcastDetailKey !== getPodcastKey(podcast)) return;
 
-  // The detail view already has its episode entry. Rebuilding its entire DOM
-  // after an asynchronous episode query resets loaded covers and related cards.
-  // The workspace is the only view whose visible episode rows need updating.
+  // Never rebuild the whole detail DOM after an asynchronous episode query:
+  // that resets loaded covers, related cards, focus and scroll position.
+  // Update only the own-rating cell, and only while this podcast is still open.
+  if (state.podcastDetailView === "detail") {
+    updatePodcastDetailOwnRatingCell(dialog, podcast);
+  }
   if (state.podcastDetailView === "episodes") {
     updatePodcastEpisodeOverview(dialog);
   }

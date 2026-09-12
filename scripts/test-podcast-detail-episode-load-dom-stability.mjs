@@ -35,6 +35,7 @@ const createCompletionHandler = new Function(
   "state",
   "getPodcastKey",
   "updatePodcastEpisodeOverview",
+  "updatePodcastDetailOwnRatingCell",
   `${completionHandler}; return handlePodcastDetailEpisodeLoadCompletion;`
 );
 
@@ -53,10 +54,12 @@ for (const podcast of [
     stableDom
   };
   const updates = [];
+  const ownUpdates = [];
   const handler = createCompletionHandler(
     { activePodcastDetailKey: podcast.key, podcastDetailView: "detail" },
     (value) => value.key,
-    (...args) => updates.push(args)
+    (...args) => updates.push(args),
+    (...args) => ownUpdates.push(args)
   );
 
   const beforeMainCover = dialog.stableDom.mainCover;
@@ -69,7 +72,8 @@ for (const podcast of [
     beforeRecommendations,
     `${podcast.kind}: recommendation container remains stable`
   );
-  assert.deepEqual(updates, [], `${podcast.kind}: unchanged detail view needs no DOM update`);
+  assert.deepEqual(updates, [], `${podcast.kind}: detail completion does not rerender episode rows`);
+  assert.deepEqual(ownUpdates, [[dialog, podcast]], `${podcast.kind}: detail completion updates only the own-rating cell`);
 }
 
 {
@@ -78,7 +82,8 @@ for (const podcast of [
   const handler = createCompletionHandler(
     { activePodcastDetailKey: "shop21 dk bitcoin samfund frihed", podcastDetailView: "episodes" },
     (podcast) => podcast.key,
-    (...args) => updates.push(args)
+    (...args) => updates.push(args),
+    () => assert.fail("episode workspace must not replace the own-rating cell")
   );
   handler(dialog, { key: "shop21 dk bitcoin samfund frihed" });
   assert.deepEqual(updates, [[dialog]], "the open episode workspace receives its narrow row update");
