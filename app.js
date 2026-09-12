@@ -16138,11 +16138,11 @@ function getProfilePanelIconMarkup(type) {
     saved:
       '<svg viewBox="0 0 24 24" focusable="false"><path d="M6.5 4.5h11v15L12 16.2l-5.5 3.3v-15Z"></path></svg>',
     ratings:
-      '<svg viewBox="0 0 24 24" focusable="false"><path d="M5 5.5h14v13H5Z"></path><path d="M8 9h8"></path><path d="M8 13h5"></path><path d="m15 15.2 1 1 2-2.2"></path></svg>',
+      '<svg viewBox="0 0 24 24" focusable="false"><path d="m12 3.5 2.7 5.5 6.1.9-4.4 4.3 1 6.1-5.4-2.9-5.4 2.9 1-6.1-4.4-4.3 6.1-.9L12 3.5Z"></path></svg>',
     submitted:
       '<svg viewBox="0 0 24 24" focusable="false"><path d="M6 4.5h8l4 4v11H6Z"></path><path d="M14 4.5v4h4"></path><path d="M9 14h6"></path><path d="M12 11v6"></path></svg>',
     episodes:
-      '<svg viewBox="0 0 24 24" focusable="false"><path d="M5 12a7 7 0 0 1 14 0"></path><path d="M5 12v5a2 2 0 0 0 2 2h2v-7H5Z"></path><path d="M19 12v5a2 2 0 0 1-2 2h-2v-7h4Z"></path></svg>',
+      '<svg viewBox="0 0 24 24" focusable="false"><circle cx="12" cy="12" r="8.5"></circle><path d="m10 8.5 5 3.5-5 3.5Z"></path></svg>',
     tip:
       '<svg viewBox="0 0 24 24" focusable="false"><path d="M9 18h6"></path><path d="M10 21h4"></path><path d="M8.5 14.5A6 6 0 1 1 15.5 14.5c-.9.8-1.5 1.6-1.5 2.5h-4c0-.9-.6-1.7-1.5-2.5Z"></path><path d="M12 2V.5"></path><path d="m4.2 4.2-1.1-1.1"></path><path d="m19.8 4.2 1.1-1.1"></path></svg>',
     edit:
