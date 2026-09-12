@@ -1,6 +1,7 @@
 /* Mobile-only composition for the existing featured recommendation and detail sheet. */
 @media (min-width: 769px) {
   .podcast-detail-sheet__description--mobile { display: none; }
+  .podcast-detail-sheet__episode-rating-mobile-help { display: none; }
   .podcast-detail-sheet__rating-icon { display: none; }
   .podcast-detail-sheet__own-rating-picker .podcast-detail-sheet__rating-icon,
   .podcast-detail-sheet__own-rating-copy small { display: none; }
@@ -1191,7 +1192,8 @@
   }
   html body #podcastDetailSheet .podcast-detail-sheet__rating-cell--own.is-episode-rating-locked .podcast-detail-sheet__own-rating-suffix {
     color: #675d56 !important;
-    align-self: center !important;
+    align-self: start !important;
+    margin-top: 6px !important;
   }
   html body #podcastDetailSheet .podcast-detail-sheet__rating-cell--own.is-episode-rating-locked .podcast-detail-sheet__own-rating-copy small {
     color: #89796d !important;
@@ -1205,14 +1207,28 @@
     outline: 2px solid #66594f !important;
     outline-offset: 2px !important;
   }
-  html body #podcastDetailSheet .podcast-detail-sheet__rating-cell--own.is-episode-rating-lock-open .podcast-detail-sheet__episode-rating-lock-help {
+  html body #podcastDetailSheet .podcast-detail-sheet__rating-cell--own .podcast-detail-sheet__episode-rating-lock-help {
+    display: none !important;
+  }
+  html body #podcastDetailSheet .podcast-detail-sheet__episode-rating-mobile-help {
+    width: 100% !important;
+    box-sizing: border-box !important;
+    display: none !important;
+    margin: 0 !important;
+    padding: 11px 13px !important;
+    border: 1px solid rgba(92, 79, 69, .22) !important;
+    border-radius: 14px !important;
+    color: #4f443d !important;
+    background: #f7f2ed !important;
+    font: 650 .73rem/1.45 "Manrope", sans-serif !important;
+    overflow-wrap: normal !important;
+    word-break: normal !important;
+  }
+  html body #podcastDetailSheet .podcast-detail-sheet__episode-rating-mobile-help.is-episode-rating-lock-open {
     display: block !important;
-    grid-column: 1 / -1 !important;
-    margin: 4px 0 0 !important;
-    visibility: visible !important;
-    opacity: 1 !important;
-    pointer-events: auto !important;
-    overflow-wrap: anywhere !important;
+  }
+  html body #podcastDetailSheet .podcast-detail-sheet__episode-rating-mobile-help p {
+    margin: 0 !important;
   }
   html body #podcastDetailSheet .podcast-detail-sheet__own-rating-input {
     height: 26px !important;

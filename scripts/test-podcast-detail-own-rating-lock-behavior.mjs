@@ -16,6 +16,8 @@ function extractFunction(name) {
 const runtimeSource = [
   "getPodcastDetailEpisodeRatingState",
   "canEditPodcastDetailInlineRating",
+  "getPodcastDetailEpisodeRatingLockHelpText",
+  "getPodcastDetailEpisodeRatingMobileHelpMarkup",
   "getPodcastDetailOwnRatingMarkup",
   "bindPodcastDetailInlineRatingEvents",
   "updatePodcastDetailOwnRatingCell"
@@ -81,6 +83,26 @@ class FakeRatingCell extends FakeElement {
   }
 }
 
+class FakeMobileLockHelp extends FakeElement {
+  constructor() {
+    super();
+    const classes = new Set();
+    this.classList = {
+      add: (...names) => names.forEach((name) => classes.add(name)),
+      remove: (...names) => names.forEach((name) => classes.delete(name)),
+      toggle: (name, force) => {
+        const shouldAdd = force === undefined ? !classes.has(name) : Boolean(force);
+        if (shouldAdd) classes.add(name);
+        else classes.delete(name);
+        return shouldAdd;
+      },
+      contains: (name) => classes.has(name)
+    };
+    this.innerHTML = "";
+    this.hidden = true;
+  }
+}
+
 function createHarness({ eligible = false, ratings = {}, manualRating = null, activeKey = "podcast-a" } = {}) {
   const episodeState = {
     items: [{ id: "episode-1" }, { id: "episode-2" }],
@@ -111,14 +133,19 @@ function createHarness({ eligible = false, ratings = {}, manualRating = null, ac
     async () => { saveCalls.push("save"); }
   );
   const ratingCell = new FakeRatingCell();
+  const mobileLockHelp = new FakeMobileLockHelp();
   const dialog = {
     isConnected: true,
     classList: { contains: () => false },
-    querySelector: (selector) => selector === ".podcast-detail-sheet__rating-cell--own" ? ratingCell : null,
+    querySelector: (selector) => {
+      if (selector === ".podcast-detail-sheet__rating-cell--own") return ratingCell;
+      if (selector === "[data-podcast-detail-episode-rating-mobile-help]") return mobileLockHelp;
+      return null;
+    },
     cover: { id: "cover-node" },
     recommendations: { id: "recommendation-node" }
   };
-  return { state, episodeState, helpers, dialog, ratingCell, saveCalls, podcast: { key: "podcast-a" } };
+  return { state, episodeState, helpers, dialog, ratingCell, mobileLockHelp, saveCalls, podcast: { key: "podcast-a" } };
 }
 
 // Unresolved metadata is visibly non-editable and cannot expose a direct-save path.
@@ -177,11 +204,18 @@ for (const [ratings, expected] of [
     h.helpers.updatePodcastDetailOwnRatingCell(h.dialog, h.podcast);
     const trigger = h.ratingCell.querySelector("[data-podcast-detail-episode-rating-lock-trigger]");
     assert.ok(trigger, "the historical info trigger remains available to touch users");
+    assert.notEqual(h.mobileLockHelp, h.ratingCell, "the mobile explanation is a sibling of the rating cell, not a third-column child");
+    assert.match(h.mobileLockHelp.innerHTML, /Din vurdering er låst, fordi du har bedømt episoder/u, "the full-width mobile panel reuses the existing explanation");
+    assert.equal(h.mobileLockHelp.hidden, false, "the locked state prepares its mobile panel without changing the rating-cell markup");
+    const ratingCellMarkupBeforeOpen = h.ratingCell.innerHTML;
     h.ratingCell.emit("click");
     assert.equal(h.ratingCell.classList.contains("is-episode-rating-lock-open"), true, "a touch tap reveals the explanation");
+    assert.equal(h.mobileLockHelp.classList.contains("is-episode-rating-lock-open"), true, "the full-width mobile panel receives the open state");
+    assert.equal(h.ratingCell.innerHTML, ratingCellMarkupBeforeOpen, "opening the explanation does not grow or rerender only the third rating cell");
     assert.equal(trigger.attributes.get("aria-expanded"), "true");
     h.ratingCell.emit("click");
     assert.equal(h.ratingCell.classList.contains("is-episode-rating-lock-open"), false, "a second tap dismisses the explanation");
+    assert.equal(h.mobileLockHelp.classList.contains("is-episode-rating-lock-open"), false, "the full-width panel closes with the same tap");
     assert.equal(trigger.attributes.get("aria-expanded"), "false");
     assert.equal(h.ratingCell.querySelector("[data-podcast-detail-inline-rating-save]"), null, "touching a lock never exposes editing");
   } finally {
@@ -218,6 +252,7 @@ for (const [ratings, expected] of [
   h.episodeState.userRatingsById["episode-1"] = null;
   h.helpers.updatePodcastDetailOwnRatingCell(h.dialog, h.podcast);
   assert.ok(h.ratingCell.querySelector("[data-podcast-detail-inline-rating-input]"), "removing the final episode rating unlocks editing");
+  assert.equal(h.mobileLockHelp.hidden, true, "unlocking removes the mobile lock disclosure without replacing the detail sheet");
 }
 
 // Completion for another podcast or a closed dialog must not mutate the visible cell.

@@ -12023,6 +12023,16 @@ function canEditPodcastDetailInlineRating(podcast) {
   return episodeRatings.resolved && episodeRatings.count === 0;
 }
 
+function getPodcastDetailEpisodeRatingLockHelpText() {
+  return "Din vurdering er låst, fordi du har bedømt episoder. Den beregnes automatisk som gennemsnittet. Fjerner du alle episodevurderinger, låses den op igen.";
+}
+
+function getPodcastDetailEpisodeRatingMobileHelpMarkup(podcast) {
+  const episodeRatings = getPodcastDetailEpisodeRatingState(podcast);
+  if (!episodeRatings.resolved || episodeRatings.count === 0) return "";
+  return `<p>${getPodcastDetailEpisodeRatingLockHelpText()}</p>`;
+}
+
 function getPodcastDetailOwnRatingMarkup(podcast) {
   const episodeRatings = getPodcastDetailEpisodeRatingState(podcast);
   const isOwnRatingLocked = episodeRatings.resolved && episodeRatings.count > 0;
@@ -12054,7 +12064,7 @@ function getPodcastDetailOwnRatingMarkup(podcast) {
       <em data-podcast-detail-inline-rating-message>Beregnes automatisk fra ${escapeHtml(countText)}</em>
       <button class="podcast-detail-sheet__episode-rating-lock-trigger" type="button" data-podcast-detail-episode-rating-lock-trigger aria-label="Hvorfor er din vurdering låst?" aria-describedby="podcastDetailEpisodeRatingLockHelp" aria-expanded="false">i</button>
       <div class="podcast-detail-sheet__episode-rating-lock-help" id="podcastDetailEpisodeRatingLockHelp" role="tooltip">
-        Din vurdering er l&aring;st, fordi du har bed&oslash;mt episoder. Den beregnes automatisk som gennemsnittet. Fjerner du alle episodevurderinger, l&aring;ses den op igen.
+        ${getPodcastDetailEpisodeRatingLockHelpText()}
       </div>`;
   }
 
@@ -12088,6 +12098,7 @@ function bindPodcastDetailInlineRatingEvents(dialog, podcast) {
   const inlineRatingMessage = ratingCell.querySelector("[data-podcast-detail-inline-rating-message]");
   const inlineRatingSaveButton = ratingCell.querySelector("[data-podcast-detail-inline-rating-save]");
   const episodeRatingLockTrigger = ratingCell.querySelector("[data-podcast-detail-episode-rating-lock-trigger]");
+  const episodeRatingMobileHelp = dialog.querySelector("[data-podcast-detail-episode-rating-mobile-help]");
   let inlineRatingSavePending = false;
 
   ratingCell.classList.toggle("is-episode-rating-locked", Boolean(episodeRatingLockTrigger));
@@ -12095,6 +12106,7 @@ function bindPodcastDetailInlineRatingEvents(dialog, podcast) {
     const isCoarsePointer = () => globalThis.matchMedia?.("(hover: none), (pointer: coarse)")?.matches;
     const setEpisodeRatingLockHelpOpen = (isOpen) => {
       ratingCell.classList.toggle("is-episode-rating-lock-open", isOpen);
+      episodeRatingMobileHelp?.classList.toggle("is-episode-rating-lock-open", isOpen);
       episodeRatingLockTrigger.setAttribute("aria-expanded", String(isOpen));
     };
     const toggleEpisodeRatingLockHelp = (event) => {
@@ -12145,6 +12157,12 @@ function updatePodcastDetailOwnRatingCell(dialog, podcast) {
   const ratingCell = dialog.querySelector(".podcast-detail-sheet__rating-cell--own");
   if (!ratingCell) return;
   ratingCell.innerHTML = `<span class="podcast-detail-sheet__rating-label">Din vurdering</span>${getPodcastDetailOwnRatingMarkup(podcast)}`;
+  const episodeRatingMobileHelp = dialog.querySelector("[data-podcast-detail-episode-rating-mobile-help]");
+  if (episodeRatingMobileHelp) {
+    episodeRatingMobileHelp.innerHTML = getPodcastDetailEpisodeRatingMobileHelpMarkup(podcast);
+    episodeRatingMobileHelp.hidden = !episodeRatingMobileHelp.innerHTML;
+    episodeRatingMobileHelp.classList.remove("is-episode-rating-lock-open");
+  }
   bindPodcastDetailInlineRatingEvents(dialog, podcast);
 }
 
@@ -12270,6 +12288,7 @@ function renderPodcastDetailSheetContent(
     }
   }
   const episodeRatingState = getPodcastDetailEpisodeRatingState(podcast);
+  const mobileEpisodeRatingLockHelpMarkup = getPodcastDetailEpisodeRatingMobileHelpMarkup(podcast);
   if (supportsEpisodes && episodeRatingState.resolved && episodeRatingState.count > 0 && state.authUser) {
     window.queueMicrotask(() => {
       reconcileExistingEpisodeDerivedParentRating(key);
@@ -12378,6 +12397,7 @@ function renderPodcastDetailSheetContent(
         ${getPodcastDetailOwnRatingMarkup(podcast)}
       </div>
     </section>
+    <section class="podcast-detail-sheet__episode-rating-mobile-help" data-podcast-detail-episode-rating-mobile-help${mobileEpisodeRatingLockHelpMarkup ? "" : " hidden"} aria-live="polite">${mobileEpisodeRatingLockHelpMarkup}</section>
     ${episodesMarkup}
     <div class="podcast-detail-sheet__recommendation-row">
     ${podcastSimilarityMarkup}
