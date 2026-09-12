@@ -11350,6 +11350,7 @@ function renderPodcastEpisodeOverviewContent(dialog, podcast) {
     if (manualEpisodes.length) {
       refreshManualEpisodeRatingData(getLocalEpisodePodcastKey(podcast), manualEpisodes)
         .then(() => {
+          getPodcastEpisodeState(podcast).eligibilityResolved = true;
           updatePodcastEpisodeOverview(dialog);
           updateOpenEpisodeDetailScores();
         })
@@ -12042,10 +12043,14 @@ function getPodcastDetailOwnRatingMarkup(podcast) {
       episodeRatings.count === 1 ? "episodevurdering" : "episodevurderinger"
     }`;
     return `
-      <span class="podcast-detail-sheet__own-rating-display">
-        <strong>${escapeHtml(value)}<small>/10</small></strong>
-        <small>Beregnet fra episoder</small>
-      </span>
+      <label class="podcast-detail-sheet__own-rating-control podcast-detail-sheet__own-rating-picker">
+        <span class="podcast-detail-sheet__rating-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="4" y="3" width="16" height="18" rx="3"></rect><path d="M8 8h.01M12 8h.01M16 8h.01M8 12h.01M12 12h.01M16 12h.01M8 16h.01M12 16h.01M16 16h.01"></path></svg></span>
+        <span class="podcast-detail-sheet__own-rating-copy">
+          <input class="podcast-detail-sheet__own-rating-input is-episode-calculated" type="text" value="${escapeHtml(value)}" data-podcast-detail-inline-rating-input aria-label="Din vurdering er beregnet fra episodevurderinger" aria-describedby="podcastDetailEpisodeRatingLockHelp" disabled />
+          <small>Beregnet fra episoder</small>
+        </span>
+        <span class="podcast-detail-sheet__own-rating-suffix">/10</span>
+      </label>
       <em data-podcast-detail-inline-rating-message>Beregnes automatisk fra ${escapeHtml(countText)}</em>
       <button class="podcast-detail-sheet__episode-rating-lock-trigger" type="button" aria-label="Hvorfor er din vurdering låst?" aria-describedby="podcastDetailEpisodeRatingLockHelp">i</button>
       <div class="podcast-detail-sheet__episode-rating-lock-help" id="podcastDetailEpisodeRatingLockHelp" role="tooltip">
@@ -12490,9 +12495,22 @@ function renderPodcastDetailSheetContent(
     });
   });
 
-  if (getEpisodePodcastConfig(podcast) && !skipEpisodeLoad) {
+  const detailEpisodeConfig = getEpisodePodcastConfig(podcast);
+  const hasManualEpisodeList = !detailEpisodeConfig && podcastHasManualEpisodeList(podcast);
+  if (hasManualEpisodeList && !skipEpisodeLoad) {
+    const manualEpisodes = ensureManualPodcastEpisodeState(podcast);
     const episodeState = getPodcastEpisodeState(podcast);
-if ((!isGenstartEpisodeCacheFresh() || episodeState.items.length < MINIMUM_RATEABLE_EPISODE_COUNT) && !episodeState.loading) {
+    if (manualEpisodes.length && !episodeState.eligibilityResolved) {
+      refreshManualEpisodeRatingData(getLocalEpisodePodcastKey(podcast), manualEpisodes)
+        .then(() => {
+          episodeState.eligibilityResolved = true;
+          handlePodcastDetailEpisodeLoadCompletion(dialog, podcast);
+        })
+        .catch(console.error);
+    }
+  } else if (detailEpisodeConfig && !skipEpisodeLoad) {
+    const episodeState = getPodcastEpisodeState(podcast);
+    if ((!isGenstartEpisodeCacheFresh() || episodeState.items.length < MINIMUM_RATEABLE_EPISODE_COUNT) && !episodeState.loading) {
       fetchGenstartEpisodes().then(() => {
         handlePodcastDetailEpisodeLoadCompletion(dialog, podcast);
       });

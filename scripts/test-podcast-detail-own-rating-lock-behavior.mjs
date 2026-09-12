@@ -55,7 +55,11 @@ class FakeRatingCell extends FakeElement {
       "data-podcast-detail-inline-rating-save",
       "data-podcast-detail-inline-rating-message"
     ]) {
-      if (value.includes(name)) this.nodes.set(name, new FakeElement());
+      if (value.includes(name)) {
+        const node = new FakeElement();
+        if (name === "data-podcast-detail-inline-rating-input") node.disabled = /\bdisabled\b/u.test(value);
+        this.nodes.set(name, node);
+      }
     }
   }
   get innerHTML() { return this._innerHTML; }
@@ -130,16 +134,19 @@ function createHarness({ eligible = false, ratings = {}, manualRating = null, ac
   assert.deepEqual(h.saveCalls, ["save", "save"], "click/touch and keyboard paths call the same guarded save");
 }
 
-// Existing single and multiple episode ratings replace the controls with a derived, locked display.
+// Existing single and multiple episode ratings restore the historical muted, disabled control.
 for (const [ratings, expected] of [
   [{ "episode-1": 7, "episode-2": null }, /7\.0/u],
-  [{ "episode-1": 7, "episode-2": 9 }, /8\.0/u]
+  [{ "episode-1": 7, "episode-2": 9 }, /8\.0/u],
+  [{ "episode-1": 7, "episode-2": 6.4, "episode-3": 7.5 }, /7\.0/u]
 ]) {
   const h = createHarness({ eligible: true, ratings });
   h.helpers.updatePodcastDetailOwnRatingCell(h.dialog, h.podcast);
   assert.match(h.ratingCell.innerHTML, expected);
   assert.match(h.ratingCell.innerHTML, /Beregnet fra episoder/u);
-  assert.equal(h.ratingCell.querySelector("[data-podcast-detail-inline-rating-input]"), null);
+  assert.match(h.ratingCell.innerHTML, /is-episode-calculated/u, "historical muted locked styling is applied");
+  assert.match(h.ratingCell.innerHTML, /role="tooltip"/u, "the locked state includes the keyboard-focusable explanation");
+  assert.equal(h.ratingCell.querySelector("[data-podcast-detail-inline-rating-input]")?.disabled, true);
   assert.equal(h.ratingCell.querySelector("[data-podcast-detail-inline-rating-save]"), null);
 }
 
