@@ -17665,12 +17665,12 @@ function createSavedPodcastCardElement(podcast, { compactLibrary = false } = {})
   }
 
   const removeButton = document.createElement("button");
-  removeButton.className = "saved-button saved-button--remove";
+  removeButton.className = "saved-button saved-button--remove is-saved";
   removeButton.type = "button";
   removeButton.setAttribute("aria-label", "Fjern fra gemte");
   removeButton.title = "Fjern fra gemte";
   removeButton.innerHTML = `
-    <svg class="saved-button__heart" viewBox="0 0 24 24" aria-hidden="true"><path d="M6.5 4.5h11a1 1 0 0 1 1 1v15l-6.5-4-6.5 4v-15a1 1 0 0 1 1-1Z" /></svg>
+    <svg class="saved-button__heart favorite-button__icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M6.5 4.5h11a1 1 0 0 1 1 1v15l-6.5-4-6.5 4v-15a1 1 0 0 1 1-1Z" /></svg>
     <span class="saved-button__label">Fjern fra gemte</span>
   `;
   removeButton.addEventListener("click", (event) => {

@@ -20365,7 +20365,8 @@ body.page-ranglister .podcast-card__main-series-mobile {
   stroke-linejoin: round;
 }
 
-.favorite-button.is-saved .favorite-button__icon path {
+.favorite-button.is-saved .favorite-button__icon path,
+.saved-button--remove.is-saved .favorite-button__icon path {
   fill: #ff5c16;
   stroke: #ff5c16;
 }
