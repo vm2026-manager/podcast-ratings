@@ -750,6 +750,10 @@ const state = {
   // existing legacy row when that user later edits or deletes their rating.
   userRatingPersistedKeyByCanonical: {},
   communityStatsByKey: {},
+  // A successful empty response is still a usable ranking snapshot, so this
+  // must not be inferred from communityStatsByKey.
+  communityStatsHasSuccessfulLoad: false,
+  communityStatsRequestToken: 0,
   userRankByKey: {},
   profileSuggestions: [],
   profileSuggestionsLoadedFor: null,
@@ -3051,10 +3055,14 @@ function resolveCanonicalPodcastId(key) {
 }
 
 function canonicalizeCommunityStats(rows) {
+  if (!Array.isArray(rows)) {
+    throw new TypeError("Community rating rows must be an array.");
+  }
+
   const totalsByKey = {};
   const unresolvedKeys = [];
 
-  (rows || []).forEach((item) => {
+  rows.forEach((item) => {
     const canonicalKey = resolveCanonicalPodcastId(item?.podcast_key);
     if (!canonicalKey) {
       unresolvedKeys.push(normalizeText(item?.podcast_key));
@@ -6936,31 +6944,43 @@ function updateRatingDialogMessage(message = "", tone = "info") {
 }
 
 async function fetchCommunityStats() {
+  const requestToken = state.communityStatsRequestToken + 1;
+  state.communityStatsRequestToken = requestToken;
+
   if (!state.supabase) {
-    state.communityStatsStatus = "error";
+    if (requestToken === state.communityStatsRequestToken) {
+      state.communityStatsStatus = "error";
+    }
     return;
   }
 
-  state.communityStatsStatus = "loading";
+  state.communityStatsStatus = state.communityStatsHasSuccessfulLoad ? "refreshing" : "loading";
 
-  const { data, error } = await state.supabase
-    .from(PODCAST_RATING_PUBLIC_STATS_VIEW)
-    .select("podcast_key, average_rating, rating_count");
+  try {
+    const { data, error } = await state.supabase
+      .from(PODCAST_RATING_PUBLIC_STATS_VIEW)
+      .select("podcast_key, average_rating, rating_count");
 
-  if (error) {
+    if (requestToken !== state.communityStatsRequestToken) return;
+    if (error) throw error;
+
+    const { statsByKey, unresolvedKeys } = canonicalizeCommunityStats(data);
+    if (requestToken !== state.communityStatsRequestToken) return;
+
+    state.communityStatsByKey = statsByKey;
+    state.communityStatsHasSuccessfulLoad = true;
+    if (unresolvedKeys.length) {
+      console.warn("Community rating rows without a current podcast identity were skipped:", unresolvedKeys);
+    }
+    state.communityStatsStatus = "ready";
+    invalidateRankingListCache();
+  } catch (error) {
+    if (requestToken !== state.communityStatsRequestToken) return;
+
     console.error(error);
     state.communityStatsStatus = "error";
     setAuthMessage("Kunne ikke hente brugernes snit fra Supabase.", "error", "hero");
-    return;
   }
-
-  const { statsByKey, unresolvedKeys } = canonicalizeCommunityStats(data);
-  state.communityStatsByKey = statsByKey;
-  if (unresolvedKeys.length) {
-    console.warn("Community rating rows without a current podcast identity were skipped:", unresolvedKeys);
-  }
-  state.communityStatsStatus = "ready";
-  invalidateRankingListCache();
 }
 
 async function refreshPodcastCommunityStat(podcastKey) {
@@ -14471,7 +14491,12 @@ function getDesktopRankingDataState() {
     };
   }
 
-  if (state.rankingSource === "users" && state.communityStatsStatus === "error") {
+  const hasUsableCommunityStats = state.communityStatsHasSuccessfulLoad;
+  if (
+    state.rankingSource === "users" &&
+    state.communityStatsStatus === "error" &&
+    !hasUsableCommunityStats
+  ) {
     return {
       status: "error",
       title: "Brugervurderinger kunne ikke indlæses",
@@ -14479,7 +14504,11 @@ function getDesktopRankingDataState() {
     };
   }
 
-  if (state.rankingSource === "users" && state.communityStatsStatus !== "ready") {
+  if (
+    state.rankingSource === "users" &&
+    state.communityStatsStatus !== "ready" &&
+    !hasUsableCommunityStats
+  ) {
     return {
       status: "loading",
       title: "Indlæser brugervurderinger",
@@ -14487,7 +14516,28 @@ function getDesktopRankingDataState() {
     };
   }
 
+  if (
+    state.rankingSource === "users" &&
+    state.communityStatsStatus === "error" &&
+    hasUsableCommunityStats
+  ) {
+    return {
+      status: "ready",
+      warning: "Brugervurderinger kunne ikke opdateres. Viser senest indlæste data."
+    };
+  }
+
   return { status: "ready" };
+}
+
+function renderDesktopRankingDataWarning(dataState) {
+  if (!dataState.warning || !elements.podcastGrid || !isDesktopRankingViewport()) return;
+
+  const warning = document.createElement("p");
+  warning.className = "desktop-ranking-data-warning";
+  warning.setAttribute("role", "status");
+  warning.textContent = dataState.warning;
+  elements.podcastGrid.prepend(warning);
 }
 
 function renderDesktopRankingDataState(dataState) {
@@ -14569,6 +14619,8 @@ function renderPodcastGrid() {
 
     elements.podcastGrid.appendChild(fragment);
   }
+
+  renderDesktopRankingDataWarning(rankingDataState);
 
   if (elements.resultsText) {
     elements.resultsText.textContent = getResultsText(filtered.length, visible.length);
