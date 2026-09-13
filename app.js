@@ -16711,8 +16711,26 @@ function renderProfilePage() {
       : "Login er ikke tilg&aelig;ngeligt, fordi auth ikke er konfigureret.";
 
     container.innerHTML = `
-      <section class="profile-page">
-        ${getProfileMobilePageHeadingMarkup()}
+      <section class="profile-page profile-page--logged-out">
+        <div class="profile-logged-out-desktop" aria-labelledby="profileLoggedOutTitle">
+          <div class="profile-logged-out-desktop__hero">
+            <p class="profile-eyebrow">Din podcastkonto</p>
+            <h1 id="profileLoggedOutTitle">Få mere ud af Podcastlisten</h1>
+            <p class="profile-logged-out-desktop__lead">Gem dine favoritter, giv vurderinger og få personlige anbefalinger.</p>
+            <div class="profile-logged-out-desktop__actions">
+              <button class="profile-button profile-button--primary" type="button" data-auth-prompt="signup" ${disabled}>Opret dig gratis <span aria-hidden="true">&#8594;</span></button>
+              <button class="profile-button profile-button--secondary" type="button" data-auth-prompt="login" ${disabled}>Log ind</button>
+            </div>
+            <p class="profile-logged-out-desktop__note">Det er gratis og tager kun et øjeblik.</p>
+          </div>
+          <div class="profile-logged-out-desktop__benefits" aria-label="Profilfordele">
+            <article class="profile-logged-out-desktop__benefit"><span class="profile-benefit-card__icon" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><path d="M5 4.5A2.5 2.5 0 0 1 7.5 2h9A2.5 2.5 0 0 1 19 4.5v16l-7-3.8-7 3.8v-16Z" /></svg></span><div><strong>Gem favoritter</strong><p>Find dem igen senere.</p></div></article>
+            <article class="profile-logged-out-desktop__benefit"><span class="profile-benefit-card__icon" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><path d="M12 3.5 14.7 9l6.1.9-4.4 4.3 1 6.1L12 17.4l-5.4 2.9 1-6.1-4.4-4.3 6.1-.9L12 3.5Z" /></svg></span><div><strong>Giv vurderinger</strong><p>Hjælp andre med at opdage gode podcasts.</p></div></article>
+            <article class="profile-logged-out-desktop__benefit"><span class="profile-benefit-card__icon" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><path d="M12 3a7 7 0 0 0-4 12.7V18h8v-2.3A7 7 0 0 0 12 3Zm-3 17h6v2H9v-2Z" /></svg></span><div><strong>Få anbefalinger</strong><p>Opdag podcasts, der passer til dig.</p></div></article>
+          </div>
+        </div>
+        <div class="profile-logged-out-mobile">
+          ${getProfileMobilePageHeadingMarkup()}
         <div class="profile-state-card profile-state-card--logged-out">
           <p class="profile-eyebrow">Din podcastkonto</p>
           <h2>Din profil</h2>
@@ -16754,6 +16772,7 @@ function renderProfilePage() {
               Opret dig
             </button>
           </div>
+        </div>
         </div>
       </section>
     `;
