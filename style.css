@@ -29548,6 +29548,54 @@ html body .desktop-user-menu__item {
   justify-content: space-between;
 }
 
+/* Shared mobile chrome: keep the four primary-page header rows aligned while
+   leaving each page's hero and content treatment independent. */
+@media (max-width: 768px) {
+  :root {
+    --mobile-main-header-height: 52px;
+  }
+
+  html body:is(.page-ranglister, .page-udforsk, .page-profil) .mobile-page-topline {
+    min-height: var(--mobile-main-header-height) !important;
+    height: var(--mobile-main-header-height) !important;
+    align-items: center !important;
+  }
+
+  html body.page-ranglister .ranking-mobile-page-header .mobile-page-topline,
+  html body.page-udforsk .explore-hero__brand-row {
+    width: calc(100% - 12px) !important;
+    margin-inline: 6px !important;
+  }
+
+  html body.page-ranglister .mobile-page-topline__profile,
+  html body.page-udforsk .mobile-page-topline__profile {
+    margin-right: 0 !important;
+  }
+
+  html body.page-ranglister .ranking-mobile-page-header {
+    gap: 15px !important;
+  }
+
+  html body.page-udforsk .explore-hero {
+    padding-top: 14px !important;
+  }
+
+  html body.page-udforsk .explore-hero__brand-row {
+    margin-bottom: -8px !important;
+  }
+
+  html body.page-profil .mobile-page-topline {
+    width: calc(100% - 40px) !important;
+    margin: 14px 20px 15px !important;
+  }
+
+  html body.page-forside.page-forside #pageIntroPanel .home-hero__header .mobile-brand-word {
+    display: inline-flex !important;
+    align-items: center !important;
+    min-height: 44px !important;
+  }
+}
+
 html body .suggestion-notification-badge--menu {
   position: static;
   min-width: 18px;
