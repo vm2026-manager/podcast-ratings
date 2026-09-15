@@ -115,6 +115,20 @@ html body .mobile-home-search-overlay { display: none; }
   html body.page-forside.page-forside #pageIntroPanel .home-popular .home-popular-card__rating {
     margin: 0 !important;
   }
+
+  /* Match the homepage's featured recommendation bleed without changing any
+     section's own card padding, grid gaps, or carousel item sizing. */
+  html body.page-forside.page-forside #pageIntroPanel .home-podcast-search,
+  html body.page-forside.page-forside #pageIntroPanel .home-quick-cards,
+  html body.page-forside.page-forside #pageIntroPanel .home-popular,
+  html body.page-forside.page-forside #pageIntroPanel .home-genres,
+  html body.page-forside.page-forside #pageIntroPanel .home-editorial-latest,
+  html body.page-forside.page-forside #pageIntroPanel .home-community-cta {
+    box-sizing: border-box !important;
+    width: calc(100% + 40px) !important;
+    max-width: none !important;
+    margin-inline: -20px !important;
+  }
 }
 
 /* MOBILE RANKING COLLAPSIBLE FILTERS */
