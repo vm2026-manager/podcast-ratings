@@ -43,6 +43,12 @@
     column-gap: 6px !important;
   }
 
+  html body.page-ranglister .ranking-list-panel {
+    width: calc(100% + 28px) !important;
+    max-width: none !important;
+    margin-inline: -14px !important;
+  }
+
   html body.page-ranglister .podcast-card__placement {
     width: 34px !important;
     min-width: 34px !important;
