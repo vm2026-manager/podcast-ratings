@@ -1102,11 +1102,20 @@
 /* Mobile homepage search keeps the existing fixed-top interaction without reserving
    the rest of the viewport when no result content is present. */
 @media (max-width: 768px) {
+  html body.mobile-home-search-overlay-open.page-forside {
+    background: #fffdf9;
+  }
+
+  html body.mobile-home-search-overlay-open.page-forside .page-shell > .topbar,
+  html body.mobile-home-search-overlay-open.page-forside #pageIntroPanel {
+    visibility: hidden !important;
+  }
+
   html body.mobile-home-search-overlay-open.page-forside .mobile-home-search-overlay {
     grid-template-rows: auto auto !important;
     height: auto !important;
     overflow: visible !important;
-    background: transparent !important;
+    background: #fffdf9 !important;
   }
 
   html body.page-forside .mobile-home-search-overlay__results.is-empty {
