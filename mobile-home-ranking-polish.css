@@ -4,7 +4,7 @@
   }
 
   html body .page-shell {
-    padding-bottom: calc(14px + var(--mobile-bottom-reserve, 76px)) !important;
+    padding-bottom: calc(14px + var(--mobile-nav-height, 76px)) !important;
   }
 
   html body.page-forside #pageIntroPanel .home-recent #homeRecentHeading {
@@ -39,7 +39,7 @@
   }
 
   html body.page-ranglister .podcast-card {
-    grid-template-columns: 34px 78px minmax(0, 1fr) 30px !important;
+    grid-template-columns: fit-content(60px) 78px minmax(0, 1fr) 30px !important;
     column-gap: 6px !important;
   }
 
@@ -50,12 +50,19 @@
   }
 
   html body.page-ranglister .podcast-card__placement {
-    width: 34px !important;
+    width: auto !important;
     min-width: 34px !important;
+    max-width: 60px !important;
     height: 34px !important;
     padding: 0 !important;
+    align-items: center !important;
+    justify-content: center !important;
     box-sizing: border-box !important;
     border-radius: 11px !important;
+  }
+
+  html body.page-ranglister .podcast-card__placement .placement-label {
+    display: none !important;
   }
 
   html body.page-ranglister .placement-value {
