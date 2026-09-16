@@ -502,3 +502,26 @@
     white-space: nowrap !important;
   }
 }
+
+/* Keep the logged-out mobile profile invitation sized by its real content. */
+@media (max-width: 768px) {
+  html body.page-profil .profile-page--logged-out .profile-state-card--logged-out {
+    min-height: 0 !important;
+    align-content: start !important;
+    padding-block: 18px !important;
+    gap: 10px !important;
+  }
+
+  html body.page-profil .profile-page--logged-out .profile-benefit-grid {
+    gap: 8px !important;
+    margin-block: 0 !important;
+  }
+
+  html body.page-profil .profile-page--logged-out .profile-benefit-card {
+    padding-block: 10px !important;
+  }
+
+  html body.page-profil .profile-page--logged-out .profile-actions {
+    gap: 8px !important;
+  }
+}
