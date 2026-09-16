@@ -1031,7 +1031,8 @@ const mobileHomeSearchOverlayState = {
   matches: [],
   activeIndex: -1,
   viewportCleanup: null,
-  viewportFrame: 0
+  viewportFrame: 0,
+  outsidePointerCleanup: null
 };
 
 function applyViewModePreference() {
@@ -1584,6 +1585,7 @@ function clearMobileHomeSearchOverlayResults({ clearInput = false } = {}) {
   mobileHomeSearchOverlayState.matches = [];
   mobileHomeSearchOverlayState.activeIndex = -1;
   results?.replaceChildren();
+  results?.classList.add("is-empty");
   input?.setAttribute("aria-expanded", "false");
   input?.removeAttribute("aria-activedescendant");
   if (clearInput && input) input.value = "";
@@ -1619,6 +1621,8 @@ function closeMobileHomeSearchOverlay({ clearInput = true } = {}) {
     window.cancelAnimationFrame(mobileHomeSearchOverlayState.viewportFrame);
   }
   mobileHomeSearchOverlayState.viewportFrame = 0;
+  mobileHomeSearchOverlayState.outsidePointerCleanup?.();
+  mobileHomeSearchOverlayState.outsidePointerCleanup = null;
   clearMobileHomeSearchOverlayResults({ clearInput });
   input?.blur();
   overlay.hidden = true;
@@ -1653,6 +1657,17 @@ function openMobileHomeSearchOverlay() {
     };
   }
 
+  if (!mobileHomeSearchOverlayState.outsidePointerCleanup) {
+    const closeOnOutsidePointer = (event) => {
+      if (overlay.hidden || overlay.contains(event.target)) return;
+      closeMobileHomeSearchOverlay();
+    };
+    document.addEventListener("pointerdown", closeOnOutsidePointer, true);
+    mobileHomeSearchOverlayState.outsidePointerCleanup = () => {
+      document.removeEventListener("pointerdown", closeOnOutsidePointer, true);
+    };
+  }
+
   input.focus({ preventScroll: true });
   return true;
 }
@@ -1671,6 +1686,7 @@ function renderMobileHomeSearchOverlayResults() {
     return;
   }
 
+  results.classList.remove("is-empty");
   const matches = getHeaderSearchMatches(query);
   mobileHomeSearchOverlayState.matches = matches;
   mobileHomeSearchOverlayState.activeIndex = -1;

@@ -1099,6 +1099,25 @@
   }
 }
 
+/* Mobile homepage search keeps the existing fixed-top interaction without reserving
+   the rest of the viewport when no result content is present. */
+@media (max-width: 768px) {
+  html body.mobile-home-search-overlay-open.page-forside .mobile-home-search-overlay {
+    grid-template-rows: auto auto !important;
+    height: auto !important;
+    overflow: visible !important;
+    background: transparent !important;
+  }
+
+  html body.page-forside .mobile-home-search-overlay__results.is-empty {
+    display: none;
+  }
+
+  html body.page-forside .mobile-home-search-overlay__results:not(.is-empty) {
+    max-height: calc(var(--mobile-search-overlay-height, 100dvh) - 104px);
+  }
+}
+
 /* Keep the logged-in welcome affordance on mobile, but do not reserve hero
    space for it in the desktop composition. */
 @media (min-width: 1101px) {

@@ -33,7 +33,7 @@
     <link rel="stylesheet" href="style.css?v=20260906-mobile-suggestion-response-layout-v1" />
     <link rel="stylesheet" href="explore-mobile-stack.css?v=2026-07-19-desktop-home-package-02" />
     <link rel="stylesheet" href="mobile-home-ranking-polish.css?v=20260813-mobile-podcast-modal-breakpoint-fix" />
-    <link rel="stylesheet" href="desktop-home-mockup.css?v=20260906-season-workspace-layout-v1" />
+    <link rel="stylesheet" href="desktop-home-mockup.css?v=20260916-mobile-home-search-refinement-v1" />
     <link rel="stylesheet" href="desktop-episode-workspace.css?v=20260906-season-colgroup-fix-v1" />
     <link rel="stylesheet" href="profile-settings-desktop.css?v=20260813-approved-mockup" />
     <link rel="stylesheet" href="mobile-ux-fixes.css?v=20260820-mobile-core-v3" />
@@ -68,7 +68,7 @@
       })();
     </script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
-    <script src="app.js?v=20260913-profile-logged-out-hero-v2" defer></script>
+    <script src="app.js?v=20260916-mobile-home-search-refinement-v1" defer></script>
   </head>
 
   <body>
@@ -783,7 +783,7 @@
           <input id="mobileHomeSearchOverlayInput" class="mobile-home-search-overlay__input" type="search" autocomplete="off" autocapitalize="none" spellcheck="false" placeholder="Søg efter podcasts..." aria-label="Søg efter podcasts" aria-autocomplete="list" aria-controls="mobileHomeSearchOverlayResults" aria-expanded="false" />
         </form>
       </div>
-      <div id="mobileHomeSearchOverlayResults" class="mobile-home-search-overlay__results" role="listbox" aria-label="Søgeresultater"></div>
+      <div id="mobileHomeSearchOverlayResults" class="mobile-home-search-overlay__results is-empty" role="listbox" aria-label="Søgeresultater"></div>
     </section>
 </body>
 </html>
