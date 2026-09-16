@@ -1270,6 +1270,17 @@
   html body #podcastDetailSheet .podcast-detail-sheet__related-cover {
     height: 68px !important;
   }
+
+  /* Keep the detail-sheet carousel media intentionally rectangular on mobile. */
+  html body #podcastDetailSheet .podcast-detail-sheet__related-cover {
+    width: 100% !important;
+    height: auto !important;
+    aspect-ratio: 16 / 9 !important;
+  }
+
+  html body #podcastDetailSheet .podcast-detail-sheet__related-cover img {
+    object-fit: cover !important;
+  }
 }
 @media (max-width: 380px) {
   html body.page-forside #pageIntroPanel .home-featured__surface {
