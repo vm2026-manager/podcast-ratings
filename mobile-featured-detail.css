@@ -824,7 +824,7 @@
   }
   html body #podcastDetailSheet .podcast-detail-sheet__content {
     max-height: calc(92dvh - 48px) !important;
-    padding: 0 clamp(22px, 7.2vw, 30px) 14px !important;
+    padding: 0 16px 14px !important;
     gap: 10px !important;
   }
   html body #podcastDetailSheet .podcast-detail-sheet__header {
