@@ -16749,7 +16749,7 @@ function renderProfilePage() {
           ${getProfileMobilePageHeadingMarkup()}
         <div class="profile-state-card profile-state-card--logged-out">
           <p class="profile-eyebrow">Din podcastkonto</p>
-          <h2>Din profil</h2>
+          <h2>Få mere med</h2>
           <p>${availabilityMessage}</p>
           <div class="profile-benefit-grid" aria-label="Profilfordele">
             <article class="profile-benefit-card">
