@@ -1,6 +1,6 @@
 import { assertEquals } from "https://deno.land/std@0.224.0/assert/mod.ts";
 import { runEpisodeImport, runEpisodeImports, selectAppleFeedKeys, selectNormalFeedKeys, selectNormalFeedShard, validateImportRequest, type ImportRepository, type PodcastEpisodeRow } from "./core.ts";
-import type { FeedConfigMap } from "./feed-config.ts";
+import { FEED_CONFIGS, type FeedConfigMap } from "./feed-config.ts";
 
 const RSS = "<rss><channel><title>Test</title><item><guid>episode-1</guid><title>Episode</title></item></channel></rss>";
 
@@ -54,6 +54,21 @@ Deno.test("a staged disabled feed stays out of all-feed selection while direct i
   });
   assertEquals(result.source, "mediano_public_rss");
   assertEquals(created.length, 1);
+});
+
+Deno.test("enabled Mediano public appears exactly once in normal all-feed shards", () => {
+  const normalKeys = selectNormalFeedKeys(FEED_CONFIGS);
+  const stagedConfigs: FeedConfigMap = {
+    ...FEED_CONFIGS,
+    mediano_public: { ...FEED_CONFIGS.mediano_public, enabled: false }
+  };
+  const beforeActivation = selectNormalFeedKeys(stagedConfigs);
+  const shards = [0, 1, 2, 3, 4, 5].map((shardIndex) => selectNormalFeedShard(FEED_CONFIGS, shardIndex, 6));
+
+  assertEquals(normalKeys.includes("mediano_public"), true);
+  assertEquals(shards.flat().filter((feedKey) => feedKey === "mediano_public").length, 1);
+  assertEquals(normalKeys.filter((feedKey) => feedKey !== "mediano_public"), beforeActivation);
+  assertEquals(normalKeys.filter((feedKey) => FEED_CONFIGS[feedKey].format === "apple_podcasts_html"), []);
 });
 
 Deno.test("single-feed requests remain compatible and shards are limited to feed=all", async () => {

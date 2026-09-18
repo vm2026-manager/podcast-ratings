@@ -43,9 +43,8 @@ export const FEED_CONFIGS: FeedConfigMap = {
     podcast_key: "mediano superliga",
     source: "mediano_public_rss",
     feed_url: PUBLIC_MEDIANO_RSS_URL,
-    // Staged manual-only rollout: explicit requests remain supported, but the
-    // shared feed=all cron must not import Mediano before first-run approval.
-    enabled: false,
+    // Production all-feed activation follows two verified manual imports.
+    enabled: true,
     routes: buildMedianoPublicFeedRoutes()
   },
   "apple_1575533784": {
