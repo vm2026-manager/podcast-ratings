@@ -85,11 +85,16 @@ async function main() {
   const firstWriteRows = local.upsertBatches().flat();
   const firstKeys = new Set(firstRows.map(storageKey));
   const approvedKeys = new Set(config.routes!.filter((route) => route.podcast_key).map((route) => route.podcast_key!));
+  const persistedFields: Array<keyof PodcastEpisodeRow> = [
+    "source", "external_guid", "podcast_key", "title", "published_at", "audio_url", "episode_url", "image_url", "metadata"
+  ];
 
   assert(firstWriteRows.length === first.inserted_count + first.updated_count, "first write rows equal import summary writes");
   assert(firstRows.length === firstWriteRows.length, "empty destination stores each first-run write once");
   assert(firstKeys.size === firstRows.length, "source + external_guid is unique");
   assert(firstRows.every((row) => row.source === config.source), "all writes use the Mediano public source");
+  assert(firstRows.every((row) => persistedFields.every((field) => Object.hasOwn(row, field)), "every write has the expected persistent fields");
+  assert(firstRows.every((row) => Object.hasOwn(row.metadata, "rateable") && Object.hasOwn(row.metadata, "exclusion_reason")), "every write carries rateability/exclusion metadata");
   assert(firstRows.every((row) => approvedKeys.has(row.podcast_key)), "only enabled canonical routes are persisted");
   assert(firstRows.every((row) => catalogueById.has(row.podcast_key)), "every persisted podcast_key is in the catalogue");
   assert(!firstRows.some((row) => row.podcast_key === "fodboldministeriet"), "Fodboldministeriet receives zero umbrella writes");
@@ -132,6 +137,8 @@ async function main() {
     per_destination: perDestination,
     identity_checks: {
       source_external_guid_unique: firstKeys.size === firstRows.length,
+      required_persistent_fields_present: true,
+      rateability_exclusion_metadata_present: true,
       approved_canonical_destinations_only: true,
       catalogue_podcast_ids_valid: true,
       fodboldministeriet_write_count: 0,
