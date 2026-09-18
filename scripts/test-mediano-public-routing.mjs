@@ -24,6 +24,10 @@ const report = auditMedianoFeedXml(`<?xml version="1.0"?><rss><channel>
 assert.equal(report.totalItems, 3);
 assert.equal(report.routedItems["Mediano PL"].count, 2);
 assert.equal(report.unmatchedItems.length, 1);
+assert.equal(report.totalRouted, 2);
+assert.equal(report.totalUnmatched, 1);
+assert.equal(report.totalAmbiguous, 0);
+assert.equal(report.canonicalRoutes["Mediano PL"].count, 2);
 assert.equal(report.duplicateCandidates.length, 3);
 assert.equal(report.dryRun, true);
 
@@ -35,6 +39,19 @@ assert.equal(
   normalizedFingerprintReport.duplicateCandidates.filter((candidate) => candidate.identity === "title_published_duration").length,
   1
 );
+
+const statusReport = auditMedianoFeedXml(`<?xml version="1.0"?><rss><channel>
+  <item><guid>pending</guid><title>Brüchmann ringer til #7: Gæst</title></item>
+  <item><guid>dedicated</guid><title>Fodboldministeriet: Egen udsendelse</title></item>
+  <item><guid>unknown</guid><title>Ukendt program: Test</title></item>
+</channel></rss>`);
+assert.equal(statusReport.totalKnownNoDestination, 1);
+assert.equal(statusReport.knownNoDestinationItems[0].route, "Brüchmann ringer til");
+assert.equal(statusReport.canonicalRoutes["Brüchmann ringer til"].count, 1);
+assert.equal(statusReport.totalSkipped, 1);
+assert.equal(statusReport.skippedItems[0].route, "Fodboldministeriet");
+assert.equal(statusReport.canonicalRoutes.Fodboldministeriet.count, 1);
+assert.equal(statusReport.totalUnmatched, 1);
 
 const catalogue = JSON.parse(await readFile(new URL("../data/podcasts.json", import.meta.url), "utf8")).rows;
 const cataloguePodcastIds = new Set(catalogue.map((row) => row["Podcast-ID"]));

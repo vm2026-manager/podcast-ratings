@@ -43,15 +43,28 @@ function valuesWithDuplicates(items, key, label) {
 export function auditMedianoFeedXml(xml, { feedUrl = PUBLIC_MEDIANO_RSS_URL, routes = MEDIANO_PUBLIC_ROUTES } = {}) {
   const items = parseRssItems(xml);
   const routed = new Map();
+  const canonicalRoutes = Object.fromEntries(routes.map((route) => [route.canonicalTitle, {
+    status: route.status || "enabled", podcastId: route.podcastId || null, count: 0, examples: []
+  }]));
   const unmatched = [];
   const ambiguous = [];
+  const knownNoDestination = [];
+  const skipped = [];
   for (const item of items) {
     const decision = routePublicMedianoTitle(item.title, routes);
     if (decision.status === "routed") {
       const key = decision.route.canonicalTitle;
       routed.set(key, [...(routed.get(key) || []), item]);
+      canonicalRoutes[key].count += 1;
+      if (canonicalRoutes[key].examples.length < 3) canonicalRoutes[key].examples.push(item.title);
     } else if (decision.status === "ambiguous") {
       ambiguous.push({ ...item, candidates: decision.routes.map((route) => route.canonicalTitle) });
+    } else if (decision.status === "known_no_destination") {
+      const entry = { ...item, route: decision.route.canonicalTitle, routeStatus: decision.route.status };
+      canonicalRoutes[decision.route.canonicalTitle].count += 1;
+      if (canonicalRoutes[decision.route.canonicalTitle].examples.length < 3) canonicalRoutes[decision.route.canonicalTitle].examples.push(item.title);
+      if (decision.route.status === "skip") skipped.push(entry);
+      else knownNoDestination.push(entry);
     } else {
       unmatched.push(item);
     }
@@ -61,11 +74,19 @@ export function auditMedianoFeedXml(xml, { feedUrl = PUBLIC_MEDIANO_RSS_URL, rou
     dryRun: true,
     feedUrl,
     totalItems: items.length,
+    totalRouted: [...routed.values()].reduce((total, entries) => total + entries.length, 0),
+    totalUnmatched: unmatched.length,
+    totalAmbiguous: ambiguous.length,
+    totalKnownNoDestination: knownNoDestination.length,
+    totalSkipped: skipped.length,
+    canonicalRoutes,
     routedItems: Object.fromEntries([...routed.entries()].map(([series, entries]) => [series, {
       count: entries.length, examples: entries.slice(0, 3).map((entry) => entry.title)
     }])),
     unmatchedItems: unmatched,
     ambiguousItems: ambiguous,
+    knownNoDestinationItems: knownNoDestination,
+    skippedItems: skipped,
     duplicateCandidates: [
       ...valuesWithDuplicates(items, "guid", "guid"),
       ...valuesWithDuplicates(items, "enclosureUrl", "enclosure_url"),
