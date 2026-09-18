@@ -93,7 +93,7 @@ async function main() {
   assert(firstRows.length === firstWriteRows.length, "empty destination stores each first-run write once");
   assert(firstKeys.size === firstRows.length, "source + external_guid is unique");
   assert(firstRows.every((row) => row.source === config.source), "all writes use the Mediano public source");
-  assert(firstRows.every((row) => persistedFields.every((field) => Object.hasOwn(row, field)), "every write has the expected persistent fields");
+  assert(firstRows.every((row) => persistedFields.every((field) => Object.hasOwn(row, field))), "every write has the expected persistent fields");
   assert(firstRows.every((row) => Object.hasOwn(row.metadata, "rateable") && Object.hasOwn(row.metadata, "exclusion_reason")), "every write carries rateability/exclusion metadata");
   assert(firstRows.every((row) => approvedKeys.has(row.podcast_key)), "only enabled canonical routes are persisted");
   assert(firstRows.every((row) => catalogueById.has(row.podcast_key)), "every persisted podcast_key is in the catalogue");

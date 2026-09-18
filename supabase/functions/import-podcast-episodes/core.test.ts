@@ -1,5 +1,5 @@
 import { assertEquals } from "https://deno.land/std@0.224.0/assert/mod.ts";
-import { runEpisodeImports, selectAppleFeedKeys, selectNormalFeedKeys, selectNormalFeedShard, validateImportRequest, type ImportRepository, type PodcastEpisodeRow } from "./core.ts";
+import { runEpisodeImport, runEpisodeImports, selectAppleFeedKeys, selectNormalFeedKeys, selectNormalFeedShard, validateImportRequest, type ImportRepository, type PodcastEpisodeRow } from "./core.ts";
 import type { FeedConfigMap } from "./feed-config.ts";
 
 const RSS = "<rss><channel><title>Test</title><item><guid>episode-1</guid><title>Episode</title></item></channel></rss>";
@@ -27,6 +27,33 @@ Deno.test("normal all-feed shards are sorted, complete, disjoint, and exclude Ap
   assertEquals(new Set(assigned).size, normalKeys.length);
   assertEquals(assigned.includes("valley_heat"), true);
   assertEquals(selectAppleFeedKeys(feedConfigs), ["apple_disabled", "apple_accidentally_enabled"]);
+});
+
+Deno.test("a staged disabled feed stays out of all-feed selection while direct import remains available", async () => {
+  const feedConfigs: FeedConfigMap = {
+    ordinary: { podcast_key: "ordinary", source: "ordinary_rss", feed_url: "https://example.test/ordinary" },
+    mediano_public: { podcast_key: "mediano superliga", source: "mediano_public_rss", feed_url: "https://example.test/mediano", enabled: false }
+  };
+  const created: string[] = [];
+  const repository: ImportRepository = {
+    createImportRun: async () => ({ id: `run-${created.push("run")}` }),
+    loadExistingEpisodes: async (): Promise<PodcastEpisodeRow[]> => [],
+    upsertEpisodes: async () => undefined,
+    updateImportRun: async () => undefined
+  };
+
+  assertEquals(selectNormalFeedKeys(feedConfigs), ["ordinary"]);
+  assertEquals(selectNormalFeedShard(feedConfigs, 0, 1), ["ordinary"]);
+
+  const result = await runEpisodeImport({
+    feedKey: "mediano_public",
+    feedConfigs,
+    repository,
+    fetchText: async () => RSS,
+    now: () => "2026-09-18T00:00:00.000Z"
+  });
+  assertEquals(result.source, "mediano_public_rss");
+  assertEquals(created.length, 1);
 });
 
 Deno.test("single-feed requests remain compatible and shards are limited to feed=all", async () => {
