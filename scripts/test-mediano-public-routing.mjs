@@ -7,9 +7,33 @@ import { buildMedianoCanonicalMigrationPlan } from "./mediano-canonical-migratio
 
 assert.equal(routePublicMedianoTitle("MEDIANO PL: Runde 1").route.canonicalTitle, "Mediano PL");
 assert.equal(routePublicMedianoTitle("mediano serie a — runde 1").route.canonicalTitle, "Mediano Serie A");
+assert.equal(routePublicMedianoTitle("MAX UPDATE: Sommerens internationale nyheder").route.canonicalTitle, "Max Mediano");
+assert.equal(routePublicMedianoTitle("Max Mediano Special: Sæsonens hold").route.canonicalTitle, "Max Mediano");
+assert.equal(routePublicMedianoTitle("Mediano PL Special - Optakt til finalen").route.canonicalTitle, "Mediano PL");
+assert.equal(routePublicMedianoTitle("Superliga for Voksne #75 - Fodboldtrøjen").route.canonicalTitle, "Superliga for voksne");
+assert.equal(routePublicMedianoTitle("MINI MAX: Danske matchvindere").route.canonicalTitle, "Minimax");
+assert.equal(routePublicMedianoTitle("Fodbold var værre i 70’erne #5: Talentets skueplads").route.canonicalTitle, "Fodbold var værre i 70'erne");
 assert.equal(routePublicMedianoTitle("Mediano PL spiller omtaler Mediano Superliga").status, "unmatched");
+assert.equal(routePublicMedianoTitle("Max Update senere i udsendelsen").status, "unmatched");
+assert.equal(routePublicMedianoTitle("Mini Maximum: ikke Minimax").status, "unmatched");
+assert.equal(routePublicMedianoTitle("Superliga for Voksnehed: ikke serien").status, "unmatched");
+assert.equal(routePublicMedianoTitle("Fodbold var værre i 70'erne senere").status, "unmatched");
 assert.equal(routePublicMedianoTitle("Brüchmann ringer til #7: Gæst").status, "known_no_destination");
 assert.equal(routePublicMedianoTitle("Bruchmann ringer til #7: Gæst").status, "known_no_destination");
+for (const title of [
+  "PL PREVIEW: Optakt til runden",
+  "Premier League Update #8: Transfer",
+  "DET SPILLER IKKE: Episode 4",
+  "MEDIANO CL: Finaleoptakt",
+  "Mediano Futsal - Optakt",
+  "Mediano VM - Optakt",
+  "Mediano Sócrates: Debat",
+  "Mediano Talks #3: Gæster",
+  "HILLSBOROUGH-KATASTROFEN 1989: Afsnit 1",
+  "SUPERLIGAENS STØRSTE ØJEBLIKKE: Historien"
+]) assert.equal(routePublicMedianoTitle(title).status, "known_no_destination", title);
+assert.equal(routePublicMedianoTitle("PL Preview senere i udsendelsen").status, "unmatched");
+assert.equal(routePublicMedianoTitle("Mediano Classic: ikke Mediano CL").status, "unmatched");
 const routes = [
   { canonicalTitle: "One", podcastId: "one", aliases: ["Shared"] },
   { canonicalTitle: "Two", podcastId: "two", aliases: ["Shared"] }

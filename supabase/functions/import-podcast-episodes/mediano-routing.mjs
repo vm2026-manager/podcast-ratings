@@ -8,9 +8,10 @@ const skipped = (key, canonicalTitle, aliases, reason) => ({ key, canonicalTitle
 
 export const MEDIANO_PUBLIC_ROUTE_DEFINITIONS = [
   enabled("mediano_superliga", "Mediano Superliga", "mediano superliga", ["Mediano Superliga"]),
-  enabled("max_mediano", "Max Mediano", "max mediano", ["Max Mediano"]),
-  enabled("mediano_pl", "Mediano PL", "mediano pl", ["Mediano PL"]),
+  enabled("max_mediano", "Max Mediano", "max mediano", ["Max Mediano", "Max Update", "Max Mediano Special"]),
+  enabled("mediano_pl", "Mediano PL", "mediano pl", ["Mediano PL", "Mediano PL Special"]),
   enabled("superliga_preview", "Superliga Preview", "superliga preview", ["Superliga Preview"]),
+  enabled("superliga_for_voksne", "Superliga for voksne", "superliga for voksne", ["Superliga for Voksne"]),
   enabled("klub_mediano", "Klub Mediano", "klub mediano", ["Klub Mediano"]),
   enabled("mediano_landshold", "Mediano Landshold", "mediano landshold", ["Mediano Landshold", "Landshold Special"]),
   enabled("mediano_breaking", "Mediano Breaking", "mediano breaking", ["Mediano Breaking"]),
@@ -33,6 +34,8 @@ export const MEDIANO_PUBLIC_ROUTE_DEFINITIONS = [
   enabled("mediano_marketing", "Mediano Marketing", "mediano marketing", ["Mediano Marketing"]),
   enabled("souplesse", "Souplesse", "souplesse", ["Souplesse"]),
   enabled("camp_canada", "Camp Canada", "camp canada", ["Camp Canada"]),
+  enabled("minimax", "Minimax", "minimax", ["Minimax", "Mini Max"]),
+  enabled("fodbold_70erne", "Fodbold var værre i 70'erne", "fodbold var værre i 70 erne", ["Fodbold var værre i 70'erne", "Fodbold var værre i 70’erne"]),
   skipped("fodboldministeriet_source_overlap", "Fodboldministeriet", ["Fodboldministeriet"], "has_dedicated_feed"),
   pending("magasinet_jennings", "Magasinet Jennings", "magasinet jennings", ["Magasinet Jennings", "Jennings"]),
   pending("bruchmann_ringer_til", "Brüchmann ringer til", "bruchmann ringer til", ["Brüchmann ringer til", "Bruchmann ringer til"]),
@@ -44,7 +47,17 @@ export const MEDIANO_PUBLIC_ROUTE_DEFINITIONS = [
   pending("superliga_update", "Superliga Update", "superliga update", ["Superliga Update"]),
   pending("bornefodboldkommissionen", "Børnefodboldkommissionen", "bornefodboldkommissionen", ["Børnefodboldkommissionen"]),
   pending("europa_magasinet", "Europa Magasinet", "europa magasinet", ["Europa Magasinet"]),
-  pending("det_taktiske_vaerksted", "Det taktiske værksted", "det taktiske vaerksted", ["Det taktiske værksted"])
+  pending("det_taktiske_vaerksted", "Det taktiske værksted", "det taktiske vaerksted", ["Det taktiske værksted"]),
+  pending("pl_preview", "PL Preview", "pl preview", ["PL Preview"]),
+  pending("premier_league_update", "Premier League Update", "premier league update", ["Premier League Update"]),
+  pending("det_spiller_ikke", "Det spiller ikke", "det spiller ikke", ["Det spiller ikke"]),
+  pending("mediano_cl", "Mediano CL", "mediano cl", ["Mediano CL"]),
+  pending("mediano_futsal", "Mediano Futsal", "mediano futsal", ["Mediano Futsal"]),
+  pending("mediano_vm", "Mediano VM", "mediano vm", ["Mediano VM"]),
+  pending("mediano_socrates", "Mediano Sócrates", "mediano socrates", ["Mediano Sócrates"]),
+  pending("mediano_talks", "Mediano Talks", "mediano talks", ["Mediano Talks"]),
+  pending("hillsborough_katastrofen", "Hillsborough-katastrofen", "hillsborough katastrofen", ["Hillsborough-katastrofen 1989", "Hillsborough Dokumentar"]),
+  pending("superligaens_storste_ojeblikke", "Superligaens største øjeblikke", "superligaens storste ojeblikke", ["Superligaens største øjeblikke"])
 ];
 
 export function normalizeMedianoText(value) {
