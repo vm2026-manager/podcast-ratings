@@ -11426,6 +11426,9 @@ function bindPodcastEpisodeOverviewEvents(dialog, podcast) {
   if (!overview) return;
 
   const tableWrap = overview.querySelector(".podcast-detail-sheet__episode-table-wrap");
+  const scrollContainer = window.matchMedia("(max-width: 768px)").matches
+    ? dialog.querySelector("[data-podcast-detail-content]")
+    : tableWrap;
   const searchInput = overview.querySelector("[data-episode-workspace-search]");
   if (searchInput?.dataset.episodeWorkspaceBound !== "true") {
     searchInput.dataset.episodeWorkspaceBound = "true";
@@ -11434,18 +11437,21 @@ function bindPodcastEpisodeOverviewEvents(dialog, podcast) {
     });
   }
 
-  if (tableWrap?.dataset.episodeWorkspaceScrollBound !== "true") {
-    tableWrap.dataset.episodeWorkspaceScrollBound = "true";
-    tableWrap.addEventListener("scroll", async () => {
+  if (scrollContainer?.dataset.episodeWorkspaceScrollBound !== "true") {
+    scrollContainer.dataset.episodeWorkspaceScrollBound = "true";
+    scrollContainer.addEventListener("scroll", async (event) => {
+      const currentOverview = dialog.querySelector("[data-podcast-episode-overview]");
+      if (!currentOverview) return;
+      const currentScrollContainer = event.currentTarget;
       const episodeState = getPodcastEpisodeState(podcast);
       const loaded = getEpisodeWorkspaceEpisodes(podcast).length;
       const visible = episodeState.workspaceVisibleCount || EPISODE_WORKSPACE_PAGE_SIZE;
-      if (tableWrap.scrollTop + tableWrap.clientHeight < tableWrap.scrollHeight - 80) return;
+      if (currentScrollContainer.scrollTop + currentScrollContainer.clientHeight < currentScrollContainer.scrollHeight - 80) return;
 
       if (visible < loaded) {
         episodeState.workspaceVisibleCount = Math.min(loaded, visible + EPISODE_WORKSPACE_PAGE_SIZE);
-        const rows = overview.querySelector("[data-episode-workspace-rows]");
-        const summary = overview.querySelector("[data-episode-workspace-summary]");
+        const rows = currentOverview.querySelector("[data-episode-workspace-rows]");
+        const summary = currentOverview.querySelector("[data-episode-workspace-summary]");
         if (rows) rows.innerHTML = renderPodcastEpisodeOverviewRows(podcast);
         if (summary) summary.textContent = getEpisodeWorkspaceSummary(podcast);
         bindPodcastEpisodeOverviewEvents(dialog, podcast);
