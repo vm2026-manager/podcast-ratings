@@ -2,7 +2,7 @@
   "version": 1,
   "source": {
     "path": "data/podcasts.json",
-    "generatedAt": "2026-09-19T09:26:29.226Z",
+    "generatedAt": "2026-09-19T13:23:31.084Z",
     "count": 1263,
     "topicAliases": "config/recommendation-topic-aliases.json",
     "topicAliasVersion": 1,
@@ -3374,11 +3374,11 @@
       "metadataIssues": []
     },
     {
-      "id": "mediano em speciel 2021",
-      "recommendationId": "rec-mediano-em-speciel-2021-e24f3e125c80adbc0ba0706ec7a181f1",
+      "id": "em speciel 2021",
+      "recommendationId": "rec-em-speciel-2021-6e6752421138b51578886666da692616",
       "recommendationIdentityBasis": "title+link",
       "identityDuplicateGroup": "",
-      "title": "Mediano: EM Speciel (2021)",
+      "title": "EM Speciel (2021)",
       "mainSeries": "",
       "primaryGenreRaw": "Fodbold",
       "primaryGenre": "Sport",
