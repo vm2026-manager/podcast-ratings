@@ -50,8 +50,9 @@ for (const id of expectedMedianoIds) {
   assert.equal(config.source, "mediano_public_rss", `${id} must read only public Mediano feed rows`);
 }
 
-assert.equal(context.MEDIANO_EPISODE_DESTINATIONS.length, 27, "approved Mediano destinations plus Magasinet Jennings are configured");
+assert.equal(context.MEDIANO_EPISODE_DESTINATIONS.length, 31, "approved Mediano destinations plus reviewed dormant series are configured");
 assert.equal(context.MEDIANO_EPISODE_PODCAST_CONFIG["superliga for voksne"].includeManualEpisodes, true);
+assert.equal(context.MEDIANO_EPISODE_PODCAST_CONFIG["klub mediano"].includeManualEpisodes, true, "Klub Mediano merges its reviewed historical subseries with RSS episodes");
 assert.equal(context.MEDIANO_EPISODE_PODCAST_CONFIG["mediano superliga"].includeManualEpisodes, false);
 assert.equal(context.getEpisodePodcastConfig({ podcastId: "unrelated podcast", title: "Unrelated" }), null, "unrelated podcasts are not globally enabled");
 
@@ -64,6 +65,8 @@ assert.equal(fodboldministeriet.databasePodcastKey, "fodboldministeriet", "Fodbo
 assert.equal(context.MEDIANO_EPISODE_PODCAST_CONFIG.fodboldministeriet, undefined, "Fodboldministeriet is not added to the Mediano umbrella config");
 
 assert.match(app, /mergeEpisodes\(rows, manualEpisodes\)/u, "Superliga for voksne uses the existing identity de-duplication merge");
+assert.match(app, /manualEpisodeKey: "den-store-talentserie"/u, "Den store talentserie uses an immutable manual episode key");
+assert.match(app, /manualEpisodeKey: "mediano-special-hvad-siger-data-om-superligaen"/u, "Mediano Special historical episode uses an immutable manual episode key");
 assert.match(app, /refreshManualEpisodeRatingData\(config\.podcastKey, manualEpisodes\)/u, "manual rating/mapping hydration remains active");
 assert.match(app, /function getEpisodeRatingPersistenceConfig[\s\S]*?if \(config\) return config;/u, "existing episode-rating persistence resolution remains unchanged");
 

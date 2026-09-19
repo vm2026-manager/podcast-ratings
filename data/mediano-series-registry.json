@@ -1,0 +1,2028 @@
+{
+  "version": 1,
+  "generatedFrom": "data/podcasts.json",
+  "rows": [
+    {
+      "legacyPodcastId": "hammer og bruchmann",
+      "displayTitle": "Hammer & Brüchmann",
+      "publisher": "Mediano",
+      "hovedserie": null,
+      "sourceUrl": "https://www.mediano.nu/oversigt/tag/Hammer+%26+Br%C3%BCchmann",
+      "episodeCount": null,
+      "year": "2021-2023",
+      "editorialRating": "8,5",
+      "editorialDate": null,
+      "rowType": "canonical_series",
+      "canonicalSeriesTitle": "Hammer & Brüchmann",
+      "canonicalPodcastId": "hammer og bruchmann",
+      "canonicalExists": true,
+      "evidenceStatus": "verified",
+      "researchStatus": "reviewed",
+      "evidence": [
+        {
+          "type": "mediano_tag_page",
+          "detail": "Mediano tag page title is ‘Hammer & Brüchmann — Forside’."
+        }
+      ],
+      "suppressFromCurrentCatalogue": false,
+      "preserveAsHistoricalEpisode": true,
+      "currentRssRouteKey": null,
+      "notes": "Verified canonical series page."
+    },
+    {
+      "legacyPodcastId": "superliga for voksne",
+      "displayTitle": "Superliga for voksne",
+      "publisher": "Mediano",
+      "hovedserie": null,
+      "sourceUrl": "https://www.mediano.nu/oversigt/tag/Superliga+for+Voksne",
+      "episodeCount": null,
+      "year": "2019-",
+      "editorialRating": "8,4",
+      "editorialDate": null,
+      "rowType": "canonical_series",
+      "canonicalSeriesTitle": "Superliga for voksne",
+      "canonicalPodcastId": "superliga for voksne",
+      "canonicalExists": true,
+      "evidenceStatus": "verified",
+      "researchStatus": "reviewed",
+      "evidence": [
+        {
+          "type": "mediano_tag_page",
+          "detail": "Mediano tag page title is ‘Superliga for Voksne — Forside’."
+        }
+      ],
+      "suppressFromCurrentCatalogue": false,
+      "preserveAsHistoricalEpisode": true,
+      "currentRssRouteKey": null,
+      "notes": "Existing canonical series."
+    },
+    {
+      "legacyPodcastId": "mediano special hvad siger data om superligaen",
+      "displayTitle": "Mediano special: hvad siger data om superligaen?",
+      "publisher": "Mediano",
+      "hovedserie": null,
+      "sourceUrl": "https://www.mediano.nu/oversigt/2023/1/24/mediano-special-hvad-siger-tallene-om-superligaen-1",
+      "episodeCount": 2,
+      "year": null,
+      "editorialRating": "8,3",
+      "editorialDate": null,
+      "rowType": "historical_episode",
+      "canonicalSeriesTitle": "Mediano Special",
+      "canonicalPodcastId": "mediano special",
+      "canonicalExists": false,
+      "evidenceStatus": "verified",
+      "researchStatus": "reviewed",
+      "evidence": [
+        {
+          "type": "mediano_episode_page",
+          "url": "https://www.mediano.nu/oversigt/2023/1/24/mediano-special-hvad-siger-tallene-om-superligaen-1",
+          "detail": "Original Mediano page calls this ‘Mediano Special - Hvad siger tallene om Superligaen #1’ and explicitly calls it the first of a two-part miniseries."
+        }
+      ],
+      "suppressFromCurrentCatalogue": true,
+      "preserveAsHistoricalEpisode": true,
+      "currentRssRouteKey": null,
+      "notes": "Verified historical Mediano Special instalment. The exact legacy catalogue identity is preserved once beneath the existing local canonical Mediano Special row.",
+      "editorialProvenance": "Existing catalogue row; kept as editorial metadata only, never a user rating."
+    },
+    {
+      "legacyPodcastId": "superzoom",
+      "displayTitle": "SuperZoom",
+      "publisher": "Mediano",
+      "hovedserie": null,
+      "sourceUrl": "https://www.mediano.nu/oversigt/tag/SUPERZOOM",
+      "episodeCount": null,
+      "year": "2024",
+      "editorialRating": "8,2",
+      "editorialDate": null,
+      "rowType": "canonical_series",
+      "canonicalSeriesTitle": "SUPERZOOM",
+      "canonicalPodcastId": "superzoom",
+      "canonicalExists": true,
+      "evidenceStatus": "verified",
+      "researchStatus": "reviewed",
+      "evidence": [
+        {
+          "type": "mediano_tag_page",
+          "detail": "Mediano tag page title is ‘SUPERZOOM — Forside’."
+        }
+      ],
+      "suppressFromCurrentCatalogue": false,
+      "preserveAsHistoricalEpisode": true,
+      "currentRssRouteKey": null,
+      "notes": "Verified canonical series page."
+    },
+    {
+      "legacyPodcastId": "mediano moneyball",
+      "displayTitle": "Mediano Moneyball",
+      "publisher": "Mediano",
+      "hovedserie": null,
+      "sourceUrl": "https://www.mediano.nu/oversigt/tag/Moneyball",
+      "episodeCount": null,
+      "year": null,
+      "editorialRating": "8,2",
+      "editorialDate": null,
+      "rowType": "canonical_series",
+      "canonicalSeriesTitle": "Moneyball",
+      "canonicalPodcastId": "mediano moneyball",
+      "canonicalExists": true,
+      "evidenceStatus": "verified",
+      "researchStatus": "reviewed",
+      "evidence": [
+        {
+          "type": "mediano_tag_page",
+          "detail": "Mediano tag page title is ‘Moneyball — Forside’."
+        }
+      ],
+      "suppressFromCurrentCatalogue": false,
+      "preserveAsHistoricalEpisode": true,
+      "currentRssRouteKey": null,
+      "notes": "Verified canonical series page."
+    },
+    {
+      "legacyPodcastId": "mediano superliga",
+      "displayTitle": "Mediano Superliga",
+      "publisher": "Mediano",
+      "hovedserie": null,
+      "sourceUrl": "https://www.mediano.nu/oversigt/category/Superliga",
+      "episodeCount": null,
+      "year": null,
+      "editorialRating": "8,2",
+      "editorialDate": null,
+      "rowType": "canonical_series",
+      "canonicalSeriesTitle": "Mediano Superliga",
+      "canonicalPodcastId": "mediano superliga",
+      "canonicalExists": true,
+      "evidenceStatus": "verified",
+      "researchStatus": "reviewed",
+      "evidence": [
+        {
+          "type": "mediano_series_page",
+          "detail": "Mediano category page title is ‘Superliga — Forside’; existing reviewed route uses Mediano Superliga."
+        }
+      ],
+      "suppressFromCurrentCatalogue": false,
+      "preserveAsHistoricalEpisode": true,
+      "currentRssRouteKey": null,
+      "notes": "Existing canonical series and route."
+    },
+    {
+      "legacyPodcastId": "mediano business",
+      "displayTitle": "Mediano Business",
+      "publisher": "Mediano",
+      "hovedserie": null,
+      "sourceUrl": "https://www.mediano.nu/oversigt/businessomfcmogvff",
+      "episodeCount": null,
+      "year": "2024",
+      "editorialRating": "8,1",
+      "editorialDate": null,
+      "rowType": "canonical_series",
+      "canonicalSeriesTitle": "Mediano Business",
+      "canonicalPodcastId": "mediano business",
+      "canonicalExists": true,
+      "evidenceStatus": "verified",
+      "researchStatus": "reviewed",
+      "evidence": [
+        {
+          "type": "mediano_tag_page",
+          "url": "https://www.mediano.nu/oversigt/tag/Mediano%2BBusiness",
+          "detail": "Mediano’s dedicated Business tag page lists repeated Mediano Business editions and its premiere as a named format."
+        },
+        {
+          "type": "reviewed_current_route",
+          "detail": "Existing reviewed Mediano public-RSS destination is named Mediano Business."
+        }
+      ],
+      "suppressFromCurrentCatalogue": false,
+      "preserveAsHistoricalEpisode": true,
+      "currentRssRouteKey": null,
+      "notes": "Verified existing canonical series. A later source says the format moved into Klub Mediano, but does not invalidate the reviewed canonical catalogue identity."
+    },
+    {
+      "legacyPodcastId": "super",
+      "displayTitle": "Super",
+      "publisher": "Mediano",
+      "hovedserie": null,
+      "sourceUrl": "https://podimo.com/dk/shows/super",
+      "episodeCount": null,
+      "year": "2021",
+      "editorialRating": "7,8",
+      "editorialDate": null,
+      "rowType": "unresolved",
+      "canonicalSeriesTitle": null,
+      "canonicalPodcastId": null,
+      "canonicalExists": false,
+      "evidenceStatus": "unresolved",
+      "researchStatus": "reviewed",
+      "evidence": [
+        {
+          "type": "unresolved",
+          "detail": "Original Podimo URL returned 403; no deterministic Mediano series evidence found in this pass."
+        }
+      ],
+      "suppressFromCurrentCatalogue": false,
+      "preserveAsHistoricalEpisode": false,
+      "currentRssRouteKey": null,
+      "notes": "Do not infer from the generic title ‘Super’."
+    },
+    {
+      "legacyPodcastId": "mediano em speciel 2021",
+      "displayTitle": "Mediano: EM Speciel (2021)",
+      "publisher": "Mediano",
+      "hovedserie": null,
+      "sourceUrl": "https://www.mediano.nu/oversigt/2020/3/17/em-special-em-2020-blev-til-em-2021",
+      "episodeCount": null,
+      "year": null,
+      "editorialRating": "7,8",
+      "editorialDate": null,
+      "rowType": "historical_episode",
+      "canonicalSeriesTitle": "EM Special",
+      "canonicalPodcastId": "mediano em speciel 2021",
+      "canonicalExists": true,
+      "evidenceStatus": "strong",
+      "researchStatus": "reviewed",
+      "evidence": [
+        {
+          "type": "mediano_series_page",
+          "detail": "Original page title explicitly brands ‘EM Special - EM 2020 blev til EM 2021’."
+        }
+      ],
+      "suppressFromCurrentCatalogue": false,
+      "preserveAsHistoricalEpisode": true,
+      "currentRssRouteKey": null,
+      "notes": "A historical EM Special installment; not paired with the distinct pending EM Roadshow route."
+    },
+    {
+      "legacyPodcastId": "troels bech i en samtale",
+      "displayTitle": "Troels Bech i en samtale",
+      "publisher": "Mediano",
+      "hovedserie": null,
+      "sourceUrl": "https://open.spotify.com/search/troels%20bech%20i%20en%20samtale",
+      "episodeCount": null,
+      "year": null,
+      "editorialRating": "7,8",
+      "editorialDate": null,
+      "rowType": "unresolved",
+      "canonicalSeriesTitle": null,
+      "canonicalPodcastId": null,
+      "canonicalExists": false,
+      "evidenceStatus": "unresolved",
+      "researchStatus": "reviewed",
+      "evidence": [
+        {
+          "type": "unresolved",
+          "detail": "Spotify search page does not provide deterministic Mediano programme identity."
+        }
+      ],
+      "suppressFromCurrentCatalogue": false,
+      "preserveAsHistoricalEpisode": false,
+      "currentRssRouteKey": null,
+      "notes": "Do not infer a series from the host name alone."
+    },
+    {
+      "legacyPodcastId": "fredagsfrokosten",
+      "displayTitle": "Fredagsfrokosten",
+      "publisher": "Mediano",
+      "hovedserie": null,
+      "sourceUrl": "https://www.mediano.nu/oversigt/tag/Fredagsfrokosten",
+      "episodeCount": null,
+      "year": null,
+      "editorialRating": "7,8",
+      "editorialDate": null,
+      "rowType": "canonical_series",
+      "canonicalSeriesTitle": "Fredagsfrokosten",
+      "canonicalPodcastId": "fredagsfrokosten",
+      "canonicalExists": true,
+      "evidenceStatus": "verified",
+      "researchStatus": "reviewed",
+      "evidence": [
+        {
+          "type": "mediano_tag_page",
+          "detail": "Requested and resolved Mediano tag URL has page title ‘Fredagsfrokosten — Forside — Mediano - lyden af fodbold’, establishing the named programme page."
+        },
+        {
+          "type": "reviewed_current_route",
+          "detail": "Existing reviewed Mediano public-RSS destination is named Fredagsfrokosten."
+        }
+      ],
+      "suppressFromCurrentCatalogue": false,
+      "preserveAsHistoricalEpisode": true,
+      "currentRssRouteKey": "mediano_public_rss",
+      "notes": "Verified programme identity; registry evidence only."
+    },
+    {
+      "legacyPodcastId": "mediano transfer",
+      "displayTitle": "Mediano Transfer",
+      "publisher": "Mediano",
+      "hovedserie": null,
+      "sourceUrl": "https://www.mediano.nu/oversigt/2025/1/3/mediano-transfer",
+      "episodeCount": null,
+      "year": "2025",
+      "editorialRating": "7,7",
+      "editorialDate": null,
+      "rowType": "canonical_series",
+      "canonicalSeriesTitle": "Mediano Transfer",
+      "canonicalPodcastId": "mediano transfer",
+      "canonicalExists": true,
+      "evidenceStatus": "verified",
+      "researchStatus": "reviewed",
+      "evidence": [
+        {
+          "type": "mediano_episode_page",
+          "url": "https://www.mediano.nu/oversigt/2025/1/3/mediano-transfer",
+          "detail": "Mediano’s premiere explicitly calls Mediano Transfer a new format and a magazine about transfers."
+        }
+      ],
+      "suppressFromCurrentCatalogue": false,
+      "preserveAsHistoricalEpisode": true,
+      "currentRssRouteKey": null,
+      "notes": "Verified existing canonical series; no suppression or routing change is warranted."
+    },
+    {
+      "legacyPodcastId": "mediano waiting",
+      "displayTitle": "Mediano Waiting",
+      "publisher": "Mediano",
+      "hovedserie": null,
+      "sourceUrl": "https://www.mediano.nu/oversigt/tag/Mediano+Waiting",
+      "episodeCount": null,
+      "year": "2025",
+      "editorialRating": "7,4",
+      "editorialDate": null,
+      "rowType": "canonical_series",
+      "canonicalSeriesTitle": "Mediano Waiting",
+      "canonicalPodcastId": "mediano waiting",
+      "canonicalExists": true,
+      "evidenceStatus": "verified",
+      "researchStatus": "reviewed",
+      "evidence": [
+        {
+          "type": "mediano_tag_page",
+          "detail": "Requested and resolved Mediano tag URL has page title ‘Mediano Waiting — Forside — Mediano - lyden af fodbold’, establishing the named programme page."
+        }
+      ],
+      "suppressFromCurrentCatalogue": false,
+      "preserveAsHistoricalEpisode": true,
+      "currentRssRouteKey": null,
+      "notes": "Verified dormant or historical programme identity; no current RSS route asserted."
+    },
+    {
+      "legacyPodcastId": "mediano marketing",
+      "displayTitle": "Mediano Marketing",
+      "publisher": "Mediano",
+      "hovedserie": null,
+      "sourceUrl": "https://www.mediano.nu/oversigt/tag/Mediano+Marketing",
+      "episodeCount": null,
+      "year": null,
+      "editorialRating": "7,4",
+      "editorialDate": null,
+      "rowType": "canonical_series",
+      "canonicalSeriesTitle": "Mediano Marketing",
+      "canonicalPodcastId": "mediano marketing",
+      "canonicalExists": true,
+      "evidenceStatus": "verified",
+      "researchStatus": "reviewed",
+      "evidence": [
+        {
+          "type": "mediano_tag_page",
+          "detail": "Requested and resolved Mediano tag URL has page title ‘Mediano Marketing — Forside — Mediano - lyden af fodbold’, establishing the named programme page."
+        },
+        {
+          "type": "reviewed_current_route",
+          "detail": "Existing reviewed Mediano public-RSS destination is named Mediano Marketing."
+        }
+      ],
+      "suppressFromCurrentCatalogue": false,
+      "preserveAsHistoricalEpisode": true,
+      "currentRssRouteKey": "mediano_public_rss",
+      "notes": "Verified programme identity; registry evidence only."
+    },
+    {
+      "legacyPodcastId": "max mediano",
+      "displayTitle": "Max Mediano",
+      "publisher": "Mediano",
+      "hovedserie": null,
+      "sourceUrl": "https://www.mediano.nu/oversigt/tag/Max+Mediano",
+      "episodeCount": null,
+      "year": null,
+      "editorialRating": "7,4",
+      "editorialDate": null,
+      "rowType": "canonical_series",
+      "canonicalSeriesTitle": "Max Mediano",
+      "canonicalPodcastId": "max mediano",
+      "canonicalExists": true,
+      "evidenceStatus": "verified",
+      "researchStatus": "reviewed",
+      "evidence": [
+        {
+          "type": "mediano_tag_page",
+          "detail": "Requested and resolved Mediano tag URL has page title ‘Max Mediano — Forside — Mediano - lyden af fodbold’, establishing the named programme page."
+        },
+        {
+          "type": "reviewed_current_route",
+          "detail": "Existing reviewed Mediano public-RSS destination is named Max Mediano."
+        }
+      ],
+      "suppressFromCurrentCatalogue": false,
+      "preserveAsHistoricalEpisode": true,
+      "currentRssRouteKey": "mediano_public_rss",
+      "notes": "Verified programme identity; registry evidence only."
+    },
+    {
+      "legacyPodcastId": "superliga preview",
+      "displayTitle": "Superliga Preview",
+      "publisher": "Mediano",
+      "hovedserie": null,
+      "sourceUrl": "https://open.spotify.com/search/Superliga%20Preview",
+      "episodeCount": null,
+      "year": null,
+      "editorialRating": "7,4",
+      "editorialDate": null,
+      "rowType": "canonical_series",
+      "canonicalSeriesTitle": "Superliga Preview",
+      "canonicalPodcastId": "superliga preview",
+      "canonicalExists": true,
+      "evidenceStatus": "verified",
+      "researchStatus": "reviewed",
+      "evidence": [
+        {
+          "type": "reviewed_current_route",
+          "detail": "Existing reviewed Mediano public-RSS destination is named Superliga Preview."
+        },
+        {
+          "type": "mediano_programme_page",
+          "url": "https://www.mediano.nu/superligapreview",
+          "detail": "Mediano’s dedicated programme page calls Superliga Preview the weekly preview of the Danish Superliga round and identifies it as a fixed format."
+        }
+      ],
+      "suppressFromCurrentCatalogue": false,
+      "preserveAsHistoricalEpisode": true,
+      "currentRssRouteKey": "mediano_public_rss",
+      "notes": "Verified existing canonical series and existing reviewed route; no runtime change."
+    },
+    {
+      "legacyPodcastId": "der var engang et mal af peter møller mod farum",
+      "displayTitle": "Der var engang et mål...af Peter Møller mod Farum",
+      "publisher": "Mediano",
+      "hovedserie": null,
+      "sourceUrl": "https://www.mediano.nu/oversigt/2025/6/27/der-var-engang-et-mlaf-peter-mller-mod-farum",
+      "episodeCount": 1,
+      "year": "2025",
+      "editorialRating": "7,3",
+      "editorialDate": "13-08-2025",
+      "rowType": "historical_episode",
+      "canonicalSeriesTitle": "Der var engang et mål",
+      "canonicalPodcastId": "der var engang et mal",
+      "canonicalExists": false,
+      "evidenceStatus": "verified",
+      "researchStatus": "reviewed",
+      "evidence": [
+        {
+          "type": "user_confirmed_series",
+          "detail": "Explicit reviewed product confirmation."
+        }
+      ],
+      "suppressFromCurrentCatalogue": true,
+      "preserveAsHistoricalEpisode": true,
+      "currentRssRouteKey": null,
+      "notes": "Existing reviewed mapping; registry only."
+    },
+    {
+      "legacyPodcastId": "her er vores bud pa de ti spillere har været de største transfersucceser i superligaen",
+      "displayTitle": "Her er vores bud på de ti spillere,  har været de største transfersucceser i Superligaen",
+      "publisher": "Mediano",
+      "hovedserie": "Transfer Special",
+      "sourceUrl": "https://medianomedia.squarespace.com/oversigt/2023/1/27/transfer-special-her-er-vores-bud-p-de-ti-spillere-der-har-vret-de-strste-transfersucceser-i-superligaen",
+      "episodeCount": 1,
+      "year": null,
+      "editorialRating": "7,3",
+      "editorialDate": null,
+      "rowType": "historical_episode",
+      "canonicalSeriesTitle": "Transfer Special",
+      "canonicalPodcastId": "transfer special",
+      "canonicalExists": false,
+      "evidenceStatus": "verified",
+      "researchStatus": "reviewed",
+      "evidence": [
+        {
+          "type": "explicit_hovedserie",
+          "detail": "Transfer Special"
+        }
+      ],
+      "suppressFromCurrentCatalogue": true,
+      "preserveAsHistoricalEpisode": true,
+      "currentRssRouteKey": null,
+      "notes": "Existing reviewed mapping; registry only."
+    },
+    {
+      "legacyPodcastId": "fodboldministeriet",
+      "displayTitle": "Fodboldministeriet",
+      "publisher": "Mediano",
+      "hovedserie": null,
+      "sourceUrl": "https://www.mediano.nu/oversigt/tag/Fodboldministeriet",
+      "episodeCount": 175,
+      "year": "2026",
+      "editorialRating": "7,2",
+      "editorialDate": "22-04-2026",
+      "rowType": "canonical_series",
+      "canonicalSeriesTitle": "Fodboldministeriet",
+      "canonicalPodcastId": "fodboldministeriet",
+      "canonicalExists": true,
+      "evidenceStatus": "verified",
+      "researchStatus": "reviewed",
+      "evidence": [
+        {
+          "type": "mediano_tag_page",
+          "detail": "Requested and resolved Mediano tag URL has page title ‘Fodboldministeriet — Forside — Mediano - lyden af fodbold’, establishing the named programme page."
+        },
+        {
+          "type": "reviewed_dedicated_feed",
+          "detail": "Reviewed routing metadata identifies Fodboldministeriet as a dedicated-feed identity, isolated from Mediano umbrella-feed writes."
+        }
+      ],
+      "suppressFromCurrentCatalogue": false,
+      "preserveAsHistoricalEpisode": true,
+      "currentRssRouteKey": "dedicated_fodboldministeriet_feed",
+      "notes": "Verified programme identity; dedicated-feed handling is documented only and is not changed here."
+    },
+    {
+      "legacyPodcastId": "mediano 1 division",
+      "displayTitle": "Mediano 1. division",
+      "publisher": "Mediano",
+      "hovedserie": null,
+      "sourceUrl": "https://www.mediano.nu/oversigt/tag/1.+division",
+      "episodeCount": null,
+      "year": null,
+      "editorialRating": "7,0",
+      "editorialDate": null,
+      "rowType": "canonical_series",
+      "canonicalSeriesTitle": "Mediano 1. division",
+      "canonicalPodcastId": "mediano 1 division",
+      "canonicalExists": true,
+      "evidenceStatus": "verified",
+      "researchStatus": "reviewed",
+      "evidence": [
+        {
+          "type": "mediano_tag_page",
+          "detail": "Requested and resolved Mediano tag URL has page title ‘1. division — Forside — Mediano - lyden af fodbold’, establishing the named programme page."
+        },
+        {
+          "type": "reviewed_current_route",
+          "detail": "Existing reviewed Mediano public-RSS destination is named Mediano 1. division."
+        }
+      ],
+      "suppressFromCurrentCatalogue": false,
+      "preserveAsHistoricalEpisode": true,
+      "currentRssRouteKey": "mediano_public_rss",
+      "notes": "Verified programme identity; registry evidence only."
+    },
+    {
+      "legacyPodcastId": "camp canada",
+      "displayTitle": "Camp Canada",
+      "publisher": "Mediano",
+      "hovedserie": null,
+      "sourceUrl": "https://www.mediano.nu/oversigt/tag/Camp+Canada",
+      "episodeCount": null,
+      "year": "2026",
+      "editorialRating": "7,0",
+      "editorialDate": "15-06-2026",
+      "rowType": "canonical_series",
+      "canonicalSeriesTitle": "Camp Canada",
+      "canonicalPodcastId": "camp canada",
+      "canonicalExists": true,
+      "evidenceStatus": "verified",
+      "researchStatus": "reviewed",
+      "evidence": [
+        {
+          "type": "mediano_tag_page",
+          "url": "https://www.mediano.nu/oversigt/tag/Camp+Canada",
+          "detail": "Requested Mediano tag page title is ‘Camp Canada — Forside — Mediano - lyden af fodbold’."
+        },
+        {
+          "type": "reviewed_current_route",
+          "detail": "Existing reviewed Mediano public-RSS destination is named Camp Canada."
+        }
+      ],
+      "suppressFromCurrentCatalogue": false,
+      "preserveAsHistoricalEpisode": true,
+      "currentRssRouteKey": "mediano_public_rss",
+      "notes": "Verified programme identity; registry evidence only."
+    },
+    {
+      "legacyPodcastId": "ciao gianni",
+      "displayTitle": "Ciao, Gianni",
+      "publisher": "Mediano",
+      "hovedserie": "Jennings",
+      "sourceUrl": "https://www.mediano.nu/oversigt/tag/Jennings",
+      "episodeCount": 1,
+      "year": "2026",
+      "editorialRating": "7",
+      "editorialDate": "02-08-2026",
+      "rowType": "historical_episode",
+      "canonicalSeriesTitle": "Magasinet Jennings",
+      "canonicalPodcastId": "magasinet jennings",
+      "canonicalExists": false,
+      "evidenceStatus": "verified",
+      "researchStatus": "reviewed",
+      "evidence": [
+        {
+          "type": "explicit_hovedserie",
+          "detail": "Jennings"
+        }
+      ],
+      "suppressFromCurrentCatalogue": true,
+      "preserveAsHistoricalEpisode": true,
+      "currentRssRouteKey": null,
+      "notes": "Existing reviewed mapping; registry only."
+    },
+    {
+      "legacyPodcastId": "danskertjek",
+      "displayTitle": "Danskertjek",
+      "publisher": "Media o",
+      "hovedserie": null,
+      "sourceUrl": "https://www.mediano.nu/oversigt/tag/Danskertjek",
+      "episodeCount": null,
+      "year": "2025",
+      "editorialRating": "6,9",
+      "editorialDate": null,
+      "rowType": "canonical_series",
+      "canonicalSeriesTitle": "Danskertjek",
+      "canonicalPodcastId": "danskertjek",
+      "canonicalExists": true,
+      "evidenceStatus": "verified",
+      "researchStatus": "reviewed",
+      "evidence": [
+        {
+          "type": "mediano_tag_page",
+          "url": "https://www.mediano.nu/oversigt/tag/Danskertjek",
+          "detail": "Requested Mediano tag page title is ‘Danskertjek — Forside — Mediano - lyden af fodbold’."
+        },
+        {
+          "type": "mediano_episode_page",
+          "url": "https://www.mediano.nu/oversigt/2025/1/26/danskertjek-nyt-og-kortere-format-gr-tt-p-danskerne-i-udlandet",
+          "detail": "Original Mediano announcement calls Danskertjek a new Mediano format and a recurring Monday programme."
+        }
+      ],
+      "suppressFromCurrentCatalogue": false,
+      "preserveAsHistoricalEpisode": true,
+      "currentRssRouteKey": null,
+      "notes": "Verified programme identity; no RSS relationship asserted."
+    },
+    {
+      "legacyPodcastId": "fodbold var værre i 70 erne",
+      "displayTitle": "Fodbold var værre i 70'erne",
+      "publisher": "Mediano",
+      "hovedserie": null,
+      "sourceUrl": "https://open.spotify.com/episode/6QHHaGoMVBcNOqfKkuit4b",
+      "episodeCount": 5,
+      "year": "2023",
+      "editorialRating": "6,9",
+      "editorialDate": null,
+      "rowType": "canonical_series",
+      "canonicalSeriesTitle": "Fodbold var værre i 70'erne",
+      "canonicalPodcastId": "fodbold var værre i 70 erne",
+      "canonicalExists": true,
+      "evidenceStatus": "verified",
+      "researchStatus": "reviewed",
+      "evidence": [
+        {
+          "type": "historical_feed_episode",
+          "url": "https://open.spotify.com/episode/6QHHaGoMVBcNOqfKkuit4b",
+          "detail": "Historical Spotify metadata explicitly identifies ‘Fodbold var værre i 70’erne #1’ as an episode of Mediano Biblioteket."
+        },
+        {
+          "type": "reviewed_current_route",
+          "detail": "Existing reviewed Mediano public-RSS destination is named Fodbold var værre i 70'erne."
+        }
+      ],
+      "suppressFromCurrentCatalogue": false,
+      "preserveAsHistoricalEpisode": true,
+      "currentRssRouteKey": "mediano_public_rss",
+      "notes": "Numbered historical programme identity confirmed without inferring from its topic."
+    },
+    {
+      "legacyPodcastId": "mediano bossword",
+      "displayTitle": "Mediano Bossword",
+      "publisher": "Mediano",
+      "hovedserie": null,
+      "sourceUrl": "https://www.mediano.nu/oversigt/tag/Bossword",
+      "episodeCount": null,
+      "year": null,
+      "editorialRating": "6,9",
+      "editorialDate": null,
+      "rowType": "canonical_series",
+      "canonicalSeriesTitle": "Mediano Bossword",
+      "canonicalPodcastId": "mediano bossword",
+      "canonicalExists": true,
+      "evidenceStatus": "verified",
+      "researchStatus": "reviewed",
+      "evidence": [
+        {
+          "type": "mediano_tag_page",
+          "url": "https://www.mediano.nu/oversigt/tag/Bossword",
+          "detail": "Requested Mediano tag page is dedicated to Bossword and lists recurring Bossword episodes."
+        },
+        {
+          "type": "reviewed_current_route",
+          "detail": "Existing reviewed Mediano public-RSS destination is named Mediano Bossword."
+        }
+      ],
+      "suppressFromCurrentCatalogue": false,
+      "preserveAsHistoricalEpisode": true,
+      "currentRssRouteKey": "mediano_public_rss",
+      "notes": "Verified programme identity; visible canonical title retains the catalogue’s Mediano prefix."
+    },
+    {
+      "legacyPodcastId": "vi præsenterer erik skjærbæk",
+      "displayTitle": "Vi præsenterer Erik Skjærbæk",
+      "publisher": "Mediano",
+      "hovedserie": "Klub Mediano",
+      "sourceUrl": "https://www.mediano.nu/oversigt/2025/1/1/klub-mediano-vi-prsenterer-erik-skjrbk-et-portrt-af-fc-kbenhavns-strke-mand",
+      "episodeCount": 1,
+      "year": "2025",
+      "editorialRating": "6,7",
+      "editorialDate": null,
+      "rowType": "historical_episode",
+      "canonicalSeriesTitle": "Klub Mediano",
+      "canonicalPodcastId": "klub mediano",
+      "canonicalExists": true,
+      "evidenceStatus": "verified",
+      "researchStatus": "reviewed",
+      "evidence": [
+        {
+          "type": "explicit_hovedserie",
+          "detail": "Klub Mediano"
+        }
+      ],
+      "suppressFromCurrentCatalogue": true,
+      "preserveAsHistoricalEpisode": true,
+      "currentRssRouteKey": null,
+      "notes": "Existing reviewed mapping; registry only."
+    },
+    {
+      "legacyPodcastId": "sadan blev han victor froholdt",
+      "displayTitle": "Sådan blev han Victor Froholdt",
+      "publisher": "Mediano",
+      "hovedserie": "Klub Mediano",
+      "sourceUrl": "https://www.mediano.nu/oversigt/2025/5/30/klub-mediano-viktor-froholdt",
+      "episodeCount": 1,
+      "year": "2025",
+      "editorialRating": "6,7",
+      "editorialDate": "23-06-2025",
+      "rowType": "historical_episode",
+      "canonicalSeriesTitle": "Klub Mediano",
+      "canonicalPodcastId": "klub mediano",
+      "canonicalExists": true,
+      "evidenceStatus": "verified",
+      "researchStatus": "reviewed",
+      "evidence": [
+        {
+          "type": "explicit_hovedserie",
+          "detail": "Klub Mediano"
+        }
+      ],
+      "suppressFromCurrentCatalogue": true,
+      "preserveAsHistoricalEpisode": true,
+      "currentRssRouteKey": null,
+      "notes": "Existing reviewed mapping; registry only."
+    },
+    {
+      "legacyPodcastId": "minimax",
+      "displayTitle": "Minimax",
+      "publisher": "Mediano",
+      "hovedserie": null,
+      "sourceUrl": null,
+      "episodeCount": null,
+      "year": "2025",
+      "editorialRating": "6,7",
+      "editorialDate": "18-08-2025",
+      "rowType": "canonical_series",
+      "canonicalSeriesTitle": "Minimax",
+      "canonicalPodcastId": "minimax",
+      "canonicalExists": true,
+      "evidenceStatus": "verified",
+      "researchStatus": "reviewed",
+      "evidence": [
+        {
+          "type": "mediano_episode_page",
+          "url": "https://www.mediano.nu/oversigt/2025/12/8/mini-max-ny-helterolle-til-hjlund-og-masser-af-danskerml-i-bundesligaen",
+          "detail": "A Mediano source explicitly brands recurring editions as ‘Mini Max’; this is the source spelling of the catalogue’s normalized Minimax identity."
+        },
+        {
+          "type": "reviewed_current_route",
+          "detail": "Existing reviewed Mediano public-RSS destination is named Minimax."
+        }
+      ],
+      "suppressFromCurrentCatalogue": false,
+      "preserveAsHistoricalEpisode": true,
+      "currentRssRouteKey": "mediano_public_rss",
+      "notes": "Verified existing canonical series. The catalogue’s Minimax spelling is an explicit normalization of Mediano’s visible Mini Max brand; no suppression or routing change."
+    },
+    {
+      "legacyPodcastId": "sagen om de 15 point forsvandt fra i lommen af den gamle dame",
+      "displayTitle": "Sagen om de 15 point,  forsvandt fra i lommen af Den Gamle Dame",
+      "publisher": "Mediano",
+      "hovedserie": "Mediano Special",
+      "sourceUrl": null,
+      "episodeCount": 1,
+      "year": null,
+      "editorialRating": "6,7",
+      "editorialDate": null,
+      "rowType": "historical_episode",
+      "canonicalSeriesTitle": "Mediano Special",
+      "canonicalPodcastId": "mediano special",
+      "canonicalExists": false,
+      "evidenceStatus": "verified",
+      "researchStatus": "reviewed",
+      "evidence": [
+        {
+          "type": "explicit_hovedserie",
+          "detail": "Mediano Special"
+        }
+      ],
+      "suppressFromCurrentCatalogue": true,
+      "preserveAsHistoricalEpisode": true,
+      "currentRssRouteKey": null,
+      "notes": "Existing reviewed mapping; registry only."
+    },
+    {
+      "legacyPodcastId": "den store talentserie",
+      "displayTitle": "Den store talentserie",
+      "publisher": "Mediano",
+      "hovedserie": null,
+      "sourceUrl": null,
+      "episodeCount": null,
+      "year": "2025",
+      "editorialRating": "6,5",
+      "editorialDate": null,
+      "rowType": "historical_episode",
+      "canonicalSeriesTitle": "Klub Mediano",
+      "canonicalPodcastId": "klub mediano",
+      "canonicalExists": true,
+      "evidenceStatus": "verified",
+      "researchStatus": "reviewed",
+      "evidence": [
+        {
+          "type": "mediano_tag_page",
+          "url": "https://www.mediano.nu/oversigt/tag/Den%2Bstore%2Btalentserie",
+          "detail": "Mediano tag page lists the numbered Den store talentserie instalments."
+        },
+        {
+          "type": "mediano_episode_page",
+          "url": "https://www.mediano.nu/oversigt/2025/03/03/klub-mediano-talent-vejen-til-landsholdet",
+          "detail": "Original instalment is titled ‘Klub Mediano: Den store talentserie #1’ and explicitly says the series is brought in Klub Mediano."
+        },
+        {
+          "type": "mediano_episode_page",
+          "url": "https://www.mediano.nu/oversigt/2025/03/16/klub-mediano-talent-akademierne",
+          "detail": "Second original instalment is titled ‘Klub Mediano: Den store talentserie #2’."
+        }
+      ],
+      "suppressFromCurrentCatalogue": false,
+      "preserveAsHistoricalEpisode": true,
+      "currentRssRouteKey": "mediano_public_rss",
+      "notes": "Historical sub-series is deterministically part of Klub Mediano, not a standalone current series."
+    },
+    {
+      "legacyPodcastId": "vm manager special",
+      "displayTitle": "VM Manager Special",
+      "publisher": "Mediano",
+      "hovedserie": null,
+      "sourceUrl": "https://www.mediano.nu/oversigt/vm-optakt-manager",
+      "episodeCount": null,
+      "year": "2026",
+      "editorialRating": "6,1",
+      "editorialDate": "08-06-2026",
+      "rowType": "unresolved",
+      "canonicalSeriesTitle": null,
+      "canonicalPodcastId": null,
+      "canonicalExists": false,
+      "evidenceStatus": "unresolved",
+      "researchStatus": "reviewed",
+      "evidence": [
+        {
+          "type": "mediano_episode_page",
+          "url": "https://www.mediano.nu/oversigt/vm-optakt-manager",
+          "detail": "Original page identifies a VM Manager 2026 special within broader VM coverage, but does not establish a recurring series or a deterministic destination."
+        }
+      ],
+      "suppressFromCurrentCatalogue": false,
+      "preserveAsHistoricalEpisode": false,
+      "currentRssRouteKey": null,
+      "notes": "Do not infer a relationship to Mediano VM or VM Showet from the shared tournament topic alone."
+    },
+    {
+      "legacyPodcastId": "hammers kaffebar",
+      "displayTitle": "Hammers Kaffebar",
+      "publisher": "Mediano",
+      "hovedserie": null,
+      "sourceUrl": null,
+      "episodeCount": 4,
+      "year": null,
+      "editorialRating": "6,0",
+      "editorialDate": null,
+      "rowType": "canonical_series",
+      "canonicalSeriesTitle": "Hammers Kaffebar",
+      "canonicalPodcastId": "hammers kaffebar",
+      "canonicalExists": true,
+      "evidenceStatus": "verified",
+      "researchStatus": "reviewed",
+      "evidence": [
+        {
+          "type": "mediano_episode_page",
+          "url": "https://www.mediano.nu/oversigt/2021/11/20/premiere-her-er-hammers-kaffebar-nyt-format-p-mediano-med-fortllinger-fra-fodboldens-verden-set-fra-dan-hammers-lnestol",
+          "detail": "Original Mediano premiere explicitly calls Hammers Kaffebar a new format and anticipates monthly issues."
+        },
+        {
+          "type": "mediano_episode_page",
+          "url": "https://www.mediano.nu/oversigt/2022/9/16/hammers-kaffebar-lydbogen",
+          "detail": "Mediano’s compilation identifies eight chapters of the format."
+        }
+      ],
+      "suppressFromCurrentCatalogue": false,
+      "preserveAsHistoricalEpisode": true,
+      "currentRssRouteKey": null,
+      "notes": "Verified recurring format; no current RSS route asserted."
+    },
+    {
+      "legacyPodcastId": "kristjaan speakmann",
+      "displayTitle": "Kristjaan Speakmann",
+      "publisher": "Mediano",
+      "hovedserie": "Brüchmann ringer til",
+      "sourceUrl": "https://www.mediano.nu/oversigt/bruchmann-ringer-til-7-speakmann",
+      "episodeCount": 1,
+      "year": "2026",
+      "editorialRating": "5,8",
+      "editorialDate": "17-07-2026",
+      "rowType": "historical_episode",
+      "canonicalSeriesTitle": "Brüchmann ringer til",
+      "canonicalPodcastId": "bruchmann ringer til",
+      "canonicalExists": false,
+      "evidenceStatus": "verified",
+      "researchStatus": "reviewed",
+      "evidence": [
+        {
+          "type": "explicit_hovedserie",
+          "detail": "Brüchmann ringer til"
+        }
+      ],
+      "suppressFromCurrentCatalogue": true,
+      "preserveAsHistoricalEpisode": true,
+      "currentRssRouteKey": null,
+      "notes": "Existing reviewed mapping; registry only."
+    },
+    {
+      "legacyPodcastId": "europa rundt med hebo",
+      "displayTitle": "Europa rundt med Hebo",
+      "publisher": "Mediano",
+      "hovedserie": null,
+      "sourceUrl": null,
+      "episodeCount": null,
+      "year": null,
+      "editorialRating": "5,5",
+      "editorialDate": null,
+      "rowType": "canonical_series",
+      "canonicalSeriesTitle": "Europa rundt med Hebo",
+      "canonicalPodcastId": "europa rundt med hebo",
+      "canonicalExists": true,
+      "evidenceStatus": "verified",
+      "researchStatus": "reviewed",
+      "evidence": [
+        {
+          "type": "mediano_episode_page",
+          "url": "https://www.mediano.nu/oversigt/2022/1/27/premiere-europa-rundt-med-hebo",
+          "detail": "Original Mediano premiere explicitly calls Europa rundt med Hebo a new format."
+        },
+        {
+          "type": "mediano_episode_page",
+          "url": "https://www.mediano.nu/oversigt/2022/8/26/europa-rundt-med-hebo-august",
+          "detail": "Later Mediano instalment refers to earlier episodes and uses the recurring programme title."
+        }
+      ],
+      "suppressFromCurrentCatalogue": false,
+      "preserveAsHistoricalEpisode": true,
+      "currentRssRouteKey": null,
+      "notes": "Verified recurring format; no current RSS route asserted."
+    },
+    {
+      "legacyPodcastId": "souplesse",
+      "displayTitle": "Souplesse",
+      "publisher": "Mediano",
+      "hovedserie": null,
+      "sourceUrl": null,
+      "episodeCount": null,
+      "year": "2023",
+      "editorialRating": "5,5",
+      "editorialDate": null,
+      "rowType": "canonical_series",
+      "canonicalSeriesTitle": "Souplesse",
+      "canonicalPodcastId": "souplesse",
+      "canonicalExists": true,
+      "evidenceStatus": "verified",
+      "researchStatus": "reviewed",
+      "evidence": [
+        {
+          "type": "mediano_tag_page",
+          "url": "https://www.mediano.nu/oversigt/tag/Souplesse",
+          "detail": "Mediano tag page is dedicated to Souplesse and lists its episodes."
+        },
+        {
+          "type": "mediano_episode_page",
+          "url": "https://www.mediano.nu/oversigt/2023/6/28/souplesse-fokus-p-danske-ryttere-i-tour-de-franc",
+          "detail": "Original page describes Souplesse as a returning recurring cycling programme with daily Tour coverage."
+        },
+        {
+          "type": "reviewed_current_route",
+          "detail": "Existing reviewed Mediano public-RSS destination is named Souplesse."
+        }
+      ],
+      "suppressFromCurrentCatalogue": false,
+      "preserveAsHistoricalEpisode": true,
+      "currentRssRouteKey": "mediano_public_rss",
+      "notes": "Verified programme identity; registry evidence only."
+    },
+    {
+      "legacyPodcastId": "fodbold var bedre i 90 erne",
+      "displayTitle": "Fodbold var bedre i 90'erne",
+      "publisher": "Mediano",
+      "hovedserie": null,
+      "sourceUrl": "https://www.mediano.nu/oversigt/tag/Fodbold%2Bvar%2Bbedre%2Bi%2B90%27erne",
+      "episodeCount": null,
+      "year": "2026",
+      "editorialRating": "5,4",
+      "editorialDate": "14-04-2026",
+      "rowType": "canonical_series",
+      "canonicalSeriesTitle": "Fodbold var bedre i 90'erne",
+      "canonicalPodcastId": "fodbold var bedre i 90 erne",
+      "canonicalExists": true,
+      "evidenceStatus": "verified",
+      "researchStatus": "reviewed",
+      "evidence": [
+        {
+          "type": "mediano_tag_page",
+          "url": "https://www.mediano.nu/oversigt/tag/Fodbold%2Bvar%2Bbedre%2Bi%2B90%27erne",
+          "detail": "Requested Mediano tag page is dedicated to Fodbold var bedre i 90'erne and lists numbered recurring episodes."
+        },
+        {
+          "type": "reviewed_current_route",
+          "detail": "Existing reviewed Mediano public-RSS destination is named Fodbold var bedre i 90'erne."
+        }
+      ],
+      "suppressFromCurrentCatalogue": false,
+      "preserveAsHistoricalEpisode": true,
+      "currentRssRouteKey": "mediano_public_rss",
+      "notes": "Verified recurring programme identity."
+    },
+    {
+      "legacyPodcastId": "vm special om trump infantino indrejseproblemer og manden bag balogun breaking",
+      "displayTitle": "VM Special om Trump, Infantino, indrejseproblemer og manden bag Balogun-breaking",
+      "publisher": "Mediano",
+      "hovedserie": "Jennings",
+      "sourceUrl": "https://www.mediano.nu/oversigt/tag/Jennings",
+      "episodeCount": 1,
+      "year": "2026",
+      "editorialRating": null,
+      "editorialDate": null,
+      "rowType": "historical_episode",
+      "canonicalSeriesTitle": "Magasinet Jennings",
+      "canonicalPodcastId": "magasinet jennings",
+      "canonicalExists": false,
+      "evidenceStatus": "verified",
+      "researchStatus": "reviewed",
+      "evidence": [
+        {
+          "type": "explicit_hovedserie",
+          "detail": "Jennings"
+        }
+      ],
+      "suppressFromCurrentCatalogue": true,
+      "preserveAsHistoricalEpisode": true,
+      "currentRssRouteKey": null,
+      "notes": "Existing reviewed mapping; registry only."
+    },
+    {
+      "legacyPodcastId": "vm optakt sadan lyder infantino bag facaden",
+      "displayTitle": "VM-optakt: Sådan lyder Infantino bag facaden",
+      "publisher": "Mediano",
+      "hovedserie": "Jennings",
+      "sourceUrl": "https://www.mediano.nu/oversigt/tag/Jennings",
+      "episodeCount": 1,
+      "year": "2026",
+      "editorialRating": null,
+      "editorialDate": null,
+      "rowType": "historical_episode",
+      "canonicalSeriesTitle": "Magasinet Jennings",
+      "canonicalPodcastId": "magasinet jennings",
+      "canonicalExists": false,
+      "evidenceStatus": "verified",
+      "researchStatus": "reviewed",
+      "evidence": [
+        {
+          "type": "explicit_hovedserie",
+          "detail": "Jennings"
+        }
+      ],
+      "suppressFromCurrentCatalogue": true,
+      "preserveAsHistoricalEpisode": true,
+      "currentRssRouteKey": null,
+      "notes": "Existing reviewed mapping; registry only."
+    },
+    {
+      "legacyPodcastId": "sprængfarlig rapport om datagigant det gra marked i england og tryktest af christiansborg",
+      "displayTitle": "Sprængfarlig rapport om datagigant, det grå marked i England og tryktest af Christiansborg",
+      "publisher": "Mediano",
+      "hovedserie": "Jennings",
+      "sourceUrl": "https://www.mediano.nu/oversigt/tag/Jennings",
+      "episodeCount": 1,
+      "year": "2026",
+      "editorialRating": null,
+      "editorialDate": null,
+      "rowType": "historical_episode",
+      "canonicalSeriesTitle": "Magasinet Jennings",
+      "canonicalPodcastId": "magasinet jennings",
+      "canonicalExists": false,
+      "evidenceStatus": "verified",
+      "researchStatus": "reviewed",
+      "evidence": [
+        {
+          "type": "explicit_hovedserie",
+          "detail": "Jennings"
+        }
+      ],
+      "suppressFromCurrentCatalogue": true,
+      "preserveAsHistoricalEpisode": true,
+      "currentRssRouteKey": null,
+      "notes": "Existing reviewed mapping; registry only."
+    },
+    {
+      "legacyPodcastId": "infantinos mislykkede fredsforsøg dyrt vm og saudisk nedjustering",
+      "displayTitle": "Infantinos mislykkede fredsforsøg, dyrt VM og saudisk nedjustering",
+      "publisher": "Mediano",
+      "hovedserie": "Jennings",
+      "sourceUrl": "https://www.mediano.nu/oversigt/tag/Jennings",
+      "episodeCount": 1,
+      "year": "2026",
+      "editorialRating": null,
+      "editorialDate": null,
+      "rowType": "historical_episode",
+      "canonicalSeriesTitle": "Magasinet Jennings",
+      "canonicalPodcastId": "magasinet jennings",
+      "canonicalExists": false,
+      "evidenceStatus": "verified",
+      "researchStatus": "reviewed",
+      "evidence": [
+        {
+          "type": "explicit_hovedserie",
+          "detail": "Jennings"
+        }
+      ],
+      "suppressFromCurrentCatalogue": true,
+      "preserveAsHistoricalEpisode": true,
+      "currentRssRouteKey": null,
+      "notes": "Existing reviewed mapping; registry only."
+    },
+    {
+      "legacyPodcastId": "fodbold og samfund med wrexham st pauli athletic club vsk og aarhus fremad",
+      "displayTitle": "Fodbold og samfund med Wrexham, St. Pauli, Athletic Club, VSK og Aarhus Fremad",
+      "publisher": "Mediano",
+      "hovedserie": "Jennings",
+      "sourceUrl": "https://www.mediano.nu/oversigt/tag/Jennings",
+      "episodeCount": 1,
+      "year": "2026",
+      "editorialRating": null,
+      "editorialDate": null,
+      "rowType": "historical_episode",
+      "canonicalSeriesTitle": "Magasinet Jennings",
+      "canonicalPodcastId": "magasinet jennings",
+      "canonicalExists": false,
+      "evidenceStatus": "verified",
+      "researchStatus": "reviewed",
+      "evidence": [
+        {
+          "type": "explicit_hovedserie",
+          "detail": "Jennings"
+        }
+      ],
+      "suppressFromCurrentCatalogue": true,
+      "preserveAsHistoricalEpisode": true,
+      "currentRssRouteKey": null,
+      "notes": "Existing reviewed mapping; registry only."
+    },
+    {
+      "legacyPodcastId": "eksklusivt interview med jesper møller om fifa og infantino",
+      "displayTitle": "Eksklusivt interview med Jesper Møller om FIFA og Infantino",
+      "publisher": "Mediano",
+      "hovedserie": "Jennings",
+      "sourceUrl": "https://www.mediano.nu/oversigt/tag/Jennings",
+      "episodeCount": 1,
+      "year": "2026",
+      "editorialRating": null,
+      "editorialDate": null,
+      "rowType": "historical_episode",
+      "canonicalSeriesTitle": "Magasinet Jennings",
+      "canonicalPodcastId": "magasinet jennings",
+      "canonicalExists": false,
+      "evidenceStatus": "verified",
+      "researchStatus": "reviewed",
+      "evidence": [
+        {
+          "type": "explicit_hovedserie",
+          "detail": "Jennings"
+        }
+      ],
+      "suppressFromCurrentCatalogue": true,
+      "preserveAsHistoricalEpisode": true,
+      "currentRssRouteKey": null,
+      "notes": "Existing reviewed mapping; registry only."
+    },
+    {
+      "legacyPodcastId": "infantino foran genvalg iran overladt til sig selv og fifa i mystisk sponsorat",
+      "displayTitle": "Infantino foran genvalg, Iran overladt til sig selv og FIFA i mystisk sponsorat",
+      "publisher": "Mediano",
+      "hovedserie": "Jennings",
+      "sourceUrl": "https://www.mediano.nu/oversigt/tag/Jennings",
+      "episodeCount": 1,
+      "year": "2026",
+      "editorialRating": null,
+      "editorialDate": null,
+      "rowType": "historical_episode",
+      "canonicalSeriesTitle": "Magasinet Jennings",
+      "canonicalPodcastId": "magasinet jennings",
+      "canonicalExists": false,
+      "evidenceStatus": "verified",
+      "researchStatus": "reviewed",
+      "evidence": [
+        {
+          "type": "explicit_hovedserie",
+          "detail": "Jennings"
+        }
+      ],
+      "suppressFromCurrentCatalogue": true,
+      "preserveAsHistoricalEpisode": true,
+      "currentRssRouteKey": null,
+      "notes": "Existing reviewed mapping; registry only."
+    },
+    {
+      "legacyPodcastId": "forudsigelsesmarkederne er kommet for at blive derfor skal det bekymre dig",
+      "displayTitle": "Forudsigelsesmarkederne er kommet for at blive - derfor skal det bekymre dig",
+      "publisher": "Mediano",
+      "hovedserie": "Jennings",
+      "sourceUrl": "https://www.mediano.nu/oversigt/tag/Jennings",
+      "episodeCount": 1,
+      "year": "2026",
+      "editorialRating": null,
+      "editorialDate": null,
+      "rowType": "historical_episode",
+      "canonicalSeriesTitle": "Magasinet Jennings",
+      "canonicalPodcastId": "magasinet jennings",
+      "canonicalExists": false,
+      "evidenceStatus": "verified",
+      "researchStatus": "reviewed",
+      "evidence": [
+        {
+          "type": "explicit_hovedserie",
+          "detail": "Jennings"
+        }
+      ],
+      "suppressFromCurrentCatalogue": true,
+      "preserveAsHistoricalEpisode": true,
+      "currentRssRouteKey": null,
+      "notes": "Existing reviewed mapping; registry only."
+    },
+    {
+      "legacyPodcastId": "jesper møller ved ikke om dbu vil stemme pa infantino det har vi ikke taget stilling til endnu",
+      "displayTitle": "Jesper Møller ved ikke, om DBU vil stemme på Infantino: Det har vi ikke taget stilling til endnu",
+      "publisher": "Mediano",
+      "hovedserie": "Jennings",
+      "sourceUrl": "https://www.mediano.nu/oversigt/tag/Jennings",
+      "episodeCount": 1,
+      "year": "2026",
+      "editorialRating": null,
+      "editorialDate": null,
+      "rowType": "historical_episode",
+      "canonicalSeriesTitle": "Magasinet Jennings",
+      "canonicalPodcastId": "magasinet jennings",
+      "canonicalExists": false,
+      "evidenceStatus": "verified",
+      "researchStatus": "reviewed",
+      "evidence": [
+        {
+          "type": "explicit_hovedserie",
+          "detail": "Jennings"
+        }
+      ],
+      "suppressFromCurrentCatalogue": true,
+      "preserveAsHistoricalEpisode": true,
+      "currentRssRouteKey": null,
+      "notes": "Existing reviewed mapping; registry only."
+    },
+    {
+      "legacyPodcastId": "trumps krig sætter fifa i kattepine og european super league er død",
+      "displayTitle": "Trumps krig sætter FIFA i kattepine og European Super League er død",
+      "publisher": "Mediano",
+      "hovedserie": "Jennings",
+      "sourceUrl": "https://www.mediano.nu/oversigt/tag/Jennings",
+      "episodeCount": 1,
+      "year": "2026",
+      "editorialRating": null,
+      "editorialDate": null,
+      "rowType": "historical_episode",
+      "canonicalSeriesTitle": "Magasinet Jennings",
+      "canonicalPodcastId": "magasinet jennings",
+      "canonicalExists": false,
+      "evidenceStatus": "verified",
+      "researchStatus": "reviewed",
+      "evidence": [
+        {
+          "type": "explicit_hovedserie",
+          "detail": "Jennings"
+        }
+      ],
+      "suppressFromCurrentCatalogue": true,
+      "preserveAsHistoricalEpisode": true,
+      "currentRssRouteKey": null,
+      "notes": "Existing reviewed mapping; registry only."
+    },
+    {
+      "legacyPodcastId": "her er scenariet alle frygter betting bag superliga og samtlige divisioner",
+      "displayTitle": "Her er scenariet, alle frygter: Betting bag Superliga og samtlige divisioner",
+      "publisher": "Mediano",
+      "hovedserie": "Jennings",
+      "sourceUrl": "https://www.mediano.nu/oversigt/tag/Jennings",
+      "episodeCount": 1,
+      "year": "2026",
+      "editorialRating": null,
+      "editorialDate": null,
+      "rowType": "historical_episode",
+      "canonicalSeriesTitle": "Magasinet Jennings",
+      "canonicalPodcastId": "magasinet jennings",
+      "canonicalExists": false,
+      "evidenceStatus": "verified",
+      "researchStatus": "reviewed",
+      "evidence": [
+        {
+          "type": "explicit_hovedserie",
+          "detail": "Jennings"
+        }
+      ],
+      "suppressFromCurrentCatalogue": true,
+      "preserveAsHistoricalEpisode": true,
+      "currentRssRouteKey": null,
+      "notes": "Existing reviewed mapping; registry only."
+    },
+    {
+      "legacyPodcastId": "vm boykot handboldchef har faet nok og city sag trækker i langdrag",
+      "displayTitle": "VM-boykot, håndboldchef har fået nok og City-sag trækker i langdrag",
+      "publisher": "Mediano",
+      "hovedserie": "Jennings",
+      "sourceUrl": "https://www.mediano.nu/oversigt/tag/Jennings",
+      "episodeCount": 1,
+      "year": "2026",
+      "editorialRating": null,
+      "editorialDate": null,
+      "rowType": "historical_episode",
+      "canonicalSeriesTitle": "Magasinet Jennings",
+      "canonicalPodcastId": "magasinet jennings",
+      "canonicalExists": false,
+      "evidenceStatus": "verified",
+      "researchStatus": "reviewed",
+      "evidence": [
+        {
+          "type": "explicit_hovedserie",
+          "detail": "Jennings"
+        }
+      ],
+      "suppressFromCurrentCatalogue": true,
+      "preserveAsHistoricalEpisode": true,
+      "currentRssRouteKey": null,
+      "notes": "Existing reviewed mapping; registry only."
+    },
+    {
+      "legacyPodcastId": "infantino abner for russisk comeback dbu reagerer",
+      "displayTitle": "Infantino åbner for russisk comeback - DBU reagerer",
+      "publisher": "Mediano",
+      "hovedserie": "Jennings",
+      "sourceUrl": "https://www.mediano.nu/oversigt/tag/Jennings",
+      "episodeCount": 1,
+      "year": "2026",
+      "editorialRating": null,
+      "editorialDate": null,
+      "rowType": "historical_episode",
+      "canonicalSeriesTitle": "Magasinet Jennings",
+      "canonicalPodcastId": "magasinet jennings",
+      "canonicalExists": false,
+      "evidenceStatus": "verified",
+      "researchStatus": "reviewed",
+      "evidence": [
+        {
+          "type": "explicit_hovedserie",
+          "detail": "Jennings"
+        }
+      ],
+      "suppressFromCurrentCatalogue": true,
+      "preserveAsHistoricalEpisode": true,
+      "currentRssRouteKey": null,
+      "notes": "Existing reviewed mapping; registry only."
+    },
+    {
+      "legacyPodcastId": "landskabet for dansk børnefodbold med politiken og fc københavn",
+      "displayTitle": "Landskabet for dansk børnefodbold - med Politiken og FC København",
+      "publisher": "Mediano",
+      "hovedserie": "Jennings",
+      "sourceUrl": "https://www.mediano.nu/oversigt/tag/Jennings",
+      "episodeCount": 1,
+      "year": "2026",
+      "editorialRating": null,
+      "editorialDate": null,
+      "rowType": "historical_episode",
+      "canonicalSeriesTitle": "Magasinet Jennings",
+      "canonicalPodcastId": "magasinet jennings",
+      "canonicalExists": false,
+      "evidenceStatus": "verified",
+      "researchStatus": "reviewed",
+      "evidence": [
+        {
+          "type": "explicit_hovedserie",
+          "detail": "Jennings"
+        }
+      ],
+      "suppressFromCurrentCatalogue": true,
+      "preserveAsHistoricalEpisode": true,
+      "currentRssRouteKey": null,
+      "notes": "Existing reviewed mapping; registry only."
+    },
+    {
+      "legacyPodcastId": "flere priser flere aftaler og flere penge op af fansenes lommer",
+      "displayTitle": "Flere priser, flere aftaler og flere penge op af fansenes lommer",
+      "publisher": "Mediano",
+      "hovedserie": "Jennings",
+      "sourceUrl": "https://www.mediano.nu/oversigt/tag/Jennings",
+      "episodeCount": 1,
+      "year": "2026",
+      "editorialRating": null,
+      "editorialDate": null,
+      "rowType": "historical_episode",
+      "canonicalSeriesTitle": "Magasinet Jennings",
+      "canonicalPodcastId": "magasinet jennings",
+      "canonicalExists": false,
+      "evidenceStatus": "verified",
+      "researchStatus": "reviewed",
+      "evidence": [
+        {
+          "type": "explicit_hovedserie",
+          "detail": "Jennings"
+        }
+      ],
+      "suppressFromCurrentCatalogue": true,
+      "preserveAsHistoricalEpisode": true,
+      "currentRssRouteKey": null,
+      "notes": "Existing reviewed mapping; registry only."
+    },
+    {
+      "legacyPodcastId": "fra johnny til donny fredspris fifa og forspil til vm 2026",
+      "displayTitle": "Fra Johnny til Donny - Fredspris, FIFA og forspil til VM 2026",
+      "publisher": "Mediano",
+      "hovedserie": "Jennings",
+      "sourceUrl": "https://www.mediano.nu/oversigt/tag/Jennings",
+      "episodeCount": 1,
+      "year": "2026",
+      "editorialRating": null,
+      "editorialDate": null,
+      "rowType": "historical_episode",
+      "canonicalSeriesTitle": "Magasinet Jennings",
+      "canonicalPodcastId": "magasinet jennings",
+      "canonicalExists": false,
+      "evidenceStatus": "verified",
+      "researchStatus": "reviewed",
+      "evidence": [
+        {
+          "type": "explicit_hovedserie",
+          "detail": "Jennings"
+        }
+      ],
+      "suppressFromCurrentCatalogue": true,
+      "preserveAsHistoricalEpisode": true,
+      "currentRssRouteKey": null,
+      "notes": "Existing reviewed mapping; registry only."
+    },
+    {
+      "legacyPodcastId": "whistlebloweren der afslørede qatar sadan snød vi verdenspressen",
+      "displayTitle": "Whistlebloweren, der afslørede Qatar - sådan snød vi verdenspressen",
+      "publisher": "Mediano",
+      "hovedserie": "Jennings",
+      "sourceUrl": "https://www.mediano.nu/oversigt/tag/Jennings",
+      "episodeCount": 1,
+      "year": "2026",
+      "editorialRating": null,
+      "editorialDate": null,
+      "rowType": "historical_episode",
+      "canonicalSeriesTitle": "Magasinet Jennings",
+      "canonicalPodcastId": "magasinet jennings",
+      "canonicalExists": false,
+      "evidenceStatus": "verified",
+      "researchStatus": "reviewed",
+      "evidence": [
+        {
+          "type": "explicit_hovedserie",
+          "detail": "Jennings"
+        }
+      ],
+      "suppressFromCurrentCatalogue": true,
+      "preserveAsHistoricalEpisode": true,
+      "currentRssRouteKey": null,
+      "notes": "Existing reviewed mapping; registry only."
+    },
+    {
+      "legacyPodcastId": "mediano pl",
+      "displayTitle": "Mediano PL",
+      "publisher": "Mediano",
+      "hovedserie": null,
+      "sourceUrl": "https://www.mediano.nu/oversigt/medianoplrunde38",
+      "episodeCount": null,
+      "year": "2026",
+      "editorialRating": null,
+      "editorialDate": null,
+      "rowType": "canonical_series",
+      "canonicalSeriesTitle": "Mediano PL",
+      "canonicalPodcastId": "mediano pl",
+      "canonicalExists": true,
+      "evidenceStatus": "verified",
+      "researchStatus": "reviewed",
+      "evidence": [
+        {
+          "type": "mediano_episode_page",
+          "url": "https://www.mediano.nu/oversigt/medianoplrunde38",
+          "detail": "Requested original page title is ‘Mediano PL: Den store sæsonafrunding 2025-2026’."
+        },
+        {
+          "type": "reviewed_current_route",
+          "detail": "Existing reviewed Mediano public-RSS destination is named Mediano PL."
+        }
+      ],
+      "suppressFromCurrentCatalogue": false,
+      "preserveAsHistoricalEpisode": true,
+      "currentRssRouteKey": "mediano_public_rss",
+      "notes": "Explicit programme prefix plus reviewed route establish identity."
+    },
+    {
+      "legacyPodcastId": "klub mediano",
+      "displayTitle": "Klub Mediano",
+      "publisher": "Mediano",
+      "hovedserie": null,
+      "sourceUrl": "https://www.mediano.nu/oversigt/category/Klub%2BMediano",
+      "episodeCount": null,
+      "year": "2026",
+      "editorialRating": null,
+      "editorialDate": null,
+      "rowType": "canonical_series",
+      "canonicalSeriesTitle": "Klub Mediano",
+      "canonicalPodcastId": "klub mediano",
+      "canonicalExists": true,
+      "evidenceStatus": "verified",
+      "researchStatus": "reviewed",
+      "evidence": [
+        {
+          "type": "mediano_category_page",
+          "url": "https://www.mediano.nu/oversigt/category/Klub%2BMediano",
+          "detail": "Requested Mediano category page title is ‘Klub Mediano — Forside’, establishing the programme page."
+        },
+        {
+          "type": "reviewed_current_route",
+          "detail": "Existing reviewed Mediano public-RSS destination is named Klub Mediano."
+        }
+      ],
+      "suppressFromCurrentCatalogue": false,
+      "preserveAsHistoricalEpisode": true,
+      "currentRssRouteKey": "mediano_public_rss",
+      "notes": "Verified canonical parent for its reviewed subseries."
+    },
+    {
+      "legacyPodcastId": "mediano landshold",
+      "displayTitle": "Mediano Landshold",
+      "publisher": "Mediano",
+      "hovedserie": null,
+      "sourceUrl": "https://www.mediano.nu/oversigt/landsholdspecial",
+      "episodeCount": null,
+      "year": "2026",
+      "editorialRating": null,
+      "editorialDate": null,
+      "rowType": "canonical_series",
+      "canonicalSeriesTitle": "Mediano Landshold",
+      "canonicalPodcastId": "mediano landshold",
+      "canonicalExists": true,
+      "evidenceStatus": "strong",
+      "researchStatus": "reviewed",
+      "evidence": [
+        {
+          "type": "mediano_episode_page",
+          "url": "https://www.mediano.nu/oversigt/landsholdspecial",
+          "detail": "Requested original page title is ‘Landshold Special: Nu afgøres Danmarks VM-skæbne’, explicitly identifying a Landshold Special programme."
+        },
+        {
+          "type": "reviewed_current_route",
+          "detail": "Existing reviewed Mediano public-RSS destination is named Mediano Landshold."
+        }
+      ],
+      "suppressFromCurrentCatalogue": false,
+      "preserveAsHistoricalEpisode": true,
+      "currentRssRouteKey": "mediano_public_rss",
+      "notes": "Primary page uses Landshold Special rather than the catalogue’s Mediano Landshold label; retain strong rather than infer a stronger equivalence."
+    },
+    {
+      "legacyPodcastId": "mediano breaking",
+      "displayTitle": "Mediano Breaking",
+      "publisher": "Mediano",
+      "hovedserie": null,
+      "sourceUrl": "https://www.mediano.nu/oversigt/category/Mediano%2BBreaking",
+      "episodeCount": null,
+      "year": "2026",
+      "editorialRating": null,
+      "editorialDate": null,
+      "rowType": "canonical_series",
+      "canonicalSeriesTitle": "Mediano Breaking",
+      "canonicalPodcastId": "mediano breaking",
+      "canonicalExists": true,
+      "evidenceStatus": "verified",
+      "researchStatus": "reviewed",
+      "evidence": [
+        {
+          "type": "mediano_category_page",
+          "url": "https://www.mediano.nu/oversigt/category/Mediano%2BBreaking",
+          "detail": "Requested Mediano category page title is ‘Mediano Breaking — Forside’."
+        },
+        {
+          "type": "reviewed_current_route",
+          "detail": "Existing reviewed Mediano public-RSS destination is named Mediano Breaking."
+        }
+      ],
+      "suppressFromCurrentCatalogue": false,
+      "preserveAsHistoricalEpisode": true,
+      "currentRssRouteKey": "mediano_public_rss",
+      "notes": "Verified programme identity."
+    },
+    {
+      "legacyPodcastId": "mediano serie a",
+      "displayTitle": "Mediano Serie A",
+      "publisher": "Mediano",
+      "hovedserie": null,
+      "sourceUrl": "https://www.mediano.nu/oversigt/2026/mediano-serie-a-saesonoptakt-26-27",
+      "episodeCount": null,
+      "year": "2026",
+      "editorialRating": null,
+      "editorialDate": null,
+      "rowType": "canonical_series",
+      "canonicalSeriesTitle": "Mediano Serie A",
+      "canonicalPodcastId": "mediano serie a",
+      "canonicalExists": true,
+      "evidenceStatus": "verified",
+      "researchStatus": "reviewed",
+      "evidence": [
+        {
+          "type": "mediano_episode_page",
+          "url": "https://www.mediano.nu/oversigt/2026/mediano-serie-a-saesonoptakt-26-27",
+          "detail": "Requested original page title is ‘Mediano Serie A: Den store sæsonoptakt 2026/2027’."
+        },
+        {
+          "type": "reviewed_current_route",
+          "detail": "Existing reviewed Mediano public-RSS destination is named Mediano Serie A."
+        }
+      ],
+      "suppressFromCurrentCatalogue": false,
+      "preserveAsHistoricalEpisode": true,
+      "currentRssRouteKey": "mediano_public_rss",
+      "notes": "Explicit programme prefix plus reviewed route establish identity."
+    },
+    {
+      "legacyPodcastId": "mediano la liga",
+      "displayTitle": "Mediano La Liga",
+      "publisher": "Mediano",
+      "hovedserie": null,
+      "sourceUrl": "https://www.mediano.nu/oversigt/2026/2/18/mediano-la-liga-vinicius-i-vlten-rayo-i-modvind-og-",
+      "episodeCount": null,
+      "year": "2026",
+      "editorialRating": null,
+      "editorialDate": null,
+      "rowType": "canonical_series",
+      "canonicalSeriesTitle": "Mediano La Liga",
+      "canonicalPodcastId": "mediano la liga",
+      "canonicalExists": true,
+      "evidenceStatus": "verified",
+      "researchStatus": "reviewed",
+      "evidence": [
+        {
+          "type": "mediano_episode_page",
+          "url": "https://www.mediano.nu/oversigt/2026/2/18/mediano-la-liga-vinicius-i-vlten-rayo-i-modvind-og-",
+          "detail": "Requested original page title begins ‘Mediano La Liga:’."
+        },
+        {
+          "type": "reviewed_current_route",
+          "detail": "Existing reviewed Mediano public-RSS destination is named Mediano La Liga."
+        }
+      ],
+      "suppressFromCurrentCatalogue": false,
+      "preserveAsHistoricalEpisode": true,
+      "currentRssRouteKey": "mediano_public_rss",
+      "notes": "Explicit programme prefix plus reviewed route establish identity."
+    },
+    {
+      "legacyPodcastId": "bold boger",
+      "displayTitle": "Bold & Bøger",
+      "publisher": "Mediano",
+      "hovedserie": null,
+      "sourceUrl": "https://www.mediano.nu/oversigt/2021/2/10/overblik-her-er-bold-amp-bger-biblioteket",
+      "episodeCount": null,
+      "year": "2026",
+      "editorialRating": null,
+      "editorialDate": null,
+      "rowType": "canonical_series",
+      "canonicalSeriesTitle": "Bold & Bøger",
+      "canonicalPodcastId": "bold boger",
+      "canonicalExists": true,
+      "evidenceStatus": "verified",
+      "researchStatus": "reviewed",
+      "evidence": [
+        {
+          "type": "mediano_programme_page",
+          "url": "https://www.mediano.nu/oversigt/2021/2/10/overblik-her-er-bold-amp-bger-biblioteket",
+          "detail": "Original Mediano library page identifies all Bold & Bøger episodes since the programme began in 2019."
+        },
+        {
+          "type": "mediano_tag_page",
+          "url": "https://www.mediano.nu/oversigt/tag/Bold%2B%26%2BB%C3%B8ger",
+          "detail": "Mediano tag page lists recurring numbered Bold & Bøger episodes."
+        },
+        {
+          "type": "reviewed_current_route",
+          "detail": "Existing reviewed Mediano public-RSS destination is named Bold & Bøger."
+        }
+      ],
+      "suppressFromCurrentCatalogue": false,
+      "preserveAsHistoricalEpisode": true,
+      "currentRssRouteKey": "mediano_public_rss",
+      "notes": "Verified recurring programme identity."
+    },
+    {
+      "legacyPodcastId": "mediano bundesliga",
+      "displayTitle": "Mediano Bundesliga",
+      "publisher": "Mediano",
+      "hovedserie": null,
+      "sourceUrl": "https://www.mediano.nu/oversigt/medianobundesliga-august",
+      "episodeCount": null,
+      "year": "2026",
+      "editorialRating": null,
+      "editorialDate": null,
+      "rowType": "canonical_series",
+      "canonicalSeriesTitle": "Mediano Bundesliga",
+      "canonicalPodcastId": "mediano bundesliga",
+      "canonicalExists": true,
+      "evidenceStatus": "verified",
+      "researchStatus": "reviewed",
+      "evidence": [
+        {
+          "type": "mediano_episode_page",
+          "url": "https://www.mediano.nu/oversigt/medianobundesliga-august",
+          "detail": "Requested original page title is ‘Mediano Bundesliga: Den store sæsonoptakt’."
+        },
+        {
+          "type": "reviewed_current_route",
+          "detail": "Existing reviewed Mediano public-RSS destination is named Mediano Bundesliga."
+        }
+      ],
+      "suppressFromCurrentCatalogue": false,
+      "preserveAsHistoricalEpisode": true,
+      "currentRssRouteKey": "mediano_public_rss",
+      "notes": "Explicit programme prefix plus reviewed route establish identity."
+    },
+    {
+      "legacyPodcastId": "mediano garra",
+      "displayTitle": "Mediano Garra",
+      "publisher": "Mediano",
+      "hovedserie": null,
+      "sourceUrl": "https://www.mediano.nu/oversigt/category/Mediano%2BGarra",
+      "episodeCount": null,
+      "year": "2026",
+      "editorialRating": null,
+      "editorialDate": null,
+      "rowType": "canonical_series",
+      "canonicalSeriesTitle": "Mediano Garra",
+      "canonicalPodcastId": "mediano garra",
+      "canonicalExists": true,
+      "evidenceStatus": "verified",
+      "researchStatus": "reviewed",
+      "evidence": [
+        {
+          "type": "mediano_category_page",
+          "url": "https://www.mediano.nu/oversigt/category/Mediano%2BGarra",
+          "detail": "Requested Mediano category page title is ‘Mediano Garra — Forside’, establishing the programme page."
+        }
+      ],
+      "suppressFromCurrentCatalogue": false,
+      "preserveAsHistoricalEpisode": true,
+      "currentRssRouteKey": null,
+      "notes": "Verified programme identity; no current RSS route asserted."
+    },
+    {
+      "legacyPodcastId": "superliga special",
+      "displayTitle": "Superliga Special",
+      "publisher": "Mediano",
+      "hovedserie": null,
+      "sourceUrl": "https://www.mediano.nu/oversigt/tag/Superliga%2BSpecial",
+      "episodeCount": null,
+      "year": "2026",
+      "editorialRating": null,
+      "editorialDate": null,
+      "rowType": "canonical_series",
+      "canonicalSeriesTitle": "Superliga Special",
+      "canonicalPodcastId": "superliga special",
+      "canonicalExists": true,
+      "evidenceStatus": "verified",
+      "researchStatus": "reviewed",
+      "evidence": [
+        {
+          "type": "mediano_tag_page",
+          "url": "https://www.mediano.nu/oversigt/tag/Superliga%2BSpecial",
+          "detail": "Requested Mediano tag page is dedicated to Superliga Special and lists recurring episodes."
+        },
+        {
+          "type": "mediano_episode_page",
+          "url": "https://www.mediano.nu/oversigt/superligaspecial-sjf-vff",
+          "detail": "Original Mediano page explicitly calls the episode a Superliga Special in Støt Mediano."
+        },
+        {
+          "type": "reviewed_current_route",
+          "detail": "Existing reviewed Mediano public-RSS destination is named Superliga Special."
+        }
+      ],
+      "suppressFromCurrentCatalogue": false,
+      "preserveAsHistoricalEpisode": true,
+      "currentRssRouteKey": "mediano_public_rss",
+      "notes": "Verified recurring programme identity."
+    },
+    {
+      "legacyPodcastId": "mediano 2 division",
+      "displayTitle": "Mediano 2. division",
+      "publisher": "Mediano",
+      "hovedserie": null,
+      "sourceUrl": "https://www.mediano.nu/oversigt/category/2.%2Bdivision",
+      "episodeCount": null,
+      "year": "2026",
+      "editorialRating": null,
+      "editorialDate": null,
+      "rowType": "canonical_series",
+      "canonicalSeriesTitle": "Mediano 2. division",
+      "canonicalPodcastId": "mediano 2 division",
+      "canonicalExists": true,
+      "evidenceStatus": "verified",
+      "researchStatus": "reviewed",
+      "evidence": [
+        {
+          "type": "mediano_category_page",
+          "url": "https://www.mediano.nu/oversigt/category/2.%2Bdivision",
+          "detail": "Requested Mediano category page is the 2. division programme page and lists recurring Mediano 2. division editions."
+        },
+        {
+          "type": "mediano_episode_page",
+          "url": "https://www.mediano.nu/oversigt/2024/8/13/mediano-2-division",
+          "detail": "Original page explicitly labels the episode Mediano 2. division."
+        },
+        {
+          "type": "reviewed_current_route",
+          "detail": "Existing reviewed Mediano public-RSS destination is named Mediano 2. division."
+        }
+      ],
+      "suppressFromCurrentCatalogue": false,
+      "preserveAsHistoricalEpisode": true,
+      "currentRssRouteKey": "mediano_public_rss",
+      "notes": "Verified recurring programme identity."
+    },
+    {
+      "legacyPodcastId": "fredagsbold",
+      "displayTitle": "Fredagsbold",
+      "publisher": "Mediano",
+      "hovedserie": null,
+      "sourceUrl": "https://www.mediano.nu/oversigt/fredagsbold-mls",
+      "episodeCount": null,
+      "year": "2026",
+      "editorialRating": null,
+      "editorialDate": null,
+      "rowType": "canonical_series",
+      "canonicalSeriesTitle": "Fredagsbold",
+      "canonicalPodcastId": "fredagsbold",
+      "canonicalExists": true,
+      "evidenceStatus": "verified",
+      "researchStatus": "reviewed",
+      "evidence": [
+        {
+          "type": "mediano_episode_page",
+          "url": "https://www.mediano.nu/oversigt/fredagsbold-mls",
+          "detail": "Original Mediano page calls Fredagsbold a new Mediano format and its second episode, planned to publish monthly."
+        },
+        {
+          "type": "mediano_episode_page",
+          "url": "https://www.mediano.nu/oversigt/fredagsbold-championship",
+          "detail": "Later Mediano edition independently identifies Fredagsbold as the monthly format for changing leagues, countries and football cultures."
+        }
+      ],
+      "suppressFromCurrentCatalogue": false,
+      "preserveAsHistoricalEpisode": true,
+      "currentRssRouteKey": null,
+      "notes": "Verified recurring format; no current RSS route asserted."
+    },
+    {
+      "legacyPodcastId": "mediano championship",
+      "displayTitle": "Mediano Championship",
+      "publisher": "Mediano",
+      "hovedserie": null,
+      "sourceUrl": "https://www.mediano.nu/oversigt/medianopl-runde19-mfa69-jxj4b",
+      "episodeCount": null,
+      "year": "2026",
+      "editorialRating": null,
+      "editorialDate": null,
+      "rowType": "canonical_series",
+      "canonicalSeriesTitle": "Mediano Championship",
+      "canonicalPodcastId": "mediano championship",
+      "canonicalExists": true,
+      "evidenceStatus": "strong",
+      "researchStatus": "reviewed",
+      "evidence": [
+        {
+          "type": "mediano_episode_page",
+          "url": "https://www.mediano.nu/oversigt/medianopl-runde19-mfa69-jxj4b",
+          "detail": "Requested original Mediano page title explicitly brands ‘Mediano Championship’."
+        }
+      ],
+      "suppressFromCurrentCatalogue": false,
+      "preserveAsHistoricalEpisode": true,
+      "currentRssRouteKey": null,
+      "notes": "One authoritative Mediano page explicitly names the programme; the available source does not determine a recurring parent or a distinct current route."
+    },
+    {
+      "legacyPodcastId": "mediano sport og perspektiv",
+      "displayTitle": "Mediano Sport og Perspektiv",
+      "publisher": "Mediano",
+      "hovedserie": null,
+      "sourceUrl": "https://www.mediano.nu/sportogperspektiv",
+      "episodeCount": null,
+      "year": "2026",
+      "editorialRating": null,
+      "editorialDate": null,
+      "rowType": "canonical_series",
+      "canonicalSeriesTitle": "Mediano Sport og Perspektiv",
+      "canonicalPodcastId": "mediano sport og perspektiv",
+      "canonicalExists": true,
+      "evidenceStatus": "verified",
+      "researchStatus": "reviewed",
+      "evidence": [
+        {
+          "type": "mediano_programme_page",
+          "url": "https://www.mediano.nu/sportogperspektiv",
+          "detail": "Mediano’s programme page says it created Mediano Sport & Perspektiv and names its dedicated channel."
+        },
+        {
+          "type": "mediano_category_page",
+          "url": "https://www.mediano.nu/oversigt/category/Sport%2B%26%2BPerspektiv",
+          "detail": "Mediano category page is dedicated to Sport & Perspektiv content."
+        },
+        {
+          "type": "reviewed_current_route",
+          "detail": "Existing reviewed Mediano public-RSS destination is named Mediano Sport og Perspektiv."
+        }
+      ],
+      "suppressFromCurrentCatalogue": false,
+      "preserveAsHistoricalEpisode": true,
+      "currentRssRouteKey": "mediano_public_rss",
+      "notes": "Verified programme identity; technical ID retains existing normalization while visible title preserves wording."
+    },
+    {
+      "legacyPodcastId": "mediano q",
+      "displayTitle": "Mediano Q",
+      "publisher": "Mediano",
+      "hovedserie": null,
+      "sourceUrl": "https://open.spotify.com/show/2eVvuLZnk3PJlZ4a5tfLHd",
+      "episodeCount": null,
+      "year": "2026",
+      "editorialRating": null,
+      "editorialDate": null,
+      "rowType": "canonical_series",
+      "canonicalSeriesTitle": "Mediano Q",
+      "canonicalPodcastId": "mediano q",
+      "canonicalExists": true,
+      "evidenceStatus": "verified",
+      "researchStatus": "reviewed",
+      "evidence": [
+        {
+          "type": "historical_feed_show",
+          "url": "https://open.spotify.com/show/2eVvuLZnk3PJlZ4a5tfLHd",
+          "detail": "Historical Spotify show metadata explicitly identifies ‘Mediano Q’ as a Mediano podcast about women’s football."
+        },
+        {
+          "type": "reviewed_current_route",
+          "detail": "Existing reviewed Mediano public-RSS destination is named Mediano Q."
+        }
+      ],
+      "suppressFromCurrentCatalogue": false,
+      "preserveAsHistoricalEpisode": true,
+      "currentRssRouteKey": "mediano_public_rss",
+      "notes": "Verified programme identity from historical show metadata and the reviewed route."
+    }
+  ]
+}

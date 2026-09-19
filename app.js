@@ -110,6 +110,12 @@ const MEDIANO_LEGACY_CATALOGUE_CANONICAL_IDS = Object.freeze({
   "flere priser flere aftaler og flere penge op af fansenes lommer": "magasinet jennings",
   "fra johnny til donny fredspris fifa og forspil til vm 2026": "magasinet jennings",
   "whistlebloweren der afslørede qatar sadan snød vi verdenspressen": "magasinet jennings"
+  , "den store talentserie": "klub mediano"
+  , "mediano special hvad siger data om superligaen": "mediano special"
+  , "sagen om de 15 point forsvandt fra i lommen af den gamle dame": "mediano special"
+  , "her er vores bud pa de ti spillere har været de største transfersucceser i superligaen": "transfer special"
+  , "kristjaan speakmann": "bruchmann ringer til"
+  , "der var engang et mal af peter møller mod farum": "der var engang et mal"
 });
 
 // Local-only canonical catalogue addition. Its title, publisher, genre, public
@@ -123,7 +129,38 @@ const LOCAL_CANONICAL_CATALOGUE_ROWS = Object.freeze([{
   Udgiver: "Mediano",
   Link: "https://www.mediano.nu/oversigt/tag/Jennings",
   Feed: "https://www.spreaker.com/show/6169233/episodes/feed"
+}, {
+  "Podcast-ID": "mediano special", Titel: "Mediano Special", Genre: "Sport", Udgiver: "Mediano",
+  manualEpisodes: [
+    "Sagen om de 15 point, forsvandt fra i lommen af Den Gamle Dame",
+    {
+      title: "Mediano special: hvad siger data om superligaen?",
+      manualEpisodeKey: "mediano-special-hvad-siger-data-om-superligaen"
+    }
+  ]
+}, {
+  "Podcast-ID": "transfer special", Titel: "Transfer Special", Genre: "Sport", Udgiver: "Mediano",
+  manualEpisodes: ["Her er vores bud på de ti spillere, har været de største transfersucceser i Superligaen"]
+}, {
+  "Podcast-ID": "bruchmann ringer til", Titel: "Brüchmann ringer til", Genre: "Sport", Udgiver: "Mediano",
+  manualEpisodes: ["Kristjaan Speakmann"]
+}, {
+  "Podcast-ID": "der var engang et mal", Titel: "Der var engang et mål", Genre: "Sport", Udgiver: "Mediano",
+  manualEpisodes: ["Der var engang et mål...af Peter Møller mod Farum"]
 }]);
+
+// Registry-derived historical episode preservation for a canonical catalogue
+// row which already exists in data/podcasts.json. This is deliberately an
+// exact identity, not a title-prefix rule: the reviewed Mediano sources place
+// Den store talentserie beneath Klub Mediano.
+const LOCAL_CANONICAL_CATALOGUE_ROW_PATCHES = Object.freeze({
+  "klub mediano": Object.freeze({
+    manualEpisodes: Object.freeze([{
+      title: "Den store talentserie",
+      manualEpisodeKey: "den-store-talentserie"
+    }])
+  })
+});
 
 const MEDIANO_EPISODE_DESTINATIONS = Object.freeze([
   ["max mediano", "Max Mediano"],
@@ -153,6 +190,10 @@ const MEDIANO_EPISODE_DESTINATIONS = Object.freeze([
   ["mediano 2 division", "Mediano 2. division"],
   ["mediano sport og perspektiv", "Mediano Sport og Perspektiv"],
   ["magasinet jennings", "Magasinet Jennings"]
+  , ["mediano special", "Mediano Special"]
+  , ["transfer special", "Transfer Special"]
+  , ["bruchmann ringer til", "Brüchmann ringer til"]
+  , ["der var engang et mal", "Der var engang et mål"]
 ]);
 
 const MEDIANO_EPISODE_PODCAST_CONFIG = Object.freeze(
@@ -169,7 +210,7 @@ const MEDIANO_EPISODE_PODCAST_CONFIG = Object.freeze(
       source: "mediano_public_rss",
       // This one destination has a reviewed historical catalogue alongside
       // Mediano public-feed episodes. Keep both on the existing merge path.
-      includeManualEpisodes: podcastKey === "superliga for voksne"
+      includeManualEpisodes: ["superliga for voksne", "klub mediano", "mediano special", "transfer special", "bruchmann ringer til", "der var engang et mal"].includes(podcastKey)
     }
   ]))
 );
@@ -23219,11 +23260,24 @@ function rebuildPodcastDetailRecommendationLookups() {
 }
 
 function applyPodcastDataRefresh(podcastRows, featuredRows, coverManifestLookup = {}, displayGroups = []) {
-  const catalogueIds = new Set(podcastRows.map((row) => normalizeText(row?.["Podcast-ID"])).filter(Boolean));
+  const patchedPodcastRows = podcastRows.map((row) => {
+    const podcastId = normalizeText(row?.["Podcast-ID"]);
+    const patch = LOCAL_CANONICAL_CATALOGUE_ROW_PATCHES[podcastId];
+    if (!patch) return row;
+    return {
+      ...row,
+      ...patch,
+      manualEpisodes: [
+        ...(Array.isArray(row?.manualEpisodes) ? row.manualEpisodes : []),
+        ...(Array.isArray(patch.manualEpisodes) ? patch.manualEpisodes : [])
+      ]
+    };
+  });
+  const catalogueIds = new Set(patchedPodcastRows.map((row) => normalizeText(row?.["Podcast-ID"])).filter(Boolean));
   const localAdditions = LOCAL_CANONICAL_CATALOGUE_ROWS.filter(
     (row) => !catalogueIds.has(normalizeText(row["Podcast-ID"]))
   );
-  const mappedPodcasts = [...podcastRows, ...localAdditions].map(mapPodcast).filter(isUsefulPodcast);
+  const mappedPodcasts = [...patchedPodcastRows, ...localAdditions].map(mapPodcast).filter(isUsefulPodcast);
   const cataloguePodcastIds = new Set(mappedPodcasts.map(getPodcastId).filter(Boolean));
   const currentCataloguePodcasts = mappedPodcasts.filter((podcast) => {
     const canonicalId = MEDIANO_LEGACY_CATALOGUE_CANONICAL_IDS[getPodcastId(podcast)];
