@@ -10872,7 +10872,6 @@ async function fetchGenstartEpisodes({ append = false } = {}) {
       .select("id,podcast_key,title,description,published_at,duration_seconds,episode_url,audio_url,image_url,external_guid,is_active,metadata", { count: "exact" })
       .eq("podcast_key", getEpisodeDatabasePodcastKey(config))
       .eq("is_active", true)
-      .eq("source", config.source)
       .order("published_at", { ascending: false })
       .range(offset, offset + EPISODE_PAGE_SIZE - 1);
 
@@ -10929,7 +10928,6 @@ async function searchGenstartEpisodes(term, token, { append = false } = {}) {
       .select("id,podcast_key,title,description,published_at,duration_seconds,episode_url,audio_url,image_url,external_guid,is_active,metadata", { count: "exact" })
       .eq("podcast_key", getEpisodeDatabasePodcastKey(config))
       .eq("is_active", true)
-      .eq("source", config.source)
       .or(`title.ilike.${pattern},description.ilike.${pattern}`)
       .order("published_at", { ascending: false })
       .range(offset, offset + EPISODE_PAGE_SIZE - 1);
