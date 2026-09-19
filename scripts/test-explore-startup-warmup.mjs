@@ -46,7 +46,12 @@ const ratingHydration = extractFunction("startInitialRatingHydration");
 assert.match(ratingHydration, /Promise\.allSettled\(\[/u);
 assert.match(ratingHydration, /initialSupabaseStartup/u);
 assert.match(ratingHydration, /initialPodcastStartup/u);
-assert.match(ratingHydration, /return refreshSupabaseState\(\);/u);
+assert.match(ratingHydration, /await refreshSupabaseState\(\);/u);
+assert.match(
+  ratingHydration,
+  /fetchEpisodeRatingMetaForEpisodes\(cachedEpisodes, \{ force: true, update: false \}\)/u,
+  "initial hydration must restore own ratings for cached historical episodes"
+);
 
 assert.doesNotMatch(app, /EXPLORE-TRACE|exploreDebug|traceExplore/u, "temporary Explore diagnostics must be removed");
 

@@ -27,7 +27,8 @@ assert.match(startup, /Promise\.allSettled\(\[\s*initialSupabaseStartup,\s*initi
 assert.match(startup, /catalogueResult\.status !== "fulfilled"/u);
 assert.match(startup, /!catalogueResult\.value/u);
 assert.match(startup, /state\.podcastDataStatus !== "ready"/u);
-assert.match(startup, /return refreshSupabaseState\(\);/u);
+assert.match(startup, /await refreshSupabaseState\(\);/u);
+assert.match(startup, /fetchEpisodeRatingMetaForEpisodes\(cachedEpisodes, \{ force: true, update: false \}\)/u);
 assert.doesNotMatch(
   startup,
   /if \(!state\.authUser\) return/u,
@@ -54,10 +55,16 @@ assert.match(
   "the one-shot hydration must start only after both startup promises are assigned"
 );
 
-function createHarness({ state, refreshSupabaseState }) {
+function createHarness({ state, refreshSupabaseState, cachedEpisodes = [] }) {
+  const episodeHydrationCalls = [];
+  const episodeUiUpdates = [];
   const factory = new Function(
     "state",
     "refreshSupabaseState",
+    "getAllCachedEpisodes",
+    "fetchEpisodeRatingMetaForEpisodes",
+    "updateGenstartEpisodeSection",
+    "updateOpenEpisodeDetailScores",
     "setAuthMessage",
     "console",
     `let initialSupabaseStartup = null;
@@ -70,7 +77,19 @@ function createHarness({ state, refreshSupabaseState }) {
        return startInitialRatingHydration();
      };`
   );
-  return factory(state, refreshSupabaseState, () => {}, { error() {} });
+  const run = factory(
+    state,
+    refreshSupabaseState,
+    () => cachedEpisodes,
+    async (episodes, options) => { episodeHydrationCalls.push({ episodes, options }); },
+    () => episodeUiUpdates.push("episode-section"),
+    () => episodeUiUpdates.push("detail-scores"),
+    () => {},
+    { error() {} }
+  );
+  run.episodeHydrationCalls = episodeHydrationCalls;
+  run.episodeUiUpdates = episodeUiUpdates;
+  return run;
 }
 
 async function settle() {
@@ -116,6 +135,7 @@ async function settle() {
   await hydration;
   assert.equal(refreshes, 1);
   assert.equal(state.communityStatsByKey.rated.ratingCount, 9, "logged-out Brugere ranking receives public stats");
+  assert.deepEqual(run.episodeHydrationCalls, []);
 }
 
 // Authenticated startup is correct in either completion order, including the
@@ -130,8 +150,10 @@ for (const order of ["supabase-first", "catalogue-first"]) {
     userRatings: {}
   };
   let refreshes = 0;
+  const cachedEpisodes = [{ id: "historical-episode-id", podcast_key: "det vi taler om", source: "radio4_det_vi_taler_om_rss" }];
   const run = createHarness({
     state,
+    cachedEpisodes,
     refreshSupabaseState: async () => {
       refreshes += 1;
       assert.ok(state.podcastById.rated);
@@ -163,6 +185,8 @@ for (const order of ["supabase-first", "catalogue-first"]) {
   assert.equal(refreshes, 1, `${order} performs exactly one initial fetch`);
   assert.equal(state.communityStatsByKey.rated.ratingCount, 2);
   assert.equal(state.userRatings.rated, 8);
+  assert.deepEqual(run.episodeHydrationCalls, [{ episodes: cachedEpisodes, options: { force: true, update: false } }]);
+  assert.deepEqual(run.episodeUiUpdates, ["episode-section", "detail-scores"]);
 }
 
 // A failed initial catalogue must not commit a falsely empty rating map. A later

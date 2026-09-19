@@ -23560,14 +23560,24 @@ function startInitialRatingHydration() {
     initialSupabaseStartup,
     initialPodcastStartup
   ])
-    .then(([, catalogueResult]) => {
+    .then(async ([, catalogueResult]) => {
       if (
         !state.supabase ||
         catalogueResult.status !== "fulfilled" ||
         !catalogueResult.value ||
         state.podcastDataStatus !== "ready"
       ) return;
-      return refreshSupabaseState();
+      await refreshSupabaseState();
+
+      // Episode lists may have loaded before getSession() resolved. Hydrate the
+      // logged-in user's exact episode UUIDs now; public aggregate stats use a
+      // separate path and must not be used as a proxy for personal ratings.
+      const cachedEpisodes = getAllCachedEpisodes();
+      if (state.authUser && cachedEpisodes.length) {
+        await fetchEpisodeRatingMetaForEpisodes(cachedEpisodes, { force: true, update: false });
+        updateGenstartEpisodeSection();
+        updateOpenEpisodeDetailScores();
+      }
     })
     .catch((error) => {
       console.error(error);
