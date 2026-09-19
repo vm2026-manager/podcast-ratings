@@ -37,7 +37,7 @@ export const MEDIANO_PUBLIC_ROUTE_DEFINITIONS = [
   enabled("minimax", "Minimax", "minimax", ["Minimax", "Mini Max"]),
   enabled("fodbold_70erne", "Fodbold var værre i 70'erne", "fodbold var værre i 70 erne", ["Fodbold var værre i 70'erne", "Fodbold var værre i 70’erne"]),
   skipped("fodboldministeriet_source_overlap", "Fodboldministeriet", ["Fodboldministeriet"], "has_dedicated_feed"),
-  pending("magasinet_jennings", "Magasinet Jennings", "magasinet jennings", ["Magasinet Jennings", "Jennings"]),
+  enabled("magasinet_jennings", "Magasinet Jennings", "magasinet jennings", ["Magasinet Jennings", "Jennings", "Jennings Ekstra"]),
   pending("bruchmann_ringer_til", "Brüchmann ringer til", "bruchmann ringer til", ["Brüchmann ringer til", "Bruchmann ringer til"]),
   pending("der_var_engang_et_maal", "Der var engang et mål", "der var engang et mal", ["Der var engang et mål"]),
   pending("fodboldens_kongeraekke", "Fodboldens Kongerække", "fodboldens kongeraekke", ["Fodboldens Kongerække"]),

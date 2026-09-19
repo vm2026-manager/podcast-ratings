@@ -83,7 +83,99 @@ const LEGACY_PODCAST_RATING_KEY_ALIASES = Object.freeze({
   "et kapitel for sig anders fogh": "anders fogh"
 });
 
+// These are not title heuristics. Each key is a reviewed historical
+// catalogue identity whose authoritative Hovedserie is Klub Mediano, and
+// whose current canonical Podcast-ID exists in this catalogue. Keep the
+// legacy keys resolvable for old links, saved podcasts, and rating rows while
+// preventing the one-off episode rows from being presented as podcasts.
+const MEDIANO_LEGACY_CATALOGUE_CANONICAL_IDS = Object.freeze({
+  "vi præsenterer erik skjærbæk": "klub mediano",
+  "sadan blev han victor froholdt": "klub mediano",
+  "sådan blev han victor froholdt": "klub mediano",
+  "ciao gianni": "magasinet jennings",
+  "vm special om trump infantino indrejseproblemer og manden bag balogun breaking": "magasinet jennings",
+  "vm optakt sadan lyder infantino bag facaden": "magasinet jennings",
+  "sprængfarlig rapport om datagigant det gra marked i england og tryktest af christiansborg": "magasinet jennings",
+  "infantinos mislykkede fredsforsøg dyrt vm og saudisk nedjustering": "magasinet jennings",
+  "fodbold og samfund med wrexham st pauli athletic club vsk og aarhus fremad": "magasinet jennings",
+  "eksklusivt interview med jesper møller om fifa og infantino": "magasinet jennings",
+  "infantino foran genvalg iran overladt til sig selv og fifa i mystisk sponsorat": "magasinet jennings",
+  "forudsigelsesmarkederne er kommet for at blive derfor skal det bekymre dig": "magasinet jennings",
+  "jesper møller ved ikke om dbu vil stemme pa infantino det har vi ikke taget stilling til endnu": "magasinet jennings",
+  "trumps krig sætter fifa i kattepine og european super league er død": "magasinet jennings",
+  "her er scenariet alle frygter betting bag superliga og samtlige divisioner": "magasinet jennings",
+  "vm boykot handboldchef har faet nok og city sag trækker i langdrag": "magasinet jennings",
+  "infantino abner for russisk comeback dbu reagerer": "magasinet jennings",
+  "landskabet for dansk børnefodbold med politiken og fc københavn": "magasinet jennings",
+  "flere priser flere aftaler og flere penge op af fansenes lommer": "magasinet jennings",
+  "fra johnny til donny fredspris fifa og forspil til vm 2026": "magasinet jennings",
+  "whistlebloweren der afslørede qatar sadan snød vi verdenspressen": "magasinet jennings"
+});
+
+// Local-only canonical catalogue addition. Its title, publisher, genre, public
+// feed, and Jennings source page are all present in the reviewed Mediano
+// routing/migration material; optional editorial fields intentionally remain
+// absent rather than being invented from a legacy episode row.
+const LOCAL_CANONICAL_CATALOGUE_ROWS = Object.freeze([{
+  "Podcast-ID": "magasinet jennings",
+  Titel: "Magasinet Jennings",
+  Genre: "Sport",
+  Udgiver: "Mediano",
+  Link: "https://www.mediano.nu/oversigt/tag/Jennings",
+  Feed: "https://www.spreaker.com/show/6169233/episodes/feed"
+}]);
+
+const MEDIANO_EPISODE_DESTINATIONS = Object.freeze([
+  ["max mediano", "Max Mediano"],
+  ["mediano pl", "Mediano PL"],
+  ["mediano superliga", "Mediano Superliga"],
+  ["superliga preview", "Superliga Preview"],
+  ["camp canada", "Camp Canada"],
+  ["mediano landshold", "Mediano Landshold"],
+  ["fodbold var bedre i 90 erne", "Fodbold var bedre i 90'erne"],
+  ["superliga special", "Superliga Special"],
+  ["bold boger", "Bold & Bøger"],
+  ["fredagsfrokosten", "Fredagsfrokosten"],
+  ["mediano la liga", "Mediano La Liga"],
+  ["mediano serie a", "Mediano Serie A"],
+  ["mediano bundesliga", "Mediano Bundesliga"],
+  ["mediano 1 division", "Mediano 1. division"],
+  ["superliga for voksne", "Superliga for voksne"],
+  ["mediano q", "Mediano Q"],
+  ["mediano business", "Mediano Business"],
+  ["mediano bossword", "Mediano Bossword"],
+  ["mediano breaking", "Mediano Breaking"],
+  ["fodbold var værre i 70 erne", "Fodbold var værre i 70'erne"],
+  ["minimax", "Minimax"],
+  ["mediano marketing", "Mediano Marketing"],
+  ["souplesse", "Souplesse"],
+  ["klub mediano", "Klub Mediano"],
+  ["mediano 2 division", "Mediano 2. division"],
+  ["mediano sport og perspektiv", "Mediano Sport og Perspektiv"],
+  ["magasinet jennings", "Magasinet Jennings"]
+]);
+
+const MEDIANO_EPISODE_PODCAST_CONFIG = Object.freeze(
+  Object.fromEntries(MEDIANO_EPISODE_DESTINATIONS.map(([podcastKey, displayName]) => [
+    podcastKey,
+    {
+      podcastKey,
+      databasePodcastKey: podcastKey,
+      enabled: true,
+      displayName,
+      persistence: "supabase",
+      // Keep public-feed rows separate from reviewed manual catalogue rows
+      // that share this Podcast-ID.
+      source: "mediano_public_rss",
+      // This one destination has a reviewed historical catalogue alongside
+      // Mediano public-feed episodes. Keep both on the existing merge path.
+      includeManualEpisodes: podcastKey === "superliga for voksne"
+    }
+  ]))
+);
+
 const EPISODE_PODCAST_CONFIG = {
+  ...MEDIANO_EPISODE_PODCAST_CONFIG,
   "mads og a holdet": {
     podcastKey: "mads og a holdet",
     databasePodcastKey: "mads og a holdet",
@@ -842,6 +934,7 @@ const state = {
     fetchedAt: 0,
     loading: false,
     loadingMore: false,
+    remoteLoadedCount: 0,
     error: "",
     searchTerm: "",
     searchLocalResults: [],
@@ -849,6 +942,7 @@ const state = {
     searchResolved: false,
     searchLoading: false,
     searchLoadingMore: false,
+    searchRemoteLoadedCount: 0,
     searchHasMore: false,
     searchTotalCount: null,
     searchError: "",
@@ -3056,7 +3150,9 @@ function getLocalEpisodePodcastKey(podcastOrKey) {
 function resolvePodcastByStoredKey(key) {
   const storedKey = normalizeText(key);
   if (!storedKey) return null;
-  return state.podcastById[storedKey] || state.podcastByLegacyKey[storedKey] || null;
+  const canonicalId = MEDIANO_LEGACY_CATALOGUE_CANONICAL_IDS[storedKey];
+  return state.podcastById[storedKey] || state.podcastByLegacyKey[storedKey] ||
+    (canonicalId ? state.podcastById[canonicalId] || null : null);
 }
 
 function resolveCanonicalPodcastId(key) {
@@ -10672,6 +10768,17 @@ async function loadLocalEpisodeData() {
   return state.localEpisodeDataPromise;
 }
 
+function getConfiguredManualEpisodes(config, term = "") {
+  if (!config?.includeManualEpisodes) return [];
+  const podcast = resolvePodcastByStoredKey(state.activePodcastDetailKey);
+  if (!podcast) return [];
+  const episodes = getRateablePodcastEpisodes(getPodcastManualEpisodes(podcast));
+  const comparableTerm = normalizeComparable(term);
+  return comparableTerm
+    ? episodes.filter((episode) => normalizeComparable(episode.title || "").includes(comparableTerm))
+    : episodes;
+}
+
 async function fetchGenstartEpisodes({ append = false } = {}) {
   const config = getEpisodePodcastConfig(state.activePodcastDetailKey);
   if (!config) return;
@@ -10713,7 +10820,7 @@ async function fetchGenstartEpisodes({ append = false } = {}) {
 
   if (episodeState.loading || episodeState.loadingMore) return;
 
-  const offset = append ? episodeState.items.length : 0;
+  const offset = append ? episodeState.remoteLoadedCount : 0;
   episodeState.loading = !append;
   episodeState.loadingMore = append;
   episodeState.error = "";
@@ -10724,6 +10831,7 @@ async function fetchGenstartEpisodes({ append = false } = {}) {
       .select("id,podcast_key,title,description,published_at,duration_seconds,episode_url,audio_url,image_url,external_guid,is_active,metadata", { count: "exact" })
       .eq("podcast_key", getEpisodeDatabasePodcastKey(config))
       .eq("is_active", true)
+      .eq("source", config.source)
       .order("published_at", { ascending: false })
       .range(offset, offset + EPISODE_PAGE_SIZE - 1);
 
@@ -10731,10 +10839,15 @@ async function fetchGenstartEpisodes({ append = false } = {}) {
 
     const fetchedRows = data || [];
     const rows = getRateablePodcastEpisodes(fetchedRows);
+    const manualEpisodes = getConfiguredManualEpisodes(config);
+    if (manualEpisodes.length) await refreshManualEpisodeRatingData(config.podcastKey, manualEpisodes);
     episodeState.items = append
       ? mergeEpisodes(episodeState.items, rows)
-      : mergeEpisodes([], rows);
-    episodeState.totalCount = Number.isFinite(count) ? count : null;
+      : mergeEpisodes(rows, manualEpisodes);
+    episodeState.remoteLoadedCount = append
+      ? episodeState.remoteLoadedCount + rows.length
+      : rows.length;
+    episodeState.totalCount = Number.isFinite(count) ? count + manualEpisodes.length : null;
     episodeState.hasMore = fetchedRows.length === EPISODE_PAGE_SIZE && (
       episodeState.totalCount === null || offset + fetchedRows.length < episodeState.totalCount
     );
@@ -10762,7 +10875,7 @@ async function searchGenstartEpisodes(term, token, { append = false } = {}) {
   const cleanTerm = normalizeText(term);
   if (cleanTerm.length < 2 || (append && (!episodeState.searchHasMore || episodeState.searchLoadingMore))) return;
 
-  const offset = append ? episodeState.searchResults.length : 0;
+  const offset = append ? episodeState.searchRemoteLoadedCount : 0;
   episodeState.searchLoading = !append;
   episodeState.searchLoadingMore = append;
   episodeState.searchError = "";
@@ -10775,6 +10888,7 @@ async function searchGenstartEpisodes(term, token, { append = false } = {}) {
       .select("id,podcast_key,title,description,published_at,duration_seconds,episode_url,audio_url,image_url,external_guid,is_active,metadata", { count: "exact" })
       .eq("podcast_key", getEpisodeDatabasePodcastKey(config))
       .eq("is_active", true)
+      .eq("source", config.source)
       .or(`title.ilike.${pattern},description.ilike.${pattern}`)
       .order("published_at", { ascending: false })
       .range(offset, offset + EPISODE_PAGE_SIZE - 1);
@@ -10784,11 +10898,15 @@ async function searchGenstartEpisodes(term, token, { append = false } = {}) {
 
     const fetchedRows = data || [];
     const rows = getRateablePodcastEpisodes(fetchedRows);
+    const manualEpisodes = getConfiguredManualEpisodes(config, cleanTerm);
     episodeState.searchResults = append
       ? mergeEpisodes(episodeState.searchResults, rows)
-      : getRateablePodcastEpisodes(mergeEpisodes([], rows));
+      : mergeEpisodes(rows, manualEpisodes);
+    episodeState.searchRemoteLoadedCount = append
+      ? episodeState.searchRemoteLoadedCount + rows.length
+      : rows.length;
     episodeState.searchResolved = true;
-    episodeState.searchTotalCount = Number.isFinite(count) ? count : null;
+    episodeState.searchTotalCount = Number.isFinite(count) ? count + manualEpisodes.length : null;
     episodeState.searchHasMore = fetchedRows.length === EPISODE_PAGE_SIZE && (
       episodeState.searchTotalCount === null || offset + fetchedRows.length < episodeState.searchTotalCount
     );
@@ -10823,6 +10941,7 @@ function scheduleGenstartEpisodeSearch(term) {
   episodeState.searchLocalResults = getLocalGenstartEpisodeMatches(term);
   episodeState.searchResults = [];
   episodeState.searchResolved = false;
+  episodeState.searchRemoteLoadedCount = 0;
   episodeState.searchLoadingMore = false;
   episodeState.searchHasMore = false;
   episodeState.searchTotalCount = null;
@@ -10856,6 +10975,7 @@ function resetGenstartEpisodeSearch() {
   episodeState.searchResults = [];
   episodeState.searchResolved = false;
   episodeState.searchLoading = false;
+  episodeState.searchRemoteLoadedCount = 0;
   episodeState.searchError = "";
   episodeState.searchToken += 1;
 }
@@ -11036,6 +11156,7 @@ function resetEpisodeWorkspaceSearch(podcast) {
   episodeState.searchResolved = false;
   episodeState.searchLoading = false;
   episodeState.searchLoadingMore = false;
+  episodeState.searchRemoteLoadedCount = 0;
   episodeState.searchHasMore = false;
   episodeState.searchTotalCount = null;
   episodeState.searchError = "";
@@ -23098,9 +23219,20 @@ function rebuildPodcastDetailRecommendationLookups() {
 }
 
 function applyPodcastDataRefresh(podcastRows, featuredRows, coverManifestLookup = {}, displayGroups = []) {
-  const mappedPodcasts = podcastRows.map(mapPodcast).filter(isUsefulPodcast);
+  const catalogueIds = new Set(podcastRows.map((row) => normalizeText(row?.["Podcast-ID"])).filter(Boolean));
+  const localAdditions = LOCAL_CANONICAL_CATALOGUE_ROWS.filter(
+    (row) => !catalogueIds.has(normalizeText(row["Podcast-ID"]))
+  );
+  const mappedPodcasts = [...podcastRows, ...localAdditions].map(mapPodcast).filter(isUsefulPodcast);
+  const cataloguePodcastIds = new Set(mappedPodcasts.map(getPodcastId).filter(Boolean));
+  const currentCataloguePodcasts = mappedPodcasts.filter((podcast) => {
+    const canonicalId = MEDIANO_LEGACY_CATALOGUE_CANONICAL_IDS[getPodcastId(podcast)];
+    // Fail closed: never suppress an identity unless its explicitly reviewed
+    // canonical target is present in this exact catalogue refresh.
+    return !canonicalId || !cataloguePodcastIds.has(canonicalId);
+  });
 
-  state.podcasts = deduplicatePodcasts(mappedPodcasts);
+  state.podcasts = deduplicatePodcasts(currentCataloguePodcasts);
   state.coverManifestByKey = coverManifestLookup;
   state.failedImageSources.clear();
   applyLocalCoverManifest(state.podcasts, coverManifestLookup);
@@ -23108,6 +23240,10 @@ function applyPodcastDataRefresh(podcastRows, featuredRows, coverManifestLookup 
   state.podcastById = lookups.byId;
   state.podcastByLegacyKey = lookups.byLegacyKey;
   state.podcastByKey = { ...lookups.byLegacyKey, ...lookups.byId };
+  Object.entries(MEDIANO_LEGACY_CATALOGUE_CANONICAL_IDS).forEach(([legacyKey, canonicalId]) => {
+    const canonicalPodcast = lookups.byId[canonicalId];
+    if (canonicalPodcast) state.podcastByKey[legacyKey] = canonicalPodcast;
+  });
   state.podcastDisplayGroups = displayGroups;
   state.podcastDisplayGroupById = Object.fromEntries(
     displayGroups.map((group) => [normalizeText(group.id), group])

@@ -1,5 +1,11 @@
 import { runEpisodeImport, type ImportRepository, type PodcastEpisodeRow } from "../supabase/functions/import-podcast-episodes/core.ts";
 import { FEED_CONFIGS } from "../supabase/functions/import-podcast-episodes/feed-config.ts";
+import { readFile, writeFile } from "node:fs/promises";
+
+const denoRuntime = (globalThis as { Deno?: { args: string[]; main: boolean; readTextFile(path: string): Promise<string>; writeTextFile(path: string, value: string): Promise<void> } }).Deno;
+const runtimeArgs = denoRuntime?.args || process.argv.slice(2);
+const readText = (path: string) => denoRuntime ? denoRuntime.readTextFile(path) : readFile(path, "utf8");
+const writeText = (path: string, value: string) => denoRuntime ? denoRuntime.writeTextFile(path, value) : writeFile(path, value);
 
 type ImportRun = { id: string; input: Record<string, unknown>; completion?: Record<string, unknown> };
 
@@ -61,7 +67,7 @@ function routing(summary: Awaited<ReturnType<typeof runEpisodeImport>>) {
 }
 
 async function main() {
-  const outputPath = Deno.args[0] || "mediano-import-simulation-20260918.json";
+  const outputPath = runtimeArgs[0] || "mediano-import-simulation-20260918.json";
   const config = FEED_CONFIGS.mediano_public;
   assert(config, "mediano_public must exist in FEED_CONFIGS");
 
@@ -75,7 +81,19 @@ async function main() {
     return xml;
   };
   const now = () => "2026-09-18T00:00:00.000Z";
-  const catalogue = JSON.parse(await Deno.readTextFile("data/podcasts.json")).rows as Array<Record<string, unknown>>;
+  const catalogue = JSON.parse(await readText("data/podcasts.json")).rows as Array<Record<string, unknown>>;
+  // Match the local frontend's reviewed, minimal canonical Jennings addition.
+  // This simulation never writes to Supabase or the source catalogue.
+  if (!catalogue.some((row) => row["Podcast-ID"] === "magasinet jennings")) {
+    catalogue.push({
+      "Podcast-ID": "magasinet jennings",
+      Titel: "Magasinet Jennings",
+      Genre: "Sport",
+      Udgiver: "Mediano",
+      Link: "https://www.mediano.nu/oversigt/tag/Jennings",
+      Feed: config.feed_url
+    });
+  }
   const catalogueById = new Map(catalogue.map((row) => [String(row["Podcast-ID"]), row]));
 
   const local = createInMemoryImportRepository();
@@ -150,7 +168,7 @@ async function main() {
     routing_conflict: { summary: conflict, preserved_wrong_podcast_key: conflictSeed.podcast_key },
     local_repository: { import_run_count: local.runs().length, no_supabase_client: true }
   };
-  await Deno.writeTextFile(outputPath, `${JSON.stringify(report, null, 2)}\n`);
+  await writeText(outputPath, `${JSON.stringify(report, null, 2)}\n`);
   console.log(JSON.stringify({
     report: outputPath,
     first_run: { fetched: first.fetched_count, inserted: first.inserted_count, updated: first.updated_count, skipped: first.skipped_count, errors: first.error_count, status: first.status },
@@ -161,4 +179,4 @@ async function main() {
   }, null, 2));
 }
 
-if (import.meta.main) main();
+if (denoRuntime?.main || import.meta.url === `file:///${process.argv[1]?.replace(/\\/g, "/")}`) main();

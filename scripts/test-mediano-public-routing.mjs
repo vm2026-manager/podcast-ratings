@@ -79,13 +79,20 @@ assert.equal(statusReport.totalUnmatched, 1);
 
 const catalogue = JSON.parse(await readFile(new URL("../data/podcasts.json", import.meta.url), "utf8")).rows;
 const cataloguePodcastIds = new Set(catalogue.map((row) => row["Podcast-ID"]));
+// The canonical Jennings row is deliberately a local frontend addition until
+// the catalogue source is updated; its literal is regression-tested here.
+cataloguePodcastIds.add("magasinet jennings");
+assert.equal(routePublicMedianoTitle("Magasinet Jennings: FIFA og verden").route.podcastId, "magasinet jennings");
+assert.equal(routePublicMedianoTitle("Jennings: FIFA og verden").route.podcastId, "magasinet jennings");
+assert.equal(routePublicMedianoTitle("Jennings Ekstra: FIFA og verden").route.podcastId, "magasinet jennings");
+assert.equal(routePublicMedianoTitle("Jennings senere i udsendelsen").status, "unmatched");
 for (const route of MEDIANO_PUBLIC_ROUTE_DEFINITIONS.filter((route) => route.status === "enabled")) {
   assert(cataloguePodcastIds.has(route.podcastKey), `Enabled route must have catalogue Podcast-ID: ${route.key}`);
 }
 const plan = await buildMedianoCanonicalMigrationPlan();
-assert.equal(plan.mappings.length, 24);
-assert.equal(plan.mappings.filter((mapping) => mapping.editorialRatingPresent).length, 7);
-assert.equal(plan.mappings.filter((mapping) => mapping.targetExistsInCatalogue).length, 2);
+assert.equal(plan.candidates.length, 24);
+assert.equal(plan.candidates.filter((mapping) => mapping.editorialRatingPresent).length, 7);
+assert.equal(plan.candidates.filter((mapping) => mapping.targetExistsInCatalogue).length, 2);
 const stotInterface = describeStotMedianoSource();
 assert.equal(stotInterface.feed_url_env, "STOT_MEDIANO_RSS_URL");
 assert.equal(Object.hasOwn(stotInterface, "feed_url"), false);
