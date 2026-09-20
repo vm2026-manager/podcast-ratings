@@ -1104,6 +1104,7 @@ const elements = {
   mobileHomeSearchOverlayClose: document.getElementById("mobileHomeSearchOverlayClose"),
   mobileHomeSearchOverlayForm: document.getElementById("mobileHomeSearchOverlayForm"),
   mobileHomeSearchOverlayInput: document.getElementById("mobileHomeSearchOverlayInput"),
+  mobileHomeSearchOverlayClear: document.getElementById("mobileHomeSearchOverlayClear"),
   mobileHomeSearchOverlayResults: document.getElementById("mobileHomeSearchOverlayResults"),
   pageLinks: document.querySelectorAll("[data-page-link]"),
   authPanel: document.getElementById("authPanel"),
@@ -1716,7 +1717,11 @@ function bindHomePodcastSearch() {
 }
 
 function clearMobileHomeSearchOverlayResults({ clearInput = false } = {}) {
-  const { mobileHomeSearchOverlayInput: input, mobileHomeSearchOverlayResults: results } = elements;
+  const {
+    mobileHomeSearchOverlayInput: input,
+    mobileHomeSearchOverlayClear: clearButton,
+    mobileHomeSearchOverlayResults: results
+  } = elements;
   mobileHomeSearchOverlayState.matches = [];
   mobileHomeSearchOverlayState.activeIndex = -1;
   results?.replaceChildren();
@@ -1724,6 +1729,13 @@ function clearMobileHomeSearchOverlayResults({ clearInput = false } = {}) {
   input?.setAttribute("aria-expanded", "false");
   input?.removeAttribute("aria-activedescendant");
   if (clearInput && input) input.value = "";
+  if (clearButton) clearButton.hidden = !input?.value;
+}
+
+function updateMobileHomeSearchOverlayClearButton() {
+  if (elements.mobileHomeSearchOverlayClear) {
+    elements.mobileHomeSearchOverlayClear.hidden = !elements.mobileHomeSearchOverlayInput?.value;
+  }
 }
 
 function scheduleMobileHomeSearchOverlayGeometry() {
@@ -1882,9 +1894,10 @@ function bindMobileHomeSearchOverlay() {
     mobileHomeSearchOverlayClose: closeButton,
     mobileHomeSearchOverlayForm: form,
     mobileHomeSearchOverlayInput: input,
+    mobileHomeSearchOverlayClear: clearButton,
     mobileHomeSearchOverlayResults: results
   } = elements;
-  if (!overlay || !closeButton || !form || !input || !results) return;
+  if (!overlay || !closeButton || !form || !input || !clearButton || !results) return;
 
   closeButton.addEventListener("click", () => closeMobileHomeSearchOverlay());
   form.addEventListener("submit", (event) => {
@@ -1895,7 +1908,19 @@ function bindMobileHomeSearchOverlay() {
       );
     }
   });
-  input.addEventListener("input", renderMobileHomeSearchOverlayResults);
+  input.addEventListener("input", () => {
+    updateMobileHomeSearchOverlayClearButton();
+    renderMobileHomeSearchOverlayResults();
+  });
+  clearButton.addEventListener("pointerdown", (event) => {
+    event.preventDefault();
+  });
+  clearButton.addEventListener("click", (event) => {
+    event.preventDefault();
+    input.value = "";
+    input.focus({ preventScroll: true });
+    input.dispatchEvent(new Event("input", { bubbles: true }));
+  });
   input.addEventListener("keydown", (event) => {
     if (event.key === "Escape") {
       event.preventDefault();
@@ -12274,9 +12299,9 @@ function getPodcastDetailOwnRatingMarkup(podcast) {
   const displayValue = value ? formatCompactRating(manualOwnRating) : "";
   return `
     <button class="podcast-detail-sheet__own-rating-reveal podcast-detail-sheet__own-rating-mobile-summary${
-      value ? " is-saved-rating" : ""
+      value ? " is-saved-rating" : " is-empty-rating"
     }" type="button" data-podcast-detail-inline-rating-reveal aria-expanded="false">
-      ${value ? `<strong>${escapeHtml(displayValue)}<small>/10</small></strong><small>Rediger</small>` : '<span aria-hidden="true">0–10</span><small>Vælg 0–10</small>'}
+      ${value ? `<strong>${escapeHtml(displayValue)}<small>/10</small></strong><small>Rediger</small>` : '<strong>Vurdér</strong><small>Tryk her · 0–10</small>'}
     </button>
     <div class="podcast-detail-sheet__own-rating-editor">
       <label class="podcast-detail-sheet__own-rating-control podcast-detail-sheet__own-rating-picker">
