@@ -3400,7 +3400,7 @@ function enableSearchInput() {
 function updateSearchClearButton() {
   if (!elements.searchClearButton || !elements.searchInput) return;
 
-  elements.searchClearButton.hidden = !elements.searchInput.value.trim();
+  elements.searchClearButton.hidden = !elements.searchInput.value;
 }
 
 function isMobileViewport() {
@@ -22687,11 +22687,8 @@ function setupEvents() {
       if (!elements.searchInput) return;
 
       elements.searchInput.value = "";
-      state.searchTerm = "";
-      updateSearchClearButton();
       elements.searchInput.focus({ preventScroll: true });
-      resetVisibleCount();
-      renderPodcastGrid();
+      elements.searchInput.dispatchEvent(new Event("input", { bubbles: true }));
     });
   }
 
