@@ -148,6 +148,23 @@ function createHarness({ eligible = false, ratings = {}, manualRating = null, ac
   return { state, episodeState, helpers, dialog, ratingCell, mobileLockHelp, saveCalls, podcast: { key: "podcast-a" } };
 }
 
+// An unrated manual podcast uses the same reveal control, but presents it as a
+// clear rating action. Saved and calculated states retain their existing markup.
+{
+  const h = createHarness({ eligible: true, ratings: { "episode-1": null, "episode-2": null } });
+  h.helpers.updatePodcastDetailOwnRatingCell(h.dialog, h.podcast);
+  assert.match(h.ratingCell.innerHTML, /own-rating-reveal[\s\S]*?is-empty-rating/u);
+  assert.match(h.ratingCell.innerHTML, /<strong>Vurdér<\/strong><small>Tryk her · 0–10<\/small>/u);
+  assert.ok(h.ratingCell.querySelector("[data-podcast-detail-inline-rating-reveal]"), "the existing reveal handler remains the action");
+}
+
+{
+  const h = createHarness({ eligible: true, ratings: { "episode-1": null, "episode-2": null }, manualRating: 6 });
+  h.helpers.updatePodcastDetailOwnRatingCell(h.dialog, h.podcast);
+  assert.match(h.ratingCell.innerHTML, /is-saved-rating/u);
+  assert.doesNotMatch(h.ratingCell.innerHTML, /is-empty-rating|Vurdér|Tryk her · 0–10/u);
+}
+
 // Unresolved metadata is visibly non-editable and cannot expose a direct-save path.
 {
   const h = createHarness();

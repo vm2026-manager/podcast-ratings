@@ -1,10 +1,11 @@
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 
-const [app, html, css] = await Promise.all([
+const [app, html, css, mobileLayoutCss] = await Promise.all([
   readFile(new URL("../app.js", import.meta.url), "utf8"),
   readFile(new URL("../index.html", import.meta.url), "utf8"),
-  readFile(new URL("../style.css", import.meta.url), "utf8")
+  readFile(new URL("../style.css", import.meta.url), "utf8"),
+  readFile(new URL("../mobile-layout-regressions.css", import.meta.url), "utf8")
 ]);
 
 assert.match(
@@ -31,5 +32,24 @@ assert.match(
   "the clear control provides a 44px touch target"
 );
 assert.match(css, /#searchInput::-webkit-search-cancel-button/u);
+
+assert.match(
+  html,
+  /<button\s+id="mobileHomeSearchOverlayClear"[\s\S]*?aria-label="Ryd søgning"[\s\S]*?hidden/u,
+  "the mobile home overlay has an explicit, initially hidden clear button"
+);
+assert.match(app, /mobileHomeSearchOverlayClear:\s*document\.getElementById\("mobileHomeSearchOverlayClear"\)/u);
+assert.match(app, /function updateMobileHomeSearchOverlayClearButton\(\)[\s\S]*?hidden\s*=\s*!elements\.mobileHomeSearchOverlayInput\?\.value/u);
+const mobileClearHandlerStart = app.indexOf('clearButton.addEventListener("click"');
+const mobileClearHandlerEnd = app.indexOf("\n  });", mobileClearHandlerStart) + "\n  });".length;
+assert.ok(mobileClearHandlerStart >= 0, "mobile home clear handler exists");
+assert.match(
+  app.slice(mobileClearHandlerStart, mobileClearHandlerEnd),
+  /input\.value\s*=\s*"";[\s\S]*?input\.focus\(\{ preventScroll: true \}\);[\s\S]*?dispatchEvent\(new Event\("input", \{ bubbles: true \}\)\)/u,
+  "mobile home clearing retains focus and reuses the normal input event path"
+);
+assert.match(mobileLayoutCss, /mobile-home-search-overlay__form\s*\{[^}]*grid-template-columns:\s*20px\s+minmax\(0,\s*1fr\)\s+44px/u);
+assert.match(mobileLayoutCss, /mobile-home-search-overlay__clear\s*\{[^}]*width:\s*44px;[^}]*height:\s*44px;/u);
+assert.match(mobileLayoutCss, /mobile-home-search-overlay__input::-webkit-search-cancel-button\s*\{[^}]*-webkit-appearance:\s*none/u);
 
 console.log("Search clear control regression checks passed.");
