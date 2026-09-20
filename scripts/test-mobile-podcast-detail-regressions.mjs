@@ -17,6 +17,22 @@ assert.match(lockedScoreRules, /font:\s*950\s+1\.18rem\/1\s+"Manrope"/u);
 assert.match(lockedScoreRules, /own-rating-suffix[\s\S]*align-self:\s*baseline[\s\S]*font:\s*900\s+\.72rem\/1/u);
 assert.match(mobileDetailCss, /podcast-detail-sheet__ratings strong[\s\S]*font-size:\s*1\.18rem\s*!important/u);
 assert.match(mobileDetailCss, /podcast-detail-sheet__ratings strong small[\s\S]*font-size:\s*\.72rem\s*!important/u);
+assert.match(
+  mobileDetailCss,
+  /podcast-detail-sheet__ratings > \.podcast-detail-sheet__rating-cell[\s\S]*grid-template-rows:\s*20px\s+24px\s+19px\s+minmax\(0,\s*1fr\)[\s\S]*rating-cell--mads > strong,[\s\S]*rating-cell--users > strong[\s\S]*grid-row:\s*3/u
+);
+assert.match(
+  mobileDetailCss,
+  /rating-cell--own\.is-episode-rating-locked \{\s*grid-template-rows:\s*20px\s+24px\s+19px\s+minmax\(0,\s*1fr\)/u
+);
+assert.match(
+  mobileDetailCss,
+  /is-episode-rating-locked > \.podcast-detail-sheet__rating-label \{\s*grid-row:\s*2/u
+);
+assert.match(
+  mobileDetailCss,
+  /is-episode-rating-locked \.podcast-detail-sheet__own-rating-picker \{\s*grid-row:\s*3\s*\/\s*span\s+2/u
+);
 
 const bindStart = app.indexOf("function bindPodcastEpisodeOverviewEvents(");
 const bindEnd = app.indexOf("\nfunction ", bindStart + 1);
