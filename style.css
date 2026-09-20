@@ -25842,17 +25842,17 @@ body.page-ranglister .ranking-search-strip .search-field {
 }
 
 body.page-ranglister #searchInput {
-  padding-right: 48px !important;
+  padding-right: 56px !important;
 }
 
 body.page-ranglister .search-field__clear {
   position: absolute !important;
-  right: 8px !important;
+  right: 4px !important;
   bottom: 2px !important;
-  width: 42px !important;
-  height: 42px !important;
-  min-width: 42px !important;
-  min-height: 42px !important;
+  width: 44px !important;
+  height: 44px !important;
+  min-width: 44px !important;
+  min-height: 44px !important;
   padding: 0 !important;
   display: inline-grid !important;
   place-items: center !important;
@@ -25882,6 +25882,11 @@ body.page-ranglister .search-field__clear svg {
 body.page-ranglister .search-field__clear:focus-visible {
   outline: 2px solid rgba(255, 92, 22, 0.42) !important;
   outline-offset: -4px !important;
+}
+
+body.page-ranglister #searchInput::-webkit-search-cancel-button {
+  -webkit-appearance: none;
+  appearance: none;
 }
 
 /* Retain browser-chrome clearance for content; fixed nav is visual-viewport anchored. */
