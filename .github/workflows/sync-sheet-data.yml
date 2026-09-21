@@ -7,6 +7,7 @@ on:
 
 permissions:
   actions: write
+  checks: write
   contents: write
   pull-requests: write
 
@@ -96,14 +97,70 @@ jobs:
             data/recommendation-metadata.json
             data/podcast-similarity-product-v1.3.json
 
-      - name: Run required regression gate for catalogue PR
+      - name: Read current catalogue PR head
+        id: catalogue-pr
         if: steps.create-pull-request.outputs.pull-request-number != ''
         env:
           GH_TOKEN: ${{ github.token }}
-        run: gh workflow run critical-regression-gate.yml --ref automation/catalogue-sync
+        run: |
+          echo "head_sha=$(gh pr view \"${{ steps.create-pull-request.outputs.pull-request-number }}\" --json headRefOid --jq .headRefOid)" >> "$GITHUB_OUTPUT"
+
+      - name: Start required regression check
+        id: required-check
+        if: steps.catalogue-pr.outputs.head_sha != ''
+        uses: actions/github-script@v7
+        env:
+          HEAD_SHA: ${{ steps.catalogue-pr.outputs.head_sha }}
+        with:
+          script: |
+            const check = await github.rest.checks.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              name: "Critical Regression Gate",
+              head_sha: process.env.HEAD_SHA,
+              status: "in_progress",
+              output: {
+                title: "Critical Regression Gate",
+                summary: "Running the repository's required regression gate for the catalogue PR."
+              }
+            });
+            core.setOutput("id", String(check.data.id));
+
+      - name: Run required regression gate against catalogue head
+        id: required-gate
+        if: steps.required-check.outputs.id != ''
+        env:
+          HEAD_SHA: ${{ steps.catalogue-pr.outputs.head_sha }}
+        run: |
+          git fetch --no-tags origin "$HEAD_SHA"
+          git checkout --detach "$HEAD_SHA"
+          node scripts/critical-regression-gate.mjs
+
+      - name: Complete required regression check
+        if: always() && steps.required-check.outputs.id != ''
+        uses: actions/github-script@v7
+        env:
+          CHECK_ID: ${{ steps.required-check.outputs.id }}
+          GATE_OUTCOME: ${{ steps.required-gate.outcome }}
+        with:
+          script: |
+            const passed = process.env.GATE_OUTCOME === "success";
+            await github.rest.checks.update({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              check_run_id: Number(process.env.CHECK_ID),
+              status: "completed",
+              conclusion: passed ? "success" : "failure",
+              output: {
+                title: "Critical Regression Gate",
+                summary: passed
+                  ? "The required regression gate passed for this catalogue PR commit."
+                  : "The required regression gate failed for this catalogue PR commit."
+              }
+            });
 
       - name: Enable automatic merge after required checks
-        if: steps.create-pull-request.outputs.pull-request-number != ''
+        if: steps.required-gate.outcome == 'success'
         env:
           GH_TOKEN: ${{ github.token }}
           PR_URL: ${{ steps.create-pull-request.outputs.pull-request-url }}
