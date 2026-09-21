@@ -2,7 +2,7 @@
   "version": 1,
   "source": {
     "path": "data/podcasts.json",
-    "generatedAt": "2026-09-21T08:43:55.674Z",
+    "generatedAt": "2026-09-21T15:04:43.313Z",
     "count": 1271,
     "topicAliases": "config/recommendation-topic-aliases.json",
     "topicAliasVersion": 1,
@@ -2705,6 +2705,45 @@
       ]
     },
     {
+      "id": "da aids kom til danmark",
+      "recommendationId": "rec-da-aids-kom-til-danmark-e474c6b31e206c8f9ce908701f4a278a",
+      "recommendationIdentityBasis": "title+link",
+      "identityDuplicateGroup": "",
+      "title": "Da aids kom til Danmark",
+      "mainSeries": "Bakspejl",
+      "primaryGenreRaw": "Historie",
+      "primaryGenre": "Historie",
+      "primaryGenreValid": true,
+      "primaryGenreMappingType": "native",
+      "primaryGenreMappingSource": "Historie",
+      "primaryGenreNeedsReview": false,
+      "primaryGenreReviewReason": "",
+      "secondaryGenre": "Dokumentar",
+      "secondaryGenreValid": true,
+      "topicsRaw": [
+        "AIDS",
+        "HIV",
+        "homoseksuelles historie",
+        "sundhedshistorie"
+      ],
+      "topicsCanonical": [
+        "AIDS",
+        "HIV",
+        "homoseksuelles historie",
+        "sundhedshistorie"
+      ],
+      "topicKeys": [
+        "aids",
+        "hiv",
+        "homoseksuelles-historie",
+        "sundhedshistorie"
+      ],
+      "topicEligible": true,
+      "genreEligible": true,
+      "recommendationMetadataEligible": true,
+      "metadataIssues": []
+    },
+    {
       "id": "nattens dronning",
       "recommendationId": "rec-nattens-dronning-3cdfd3b0f7d40613a9412d00d80e48a8",
       "recommendationIdentityBasis": "title+link",
@@ -3289,45 +3328,6 @@
         "whistleblowere",
         "krigslaekager",
         "pressefrihed"
-      ],
-      "topicEligible": true,
-      "genreEligible": true,
-      "recommendationMetadataEligible": true,
-      "metadataIssues": []
-    },
-    {
-      "id": "da aids kom til danmark",
-      "recommendationId": "rec-da-aids-kom-til-danmark-e474c6b31e206c8f9ce908701f4a278a",
-      "recommendationIdentityBasis": "title+link",
-      "identityDuplicateGroup": "",
-      "title": "Da aids kom til Danmark",
-      "mainSeries": "Bakspejl",
-      "primaryGenreRaw": "Historie",
-      "primaryGenre": "Historie",
-      "primaryGenreValid": true,
-      "primaryGenreMappingType": "native",
-      "primaryGenreMappingSource": "Historie",
-      "primaryGenreNeedsReview": false,
-      "primaryGenreReviewReason": "",
-      "secondaryGenre": "Dokumentar",
-      "secondaryGenreValid": true,
-      "topicsRaw": [
-        "AIDS",
-        "HIV",
-        "homoseksuelles historie",
-        "sundhedshistorie"
-      ],
-      "topicsCanonical": [
-        "AIDS",
-        "HIV",
-        "homoseksuelles historie",
-        "sundhedshistorie"
-      ],
-      "topicKeys": [
-        "aids",
-        "hiv",
-        "homoseksuelles-historie",
-        "sundhedshistorie"
       ],
       "topicEligible": true,
       "genreEligible": true,
@@ -4185,6 +4185,45 @@
         "svindel",
         "falske-identiteter",
         "manipulation"
+      ],
+      "topicEligible": true,
+      "genreEligible": true,
+      "recommendationMetadataEligible": true,
+      "metadataIssues": []
+    },
+    {
+      "id": "i hænderne pa hr doktor",
+      "recommendationId": "rec-i-haenderne-paa-hr-doktor-80a42f1d738993af38e518a782b089bb",
+      "recommendationIdentityBasis": "title+link",
+      "identityDuplicateGroup": "",
+      "title": "I hænderne på Hr. Doktor",
+      "mainSeries": "Undersøger",
+      "primaryGenreRaw": "True Crime",
+      "primaryGenre": "True Crime",
+      "primaryGenreValid": true,
+      "primaryGenreMappingType": "native",
+      "primaryGenreMappingSource": "True Crime",
+      "primaryGenreNeedsReview": false,
+      "primaryGenreReviewReason": "",
+      "secondaryGenre": "Dokumentar",
+      "secondaryGenreValid": true,
+      "topicsRaw": [
+        "Seksuelle overgreb",
+        "læger",
+        "patientsikkerhed",
+        "magtmisbrug"
+      ],
+      "topicsCanonical": [
+        "seksuelle overgreb",
+        "læger",
+        "patientsikkerhed",
+        "magtmisbrug"
+      ],
+      "topicKeys": [
+        "seksuelle-overgreb",
+        "laeger",
+        "patientsikkerhed",
+        "magtmisbrug"
       ],
       "topicEligible": true,
       "genreEligible": true,
@@ -7471,6 +7510,45 @@
       "metadataIssues": [
         "invalid_primary_genre"
       ]
+    },
+    {
+      "id": "mysteriet om lisbeth hagen",
+      "recommendationId": "rec-mysteriet-om-lisbeth-hagen-75bf32f162ce1de5ee79bc09c5f588e1",
+      "recommendationIdentityBasis": "title+link",
+      "identityDuplicateGroup": "",
+      "title": "Mysteriet om Lisbeth Hagen",
+      "mainSeries": "Djævlen i detaljen",
+      "primaryGenreRaw": "True Crime",
+      "primaryGenre": "True Crime",
+      "primaryGenreValid": true,
+      "primaryGenreMappingType": "native",
+      "primaryGenreMappingSource": "True Crime",
+      "primaryGenreNeedsReview": false,
+      "primaryGenreReviewReason": "",
+      "secondaryGenre": "Dokumentar",
+      "secondaryGenreValid": true,
+      "topicsRaw": [
+        "Anne-Elisabeth Hagen",
+        "forsvinding",
+        "løsepenge",
+        "Norge"
+      ],
+      "topicsCanonical": [
+        "Anne-Elisabeth Hagen",
+        "forsvinding",
+        "løsepenge",
+        "Norge"
+      ],
+      "topicKeys": [
+        "anne-elisabeth-hagen",
+        "forsvinding",
+        "loesepenge",
+        "norge"
+      ],
+      "topicEligible": true,
+      "genreEligible": true,
+      "recommendationMetadataEligible": true,
+      "metadataIssues": []
     },
     {
       "id": "f c københavn",
@@ -40396,45 +40474,6 @@
       "metadataIssues": []
     },
     {
-      "id": "i hænderne pa hr doktor",
-      "recommendationId": "rec-i-haenderne-paa-hr-doktor-80a42f1d738993af38e518a782b089bb",
-      "recommendationIdentityBasis": "title+link",
-      "identityDuplicateGroup": "",
-      "title": "I hænderne på Hr. Doktor",
-      "mainSeries": "Undersøger",
-      "primaryGenreRaw": "True Crime",
-      "primaryGenre": "True Crime",
-      "primaryGenreValid": true,
-      "primaryGenreMappingType": "native",
-      "primaryGenreMappingSource": "True Crime",
-      "primaryGenreNeedsReview": false,
-      "primaryGenreReviewReason": "",
-      "secondaryGenre": "Dokumentar",
-      "secondaryGenreValid": true,
-      "topicsRaw": [
-        "Seksuelle overgreb",
-        "læger",
-        "patientsikkerhed",
-        "magtmisbrug"
-      ],
-      "topicsCanonical": [
-        "seksuelle overgreb",
-        "læger",
-        "patientsikkerhed",
-        "magtmisbrug"
-      ],
-      "topicKeys": [
-        "seksuelle-overgreb",
-        "laeger",
-        "patientsikkerhed",
-        "magtmisbrug"
-      ],
-      "topicEligible": true,
-      "genreEligible": true,
-      "recommendationMetadataEligible": true,
-      "metadataIssues": []
-    },
-    {
       "id": "abortturisten",
       "recommendationId": "rec-abortturisten-1f5757a125b4773c8c8265207b2b048b",
       "recommendationIdentityBasis": "title+link",
@@ -43357,45 +43396,6 @@
       "metadataIssues": [
         "topic_alias_applied"
       ]
-    },
-    {
-      "id": "mysteriet om lisbeth hagen",
-      "recommendationId": "rec-mysteriet-om-lisbeth-hagen-75bf32f162ce1de5ee79bc09c5f588e1",
-      "recommendationIdentityBasis": "title+link",
-      "identityDuplicateGroup": "",
-      "title": "Mysteriet om Lisbeth Hagen",
-      "mainSeries": "Djævlen i detaljen",
-      "primaryGenreRaw": "True Crime",
-      "primaryGenre": "True Crime",
-      "primaryGenreValid": true,
-      "primaryGenreMappingType": "native",
-      "primaryGenreMappingSource": "True Crime",
-      "primaryGenreNeedsReview": false,
-      "primaryGenreReviewReason": "",
-      "secondaryGenre": "Dokumentar",
-      "secondaryGenreValid": true,
-      "topicsRaw": [
-        "Anne-Elisabeth Hagen",
-        "forsvinding",
-        "løsepenge",
-        "Norge"
-      ],
-      "topicsCanonical": [
-        "Anne-Elisabeth Hagen",
-        "forsvinding",
-        "løsepenge",
-        "Norge"
-      ],
-      "topicKeys": [
-        "anne-elisabeth-hagen",
-        "forsvinding",
-        "loesepenge",
-        "norge"
-      ],
-      "topicEligible": true,
-      "genreEligible": true,
-      "recommendationMetadataEligible": true,
-      "metadataIssues": []
     },
     {
       "id": "lars ranthe",
