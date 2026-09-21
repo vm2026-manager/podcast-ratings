@@ -2831,6 +2831,10 @@ function normalizeEnglishFlag(value) {
   return normalizeText(value).toLocaleLowerCase("da-DK") === "x";
 }
 
+function isOutdatedPodcast(podcast) {
+  return String(podcast?.uaktuel ?? "").trim().toLowerCase() === "x";
+}
+
 function mapPodcast(row, index) {
   const title = getField(row, ["Titel", "Title"]);
   const host = getField(row, ["V\u00e6rt", "Vaert", "Host", "V\u00e6rter"]);
@@ -2920,6 +2924,7 @@ function mapPodcast(row, index) {
   ]);
   const isUnderratedPearl =
     normalizeText(rawUnderratedPearl).trim().toLowerCase() === "x";
+  const uaktuel = getField(row, ["Uaktuel"]);
   const placement = parsePlacement(getField(row, ["Placering", "Rank", "Rangering"]));
   const manualEpisodes = parseManualEpisodeTitles(
     row?.manualEpisodes || row?.manual_episodes || getField(row, ["Episoder", "Manual episodes", "ManualEpisodes"])
@@ -2984,6 +2989,7 @@ function mapPodcast(row, index) {
     shortDescription,
     longDescription,
     isUnderratedPearl,
+    uaktuel,
     placement: placement ?? index + 1,
     randomTieBreaker: Math.random(),
     completenessScore: getCompletenessScore({
@@ -18645,6 +18651,10 @@ function getExploreSearchParts(searchTerm) {
 }
 
 function matchesExploreFilters(podcast, searchParts = [], genre = "Alle") {
+  if (isOutdatedPodcast(podcast)) {
+    return false;
+  }
+
   if (genre !== "Alle" && podcast.genre !== genre) {
     return false;
   }
@@ -20054,6 +20064,7 @@ function getPodcastlistenTopPodcasts(limit = HOME_ROTATION_TOP_LIMIT) {
     .filter(
       (podcast) =>
         getPodcastKey(podcast) &&
+        !isOutdatedPodcast(podcast) &&
         parseNumber(podcast.ratingValue) !== null &&
         Boolean(podcast.image)
     )
