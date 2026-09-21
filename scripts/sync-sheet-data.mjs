@@ -381,9 +381,10 @@ function mapAccessType(value, title) {
     normalizedValue.toLocaleLowerCase("da-DK")
   );
   if (!accessType) {
-    throw new Error(
-      `Ugyldig værdi i Adgang${formatEditorialRowLabel(title)}: ${JSON.stringify(normalizedValue)}.`
+    console.warn(
+      `Ukendt værdi i Adgang${formatEditorialRowLabel(title)}: ${JSON.stringify(normalizedValue)}. Bruger free som sikker standard.`
     );
+    return "free";
   }
 
   return accessType;
