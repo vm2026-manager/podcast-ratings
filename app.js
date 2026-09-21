@@ -997,6 +997,11 @@ const state = {
     searchToken: 0,
     statsById: {},
     userRatingsById: {},
+    // The detail score must cover every episode a user has rated, not merely
+    // the current page of the episode workspace.
+    parentUserRatingsById: {},
+    parentUserRatingsResolvedFor: "",
+    parentUserRatingsLoading: false,
     statsLoadingIds: new Set(),
     userRatingLoadingIds: new Set()
     }
@@ -8054,6 +8059,9 @@ async function saveActiveEpisodeRating() {
     if (error) throw error;
 
     episodeState.userRatingsById[episodeId] = numericValue;
+    if (episodeState.parentUserRatingsResolvedFor === state.authUser.id) {
+      episodeState.parentUserRatingsById[episodeId] = numericValue;
+    }
     closeRatingDialog();
     updatePodcastEpisodeOverviewRatingRow(episodeId);
     updateOpenEpisodeDetailScores();
@@ -8204,6 +8212,9 @@ async function deleteActiveEpisodeRating() {
     if (error) throw error;
 
     episodeState.userRatingsById[episodeId] = null;
+    if (episodeState.parentUserRatingsResolvedFor === state.authUser.id) {
+      delete episodeState.parentUserRatingsById[episodeId];
+    }
     updateProfileEpisodeRatingAfterDelete(episodeId);
     closeRatingDialog();
     updatePodcastEpisodeOverviewRatingRow(episodeId);
@@ -10429,7 +10440,11 @@ function getEpisodeUserRating(episodeId) {
 
 function getPodcastEpisodeUserRatingSummary(podcastOrKey) {
   const episodeState = getPodcastEpisodeState(podcastOrKey);
-  const ratings = Object.values(episodeState.userRatingsById)
+  const ratingsById =
+    state.authUser && episodeState.parentUserRatingsResolvedFor === state.authUser.id
+      ? episodeState.parentUserRatingsById
+      : episodeState.userRatingsById;
+  const ratings = Object.values(ratingsById)
     .map((value) => parseNumber(value))
     .filter((value) => value !== null);
   const count = ratings.length;
@@ -10440,6 +10455,44 @@ function getPodcastEpisodeUserRatingSummary(podcastOrKey) {
       ? ratings.reduce((total, value) => total + value, 0) / count
       : null
   };
+}
+
+async function fetchPodcastEpisodeParentRatings(podcastOrKey) {
+  const config = getEpisodePodcastConfig(podcastOrKey);
+  const episodeState = getPodcastEpisodeState(podcastOrKey);
+  const request = getUserScopedRequestContext();
+  if (!config || config.dataSource === "local" || !state.supabase || !request.userId) return;
+  if (episodeState.parentUserRatingsLoading || episodeState.parentUserRatingsResolvedFor === request.userId) return;
+
+  episodeState.parentUserRatingsLoading = true;
+  try {
+    // Query from the user's rows and join the parent episode. This is deliberately
+    // independent of the visible episode page, so older ratings still count.
+    const { data, error } = await state.supabase
+      .from("episode_ratings")
+      .select("episode_id,rating,podcast_episodes!inner(podcast_key,is_active)")
+      .eq("user_id", request.userId)
+      .eq("podcast_episodes.podcast_key", getEpisodeDatabasePodcastKey(config))
+      .eq("podcast_episodes.is_active", true);
+
+    if (error) throw error;
+    if (!isCurrentUserScopedRequest(request)) return;
+
+    const ratingsById = {};
+    (data || []).forEach((item) => {
+      const episodeId = normalizeText(item.episode_id);
+      const rating = parseNumber(item.rating);
+      if (!episodeId || rating === null) return;
+      ratingsById[episodeId] = rating;
+      episodeState.userRatingsById[episodeId] = rating;
+    });
+    episodeState.parentUserRatingsById = ratingsById;
+    episodeState.parentUserRatingsResolvedFor = request.userId;
+  } catch (error) {
+    if (isCurrentUserScopedRequest(request)) console.error(error);
+  } finally {
+    if (isCurrentUserScopedRequest(request)) episodeState.parentUserRatingsLoading = false;
+  }
 }
 
 function getEpisodeIdsForQuery(episodes) {
@@ -12370,12 +12423,16 @@ function getPodcastDetailEpisodeRatingState(podcast) {
   }
 
   const episodeState = getPodcastEpisodeState(podcast);
+  const usesParentRatingQuery = Object.hasOwn(episodeState, "parentUserRatingsResolvedFor") &&
+    getEpisodePodcastConfig(podcast)?.dataSource !== "local";
   const episodeIds = getEpisodeIdsForQuery(episodeState.items);
   const resolved =
     !state.authUser ||
-    (episodeState.eligibilityResolved &&
-      !episodeState.loading &&
-      episodeIds.every((episodeId) => episodeState.userRatingsById[episodeId] !== undefined));
+    (usesParentRatingQuery
+      ? episodeState.parentUserRatingsResolvedFor === state.authUser.id
+      : episodeState.eligibilityResolved &&
+        !episodeState.loading &&
+        episodeIds.every((episodeId) => episodeState.userRatingsById[episodeId] !== undefined));
   const summary = getPodcastEpisodeUserRatingSummary(podcast);
   return { resolved, ...summary };
 }
@@ -12912,6 +12969,11 @@ function renderPodcastDetailSheetContent(
     }
   } else if (detailEpisodeConfig && !skipEpisodeLoad) {
     const episodeState = getPodcastEpisodeState(podcast);
+    if (state.authUser) {
+      fetchPodcastEpisodeParentRatings(podcast).then(() => {
+        handlePodcastDetailEpisodeLoadCompletion(dialog, podcast);
+      });
+    }
     if ((!isGenstartEpisodeCacheFresh() || episodeState.items.length < MINIMUM_RATEABLE_EPISODE_COUNT) && !episodeState.loading) {
       fetchGenstartEpisodes().then(() => {
         handlePodcastDetailEpisodeLoadCompletion(dialog, podcast);
@@ -15465,6 +15527,9 @@ function clearUserScopedState({ clearUi = false } = {}) {
   state.personalizationUserStateStatus = "idle";
   Object.values(state.podcastEpisodesByKey).forEach((episodeState) => {
     episodeState.userRatingsById = {};
+    episodeState.parentUserRatingsById = {};
+    episodeState.parentUserRatingsResolvedFor = "";
+    episodeState.parentUserRatingsLoading = false;
     episodeState.userRatingLoadingIds = new Set();
   });
   state.episodeParentRatingSyncSignatures = {};
