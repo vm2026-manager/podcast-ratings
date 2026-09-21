@@ -69,6 +69,7 @@ const PODCAST_FIELDS = [
     output: "Undervurderet perle",
     candidates: ["Undervurderet perle", "Undervurderede perler", "Underrated pearl", "Underrated"]
   },
+  { output: "Uaktuel", candidates: ["Uaktuel"] },
   { output: "Placering", candidates: ["Placering", "Rank", "Rangering"] },
   { output: "Podcast-ID", candidates: ["Podcast-ID", "Podcast ID", "PodcastID"] }
 ];

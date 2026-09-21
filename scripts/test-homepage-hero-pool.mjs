@@ -25,6 +25,7 @@ assert.match(heroSource, /circular: true/u);
 
 assert.match(topPodcastsSource, /parseNumber\(podcast\.ratingValue\) !== null/u);
 assert.match(topPodcastsSource, /Boolean\(podcast\.image\)/u);
+assert.match(topPodcastsSource, /!isOutdatedPodcast\(podcast\)/u);
 assert.match(topPodcastsSource, /const seenKeys = new Set\(\)/u);
 assert.match(topPodcastsSource, /localeCompare\(normalizeText\(b\.title\), "da"/u);
 assert.doesNotMatch(topPodcastsSource, /HOME_HERO_POOL_LIMIT/u);
