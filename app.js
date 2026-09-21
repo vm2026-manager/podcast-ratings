@@ -29,6 +29,7 @@ const VALID_RANKING_SOURCES = new Set(["mads", "users"]);
 const VALID_LANGUAGE_FILTERS = new Set(["all", "danish", "english"]);
 const PODCAST_DATA_REFRESH_INTERVAL_MS = 60 * 60 * 1000;
 const HOME_HERO_COVER_COUNT = 12;
+const HOME_HERO_POOL_LIMIT = 150;
 const HOME_ROTATION_TOP_LIMIT = 50;
 const HOME_POPULAR_CAROUSEL_POOL_LIMIT = 100;
 const HOME_COMMUNITY_MIN_RATING = 6;
@@ -20115,7 +20116,7 @@ function getHomeHeroPodcasts(
   limit = HOME_HERO_COVER_COUNT
 ) {
   return selectRotatingItems(
-    getPodcastlistenTopPodcasts(HOME_ROTATION_TOP_LIMIT),
+    getPodcastlistenTopPodcasts(HOME_HERO_POOL_LIMIT),
     limit,
     {
       sectionKey: "home-editorial-hero",
