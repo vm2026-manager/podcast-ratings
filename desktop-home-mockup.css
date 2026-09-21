@@ -15586,7 +15586,7 @@ html body.page-udforsk .explore-card__host + .explore-card__publisher {
   display: none;
 }
 
-@media (max-width: 1100px) {
+@media (max-width: 1299.59px) {
   html body .mobile-header-search-button {
     position: fixed;
     top: 12px;
@@ -18617,7 +18617,7 @@ html body #podcastDetailSheet [data-podcast-detail-placement]:empty {
   html body .mobile-header-search-button { display: none !important; }
 }
 
-@media (max-width: 1100px) {
+@media (max-width: 1299.59px) {
   html body .mobile-header-search-button {
     position: fixed;
     top: 12px;

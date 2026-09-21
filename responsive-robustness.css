@@ -46,43 +46,8 @@ html body :is(.desktop-header-search__input, .desktop-user-button__copy,
   }
 }
 
-/* Compact desktop: keep every header control visible by using its intentional
- * two-row mode before the single-row layout runs out of room. */
+/* Compact desktop safeguards for content outside the header. */
 @media (min-width: 901px) and (max-width: 1280px) {
-  html body:is(.page-forside, .page-ranglister, .page-udforsk, .page-profil) .page-shell > .topbar {
-    grid-template-columns: minmax(0, 1fr) minmax(168px, 250px) !important;
-    grid-template-areas: "brand account" "nav search" !important;
-    grid-template-rows: 56px 52px !important;
-    column-gap: clamp(10px, 2vw, 18px) !important;
-    height: 108px !important;
-    min-height: 108px !important;
-    max-height: none !important;
-  }
-
-  html body .page-shell > .topbar .site-nav {
-    gap: clamp(9px, 1.5vw, 18px) !important;
-    width: 100% !important;
-    overflow: hidden;
-  }
-
-  html body .page-shell > .topbar .site-nav__link {
-    font-size: clamp(.82rem, 1.35vw, 1rem) !important;
-  }
-
-  html body .page-shell > .topbar #desktopHeaderSearch {
-    width: 100% !important;
-    min-width: 0 !important;
-  }
-
-  html body .page-shell > .topbar #desktopUserButton {
-    min-width: 0 !important;
-    width: min(100%, 250px) !important;
-  }
-
-  html body .page-shell > .topbar .desktop-user-button__copy {
-    overflow: hidden;
-  }
-
   html body.page-ranglister .ranking-layout {
     grid-template-columns: minmax(210px, 25%) minmax(0, 1fr) !important;
     gap: clamp(18px, 2.5vw, 32px) !important;
@@ -110,21 +75,17 @@ html body :is(.desktop-header-search__input, .desktop-user-button__copy,
   }
 }
 
-/* This file loads after the page-specific header rules. Keep the compact
- * header deliberate here too, instead of letting the navigation drop to a
- * separate row beside search at constrained CSS viewport widths. */
+/* The only intermediate header layout: reuse the compact search button so
+ * every control stays in one row until the full desktop grid takes over. */
 @media (min-width: 901px) and (max-width: 1299.59px) {
   html body:is(.page-forside, .page-ranglister, .page-udforsk, .page-profil) .page-shell > .topbar {
-    grid-template-columns: minmax(0, 1fr) max-content minmax(168px, 250px) !important;
-    grid-template-areas:
-      "brand nav account"
-      "search search search" !important;
-    grid-template-rows: 58px 52px !important;
+    grid-template-columns: minmax(0, 1fr) max-content 42px minmax(168px, 250px) !important;
+    grid-template-areas: "brand nav search account" !important;
+    grid-template-rows: 76px !important;
     column-gap: clamp(10px, 1.5vw, 18px) !important;
-    row-gap: 0 !important;
-    height: 110px !important;
-    min-height: 110px !important;
-    max-height: none !important;
+    height: 76px !important;
+    min-height: 76px !important;
+    max-height: 76px !important;
   }
 
   html body:is(.page-forside, .page-ranglister, .page-udforsk, .page-profil) .page-shell > .topbar .sidebar-logo {
@@ -136,13 +97,24 @@ html body :is(.desktop-header-search__input, .desktop-user-button__copy,
     grid-area: nav !important;
     justify-self: center !important;
     width: max-content !important;
-    height: 58px !important;
-    min-height: 0 !important;
-    max-height: 58px !important;
+    height: 76px !important;
+    min-height: 76px !important;
+    max-height: 76px !important;
     display: flex !important;
     flex-wrap: nowrap !important;
     gap: clamp(9px, 1.5vw, 18px) !important;
     white-space: nowrap !important;
+  }
+
+  html body:is(.page-forside, .page-ranglister, .page-udforsk, .page-profil) .page-shell > .topbar .site-nav__link {
+    min-height: 76px !important;
+    border-bottom: 0 !important;
+    text-decoration: none !important;
+  }
+
+  html body:is(.page-forside, .page-ranglister, .page-udforsk, .page-profil) .page-shell > .topbar .site-nav__link::after {
+    bottom: 11px !important;
+    height: 2px !important;
   }
 
   html body:is(.page-forside, .page-ranglister, .page-udforsk, .page-profil) .page-shell > .topbar #desktopUserButton {
@@ -153,23 +125,30 @@ html body :is(.desktop-header-search__input, .desktop-user-button__copy,
   }
 
   html body:is(.page-forside, .page-ranglister, .page-udforsk, .page-profil) .page-shell > .topbar #desktopHeaderSearch {
+    display: none !important;
+  }
+
+  html body:is(.page-forside, .page-ranglister, .page-udforsk, .page-profil) .page-shell > .topbar #desktopHeaderSearch.is-mobile-open {
+    display: grid !important;
+  }
+
+  html body:is(.page-forside, .page-ranglister, .page-udforsk, .page-profil) .page-shell > .topbar #mobileHeaderSearchButton {
     grid-area: search !important;
-    grid-column: 1 / -1 !important;
-    width: min(100%, 620px) !important;
-    min-width: 0 !important;
-    margin-inline: auto !important;
+    position: static !important;
+    z-index: auto !important;
+    width: 42px !important;
+    height: 42px !important;
+    display: inline-flex !important;
     justify-self: center !important;
   }
-}
 
-/* The existing compact search button takes over at this narrower desktop
- * range, so remove the reserved second row rather than leaving blank header
- * space below the coherent one-row controls. */
-@media (min-width: 901px) and (max-width: 1100px) {
-  html body:is(.page-forside, .page-ranglister, .page-udforsk, .page-profil) .page-shell > .topbar {
-    grid-template-areas: "brand nav account" !important;
-    grid-template-rows: 58px !important;
-    height: 58px !important;
-    min-height: 58px !important;
+  html body:is(.page-forside, .page-ranglister, .page-udforsk, .page-profil) .page-shell > .topbar #mobileHeaderSearchButton svg {
+    width: 20px !important;
+    height: 20px !important;
+    fill: none !important;
+    stroke: currentColor !important;
+    stroke-width: 2.1 !important;
+    stroke-linecap: round !important;
+    stroke-linejoin: round !important;
   }
 }
