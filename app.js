@@ -30,7 +30,7 @@ const VALID_LANGUAGE_FILTERS = new Set(["all", "danish", "english"]);
 const PODCAST_DATA_REFRESH_INTERVAL_MS = 60 * 60 * 1000;
 const HOME_HERO_COVER_COUNT = 12;
 const HOME_ROTATION_TOP_LIMIT = 50;
-const HOME_POPULAR_CAROUSEL_POOL_LIMIT = 20;
+const HOME_POPULAR_CAROUSEL_POOL_LIMIT = 100;
 const HOME_COMMUNITY_MIN_RATING = 6;
 const HOME_COMMUNITY_PRIMARY_MIN_COUNT = 3;
 const HOME_COMMUNITY_SECONDARY_MIN_COUNT = 2;
@@ -3255,9 +3255,20 @@ function canonicalizeCommunityStats(rows) {
     const ratingCount = Number(item?.rating_count || 0);
     if (averageRating === null || ratingCount <= 0) return;
 
-    const totals = totalsByKey[canonicalKey] || { weightedRatingSum: 0, ratingCount: 0 };
+    const totals = totalsByKey[canonicalKey] || {
+      weightedRatingSum: 0,
+      ratingCount: 0,
+      recentUsers7d: 0,
+      recentUsers30d: 0,
+      recentUsers90d: 0,
+      momentumScore: 0
+    };
     totals.weightedRatingSum += averageRating * ratingCount;
     totals.ratingCount += ratingCount;
+    totals.recentUsers7d += Math.max(0, Number(item?.recent_users_7d || 0));
+    totals.recentUsers30d += Math.max(0, Number(item?.recent_users_30d || 0));
+    totals.recentUsers90d += Math.max(0, Number(item?.recent_users_90d || 0));
+    totals.momentumScore += Math.max(0, Number(item?.momentum_score || 0));
     totalsByKey[canonicalKey] = totals;
   });
 
@@ -3267,7 +3278,11 @@ function canonicalizeCommunityStats(rows) {
         canonicalKey,
         {
           averageRating: totals.weightedRatingSum / totals.ratingCount,
-          ratingCount: totals.ratingCount
+          ratingCount: totals.ratingCount,
+          recentUsers7d: totals.recentUsers7d,
+          recentUsers30d: totals.recentUsers30d,
+          recentUsers90d: totals.recentUsers90d,
+          momentumScore: totals.momentumScore
         }
       ])
     ),
@@ -7141,7 +7156,7 @@ async function fetchCommunityStats() {
   try {
     const { data, error } = await state.supabase
       .from(PODCAST_RATING_PUBLIC_STATS_VIEW)
-      .select("podcast_key, average_rating, rating_count");
+      .select("podcast_key, average_rating, rating_count, recent_users_7d, recent_users_30d, recent_users_90d, momentum_score");
 
     if (requestToken !== state.communityStatsRequestToken) return;
     if (error) throw error;
@@ -7171,7 +7186,7 @@ async function refreshPodcastCommunityStat(podcastKey) {
 
   const { data, error } = await state.supabase
     .from(PODCAST_RATING_PUBLIC_STATS_VIEW)
-    .select("podcast_key, average_rating, rating_count")
+    .select("podcast_key, average_rating, rating_count, recent_users_7d, recent_users_30d, recent_users_90d, momentum_score")
     .eq("podcast_key", key)
     .maybeSingle();
 
@@ -7182,7 +7197,11 @@ async function refreshPodcastCommunityStat(podcastKey) {
   } else {
     state.communityStatsByKey[key] = {
       averageRating: parseNumber(data.average_rating),
-      ratingCount: Number(data.rating_count || 0)
+      ratingCount: Number(data.rating_count || 0),
+      recentUsers7d: Number(data.recent_users_7d || 0),
+      recentUsers30d: Number(data.recent_users_30d || 0),
+      recentUsers90d: Number(data.recent_users_90d || 0),
+      momentumScore: Number(data.momentum_score || 0)
     };
   }
 
@@ -13714,6 +13733,7 @@ function renderHomePopular(container) {
     secondary: candidatePools.secondary.length,
     tertiary: candidatePools.tertiary.length
   };
+  const allCandidates = Object.values(candidatePools).flat();
   const popular = selectHomeCommunityPopularCandidates(desiredCount, {
     hourKey: dayKey,
     deprioritizeKeys: heroKeys,
@@ -13731,6 +13751,11 @@ function renderHomePopular(container) {
     candidatePoolCounts.tertiary
   );
   container.dataset.communityRotationKey = dayKey;
+  container.dataset.communityCandidatePoolSize = String(allCandidates.length);
+  container.dataset.communitySelectedCount = String(popular.length);
+  container.dataset.communityMomentumCandidates = String(
+    allCandidates.filter((candidate) => candidate.popularityScore > 0.4).length
+  );
   container.dataset.communitySelectedPrimary = String(
     popular.filter((candidate) => candidate.candidateLevel === "primary").length
   );
@@ -19901,8 +19926,32 @@ function getHomeCommunityCandidateLevel(communityRating, communityRatingCount) {
   return "tertiary";
 }
 
+function getHomeCommunityPopularityScore(stat) {
+  const rating = parseNumber(stat?.averageRating);
+  const ratingCount = Math.max(0, Number(stat?.ratingCount || 0));
+  if (rating === null || ratingCount < 1) return 0;
+
+  // Established signal: quality above the public eligibility floor and a
+  // capped logarithmic user-count contribution. Momentum is intentionally
+  // based on aggregate unique users, never raw episode-rating rows.
+  const quality = Math.max(0, Math.min(1, (rating - HOME_COMMUNITY_MIN_RATING) / 4));
+  const establishedPopularity = Math.min(1, Math.log1p(ratingCount) / Math.log1p(20));
+  const established = quality * 0.7 + establishedPopularity * 0.3;
+  const recent7d = Math.max(0, Number(stat?.recentUsers7d || 0));
+  const recent30d = Math.max(recent7d, Number(stat?.recentUsers30d || 0));
+  const recent90d = Math.max(recent30d, Number(stat?.recentUsers90d || 0));
+  const weightedMomentum =
+    recent7d +
+    (recent30d - recent7d) * 0.35 +
+    (recent90d - recent30d) * 0.1;
+  const momentum =
+    (weightedMomentum / (weightedMomentum + 3)) * Math.min(1, ratingCount / 2);
+
+  return established * 0.4 + momentum * 0.6;
+}
+
 function getHomeCommunityPopularCandidatePools(
-  limit = HOME_ROTATION_TOP_LIMIT
+  limit = HOME_POPULAR_CAROUSEL_POOL_LIMIT
 ) {
   const pools = {
     primary: [],
@@ -19927,6 +19976,7 @@ function getHomeCommunityPopularCandidatePools(
       podcast,
       communityRating,
       communityRatingCount,
+      popularityScore: getHomeCommunityPopularityScore(stat),
       candidateLevel
     });
   });
@@ -19937,7 +19987,13 @@ function getHomeCommunityPopularCandidatePools(
 
   Object.keys(pools).forEach((candidateLevel) => {
     pools[candidateLevel] = pools[candidateLevel]
-      .sort((a, b) => compareExplorePodcasts(a.podcast, b.podcast))
+      .sort(
+        (a, b) =>
+          b.popularityScore - a.popularityScore ||
+          b.communityRating - a.communityRating ||
+          b.communityRatingCount - a.communityRatingCount ||
+          normalizeText(a.podcast.title).localeCompare(normalizeText(b.podcast.title), "da")
+      )
       .slice(0, normalizedLimit);
   });
 
@@ -19958,28 +20014,32 @@ function selectHomeCommunityPopularCandidates(
   const pools =
     candidatePools ||
     getHomeCommunityPopularCandidatePools(HOME_ROTATION_TOP_LIMIT);
-  const selected = [];
-  const candidateLevels = ["primary", "secondary", "tertiary"];
-
-  candidateLevels.forEach((candidateLevel) => {
-    const remainingCount = targetCount - selected.length;
-    if (remainingCount <= 0) return;
-
-    selected.push(
-      ...selectRotatingItems(pools[candidateLevel], remainingCount, {
-        sectionKey: `home-community-popular:${candidateLevel}`,
-        hourKey,
-        avoidAdjacentMainSeries: false,
-        deprioritizeKeys
-      })
+  const candidates = Object.values(pools)
+    .flat()
+    .sort(
+      (a, b) =>
+        b.popularityScore - a.popularityScore ||
+        b.communityRating - a.communityRating ||
+        b.communityRatingCount - a.communityRatingCount
     );
-  });
+  const seed = getHourlyRotationSeed("home-community-popular", hourKey);
+  const selected = candidates
+    .map((candidate) => {
+      // Efraimidis-Spirakis weighted sampling produces a deterministic daily
+      // selection that favors stronger candidates without freezing the list.
+      const random = (getExploreShuffleSeed(`${seed}:${getPodcastKey(candidate.podcast)}`) + 1) / 4294967297;
+      return { candidate, priority: -Math.log(random) / Math.max(0.05, candidate.popularityScore) };
+    })
+    .sort((a, b) => a.priority - b.priority)
+    .map(({ candidate }) => candidate);
+  const preferred = selected.filter((candidate) => !deprioritizeKeys.has(getPodcastKey(candidate.podcast)));
+  const rotated = (preferred.length >= targetCount ? preferred : preferred.concat(selected.filter((candidate) => deprioritizeKeys.has(getPodcastKey(candidate.podcast))))).slice(0, targetCount);
 
   return arrangeWithoutAdjacentMainSeries(
-    selected,
-    getHourlyRotationSeed("home-community-popular", hourKey),
+    rotated,
+    seed,
     {
-      limit: selected.length,
+      limit: rotated.length,
       circular: true
     }
   );
