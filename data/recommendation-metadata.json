@@ -2,8 +2,8 @@
   "version": 1,
   "source": {
     "path": "data/podcasts.json",
-    "generatedAt": "2026-09-19T16:47:51.375Z",
-    "count": 1263,
+    "generatedAt": "2026-09-21T07:26:58.436Z",
+    "count": 1270,
     "topicAliases": "config/recommendation-topic-aliases.json",
     "topicAliasVersion": 1,
     "genreMapping": "config/recommendation-genre-mapping.json",
@@ -11,16 +11,16 @@
     "stableIdMethod": "frontend-normalized-title",
     "recommendationIdMethod": "metadata-fingerprint-sha256-128-v1"
   },
-  "count": 1263,
+  "count": 1270,
   "summary": {
-    "podcasts": 1263,
-    "validPrimaryGenres": 1243,
+    "podcasts": 1270,
+    "validPrimaryGenres": 1250,
     "invalidPrimaryGenres": 20,
-    "genreEligibleBeforeMapping": 983,
-    "genreEligibleAfterMapping": 1243,
-    "recommendationMetadataEligibleBeforeMapping": 983,
-    "recommendationMetadataEligibleAfterMapping": 1243,
-    "primaryGenreMappingNative": 983,
+    "genreEligibleBeforeMapping": 990,
+    "genreEligibleAfterMapping": 1250,
+    "recommendationMetadataEligibleBeforeMapping": 990,
+    "recommendationMetadataEligibleAfterMapping": 1250,
+    "primaryGenreMappingNative": 990,
     "primaryGenreMappingCapitalization": 99,
     "primaryGenreMappingSpelling": 0,
     "primaryGenreMappingDirect": 161,
@@ -28,36 +28,36 @@
     "primaryGenreMappingUnmapped": 20,
     "uniqueUnmappedPrimaryGenres": 14,
     "conditionalGenreReviews": 0,
-    "withSecondaryGenre": 1035,
-    "withRawTopics": 1263,
-    "withCanonicalTopics": 1263,
-    "topicEligible": 1263,
-    "genreEligible": 1243,
-    "recommendationMetadataEligible": 1243,
+    "withSecondaryGenre": 1041,
+    "withRawTopics": 1270,
+    "withCanonicalTopics": 1270,
+    "topicEligible": 1270,
+    "genreEligible": 1250,
+    "recommendationMetadataEligible": 1250,
     "approvedAliases": 17,
     "podcastsWithAliasApplied": 97,
-    "rawTopicOccurrences": 4592,
-    "rawUniqueTopicForms": 2874,
-    "canonicalTopicOccurrences": 4592,
-    "canonicalUniqueTopics": 2640,
-    "normalizedTopicIdentities": 2640,
-    "topicVariantGroups": 234,
-    "topicCollisionGroups": 217,
+    "rawTopicOccurrences": 4627,
+    "rawUniqueTopicForms": 2893,
+    "canonicalTopicOccurrences": 4627,
+    "canonicalUniqueTopics": 2657,
+    "normalizedTopicIdentities": 2657,
+    "topicVariantGroups": 236,
+    "topicCollisionGroups": 219,
     "approvedAliasTopicGroups": 17,
-    "safeTopicCollisionGroups": 217,
+    "safeTopicCollisionGroups": 219,
     "unsafeTopicCollisionGroups": 0,
-    "podcastsAffectedByTopicNormalization": 349,
+    "podcastsAffectedByTopicNormalization": 350,
     "withinPodcastTopicDuplicatesRemoved": 0,
-    "canonicalTopicsUsedOnce": 1967,
-    "canonicalTopicsAtLeastThree": 339,
-    "canonicalTopicsAtLeastFive": 149,
-    "canonicalTopicsAtLeastTen": 47,
+    "canonicalTopicsUsedOnce": 1980,
+    "canonicalTopicsAtLeastThree": 340,
+    "canonicalTopicsAtLeastFive": 150,
+    "canonicalTopicsAtLeastTen": 48,
     "possibleStandaloneRows": 300,
     "topicKeyCollisions": 0,
-    "uniqueExistingIds": 1257,
+    "uniqueExistingIds": 1264,
     "duplicateStableIdValues": 6,
     "podcastsSharingStableId": 12,
-    "uniqueRecommendationIds": 1263,
+    "uniqueRecommendationIds": 1270,
     "recommendationIdCollisions": 0,
     "exactDuplicateGroups": 1,
     "likelyDuplicateGroups": 2,
@@ -3474,7 +3474,7 @@
       ],
       "topicsCanonical": [
         "psykologi",
-        "livsfilosofi",
+        "Livsfilosofi",
         "Menneskelig adfærd",
         "samfundstendenser"
       ],
@@ -5645,7 +5645,7 @@
         "valgkampe"
       ],
       "topicsCanonical": [
-        "amerikansk politik",
+        "Amerikansk politik",
         "Det Hvide Hus",
         "valgkampe"
       ],
@@ -17154,7 +17154,7 @@
       "topicsCanonical": [
         "Aktuelle nyheder",
         "Dansk politik",
-        "international politik"
+        "International politik"
       ],
       "topicKeys": [
         "aktuelle-nyheder",
@@ -18711,7 +18711,7 @@
         "dansk udenrigspolitik"
       ],
       "topicsCanonical": [
-        "international politik",
+        "International politik",
         "krige",
         "stormagtsrivalisering",
         "dansk udenrigspolitik"
@@ -19466,7 +19466,7 @@
         "Amerikanske valgkampe",
         "kampagnestrategi",
         "meningsmålinger",
-        "amerikansk politik"
+        "Amerikansk politik"
       ],
       "topicKeys": [
         "amerikanske-valgkampe",
@@ -19732,7 +19732,7 @@
         "USA's samfund"
       ],
       "topicsCanonical": [
-        "amerikansk politik",
+        "Amerikansk politik",
         "amerikanske valg",
         "Amerikansk kultur",
         "USA's samfund"
@@ -22183,7 +22183,7 @@
         "USA's samfund"
       ],
       "topicsCanonical": [
-        "amerikansk politik",
+        "Amerikansk politik",
         "Amerikansk popkultur",
         "kulturkampe",
         "USA's samfund"
@@ -29498,8 +29498,8 @@
       ],
       "topicsCanonical": [
         "Aktuelle nyheder",
-        "amerikansk politik",
-        "international politik",
+        "Amerikansk politik",
+        "International politik",
         "nyhedsbaggrund"
       ],
       "topicKeys": [
@@ -29922,7 +29922,7 @@
       "topicsCanonical": [
         "Aktier",
         "finansmarkeder",
-        "makroøkonomi",
+        "Makroøkonomi",
         "markedsnyheder"
       ],
       "topicKeys": [
@@ -31619,7 +31619,7 @@
         "amerikansk historie"
       ],
       "topicsCanonical": [
-        "amerikansk politik",
+        "Amerikansk politik",
         "USA's samfund",
         "kulturkampe",
         "amerikansk historie"
@@ -32892,7 +32892,7 @@
         "internationale forhold"
       ],
       "topicsCanonical": [
-        "amerikansk politik",
+        "Amerikansk politik",
         "Mediekritik",
         "kulturkampe",
         "internationale forhold"
@@ -32933,7 +32933,7 @@
       ],
       "topicsCanonical": [
         "Aktuelle nyheder",
-        "amerikansk politik",
+        "Amerikansk politik",
         "internationale nyheder"
       ],
       "topicKeys": [
@@ -33049,7 +33049,7 @@
       "topicsCanonical": [
         "Amerikansk konservatisme",
         "kulturkampe",
-        "amerikansk politik",
+        "Amerikansk politik",
         "mediedebat"
       ],
       "topicKeys": [
@@ -33161,7 +33161,7 @@
       ],
       "topicsCanonical": [
         "Aktuelle nyheder",
-        "amerikansk politik",
+        "Amerikansk politik",
         "internationale begivenheder"
       ],
       "topicKeys": [
@@ -33742,7 +33742,7 @@
         "politisk kommunikation"
       ],
       "topicsCanonical": [
-        "amerikansk politik",
+        "Amerikansk politik",
         "Demokraterne",
         "valgkampe",
         "politisk kommunikation"
@@ -34057,7 +34057,7 @@
         "Startups",
         "venturekapital",
         "Silicon Valley",
-        "amerikansk politik"
+        "Amerikansk politik"
       ],
       "topicKeys": [
         "startups",
@@ -34095,7 +34095,7 @@
       "topicsCanonical": [
         "Amerikansk konservatisme",
         "kulturkampe",
-        "amerikansk politik",
+        "Amerikansk politik",
         "Mediekritik"
       ],
       "topicKeys": [
@@ -34135,7 +34135,7 @@
       ],
       "topicsCanonical": [
         "erhvervsliv",
-        "amerikansk politik",
+        "Amerikansk politik",
         "iværksætteri",
         "økonomi"
       ],
@@ -34175,7 +34175,7 @@
       "topicsCanonical": [
         "Aktuelle nyheder",
         "nyhedsbaggrund",
-        "amerikansk politik",
+        "Amerikansk politik",
         "internationale konflikter"
       ],
       "topicKeys": [
@@ -34329,7 +34329,7 @@
         "Demokraterne"
       ],
       "topicsCanonical": [
-        "amerikansk politik",
+        "Amerikansk politik",
         "breaking news",
         "valgkampe",
         "Demokraterne"
@@ -34446,7 +34446,7 @@
         "retssager"
       ],
       "topicsCanonical": [
-        "amerikansk politik",
+        "Amerikansk politik",
         "medier",
         "kulturkampe",
         "retssager"
@@ -34486,7 +34486,7 @@
       ],
       "topicsCanonical": [
         "politiske idéer",
-        "amerikansk politik",
+        "Amerikansk politik",
         "Samfundsforandringer",
         "magt"
       ],
@@ -41393,7 +41393,7 @@
         "geopolitik"
       ],
       "topicsCanonical": [
-        "amerikansk politik",
+        "Amerikansk politik",
         "Donald Trump",
         "USA",
         "geopolitik"
@@ -48182,6 +48182,300 @@
         "broendby-if",
         "agf",
         "fankultur"
+      ],
+      "topicEligible": true,
+      "genreEligible": true,
+      "recommendationMetadataEligible": true,
+      "metadataIssues": []
+    },
+    {
+      "id": "amerikanske tilstande",
+      "recommendationId": "rec-amerikanske-tilstande-efd19ea3d44301f678be3c692ad7d4b5",
+      "recommendationIdentityBasis": "title+link",
+      "identityDuplicateGroup": "",
+      "title": "Amerikanske tilstande",
+      "mainSeries": "",
+      "primaryGenreRaw": "Samfund",
+      "primaryGenre": "Samfund",
+      "primaryGenreValid": true,
+      "primaryGenreMappingType": "native",
+      "primaryGenreMappingSource": "Samfund",
+      "primaryGenreNeedsReview": false,
+      "primaryGenreReviewReason": "",
+      "secondaryGenre": "Viden",
+      "secondaryGenreValid": true,
+      "topicsRaw": [
+        "Amerikansk politik",
+        "Donald Trump",
+        "sociale medier",
+        "MAGA",
+        "USA"
+      ],
+      "topicsCanonical": [
+        "Amerikansk politik",
+        "Donald Trump",
+        "sociale medier",
+        "MAGA",
+        "USA"
+      ],
+      "topicKeys": [
+        "amerikansk-politik",
+        "donald-trump",
+        "sociale-medier",
+        "maga",
+        "usa"
+      ],
+      "topicEligible": true,
+      "genreEligible": true,
+      "recommendationMetadataEligible": true,
+      "metadataIssues": []
+    },
+    {
+      "id": "mine levende rad med knud romer",
+      "recommendationId": "rec-mine-levende-raad-med-knud-romer-3d496b9cf21314b448be06e9bceb5f3c",
+      "recommendationIdentityBasis": "title+link",
+      "identityDuplicateGroup": "",
+      "title": "Mine levende råd - med Knud Romer",
+      "mainSeries": "",
+      "primaryGenreRaw": "Underholdning",
+      "primaryGenre": "Underholdning",
+      "primaryGenreValid": true,
+      "primaryGenreMappingType": "native",
+      "primaryGenreMappingSource": "Underholdning",
+      "primaryGenreNeedsReview": false,
+      "primaryGenreReviewReason": "",
+      "secondaryGenre": "Viden",
+      "secondaryGenreValid": true,
+      "topicsRaw": [
+        "Livsfilosofi",
+        "lytterspørgsmål",
+        "hverdagens dilemmaer",
+        "ekspertsamtaler",
+        "eksistentielle spørgsmål"
+      ],
+      "topicsCanonical": [
+        "Livsfilosofi",
+        "lytterspørgsmål",
+        "hverdagens dilemmaer",
+        "ekspertsamtaler",
+        "eksistentielle spørgsmål"
+      ],
+      "topicKeys": [
+        "livsfilosofi",
+        "lytterspoergsmaal",
+        "hverdagens-dilemmaer",
+        "ekspertsamtaler",
+        "eksistentielle-spoergsmaal"
+      ],
+      "topicEligible": true,
+      "genreEligible": true,
+      "recommendationMetadataEligible": true,
+      "metadataIssues": []
+    },
+    {
+      "id": "tingets tilstand med damsgaard og jespersen",
+      "recommendationId": "rec-tingets-tilstand-med-damsgaard-og-jespersen-9e98ee70d54d579b293c8e2f3135802a",
+      "recommendationIdentityBasis": "title+link",
+      "identityDuplicateGroup": "",
+      "title": "Tingets tilstand med Damsgaard og Jespersen",
+      "mainSeries": "",
+      "primaryGenreRaw": "Samfund",
+      "primaryGenre": "Samfund",
+      "primaryGenreValid": true,
+      "primaryGenreMappingType": "native",
+      "primaryGenreMappingSource": "Samfund",
+      "primaryGenreNeedsReview": false,
+      "primaryGenreReviewReason": "",
+      "secondaryGenre": "Viden",
+      "secondaryGenreValid": true,
+      "topicsRaw": [
+        "Dansk politik",
+        "Christiansborg",
+        "politisk analyse",
+        "Folketinget",
+        "partier"
+      ],
+      "topicsCanonical": [
+        "Dansk politik",
+        "Christiansborg",
+        "politisk analyse",
+        "Folketinget",
+        "partier"
+      ],
+      "topicKeys": [
+        "dansk-politik",
+        "christiansborg",
+        "politisk-analyse",
+        "folketinget",
+        "partier"
+      ],
+      "topicEligible": true,
+      "genreEligible": true,
+      "recommendationMetadataEligible": true,
+      "metadataIssues": []
+    },
+    {
+      "id": "big picture",
+      "recommendationId": "rec-big-picture-d85c3671e15279c8499552ea8fdcbf69",
+      "recommendationIdentityBasis": "title+link",
+      "identityDuplicateGroup": "",
+      "title": "Big Picture",
+      "mainSeries": "",
+      "primaryGenreRaw": "Viden",
+      "primaryGenre": "Viden",
+      "primaryGenreValid": true,
+      "primaryGenreMappingType": "native",
+      "primaryGenreMappingSource": "Viden",
+      "primaryGenreNeedsReview": false,
+      "primaryGenreReviewReason": "",
+      "secondaryGenre": "Samfund",
+      "secondaryGenreValid": true,
+      "topicsRaw": [
+        "Makroøkonomi",
+        "investering",
+        "finansmarkeder",
+        "geopolitik",
+        "verdensøkonomi"
+      ],
+      "topicsCanonical": [
+        "Makroøkonomi",
+        "investering",
+        "finansmarkeder",
+        "geopolitik",
+        "verdensøkonomi"
+      ],
+      "topicKeys": [
+        "makrooekonomi",
+        "investering",
+        "finansmarkeder",
+        "geopolitik",
+        "verdensoekonomi"
+      ],
+      "topicEligible": true,
+      "genreEligible": true,
+      "recommendationMetadataEligible": true,
+      "metadataIssues": []
+    },
+    {
+      "id": "øje pa sagen",
+      "recommendationId": "rec-oeje-paa-sagen-c985456d21b28a5d7eca22588c3cdff8",
+      "recommendationIdentityBasis": "title+link",
+      "identityDuplicateGroup": "",
+      "title": "Øje på sagen",
+      "mainSeries": "",
+      "primaryGenreRaw": "Samfund",
+      "primaryGenre": "Samfund",
+      "primaryGenreValid": true,
+      "primaryGenreMappingType": "native",
+      "primaryGenreMappingSource": "Samfund",
+      "primaryGenreNeedsReview": false,
+      "primaryGenreReviewReason": "",
+      "secondaryGenre": "Dokumentar",
+      "secondaryGenreValid": true,
+      "topicsRaw": [
+        "Østjylland",
+        "lokale nyheder",
+        "aktuelle sager",
+        "undersøgende journalistik",
+        "samfundsforhold"
+      ],
+      "topicsCanonical": [
+        "Østjylland",
+        "lokale nyheder",
+        "aktuelle sager",
+        "undersøgende journalistik",
+        "samfundsforhold"
+      ],
+      "topicKeys": [
+        "oestjylland",
+        "lokale-nyheder",
+        "aktuelle-sager",
+        "undersoegende-journalistik",
+        "samfundsforhold"
+      ],
+      "topicEligible": true,
+      "genreEligible": true,
+      "recommendationMetadataEligible": true,
+      "metadataIssues": []
+    },
+    {
+      "id": "højtryk",
+      "recommendationId": "rec-hoejtryk-e8933f4132b04ddc7774c65839064af2",
+      "recommendationIdentityBasis": "title+link",
+      "identityDuplicateGroup": "",
+      "title": "Højtryk",
+      "mainSeries": "",
+      "primaryGenreRaw": "Samfund",
+      "primaryGenre": "Samfund",
+      "primaryGenreValid": true,
+      "primaryGenreMappingType": "native",
+      "primaryGenreMappingSource": "Samfund",
+      "primaryGenreNeedsReview": false,
+      "primaryGenreReviewReason": "",
+      "secondaryGenre": "Viden",
+      "secondaryGenreValid": true,
+      "topicsRaw": [
+        "International politik",
+        "geopolitik",
+        "globale udviklinger",
+        "menneskerettigheder",
+        "klima og udvikling"
+      ],
+      "topicsCanonical": [
+        "International politik",
+        "geopolitik",
+        "globale udviklinger",
+        "menneskerettigheder",
+        "klima og udvikling"
+      ],
+      "topicKeys": [
+        "international-politik",
+        "geopolitik",
+        "globale-udviklinger",
+        "menneskerettigheder",
+        "klima-og-udvikling"
+      ],
+      "topicEligible": true,
+      "genreEligible": true,
+      "recommendationMetadataEligible": true,
+      "metadataIssues": []
+    },
+    {
+      "id": "kendte kører syge biler med joachim stender",
+      "recommendationId": "rec-kendte-koerer-syge-biler-med-joachim-stender-2d09d7c9ebdd693aed41d7ade10d7442",
+      "recommendationIdentityBasis": "title+link",
+      "identityDuplicateGroup": "",
+      "title": "Kendte kører syge biler med Joachim Stender",
+      "mainSeries": "",
+      "primaryGenreRaw": "Underholdning",
+      "primaryGenre": "Underholdning",
+      "primaryGenreValid": true,
+      "primaryGenreMappingType": "native",
+      "primaryGenreMappingSource": "Underholdning",
+      "primaryGenreNeedsReview": false,
+      "primaryGenreReviewReason": "",
+      "secondaryGenre": "",
+      "secondaryGenreValid": true,
+      "topicsRaw": [
+        "Biler",
+        "bilkultur",
+        "kendte danskere",
+        "personlige interviews",
+        "livshistorier"
+      ],
+      "topicsCanonical": [
+        "Biler",
+        "bilkultur",
+        "kendte danskere",
+        "personlige interviews",
+        "livshistorier"
+      ],
+      "topicKeys": [
+        "biler",
+        "bilkultur",
+        "kendte-danskere",
+        "personlige-interviews",
+        "livshistorier"
       ],
       "topicEligible": true,
       "genreEligible": true,
