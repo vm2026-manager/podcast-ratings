@@ -99,11 +99,15 @@ jobs:
 
       - name: Read current catalogue PR head
         id: catalogue-pr
-        if: steps.create-pull-request.outputs.pull-request-number != ''
+        if: steps.catalogue.outputs.changed == 'true'
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          echo "head_sha=$(gh pr view \"${{ steps.create-pull-request.outputs.pull-request-number }}\" --json headRefOid --jq .headRefOid)" >> "$GITHUB_OUTPUT"
+          pr_json=$(gh pr list --base main --head automation/catalogue-sync --state open --json number,headRefOid --jq '.[0]')
+          if [ "$pr_json" != "null" ] && [ -n "$pr_json" ]; then
+            echo "number=$(echo "$pr_json" | jq -r .number)" >> "$GITHUB_OUTPUT"
+            echo "head_sha=$(echo "$pr_json" | jq -r .headRefOid)" >> "$GITHUB_OUTPUT"
+          fi
 
       - name: Start required regression check
         id: required-check
