@@ -879,6 +879,10 @@ const state = {
   exploreSuggestionDialogOpen: false,
   activeSuggestionEditId: null,
   userRatingsByKey: {},
+  // Every user-specific request captures this generation. It changes before a
+  // logout or account switch clears shared personalized state, so responses
+  // from the previous session cannot repopulate it.
+  userScopedRequestGeneration: 0,
   // Canonical catalogue ID -> raw user_ratings.podcast_key. This preserves an
   // existing legacy row when that user later edits or deletes their rating.
   userRatingPersistedKeyByCanonical: {},
@@ -7221,10 +7225,11 @@ async function fetchSavedPodcastRows() {
 }
 
 async function fetchUserState() {
+  const request = getUserScopedRequestContext();
   clearUserScopedState();
   state.personalizationUserStateStatus = "loading";
 
-  if (!state.supabase || !state.authUser) {
+  if (!state.supabase || !request.userId) {
     state.personalizationUserStateStatus = "ready";
     return;
   }
@@ -7235,6 +7240,8 @@ async function fetchUserState() {
         state.supabase.from("user_ratings").select("podcast_key, rating"),
         fetchSavedPodcastRows()
       ]);
+
+    if (!isCurrentUserScopedRequest(request)) return;
 
     if (ratingsError) {
       console.error(ratingsError);
@@ -7279,9 +7286,11 @@ async function fetchUserState() {
     }
     state.personalizationUserStateStatus = ratingsError || savedError ? "error" : "ready";
   } catch (error) {
+    if (!isCurrentUserScopedRequest(request)) return;
     state.personalizationUserStateStatus = "error";
     throw error;
   }
+  if (!isCurrentUserScopedRequest(request)) return;
   invalidateRankingListCache();
 }
 
@@ -7362,6 +7371,7 @@ async function initSupabase() {
     setAuthMessage("Supabase-session kunne ikke indlæses.", "error", "hero");
   }
 
+  invalidateUserScopedRequests();
   state.session = session;
   state.authUser = session?.user || null;
   syncRankingPositionModeForAuthUser();
@@ -7382,6 +7392,8 @@ async function initSupabase() {
       Boolean(previousUserId) &&
       previousUserId === nextUserId &&
       ["INITIAL_SESSION", "SIGNED_IN", "TOKEN_REFRESHED"].includes(event);
+
+    if (previousUserId !== nextUserId) invalidateUserScopedRequests();
 
     state.session = sessionUpdate;
     state.authUser = sessionUpdate?.user || null;
@@ -7481,8 +7493,10 @@ async function handleAuthAction(mode) {
       if (error) throw error;
       authenticationSucceeded = Boolean(data.session);
 
+      const nextUser = data.session?.user || data.user || state.authUser;
+      if (state.authUser?.id !== nextUser?.id) invalidateUserScopedRequests();
       state.session = data.session || state.session;
-      state.authUser = data.session?.user || data.user || state.authUser;
+      state.authUser = nextUser;
       if (data.session) {
         setAuthMessage("Din konto er oprettet, og du er nu logget ind.", "success", "hero");
         closeAuthDialog({ clearPending: false });
@@ -7505,8 +7519,10 @@ async function handleAuthAction(mode) {
       if (error) throw error;
       authenticationSucceeded = true;
 
+      const nextUser = data.session?.user || state.authUser;
+      if (state.authUser?.id !== nextUser?.id) invalidateUserScopedRequests();
       state.session = data.session || state.session;
-      state.authUser = data.session?.user || state.authUser;
+      state.authUser = nextUser;
       setAuthMessage("Du er nu logget ind.", "success", "hero");
       closeAuthDialog({ clearPending: false });
       renderAuthPanel();
@@ -7587,6 +7603,7 @@ async function handleLogout() {
     const { error } = await state.supabase.auth.signOut();
     if (error) throw error;
     clearTrackedAuthStorage();
+    invalidateUserScopedRequests();
     state.session = null;
     state.authUser = null;
     syncRankingPositionModeForAuthUser();
@@ -10411,7 +10428,8 @@ async function fetchEpisodeStatsForIds(ids, { force = false, podcastKey = "" } =
 
 async function fetchEpisodeUserRatingsForIds(ids, { force = false, podcastKey = "" } = {}) {
   const episodeState = podcastKey ? getPodcastEpisodeState(podcastKey) : getActivePodcastEpisodeState();
-  if (!state.supabase || !state.authUser) return;
+  const request = getUserScopedRequestContext();
+  if (!state.supabase || !request.userId) return;
 
   const queryIds = getEpisodeIdsForQuery(ids.map((id) => ({ id }))).filter((id) => {
     if (force) return true;
@@ -10419,7 +10437,8 @@ async function fetchEpisodeUserRatingsForIds(ids, { force = false, podcastKey = 
   });
   if (!queryIds.length) return;
 
-  queryIds.forEach((id) => episodeState.userRatingLoadingIds.add(id));
+  const loadingIds = episodeState.userRatingLoadingIds;
+  queryIds.forEach((id) => loadingIds.add(id));
   try {
     const { data, error } = await state.supabase
       .from("episode_ratings")
@@ -10428,6 +10447,7 @@ async function fetchEpisodeUserRatingsForIds(ids, { force = false, podcastKey = 
       .in("episode_id", queryIds);
 
     if (error) throw error;
+    if (!isCurrentUserScopedRequest(request)) return;
 
     const returnedIds = new Set();
     (data || []).forEach((item) => {
@@ -10442,9 +10462,9 @@ async function fetchEpisodeUserRatingsForIds(ids, { force = false, podcastKey = 
     });
     applyLegacyLocalEpisodeRatingFallback(podcastKey, queryIds.filter((id) => !returnedIds.has(id)));
   } catch (error) {
-    console.error(error);
+    if (isCurrentUserScopedRequest(request)) console.error(error);
   } finally {
-    queryIds.forEach((id) => episodeState.userRatingLoadingIds.delete(id));
+    queryIds.forEach((id) => loadingIds.delete(id));
   }
 }
 
@@ -10516,6 +10536,7 @@ async function fetchProfileEpisodeRatings({ append = false } = {}) {
   if (episodeRatings.loading || episodeRatings.loadingMore) return;
 
   const userId = state.authUser.id;
+  const request = getUserScopedRequestContext();
   if (!append && episodeRatings.loadedFor === userId && (episodeRatings.items.length || !episodeRatings.hasMore)) {
     updateProfileEpisodeRatingsSection();
     return;
@@ -10535,6 +10556,7 @@ async function fetchProfileEpisodeRatings({ append = false } = {}) {
       .range(offset, offset + PROFILE_EPISODE_RATINGS_PAGE_SIZE - 1);
 
     if (error) throw error;
+    if (!isCurrentUserScopedRequest(request)) return;
 
     const rows = data || [];
     const nextItems = append ? [...episodeRatings.items, ...rows] : rows;
@@ -10556,6 +10578,7 @@ async function fetchProfileEpisodeRatings({ append = false } = {}) {
         .in("id", ids);
 
       if (episodeError) throw episodeError;
+      if (!isCurrentUserScopedRequest(request)) return;
 
       (episodes || []).forEach((episode) => {
         const id = getEpisodeKey(episode);
@@ -10582,9 +10605,11 @@ async function fetchProfileEpisodeRatings({ append = false } = {}) {
       );
     }
   } catch (error) {
+    if (!isCurrentUserScopedRequest(request)) return;
     console.error(error);
     episodeRatings.error = "Dine episodevurderinger kunne ikke hentes lige nu.";
   } finally {
+    if (!isCurrentUserScopedRequest(request) || getProfileEpisodeRatingsState() !== episodeRatings) return;
     episodeRatings.loading = false;
     episodeRatings.loadingMore = false;
     updateProfileEpisodeRatingsSection();
@@ -15317,6 +15342,25 @@ function clearUserScopedState({ clearUi = false } = {}) {
   state.rankingListCacheVersion += 1;
 }
 
+function invalidateUserScopedRequests() {
+  state.userScopedRequestGeneration += 1;
+}
+
+function getUserScopedRequestContext() {
+  return {
+    userId: state.authUser?.id || "",
+    generation: state.userScopedRequestGeneration
+  };
+}
+
+function isCurrentUserScopedRequest(request) {
+  return Boolean(
+    request?.userId &&
+      state.authUser?.id === request.userId &&
+      state.userScopedRequestGeneration === request.generation
+  );
+}
+
 function getSuggestionDialogMarkup(titleId = "podcastSuggestionTitle") {
   return `
     <div class="explore-suggestion-dialog is-hidden" data-explore-suggest-dialog aria-hidden="true">
@@ -15664,6 +15708,7 @@ async function fetchProfileSuggestions() {
   if (!state.supabase || !state.authUser || state.profileSuggestionsLoading) return;
 
   const userId = state.authUser.id;
+  const request = getUserScopedRequestContext();
   state.profileSuggestionsLoading = true;
   state.profileSuggestionsError = "";
 
@@ -15683,17 +15728,20 @@ async function fetchProfileSuggestions() {
     }
 
     if (error) throw error;
+    if (!isCurrentUserScopedRequest(request)) return;
 
     state.profileSuggestions = data || [];
     state.profileSuggestionsLoadedFor = userId;
     renderSuggestionNotificationBadges();
   } catch (error) {
+    if (!isCurrentUserScopedRequest(request)) return;
     console.error(error);
     state.profileSuggestions = [];
     state.profileSuggestionsLoadedFor = userId;
     state.profileSuggestionsError =
       "Dine podcastforslag kunne ikke hentes lige nu.";
   } finally {
+    if (!isCurrentUserScopedRequest(request)) return;
     state.profileSuggestionsLoading = false;
     if (document.body.classList.contains("page-profil")) {
       const suggestionsSection = document.getElementById("profileSuggestions");
@@ -16081,6 +16129,7 @@ async function fetchPodcastSuggestionsForAdmin() {
 
   state.adminPodcastSuggestionsLoading = true;
   state.adminPodcastSuggestionsError = "";
+  const request = getUserScopedRequestContext();
   try {
     let { data, error } = await state.supabase
       .from("podcast_suggestions")
@@ -16093,16 +16142,19 @@ async function fetchPodcastSuggestionsForAdmin() {
         .order("created_at", { ascending: false }));
     }
     if (error) throw error;
+    if (!isCurrentUserScopedRequest(request)) return;
 
     state.adminPodcastSuggestions = data || [];
-    state.adminPodcastSuggestionsLoadedFor = state.authUser.id;
+    state.adminPodcastSuggestionsLoadedFor = request.userId;
     renderSuggestionNotificationBadges();
   } catch (error) {
+    if (!isCurrentUserScopedRequest(request)) return;
     console.error("Podcast suggestion admin fetch failed", error);
     state.adminPodcastSuggestions = [];
-    state.adminPodcastSuggestionsLoadedFor = state.authUser.id;
+    state.adminPodcastSuggestionsLoadedFor = request.userId;
     state.adminPodcastSuggestionsError = "Podcastforslag kunne ikke hentes lige nu.";
   } finally {
+    if (!isCurrentUserScopedRequest(request)) return;
     state.adminPodcastSuggestionsLoading = false;
     if (document.body.classList.contains("page-profil")) {
       renderAdminPodcastSuggestionsPreview(document);
