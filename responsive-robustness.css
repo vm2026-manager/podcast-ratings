@@ -109,3 +109,67 @@ html body :is(.desktop-header-search__input, .desktop-user-button__copy,
     gap: 12px !important;
   }
 }
+
+/* This file loads after the page-specific header rules. Keep the compact
+ * header deliberate here too, instead of letting the navigation drop to a
+ * separate row beside search at constrained CSS viewport widths. */
+@media (min-width: 901px) and (max-width: 1299.59px) {
+  html body:is(.page-forside, .page-ranglister, .page-udforsk, .page-profil) .page-shell > .topbar {
+    grid-template-columns: minmax(0, 1fr) max-content minmax(168px, 250px) !important;
+    grid-template-areas:
+      "brand nav account"
+      "search search search" !important;
+    grid-template-rows: 58px 52px !important;
+    column-gap: clamp(10px, 1.5vw, 18px) !important;
+    row-gap: 0 !important;
+    height: 110px !important;
+    min-height: 110px !important;
+    max-height: none !important;
+  }
+
+  html body:is(.page-forside, .page-ranglister, .page-udforsk, .page-profil) .page-shell > .topbar .sidebar-logo {
+    grid-area: brand !important;
+    min-width: 0 !important;
+  }
+
+  html body:is(.page-forside, .page-ranglister, .page-udforsk, .page-profil) .page-shell > .topbar .site-nav {
+    grid-area: nav !important;
+    justify-self: center !important;
+    width: max-content !important;
+    height: 58px !important;
+    min-height: 0 !important;
+    max-height: 58px !important;
+    display: flex !important;
+    flex-wrap: nowrap !important;
+    gap: clamp(9px, 1.5vw, 18px) !important;
+    white-space: nowrap !important;
+  }
+
+  html body:is(.page-forside, .page-ranglister, .page-udforsk, .page-profil) .page-shell > .topbar #desktopUserButton {
+    grid-area: account !important;
+    min-width: 0 !important;
+    width: min(100%, 250px) !important;
+    justify-self: end !important;
+  }
+
+  html body:is(.page-forside, .page-ranglister, .page-udforsk, .page-profil) .page-shell > .topbar #desktopHeaderSearch {
+    grid-area: search !important;
+    grid-column: 1 / -1 !important;
+    width: min(100%, 620px) !important;
+    min-width: 0 !important;
+    margin-inline: auto !important;
+    justify-self: center !important;
+  }
+}
+
+/* The existing compact search button takes over at this narrower desktop
+ * range, so remove the reserved second row rather than leaving blank header
+ * space below the coherent one-row controls. */
+@media (min-width: 901px) and (max-width: 1100px) {
+  html body:is(.page-forside, .page-ranglister, .page-udforsk, .page-profil) .page-shell > .topbar {
+    grid-template-areas: "brand nav account" !important;
+    grid-template-rows: 58px !important;
+    height: 58px !important;
+    min-height: 58px !important;
+  }
+}
