@@ -7322,9 +7322,12 @@ async function fetchSavedPodcastRows() {
   return { data: [], error: lastError };
 }
 
-async function fetchUserState() {
+async function fetchUserState(options = {}) {
+  const preserveCurrentState = Boolean(options.preserveCurrentState);
   const request = getUserScopedRequestContext();
-  clearUserScopedState();
+  if (!preserveCurrentState) {
+    clearUserScopedState();
+  }
   state.personalizationUserStateStatus = "loading";
 
   if (!state.supabase || !request.userId) {
@@ -7396,6 +7399,14 @@ async function refreshSupabaseState() {
   if (!state.supabase) return;
 
   await Promise.all([fetchCommunityStats(), fetchUserState()]);
+  rebuildUserRanks();
+  render();
+}
+
+async function refreshSupabaseStatePreservingCurrentUserState() {
+  if (!state.supabase) return;
+
+  await Promise.all([fetchCommunityStats(), fetchUserState({ preserveCurrentState: true })]);
   rebuildUserRanks();
   render();
 }
@@ -12614,7 +12625,9 @@ async function savePodcastDetailInlineRating(dialog, podcast, input, message) {
     render();
     refreshOpenPodcastDetailSheet();
     setAuthMessage("Din vurdering er gemt.", "success");
-    refreshSupabaseState().catch((refreshError) => console.error(refreshError));
+    refreshSupabaseStatePreservingCurrentUserState()
+      .then(refreshOpenPodcastDetailSheet)
+      .catch((refreshError) => console.error(refreshError));
   } catch (error) {
     console.error(error);
     if (message) {
@@ -12681,7 +12694,9 @@ function renderPodcastDetailSheetContent(
       : "";
   const userCountText = rating.userCount
     ? formatUserRatingCount(rating.userCount)
-    : "Ingen vurderinger endnu";
+    : state.communityStatsStatus === "loading" && !state.communityStatsHasSuccessfulLoad
+      ? "Indlæser brugervurderinger …"
+      : "Ingen vurderinger endnu";
   const episodeConfig = getEpisodePodcastConfig(podcast);
   if (episodeConfig?.persistence === "local") {
     const localEpisodeState = getPodcastEpisodeState(podcast);

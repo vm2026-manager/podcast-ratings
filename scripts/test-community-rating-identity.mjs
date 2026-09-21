@@ -17,7 +17,7 @@ const aliases = source.match(/const LEGACY_PODCAST_RATING_KEY_ALIASES = Object\.
 assert.ok(aliases);
 const medianoAliases = source.match(/const MEDIANO_LEGACY_CATALOGUE_CANONICAL_IDS = Object\.freeze\([\s\S]*?\n\}\);/);
 assert.ok(medianoAliases);
-const ids = ["bedraget", "bedraget pa hvidovre hospital", "super", "superligaens sandheder", "the super always rings twice", "bomben", "genvej", "kapret", "barn med den forkerte sæson 1", "barn med den forkerte sæson 2", "kvinden med den tunge kuffert", "kvinden med den tunge kuffert det sidste kapitel", "agenterne politiken", "agenterne ekstra bladet", "bjarne corydon", "fa mere eventyr ind i hverdagen", "christian fuhlendorff", "joachim b olsen", "helle thorning", "saddam hussein", "hvem bortførte vores børn", "anders fogh", "hva sa"];
+const ids = ["bedraget", "bedraget pa hvidovre hospital", "super", "superligaens sandheder", "the super always rings twice", "bomben", "genvej", "kapret", "barn med den forkerte sæson 1", "barn med den forkerte sæson 2", "kvinden med den tunge kuffert", "kvinden med den tunge kuffert det sidste kapitel", "agenterne politiken", "agenterne ekstra bladet", "bjarne corydon", "fa mere eventyr ind i hverdagen", "christian fuhlendorff", "joachim b olsen", "helle thorning", "saddam hussein", "hvem bortførte vores børn", "anders fogh", "hva sa", "112 for knuste hjerter"];
 const context = { console, state: { podcastById: Object.fromEntries(ids.map((podcastId) => [podcastId, { podcastId }])), podcastByLegacyKey: {}, userRatingPersistedKeyByCanonical: {}, userRatingsByKey: {} } };
 vm.createContext(context);
 vm.runInContext([aliases[0], medianoAliases[0], "function normalizeText(v) { return String(v ?? '').trim(); }", "function normalizeMatchKey(v) { return normalizeText(v).toLowerCase().normalize('NFD').replace(/[\\u0300-\\u036f]/g, '').replace(/&/g, ' og ').replace(/[^a-z0-9æøå]+/g, ' ').replace(/\\s+/g, ' ').trim(); }", "function parseNumber(v) { const n = Number(String(v ?? '').replace(',', '.')); return Number.isFinite(n) ? n : null; }", extract("getPodcastId"), extract("getLegacyPodcastKey"), extract("getPodcastKey"), extract("resolvePodcastByStoredKey"), extract("resolveCanonicalPodcastId"), extract("canonicalizeCommunityStats"), extract("canonicalizeUserRatingRows"), extract("getPersistedUserRatingKey"), extract("getUserRatingForPodcast")].join("\n\n"), context);
@@ -29,6 +29,11 @@ assert.equal(context.resolveCanonicalPodcastId("hva så"), "", "The duplicate hi
 for (const rows of [[{ podcast_key: "mørklagt hvem bortførte vores børn", average_rating: 8.5, rating_count: 1 }, { podcast_key: "hvem bortførte vores børn", average_rating: 8, rating_count: 1 }], [{ podcast_key: "hvem bortførte vores børn", average_rating: 8, rating_count: 1 }, { podcast_key: "mørklagt hvem bortførte vores børn", average_rating: 8.5, rating_count: 1 }]]) { const stat = context.canonicalizeCommunityStats(rows).statsByKey[ids[20]]; assert.equal(stat.averageRating, 8.25); assert.equal(stat.ratingCount, 2); }
 assert.equal(context.resolveCanonicalPodcastId("bedraget"), ids[0]);
 assert.equal(context.resolveCanonicalPodcastId(ids[1]), ids[1]);
+const legacy112Stat = context.canonicalizeCommunityStats([
+  { podcast_key: "112 for knuste hjerter", average_rating: 7, rating_count: 2 }
+]).statsByKey[ids[23]];
+assert.equal(legacy112Stat.averageRating, 7, "112 historical ratings resolve through its canonical ID");
+assert.equal(legacy112Stat.ratingCount, 2, "112 historical ratings retain their user count");
 let hydrated = context.canonicalizeUserRatingRows([{ podcast_key: "bedraget", rating: 8 }]);
 context.state.userRatingPersistedKeyByCanonical = hydrated.persistedKeyByCanonical;
 assert.equal(context.getPersistedUserRatingKey(ids[0]), "bedraget");
