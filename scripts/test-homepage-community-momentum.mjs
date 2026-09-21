@@ -18,7 +18,7 @@ function extractFunction(name) {
 
 const popularityScore = new Function(
   "parseNumber", "HOME_COMMUNITY_MIN_RATING",
-  `${extractFunction("getHomeCommunityPopularityScore")}\nreturn getHomeCommunityPopularityScore;`
+  `${extractFunction("getHomeCommunityPopularitySignals")}\n${extractFunction("getHomeCommunityPopularityScore")}\nreturn getHomeCommunityPopularityScore;`
 )(
   (value) => (Number.isFinite(Number(value)) ? Number(value) : null),
   6
@@ -46,12 +46,12 @@ assert.match(migration, /momentum_score/u);
 assert.match(app, /const HOME_POPULAR_CAROUSEL_POOL_LIMIT = 100;/u, "candidate pool removes the old top-20 bottleneck");
 assert.match(extractFunction("renderHomePopular"), /isMobileHome \? 14 : 15/u, "mobile and desktop counts remain unchanged");
 assert.match(extractFunction("selectHomeCommunityPopularCandidates"), /deprioritizeKeys/u, "hero podcasts remain de-prioritized");
-assert.match(extractFunction("selectHomeCommunityPopularCandidates"), /getExploreShuffleSeed/u, "selection is deterministic within a rotation key");
+assert.match(extractFunction("getHomeCommunityPopularSelection"), /getExploreShuffleSeed/u, "selection is deterministic within a rotation key");
 
 const selectCandidates = new Function(
   "getExploreHourBucket", "HOME_ROTATION_TOP_LIMIT", "getHomeCommunityPopularCandidatePools",
   "getHourlyRotationSeed", "getExploreShuffleSeed", "getPodcastKey", "arrangeWithoutAdjacentMainSeries",
-  `${extractFunction("selectHomeCommunityPopularCandidates")}\nreturn selectHomeCommunityPopularCandidates;`
+  `${extractFunction("selectHomeCommunityPopularCandidates")}\n${extractFunction("getHomeCommunityPopularSelection")}\nreturn selectHomeCommunityPopularCandidates;`
 )(
   () => "unused", 100, () => ({}),
   (_section, key) => String(key),

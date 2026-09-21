@@ -5029,6 +5029,13 @@ function isPodcastSuggestionAdmin() {
   return PODCAST_SUGGESTION_ADMIN_EMAILS.has(getCurrentUserEmail());
 }
 
+function isHomePopularDiagnosticsEnabled() {
+  return (
+    isPodcastSuggestionAdmin() &&
+    new URLSearchParams(window.location.search).get("debugPopular") === "1"
+  );
+}
+
 function getUnreadSuggestionItems() {
   const items = isPodcastSuggestionAdmin() ? state.adminPodcastSuggestions : state.profileSuggestions;
   return (items || []).filter((suggestion) => isPodcastSuggestionAdmin()
@@ -13734,11 +13741,12 @@ function renderHomePopular(container) {
     tertiary: candidatePools.tertiary.length
   };
   const allCandidates = Object.values(candidatePools).flat();
-  const popular = selectHomeCommunityPopularCandidates(desiredCount, {
+  const selection = getHomeCommunityPopularSelection(desiredCount, {
     hourKey: dayKey,
     deprioritizeKeys: heroKeys,
     candidatePools
   });
+  const popular = selection.selected;
 
   container.innerHTML = "";
   container.dataset.communityPrimaryCandidates = String(
@@ -13781,7 +13789,39 @@ function renderHomePopular(container) {
     );
   });
   container.appendChild(fragment);
+  if (isHomePopularDiagnosticsEnabled()) {
+    container.after(
+      createHomePopularDiagnosticPanel({ dayKey, desiredCount, heroKeys, candidatePools, selection })
+    );
+  }
   setupHomePopularIndicators(container, popular.length);
+}
+
+function createHomePopularDiagnosticPanel({ dayKey, desiredCount, heroKeys, candidatePools, selection }) {
+  const panel = document.createElement("aside");
+  panel.className = "home-popular-diagnostics";
+  panel.dataset.homePopularDiagnostics = "";
+  const candidates = selection.candidates || [];
+  const selected = selection.selected || [];
+  const selectedKeys = new Set(selected.map((candidate) => getPodcastKey(candidate.podcast)));
+  const candidateRanks = new Map(candidates.map((candidate, index) => [getPodcastKey(candidate.podcast), index + 1]));
+  const format = (value) => Number(value || 0).toFixed(3);
+  const row = (candidate, position = "—") => {
+    const podcast = candidate.podcast;
+    const key = getPodcastKey(podcast);
+    const inHero = heroKeys.has(key);
+    const selectedNow = selectedKeys.has(key);
+    const reason = selectedNow
+      ? inHero ? "Valgt som hero-fallback" : "Valgt af dagens vægtede rotation"
+      : inHero ? "Deprioriteret: allerede i hero" : "Ikke valgt af dagens vægtede rotation";
+    return `<tr><td>${escapeHtml(position)}</td><td><strong>${escapeHtml(podcast.title)}</strong><small>${escapeHtml(key)}</small></td><td>${format(candidate.popularityScore)}</td><td>${format(candidate.establishedScore)}</td><td>${format(candidate.momentumScore)}</td><td>${escapeHtml(formatCompactRating(candidate.communityRating))} / ${candidate.communityRatingCount}</td><td>${candidate.recentUsers7d} / ${candidate.recentUsers30d} / ${candidate.recentUsers90d}</td><td>${inHero ? "Ja" : "Nej"}</td><td>${escapeHtml(podcast.mainSeries || "—")}</td><td>#${candidateRanks.get(key) || "—"}</td><td>${escapeHtml(reason)}</td></tr>`;
+  };
+  const omitted = selection.weightedCandidates
+    .filter((candidate) => !selectedKeys.has(getPodcastKey(candidate.podcast)))
+    .slice(0, 25);
+  const poolSize = Object.values(candidatePools).flat().length;
+  panel.innerHTML = `<details open><summary>Intern diagnostic: Populært blandt brugere</summary><p class="home-popular-diagnostics__summary">Rotation: <b>${escapeHtml(dayKey)}</b> · Eligible: ${candidates.length} · Pool: ${poolSize} · Selected: ${selected.length}/${desiredCount} · Hero deprioriteret: ${heroKeys.size}</p><div class="home-popular-diagnostics__scroll"><table><caption>Valgte podcasts</caption><thead><tr><th>Pos.</th><th>Podcast / ID</th><th>Final</th><th>Established</th><th>Momentum</th><th>Snit / brugere</th><th>Seneste 7/30/90d</th><th>Hero</th><th>Serie</th><th>Score-rang</th><th>Status</th></tr></thead><tbody>${selected.map((candidate, index) => row(candidate, index + 1)).join("")}</tbody></table></div><details><summary>Top kandidater som ikke blev vist (${omitted.length})</summary><div class="home-popular-diagnostics__scroll"><table><tbody>${omitted.map((candidate) => row(candidate)).join("")}</tbody></table></div></details></details>`;
+  return panel;
 }
 
 function setupHomeCarouselIndicators(
@@ -19927,9 +19967,15 @@ function getHomeCommunityCandidateLevel(communityRating, communityRatingCount) {
 }
 
 function getHomeCommunityPopularityScore(stat) {
+  return getHomeCommunityPopularitySignals(stat).popularityScore;
+}
+
+function getHomeCommunityPopularitySignals(stat) {
   const rating = parseNumber(stat?.averageRating);
   const ratingCount = Math.max(0, Number(stat?.ratingCount || 0));
-  if (rating === null || ratingCount < 1) return 0;
+  if (rating === null || ratingCount < 1) {
+    return { establishedScore: 0, momentumScore: 0, popularityScore: 0 };
+  }
 
   // Established signal: quality above the public eligibility floor and a
   // capped logarithmic user-count contribution. Momentum is intentionally
@@ -19947,7 +19993,11 @@ function getHomeCommunityPopularityScore(stat) {
   const momentum =
     (weightedMomentum / (weightedMomentum + 3)) * Math.min(1, ratingCount / 2);
 
-  return established * 0.4 + momentum * 0.6;
+  return {
+    establishedScore: established,
+    momentumScore: momentum,
+    popularityScore: established * 0.4 + momentum * 0.6
+  };
 }
 
 function getHomeCommunityPopularCandidatePools(
@@ -19972,11 +20022,15 @@ function getHomeCommunityPopularCandidatePools(
 
     if (!candidateLevel) return;
 
+    const signals = getHomeCommunityPopularitySignals(stat);
     pools[candidateLevel].push({
       podcast,
       communityRating,
       communityRatingCount,
-      popularityScore: getHomeCommunityPopularityScore(stat),
+      recentUsers7d: Math.max(0, Number(stat?.recentUsers7d || 0)),
+      recentUsers30d: Math.max(0, Number(stat?.recentUsers30d || 0)),
+      recentUsers90d: Math.max(0, Number(stat?.recentUsers90d || 0)),
+      ...signals,
       candidateLevel
     });
   });
@@ -20008,8 +20062,19 @@ function selectHomeCommunityPopularCandidates(
     candidatePools = null
   } = {}
 ) {
+  return getHomeCommunityPopularSelection(count, { hourKey, deprioritizeKeys, candidatePools }).selected;
+}
+
+function getHomeCommunityPopularSelection(
+  count,
+  {
+    hourKey = getExploreHourBucket(),
+    deprioritizeKeys = new Set(),
+    candidatePools = null
+  } = {}
+) {
   const targetCount = Math.max(0, Math.floor(Number(count) || 0));
-  if (!targetCount) return [];
+  if (!targetCount) return { selected: [], candidates: [], weightedCandidates: [] };
 
   const pools =
     candidatePools ||
@@ -20023,7 +20088,7 @@ function selectHomeCommunityPopularCandidates(
         b.communityRatingCount - a.communityRatingCount
     );
   const seed = getHourlyRotationSeed("home-community-popular", hourKey);
-  const selected = candidates
+  const weightedCandidates = candidates
     .map((candidate) => {
       // Efraimidis-Spirakis weighted sampling produces a deterministic daily
       // selection that favors stronger candidates without freezing the list.
@@ -20031,11 +20096,10 @@ function selectHomeCommunityPopularCandidates(
       return { candidate, priority: -Math.log(random) / Math.max(0.05, candidate.popularityScore) };
     })
     .sort((a, b) => a.priority - b.priority)
-    .map(({ candidate }) => candidate);
-  const preferred = selected.filter((candidate) => !deprioritizeKeys.has(getPodcastKey(candidate.podcast)));
-  const rotated = (preferred.length >= targetCount ? preferred : preferred.concat(selected.filter((candidate) => deprioritizeKeys.has(getPodcastKey(candidate.podcast))))).slice(0, targetCount);
-
-  return arrangeWithoutAdjacentMainSeries(
+    .map(({ candidate, priority }, index) => ({ ...candidate, rotationPriority: priority, rotationRank: index + 1 }));
+  const preferred = weightedCandidates.filter((candidate) => !deprioritizeKeys.has(getPodcastKey(candidate.podcast)));
+  const rotated = (preferred.length >= targetCount ? preferred : preferred.concat(weightedCandidates.filter((candidate) => deprioritizeKeys.has(getPodcastKey(candidate.podcast))))).slice(0, targetCount);
+  const selected = arrangeWithoutAdjacentMainSeries(
     rotated,
     seed,
     {
@@ -20043,6 +20107,7 @@ function selectHomeCommunityPopularCandidates(
       circular: true
     }
   );
+  return { selected, candidates, weightedCandidates };
 }
 
 function getHomeHeroPodcasts(
