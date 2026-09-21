@@ -3,6 +3,17 @@ html body .home-podcast-search { display: none; }
 html body .mobile-home-search-overlay { display: none; }
 
 @media (max-width: 768px) {
+  html body.page-ranglister .ranking-source-field:not(.ranking-user-sort-field):not(.ranking-own-sort-field) .ranking-source-toggle {
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  }
+
+  html body.page-ranglister .ranking-source-field:not(.ranking-user-sort-field):not(.ranking-own-sort-field) .ranking-source-button {
+    min-height: 44px !important;
+    padding-inline: 5px !important;
+    font-size: 0.7rem !important;
+    white-space: normal !important;
+  }
+
   html body.mobile-home-search-overlay-open.page-forside .mobile-home-search-overlay {
     position: fixed;
     z-index: 5000;

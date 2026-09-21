@@ -25,7 +25,7 @@ const INITIAL_VISIBLE_COUNT = 24;
 const MOBILE_RANKING_BATCH_SIZE = 20;
 const MOBILE_RANKING_TAIL_SIZE = 50;
 const DESKTOP_RANKING_BATCH_SIZE = 24;
-const VALID_RANKING_SOURCES = new Set(["mads", "users"]);
+const VALID_RANKING_SOURCES = new Set(["mads", "users", "mine"]);
 const VALID_LANGUAGE_FILTERS = new Set(["all", "danish", "english"]);
 const PODCAST_DATA_REFRESH_INTERVAL_MS = 60 * 60 * 1000;
 const HOME_HERO_COVER_COUNT = 12;
@@ -936,6 +936,7 @@ const state = {
   rankingSourceTouched: false,
   userRankingSort: "rating",
   userRankingDirection: "desc",
+  ownRatingDirection: "desc",
   sort: "placement-asc",
   sortTouched: false,
   profilePreferences: readProfilePreferences(),
@@ -3842,6 +3843,9 @@ function invalidateRankingListCache() {
 }
 
 function getPodcastRatingForActiveSource(podcast) {
+  if (state.rankingSource === "mine") {
+    return getEffectiveOwnRatingForRanking(podcast);
+  }
   if (podcast?.isDisplayGroup) {
     return state.rankingSource === "users"
       ? parseNumber(podcast.userAverageRating)
@@ -3854,6 +3858,15 @@ function getPodcastRatingForActiveSource(podcast) {
   }
 
   return parseNumber(podcast.ratingValue);
+}
+
+function getEffectiveOwnRatingForRanking(podcast) {
+  if (!isLoggedIn() || !podcast) return null;
+  if (podcast.isDisplayGroup) {
+    const members = podcast.displayGroupMembers || getDisplayGroupMemberPodcasts(podcast);
+    return parseNumber(getDisplayGroupOwnRatingStats(members).average);
+  }
+  return parseNumber(getUserRatingForPodcast(podcast));
 }
 
 function getCommunityRatingCount(podcast) {
@@ -3920,6 +3933,7 @@ function clearRankingFilters() {
     state.userRankingSort = "rating";
     state.userRankingDirection = "desc";
   }
+  if (state.rankingSource === "mine") state.ownRatingDirection = "desc";
   if (elements.searchInput) {
     elements.searchInput.value = "";
   }
@@ -4003,6 +4017,7 @@ function getRankingListCacheKey() {
     state.rankingSource,
     hasDesktopUserRankingSort() ? state.userRankingSort : "",
     hasDesktopUserRankingSort() ? state.userRankingDirection : "",
+    hasDesktopOwnRatingSort() ? state.ownRatingDirection : "",
     state.sort,
     activeFilter,
     getExactPublisherFilterToken(state.activePublisherFilter),
@@ -4104,6 +4119,9 @@ function getFilteredPodcasts() {
 
   const filtered = getRankingCandidates()
     .filter((podcast) => {
+      if (state.rankingSource === "mine" && getEffectiveOwnRatingForRanking(podcast) === null) {
+        return false;
+      }
       if (
         state.activePublisherFilter &&
         !publisherMatchesExactFilter(podcast.publisher, state.activePublisherFilter)
@@ -4177,6 +4195,7 @@ function getFilteredPodcasts() {
     })
     .sort((a, b) => {
       const usesDesktopUserRankingSort = hasDesktopUserRankingSort();
+      const usesDesktopOwnRatingSort = hasDesktopOwnRatingSort();
       const isUserCountSort = usesDesktopUserRankingSort && state.userRankingSort === "count";
       const isUserSortAscending = usesDesktopUserRankingSort && state.userRankingDirection === "asc";
 
@@ -4214,6 +4233,9 @@ function getFilteredPodcasts() {
         if (usesDesktopUserRankingSort) {
           return isUserSortAscending ? ratingDelta : -ratingDelta;
         }
+        if (usesDesktopOwnRatingSort) {
+          return state.ownRatingDirection === "asc" ? ratingDelta : -ratingDelta;
+        }
         return state.sort === "placement-desc" ? ratingDelta : -ratingDelta;
       }
 
@@ -4231,7 +4253,7 @@ function comparePodcastsByActiveRankingOrder(a, b) {
     return state.sort === "placement-desc" ? bRank - aRank : aRank - bRank;
   }
 
-  const placementDelta = a.placement - b.placement;
+  const placementDelta = Number(a.placement || Number.MAX_SAFE_INTEGER) - Number(b.placement || Number.MAX_SAFE_INTEGER);
   if (placementDelta !== 0) {
     return state.sort === "placement-desc" ? -placementDelta : placementDelta;
   }
@@ -4517,13 +4539,24 @@ function updateRankingSourceUi() {
     if (button.dataset.rankingSource === "mads") {
       button.setAttribute("aria-label", "Podcastlisten");
     }
+    if (button.dataset.rankingSource === "mine") {
+      button.setAttribute("aria-label", "Min vurdering");
+      button.disabled = !isLoggedIn();
+      button.setAttribute("aria-disabled", String(!isLoggedIn()));
+    }
   });
 
   const showUserSort = isDesktopRankingViewport();
   const userSortEnabled = showUserSort && state.rankingSource === "users";
+  const ownSortEnabled = showUserSort && state.rankingSource === "mine";
   if (elements.rankingUserSortField) {
-    elements.rankingUserSortField.hidden = !showUserSort;
-    elements.rankingUserSortField.setAttribute("aria-hidden", String(!showUserSort));
+    elements.rankingUserSortField.hidden = !userSortEnabled;
+    elements.rankingUserSortField.setAttribute("aria-hidden", String(!userSortEnabled));
+  }
+  const ownSortField = document.querySelector("[data-ranking-own-sort-field]");
+  if (ownSortField) {
+    ownSortField.hidden = !ownSortEnabled;
+    ownSortField.setAttribute("aria-hidden", String(!ownSortEnabled));
   }
 
   elements.rankingUserSortButtons?.forEach((button) => {
@@ -4532,6 +4565,14 @@ function updateRankingSourceUi() {
     button.setAttribute("aria-pressed", String(active));
     button.disabled = !userSortEnabled;
     button.setAttribute("aria-disabled", String(!userSortEnabled));
+  });
+
+  document.querySelectorAll("[data-ranking-own-sort]").forEach((button) => {
+    const direction = button.dataset.rankingOwnSort;
+    const active = ownSortEnabled && direction === state.ownRatingDirection;
+    button.hidden = !ownSortEnabled;
+    button.classList.toggle("active", active);
+    button.setAttribute("aria-pressed", String(active));
   });
 }
 
@@ -4551,6 +4592,11 @@ function scheduleRankingSourceGridRender() {
 
 function handleRankingSourceChange(source) {
   const nextSource = normalizeRankingSource(source) || "mads";
+  if (nextSource === "mine" && !isLoggedIn()) {
+    updateRankingSourceUi();
+    return;
+  }
+
   if (state.rankingSource === nextSource) {
     updateRankingSourceUi();
     return;
@@ -6147,7 +6193,9 @@ function getMobileRankingRatingParts(podcast) {
   const key = getPodcastKey(podcast);
   const communityStat = getCommunityStat(key);
   const primary =
-    state.rankingSource === "users"
+    state.rankingSource === "mine"
+      ? { label: "Min vurdering", value: getEffectiveOwnRatingForRanking(podcast) }
+      : state.rankingSource === "users"
       ? {
           label: "Brugere",
           value: hasCommunityRating(communityStat) ? communityStat.averageRating : null
@@ -6174,7 +6222,14 @@ function getMobileRankingScoreFields(podcast) {
   const key = getPodcastKey(podcast);
   const communityStat = getCommunityStat(key);
   const primary =
-    state.rankingSource === "users"
+    state.rankingSource === "mine"
+      ? {
+          label: "Min",
+          value: getEffectiveOwnRatingForRanking(podcast),
+          type: "primary",
+          source: "mine"
+        }
+      : state.rankingSource === "users"
       ? {
           label: "Brugere",
           value: hasCommunityRating(communityStat) ? communityStat.averageRating : null,
@@ -6236,6 +6291,10 @@ function hasDesktopUserRankingSort() {
   return isDesktopRankingViewport() && state.rankingSource === "users";
 }
 
+function hasDesktopOwnRatingSort() {
+  return isDesktopRankingViewport() && state.rankingSource === "mine";
+}
+
 function syncDesktopRankingSearchPlacement() {
   const searchStrip = document.querySelector(".ranking-search-strip");
   const mainColumn = document.querySelector(".ranking-main-column");
@@ -6269,13 +6328,16 @@ function getDesktopRankingScore(podcast) {
     ? { averageRating: podcast.userAverageRating, ratingCount: podcast.userRatingCount }
     : getCommunityStat(getPodcastKey(podcast));
   const isUserRanking = state.rankingSource === "users";
-  const value = isUserRanking
+  const isOwnRanking = state.rankingSource === "mine";
+  const value = isOwnRanking
+    ? getEffectiveOwnRatingForRanking(podcast)
+    : isUserRanking
     ? parseNumber(communityStat?.averageRating ?? podcast.userAverageRating)
     : parseNumber(podcast.ratingValue);
 
   return {
-    label: isUserRanking ? "Brugernes vurdering" : "Podcastlistens vurdering",
-    sourceLabel: isUserRanking ? "Brugere" : "Podcastlisten",
+    label: isOwnRanking ? "Min vurdering" : isUserRanking ? "Brugernes vurdering" : "Podcastlistens vurdering",
+    sourceLabel: isOwnRanking ? "Min vurdering" : isUserRanking ? "Brugere" : "Podcastlisten",
     value,
     showCount: isUserRanking,
     count: isUserRanking
@@ -6285,9 +6347,7 @@ function getDesktopRankingScore(podcast) {
 }
 
 function getDesktopRankingOwnScore(podcast) {
-  if (podcast?.isDisplayGroup) return null;
-  if (!isLoggedIn()) return null;
-  return parseNumber(getUserRatingForPodcast(podcast));
+  return getEffectiveOwnRatingForRanking(podcast);
 }
 
 function getDesktopRankingUserCountText(score) {
@@ -6700,6 +6760,8 @@ function updateDesktopRankingSourceContext() {
   const sourceText =
     state.rankingSource === "users"
       ? "\u2605 Baseret p\u00e5 brugernes vurderinger"
+      : state.rankingSource === "mine"
+        ? "\u2605 Baseret p\u00e5 dine vurderinger"
       : "\u2605 Baseret p\u00e5 Podcastlistens vurderinger";
   note.textContent = sourceText;
 
@@ -6835,9 +6897,14 @@ function renderDesktopRanking(podcasts) {
   const activeScoreLabel =
     state.rankingSource === "users"
       ? "Brugernes vurdering"
+      : state.rankingSource === "mine"
+        ? "Min vurdering"
       : "Podcastlistens vurdering";
-  const canToggleUserSortDirection = state.rankingSource === "users";
-  const userSortDirection = state.userRankingDirection === "asc" ? "asc" : "desc";
+  const canToggleUserSortDirection = state.rankingSource === "users" || state.rankingSource === "mine";
+  const userSortDirection =
+    state.rankingSource === "mine"
+      ? state.ownRatingDirection === "asc" ? "asc" : "desc"
+      : state.userRankingDirection === "asc" ? "asc" : "desc";
   const showsCards = state.desktopRankingLayout === "cards";
 
   if (showsCards) {
@@ -6886,7 +6953,11 @@ function renderDesktopRanking(podcasts) {
   elements.podcastGrid.appendChild(table);
 
   table.querySelector("[data-ranking-user-direction-toggle]")?.addEventListener("click", () => {
-    state.userRankingDirection = state.userRankingDirection === "asc" ? "desc" : "asc";
+    if (state.rankingSource === "mine") {
+      state.ownRatingDirection = state.ownRatingDirection === "asc" ? "desc" : "asc";
+    } else {
+      state.userRankingDirection = state.userRankingDirection === "asc" ? "desc" : "asc";
+    }
     resetVisibleCount();
     renderPodcastGrid();
   });
@@ -14921,7 +14992,10 @@ function renderPodcastGrid() {
   if (!filtered.length) {
     const empty = document.createElement("div");
     empty.className = "empty-state";
-    empty.textContent = "Ingen podcasts matcher den valgte kombination af filtre.";
+    empty.textContent =
+      state.rankingSource === "mine" && isLoggedIn() && state.minimumRating === 0 && !state.searchTerm && !state.activeFilter && !state.activePublisherFilter && !state.activeMainSeriesFilter && !state.freeOnly && state.languageFilter === "all"
+        ? "Du har ikke vurderet nogen podcasts endnu."
+        : "Ingen podcasts matcher den valgte kombination af filtre.";
     elements.podcastGrid.appendChild(empty);
   } else if (isDesktopRankingViewport()) {
     renderDesktopRanking(visible);
@@ -23040,6 +23114,18 @@ function setupEvents() {
       resetVisibleCount();
       updateRankingSourceUi();
       updateMobileRankingFilterUi();
+      renderPodcastGrid();
+    });
+  });
+
+  document.querySelectorAll("[data-ranking-own-sort]").forEach((button) => {
+    button.addEventListener("click", () => {
+      if (!hasDesktopOwnRatingSort()) return;
+      const direction = button.dataset.rankingOwnSort;
+      if (direction !== "asc" && direction !== "desc" || state.ownRatingDirection === direction) return;
+      state.ownRatingDirection = direction;
+      resetVisibleCount();
+      updateRankingSourceUi();
       renderPodcastGrid();
     });
   });
