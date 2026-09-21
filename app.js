@@ -1044,6 +1044,7 @@ const state = {
   lastSuccessfulPodcastDataRefreshAt: 0,
   exploreUnderratedHourBucket: null,
   homeHeroHourBucket: null,
+  homeHeroNavigationKeys: [],
   homeHeroRotationTimer: null
 };
 
@@ -6954,10 +6955,21 @@ function escapeAttributeSelectorValue(value) {
 function setFavoriteButtonState(button, isFavorite, isPending = false) {
   if (!button) return;
 
+  const isDetailHeaderFavorite = button.classList.contains(
+    "podcast-detail-sheet__header-favorite"
+  );
+  const detailHeaderActionLabel = isFavorite ? "Fjern fra gemte" : "Gem til senere";
   button.classList.toggle("is-saved", isFavorite);
   button.classList.toggle("is-pending", isPending);
   button.disabled = Boolean(isPending);
-  button.setAttribute("aria-label", isFavorite ? "Gemt til senere" : "Gem til senere");
+  button.setAttribute(
+    "aria-label",
+    isDetailHeaderFavorite ? detailHeaderActionLabel : isFavorite ? "Gemt til senere" : "Gem til senere"
+  );
+  if (isDetailHeaderFavorite) {
+    button.title = detailHeaderActionLabel;
+    button.dataset.tooltip = detailHeaderActionLabel;
+  }
   button.setAttribute("aria-pressed", String(Boolean(isFavorite)));
   const detailSubtitle = button.querySelector("[data-favorite-subtitle]");
   const favoriteLabel = detailSubtitle
@@ -12251,7 +12263,7 @@ function renderPodcastDisplayGroupContent(dialog, displayGroup) {
   content.innerHTML = `
     <header class="podcast-detail-sheet__header">
       <div class="podcast-detail-sheet__cover"><img class="podcast-detail-sheet__image" alt="" loading="lazy" /></div>
-      <div class="podcast-detail-sheet__intro"><div class="podcast-detail-sheet__intro-actions"><span class="podcast-detail-sheet__header-action-icons"><button class="favorite-button podcast-detail-sheet__header-favorite" type="button" data-podcast-detail-favorite aria-label="Gem podcast"><span aria-hidden="true"></span></button></span></div><h2 id="podcastDetailTitle">${escapeHtml(displayGroup.title)}</h2><p class="podcast-detail-sheet__meta">${escapeHtml(metadata.host || metadata.publisher || `${members.length} vurderede sæsoner`)}</p><div class="podcast-detail-sheet__chips"><span class="podcast-detail-sheet__episode-entry"><button class="podcast-detail-sheet__episode-entry-button" type="button" data-podcast-seasons-open aria-describedby="podcastSeasonEntryTooltip"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="3" width="14" height="18" rx="2"></rect><path d="M9 8h6M9 12h6M9 16h4"></path></svg><span>Vurder sæsoner</span></button><span class="podcast-detail-sheet__episode-entry-tooltip" id="podcastSeasonEntryTooltip" role="tooltip">Se alle sæsoner og bedøm dem én for én.</span></span>${metadata.genre ? `<button class="podcast-detail-sheet__genre" type="button" data-podcast-detail-filter="genre" data-value="${escapeHtml(metadata.genre)}">${escapeHtml(metadata.genre)}</button>` : ""}${metadata.publisher ? `<button class="podcast-detail-sheet__chip podcast-detail-sheet__publisher" type="button" data-podcast-detail-filter="publisher" data-value="${escapeHtml(metadata.publisher)}">${escapeHtml(metadata.publisher)}</button>` : ""}</div><section class="podcast-detail-sheet__description podcast-detail-sheet__description--desktop"><h3>Om podcasten</h3><p>${escapeHtml(description)}</p></section></div>
+      <div class="podcast-detail-sheet__intro"><div class="podcast-detail-sheet__intro-actions"><span class="podcast-detail-sheet__header-action-icons"><button class="favorite-button podcast-detail-sheet__header-favorite" type="button" data-podcast-detail-favorite aria-label="Gem til senere" title="Gem til senere" data-tooltip="Gem til senere"><span aria-hidden="true"></span></button></span></div><h2 id="podcastDetailTitle">${escapeHtml(displayGroup.title)}</h2><p class="podcast-detail-sheet__meta">${escapeHtml(metadata.host || metadata.publisher || `${members.length} vurderede sæsoner`)}</p><div class="podcast-detail-sheet__chips"><span class="podcast-detail-sheet__episode-entry"><button class="podcast-detail-sheet__episode-entry-button" type="button" data-podcast-seasons-open aria-describedby="podcastSeasonEntryTooltip"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="3" width="14" height="18" rx="2"></rect><path d="M9 8h6M9 12h6M9 16h4"></path></svg><span>Vurder sæsoner</span></button><span class="podcast-detail-sheet__episode-entry-tooltip" id="podcastSeasonEntryTooltip" role="tooltip">Se alle sæsoner og bedøm dem én for én.</span></span>${metadata.genre ? `<button class="podcast-detail-sheet__genre" type="button" data-podcast-detail-filter="genre" data-value="${escapeHtml(metadata.genre)}">${escapeHtml(metadata.genre)}</button>` : ""}${metadata.publisher ? `<button class="podcast-detail-sheet__chip podcast-detail-sheet__publisher" type="button" data-podcast-detail-filter="publisher" data-value="${escapeHtml(metadata.publisher)}">${escapeHtml(metadata.publisher)}</button>` : ""}</div><section class="podcast-detail-sheet__description podcast-detail-sheet__description--desktop"><h3>Om podcasten</h3><p>${escapeHtml(description)}</p></section></div>
       <section class="podcast-detail-sheet__description podcast-detail-sheet__description--mobile"><h3>Om podcasten</h3><p data-podcast-detail-description>${escapeHtml(description)}</p><button class="podcast-detail-sheet__description-toggle" type="button" data-podcast-detail-description-toggle aria-expanded="false">Læs mere</button></section>
     </header>
     <section class="podcast-detail-sheet__ratings" aria-label="Vurderinger">
@@ -12619,7 +12631,7 @@ function renderPodcastDetailSheetContent(
   const externalLinkMarkup = hasLink
     ? `<a class="podcast-detail-sheet__header-link" href="${escapeHtml(podcast.link)}" target="_blank" rel="noopener noreferrer" aria-label="Link til podcasten" title="Link til podcasten" data-tooltip="Link til podcasten"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 5h5v5M19 5l-9 9"></path><path d="M19 14v4a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1h4"></path></svg></a>`
     : "";
-  const headerActionMarkup = `<span class="podcast-detail-sheet__header-action-icons"><button class="favorite-button podcast-detail-sheet__header-favorite" type="button" data-podcast-detail-favorite aria-label="Gem podcast"><span aria-hidden="true"></span></button>${externalLinkMarkup}</span>`;
+  const headerActionMarkup = `<span class="podcast-detail-sheet__header-action-icons"><button class="favorite-button podcast-detail-sheet__header-favorite" type="button" data-podcast-detail-favorite aria-label="Gem til senere" title="Gem til senere" data-tooltip="Gem til senere"><span aria-hidden="true"></span></button>${externalLinkMarkup}</span>`;
   const reviewStatusMarkup = hasPodcastlistenReview
     ? `<button class="podcast-detail-sheet__review-status" type="button" data-podcast-detail-review><span class="podcast-detail-sheet__review-status-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="5" y="3" width="14" height="18" rx="2"></rect><path d="M8 8h8M8 12h8M8 16h5"></path></svg></span><span><strong>Podcastlisten har anmeldt</strong><small>Læs den redaktionelle anmeldelse</small></span></button>`
     : `<div class="podcast-detail-sheet__review-status" aria-label="Ingen anmeldelse endnu"><span class="podcast-detail-sheet__review-status-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="5" y="3" width="14" height="18" rx="2"></rect><path d="M8 8h8M8 12h8M8 16h5"></path></svg></span><span><strong>Ingen anmeldelse endnu</strong><small>Podcastlisten har ikke anmeldt podcasten</small></span></div>`;
@@ -13157,7 +13169,10 @@ function createHomePopularCardElement(podcast, options = {}) {
   card.setAttribute("aria-label", `Åbn detaljer om ${podcast.title}`);
 
   const openPodcastDetails = () => {
-    openPodcastDetailSheet(podcast, card, { allowDesktop: true });
+    openPodcastDetailSheet(podcast, card, {
+      allowDesktop: true,
+      navigationKeys: options.navigationKeys
+    });
   };
 
   card.addEventListener("click", (event) => {
@@ -13748,6 +13763,7 @@ function renderHomePopular(container) {
     candidatePools
   });
   const popular = selection.selected;
+  const navigationKeys = popular.map((candidate) => getPodcastKey(candidate.podcast)).filter(Boolean);
 
   container.innerHTML = "";
   container.dataset.communityPrimaryCandidates = String(
@@ -13785,7 +13801,8 @@ function renderHomePopular(container) {
   popular.forEach((candidate) => {
     fragment.appendChild(
       createHomePopularCardElement(candidate.podcast, {
-        candidateLevel: candidate.candidateLevel
+        candidateLevel: candidate.candidateLevel,
+        navigationKeys
       })
     );
   });
@@ -20219,6 +20236,7 @@ function updateHomeHeroCovers({ force = false } = {}) {
   }
 
   const podcasts = getHomeHeroPodcasts(hourBucket);
+  state.homeHeroNavigationKeys = podcasts.map(getPodcastKey).filter(Boolean);
 
   for (let index = 0; index < HOME_HERO_COVER_COUNT; index += 1) {
     setHomeHeroCover(
@@ -22133,7 +22151,10 @@ function renderRoute() {
           const podcastKey = cover.dataset.podcastKey;
           const podcast = podcastKey ? state.podcastByKey[podcastKey] : null;
           if (!podcast) return;
-          openPodcastDetailSheet(podcast, cover, { allowDesktop: true });
+          openPodcastDetailSheet(podcast, cover, {
+            allowDesktop: true,
+            navigationKeys: state.homeHeroNavigationKeys
+          });
         });
       });
 
