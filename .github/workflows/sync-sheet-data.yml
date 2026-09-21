@@ -7,6 +7,7 @@ on:
 
 permissions:
   contents: write
+  pull-requests: write
 
 concurrency:
   group: sync-podcast-sheet-data
@@ -73,8 +74,40 @@ jobs:
           node scripts/test-current-podcast-similarity-product-v1.3.mjs
           node scripts/validate-recommendation-product-sync.mjs
 
-      - name: Commit updated JSON files
-        uses: stefanzweifel/git-auto-commit-action@v5
+      - name: Create or update catalogue-sync pull request
+        id: create-pull-request
+        if: steps.catalogue.outputs.changed == 'true'
+        uses: peter-evans/create-pull-request@v7
         with:
-          commit_message: "chore: sync podcast data from Google Sheets"
-          file_pattern: data/podcasts.json data/featured-reviews.json data/explore-clusters.json data/recommendation-metadata.json data/podcast-similarity-product-v1.3.json
+          token: ${{ github.token }}
+          branch: automation/catalogue-sync
+          base: main
+          title: Sync Podcastlisten catalogue
+          commit-message: "chore: sync podcast data from Google Sheets"
+          body: |
+            Automated, validated catalogue sync from the public Podcastlisten Google Sheet.
+
+            The normal Critical Regression Gate must pass before this PR can merge.
+          add-paths: |
+            data/podcasts.json
+            data/featured-reviews.json
+            data/explore-clusters.json
+            data/recommendation-metadata.json
+            data/podcast-similarity-product-v1.3.json
+
+      - name: Enable automatic merge after required checks
+        if: steps.create-pull-request.outputs.pull-request-number != ''
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_URL: ${{ steps.create-pull-request.outputs.pull-request-url }}
+        run: |
+          set +e
+          gh pr merge --auto --merge "$PR_URL"
+          status=$?
+          set -e
+          if [ "$status" -ne 0 ]; then
+            echo "::warning::Could not enable auto-merge for $PR_URL. The validated PR remains open for normal review/merge."
+            echo "Auto-merge could not be enabled for $PR_URL; the PR remains open." >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "Auto-merge enabled for $PR_URL after required checks pass." >> "$GITHUB_STEP_SUMMARY"
+          fi
