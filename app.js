@@ -121,17 +121,21 @@ const MEDIANO_LEGACY_CATALOGUE_CANONICAL_IDS = Object.freeze({
 
 // Local-only canonical catalogue addition. Its title, publisher, genre, public
 // feed, and Jennings source page are all present in the reviewed Mediano
-// routing/migration material; optional editorial fields intentionally remain
-// absent rather than being invented from a legacy episode row.
+// routing/migration material; their editorial descriptions are reviewed
+// catalogue copy, while their identities and manual episodes remain unchanged.
 const LOCAL_CANONICAL_CATALOGUE_ROWS = Object.freeze([{
   "Podcast-ID": "magasinet jennings",
   Titel: "Magasinet Jennings",
   Genre: "Sport",
   Udgiver: "Mediano",
   Link: "https://www.mediano.nu/oversigt/tag/Jennings",
-  Feed: "https://www.spreaker.com/show/6169233/episodes/feed"
+  Feed: "https://www.spreaker.com/show/6169233/episodes/feed",
+  "Kort beskrivelse": "Medianos kritiske magasin om fodbolden uden for banen – blandt andet FIFA, sportspolitik, ejerskaber, betting og forholdet mellem sport og samfund.",
+  "Lang beskrivelse": "Magasinet Jennings er opkaldt efter den undersøgende journalist Andrew Jennings. Formatet behandler de store historier uden for selve fodboldbanen kritisk, nysgerrigt og grundigt – blandt andet FIFA og VM, sportspolitik, fodboldens ejerskaber, betting og ludomani samt sportens rolle i samfundet."
 }, {
   "Podcast-ID": "mediano special", Titel: "Mediano Special", Genre: "Sport", Udgiver: "Mediano",
+  "Kort beskrivelse": "Medianos specialudsendelser, der går i dybden med en aktuel sag, klub eller historie fra fodboldens verden.",
+  "Lang beskrivelse": "Mediano Special samler udsendelser, hvor Mediano sætter ekstra tid af til én konkret historie. Det kan være en klub i forandring, ejerskab og strategi, talentudvikling, stadionprojekter eller andre aktuelle fodboldhistorier, som bliver foldet ud med interviews, analyse og perspektiv.",
   manualEpisodes: [
     "Sagen om de 15 point, forsvandt fra i lommen af Den Gamle Dame",
     {
@@ -141,12 +145,18 @@ const LOCAL_CANONICAL_CATALOGUE_ROWS = Object.freeze([{
   ]
 }, {
   "Podcast-ID": "transfer special", Titel: "Transfer Special", Genre: "Sport", Udgiver: "Mediano",
+  "Kort beskrivelse": "Medianos transferserie, hvor eksperter går klubberne efter i sømmene og ser på handler, økonomi, strategi, talentplan og den sportslige retning.",
+  "Lang beskrivelse": "Transfer Special går i dybden med klubbernes arbejde på transfermarkedet. Medianos eksperter ser ikke kun på køb og salg, men også på økonomi, strategi, brugen af egne talenter og hvor klubben er på vej hen.",
   manualEpisodes: ["Her er vores bud på de ti spillere, har været de største transfersucceser i Superligaen"]
 }, {
   "Podcast-ID": "bruchmann ringer til", Titel: "Brüchmann ringer til", Genre: "Sport", Udgiver: "Mediano",
+  "Kort beskrivelse": "Peter Brüchmann ringer til profiler i og omkring Superligaen til samtaler om klubber, ledelse, trænerarbejde og aktuelle fodboldspørgsmål.",
+  "Lang beskrivelse": "Brüchmann ringer til er Medianos interviewformat om Superligaen, hvor Peter Brüchmann taler med direktører, sportsdirektører, trænere og andre profiler i og omkring ligaen. Udsendelserne kan være et længere enkeltinterview eller et mere magasinagtigt format med flere samtaler og går tæt på klubbernes retning, strategi, transfers og sportslige valg.",
   manualEpisodes: ["Kristjaan Speakmann"]
 }, {
   "Podcast-ID": "der var engang et mal", Titel: "Der var engang et mål", Genre: "Sport", Udgiver: "Mediano",
+  "Kort beskrivelse": "Medianos serie om ikoniske scoringer og historierne omkring dem – med analyse, fodboldhistorie og kontekst.",
+  "Lang beskrivelse": "Der var engang et mål tager udgangspunkt i en mindeværdig scoring og bruger den som indgang til en større fodboldhistorie. Værter og eksperter genbesøger kampens og spillerens betydning, den taktiske detalje og den tid, klub eller kultur som målet blev en del af.",
   manualEpisodes: ["Der var engang et mål...af Peter Møller mod Farum"]
 }]);
 
@@ -2403,6 +2413,16 @@ function applyLocalCoverManifest(podcasts, manifestLookup) {
     const variants = getManifestVariantEntries(entry);
 
     podcast.localCoverVariants = variants;
+    const manifestOriginalImageUrl = normalizeImageSource(entry?.originalImageUrl);
+    const podcastImageUrl = normalizeImageSource(podcast.image);
+    const manualOverride = entry?.manualOverride === true || normalizeText(entry?.sourceKind).toLowerCase() === "manual";
+    podcast.preferExternalCoverSource = Boolean(
+      variants.length &&
+      /^https?:\/\//i.test(podcastImageUrl) &&
+      manifestOriginalImageUrl &&
+      podcastImageUrl !== manifestOriginalImageUrl &&
+      !manualOverride
+    );
     podcast.needsCoverPlaceholder = Boolean(entry?.needsPlaceholder || entry?.needs_placeholder);
     podcast.coverQualityCategory = normalizeText(
       entry?.qualityCategory || entry?.quality_category || entry?.category
@@ -2581,11 +2601,11 @@ function getImageCandidates(image, alt = "") {
   const sources = Array.isArray(image) ? image : [image];
   let responsiveMeta = null;
 
-  sources.forEach((source) => {
+  sources.forEach((source, index) => {
     const src = normalizeImageSource(source);
     if (!src) return;
 
-    if (!responsiveMeta) {
+    if (!responsiveMeta && index === 0) {
       responsiveMeta = getResponsiveCoverMeta(src);
     }
 
@@ -2628,12 +2648,16 @@ function getPodcastImageSources(podcast) {
     ? podcast.localCoverVariants.map((variant) => variant.path)
     : [];
 
+  const externalSources = [
+    podcast.image,
+    ...(Array.isArray(podcast.imageFallbacks) ? podcast.imageFallbacks : [])
+  ];
+
   return Array.from(
     new Set(
       [
-        ...localSources,
-        podcast.image,
-        ...(Array.isArray(podcast.imageFallbacks) ? podcast.imageFallbacks : [])
+        ...(podcast.preferExternalCoverSource ? externalSources : localSources),
+        ...(podcast.preferExternalCoverSource ? localSources : externalSources)
       ]
         .map(normalizeText)
         .filter(Boolean)
