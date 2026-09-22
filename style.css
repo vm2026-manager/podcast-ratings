@@ -23350,6 +23350,11 @@ html body.page-profil .profile-suggestion-action--danger {
     padding-bottom: calc(88px + env(safe-area-inset-bottom)) !important;
   }
 
+  /* The page shell owns the fixed-nav clearance; keep only normal list spacing here. */
+  html body.page-ranglister .ranking-layout {
+    padding-bottom: 20px !important;
+  }
+
   html body .content-shell,
   html body #pageIntroPanel {
     min-height: 0 !important;
