@@ -86,8 +86,8 @@ assert.equal(agenterne.length, 2, "Agenterne must remain two canonical podcasts"
 const ekstraBladet = agenterne.find((podcast) => podcast.podcastId === "agenterne ekstra bladet");
 const politiken = agenterne.find((podcast) => podcast.podcastId === "agenterne politiken");
 assert.ok(ekstraBladet && politiken, "Both canonical Agenterne IDs must exist");
-assert.equal(resolveLocalCover(ekstraBladet)?.stableKey, "agenterne-99488435eb");
-assert.equal(resolveLocalCover(politiken), null, "Ambiguous title fallback must not assign Ekstra Bladet's cover");
+assert.equal(resolveLocalCover(politiken)?.stableKey, "agenterne-99488435eb");
+assert.equal(resolveLocalCover(ekstraBladet), null, "Ambiguous title fallback must not assign Politiken's cover");
 assert.notEqual(ekstraBladet.image, politiken.image, "Each Agenterne row keeps its own external fallback");
 
 ["Genstart", "Kapret", "Robert og Thetanerne"].forEach((title) => {
