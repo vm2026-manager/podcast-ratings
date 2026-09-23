@@ -1,6 +1,7 @@
 // Shared editorial registry for the public Mediano umbrella source. A destination
 // is enabled only when its stable Podcast-ID exists in the public catalogue.
 export const PUBLIC_MEDIANO_RSS_URL = "https://www.spreaker.com/show/6169233/episodes/feed";
+export const MEDIANO_SITE_RSS_URL = "https://www.mediano.nu/oversigt?format=rss";
 
 const enabled = (key, canonicalTitle, podcastKey, aliases) => ({ key, canonicalTitle, podcastKey, aliases, status: "enabled" });
 const pending = (key, canonicalTitle, proposedPodcastKey, aliases) => ({ key, canonicalTitle, podcastKey: null, proposedPodcastKey, aliases, status: "pending_catalogue" });
@@ -13,7 +14,7 @@ export const MEDIANO_PUBLIC_ROUTE_DEFINITIONS = [
   enabled("superliga_preview", "Superliga Preview", "superliga preview", ["Superliga Preview"]),
   enabled("superliga_for_voksne", "Superliga for voksne", "superliga for voksne", ["Superliga for Voksne"]),
   enabled("klub_mediano", "Klub Mediano", "klub mediano", ["Klub Mediano"]),
-  enabled("mediano_landshold", "Mediano Landshold", "mediano landshold", ["Mediano Landshold", "Landshold Special"]),
+  enabled("mediano_landshold", "Mediano Landshold", "mediano landshold", ["Mediano Landshold", "Landshold Special", "Landshold Preview"]),
   enabled("mediano_breaking", "Mediano Breaking", "mediano breaking", ["Mediano Breaking"]),
   enabled("fodbold_90erne", "Fodbold var bedre i 90'erne", "fodbold var bedre i 90 erne", ["Fodbold var bedre i 90'erne", "Fodbold var bedre i 90’erne"]),
   enabled("fredagsfrokosten", "Fredagsfrokosten", "fredagsfrokosten", ["Fredagsfrokosten"]),
@@ -38,7 +39,10 @@ export const MEDIANO_PUBLIC_ROUTE_DEFINITIONS = [
   enabled("fodbold_70erne", "Fodbold var værre i 70'erne", "fodbold var værre i 70 erne", ["Fodbold var værre i 70'erne", "Fodbold var værre i 70’erne"]),
   skipped("fodboldministeriet_source_overlap", "Fodboldministeriet", ["Fodboldministeriet"], "has_dedicated_feed"),
   enabled("magasinet_jennings", "Magasinet Jennings", "magasinet jennings", ["Magasinet Jennings", "Jennings", "Jennings Ekstra"]),
-  pending("bruchmann_ringer_til", "Brüchmann ringer til", "bruchmann ringer til", ["Brüchmann ringer til", "Bruchmann ringer til"]),
+  // These are verified site titles. Do not route on a person's name alone.
+  enabled("troels_bech_i_en_samtale", "Troels Bech i en samtale", "troels bech i en samtale", ["Troels Bech i en samtale", "Troels Bech i en samtale med Thomas Thomasberg", "Landsholdets analytiker: Mounir Akhiat"]),
+  enabled("transfer_special", "Transfer Special", "transfer special", ["Transfer Special"]),
+  enabled("bruchmann_ringer_til", "Brüchmann ringer til", "bruchmann ringer til", ["Brüchmann ringer til", "Bruchmann ringer til"]),
   pending("der_var_engang_et_maal", "Der var engang et mål", "der var engang et mal", ["Der var engang et mål"]),
   pending("fodboldens_kongeraekke", "Fodboldens Kongerække", "fodboldens kongeraekke", ["Fodboldens Kongerække"]),
   pending("vm_showet", "VM Showet", "vm showet", ["VM Showet"]),
@@ -96,15 +100,14 @@ export function buildMedianoPublicFeedRoutes() {
   }));
 }
 
-// Design-only interface. It deliberately carries the *name* of an Edge Function
-// secret, not its value, and is not registered in FEED_CONFIGS. Activation must
-// wait for private-audio authorization/redaction support in the importer/UI.
-export const STOT_MEDIANO_RSS_URL_ENV = "STOT_MEDIANO_RSS_URL";
+// Operational description for the public site RSS. The importer enforces
+// metadata-only rows so subscriber audio can never be persisted.
 export function describeStotMedianoSource() {
   return {
-    source: "mediano_stot_rss",
-    feed_url_env: STOT_MEDIANO_RSS_URL_ENV,
+    source: "mediano_site_rss",
+    feed_url: MEDIANO_SITE_RSS_URL,
     routes: buildMedianoPublicFeedRoutes(),
-    activation: "blocked_pending_private_audio_authorization"
+    metadata_only: true,
+    activation: "enabled_metadata_only"
   };
 }

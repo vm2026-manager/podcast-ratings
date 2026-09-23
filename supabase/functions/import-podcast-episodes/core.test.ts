@@ -1,5 +1,5 @@
 import { assertEquals } from "https://deno.land/std@0.224.0/assert/mod.ts";
-import { runEpisodeImport, runEpisodeImports, selectAppleFeedKeys, selectNormalFeedKeys, selectNormalFeedShard, validateImportRequest, type ImportRepository, type PodcastEpisodeRow } from "./core.ts";
+import { mapEpisodes, parseFeed, runEpisodeImport, runEpisodeImports, selectAppleFeedKeys, selectNormalFeedKeys, selectNormalFeedShard, validateImportRequest, type ImportRepository, type PodcastEpisodeRow } from "./core.ts";
 import { FEED_CONFIGS, type FeedConfigMap } from "./feed-config.ts";
 
 const RSS = "<rss><channel><title>Test</title><item><guid>episode-1</guid><title>Episode</title></item></channel></rss>";
@@ -66,9 +66,66 @@ Deno.test("enabled Mediano public appears exactly once in normal all-feed shards
   const shards = [0, 1, 2, 3, 4, 5].map((shardIndex) => selectNormalFeedShard(FEED_CONFIGS, shardIndex, 6));
 
   assertEquals(normalKeys.includes("mediano_public"), true);
+  assertEquals(normalKeys.includes("mediano_site"), true);
   assertEquals(shards.flat().filter((feedKey) => feedKey === "mediano_public").length, 1);
   assertEquals(normalKeys.filter((feedKey) => feedKey !== "mediano_public"), beforeActivation);
   assertEquals(normalKeys.filter((feedKey) => FEED_CONFIGS[feedKey].format === "apple_podcasts_html"), []);
+});
+
+Deno.test("Mediano site imports are metadata-only and retain an overlapping public episode", async () => {
+  const writes: PodcastEpisodeRow[][] = [];
+  let observedUrls: string[] = [];
+  let observedSources: string[] = [];
+  const repository: ImportRepository = {
+    createImportRun: async () => ({ id: "site-run" }),
+    loadExistingEpisodes: async (_source, _guids, urls = [], sources = []) => {
+      observedUrls = urls;
+      observedSources = sources;
+      return [{
+        podcast_key: "troels bech i en samtale",
+        source: "mediano_public_rss",
+        external_guid: "public-guid",
+        external_episode_id: null,
+        title: "Troels Bech i en samtale med Thomas Thomasberg",
+        description: null,
+        published_at: "2022-10-11T00:00:00.000Z",
+        duration_seconds: null,
+        episode_url: "https://www.mediano.nu/oversigt/troels-thomasberg",
+        audio_url: "https://public.example/audio.mp3",
+        image_url: null,
+        is_active: true,
+        metadata: {}
+      }];
+    },
+    upsertEpisodes: async (rows) => { writes.push(rows); },
+    updateImportRun: async () => undefined
+  };
+  const feedConfigs: FeedConfigMap = {
+    mediano_site: {
+      podcast_key: "mediano superliga",
+      source: "mediano_site_rss",
+      feed_url: "https://example.test/mediano-site",
+      metadata_only: true,
+      dedupe_by_episode_url_with_sources: ["mediano_public_rss"],
+      routes: [{ key: "troels", podcast_key: "troels bech i en samtale", title: { prefixes: ["Troels Bech i en samtale med Thomas Thomasberg"] } }]
+    }
+  };
+  const result = await runEpisodeImport({
+    feedKey: "mediano_site",
+    feedConfigs,
+    repository,
+    fetchText: async () => "<rss><channel><title>Mediano</title><item><guid>site-guid</guid><title>Troels Bech i en samtale med Thomas Thomasberg</title><link>https://www.mediano.nu/oversigt/troels-thomasberg</link><enclosure url=\"https://private.example/audio.mp3\" /></item></channel></rss>",
+    now: () => "2026-09-23T00:00:00.000Z"
+  });
+
+  assertEquals(observedUrls, ["https://www.mediano.nu/oversigt/troels-thomasberg"]);
+  assertEquals(observedSources, ["mediano_public_rss"]);
+  assertEquals(writes, []);
+  assertEquals(result.inserted_count, 0);
+  assertEquals(result.details.routing?.cross_source_url_duplicate_count, 1);
+  const mapped = mapEpisodes(parseFeed("<rss><channel><title>Mediano</title><item><guid>metadata-only</guid><title>Troels Bech i en samtale med Thomas Thomasberg</title><enclosure url=\"https://private.example/audio.mp3\" /></item></channel></rss>"), feedConfigs.mediano_site, "2026-09-23T00:00:00.000Z");
+  assertEquals(mapped.episodes[0].audio_url, null);
+  assertEquals(mapped.episodes[0].metadata.metadata_only, true);
 });
 
 Deno.test("single-feed requests remain compatible and shards are limited to feed=all", async () => {

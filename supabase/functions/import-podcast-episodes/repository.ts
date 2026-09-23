@@ -28,7 +28,7 @@ export function createSupabaseImportRepository(client: any): ImportRepository {
       return { id: data.id };
     },
 
-    async loadExistingEpisodes(source: string, externalGuids: string[]) {
+    async loadExistingEpisodes(source: string, externalGuids: string[], episodeUrls: string[] = [], additionalSources: string[] = []) {
       const rows: PodcastEpisodeRow[] = [];
       for (const guidBatch of chunk(externalGuids, BATCH_SIZE)) {
         const { data, error } = await client
@@ -38,6 +38,19 @@ export function createSupabaseImportRepository(client: any): ImportRepository {
           .in("external_guid", guidBatch);
         if (error) throw new Error("Existing episode select failed");
         rows.push(...(data || []));
+      }
+      // Supplemental sources are deduplicated only against their explicitly
+      // configured primary sources, through the canonical public page URL.
+      if (episodeUrls.length && additionalSources.length) {
+        for (const urlBatch of chunk(episodeUrls, BATCH_SIZE)) {
+          const { data, error } = await client
+            .from("podcast_episodes")
+            .select(SELECT_FIELDS)
+            .in("source", additionalSources)
+            .in("episode_url", urlBatch);
+          if (error) throw new Error("Cross-source episode select failed");
+          rows.push(...(data || []));
+        }
       }
       return rows;
     },
