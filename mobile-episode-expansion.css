@@ -138,6 +138,13 @@
     color: #e65a1d;
     font: 800 .82rem/1.2 "Manrope", sans-serif;
   }
+  html body #podcastDetailSheet.is-episode-workspace .podcast-detail-sheet__episode-editorial-score {
+    display: block;
+    margin-top: 4px;
+    color: #75675d;
+    font: 750 .74rem/1.25 "Manrope", sans-serif;
+  }
+  html body #podcastDetailSheet.is-episode-workspace .podcast-detail-sheet__episode-editorial-score strong { color: #342a24; }
   html body #podcastDetailSheet.is-episode-workspace .podcast-detail-sheet__episode-source-score {
     display: inline-flex !important;
     align-items: baseline !important;

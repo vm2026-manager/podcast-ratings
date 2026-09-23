@@ -34,6 +34,8 @@
   html body #podcastDetailSheet.is-episode-workspace .episode-publication-date-header,
   html body #podcastDetailSheet.is-episode-workspace .episode-publication-date-cell { white-space: nowrap !important; }
   html body #podcastDetailSheet.is-episode-workspace .episode-title { display: block !important; min-width: 0 !important; max-width: 100% !important; font: 800 1.08rem/1.38 "Manrope", sans-serif !important; overflow-wrap: anywhere; }
+  html body #podcastDetailSheet.is-episode-workspace .podcast-detail-sheet__episode-editorial-score { display: block; margin-top: 5px; color: #786d64; font: 750 .8rem/1.25 "Manrope", sans-serif; }
+  html body #podcastDetailSheet.is-episode-workspace .podcast-detail-sheet__episode-editorial-score strong { color: #332922; }
   html body #podcastDetailSheet.is-episode-workspace .episode-title--long { font-size: 1rem !important; }
   html body #podcastDetailSheet.is-episode-workspace .episode-title--very-long { font-size: .94rem !important; }
   html body #podcastDetailSheet.is-episode-workspace .podcast-detail-sheet__episode-source-score > strong,
@@ -70,6 +72,7 @@
   html body #podcastDetailSheet.is-episode-workspace .podcast-detail-sheet__episode-own-score,
   html body #podcastDetailSheet.is-episode-workspace .podcast-detail-sheet__episode-own-score > strong { font-size: .94rem !important; }
   html body #podcastDetailSheet.is-episode-workspace .episode-title { display: block !important; min-width: 0 !important; max-width: 100% !important; font: 800 1rem/1.35 "Manrope", sans-serif !important; overflow-wrap: anywhere; }
+  html body #podcastDetailSheet.is-episode-workspace .podcast-detail-sheet__episode-editorial-score { display: block; margin-top: 4px; color: #786d64; font: 750 .75rem/1.25 "Manrope", sans-serif; }
   html body #podcastDetailSheet.is-episode-workspace .episode-title--long { font-size: .94rem !important; }
   html body #podcastDetailSheet.is-episode-workspace .episode-title--very-long { font-size: .9rem !important; }
   html body #podcastDetailSheet.is-episode-workspace .podcast-detail-sheet__episode-workspace-title { font-size: 1.15rem !important; }
