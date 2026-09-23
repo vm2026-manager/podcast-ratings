@@ -23,8 +23,10 @@ assert.equal(routePublicMedianoTitle("Brüchmann ringer til #7: Gæst").route.po
 assert.equal(routePublicMedianoTitle("Bruchmann ringer til #7: Gæst").route.podcastId, "bruchmann ringer til");
 assert.equal(routePublicMedianoTitle("Transfer Special#2: AGF").route.podcastId, "transfer special");
 assert.equal(routePublicMedianoTitle("Troels Bech i en samtale med Thomas Thomasberg").route.podcastId, "troels bech i en samtale");
+assert.equal(routePublicMedianoTitle("Troels Bech i en samtale med Nadia Nadim").route.podcastId, "troels bech i en samtale");
 assert.equal(routePublicMedianoTitle("Landsholdets analytiker: Mounir Akhiat").route.podcastId, "troels bech i en samtale");
 assert.equal(routePublicMedianoTitle("Troels Bech analyserer landsholdet").status, "unmatched");
+assert.equal(routePublicMedianoTitle("Mediano Special: Troels Bech i en samtale med Nadia Nadim").status, "unmatched");
 for (const title of [
   "PL PREVIEW: Optakt til runden",
   "Premier League Update #8: Transfer",

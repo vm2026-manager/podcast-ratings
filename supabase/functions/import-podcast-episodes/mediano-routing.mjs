@@ -3,7 +3,7 @@
 export const PUBLIC_MEDIANO_RSS_URL = "https://www.spreaker.com/show/6169233/episodes/feed";
 export const MEDIANO_SITE_RSS_URL = "https://www.mediano.nu/oversigt?format=rss";
 
-const enabled = (key, canonicalTitle, podcastKey, aliases) => ({ key, canonicalTitle, podcastKey, aliases, status: "enabled" });
+const enabled = (key, canonicalTitle, podcastKey, aliases, literalStarts = []) => ({ key, canonicalTitle, podcastKey, aliases, literalStarts, status: "enabled" });
 const pending = (key, canonicalTitle, proposedPodcastKey, aliases) => ({ key, canonicalTitle, podcastKey: null, proposedPodcastKey, aliases, status: "pending_catalogue" });
 const skipped = (key, canonicalTitle, aliases, reason) => ({ key, canonicalTitle, podcastKey: null, aliases, status: "skip", reason });
 
@@ -40,7 +40,7 @@ export const MEDIANO_PUBLIC_ROUTE_DEFINITIONS = [
   skipped("fodboldministeriet_source_overlap", "Fodboldministeriet", ["Fodboldministeriet"], "has_dedicated_feed"),
   enabled("magasinet_jennings", "Magasinet Jennings", "magasinet jennings", ["Magasinet Jennings", "Jennings", "Jennings Ekstra"]),
   // These are verified site titles. Do not route on a person's name alone.
-  enabled("troels_bech_i_en_samtale", "Troels Bech i en samtale", "troels bech i en samtale", ["Troels Bech i en samtale", "Troels Bech i en samtale med Thomas Thomasberg", "Landsholdets analytiker: Mounir Akhiat"]),
+  enabled("troels_bech_i_en_samtale", "Troels Bech i en samtale", "troels bech i en samtale", ["Troels Bech i en samtale", "Troels Bech i en samtale med Thomas Thomasberg", "Landsholdets analytiker: Mounir Akhiat"], ["Troels Bech i en samtale med "]),
   enabled("transfer_special", "Transfer Special", "transfer special", ["Transfer Special"]),
   enabled("bruchmann_ringer_til", "Brüchmann ringer til", "bruchmann ringer til", ["Brüchmann ringer til", "Bruchmann ringer til"]),
   pending("der_var_engang_et_maal", "Der var engang et mål", "der var engang et mal", ["Der var engang et mål"]),
@@ -86,7 +86,11 @@ export function matchesExplicitTitlePrefix(title, aliases) {
 }
 
 export function routeMedianoPublicTitle(title, definitions = MEDIANO_PUBLIC_ROUTE_DEFINITIONS) {
-  const matches = definitions.filter((definition) => matchesExplicitTitlePrefix(title, definition.aliases));
+  const normalizedTitle = normalizeMedianoText(title);
+  const matches = definitions.filter((definition) => (
+    matchesExplicitTitlePrefix(title, definition.aliases)
+    || definition.literalStarts?.some((prefix) => normalizedTitle.startsWith(prefix.toLocaleLowerCase("da-DK")))
+  ));
   if (matches.length === 1) return { status: matches[0].podcastKey ? "routed" : "known_no_destination", route: matches[0] };
   if (matches.length > 1) return { status: "ambiguous", routes: matches };
   return { status: "unmatched", routes: [] };
@@ -96,7 +100,14 @@ export function buildMedianoPublicFeedRoutes() {
   return MEDIANO_PUBLIC_ROUTE_DEFINITIONS.map((definition) => ({
     key: definition.key,
     podcast_key: definition.podcastKey,
-    title: { prefixes: definition.aliases }
+    title: {
+      prefixes: definition.aliases,
+      // Deliberately scoped to the verified Troels title convention. Other
+      // Mediano routes retain their strict separator-bound prefix behavior.
+      ...(definition.literalStarts?.length
+        ? { startsWith: definition.literalStarts }
+        : {})
+    }
   }));
 }
 

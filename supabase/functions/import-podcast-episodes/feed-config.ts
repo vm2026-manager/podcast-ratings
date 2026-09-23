@@ -9,6 +9,9 @@ export type FeedRouteMatcher = {
   aliases?: string[];
   // Prefixes require a title-start match and an explicit title separator.
   prefixes?: string[];
+  // Literal starts are reserved for verified series conventions that continue
+  // in prose rather than with an explicit title separator.
+  startsWith?: string[];
 };
 
 export type FeedRoute = {
