@@ -28,7 +28,7 @@ export function createSupabaseImportRepository(client: any): ImportRepository {
       return { id: data.id };
     },
 
-    async loadExistingEpisodes(source: string, externalGuids: string[]) {
+    async loadExistingEpisodes(source: string, externalGuids: string[], episodeUrls: string[] = [], additionalSources: string[] = [], podcastKeys: string[] = []) {
       const rows: PodcastEpisodeRow[] = [];
       for (const guidBatch of chunk(externalGuids, BATCH_SIZE)) {
         const { data, error } = await client
@@ -39,7 +39,34 @@ export function createSupabaseImportRepository(client: any): ImportRepository {
         if (error) throw new Error("Existing episode select failed");
         rows.push(...(data || []));
       }
-      return rows;
+      // Supplemental sources are deduplicated only against their explicitly
+      // configured primary sources, through exact canonical URL equality.
+      if (episodeUrls.length && additionalSources.length) {
+        for (const urlBatch of chunk(episodeUrls, BATCH_SIZE)) {
+          const { data, error } = await client
+            .from("podcast_episodes")
+            .select(SELECT_FIELDS)
+            .in("source", additionalSources)
+            .in("episode_url", urlBatch);
+          if (error) throw new Error("Cross-source episode select failed");
+          rows.push(...(data || []));
+        }
+      }
+      // The source URLs intentionally differ between Spreaker and Mediano's
+      // site feed. Load only the routed parent keys so core can apply its
+      // exact title + publication-date identity check without fuzzy matching.
+      if (podcastKeys.length && additionalSources.length) {
+        const { data, error } = await client
+          .from("podcast_episodes")
+          .select(SELECT_FIELDS)
+          .in("source", additionalSources)
+          .in("podcast_key", podcastKeys);
+        if (error) throw new Error("Cross-source episode identity select failed");
+        rows.push(...(data || []));
+      }
+      return [...new Map(
+        rows.map((row) => [`${row.source}\u0000${row.external_guid}`, row]),
+      ).values()];
     },
 
     async upsertEpisodes(rows: PodcastEpisodeRow[]) {

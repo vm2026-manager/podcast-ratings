@@ -12,7 +12,7 @@ const expectedMedianoIds = [
   "mediano 1 division", "superliga for voksne", "mediano q", "mediano business",
   "mediano bossword", "mediano breaking", "fodbold var værre i 70 erne", "minimax",
   "mediano marketing", "souplesse", "klub mediano", "mediano 2 division",
-  "mediano sport og perspektiv", "magasinet jennings"
+  "mediano sport og perspektiv", "magasinet jennings", "troels bech i en samtale"
 ];
 
 const configStart = app.indexOf("const MEDIANO_EPISODE_DESTINATIONS");
@@ -50,7 +50,7 @@ for (const id of expectedMedianoIds) {
   assert.equal(config.source, "mediano_public_rss", `${id} must read only public Mediano feed rows`);
 }
 
-assert.equal(context.MEDIANO_EPISODE_DESTINATIONS.length, 31, "approved Mediano destinations plus reviewed dormant series are configured");
+assert.equal(context.MEDIANO_EPISODE_DESTINATIONS.length, 32, "approved Mediano destinations plus reviewed dormant series are configured");
 assert.equal(context.MEDIANO_EPISODE_PODCAST_CONFIG["superliga for voksne"].includeManualEpisodes, true);
 assert.equal(context.MEDIANO_EPISODE_PODCAST_CONFIG["klub mediano"].includeManualEpisodes, true, "Klub Mediano merges its reviewed historical subseries with RSS episodes");
 assert.equal(context.MEDIANO_EPISODE_PODCAST_CONFIG["mediano superliga"].includeManualEpisodes, false);

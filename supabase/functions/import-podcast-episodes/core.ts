@@ -60,6 +60,14 @@ function normalizeRouteText(value: unknown): string {
     .trim();
 }
 
+function normalizeRoutePrefix(value: unknown): string {
+  return String(value || "")
+    .normalize("NFKD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLocaleLowerCase("da-DK")
+    .replace(/\s+/g, " ");
+}
+
 function matcherMatches(value: string, matcher: FeedRouteMatcher | undefined): boolean {
   if (!matcher || !value) return false;
   const normalized = normalizeRouteText(value);
@@ -70,6 +78,7 @@ function matcherMatches(value: string, matcher: FeedRouteMatcher | undefined): b
     return Boolean(normalizedAlias) && normalized.includes(normalizedAlias);
   })) return true;
   if (matcher.prefixes?.length && matchesExplicitTitlePrefix(value, matcher.prefixes)) return true;
+  if (matcher.startsWith?.some((prefix) => normalizeRoutePrefix(value).startsWith(normalizeRoutePrefix(prefix)))) return true;
   return (matcher.patterns || []).some((pattern) => {
     const flags = [...new Set(`${pattern.flags.replace(/[gy]/g, "")}iu`.split(""))].join("");
     return new RegExp(pattern.source, flags).test(normalized);
@@ -159,7 +168,7 @@ export type ImportRepository = {
     status: "running";
     started_at: string;
   }): Promise<{ id: string }>;
-  loadExistingEpisodes(source: string, externalGuids: string[]): Promise<PodcastEpisodeRow[]>;
+  loadExistingEpisodes(source: string, externalGuids: string[], episodeUrls?: string[], additionalSources?: string[], podcastKeys?: string[]): Promise<PodcastEpisodeRow[]>;
   upsertEpisodes(rows: PodcastEpisodeRow[]): Promise<void>;
   updateImportRun(id: string, input: Record<string, unknown>): Promise<void>;
 };
@@ -440,7 +449,9 @@ export function mapEpisodes(feed: ReturnType<typeof parseFeed>, config: FeedConf
       published_at: published.value,
       duration_seconds: duration.value,
       episode_url: normalizeText(item.link) || null,
-      audio_url: normalizeText(item.enclosure_url) || null,
+      // The Mediano site source is metadata-only: never persist an enclosure
+      // that could point to subscriber-only audio.
+      audio_url: config.metadata_only ? null : normalizeText(item.enclosure_url) || null,
       image_url: normalizeText(item.image_url) || feed.channel.image_url || null,
       is_active: exclusionReason === null,
       metadata: {
@@ -448,6 +459,7 @@ export function mapEpisodes(feed: ReturnType<typeof parseFeed>, config: FeedConf
         feed_url: config.feed_url,
         enclosure_type: item.enclosure_type || null,
         original_pub_date: item.pubDate || null,
+        metadata_only: config.metadata_only === true,
         rateable: exclusionReason === null,
         exclusion_reason: exclusionReason
       }
@@ -709,6 +721,33 @@ function persistentComparable(row: PodcastEpisodeRow): string {
   );
 }
 
+function normalizeCrossSourceEpisodeTitle(value: unknown): string {
+  return String(value || "")
+    .normalize("NFKD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLocaleLowerCase("da-DK")
+    .replace(/&/g, " og ")
+    .replace(/[^a-z0-9]+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function hasSamePublicationDate(left: string | null, right: string | null): boolean {
+  if (!left || !right) return false;
+  const leftDate = new Date(left);
+  const rightDate = new Date(right);
+  if (Number.isNaN(leftDate.getTime()) || Number.isNaN(rightDate.getTime())) return false;
+  return leftDate.toISOString().slice(0, 10) === rightDate.toISOString().slice(0, 10);
+}
+
+function hasExactCrossSourceEpisodeIdentity(incoming: PodcastEpisodeRow, existing: PodcastEpisodeRow): boolean {
+  const incomingTitle = normalizeCrossSourceEpisodeTitle(incoming.title);
+  const existingTitle = normalizeCrossSourceEpisodeTitle(existing.title);
+  return Boolean(incomingTitle) && incoming.podcast_key === existing.podcast_key &&
+    incomingTitle === existingTitle &&
+    hasSamePublicationDate(incoming.published_at, existing.published_at);
+}
+
 export function classifyEpisodes(mapped: PodcastEpisodeRow[], existing: PodcastEpisodeRow[]) {
   const existingByGuid = new Map(existing.map((row) => [row.external_guid, row]));
   const inserted: PodcastEpisodeRow[] = [];
@@ -793,7 +832,10 @@ export async function runEpisodeImport(options: {
     const routing = routeEpisodes(mapped.episodes, config);
     const existing = await options.repository.loadExistingEpisodes(
       config.source,
-      routing.episodes.map((episode) => episode.external_guid)
+      routing.episodes.map((episode) => episode.external_guid),
+      routing.episodes.map((episode) => episode.episode_url).filter((url): url is string => Boolean(url)),
+      config.dedupe_by_episode_url_with_sources,
+      [...new Set(routing.episodes.map((episode) => episode.podcast_key))]
     );
     const episodesForClassification =
       config.format === "dr_lyd_next_data"
@@ -816,17 +858,32 @@ export async function runEpisodeImport(options: {
           })
         : routing.episodes;
 
-    const existingByGuid = new Map(existing.map((episode) => [episode.external_guid, episode]));
+    const existingByGuid = new Map(existing.filter((episode) => episode.source === config.source).map((episode) => [episode.external_guid, episode]));
+    const existingCrossSourceEpisodes = existing
+      .filter((episode) => episode.source !== config.source && episode.episode_url);
+    const existingByEpisodeUrl = new Map(existingCrossSourceEpisodes.map((episode) => [episode.episode_url!, episode]));
+    const crossSourceUrlDuplicates = episodesForClassification.filter((episode) => {
+      const current = episode.episode_url ? existingByEpisodeUrl.get(episode.episode_url) : null;
+      return current && current.podcast_key === episode.podcast_key;
+    });
+    const crossSourceUrlConflicts = episodesForClassification.filter((episode) => {
+      const current = episode.episode_url ? existingByEpisodeUrl.get(episode.episode_url) : null;
+      return current && current.podcast_key !== episode.podcast_key;
+    });
+    const crossSourceIdentityDuplicates = episodesForClassification.filter((episode) =>
+      existingCrossSourceEpisodes.some((current) => hasExactCrossSourceEpisodeIdentity(episode, current))
+    );
     const routingConflicts = config.routes?.length
       ? episodesForClassification.filter((episode) => {
           const current = existingByGuid.get(episode.external_guid);
           return current && current.podcast_key !== episode.podcast_key;
         })
       : [];
-    const safeEpisodesForClassification = routingConflicts.length
-      ? episodesForClassification.filter((episode) => !routingConflicts.some((conflict) => conflict.external_guid === episode.external_guid))
+    const unsafeEpisodes = routingConflicts.concat(crossSourceUrlConflicts);
+    const safeEpisodesForClassification = unsafeEpisodes.length || crossSourceUrlDuplicates.length || crossSourceIdentityDuplicates.length
+      ? episodesForClassification.filter((episode) => !unsafeEpisodes.some((conflict) => conflict.external_guid === episode.external_guid) && !crossSourceUrlDuplicates.some((duplicate) => duplicate.external_guid === episode.external_guid) && !crossSourceIdentityDuplicates.some((duplicate) => duplicate.external_guid === episode.external_guid))
       : episodesForClassification;
-    if (routing.report && (routing.report.unmatched.length || routing.report.ambiguous.length || routing.report.known_no_destination.length || routingConflicts.length)) {
+    if (routing.report && (routing.report.unmatched.length || routing.report.ambiguous.length || routing.report.known_no_destination.length || routingConflicts.length || crossSourceUrlConflicts.length)) {
       console.warn("[episode-import] routing review required", JSON.stringify({
         source: config.source,
         unmatched: routing.report.unmatched,
@@ -837,10 +894,19 @@ export async function runEpisodeImport(options: {
           title: episode.title,
           requested_podcast_key: episode.podcast_key,
           existing_podcast_key: existingByGuid.get(episode.external_guid)?.podcast_key || null
+        })),
+        cross_source_url_conflicts: crossSourceUrlConflicts.map((episode) => ({
+          external_guid: episode.external_guid,
+          title: episode.title,
+          episode_url: episode.episode_url,
+          existing_podcast_key: existingByEpisodeUrl.get(episode.episode_url || "")?.podcast_key || null
         }))
       }));
     }
-    const classified = classifyEpisodes(safeEpisodesForClassification, existing);
+    const classified = classifyEpisodes(
+      safeEpisodesForClassification,
+      existing.filter((episode) => episode.source === config.source),
+    );
     const writeRows = classified.inserted.concat(classified.updated);
     const batches = chunk(writeRows);
     let batchErrors = 0;
@@ -854,7 +920,7 @@ export async function runEpisodeImport(options: {
     }
 
     const itemErrors = mapped.errors.length;
-    const routingConflictCount = routingConflicts.length;
+    const routingConflictCount = routingConflicts.length + crossSourceUrlConflicts.length;
     const unmatchedCount = routing.report?.unmatched.length || 0;
     const ambiguousCount = routing.report?.ambiguous.length || 0;
     const routingIssueCount = unmatchedCount + ambiguousCount + routingConflictCount;
@@ -908,7 +974,10 @@ export async function runEpisodeImport(options: {
                 title: episode.title,
                 requested_podcast_key: episode.podcast_key,
                 existing_podcast_key: existingByGuid.get(episode.external_guid)?.podcast_key || null
-              }))
+              })),
+              cross_source_url_duplicate_count: crossSourceUrlDuplicates.length,
+              cross_source_url_conflict_count: crossSourceUrlConflicts.length,
+              cross_source_identity_duplicate_count: crossSourceIdentityDuplicates.length,
             }
           : undefined,
         errors: mapped.errors.slice(0, 5),

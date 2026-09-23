@@ -1,4 +1,4 @@
-import { PUBLIC_MEDIANO_RSS_URL, buildMedianoPublicFeedRoutes } from "./mediano-routing.mjs";
+import { MEDIANO_SITE_RSS_URL, PUBLIC_MEDIANO_RSS_URL, buildMedianoPublicFeedRoutes } from "./mediano-routing.mjs";
 
 export type FeedFormat = "rss" | "radio4_json" | "dr_lyd_next_data" | "apple_podcasts_html";
 
@@ -9,6 +9,9 @@ export type FeedRouteMatcher = {
   aliases?: string[];
   // Prefixes require a title-start match and an explicit title separator.
   prefixes?: string[];
+  // Literal starts are reserved for verified series conventions that continue
+  // in prose rather than with an explicit title separator.
+  startsWith?: string[];
 };
 
 export type FeedRoute = {
@@ -33,6 +36,8 @@ export type FeedConfig = {
   generated_from_sheet?: boolean;
   apple_show_id?: string;
   routes?: FeedRoute[];
+  metadata_only?: boolean;
+  dedupe_by_episode_url_with_sources?: string[];
 };
 
 export type FeedConfigMap = Record<string, FeedConfig>;
@@ -45,6 +50,16 @@ export const FEED_CONFIGS: FeedConfigMap = {
     feed_url: PUBLIC_MEDIANO_RSS_URL,
     // Production all-feed activation follows two verified manual imports.
     enabled: true,
+    routes: buildMedianoPublicFeedRoutes()
+  },
+  "mediano_site": {
+    // Supplemental public-site metadata; never a replacement for Spreaker.
+    podcast_key: "mediano superliga",
+    source: "mediano_site_rss",
+    feed_url: MEDIANO_SITE_RSS_URL,
+    enabled: true,
+    metadata_only: true,
+    dedupe_by_episode_url_with_sources: ["mediano_public_rss"],
     routes: buildMedianoPublicFeedRoutes()
   },
   "apple_1575533784": {

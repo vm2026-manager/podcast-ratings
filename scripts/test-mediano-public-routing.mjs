@@ -10,6 +10,7 @@ assert.equal(routePublicMedianoTitle("mediano serie a — runde 1").route.canoni
 assert.equal(routePublicMedianoTitle("MAX UPDATE: Sommerens internationale nyheder").route.canonicalTitle, "Max Mediano");
 assert.equal(routePublicMedianoTitle("Max Mediano Special: Sæsonens hold").route.canonicalTitle, "Max Mediano");
 assert.equal(routePublicMedianoTitle("Mediano PL Special - Optakt til finalen").route.canonicalTitle, "Mediano PL");
+assert.equal(routePublicMedianoTitle("Landshold Preview: Optakt til Norge-Danmark").route.podcastId, "mediano landshold");
 assert.equal(routePublicMedianoTitle("Superliga for Voksne #75 - Fodboldtrøjen").route.canonicalTitle, "Superliga for voksne");
 assert.equal(routePublicMedianoTitle("MINI MAX: Danske matchvindere").route.canonicalTitle, "Minimax");
 assert.equal(routePublicMedianoTitle("Fodbold var værre i 70’erne #5: Talentets skueplads").route.canonicalTitle, "Fodbold var værre i 70'erne");
@@ -18,8 +19,14 @@ assert.equal(routePublicMedianoTitle("Max Update senere i udsendelsen").status, 
 assert.equal(routePublicMedianoTitle("Mini Maximum: ikke Minimax").status, "unmatched");
 assert.equal(routePublicMedianoTitle("Superliga for Voksnehed: ikke serien").status, "unmatched");
 assert.equal(routePublicMedianoTitle("Fodbold var værre i 70'erne senere").status, "unmatched");
-assert.equal(routePublicMedianoTitle("Brüchmann ringer til #7: Gæst").status, "known_no_destination");
-assert.equal(routePublicMedianoTitle("Bruchmann ringer til #7: Gæst").status, "known_no_destination");
+assert.equal(routePublicMedianoTitle("Brüchmann ringer til #7: Gæst").route.podcastId, "bruchmann ringer til");
+assert.equal(routePublicMedianoTitle("Bruchmann ringer til #7: Gæst").route.podcastId, "bruchmann ringer til");
+assert.equal(routePublicMedianoTitle("Transfer Special#2: AGF").route.podcastId, "transfer special");
+assert.equal(routePublicMedianoTitle("Troels Bech i en samtale med Thomas Thomasberg").route.podcastId, "troels bech i en samtale");
+assert.equal(routePublicMedianoTitle("Troels Bech i en samtale med Nadia Nadim").route.podcastId, "troels bech i en samtale");
+assert.equal(routePublicMedianoTitle("Landsholdets analytiker: Mounir Akhiat").route.podcastId, "troels bech i en samtale");
+assert.equal(routePublicMedianoTitle("Troels Bech analyserer landsholdet").status, "unmatched");
+assert.equal(routePublicMedianoTitle("Mediano Special: Troels Bech i en samtale med Nadia Nadim").status, "unmatched");
 for (const title of [
   "PL PREVIEW: Optakt til runden",
   "Premier League Update #8: Transfer",
@@ -69,8 +76,7 @@ const statusReport = auditMedianoFeedXml(`<?xml version="1.0"?><rss><channel>
   <item><guid>dedicated</guid><title>Fodboldministeriet: Egen udsendelse</title></item>
   <item><guid>unknown</guid><title>Ukendt program: Test</title></item>
 </channel></rss>`);
-assert.equal(statusReport.totalKnownNoDestination, 1);
-assert.equal(statusReport.knownNoDestinationItems[0].route, "Brüchmann ringer til");
+assert.equal(statusReport.totalKnownNoDestination, 0);
 assert.equal(statusReport.canonicalRoutes["Brüchmann ringer til"].count, 1);
 assert.equal(statusReport.totalSkipped, 1);
 assert.equal(statusReport.skippedItems[0].route, "Fodboldministeriet");
@@ -81,7 +87,7 @@ const catalogue = JSON.parse(await readFile(new URL("../data/podcasts.json", imp
 const cataloguePodcastIds = new Set(catalogue.map((row) => row["Podcast-ID"]));
 // The canonical Jennings row is deliberately a local frontend addition until
 // the catalogue source is updated; its literal is regression-tested here.
-cataloguePodcastIds.add("magasinet jennings");
+for (const id of ["magasinet jennings", "transfer special", "bruchmann ringer til"]) cataloguePodcastIds.add(id);
 assert.equal(routePublicMedianoTitle("Magasinet Jennings: FIFA og verden").route.podcastId, "magasinet jennings");
 assert.equal(routePublicMedianoTitle("Jennings: FIFA og verden").route.podcastId, "magasinet jennings");
 assert.equal(routePublicMedianoTitle("Jennings Ekstra: FIFA og verden").route.podcastId, "magasinet jennings");
@@ -94,9 +100,9 @@ assert.equal(plan.candidates.length, 24);
 assert.equal(plan.candidates.filter((mapping) => mapping.editorialRatingPresent).length, 7);
 assert.equal(plan.candidates.filter((mapping) => mapping.targetExistsInCatalogue).length, 2);
 const stotInterface = describeStotMedianoSource();
-assert.equal(stotInterface.feed_url_env, "STOT_MEDIANO_RSS_URL");
-assert.equal(Object.hasOwn(stotInterface, "feed_url"), false);
-assert.equal(stotInterface.activation, "blocked_pending_private_audio_authorization");
+assert.equal(stotInterface.feed_url, "https://www.mediano.nu/oversigt?format=rss");
+assert.equal(stotInterface.metadata_only, true);
+assert.equal(stotInterface.activation, "enabled_metadata_only");
 for (const historicalPodcastId of [
   "hammer og bruchmann", "superliga for voksne", "superzoom", "mediano em speciel 2021",
   "fodbold var værre i 70 erne", "den store talentserie", "vm manager special", "hammers kaffebar", "souplesse", "super"

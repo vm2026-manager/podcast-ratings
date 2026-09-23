@@ -66,9 +66,68 @@ Deno.test("enabled Mediano public appears exactly once in normal all-feed shards
   const shards = [0, 1, 2, 3, 4, 5].map((shardIndex) => selectNormalFeedShard(FEED_CONFIGS, shardIndex, 6));
 
   assertEquals(normalKeys.includes("mediano_public"), true);
+  assertEquals(normalKeys.includes("mediano_site"), true);
   assertEquals(shards.flat().filter((feedKey) => feedKey === "mediano_public").length, 1);
+  assertEquals(shards.flat().filter((feedKey) => feedKey === "mediano_site").length, 1);
   assertEquals(normalKeys.filter((feedKey) => feedKey !== "mediano_public"), beforeActivation);
   assertEquals(normalKeys.filter((feedKey) => FEED_CONFIGS[feedKey].format === "apple_podcasts_html"), []);
+});
+
+Deno.test("Mediano site imports retain Spreaker public episodes by verified identity", async () => {
+  const writes: PodcastEpisodeRow[][] = [];
+  let observedUrls: string[] = [];
+  let observedSources: string[] = [];
+  let observedPodcastKeys: string[] = [];
+  const repository: ImportRepository = {
+    createImportRun: async () => ({ id: "site-run" }),
+    loadExistingEpisodes: async (_source, _guids, urls = [], sources = [], podcastKeys = []) => {
+      observedUrls = urls;
+      observedSources = sources;
+      observedPodcastKeys = podcastKeys;
+      return [
+        {
+          podcast_key: "mediano superliga", source: "mediano_public_rss", external_guid: "https://api.spreaker.com/episode/75189119", external_episode_id: null,
+          title: "MEDIANO SUPERLIGA #9: Her er din Superligapakke til 18 dage uden Superliga", description: null,
+          published_at: "2026-09-21T10:15:37.000Z", duration_seconds: null, episode_url: "https://www.spreaker.com/episode/75189119",
+          audio_url: "https://public.example/audio.mp3", image_url: null, is_active: true, metadata: {}
+        },
+        {
+          podcast_key: "max mediano", source: "mediano_public_rss", external_guid: "https://api.spreaker.com/episode/other-parent", external_episode_id: null,
+          title: "Mediano Superliga #11: Samme titel på tværs", description: null,
+          published_at: "2026-09-23T10:00:00.000Z", duration_seconds: null, episode_url: "https://www.spreaker.com/episode/other-parent",
+          audio_url: "https://public.example/other.mp3", image_url: null, is_active: true, metadata: {}
+        }
+      ];
+    },
+    upsertEpisodes: async (rows) => { writes.push(rows); },
+    updateImportRun: async () => undefined
+  };
+  const feedConfigs: FeedConfigMap = {
+    mediano_site: {
+      podcast_key: "mediano superliga",
+      source: "mediano_site_rss",
+      feed_url: "https://example.test/mediano-site",
+      metadata_only: true,
+      dedupe_by_episode_url_with_sources: ["mediano_public_rss"],
+      routes: [{ key: "superliga", podcast_key: "mediano superliga", title: { prefixes: ["Mediano Superliga"] } }]
+    }
+  };
+  const result = await runEpisodeImport({
+    feedKey: "mediano_site",
+    feedConfigs,
+    repository,
+    fetchText: async () => "<rss><channel><title>Mediano</title><item><guid>site-duplicate</guid><title>Mediano Superliga #9: Her er din Superligapakke til 18 dage uden Superliga</title><link>https://www.mediano.nu/oversigt/medianosuperliga-9</link><pubDate>Mon, 21 Sep 2026 10:16:19 +0000</pubDate><enclosure url=\"https://private.example/audio.mp3\" /></item><item><guid>site-new</guid><title>Mediano Superliga #10: En ægte Støt Mediano-episode</title><link>https://www.mediano.nu/oversigt/medianosuperliga-10</link><pubDate>Tue, 22 Sep 2026 10:00:00 +0000</pubDate><enclosure url=\"https://private.example/new.mp3\" /></item><item><guid>site-different-parent</guid><title>Mediano Superliga #11: Samme titel på tværs</title><link>https://www.mediano.nu/oversigt/medianosuperliga-11</link><pubDate>Wed, 23 Sep 2026 10:00:00 +0000</pubDate><enclosure url=\"https://private.example/other.mp3\" /></item></channel></rss>",
+    now: () => "2026-09-23T00:00:00.000Z"
+  });
+
+  assertEquals(observedUrls, ["https://www.mediano.nu/oversigt/medianosuperliga-9", "https://www.mediano.nu/oversigt/medianosuperliga-10", "https://www.mediano.nu/oversigt/medianosuperliga-11"]);
+  assertEquals(observedSources, ["mediano_public_rss"]);
+  assertEquals(observedPodcastKeys, ["mediano superliga"]);
+  assertEquals(writes.flat().map((row) => row.title), ["Mediano Superliga #10: En ægte Støt Mediano-episode", "Mediano Superliga #11: Samme titel på tværs"]);
+  assertEquals(writes.flat().every((row) => row.audio_url === null), true);
+  assertEquals(result.inserted_count, 2);
+  assertEquals(result.details.routing?.cross_source_url_duplicate_count, 0);
+  assertEquals(result.details.routing?.cross_source_identity_duplicate_count, 1);
 });
 
 Deno.test("single-feed requests remain compatible and shards are limited to feed=all", async () => {

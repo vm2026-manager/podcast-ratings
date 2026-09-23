@@ -201,6 +201,7 @@ const MEDIANO_EPISODE_DESTINATIONS = Object.freeze([
   ["mediano 2 division", "Mediano 2. division"],
   ["mediano sport og perspektiv", "Mediano Sport og Perspektiv"],
   ["magasinet jennings", "Magasinet Jennings"]
+  , ["troels bech i en samtale", "Troels Bech i en samtale"]
   , ["mediano special", "Mediano Special"]
   , ["transfer special", "Transfer Special"]
   , ["bruchmann ringer til", "Brüchmann ringer til"]
