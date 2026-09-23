@@ -53,6 +53,7 @@ for (const id of expectedMedianoIds) {
 assert.equal(context.MEDIANO_EPISODE_DESTINATIONS.length, 32, "approved Mediano destinations plus reviewed dormant series are configured");
 assert.equal(context.MEDIANO_EPISODE_PODCAST_CONFIG["superliga for voksne"].includeManualEpisodes, true);
 assert.equal(context.MEDIANO_EPISODE_PODCAST_CONFIG["klub mediano"].includeManualEpisodes, true, "Klub Mediano merges its reviewed historical subseries with RSS episodes");
+assert.equal(context.MEDIANO_EPISODE_PODCAST_CONFIG["troels bech i en samtale"].includeManualEpisodes, true, "Troels merges the reviewed Mounir catalogue row with its existing Supabase episode");
 assert.equal(context.MEDIANO_EPISODE_PODCAST_CONFIG["mediano superliga"].includeManualEpisodes, false);
 assert.equal(context.getEpisodePodcastConfig({ podcastId: "unrelated podcast", title: "Unrelated" }), null, "unrelated podcasts are not globally enabled");
 

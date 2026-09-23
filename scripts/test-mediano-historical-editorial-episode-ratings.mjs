@@ -39,8 +39,9 @@ const buildHistoricalMedianoEpisodeEntries = new Function(
   "normalizeText",
   "getField",
   "MEDIANO_LEGACY_CATALOGUE_CANONICAL_IDS",
+  "MEDIANO_HISTORICAL_CATALOGUE_CANONICAL_EPISODE_IDS",
   `${sourceFunction("buildHistoricalMedianoEpisodeEntries", "withHistoricalMedianoEpisodeEntries")}\nreturn buildHistoricalMedianoEpisodeEntries;`
-)(normalizeText, getField, aliases);
+)(normalizeText, getField, aliases, {});
 
 assert.deepEqual(
   Object.fromEntries(Object.keys(aliases).map((id) => [id, scoreFor(id)])),

@@ -16,6 +16,7 @@ const checks = [
   ["manual catalogue episode identity", ["scripts/validate-manual-catalogue-episode-migration.mjs"]],
   ["Mediano legacy catalogue resolution", ["scripts/test-mediano-legacy-catalogue-resolution.mjs"]],
   ["Mediano historical editorial episode ratings", ["scripts/test-mediano-historical-editorial-episode-ratings.mjs"]],
+  ["Mounir canonical Mediano editorial rating", ["scripts/test-mediano-mounir-canonical-editorial-rating.mjs"]],
   ["Explore stale-content guard", ["scripts/test-explore-stale-content-guard.mjs"]],
   ["Explore startup warmup", ["scripts/test-explore-startup-warmup.mjs"]]
 ];
