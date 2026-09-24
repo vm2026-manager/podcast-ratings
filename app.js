@@ -629,6 +629,7 @@ const EPISODE_CACHE_TTL_MS = 10 * 60 * 1000;
 const EPISODE_SEARCH_DEBOUNCE_MS = 320;
 const PROFILE_EPISODE_RATINGS_PAGE_SIZE = 20;
 const PODCAST_RATING_PUBLIC_STATS_VIEW = "podcast_rating_combined_public_stats";
+const DISPLAY_GROUP_COMMUNITY_STATS_RPC = "get_display_group_community_stats";
 const DATA_VERSION = "2026-07-16-underrated-pearls";
 const EXPANDED_LIST_STORAGE_KEY = "podcast-ratings-expanded-list";
 const VIEW_MODE_STORAGE_KEY = "podcast-ratings-desktop-view";
@@ -907,6 +908,10 @@ const state = {
   // existing legacy row when that user later edits or deletes their rating.
   userRatingPersistedKeyByCanonical: {},
   communityStatsByKey: {},
+  // Canonical catalogue ID -> raw public-stat keys. Display-group aggregation
+  // passes these through so historical aliases remain part of the same group.
+  communityStatsStoredKeysByCanonical: {},
+  displayGroupCommunityStatsById: {},
   // A successful empty response is still a usable ranking snapshot, so this
   // must not be inferred from communityStatsByKey.
   communityStatsHasSuccessfulLoad: false,
@@ -3303,6 +3308,7 @@ function canonicalizeCommunityStats(rows) {
   }
 
   const totalsByKey = {};
+  const storedKeysByCanonical = {};
   const unresolvedKeys = [];
 
   rows.forEach((item) => {
@@ -3315,6 +3321,13 @@ function canonicalizeCommunityStats(rows) {
     const averageRating = parseNumber(item?.average_rating);
     const ratingCount = Number(item?.rating_count || 0);
     if (averageRating === null || ratingCount <= 0) return;
+
+    const storedKey = normalizeText(item?.podcast_key);
+    if (storedKey) {
+      const keys = storedKeysByCanonical[canonicalKey] || new Set();
+      keys.add(storedKey);
+      storedKeysByCanonical[canonicalKey] = keys;
+    }
 
     const totals = totalsByKey[canonicalKey] || {
       weightedRatingSum: 0,
@@ -3345,6 +3358,12 @@ function canonicalizeCommunityStats(rows) {
           recentUsers90d: totals.recentUsers90d,
           momentumScore: totals.momentumScore
         }
+      ])
+    ),
+    storedKeysByCanonical: Object.fromEntries(
+      Object.entries(storedKeysByCanonical).map(([canonicalKey, keys]) => [
+        canonicalKey,
+        [...keys]
       ])
     ),
     unresolvedKeys
@@ -4097,22 +4116,11 @@ function getDisplayGroupMemberPodcasts(group) {
   }).filter(Boolean);
 }
 
-function getDisplayGroupUserStats(members) {
-  const stats = members
-    .map((podcast) => getCommunityStat(getPodcastKey(podcast)))
-    .map((stat) => ({
-      averageRating: parseNumber(stat?.averageRating),
-      ratingCount: Number(stat?.ratingCount || 0)
-    }))
-    .filter((stat) => stat.averageRating !== null && stat.ratingCount > 0);
-  const ratingCount = stats.reduce((sum, stat) => sum + stat.ratingCount, 0);
-  const weightedTotal = stats.reduce(
-    (sum, stat) => sum + stat.averageRating * stat.ratingCount,
-    0
-  );
+function getDisplayGroupUserStats(group) {
+  const stats = state.displayGroupCommunityStatsById[normalizeText(group?.id)];
   return {
-    averageRating: ratingCount ? weightedTotal / ratingCount : null,
-    ratingCount
+    averageRating: parseNumber(stats?.averageRating),
+    ratingCount: Math.max(0, Number(stats?.ratingCount || 0))
   };
 }
 
@@ -4129,7 +4137,7 @@ function createRankingDisplayGroup(group) {
   const editorialRatings = members
     .map((podcast) => parseNumber(podcast.ratingValue))
     .filter((rating) => rating !== null);
-  const userStats = getDisplayGroupUserStats(members);
+  const userStats = getDisplayGroupUserStats(group);
   return {
     ...representative,
     title: group.title,
@@ -7286,10 +7294,13 @@ async function fetchCommunityStats() {
     if (requestToken !== state.communityStatsRequestToken) return;
     if (error) throw error;
 
-    const { statsByKey, unresolvedKeys } = canonicalizeCommunityStats(data);
+    const { statsByKey, storedKeysByCanonical, unresolvedKeys } = canonicalizeCommunityStats(data);
     if (requestToken !== state.communityStatsRequestToken) return;
 
     state.communityStatsByKey = statsByKey;
+    state.communityStatsStoredKeysByCanonical = storedKeysByCanonical;
+    await fetchDisplayGroupCommunityStats(requestToken);
+    if (requestToken !== state.communityStatsRequestToken) return;
     state.communityStatsHasSuccessfulLoad = true;
     if (unresolvedKeys.length) {
       console.warn("Community rating rows without a current podcast identity were skipped:", unresolvedKeys);
@@ -7303,6 +7314,51 @@ async function fetchCommunityStats() {
     state.communityStatsStatus = "error";
     setAuthMessage("Kunne ikke hente brugernes snit fra Supabase.", "error", "hero");
   }
+}
+
+function buildDisplayGroupCommunityStatsRequest() {
+  return state.podcastDisplayGroups
+    .map((group) => {
+      const podcastKeys = getDisplayGroupMemberPodcasts(group).flatMap((member) => {
+        const canonicalKey = getPodcastKey(member);
+        const storedKeys = state.communityStatsStoredKeysByCanonical[canonicalKey];
+        return storedKeys?.length ? storedKeys : [canonicalKey];
+      });
+      return {
+        id: normalizeText(group.id),
+        podcast_keys: [...new Set(podcastKeys.filter(Boolean))]
+      };
+    })
+    .filter((group) => group.id && group.podcast_keys.length);
+}
+
+async function fetchDisplayGroupCommunityStats(requestToken) {
+  const groups = buildDisplayGroupCommunityStatsRequest();
+  if (!groups.length) {
+    state.displayGroupCommunityStatsById = {};
+    return;
+  }
+
+  const { data, error } = await state.supabase.rpc(DISPLAY_GROUP_COMMUNITY_STATS_RPC, {
+    p_groups: groups
+  });
+  if (requestToken !== state.communityStatsRequestToken) return;
+  if (error) throw error;
+
+  state.displayGroupCommunityStatsById = Object.fromEntries(
+    (data || [])
+      .map((item) => {
+        const id = normalizeText(item?.display_group_id);
+        return [
+          id,
+          {
+            averageRating: parseNumber(item?.average_rating),
+            ratingCount: Math.max(0, Number(item?.rating_count || 0))
+          }
+        ];
+      })
+      .filter(([id]) => Boolean(id))
+  );
 }
 
 async function refreshPodcastCommunityStat(podcastKey) {
