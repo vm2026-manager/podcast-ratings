@@ -13710,7 +13710,7 @@ function updateHomeFeaturedForegroundTheme(container, image) {
 }
 
 const HOME_FEATURED_AUTOPLAY_DELAY = 12000;
-const HOME_FEATURED_TRACKPAD_THRESHOLD = 300;
+const HOME_FEATURED_TRACKPAD_THRESHOLD = 450;
 const HOME_FEATURED_TRACKPAD_IDLE_DELAY = 500;
 const HOME_FEATURED_TRACKPAD_DOMINANCE = 2.2;
 
@@ -13746,9 +13746,9 @@ function initHomeFeaturedDesktopTrackpadNavigation(surface, onNavigate) {
     const horizontalIntent = Math.abs(event.deltaX) > Math.abs(event.deltaY) * HOME_FEATURED_TRACKPAD_DOMINANCE;
     if (!horizontalIntent) return;
 
+    event.preventDefault();
     scheduleGestureReset();
     if (gestureLocked) {
-      event.preventDefault();
       return;
     }
 
@@ -13756,7 +13756,6 @@ function initHomeFeaturedDesktopTrackpadNavigation(surface, onNavigate) {
     if (Math.abs(accumulatedDeltaX) < HOME_FEATURED_TRACKPAD_THRESHOLD) return;
 
     gestureLocked = true;
-    event.preventDefault();
     onNavigate(accumulatedDeltaX > 0 ? "next" : "previous");
   }, { passive: false });
 
