@@ -64,7 +64,7 @@ const initTrackpadNavigation = new Function(
   "HOME_FEATURED_TRACKPAD_IDLE_DELAY",
   "HOME_FEATURED_TRACKPAD_DOMINANCE",
   `${extractFunction("initHomeFeaturedDesktopTrackpadNavigation")}\nreturn initHomeFeaturedDesktopTrackpadNavigation;`
-)(fakeWindow, fakeDocument, 48, 180, 1.35);
+)(fakeWindow, fakeDocument, 72, 300, 1.6);
 
 function createHarness({ desktop = true, homepage = true } = {}) {
   timers = [];
@@ -84,10 +84,9 @@ function finishGesture() {
 
 {
   const { surface, transitions } = createHarness();
-  surface.dispatchWheel(16, 2);
-  surface.dispatchWheel(18, 1);
-  assert.equal(surface.dispatchWheel(18, 2), true, "a clear left trackpad gesture is accepted");
-  assert.deepEqual(transitions, ["next"], "a clear left gesture moves to the next recommendation");
+  surface.dispatchWheel(24, 2);
+  surface.dispatchWheel(24, 2);
+  assert.deepEqual(transitions, [], "48px of clear horizontal input does not navigate");
 }
 
 {
@@ -104,26 +103,39 @@ function finishGesture() {
 
 {
   const { surface, transitions } = createHarness();
-  surface.dispatchWheel(-20, 1);
-  surface.dispatchWheel(-30, 2);
-  assert.deepEqual(transitions, ["previous"], "a clear right gesture moves to the previous recommendation");
+  surface.dispatchWheel(30, 2);
+  surface.dispatchWheel(30, 2);
+  assert.deepEqual(transitions, [], "60px of clear horizontal input does not navigate");
 }
 
 {
   const { surface, transitions } = createHarness();
-  [20, 20, 20, 20, 20].forEach((deltaX) => surface.dispatchWheel(deltaX, 1));
-  assert.deepEqual(transitions, ["next"], "many events in one gesture cause one transition");
+  surface.dispatchWheel(36, 2);
+  assert.equal(surface.dispatchWheel(36, 2), true, "72px of clear horizontal input is accepted");
+  assert.deepEqual(transitions, ["next"], "72px of clear horizontal input moves to the next recommendation");
+}
+
+{
+  const { surface, transitions } = createHarness();
+  [30, 30, 30].forEach((deltaX) => surface.dispatchWheel(deltaX, 20));
+  assert.deepEqual(transitions, [], "diagonal movement that passed 1.35 but not 1.6 does not navigate");
+  [36, 36].forEach((deltaX) => surface.dispatchWheel(deltaX, 20));
+  assert.deepEqual(transitions, ["next"], "clearly horizontal input over 1.6 dominance navigates");
+}
+
+{
+  const { surface, transitions } = createHarness();
+  [18, 18, 18, 18, 18, 18].forEach((deltaX) => surface.dispatchWheel(deltaX, 2));
+  assert.deepEqual(transitions, ["next"], "trackpad inertia events within the 300ms gesture window cause one transition");
   finishGesture();
-  [25, 25].forEach((deltaX) => surface.dispatchWheel(deltaX, 1));
+  [36, 36].forEach((deltaX) => surface.dispatchWheel(deltaX, 2));
   assert.deepEqual(transitions, ["next", "next"], "a distinct gesture after idle can transition again");
 }
 
 {
   const { surface, transitions } = createHarness();
-  assert.equal(surface.dispatchWheel(8, 40), false, "vertical scrolling is not prevented");
-  surface.dispatchWheel(10, 9);
-  surface.dispatchWheel(12, 11);
-  assert.deepEqual(transitions, [], "vertical, small, and ambiguous movement does not navigate");
+  assert.equal(surface.dispatchWheel(20, 50), false, "vertical scrolling is not prevented");
+  assert.deepEqual(transitions, [], "vertical scrolling does not navigate");
   assert.equal(surface.listeners.get("wheel").options.passive, false, "wheel listener is non-passive only for accepted navigation");
 }
 
@@ -131,5 +143,8 @@ assert.match(app, /data-home-featured-prev[\s\S]*setHomeFeaturedIndex\(container
 assert.match(app, /data-home-featured-next[\s\S]*setHomeFeaturedIndex\(container, nextIndex\)/u, "next button navigation remains bound");
 assert.match(app, /\(max-width: 768px\).*event\.pointerType === "mouse"/u, "mobile pointer swipe remains unchanged");
 assert.match(app, /\(min-width: 1101px\)/u, "wheel navigation uses the desktop homepage breakpoint");
+assert.match(app, /const HOME_FEATURED_TRACKPAD_THRESHOLD = 72;/u, "trackpad threshold is tuned to 72px");
+assert.match(app, /const HOME_FEATURED_TRACKPAD_IDLE_DELAY = 300;/u, "trackpad idle reset is tuned to 300ms");
+assert.match(app, /const HOME_FEATURED_TRACKPAD_DOMINANCE = 1\.6;/u, "trackpad dominance is tuned to 1.6");
 
 console.log("Home featured desktop trackpad navigation regression checks passed.");

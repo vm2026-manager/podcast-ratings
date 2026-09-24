@@ -13710,9 +13710,9 @@ function updateHomeFeaturedForegroundTheme(container, image) {
 }
 
 const HOME_FEATURED_AUTOPLAY_DELAY = 12000;
-const HOME_FEATURED_TRACKPAD_THRESHOLD = 48;
-const HOME_FEATURED_TRACKPAD_IDLE_DELAY = 180;
-const HOME_FEATURED_TRACKPAD_DOMINANCE = 1.35;
+const HOME_FEATURED_TRACKPAD_THRESHOLD = 72;
+const HOME_FEATURED_TRACKPAD_IDLE_DELAY = 300;
+const HOME_FEATURED_TRACKPAD_DOMINANCE = 1.6;
 
 function initHomeFeaturedDesktopTrackpadNavigation(surface, onNavigate) {
   if (!surface) return;
