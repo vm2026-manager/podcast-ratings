@@ -64,7 +64,7 @@ const initTrackpadNavigation = new Function(
   "HOME_FEATURED_TRACKPAD_IDLE_DELAY",
   "HOME_FEATURED_TRACKPAD_DOMINANCE",
   `${extractFunction("initHomeFeaturedDesktopTrackpadNavigation")}\nreturn initHomeFeaturedDesktopTrackpadNavigation;`
-)(fakeWindow, fakeDocument, 180, 500, 2.2);
+)(fakeWindow, fakeDocument, 300, 500, 2.2);
 
 function createHarness({ desktop = true, homepage = true } = {}) {
   timers = [];
@@ -84,9 +84,9 @@ function finishGesture() {
 
 {
   const { surface, transitions } = createHarness();
-  surface.dispatchWheel(36, 2);
-  surface.dispatchWheel(36, 2);
-  assert.deepEqual(transitions, [], "72px of clear horizontal input does not navigate");
+  surface.dispatchWheel(90, 2);
+  surface.dispatchWheel(90, 2);
+  assert.deepEqual(transitions, [], "180px of clear horizontal input does not navigate");
 }
 
 {
@@ -103,32 +103,39 @@ function finishGesture() {
 
 {
   const { surface, transitions } = createHarness();
-  surface.dispatchWheel(60, 2);
-  surface.dispatchWheel(60, 2);
-  assert.deepEqual(transitions, [], "120px of clear horizontal input does not navigate");
+  surface.dispatchWheel(110, 2);
+  surface.dispatchWheel(110, 2);
+  assert.deepEqual(transitions, [], "220px of clear horizontal input does not navigate");
 }
 
 {
   const { surface, transitions } = createHarness();
-  surface.dispatchWheel(85, 2);
-  surface.dispatchWheel(85, 2);
-  assert.deepEqual(transitions, [], "170px of clear horizontal input does not navigate");
+  surface.dispatchWheel(130, 2);
+  surface.dispatchWheel(130, 2);
+  assert.deepEqual(transitions, [], "260px of clear horizontal input does not navigate");
+}
+
+{
+  const { surface, transitions } = createHarness();
+  surface.dispatchWheel(145, 2);
+  surface.dispatchWheel(145, 2);
+  assert.deepEqual(transitions, [], "290px of clear horizontal input does not navigate");
 }
 
 {
   const { surface, transitions } = createHarness();
   [40, 40, 40, 40, 40].forEach((deltaX) => surface.dispatchWheel(deltaX, 20));
   assert.deepEqual(transitions, [], "movement between 1.6 and 2.2 dominance does not navigate");
-  [90, 90].forEach((deltaX) => surface.dispatchWheel(deltaX, 20));
-  assert.deepEqual(transitions, ["next"], "clearly horizontal input over 2.2 dominance navigates at 180px");
+  [150, 150].forEach((deltaX) => surface.dispatchWheel(deltaX, 20));
+  assert.deepEqual(transitions, ["next"], "clearly horizontal input over 2.2 dominance navigates at 300px");
 }
 
 {
   const { surface, transitions } = createHarness();
-  [30, 30, 30, 30, 30, 30, 30, 30].forEach((deltaX) => surface.dispatchWheel(deltaX, 2));
+  [30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30].forEach((deltaX) => surface.dispatchWheel(deltaX, 2));
   assert.deepEqual(transitions, ["next"], "trackpad inertia events within the 500ms gesture window cause one transition");
   finishGesture();
-  [90, 90].forEach((deltaX) => surface.dispatchWheel(deltaX, 2));
+  [150, 150].forEach((deltaX) => surface.dispatchWheel(deltaX, 2));
   assert.deepEqual(transitions, ["next", "next"], "a distinct gesture after idle can transition again");
 }
 
@@ -143,7 +150,7 @@ assert.match(app, /data-home-featured-prev[\s\S]*setHomeFeaturedIndex\(container
 assert.match(app, /data-home-featured-next[\s\S]*setHomeFeaturedIndex\(container, nextIndex\)/u, "next button navigation remains bound");
 assert.match(app, /\(max-width: 768px\).*event\.pointerType === "mouse"/u, "mobile pointer swipe remains unchanged");
 assert.match(app, /\(min-width: 1101px\)/u, "wheel navigation uses the desktop homepage breakpoint");
-assert.match(app, /const HOME_FEATURED_TRACKPAD_THRESHOLD = 180;/u, "trackpad threshold is tuned to 180px");
+assert.match(app, /const HOME_FEATURED_TRACKPAD_THRESHOLD = 300;/u, "trackpad threshold is tuned to 300px");
 assert.match(app, /const HOME_FEATURED_TRACKPAD_IDLE_DELAY = 500;/u, "trackpad idle reset is tuned to 500ms");
 assert.match(app, /const HOME_FEATURED_TRACKPAD_DOMINANCE = 2\.2;/u, "trackpad dominance is tuned to 2.2");
 
