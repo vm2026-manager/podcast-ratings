@@ -117,6 +117,14 @@ const MEDIANO_LEGACY_CATALOGUE_CANONICAL_IDS = Object.freeze({
   , "her er vores bud pa de ti spillere har været de største transfersucceser i superligaen": "transfer special"
   , "kristjaan speakmann": "bruchmann ringer til"
   , "der var engang et mal af peter møller mod farum": "der var engang et mal"
+  , "landsholdets analytiker mounir akhiat": "troels bech i en samtale"
+});
+
+// This reviewed bridge connects a historical catalogue identity to the
+// already-imported public Mediano episode. It never provides a rating: that
+// remains read from the live catalogue row during each refresh.
+const MEDIANO_HISTORICAL_CATALOGUE_CANONICAL_EPISODE_IDS = Object.freeze({
+  "landsholdets analytiker mounir akhiat": "59389cfb-aa8c-40a3-94b4-9e2b04e832cc"
 });
 
 // Local-only canonical catalogue addition. Its title, publisher, genre, public
@@ -222,7 +230,7 @@ const MEDIANO_EPISODE_PODCAST_CONFIG = Object.freeze(
       source: "mediano_public_rss",
       // This one destination has a reviewed historical catalogue alongside
       // Mediano public-feed episodes. Keep both on the existing merge path.
-      includeManualEpisodes: ["superliga for voksne", "klub mediano", "mediano special", "transfer special", "bruchmann ringer til", "der var engang et mal"].includes(podcastKey)
+      includeManualEpisodes: ["superliga for voksne", "klub mediano", "magasinet jennings", "troels bech i en samtale", "mediano special", "transfer special", "bruchmann ringer til", "der var engang et mal"].includes(podcastKey)
     }
   ]))
 );
@@ -2951,8 +2959,19 @@ function mapPodcast(row, index) {
     normalizeText(rawUnderratedPearl).trim().toLowerCase() === "x";
   const uaktuel = getField(row, ["Uaktuel"]);
   const placement = parsePlacement(getField(row, ["Placering", "Rank", "Rangering"]));
-  const manualEpisodes = parseManualEpisodeTitles(
+  const manualEpisodeEntries = parseManualEpisodeEntries(
     row?.manualEpisodes || row?.manual_episodes || getField(row, ["Episoder", "Manual episodes", "ManualEpisodes"])
+  );
+  const manualEpisodes = manualEpisodeEntries.map((entry) => entry.title);
+  const manualEpisodeEditorialRatings = Object.fromEntries(
+    manualEpisodeEntries
+      .filter((entry) => parseNumber(entry.editorialRating) !== null)
+      .map((entry) => [normalizeMatchKey(entry.title), entry.editorialRating])
+  );
+  const manualEpisodeCanonicalIds = Object.fromEntries(
+    manualEpisodeEntries
+      .filter((entry) => normalizeText(entry.canonicalEpisodeId))
+      .map((entry) => [normalizeMatchKey(entry.title), entry.canonicalEpisodeId])
   );
   const supplementarySimilaritiesRaw = normalizeText(
     row?.supplementarySimilaritiesRaw ?? getField(row, ["Supplerende ligheder"])
@@ -2996,6 +3015,8 @@ function mapPodcast(row, index) {
     mainSeries,
     episodes,
     manualEpisodes,
+    manualEpisodeEditorialRatings,
+    manualEpisodeCanonicalIds,
     supplementarySimilaritiesRaw,
     supplementarySimilarities,
     yearPlayed,
@@ -9916,11 +9937,57 @@ function parseManualEpisodeEntries(value) {
       title,
       manualEpisodeKey: normalizeText(
         typeof value === "object" ? value?.manual_episode_key || value?.manualEpisodeKey : ""
+      ),
+      // This remains source metadata, not a community or user rating. It is
+      // populated only from an explicitly mapped catalogue row below.
+      editorialRating: normalizeText(
+        typeof value === "object" ? value?.editorialRating : ""
+      ),
+      canonicalEpisodeId: normalizeText(
+        typeof value === "object" ? value?.canonicalEpisodeId : ""
       )
     });
   });
 
   return entries;
+}
+
+function mergeManualEpisodeEntries(...values) {
+  const entries = [];
+  const entryIndexesByTitle = new Map();
+  values.flat().forEach((value) => {
+    const entry = typeof value === "object" && !Array.isArray(value)
+      ? value
+      : { title: value };
+    const title = normalizeText(entry?.title);
+    const key = normalizeMatchKey(title);
+    if (!title || !key) return;
+    const existingIndex = entryIndexesByTitle.get(key);
+    if (existingIndex !== undefined) {
+      // A local title can predate its live catalogue row. Keep its immutable
+      // position while retaining the catalogue-only editorial metadata.
+      const existing = entries[existingIndex];
+      if (!normalizeText(existing.editorialRating) && normalizeText(entry.editorialRating)) {
+        entries[existingIndex] = { ...existing, editorialRating: entry.editorialRating };
+      }
+      return;
+    }
+    entryIndexesByTitle.set(key, entries.length);
+    entries.push({ ...entry, title });
+  });
+  return entries;
+}
+
+function getManualEpisodeEditorialRating(podcast, title) {
+  return parseNumber(
+    podcast?.manualEpisodeEditorialRatings?.[normalizeMatchKey(title)]
+  );
+}
+
+function getManualEpisodeCanonicalId(podcast, title) {
+  return normalizeText(
+    podcast?.manualEpisodeCanonicalIds?.[normalizeMatchKey(title)]
+  );
 }
 
 function parseManualEpisodeTitles(value) {
@@ -10005,9 +10072,10 @@ function getPodcastManualEpisodes(podcast) {
       : "";
     const legacyCanonicalEpisodeId = createStableManualEpisodeUuid(podcastKey, episodeNumber, title);
     const hasImmutableManualKey = Boolean(entry.manualEpisodeKey);
-    const canonicalEpisodeId = hasImmutableManualKey
+    const reviewedCanonicalEpisodeId = getManualEpisodeCanonicalId(podcast, title);
+    const canonicalEpisodeId = reviewedCanonicalEpisodeId || (hasImmutableManualKey
       ? createStableManualCatalogueEpisodeUuid(podcastKey, entry.manualEpisodeKey)
-      : legacyCanonicalEpisodeId;
+      : legacyCanonicalEpisodeId);
     const manualEpisodeKey = hasImmutableManualKey
       ? `manual-catalogue-v2:${podcastKey}:${entry.manualEpisodeKey}`
       : `manual-catalogue-v1:${canonicalEpisodeId}`;
@@ -10018,6 +10086,7 @@ function getPodcastManualEpisodes(podcast) {
       manual_episode_key: manualEpisodeKey,
       podcast_key: podcastKey,
       title,
+      editorial_rating: getManualEpisodeEditorialRating(podcast, title),
       episode_number: episodeNumber,
       is_active: true,
       source: MANUAL_CATALOGUE_SOURCE,
@@ -10395,13 +10464,30 @@ function getEpisodeKey(episode) {
 }
 
 function mergeEpisodes(existing, incoming) {
-  const seen = new Set();
-  return [...existing, ...(incoming || [])].filter((episode) => {
+  const episodeIndexesByKey = new Map();
+  const merged = [];
+  [...existing, ...(incoming || [])].forEach((episode) => {
     const key = getEpisodeKey(episode);
-    if (!key || seen.has(key)) return false;
-    seen.add(key);
-    return true;
+    if (!key) return;
+    const existingIndex = episodeIndexesByKey.get(key);
+    if (existingIndex === undefined) {
+      episodeIndexesByKey.set(key, merged.length);
+      merged.push(episode);
+      return;
+    }
+    const existingEpisode = merged[existingIndex];
+    const editorialRating = parseNumber(episode?.editorial_rating);
+    if (
+      episode?.dataSource === "manual" &&
+      parseNumber(existingEpisode?.editorial_rating) === null &&
+      editorialRating !== null
+    ) {
+      // Keep the existing Supabase row and its UUID, ratings, and references;
+      // add only reviewed catalogue metadata from the duplicate manual row.
+      merged[existingIndex] = { ...existingEpisode, editorial_rating: editorialRating };
+    }
   });
+  return merged;
 }
 
 function formatEpisodeDate(value) {
@@ -11113,13 +11199,17 @@ async function fetchGenstartEpisodes({ append = false } = {}) {
     const rows = getRateablePodcastEpisodes(fetchedRows);
     const manualEpisodes = getConfiguredManualEpisodes(config);
     if (manualEpisodes.length) await refreshManualEpisodeRatingData(config.podcastKey, manualEpisodes);
-    episodeState.items = append
+    const mergedItems = append
       ? mergeEpisodes(episodeState.items, rows)
       : mergeEpisodes(rows, manualEpisodes);
+    episodeState.items = mergedItems;
     episodeState.remoteLoadedCount = append
       ? episodeState.remoteLoadedCount + rows.length
       : rows.length;
-    episodeState.totalCount = Number.isFinite(count) ? count + manualEpisodes.length : null;
+    const uniqueManualEpisodeCount = append
+      ? manualEpisodes.length
+      : Math.max(0, mergedItems.length - rows.length);
+    episodeState.totalCount = Number.isFinite(count) ? count + uniqueManualEpisodeCount : null;
     episodeState.hasMore = fetchedRows.length === EPISODE_PAGE_SIZE && (
       episodeState.totalCount === null || offset + fetchedRows.length < episodeState.totalCount
     );
@@ -11487,6 +11577,7 @@ function renderPodcastEpisodeOverviewRows(podcast) {
       const userRating = getEpisodeUserRating(episodeId);
       const sourceScore = parseNumber(stat?.averageRating);
       const ratingCount = Number(stat?.ratingCount || 0);
+      const editorialScore = parseNumber(episode.editorial_rating);
       const title = episode.title || `Episode ${episodeNumber}`;
       const titleLengthClass = title.length > 115
         ? " episode-title--very-long"
@@ -11509,6 +11600,7 @@ function renderPodcastEpisodeOverviewRows(podcast) {
           }
           <td data-label="Episode" data-published-date="${escapeHtml(publicationDate)}">
             <strong class="episode-title${titleLengthClass}">${escapeHtml(title)}</strong>
+            ${editorialScore === null ? "" : `<span class="podcast-detail-sheet__episode-editorial-score">Podcastlistens vurdering: <strong>${escapeHtml(formatCompactRating(editorialScore))}/10</strong></span>`}
           </td>
           <td data-label="Brugere">
             <span class="podcast-detail-sheet__episode-source-score">
@@ -23648,24 +23740,65 @@ function rebuildPodcastDetailRecommendationLookups() {
   state.podcastDetailRecommendationCache.clear();
 }
 
+function buildHistoricalMedianoEpisodeEntries(podcastRows, catalogueIds) {
+  const byCanonicalPodcastId = new Map();
+  (podcastRows || []).forEach((row) => {
+    const legacyPodcastId = normalizeText(row?.["Podcast-ID"]);
+    const canonicalPodcastId = MEDIANO_LEGACY_CATALOGUE_CANONICAL_IDS[legacyPodcastId];
+    const title = normalizeText(row?.Titel);
+    if (!legacyPodcastId || !canonicalPodcastId || !catalogueIds.has(canonicalPodcastId) || !title) return;
+
+    const entries = byCanonicalPodcastId.get(canonicalPodcastId) || [];
+    entries.push({
+      title,
+      // The rating remains sourced from the live catalogue payload. No score is
+      // copied into a local registry or used to alter a Supabase rating row.
+      editorialRating: getField(row, ["Vuring (1-10)"]),
+      canonicalEpisodeId: MEDIANO_HISTORICAL_CATALOGUE_CANONICAL_EPISODE_IDS[legacyPodcastId] || ""
+    });
+    byCanonicalPodcastId.set(canonicalPodcastId, entries);
+  });
+  return byCanonicalPodcastId;
+}
+
+function withHistoricalMedianoEpisodeEntries(row, historicalEntriesByCanonicalId) {
+  const podcastId = normalizeText(row?.["Podcast-ID"]);
+  const historicalEntries = historicalEntriesByCanonicalId.get(podcastId) || [];
+  if (!historicalEntries.length) return row;
+  return {
+    ...row,
+    // Existing configured entries stay first, preserving their existing manual
+    // episode order and immutable ID derivation. Historical entries are only
+    // appended when their reviewed legacy -> canonical relationship is exact.
+    manualEpisodes: mergeManualEpisodeEntries(row?.manualEpisodes, historicalEntries)
+  };
+}
+
 function applyPodcastDataRefresh(podcastRows, featuredRows, coverManifestLookup = {}, displayGroups = []) {
+  const sourceCatalogueIds = new Set(
+    podcastRows.map((row) => normalizeText(row?.["Podcast-ID"])).filter(Boolean)
+  );
+  const historicalEntriesByCanonicalId = buildHistoricalMedianoEpisodeEntries(
+    podcastRows,
+    new Set([
+      ...sourceCatalogueIds,
+      ...LOCAL_CANONICAL_CATALOGUE_ROWS.map((row) => normalizeText(row?.["Podcast-ID"]))
+    ])
+  );
   const patchedPodcastRows = podcastRows.map((row) => {
     const podcastId = normalizeText(row?.["Podcast-ID"]);
     const patch = LOCAL_CANONICAL_CATALOGUE_ROW_PATCHES[podcastId];
-    if (!patch) return row;
-    return {
+    const patchedRow = patch ? {
       ...row,
       ...patch,
-      manualEpisodes: [
-        ...(Array.isArray(row?.manualEpisodes) ? row.manualEpisodes : []),
-        ...(Array.isArray(patch.manualEpisodes) ? patch.manualEpisodes : [])
-      ]
-    };
+      manualEpisodes: mergeManualEpisodeEntries(row?.manualEpisodes, patch.manualEpisodes)
+    } : row;
+    return withHistoricalMedianoEpisodeEntries(patchedRow, historicalEntriesByCanonicalId);
   });
   const catalogueIds = new Set(patchedPodcastRows.map((row) => normalizeText(row?.["Podcast-ID"])).filter(Boolean));
-  const localAdditions = LOCAL_CANONICAL_CATALOGUE_ROWS.filter(
-    (row) => !catalogueIds.has(normalizeText(row["Podcast-ID"]))
-  );
+  const localAdditions = LOCAL_CANONICAL_CATALOGUE_ROWS
+    .filter((row) => !catalogueIds.has(normalizeText(row["Podcast-ID"])))
+    .map((row) => withHistoricalMedianoEpisodeEntries(row, historicalEntriesByCanonicalId));
   const mappedPodcasts = [...patchedPodcastRows, ...localAdditions].map(mapPodcast).filter(isUsefulPodcast);
   const cataloguePodcastIds = new Set(mappedPodcasts.map(getPodcastId).filter(Boolean));
   const currentCataloguePodcasts = mappedPodcasts.filter((podcast) => {
