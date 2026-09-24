@@ -868,6 +868,8 @@ const state = {
   podcastById: {},
   podcastByLegacyKey: {},
   podcastDisplayGroups: [],
+  podcastDisplayGroupsReady: false,
+  podcastDisplayGroupsVersion: 0,
   podcastDisplayGroupById: {},
   podcastDetailDisplayGroupByPodcastKey: {},
   podcastDetailPublicItemByPodcastKey: {},
@@ -7305,21 +7307,26 @@ function buildDisplayGroupCommunityStatsRequest() {
 }
 
 async function fetchDisplayGroupCommunityStats(requestToken) {
+  // An empty array before the catalogue commits is not a confirmed empty
+  // display-group configuration. Preserve an already-good aggregate until the
+  // configuration is explicitly ready.
+  if (!state.podcastDisplayGroupsReady) return;
   const displayGroupIds = buildDisplayGroupCommunityStatsRequest();
-  // Clear first: a failed or stale RPC must never present old group data as
-  // fresh. Ordinary per-podcast statistics are intentionally unaffected.
-  state.displayGroupCommunityStatsById = {};
-  // Recommendation entries may contain a resolved public display item. Clear
-  // them alongside the dynamic group state so no snapshot can outlive an RPC
-  // refresh (ordinary podcast statistics are deliberately left intact).
-  state.podcastDetailRecommendationCache?.clear();
-  if (!displayGroupIds.length) return;
+  const displayGroupsVersion = state.podcastDisplayGroupsVersion;
+  // A confirmed ready-but-empty configuration is the one valid immediate clear.
+  if (!displayGroupIds.length) {
+    state.displayGroupCommunityStatsById = {};
+    state.podcastDetailRecommendationCache?.clear();
+    refreshOpenPodcastDetailSheet();
+    return;
+  }
 
   try {
     const { data, error } = await state.supabase.rpc(DISPLAY_GROUP_COMMUNITY_STATS_RPC, {
       p_display_group_ids: displayGroupIds
     });
     if (requestToken !== state.communityStatsRequestToken) return;
+    if (displayGroupsVersion !== state.podcastDisplayGroupsVersion) return;
     if (error) throw error;
 
     state.displayGroupCommunityStatsById = Object.fromEntries(
@@ -7337,10 +7344,13 @@ async function fetchDisplayGroupCommunityStats(requestToken) {
         .filter(([id]) => Boolean(id))
     );
     state.podcastDetailRecommendationCache?.clear();
+    refreshOpenPodcastDetailSheet();
   } catch (error) {
     if (requestToken !== state.communityStatsRequestToken) return;
+    if (displayGroupsVersion !== state.podcastDisplayGroupsVersion) return;
     state.displayGroupCommunityStatsById = {};
     state.podcastDetailRecommendationCache?.clear();
+    refreshOpenPodcastDetailSheet();
     console.warn("Display-group community stats are unavailable:", error);
   }
 }
@@ -23875,10 +23885,16 @@ function applyPodcastDataRefresh(podcastRows, featuredRows, coverManifestLookup 
     if (canonicalPodcast) state.podcastByKey[legacyKey] = canonicalPodcast;
   });
   state.podcastDisplayGroups = displayGroups;
+  state.podcastDisplayGroupsReady = true;
+  state.podcastDisplayGroupsVersion += 1;
   state.podcastDisplayGroupById = Object.fromEntries(
     displayGroups.map((group) => [normalizeText(group.id), group])
   );
   rebuildPodcastDetailRecommendationLookups();
+  // Supabase and the catalogue start in parallel. Once this valid definition
+  // commits, synchronize group aggregates even if an earlier refresh happened
+  // while the configuration was unready.
+  if (state.supabase) void fetchDisplayGroupCommunityStats(state.communityStatsRequestToken);
   if (
     state.podcastSimilarityProductStatus === "ready" &&
     state.podcastSimilarityMetadataPayload
