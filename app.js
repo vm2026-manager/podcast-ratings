@@ -7309,6 +7309,10 @@ async function fetchDisplayGroupCommunityStats(requestToken) {
   // Clear first: a failed or stale RPC must never present old group data as
   // fresh. Ordinary per-podcast statistics are intentionally unaffected.
   state.displayGroupCommunityStatsById = {};
+  // Recommendation entries may contain a resolved public display item. Clear
+  // them alongside the dynamic group state so no snapshot can outlive an RPC
+  // refresh (ordinary podcast statistics are deliberately left intact).
+  state.podcastDetailRecommendationCache?.clear();
   if (!displayGroupIds.length) return;
 
   try {
@@ -7332,9 +7336,11 @@ async function fetchDisplayGroupCommunityStats(requestToken) {
         })
         .filter(([id]) => Boolean(id))
     );
+    state.podcastDetailRecommendationCache?.clear();
   } catch (error) {
     if (requestToken !== state.communityStatsRequestToken) return;
     state.displayGroupCommunityStatsById = {};
+    state.podcastDetailRecommendationCache?.clear();
     console.warn("Display-group community stats are unavailable:", error);
   }
 }
@@ -9323,7 +9329,11 @@ function selectPodcastDetailRecommendations(
 function resolvePublicPodcastDisplayItem(podcast) {
   if (!podcast || podcast.isDisplayGroup) return podcast || null;
   const podcastKey = getPodcastKey(podcast);
-  return state.podcastDetailPublicItemByPodcastKey[podcastKey] || podcast;
+  // The lookup holds only catalogue identity. Recreate the public item here so
+  // its community fields always read the current RPC state rather than a
+  // catalogue-time snapshot.
+  const displayGroup = state.podcastDetailPublicItemByPodcastKey[podcastKey];
+  return displayGroup ? createRankingDisplayGroup(displayGroup) || podcast : podcast;
 }
 
 function collapseRecommendationCandidatesForPublicDisplay(sourcePodcast, candidates) {
@@ -12414,7 +12424,16 @@ function getDisplayGroupSeasonLabel(podcast) {
 
 function getDisplayGroupOwnRatingStats(members) {
   const ratings = members.map((member) => parseNumber(getUserRating(getPodcastKey(member)))).filter((rating) => rating !== null);
-  return { average: averageNumbers(ratings), count: ratings.length };
+  // user_ratings is numeric(3,1). Sum those stored tenths as integers so a
+  // binary accumulation such as 7.449999999999999 cannot round down in the
+  // display formatter at a decimal half-step.
+  const ratingTenths = ratings.map((rating) => Math.round(rating * 10));
+  return {
+    average: ratingTenths.length
+      ? ratingTenths.reduce((sum, rating) => sum + rating, 0) / (ratingTenths.length * 10)
+      : null,
+    count: ratings.length
+  };
 }
 
 function bindPodcastDetailFilterButtons(content, podcast) {
@@ -12538,7 +12557,7 @@ function renderPodcastDisplayGroupContent(dialog, displayGroup) {
     <section class="podcast-detail-sheet__ratings" aria-label="Vurderinger">
       <div><span>Podcastlistens vurdering</span><strong>${escapeHtml(formatCompactRating(displayGroup.ratingValue))}<small>/10</small></strong><em>${editorialCount} sæsoner med score</em></div>
       <div><span>Brugernes vurdering</span><strong>${displayGroup.userAverageRating === null ? "—" : escapeHtml(formatCompactRating(displayGroup.userAverageRating))}<small>/10</small></strong><em>${userCount ? escapeHtml(formatUserRatingCount(userCount)) : "Ingen brugervurderinger endnu"}</em></div>
-      <div class="podcast-detail-sheet__rating-cell podcast-detail-sheet__rating-cell--own podcast-detail-sheet__rating-cell--group-own"><span class="podcast-detail-sheet__rating-label">Din vurdering</span><strong>${own.average === null ? "—" : escapeHtml(formatCompactRating(own.average))}<small>/10</small></strong><em>${own.count ? `Beregnet fra ${own.count} sæsonvurderinger` : "Ingen sæsoner vurderet"}</em></div>
+      <div class="podcast-detail-sheet__rating-cell podcast-detail-sheet__rating-cell--own podcast-detail-sheet__rating-cell--group-own${own.count ? " is-episode-rating-locked" : ""}"><span class="podcast-detail-sheet__rating-label">Din vurdering</span>${own.count ? `<label class="podcast-detail-sheet__own-rating-control podcast-detail-sheet__own-rating-picker"><span class="podcast-detail-sheet__rating-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="4" y="3" width="16" height="18" rx="3"></rect><path d="M8 8h.01M12 8h.01M16 8h.01M8 12h.01M12 12h.01M16 12h.01M8 16h.01M12 16h.01M16 16h.01"></path></svg></span><span class="podcast-detail-sheet__own-rating-copy"><input class="podcast-detail-sheet__own-rating-input is-episode-calculated" type="text" value="${escapeHtml(formatCompactRating(own.average))}" aria-label="Din vurdering er låst og beregnes fra sæsonvurderinger" disabled /><small>Beregnet fra sæsoner</small></span><span class="podcast-detail-sheet__own-rating-suffix">/10</span></label><em>Beregnet fra ${own.count} sæsonvurderinger. Redigér under Vurder sæsoner.</em>` : `<strong>—<small>/10</small></strong><em>Ingen sæsoner vurderet. Vurdér under Vurder sæsoner.</em>`}</div>
     </section>
     <div class="podcast-detail-sheet__recommendation-row">${relatedMarkup}<div class="podcast-detail-sheet__review-status" aria-label="Sæsoner vurderet"><span class="podcast-detail-sheet__review-status-icon" aria-hidden="true">★</span><span><strong>${members.length} sæsoner vurderet</strong><small>Se vurderingerne under Vurder sæsoner</small></span></div></div>`;
   setImage(content.querySelector(".podcast-detail-sheet__cover"), getPodcastImageSources(displayGroup), displayGroup.title);
@@ -23758,13 +23777,14 @@ function rebuildPodcastDetailRecommendationLookups() {
 
   state.podcastDisplayGroups.forEach((group) => {
     const members = getDisplayGroupMemberPodcasts(group);
-    const publicItem = group.rankingEnabled ? createRankingDisplayGroup(group) : null;
     members.forEach((member) => {
       const key = getPodcastKey(member);
       if (!key) return;
       displayGroupByPodcastKey[key] = group;
       canonicalGroupKeyByPodcastKey[key] = `display-group:${group.id}`;
-      if (publicItem) publicItemByPodcastKey[key] = publicItem;
+      // Keep the static definition only. Community statistics are asynchronous
+      // and are resolved by resolvePublicPodcastDisplayItem on demand.
+      if (group.rankingEnabled) publicItemByPodcastKey[key] = group;
     });
   });
 
