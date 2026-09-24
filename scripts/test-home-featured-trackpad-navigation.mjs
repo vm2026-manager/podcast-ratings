@@ -166,8 +166,8 @@ function finishGesture() {
   assert.equal(surface.listeners.get("wheel").options.passive, false, "wheel listener is non-passive only for accepted navigation");
 }
 
-assert.match(app, /data-home-featured-prev[\s\S]*setHomeFeaturedIndex\(container, previousIndex, \{ direction: "previous"/u, "previous button navigation remains bound");
-assert.match(app, /data-home-featured-next[\s\S]*setHomeFeaturedIndex\(container, nextIndex, \{ direction: "next"/u, "next button navigation remains bound");
+assert.match(app, /data-home-featured-prev[\s\S]*setHomeFeaturedIndex\(navigationContainer, previousIndex, \{ direction: "previous"/u, "previous button navigation remains bound to the shared track");
+assert.match(app, /data-home-featured-next[\s\S]*setHomeFeaturedIndex\(navigationContainer, nextIndex, \{ direction: "next"/u, "next button navigation remains bound to the shared track");
 assert.match(app, /\(max-width: 768px\).*event\.pointerType === "mouse"/u, "mobile pointer swipe remains unchanged");
 assert.match(app, /\(min-width: 1101px\)/u, "wheel navigation uses the desktop homepage breakpoint");
 assert.match(app, /const HOME_FEATURED_TRACKPAD_THRESHOLD = 450;/u, "trackpad threshold is tuned to 450px");

@@ -13715,8 +13715,7 @@ const HOME_FEATURED_AUTOPLAY_DELAY = 12000;
 const HOME_FEATURED_TRACKPAD_THRESHOLD = 450;
 const HOME_FEATURED_TRACKPAD_IDLE_DELAY = 500;
 const HOME_FEATURED_TRACKPAD_DOMINANCE = 2.2;
-const HOME_FEATURED_TRANSITION_EXIT_DELAY = 70;
-const HOME_FEATURED_TRANSITION_DURATION = 220;
+const HOME_FEATURED_TRACK_TRANSITION_DURATION = 320;
 
 function initHomeFeaturedDesktopTrackpadNavigation(surface, onNavigate) {
   if (!surface) return;
@@ -13860,31 +13859,56 @@ function setHomeFeaturedIndex(container, index, { direction = "next", animate = 
     return;
   }
 
-  state.homeFeaturedTransitioning = true;
-  stopHomeFeaturedAutoplay();
-  container.classList.add("is-home-featured-leaving", `is-home-featured-leaving--${direction}`);
-  window.setTimeout(() => {
+  const track = container.querySelector(".home-featured__track");
+  if (!track) {
     state.homeFeaturedIndex = nextIndex;
     renderHomeFeatured(container);
-    container.classList.remove(
-      "is-home-featured-leaving",
-      "is-home-featured-leaving--next",
-      "is-home-featured-leaving--previous"
-    );
-    container.classList.add("is-home-featured-entering", `is-home-featured-entering--${direction}`);
-    state.homeFeaturedTransitionTimer = window.setTimeout(() => {
-      container.classList.remove(
-        "is-home-featured-entering",
-        "is-home-featured-entering--next",
-        "is-home-featured-entering--previous"
-      );
-      state.homeFeaturedTransitionTimer = null;
-      state.homeFeaturedTransitioning = false;
-    }, HOME_FEATURED_TRANSITION_DURATION);
-  }, HOME_FEATURED_TRANSITION_EXIT_DELAY);
+    return;
+  }
+
+  const currentIndex = state.homeFeaturedIndex;
+  let targetPosition = nextIndex + 1;
+  if (direction === "next" && currentIndex === reviews.length - 1 && nextIndex === 0) {
+    targetPosition = reviews.length + 1;
+  } else if (direction === "previous" && currentIndex === 0 && nextIndex === reviews.length - 1) {
+    targetPosition = 0;
+  }
+
+  state.homeFeaturedTransitioning = true;
+  stopHomeFeaturedAutoplay();
+  container.classList.add("is-home-featured-track-transitioning");
+  track.style.transition = `transform ${HOME_FEATURED_TRACK_TRANSITION_DURATION}ms cubic-bezier(.22, .75, .25, 1)`;
+  window.requestAnimationFrame(() => {
+    track.style.transform = `translate3d(-${targetPosition * 100}%, 0, 0)`;
+  });
+
+  state.homeFeaturedTransitionTimer = window.setTimeout(() => {
+    state.homeFeaturedIndex = nextIndex;
+    container.querySelectorAll("[data-home-featured-index]").forEach((button) => {
+      const isActive = Number(button.dataset.homeFeaturedIndex) === nextIndex;
+      button.classList.toggle("is-active", isActive);
+      button.setAttribute("aria-current", String(isActive));
+    });
+
+    const canonicalPosition = nextIndex + 1;
+    if (targetPosition !== canonicalPosition) {
+      track.style.transition = "none";
+      track.style.transform = `translate3d(-${canonicalPosition * 100}%, 0, 0)`;
+      window.requestAnimationFrame(() => {
+        track.style.transition = "";
+      });
+    } else {
+      track.style.transition = "";
+    }
+
+    container.classList.remove("is-home-featured-track-transitioning");
+    state.homeFeaturedTransitionTimer = null;
+    state.homeFeaturedTransitioning = false;
+    startHomeFeaturedAutoplay(container);
+  }, HOME_FEATURED_TRACK_TRANSITION_DURATION);
 }
 
-function renderHomeFeatured(container) {
+function renderHomeFeatured(container, { forceSingle = false, featuredIndex = state.homeFeaturedIndex } = {}) {
   if (!container) return;
 
   const reviews = getHomeFeaturedReviewQueue();
@@ -13894,9 +13918,31 @@ function renderHomeFeatured(container) {
   }
 
   const maxIndex = reviews.length - 1;
-  state.homeFeaturedIndex = Math.min(Math.max(state.homeFeaturedIndex, 0), maxIndex);
+  const activeIndex = Math.min(Math.max(featuredIndex, 0), maxIndex);
+  if (!forceSingle) state.homeFeaturedIndex = activeIndex;
 
-  const review = reviews[state.homeFeaturedIndex];
+  const useDesktopTrack = !forceSingle && shouldAnimateHomeFeatured(container, true);
+  if (useDesktopTrack) {
+    const slideIndexes = [maxIndex, ...reviews.map((_, reviewIndex) => reviewIndex), 0];
+    container.dataset.homeFeaturedTrackRoot = "true";
+    container.innerHTML = `
+      <div class="home-featured__viewport" aria-live="polite">
+        <div class="home-featured__track" style="transform: translate3d(-${(activeIndex + 1) * 100}%, 0, 0)">
+          ${slideIndexes.map((reviewIndex) => `<div class="home-featured__slide" data-home-featured-slide-index="${reviewIndex}"><div class="home-featured__slide-content"></div></div>`).join("")}
+        </div>
+      </div>
+    `;
+    container.querySelectorAll(".home-featured__slide-content").forEach((slide, slidePosition) => {
+      renderHomeFeatured(slide, { forceSingle: true, featuredIndex: slideIndexes[slidePosition] });
+    });
+    bindHomeFeaturedAutoplayPause(container);
+    startHomeFeaturedAutoplay(container);
+    return;
+  }
+
+  if (!forceSingle) delete container.dataset.homeFeaturedTrackRoot;
+
+  const review = reviews[activeIndex];
   const podcast = getPodcastForFeaturedReview(review);
   const imageSources = podcast ? getPodcastImageSources(podcast) : review.image;
   const coverCacheVersion = getPodcastCoverRevision(podcast);
@@ -13955,10 +14001,10 @@ function renderHomeFeatured(container) {
   ) || "";
   const showNavigation = reviews.length > 1;
   const indicatorMarkup = showNavigation
-    ? `<div class="home-featured__indicators" aria-label="Vælg ugens anbefaling">${reviews.map((reviewItem, index) => `<button class="home-featured__indicator${index === state.homeFeaturedIndex ? " is-active" : ""}" type="button" data-home-featured-index="${index}" aria-label="Vis anbefaling ${index + 1}: ${escapeHtml(reviewItem.title || "podcast")}" aria-current="${index === state.homeFeaturedIndex ? "true" : "false"}"></button>`).join("")}</div>`
+    ? `<div class="home-featured__indicators" aria-label="Vælg ugens anbefaling">${reviews.map((reviewItem, index) => `<button class="home-featured__indicator${index === activeIndex ? " is-active" : ""}" type="button" data-home-featured-index="${index}" aria-label="Vis anbefaling ${index + 1}: ${escapeHtml(reviewItem.title || "podcast")}" aria-current="${index === activeIndex ? "true" : "false"}"></button>`).join("")}</div>`
     : "";
-  const previousIndex = (state.homeFeaturedIndex - 1 + reviews.length) % reviews.length;
-  const nextIndex = (state.homeFeaturedIndex + 1) % reviews.length;
+  const previousIndex = (activeIndex - 1 + reviews.length) % reviews.length;
+  const nextIndex = (activeIndex + 1) % reviews.length;
   const previousReview = showNavigation ? reviews[previousIndex] : null;
   const nextReview = showNavigation ? reviews[nextIndex] : null;
   const previousPodcast = previousReview ? getPodcastForFeaturedReview(previousReview) : null;
@@ -14068,6 +14114,7 @@ function renderHomeFeatured(container) {
     <div class="home-featured__indicators--mobile">${indicatorMarkup}</div>
   `;
 
+  const navigationContainer = container.closest("[data-home-featured-track-root]") || container;
   const image = container.querySelector(".home-featured__image");
   const coverButton = container.querySelector(".home-featured__cover");
   const initialBackgroundSource = Array.isArray(imageSources) ? imageSources[0] : imageSources;
@@ -14153,7 +14200,7 @@ function renderHomeFeatured(container) {
     button.addEventListener("click", (event) => {
       event.preventDefault();
       event.stopPropagation();
-      setHomeFeaturedIndex(container, previousIndex, { direction: "previous", animate: true });
+      setHomeFeaturedIndex(navigationContainer, previousIndex, { direction: "previous", animate: true });
     });
   });
 
@@ -14161,7 +14208,7 @@ function renderHomeFeatured(container) {
     button.addEventListener("click", (event) => {
       event.preventDefault();
       event.stopPropagation();
-      setHomeFeaturedIndex(container, nextIndex, { direction: "next", animate: true });
+      setHomeFeaturedIndex(navigationContainer, nextIndex, { direction: "next", animate: true });
     });
   });
 
@@ -14170,8 +14217,8 @@ function renderHomeFeatured(container) {
       event.preventDefault();
       event.stopPropagation();
       const index = Number(button.dataset.homeFeaturedIndex);
-      setHomeFeaturedIndex(container, index, {
-        direction: index > state.homeFeaturedIndex ? "next" : "previous",
+      setHomeFeaturedIndex(navigationContainer, index, {
+        direction: index > activeIndex ? "next" : "previous",
         animate: true
       });
     });
@@ -14188,7 +14235,7 @@ function renderHomeFeatured(container) {
     const distance = event.clientX - swipeStartX;
     swipeStartX = null;
     if (Math.abs(distance) < 42) return;
-    setHomeFeaturedIndex(container, distance < 0 ? nextIndex : previousIndex, {
+    setHomeFeaturedIndex(navigationContainer, distance < 0 ? nextIndex : previousIndex, {
       direction: distance < 0 ? "next" : "previous",
       animate: true
     });
@@ -14197,14 +14244,16 @@ function renderHomeFeatured(container) {
     swipeStartX = null;
   });
   initHomeFeaturedDesktopTrackpadNavigation(featuredSurface, (direction) => {
-    setHomeFeaturedIndex(container, direction === "next" ? nextIndex : previousIndex, {
+    setHomeFeaturedIndex(navigationContainer, direction === "next" ? nextIndex : previousIndex, {
       direction,
       animate: true
     });
   });
 
-  bindHomeFeaturedAutoplayPause(container);
-  startHomeFeaturedAutoplay(container);
+  if (!forceSingle) {
+    bindHomeFeaturedAutoplayPause(container);
+    startHomeFeaturedAutoplay(container);
+  }
 }
 
 function renderHomePopular(container) {
