@@ -15,7 +15,7 @@ assert.equal(calls, 0); assert.deepEqual(state.displayGroupCommunityStatsById, i
 state.podcastDisplayGroupsReady = true; state.podcastDisplayGroupsVersion = 1; next = deferred(); const pending = context.fetchDisplayGroupCommunityStats(1);
 assert.equal(calls, 1); assert.deepEqual(state.displayGroupCommunityStatsById, initial()); assert.equal(modalRefreshes, 0);
 next.resolve({ data: [{ display_group_id: "narkobetjenten", average_rating: 8.15, rating_count: 2 }], error: null }); await pending;
-assert.deepEqual(state.displayGroupCommunityStatsById, { narkobetjenten: { averageRating: 8.15, ratingCount: 2 } }); assert.equal(modalRefreshes, 1);
+assert.equal(JSON.stringify(state.displayGroupCommunityStatsById), JSON.stringify({ narkobetjenten: { averageRating: 8.15, ratingCount: 2 } })); assert.equal(modalRefreshes, 1);
 state.displayGroupCommunityStatsById = initial(); modalRefreshes = 0; next = deferred(); const failed = context.fetchDisplayGroupCommunityStats(1); assert.deepEqual(state.displayGroupCommunityStatsById, initial()); next.resolve({ data: null, error: new Error("fail") }); await failed;
 assert.deepEqual(state.displayGroupCommunityStatsById, {}); assert.deepEqual(state.communityStatsByKey, { ordinary: { averageRating: 8, ratingCount: 2 } }); assert.equal(modalRefreshes, 1);
 state.displayGroupCommunityStatsById = initial(); ids = []; modalRefreshes = 0; await context.fetchDisplayGroupCommunityStats(1); assert.deepEqual(state.displayGroupCommunityStatsById, {}); assert.equal(modalRefreshes, 1); ids = ["narkobetjenten"];
