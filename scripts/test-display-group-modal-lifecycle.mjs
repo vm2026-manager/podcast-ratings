@@ -81,6 +81,8 @@ assert.match(markup, /Podcastlistens vurdering[\s\S]*7,4[\s\S]*12 sæsoner med s
 assert.match(markup, /Brugernes vurdering[\s\S]*7,5[\s\S]*1 bruger/u);
 assert.match(markup, /Din vurdering[\s\S]*value="7,5"[\s\S]*Beregnet fra 6 sæsonvurderinger/u);
 assert.match(markup, /is-episode-rating-locked[\s\S]*is-episode-calculated[\s\S]*disabled/u);
+assert.match(markup, /data-podcast-detail-season-rating-lock-trigger/u);
+assert.match(markup, /podcast-detail-sheet__episode-rating-lock-help[\s\S]*beregnes automatisk ud fra dine sæsonvurderinger[\s\S]*Redigér under Vurder sæsoner/u);
 assert.doesNotMatch(markup, /data-podcast-detail-inline-rating-save/u);
 assert.match(markup, /Vurder sæsoner/u);
 
