@@ -12424,7 +12424,16 @@ function getDisplayGroupSeasonLabel(podcast) {
 
 function getDisplayGroupOwnRatingStats(members) {
   const ratings = members.map((member) => parseNumber(getUserRating(getPodcastKey(member)))).filter((rating) => rating !== null);
-  return { average: averageNumbers(ratings), count: ratings.length };
+  // user_ratings is numeric(3,1). Sum those stored tenths as integers so a
+  // binary accumulation such as 7.449999999999999 cannot round down in the
+  // display formatter at a decimal half-step.
+  const ratingTenths = ratings.map((rating) => Math.round(rating * 10));
+  return {
+    average: ratingTenths.length
+      ? ratingTenths.reduce((sum, rating) => sum + rating, 0) / (ratingTenths.length * 10)
+      : null,
+    count: ratings.length
+  };
 }
 
 function bindPodcastDetailFilterButtons(content, podcast) {

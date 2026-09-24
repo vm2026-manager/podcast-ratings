@@ -69,4 +69,27 @@ assert.match(app, /data-podcast-season-rate/u);
 assert.doesNotMatch(groupRender, /data-podcast-detail-inline-rating-save/u);
 assert.match(app, /function getDisplayGroupOwnRatingStats\(members\)/u);
 
+// Ratings are persisted at one decimal. Their integer-tenths average avoids
+// the old IEEE-754 path where this exact set became 7.449999999999999 and was
+// rendered as 7,4 even though the equivalent community aggregate is 7.45.
+const getOwnStats = new Function(
+  "parseNumber", "getUserRating", "getPodcastKey",
+  `${extractFunction("getDisplayGroupOwnRatingStats")}; return getDisplayGroupOwnRatingStats;`
+)(
+  (value) => Number.isFinite(Number(value)) ? Number(value) : null,
+  (key) => ({ a: 8.0, b: 8.2, c: 8.2, d: 6.9, e: 6.9, f: 6.5 }[key] ?? null),
+  (member) => member.key
+);
+const ownStats = getOwnStats(["a", "b", "c", "d", "e", "f"].map((key) => ({ key })));
+assert.equal(ownStats.count, 6);
+assert.equal(ownStats.average, 7.45);
+
+const formatCompactRating = new Function(
+  "parseNumber", `${extractFunction("formatCompactRating")}; return formatCompactRating;`
+)((value) => Number.isFinite(Number(value)) ? Number(value) : null);
+assert.equal(formatCompactRating(ownStats.average), "7,5");
+assert.equal(formatCompactRating(7.45), "7,5", "community and own 7.45 display identically");
+assert.equal(formatCompactRating(7.44), "7,4");
+assert.equal(formatCompactRating(7.46), "7,5");
+
 console.log("Display-group modal freshness and derived-own-rating regression checks passed.");
