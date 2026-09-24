@@ -81,8 +81,54 @@ assert.match(markup, /Podcastlistens vurdering[\s\S]*7,4[\s\S]*12 sæsoner med s
 assert.match(markup, /Brugernes vurdering[\s\S]*7,5[\s\S]*1 bruger/u);
 assert.match(markup, /Din vurdering[\s\S]*value="7,5"[\s\S]*Beregnet fra 6 sæsonvurderinger/u);
 assert.match(markup, /is-episode-rating-locked[\s\S]*is-episode-calculated[\s\S]*disabled/u);
+assert.match(markup, /data-podcast-detail-season-rating-lock-trigger/u);
+assert.match(markup, /podcast-detail-sheet__episode-rating-lock-help[\s\S]*beregnes automatisk ud fra dine sæsonvurderinger[\s\S]*Redigér under Vurder sæsoner/u);
+assert.match(markup, /podcast-detail-sheet__episode-rating-mobile-help[\s\S]*data-podcast-detail-season-rating-mobile-help[\s\S]*beregnes automatisk ud fra dine sæsonvurderinger/u);
 assert.doesNotMatch(markup, /data-podcast-detail-inline-rating-save/u);
 assert.match(markup, /Vurder sæsoner/u);
+
+function classList() {
+  const values = new Set();
+  return { contains: (value) => values.has(value), toggle: (value, force) => force ? values.add(value) : values.delete(value), add: (value) => values.add(value), remove: (value) => values.delete(value) };
+}
+function eventTarget() {
+  const listeners = new Map();
+  const attributes = new Map();
+  return { classList: classList(), addEventListener: (name, handler) => listeners.set(name, handler), click() { listeners.get("click")?.({ preventDefault() {}, target: this }); }, contains: (target) => target === this, setAttribute: (name, value) => attributes.set(name, value), getAttribute: (name) => attributes.get(name) };
+}
+const ratingCell = eventTarget();
+const seasonTrigger = eventTarget();
+seasonTrigger.closest = () => ratingCell;
+seasonTrigger.setAttribute("aria-expanded", "false");
+const seasonMobileHelp = eventTarget();
+const interactiveContent = eventTarget();
+interactiveContent.classList = { remove() {}, add() {} };
+interactiveContent.querySelector = (selector) => ({
+  "[data-podcast-detail-season-rating-lock-trigger]": seasonTrigger,
+  "[data-podcast-detail-season-rating-mobile-help]": seasonMobileHelp
+}[selector] || null);
+interactiveContent.querySelectorAll = () => [];
+Object.defineProperty(interactiveContent, "innerHTML", { set() {} });
+const interactiveDialog = { querySelector: (selector) => selector === "[data-podcast-detail-content]" ? interactiveContent : { replaceChildren() {} }, classList: { remove() {} } };
+const originalMatchMedia = globalThis.matchMedia;
+globalThis.matchMedia = () => ({ matches: true });
+runtime.renderPodcastDisplayGroupContent(interactiveDialog, resolved);
+assert.equal(seasonTrigger.getAttribute("aria-expanded"), "false");
+assert.equal(ratingCell.classList.contains("is-episode-rating-lock-open"), false);
+assert.equal(seasonMobileHelp.classList.contains("is-episode-rating-lock-open"), false);
+seasonTrigger.click();
+assert.equal(seasonTrigger.getAttribute("aria-expanded"), "true");
+assert.equal(ratingCell.classList.contains("is-episode-rating-lock-open"), true);
+assert.equal(seasonMobileHelp.classList.contains("is-episode-rating-lock-open"), true);
+seasonTrigger.click();
+assert.equal(seasonTrigger.getAttribute("aria-expanded"), "false");
+assert.equal(ratingCell.classList.contains("is-episode-rating-lock-open"), false);
+assert.equal(seasonMobileHelp.classList.contains("is-episode-rating-lock-open"), false);
+globalThis.matchMedia = () => ({ matches: false });
+seasonTrigger.click();
+assert.equal(ratingCell.classList.contains("is-episode-rating-lock-open"), false);
+assert.equal(seasonMobileHelp.classList.contains("is-episode-rating-lock-open"), false);
+globalThis.matchMedia = originalMatchMedia;
 
 const own = runtime.getDisplayGroupOwnRatingStats(members);
 assert.deepEqual(own, { average: 7.45, count: 6 });

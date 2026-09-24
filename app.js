@@ -12567,8 +12567,9 @@ function renderPodcastDisplayGroupContent(dialog, displayGroup) {
     <section class="podcast-detail-sheet__ratings" aria-label="Vurderinger">
       <div><span>Podcastlistens vurdering</span><strong>${escapeHtml(formatCompactRating(displayGroup.ratingValue))}<small>/10</small></strong><em>${editorialCount} sæsoner med score</em></div>
       <div><span>Brugernes vurdering</span><strong>${displayGroup.userAverageRating === null ? "—" : escapeHtml(formatCompactRating(displayGroup.userAverageRating))}<small>/10</small></strong><em>${userCount ? escapeHtml(formatUserRatingCount(userCount)) : "Ingen brugervurderinger endnu"}</em></div>
-      <div class="podcast-detail-sheet__rating-cell podcast-detail-sheet__rating-cell--own podcast-detail-sheet__rating-cell--group-own${own.count ? " is-episode-rating-locked" : ""}"><span class="podcast-detail-sheet__rating-label">Din vurdering</span>${own.count ? `<label class="podcast-detail-sheet__own-rating-control podcast-detail-sheet__own-rating-picker"><span class="podcast-detail-sheet__rating-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="4" y="3" width="16" height="18" rx="3"></rect><path d="M8 8h.01M12 8h.01M16 8h.01M8 12h.01M12 12h.01M16 12h.01M8 16h.01M12 16h.01M16 16h.01"></path></svg></span><span class="podcast-detail-sheet__own-rating-copy"><input class="podcast-detail-sheet__own-rating-input is-episode-calculated" type="text" value="${escapeHtml(formatCompactRating(own.average))}" aria-label="Din vurdering er låst og beregnes fra sæsonvurderinger" disabled /><small>Beregnet fra sæsoner</small></span><span class="podcast-detail-sheet__own-rating-suffix">/10</span></label><em>Beregnet fra ${own.count} sæsonvurderinger. Redigér under Vurder sæsoner.</em>` : `<strong>—<small>/10</small></strong><em>Ingen sæsoner vurderet. Vurdér under Vurder sæsoner.</em>`}</div>
+      <div class="podcast-detail-sheet__rating-cell podcast-detail-sheet__rating-cell--own podcast-detail-sheet__rating-cell--group-own${own.count ? " is-episode-rating-locked" : ""}"><span class="podcast-detail-sheet__rating-label">Din vurdering</span>${own.count ? `<label class="podcast-detail-sheet__own-rating-control podcast-detail-sheet__own-rating-picker"><span class="podcast-detail-sheet__rating-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="4" y="3" width="16" height="18" rx="3"></rect><path d="M8 8h.01M12 8h.01M16 8h.01M8 12h.01M12 12h.01M16 12h.01M8 16h.01M12 16h.01M16 16h.01"></path></svg></span><span class="podcast-detail-sheet__own-rating-copy"><input class="podcast-detail-sheet__own-rating-input is-episode-calculated" type="text" value="${escapeHtml(formatCompactRating(own.average))}" aria-label="Din vurdering er låst og beregnes fra sæsonvurderinger" aria-describedby="podcastDetailSeasonRatingLockHelp" disabled /><small>Beregnet fra sæsoner</small></span><span class="podcast-detail-sheet__own-rating-suffix">/10</span></label><em>Beregnet fra ${own.count} ${own.count === 1 ? "sæsonvurdering" : "sæsonvurderinger"}</em><button class="podcast-detail-sheet__episode-rating-lock-trigger" type="button" data-podcast-detail-season-rating-lock-trigger aria-label="Hvorfor er din vurdering låst?" aria-describedby="podcastDetailSeasonRatingLockHelp" aria-expanded="false">i</button><div class="podcast-detail-sheet__episode-rating-lock-help" id="podcastDetailSeasonRatingLockHelp" role="tooltip">Din vurdering er låst, fordi den beregnes automatisk ud fra dine sæsonvurderinger. Redigér under Vurder sæsoner.</div>` : `<strong>—<small>/10</small></strong><em>Ingen sæsoner vurderet. Vurdér under Vurder sæsoner.</em>`}</div>
     </section>
+    <section class="podcast-detail-sheet__episode-rating-mobile-help" data-podcast-detail-season-rating-mobile-help${own.count ? "" : " hidden"} aria-live="polite">${own.count ? `<p>Din vurdering er låst, fordi den beregnes automatisk ud fra dine sæsonvurderinger. Redigér under Vurder sæsoner.</p>` : ""}</section>
     <div class="podcast-detail-sheet__recommendation-row">${relatedMarkup}<div class="podcast-detail-sheet__review-status" aria-label="Sæsoner vurderet"><span class="podcast-detail-sheet__review-status-icon" aria-hidden="true">★</span><span><strong>${members.length} sæsoner vurderet</strong><small>Se vurderingerne under Vurder sæsoner</small></span></div></div>`;
   setImage(content.querySelector(".podcast-detail-sheet__cover"), getPodcastImageSources(displayGroup), displayGroup.title);
   hydratePodcastSimilarityProduct(dialog, displayGroup);
@@ -12588,6 +12589,23 @@ function renderPodcastDisplayGroupContent(dialog, displayGroup) {
     descriptionToggle.setAttribute("aria-expanded", String(expanded));
     descriptionToggle.textContent = expanded ? "Vis mindre" : "Læs mere";
   });
+  const seasonRatingLockTrigger = content.querySelector("[data-podcast-detail-season-rating-lock-trigger]");
+  if (seasonRatingLockTrigger) {
+    const ratingCell = seasonRatingLockTrigger.closest(".podcast-detail-sheet__rating-cell");
+    const seasonRatingMobileHelp = content.querySelector("[data-podcast-detail-season-rating-mobile-help]");
+    const toggleSeasonRatingLockHelp = (event) => {
+      if (!globalThis.matchMedia?.("(hover: none), (pointer: coarse)")?.matches) return;
+      event?.preventDefault();
+      const isOpen = !ratingCell.classList.contains("is-episode-rating-lock-open");
+      ratingCell.classList.toggle("is-episode-rating-lock-open", isOpen);
+      seasonRatingMobileHelp?.classList.toggle("is-episode-rating-lock-open", isOpen);
+      seasonRatingLockTrigger.setAttribute("aria-expanded", String(isOpen));
+    };
+    seasonRatingLockTrigger.addEventListener("click", toggleSeasonRatingLockHelp);
+    ratingCell?.addEventListener("click", (event) => {
+      if (!seasonRatingLockTrigger.contains(event.target)) toggleSeasonRatingLockHelp(event);
+    });
+  }
   content.querySelector("[data-podcast-seasons-open]")?.addEventListener("click", () => renderPodcastDisplayGroupSeasonWorkspace(dialog, displayGroup));
 }
 
