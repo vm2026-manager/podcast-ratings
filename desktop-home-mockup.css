@@ -18793,43 +18793,40 @@ html body #podcastDetailSheet [data-podcast-detail-placement]:empty {
   }
 }
 
-@media (min-width: 1101px) and (prefers-reduced-motion: no-preference) {
-  html body.page-forside #pageIntroPanel .home-featured__content.is-home-featured-leaving {
+/* Desktop weekly recommendation: retained slides move through a real horizontal track.
+   The visible slide is never removed while its neighbour enters the viewport. */
+@media (min-width: 1101px) {
+  html body.page-forside #pageIntroPanel .home-featured__viewport {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    isolation: isolate;
+  }
+
+  html body.page-forside #pageIntroPanel .home-featured__track {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    will-change: transform;
+  }
+
+  html body.page-forside #pageIntroPanel .home-featured__slide {
+    flex: 0 0 100%;
+    width: 100%;
+    min-width: 100%;
+    height: 100%;
+    overflow: hidden;
+  }
+
+  html body.page-forside #pageIntroPanel .home-featured__slide-content,
+  html body.page-forside #pageIntroPanel .home-featured__slide-content .home-featured__surface {
+    width: 100%;
+    height: 100%;
+    min-height: 0;
+  }
+
+  html body.page-forside #pageIntroPanel .home-featured__content.is-home-featured-track-transitioning .home-featured__track {
     pointer-events: none;
-  }
-
-  html body.page-forside #pageIntroPanel .home-featured__content.is-home-featured-leaving--next .home-featured__surface {
-    animation: home-featured-leave-next 70ms ease-in forwards;
-  }
-
-  html body.page-forside #pageIntroPanel .home-featured__content.is-home-featured-leaving--previous .home-featured__surface {
-    animation: home-featured-leave-previous 70ms ease-in forwards;
-  }
-
-  html body.page-forside #pageIntroPanel .home-featured__content.is-home-featured-entering--next .home-featured__surface {
-    animation: home-featured-enter-next 180ms cubic-bezier(.2, .8, .2, 1) both;
-  }
-
-  html body.page-forside #pageIntroPanel .home-featured__content.is-home-featured-entering--previous .home-featured__surface {
-    animation: home-featured-enter-previous 180ms cubic-bezier(.2, .8, .2, 1) both;
-  }
-
-  @keyframes home-featured-leave-next {
-    to { opacity: 0; transform: translateX(-18px); }
-  }
-
-  @keyframes home-featured-leave-previous {
-    to { opacity: 0; transform: translateX(18px); }
-  }
-
-  @keyframes home-featured-enter-next {
-    from { opacity: 0; transform: translateX(18px); }
-    to { opacity: 1; transform: translateX(0); }
-  }
-
-  @keyframes home-featured-enter-previous {
-    from { opacity: 0; transform: translateX(-18px); }
-    to { opacity: 1; transform: translateX(0); }
   }
 }
 
