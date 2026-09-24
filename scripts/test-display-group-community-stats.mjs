@@ -108,6 +108,8 @@ const context = {
   console: { warn: (...args) => warnings.push(args) },
   state: {
     communityStatsRequestToken: 1,
+    podcastDisplayGroupsReady: true,
+    podcastDisplayGroupsVersion: 1,
     communityStatsByKey: ordinaryStats,
     displayGroupCommunityStatsById: { stale: { averageRating: 9, ratingCount: 1 } },
     supabase: { rpc: async () => ({ data: null, error: new Error("missing RPC") }) }

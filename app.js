@@ -868,6 +868,8 @@ const state = {
   podcastById: {},
   podcastByLegacyKey: {},
   podcastDisplayGroups: [],
+  podcastDisplayGroupsReady: false,
+  podcastDisplayGroupsVersion: 0,
   podcastDisplayGroupById: {},
   podcastDetailDisplayGroupByPodcastKey: {},
   podcastDetailPublicItemByPodcastKey: {},
@@ -7305,7 +7307,12 @@ function buildDisplayGroupCommunityStatsRequest() {
 }
 
 async function fetchDisplayGroupCommunityStats(requestToken) {
+  // An empty array before the catalogue commits is not a confirmed empty
+  // display-group configuration. Preserve an already-good aggregate until the
+  // configuration is explicitly ready.
+  if (!state.podcastDisplayGroupsReady) return;
   const displayGroupIds = buildDisplayGroupCommunityStatsRequest();
+  const displayGroupsVersion = state.podcastDisplayGroupsVersion;
   // Clear first: a failed or stale RPC must never present old group data as
   // fresh. Ordinary per-podcast statistics are intentionally unaffected.
   state.displayGroupCommunityStatsById = {};
@@ -7320,6 +7327,7 @@ async function fetchDisplayGroupCommunityStats(requestToken) {
       p_display_group_ids: displayGroupIds
     });
     if (requestToken !== state.communityStatsRequestToken) return;
+    if (displayGroupsVersion !== state.podcastDisplayGroupsVersion) return;
     if (error) throw error;
 
     state.displayGroupCommunityStatsById = Object.fromEntries(
@@ -7339,6 +7347,7 @@ async function fetchDisplayGroupCommunityStats(requestToken) {
     state.podcastDetailRecommendationCache?.clear();
   } catch (error) {
     if (requestToken !== state.communityStatsRequestToken) return;
+    if (displayGroupsVersion !== state.podcastDisplayGroupsVersion) return;
     state.displayGroupCommunityStatsById = {};
     state.podcastDetailRecommendationCache?.clear();
     console.warn("Display-group community stats are unavailable:", error);
@@ -23875,10 +23884,16 @@ function applyPodcastDataRefresh(podcastRows, featuredRows, coverManifestLookup 
     if (canonicalPodcast) state.podcastByKey[legacyKey] = canonicalPodcast;
   });
   state.podcastDisplayGroups = displayGroups;
+  state.podcastDisplayGroupsReady = true;
+  state.podcastDisplayGroupsVersion += 1;
   state.podcastDisplayGroupById = Object.fromEntries(
     displayGroups.map((group) => [normalizeText(group.id), group])
   );
   rebuildPodcastDetailRecommendationLookups();
+  // Supabase and the catalogue start in parallel. Once this valid definition
+  // commits, synchronize group aggregates even if an earlier refresh happened
+  // while the configuration was unready.
+  if (state.supabase) void fetchDisplayGroupCommunityStats(state.communityStatsRequestToken);
   if (
     state.podcastSimilarityProductStatus === "ready" &&
     state.podcastSimilarityMetadataPayload
