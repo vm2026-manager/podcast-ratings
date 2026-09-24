@@ -13710,6 +13710,55 @@ function updateHomeFeaturedForegroundTheme(container, image) {
 }
 
 const HOME_FEATURED_AUTOPLAY_DELAY = 12000;
+const HOME_FEATURED_TRACKPAD_THRESHOLD = 48;
+const HOME_FEATURED_TRACKPAD_IDLE_DELAY = 180;
+const HOME_FEATURED_TRACKPAD_DOMINANCE = 1.35;
+
+function initHomeFeaturedDesktopTrackpadNavigation(surface, onNavigate) {
+  if (!surface) return;
+
+  let accumulatedDeltaX = 0;
+  let gestureLocked = false;
+  let idleTimer = null;
+  const resetGesture = () => {
+    accumulatedDeltaX = 0;
+    gestureLocked = false;
+    if (idleTimer !== null) {
+      window.clearTimeout(idleTimer);
+      idleTimer = null;
+    }
+  };
+  const scheduleGestureReset = () => {
+    if (idleTimer !== null) window.clearTimeout(idleTimer);
+    idleTimer = window.setTimeout(() => {
+      idleTimer = null;
+      accumulatedDeltaX = 0;
+      gestureLocked = false;
+    }, HOME_FEATURED_TRACKPAD_IDLE_DELAY);
+  };
+
+  surface.addEventListener("wheel", (event) => {
+    if (window.matchMedia?.("(max-width: 768px)").matches) return;
+
+    const horizontalIntent = Math.abs(event.deltaX) > Math.abs(event.deltaY) * HOME_FEATURED_TRACKPAD_DOMINANCE;
+    if (!horizontalIntent) return;
+
+    scheduleGestureReset();
+    if (gestureLocked) {
+      event.preventDefault();
+      return;
+    }
+
+    accumulatedDeltaX += event.deltaX;
+    if (Math.abs(accumulatedDeltaX) < HOME_FEATURED_TRACKPAD_THRESHOLD) return;
+
+    gestureLocked = true;
+    event.preventDefault();
+    onNavigate(accumulatedDeltaX > 0 ? "next" : "previous");
+  }, { passive: false });
+
+  surface.addEventListener("mouseleave", resetGesture);
+}
 
 function stopHomeFeaturedAutoplay() {
   if (state.homeFeaturedAutoplayTimer !== null) {
@@ -14065,6 +14114,9 @@ function renderHomeFeatured(container) {
   });
   featuredSurface?.addEventListener("pointercancel", () => {
     swipeStartX = null;
+  });
+  initHomeFeaturedDesktopTrackpadNavigation(featuredSurface, (direction) => {
+    setHomeFeaturedIndex(container, direction === "next" ? nextIndex : previousIndex);
   });
 
   bindHomeFeaturedAutoplayPause(container);
