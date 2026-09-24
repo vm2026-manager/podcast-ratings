@@ -13738,7 +13738,10 @@ function initHomeFeaturedDesktopTrackpadNavigation(surface, onNavigate) {
   };
 
   surface.addEventListener("wheel", (event) => {
-    if (window.matchMedia?.("(max-width: 768px)").matches) return;
+    if (
+      !document.body.classList.contains("page-forside") ||
+      !window.matchMedia?.("(min-width: 1101px)").matches
+    ) return;
 
     const horizontalIntent = Math.abs(event.deltaX) > Math.abs(event.deltaY) * HOME_FEATURED_TRACKPAD_DOMINANCE;
     if (!horizontalIntent) return;
