@@ -18787,6 +18787,52 @@ html body #podcastDetailSheet [data-podcast-detail-placement]:empty {
   }
 }
 
+@media (min-width: 1101px) {
+  html body.page-forside.home-featured-trackpad-guard #pageIntroPanel .home-featured__surface {
+    overscroll-behavior-x: none;
+  }
+}
+
+@media (min-width: 1101px) and (prefers-reduced-motion: no-preference) {
+  html body.page-forside #pageIntroPanel .home-featured__content.is-home-featured-leaving {
+    pointer-events: none;
+  }
+
+  html body.page-forside #pageIntroPanel .home-featured__content.is-home-featured-leaving--next .home-featured__surface {
+    animation: home-featured-leave-next 70ms ease-in forwards;
+  }
+
+  html body.page-forside #pageIntroPanel .home-featured__content.is-home-featured-leaving--previous .home-featured__surface {
+    animation: home-featured-leave-previous 70ms ease-in forwards;
+  }
+
+  html body.page-forside #pageIntroPanel .home-featured__content.is-home-featured-entering--next .home-featured__surface {
+    animation: home-featured-enter-next 180ms cubic-bezier(.2, .8, .2, 1) both;
+  }
+
+  html body.page-forside #pageIntroPanel .home-featured__content.is-home-featured-entering--previous .home-featured__surface {
+    animation: home-featured-enter-previous 180ms cubic-bezier(.2, .8, .2, 1) both;
+  }
+
+  @keyframes home-featured-leave-next {
+    to { opacity: 0; transform: translateX(-18px); }
+  }
+
+  @keyframes home-featured-leave-previous {
+    to { opacity: 0; transform: translateX(18px); }
+  }
+
+  @keyframes home-featured-enter-next {
+    from { opacity: 0; transform: translateX(18px); }
+    to { opacity: 1; transform: translateX(0); }
+  }
+
+  @keyframes home-featured-enter-previous {
+    from { opacity: 0; transform: translateX(-18px); }
+    to { opacity: 1; transform: translateX(0); }
+  }
+}
+
 @media (max-width: 1100px) {
   html body.page-forside #pageIntroPanel .home-featured__cover-column {
     display: contents;
