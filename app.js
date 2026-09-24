@@ -948,6 +948,8 @@ const state = {
   homeFeaturedIndex: 0,
   homeFeaturedAutoplayTimer: null,
   homeFeaturedAutoplayPaused: false,
+  homeFeaturedTransitionTimer: null,
+  homeFeaturedTransitioning: false,
   activeFilter: null,
   activePublisherFilter: "",
   activeMainSeriesFilter: "",
@@ -13713,16 +13715,27 @@ const HOME_FEATURED_AUTOPLAY_DELAY = 12000;
 const HOME_FEATURED_TRACKPAD_THRESHOLD = 450;
 const HOME_FEATURED_TRACKPAD_IDLE_DELAY = 500;
 const HOME_FEATURED_TRACKPAD_DOMINANCE = 2.2;
+const HOME_FEATURED_TRANSITION_EXIT_DELAY = 70;
+const HOME_FEATURED_TRANSITION_DURATION = 220;
 
 function initHomeFeaturedDesktopTrackpadNavigation(surface, onNavigate) {
   if (!surface) return;
 
   let accumulatedDeltaX = 0;
   let gestureLocked = false;
+  let gestureAxis = "undecided";
   let idleTimer = null;
+  const isDesktopHomepage = () =>
+    document.body.classList.contains("page-forside") &&
+    window.matchMedia?.("(min-width: 1101px)").matches;
+  const setOverscrollGuard = (active) => {
+    if (!isDesktopHomepage()) return;
+    document.body.classList.toggle("home-featured-trackpad-guard", active);
+  };
   const resetGesture = () => {
     accumulatedDeltaX = 0;
     gestureLocked = false;
+    gestureAxis = "undecided";
     if (idleTimer !== null) {
       window.clearTimeout(idleTimer);
       idleTimer = null;
@@ -13734,24 +13747,36 @@ function initHomeFeaturedDesktopTrackpadNavigation(surface, onNavigate) {
       idleTimer = null;
       accumulatedDeltaX = 0;
       gestureLocked = false;
+      gestureAxis = "undecided";
     }, HOME_FEATURED_TRACKPAD_IDLE_DELAY);
   };
 
   surface.addEventListener("wheel", (event) => {
-    if (
-      !document.body.classList.contains("page-forside") ||
-      !window.matchMedia?.("(min-width: 1101px)").matches
-    ) return;
+    if (!isDesktopHomepage()) return;
 
-    const horizontalIntent = Math.abs(event.deltaX) > Math.abs(event.deltaY) * HOME_FEATURED_TRACKPAD_DOMINANCE;
-    if (!horizontalIntent) return;
-
-    event.preventDefault();
-    scheduleGestureReset();
-    if (gestureLocked) {
+    if (gestureAxis === "vertical") {
+      scheduleGestureReset();
       return;
     }
 
+    if (gestureAxis === "undecided") {
+      const horizontalIntent = Math.abs(event.deltaX) > Math.abs(event.deltaY) * HOME_FEATURED_TRACKPAD_DOMINANCE;
+      const verticalIntent = Math.abs(event.deltaY) > Math.abs(event.deltaX) * HOME_FEATURED_TRACKPAD_DOMINANCE;
+      if (horizontalIntent) {
+        gestureAxis = "horizontal";
+        setOverscrollGuard(true);
+      } else if (verticalIntent) {
+        gestureAxis = "vertical";
+        scheduleGestureReset();
+        return;
+      } else {
+        return;
+      }
+    }
+
+    event.preventDefault();
+    scheduleGestureReset();
+    if (gestureLocked) return;
     accumulatedDeltaX += event.deltaX;
     if (Math.abs(accumulatedDeltaX) < HOME_FEATURED_TRACKPAD_THRESHOLD) return;
 
@@ -13759,7 +13784,11 @@ function initHomeFeaturedDesktopTrackpadNavigation(surface, onNavigate) {
     onNavigate(accumulatedDeltaX > 0 ? "next" : "previous");
   }, { passive: false });
 
-  surface.addEventListener("mouseleave", resetGesture);
+  surface.addEventListener("pointerenter", () => setOverscrollGuard(true));
+  surface.addEventListener("mouseleave", () => {
+    resetGesture();
+    setOverscrollGuard(false);
+  });
 }
 
 function stopHomeFeaturedAutoplay() {
@@ -13783,8 +13812,8 @@ function startHomeFeaturedAutoplay(container) {
       return;
     }
 
-    state.homeFeaturedIndex = (state.homeFeaturedIndex + 1) % reviews.length;
-    renderHomeFeatured(container);
+    const nextIndex = (state.homeFeaturedIndex + 1) % reviews.length;
+    setHomeFeaturedIndex(container, nextIndex, { direction: "next", animate: true });
   }, HOME_FEATURED_AUTOPLAY_DELAY);
 }
 
@@ -13807,9 +13836,52 @@ function bindHomeFeaturedAutoplayPause(container) {
   });
 }
 
-function setHomeFeaturedIndex(container, index) {
-  state.homeFeaturedIndex = index;
-  renderHomeFeatured(container);
+function shouldAnimateHomeFeatured(container, animate) {
+  return Boolean(
+    animate &&
+    container?.isConnected &&
+    document.body.classList.contains("page-forside") &&
+    window.matchMedia?.("(min-width: 1101px)").matches &&
+    !window.matchMedia?.("(prefers-reduced-motion: reduce)").matches
+  );
+}
+
+function setHomeFeaturedIndex(container, index, { direction = "next", animate = false } = {}) {
+  if (!container || state.homeFeaturedTransitioning) return;
+
+  const reviews = getHomeFeaturedReviewQueue();
+  if (!reviews.length) return;
+  const nextIndex = Math.min(Math.max(index, 0), reviews.length - 1);
+  if (nextIndex === state.homeFeaturedIndex) return;
+
+  if (!shouldAnimateHomeFeatured(container, animate)) {
+    state.homeFeaturedIndex = nextIndex;
+    renderHomeFeatured(container);
+    return;
+  }
+
+  state.homeFeaturedTransitioning = true;
+  stopHomeFeaturedAutoplay();
+  container.classList.add("is-home-featured-leaving", `is-home-featured-leaving--${direction}`);
+  window.setTimeout(() => {
+    state.homeFeaturedIndex = nextIndex;
+    renderHomeFeatured(container);
+    container.classList.remove(
+      "is-home-featured-leaving",
+      "is-home-featured-leaving--next",
+      "is-home-featured-leaving--previous"
+    );
+    container.classList.add("is-home-featured-entering", `is-home-featured-entering--${direction}`);
+    state.homeFeaturedTransitionTimer = window.setTimeout(() => {
+      container.classList.remove(
+        "is-home-featured-entering",
+        "is-home-featured-entering--next",
+        "is-home-featured-entering--previous"
+      );
+      state.homeFeaturedTransitionTimer = null;
+      state.homeFeaturedTransitioning = false;
+    }, HOME_FEATURED_TRANSITION_DURATION);
+  }, HOME_FEATURED_TRANSITION_EXIT_DELAY);
 }
 
 function renderHomeFeatured(container) {
@@ -14081,7 +14153,7 @@ function renderHomeFeatured(container) {
     button.addEventListener("click", (event) => {
       event.preventDefault();
       event.stopPropagation();
-      setHomeFeaturedIndex(container, previousIndex);
+      setHomeFeaturedIndex(container, previousIndex, { direction: "previous", animate: true });
     });
   });
 
@@ -14089,7 +14161,7 @@ function renderHomeFeatured(container) {
     button.addEventListener("click", (event) => {
       event.preventDefault();
       event.stopPropagation();
-      setHomeFeaturedIndex(container, nextIndex);
+      setHomeFeaturedIndex(container, nextIndex, { direction: "next", animate: true });
     });
   });
 
@@ -14097,7 +14169,11 @@ function renderHomeFeatured(container) {
     button.addEventListener("click", (event) => {
       event.preventDefault();
       event.stopPropagation();
-      setHomeFeaturedIndex(container, Number(button.dataset.homeFeaturedIndex));
+      const index = Number(button.dataset.homeFeaturedIndex);
+      setHomeFeaturedIndex(container, index, {
+        direction: index > state.homeFeaturedIndex ? "next" : "previous",
+        animate: true
+      });
     });
   });
 
@@ -14112,13 +14188,19 @@ function renderHomeFeatured(container) {
     const distance = event.clientX - swipeStartX;
     swipeStartX = null;
     if (Math.abs(distance) < 42) return;
-    setHomeFeaturedIndex(container, distance < 0 ? nextIndex : previousIndex);
+    setHomeFeaturedIndex(container, distance < 0 ? nextIndex : previousIndex, {
+      direction: distance < 0 ? "next" : "previous",
+      animate: true
+    });
   });
   featuredSurface?.addEventListener("pointercancel", () => {
     swipeStartX = null;
   });
   initHomeFeaturedDesktopTrackpadNavigation(featuredSurface, (direction) => {
-    setHomeFeaturedIndex(container, direction === "next" ? nextIndex : previousIndex);
+    setHomeFeaturedIndex(container, direction === "next" ? nextIndex : previousIndex, {
+      direction,
+      animate: true
+    });
   });
 
   bindHomeFeaturedAutoplayPause(container);

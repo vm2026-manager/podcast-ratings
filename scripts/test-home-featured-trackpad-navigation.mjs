@@ -34,11 +34,16 @@ class FakeSurface {
     });
     return prevented;
   }
+
+  dispatch(type, event = {}) {
+    this.listeners.get(type)?.listener(event);
+  }
 }
 
 let timers = [];
 let desktopMatch = true;
 let homepageMatch = true;
+let overscrollGuardActive = false;
 const fakeWindow = {
   matchMedia: () => ({ matches: desktopMatch }),
   setTimeout: (callback) => {
@@ -53,7 +58,13 @@ const fakeWindow = {
 const fakeDocument = {
   body: {
     classList: {
-      contains: () => homepageMatch
+      contains: (className) =>
+        className === "page-forside"
+          ? homepageMatch
+          : className === "home-featured-trackpad-guard" && overscrollGuardActive,
+      toggle: (className, active) => {
+        if (className === "home-featured-trackpad-guard") overscrollGuardActive = Boolean(active);
+      }
     }
   }
 };
@@ -70,6 +81,7 @@ function createHarness({ desktop = true, homepage = true } = {}) {
   timers = [];
   desktopMatch = desktop;
   homepageMatch = homepage;
+  overscrollGuardActive = false;
   const surface = new FakeSurface();
   const transitions = [];
   initTrackpadNavigation(surface, (direction) => transitions.push(direction));
@@ -84,9 +96,14 @@ function finishGesture() {
 
 {
   const { surface, transitions } = createHarness();
+  surface.dispatch("pointerenter");
+  assert.equal(overscrollGuardActive, true, "overscroll protection is active only while the weekly surface is hovered");
   assert.equal(surface.dispatchWheel(150, 2), true, "the first clear horizontal event is prevented");
+  assert.equal(surface.dispatchWheel(0, 2), true, "a noisy inertia tail remains prevented after horizontal ownership");
   assert.equal(surface.dispatchWheel(150, 2), true, "300px of clear horizontal input remains prevented");
   assert.deepEqual(transitions, [], "300px of clear horizontal input does not navigate");
+  surface.dispatch("mouseleave");
+  assert.equal(overscrollGuardActive, false, "overscroll protection is removed when the pointer leaves the weekly surface");
 }
 
 {
@@ -149,12 +166,15 @@ function finishGesture() {
   assert.equal(surface.listeners.get("wheel").options.passive, false, "wheel listener is non-passive only for accepted navigation");
 }
 
-assert.match(app, /data-home-featured-prev[\s\S]*setHomeFeaturedIndex\(container, previousIndex\)/u, "previous button navigation remains bound");
-assert.match(app, /data-home-featured-next[\s\S]*setHomeFeaturedIndex\(container, nextIndex\)/u, "next button navigation remains bound");
+assert.match(app, /data-home-featured-prev[\s\S]*setHomeFeaturedIndex\(container, previousIndex, \{ direction: "previous"/u, "previous button navigation remains bound");
+assert.match(app, /data-home-featured-next[\s\S]*setHomeFeaturedIndex\(container, nextIndex, \{ direction: "next"/u, "next button navigation remains bound");
 assert.match(app, /\(max-width: 768px\).*event\.pointerType === "mouse"/u, "mobile pointer swipe remains unchanged");
 assert.match(app, /\(min-width: 1101px\)/u, "wheel navigation uses the desktop homepage breakpoint");
 assert.match(app, /const HOME_FEATURED_TRACKPAD_THRESHOLD = 450;/u, "trackpad threshold is tuned to 450px");
 assert.match(app, /const HOME_FEATURED_TRACKPAD_IDLE_DELAY = 500;/u, "trackpad idle reset is tuned to 500ms");
 assert.match(app, /const HOME_FEATURED_TRACKPAD_DOMINANCE = 2\.2;/u, "trackpad dominance is tuned to 2.2");
+assert.match(app, /let gestureAxis = "undecided"/u, "trackpad navigation tracks gesture ownership");
+assert.match(app, /gestureAxis = "horizontal"/u, "horizontal ownership persists across later wheel events");
+assert.match(app, /home-featured-trackpad-guard/u, "overscroll guard is scoped to the weekly surface interaction");
 
 console.log("Home featured desktop trackpad navigation regression checks passed.");
