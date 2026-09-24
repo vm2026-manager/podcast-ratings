@@ -7313,14 +7313,13 @@ async function fetchDisplayGroupCommunityStats(requestToken) {
   if (!state.podcastDisplayGroupsReady) return;
   const displayGroupIds = buildDisplayGroupCommunityStatsRequest();
   const displayGroupsVersion = state.podcastDisplayGroupsVersion;
-  // Clear first: a failed or stale RPC must never present old group data as
-  // fresh. Ordinary per-podcast statistics are intentionally unaffected.
-  state.displayGroupCommunityStatsById = {};
-  // Recommendation entries may contain a resolved public display item. Clear
-  // them alongside the dynamic group state so no snapshot can outlive an RPC
-  // refresh (ordinary podcast statistics are deliberately left intact).
-  state.podcastDetailRecommendationCache?.clear();
-  if (!displayGroupIds.length) return;
+  // A confirmed ready-but-empty configuration is the one valid immediate clear.
+  if (!displayGroupIds.length) {
+    state.displayGroupCommunityStatsById = {};
+    state.podcastDetailRecommendationCache?.clear();
+    refreshOpenPodcastDetailSheet();
+    return;
+  }
 
   try {
     const { data, error } = await state.supabase.rpc(DISPLAY_GROUP_COMMUNITY_STATS_RPC, {
@@ -7345,11 +7344,13 @@ async function fetchDisplayGroupCommunityStats(requestToken) {
         .filter(([id]) => Boolean(id))
     );
     state.podcastDetailRecommendationCache?.clear();
+    refreshOpenPodcastDetailSheet();
   } catch (error) {
     if (requestToken !== state.communityStatsRequestToken) return;
     if (displayGroupsVersion !== state.podcastDisplayGroupsVersion) return;
     state.displayGroupCommunityStatsById = {};
     state.podcastDetailRecommendationCache?.clear();
+    refreshOpenPodcastDetailSheet();
     console.warn("Display-group community stats are unavailable:", error);
   }
 }

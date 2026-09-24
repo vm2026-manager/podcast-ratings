@@ -122,6 +122,7 @@ const context = {
   },
   Math,
   Object
+  , refreshOpenPodcastDetailSheet: () => {}
 };
 vm.createContext(context);
 vm.runInContext(extractFunction("fetchDisplayGroupCommunityStats"), context);
