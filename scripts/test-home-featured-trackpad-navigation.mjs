@@ -37,8 +37,10 @@ class FakeSurface {
 }
 
 let timers = [];
+let desktopMatch = true;
+let homepageMatch = true;
 const fakeWindow = {
-  matchMedia: () => ({ matches: false }),
+  matchMedia: () => ({ matches: desktopMatch }),
   setTimeout: (callback) => {
     const timer = { callback, cleared: false };
     timers.push(timer);
@@ -48,16 +50,26 @@ const fakeWindow = {
     timer.cleared = true;
   }
 };
+const fakeDocument = {
+  body: {
+    classList: {
+      contains: () => homepageMatch
+    }
+  }
+};
 const initTrackpadNavigation = new Function(
   "window",
+  "document",
   "HOME_FEATURED_TRACKPAD_THRESHOLD",
   "HOME_FEATURED_TRACKPAD_IDLE_DELAY",
   "HOME_FEATURED_TRACKPAD_DOMINANCE",
   `${extractFunction("initHomeFeaturedDesktopTrackpadNavigation")}\nreturn initHomeFeaturedDesktopTrackpadNavigation;`
-)(fakeWindow, 48, 180, 1.35);
+)(fakeWindow, fakeDocument, 48, 180, 1.35);
 
-function createHarness() {
+function createHarness({ desktop = true, homepage = true } = {}) {
   timers = [];
+  desktopMatch = desktop;
+  homepageMatch = homepage;
   const surface = new FakeSurface();
   const transitions = [];
   initTrackpadNavigation(surface, (direction) => transitions.push(direction));
@@ -76,6 +88,18 @@ function finishGesture() {
   surface.dispatchWheel(18, 1);
   assert.equal(surface.dispatchWheel(18, 2), true, "a clear left trackpad gesture is accepted");
   assert.deepEqual(transitions, ["next"], "a clear left gesture moves to the next recommendation");
+}
+
+{
+  const { surface, transitions } = createHarness({ desktop: false });
+  assert.equal(surface.dispatchWheel(60, 1), false, "wheel input below the desktop breakpoint is not prevented");
+  assert.deepEqual(transitions, [], "wheel input below 1101px does not navigate");
+}
+
+{
+  const { surface, transitions } = createHarness({ homepage: false });
+  surface.dispatchWheel(60, 1);
+  assert.deepEqual(transitions, [], "wheel navigation is limited to body.page-forside");
 }
 
 {
@@ -106,5 +130,6 @@ function finishGesture() {
 assert.match(app, /data-home-featured-prev[\s\S]*setHomeFeaturedIndex\(container, previousIndex\)/u, "previous button navigation remains bound");
 assert.match(app, /data-home-featured-next[\s\S]*setHomeFeaturedIndex\(container, nextIndex\)/u, "next button navigation remains bound");
 assert.match(app, /\(max-width: 768px\).*event\.pointerType === "mouse"/u, "mobile pointer swipe remains unchanged");
+assert.match(app, /\(min-width: 1101px\)/u, "wheel navigation uses the desktop homepage breakpoint");
 
 console.log("Home featured desktop trackpad navigation regression checks passed.");
