@@ -83,6 +83,8 @@ assert.match(markup, /Din vurdering[\s\S]*value="7,5"[\s\S]*Beregnet fra 6 sæso
 assert.match(markup, /is-episode-rating-locked[\s\S]*is-episode-calculated[\s\S]*disabled/u);
 assert.match(markup, /data-podcast-detail-season-rating-lock-trigger/u);
 assert.match(markup, /podcast-detail-sheet__episode-rating-lock-help[\s\S]*beregnes automatisk ud fra dine sæsonvurderinger[\s\S]*Redigér under Vurder sæsoner/u);
+assert.match(markup, /podcast-detail-sheet__episode-rating-mobile-help[\s\S]*data-podcast-detail-season-rating-mobile-help[\s\S]*beregnes automatisk ud fra dine sæsonvurderinger/u);
+assert.match(app, /seasonRatingMobileHelp\?\.classList\.toggle\("is-episode-rating-lock-open", isOpen\)/u);
 assert.doesNotMatch(markup, /data-podcast-detail-inline-rating-save/u);
 assert.match(markup, /Vurder sæsoner/u);
 
