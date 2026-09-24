@@ -1,9 +1,10 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
+import vm from "node:vm";
 
 const app = readFileSync(new URL("../app.js", import.meta.url), "utf8");
 const migration = readFileSync(
-  new URL("../supabase/migrations/20260924110000_create_display_group_community_stats.sql", import.meta.url),
+  new URL("../supabase/migrations/20260924065645_restrict_display_group_community_stats.sql", import.meta.url),
   "utf8"
 );
 
@@ -58,10 +59,10 @@ assert.equal(stats.ratingCount, 2);
 stats = displayGroupStats([{ user: "user-a", podcastKey: "single", rating: 7 }, { user: "user-b", podcastKey: "single", rating: 9 }], ["single"]);
 assert.deepEqual(stats, { averageRating: 8, ratingCount: 2 });
 
-// H: raw historical keys are forwarded to the server aggregate rather than
-// discarded when the client canonicalizes public per-podcast stats.
-assert.match(app, /communityStatsStoredKeysByCanonical/u);
-assert.match(app, /storedKeys\?\.length \? storedKeys : \[canonicalKey\]/u);
+// H: the client supplies only reviewed group IDs. Exact persisted rating keys
+// are held in a private server-side map, so aliases cannot be caller-injected.
+assert.match(app, /p_display_group_ids: displayGroupIds/u);
+assert.doesNotMatch(app, /communityStatsStoredKeysByCanonical|p_groups|podcast_keys: \[\.\.\.new Set/u);
 
 // G/I: editorial aggregation and the existing per-season own-rating helper
 // remain separate from the community RPC.
@@ -71,12 +72,70 @@ assert.match(app, /DISPLAY_GROUP_COMMUNITY_STATS_RPC/u);
 assert.doesNotMatch(app, /function getDisplayGroupUserStats\(group\)[\s\S]{0,500}weightedTotal/u);
 
 // The migration is additive and only returns a group ID plus aggregates. It
-// has no rating-data DML and explicitly limits execution to public roles.
+// validates IDs through a private reviewed-membership map and has no rating
+// DML. An unknown ID joins no map row, so it cannot aggregate arbitrary keys.
 assert.match(migration, /security definer/u);
-assert.match(migration, /group by requested_keys\.display_group_id, effective_user_ratings\.user_id/u);
+assert.match(migration, /private\.display_group_rating_members/u);
+assert.match(migration, /p_display_group_ids text\[\]/u);
+assert.match(migration, /join requested_group_ids[\s\S]*members\.display_group_id/u);
+assert.match(migration, /group by requested_members\.display_group_id, effective_user_ratings\.user_id/u);
 assert.match(migration, /avg\(per_user_group_ratings\.user_average_rating\)/u);
-assert.match(migration, /revoke all on function public\.get_display_group_community_stats\(jsonb\) from public/u);
-assert.match(migration, /grant execute on function public\.get_display_group_community_stats\(jsonb\) to anon, authenticated/u);
-assert.doesNotMatch(migration, /\b(?:insert|update|delete|alter\s+table|drop\s+table)\b/iu);
+assert.match(migration, /set search_path = ''/u);
+assert.match(migration, /revoke all on function public\.get_display_group_community_stats\(text\[\]\) from public/u);
+assert.match(migration, /grant execute on function public\.get_display_group_community_stats\(text\[\]\) to anon, authenticated/u);
+assert.doesNotMatch(migration, /\b(?:insert into|update|delete from)\s+public\.(?:user_ratings|episode_ratings)\b/iu);
+assert.doesNotMatch(migration, /user_id.*returns|rating.*returns/iu);
+
+function extractFunction(name) {
+  const marker = `async function ${name}(`;
+  const start = app.indexOf(marker);
+  assert.notEqual(start, -1, `Missing ${name}`);
+  let depth = 0;
+  for (let index = start; index < app.length; index += 1) {
+    if (app[index] === "{") depth += 1;
+    if (app[index] === "}" && --depth === 0) return app.slice(start, index + 1);
+  }
+  throw new Error(`Could not extract ${name}`);
+}
+
+// Failure/rollout regression: the optional RPC clears only group stats. The
+// already-loaded normal per-podcast aggregate remains usable and no stale
+// group result survives a failed refresh.
+const ordinaryStats = { "ordinary-podcast": { averageRating: 8, ratingCount: 2 } };
+const warnings = [];
+const context = {
+  DISPLAY_GROUP_COMMUNITY_STATS_RPC: "get_display_group_community_stats",
+  console: { warn: (...args) => warnings.push(args) },
+  state: {
+    communityStatsRequestToken: 1,
+    communityStatsByKey: ordinaryStats,
+    displayGroupCommunityStatsById: { stale: { averageRating: 9, ratingCount: 1 } },
+    supabase: { rpc: async () => ({ data: null, error: new Error("missing RPC") }) }
+  },
+  buildDisplayGroupCommunityStatsRequest: () => ["narkobetjenten"],
+  normalizeText: (value) => String(value ?? "").trim(),
+  parseNumber: (value) => {
+    const numeric = Number(value);
+    return Number.isFinite(numeric) ? numeric : null;
+  },
+  Math,
+  Object
+};
+vm.createContext(context);
+vm.runInContext(extractFunction("fetchDisplayGroupCommunityStats"), context);
+await context.fetchDisplayGroupCommunityStats(1);
+assert.equal(JSON.stringify(context.state.displayGroupCommunityStatsById), "{}");
+assert.deepEqual(context.state.communityStatsByKey, ordinaryStats);
+assert.equal(warnings.length, 1);
+
+context.state.supabase.rpc = async () => ({
+  data: [{ display_group_id: "narkobetjenten", average_rating: 7.45, rating_count: 1 }],
+  error: null
+});
+await context.fetchDisplayGroupCommunityStats(1);
+assert.equal(
+  JSON.stringify(context.state.displayGroupCommunityStatsById),
+  JSON.stringify({ narkobetjenten: { averageRating: 7.45, ratingCount: 1 } })
+);
 
 console.log("display-group community stats regression tests passed");

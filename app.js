@@ -908,9 +908,6 @@ const state = {
   // existing legacy row when that user later edits or deletes their rating.
   userRatingPersistedKeyByCanonical: {},
   communityStatsByKey: {},
-  // Canonical catalogue ID -> raw public-stat keys. Display-group aggregation
-  // passes these through so historical aliases remain part of the same group.
-  communityStatsStoredKeysByCanonical: {},
   displayGroupCommunityStatsById: {},
   // A successful empty response is still a usable ranking snapshot, so this
   // must not be inferred from communityStatsByKey.
@@ -3308,7 +3305,6 @@ function canonicalizeCommunityStats(rows) {
   }
 
   const totalsByKey = {};
-  const storedKeysByCanonical = {};
   const unresolvedKeys = [];
 
   rows.forEach((item) => {
@@ -3321,13 +3317,6 @@ function canonicalizeCommunityStats(rows) {
     const averageRating = parseNumber(item?.average_rating);
     const ratingCount = Number(item?.rating_count || 0);
     if (averageRating === null || ratingCount <= 0) return;
-
-    const storedKey = normalizeText(item?.podcast_key);
-    if (storedKey) {
-      const keys = storedKeysByCanonical[canonicalKey] || new Set();
-      keys.add(storedKey);
-      storedKeysByCanonical[canonicalKey] = keys;
-    }
 
     const totals = totalsByKey[canonicalKey] || {
       weightedRatingSum: 0,
@@ -3358,12 +3347,6 @@ function canonicalizeCommunityStats(rows) {
           recentUsers90d: totals.recentUsers90d,
           momentumScore: totals.momentumScore
         }
-      ])
-    ),
-    storedKeysByCanonical: Object.fromEntries(
-      Object.entries(storedKeysByCanonical).map(([canonicalKey, keys]) => [
-        canonicalKey,
-        [...keys]
       ])
     ),
     unresolvedKeys
@@ -7294,11 +7277,10 @@ async function fetchCommunityStats() {
     if (requestToken !== state.communityStatsRequestToken) return;
     if (error) throw error;
 
-    const { statsByKey, storedKeysByCanonical, unresolvedKeys } = canonicalizeCommunityStats(data);
+    const { statsByKey, unresolvedKeys } = canonicalizeCommunityStats(data);
     if (requestToken !== state.communityStatsRequestToken) return;
 
     state.communityStatsByKey = statsByKey;
-    state.communityStatsStoredKeysByCanonical = storedKeysByCanonical;
     await fetchDisplayGroupCommunityStats(requestToken);
     if (requestToken !== state.communityStatsRequestToken) return;
     state.communityStatsHasSuccessfulLoad = true;
@@ -7318,47 +7300,43 @@ async function fetchCommunityStats() {
 
 function buildDisplayGroupCommunityStatsRequest() {
   return state.podcastDisplayGroups
-    .map((group) => {
-      const podcastKeys = getDisplayGroupMemberPodcasts(group).flatMap((member) => {
-        const canonicalKey = getPodcastKey(member);
-        const storedKeys = state.communityStatsStoredKeysByCanonical[canonicalKey];
-        return storedKeys?.length ? storedKeys : [canonicalKey];
-      });
-      return {
-        id: normalizeText(group.id),
-        podcast_keys: [...new Set(podcastKeys.filter(Boolean))]
-      };
-    })
-    .filter((group) => group.id && group.podcast_keys.length);
+    .map((group) => normalizeText(group?.id))
+    .filter(Boolean);
 }
 
 async function fetchDisplayGroupCommunityStats(requestToken) {
-  const groups = buildDisplayGroupCommunityStatsRequest();
-  if (!groups.length) {
+  const displayGroupIds = buildDisplayGroupCommunityStatsRequest();
+  // Clear first: a failed or stale RPC must never present old group data as
+  // fresh. Ordinary per-podcast statistics are intentionally unaffected.
+  state.displayGroupCommunityStatsById = {};
+  if (!displayGroupIds.length) return;
+
+  try {
+    const { data, error } = await state.supabase.rpc(DISPLAY_GROUP_COMMUNITY_STATS_RPC, {
+      p_display_group_ids: displayGroupIds
+    });
+    if (requestToken !== state.communityStatsRequestToken) return;
+    if (error) throw error;
+
+    state.displayGroupCommunityStatsById = Object.fromEntries(
+      (data || [])
+        .map((item) => {
+          const id = normalizeText(item?.display_group_id);
+          return [
+            id,
+            {
+              averageRating: parseNumber(item?.average_rating),
+              ratingCount: Math.max(0, Number(item?.rating_count || 0))
+            }
+          ];
+        })
+        .filter(([id]) => Boolean(id))
+    );
+  } catch (error) {
+    if (requestToken !== state.communityStatsRequestToken) return;
     state.displayGroupCommunityStatsById = {};
-    return;
+    console.warn("Display-group community stats are unavailable:", error);
   }
-
-  const { data, error } = await state.supabase.rpc(DISPLAY_GROUP_COMMUNITY_STATS_RPC, {
-    p_groups: groups
-  });
-  if (requestToken !== state.communityStatsRequestToken) return;
-  if (error) throw error;
-
-  state.displayGroupCommunityStatsById = Object.fromEntries(
-    (data || [])
-      .map((item) => {
-        const id = normalizeText(item?.display_group_id);
-        return [
-          id,
-          {
-            averageRating: parseNumber(item?.average_rating),
-            ratingCount: Math.max(0, Number(item?.rating_count || 0))
-          }
-        ];
-      })
-      .filter(([id]) => Boolean(id))
-  );
 }
 
 async function refreshPodcastCommunityStat(podcastKey) {
