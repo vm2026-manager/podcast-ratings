@@ -1,4 +1,8 @@
 /* Shared mobile expand/collapse treatment for profile panels. */
+html body #podcastDetailSheet .podcast-detail-sheet__episode-mobile-column-header {
+  display: none;
+}
+
 @media (max-width: 768px) {
   html body.page-profil .profile-panel__toggle {
     min-height: 34px;
@@ -77,7 +81,10 @@
     font-size: 16px !important;
   }
   html body #podcastDetailSheet.is-episode-workspace .podcast-detail-sheet__episode-workspace-summary {
+    box-sizing: border-box !important;
     margin: 0 !important;
+    /* Align with the table wrapper's 10px inset plus each card's 16px gutter. */
+    padding: 0 26px !important;
     color: #786a60 !important;
     font: 800 .75rem/1.2 "Manrope", sans-serif !important;
   }
@@ -87,6 +94,18 @@
     border: 0 !important;
     border-radius: 0 !important;
     background: transparent !important;
+  }
+  html body #podcastDetailSheet.is-episode-workspace .podcast-detail-sheet__episode-mobile-column-header {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) 120px !important;
+    padding: 0 16px 7px !important;
+  }
+  html body #podcastDetailSheet.is-episode-workspace .podcast-detail-sheet__episode-mobile-column-header span {
+    grid-column: 2 !important;
+    color: #887a70 !important;
+    font: 800 .65rem/1 "Manrope", sans-serif !important;
+    letter-spacing: .04em !important;
+    text-transform: uppercase !important;
   }
   html body #podcastDetailSheet.is-episode-workspace .podcast-detail-sheet__episode-table,
   html body #podcastDetailSheet.is-episode-workspace .podcast-detail-sheet__episode-table tbody {
