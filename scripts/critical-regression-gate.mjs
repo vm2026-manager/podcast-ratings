@@ -11,6 +11,7 @@ const checks = [
   ["episode detail DOM stability", ["scripts/test-podcast-detail-episode-load-dom-stability.mjs"]],
   ["episode own-rating lock", ["scripts/test-podcast-detail-own-rating-lock-behavior.mjs"]],
   ["mobile podcast-detail rating alignment", ["scripts/test-mobile-podcast-detail-regressions.mjs"]],
+  ["mobile episode workspace layout", ["scripts/test-mobile-episode-workspace-layout.mjs"]],
   ["episode canonical identity", ["scripts/validate-episode-canonical-identity.mjs"]],
   ["legacy community rating identity", ["scripts/test-community-rating-identity.mjs"]],
   ["display-group unique community users", ["scripts/test-display-group-community-stats.mjs"]],
