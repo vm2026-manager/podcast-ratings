@@ -9419,25 +9419,56 @@ function getPodcastDetailRecommendations(podcast) {
   return completedRecommendations;
 }
 
+function createPodcastSimilarityProductCard(item, sectionType) {
+  const template = document.createElement("template");
+  template.innerHTML = renderPodcastSimilarityProductCard(item, sectionType).trim();
+  return template.content.firstElementChild;
+}
+
+function updatePodcastSimilarityProductCard(card, item, sectionType) {
+  // Preserve the cover subtree (and its successfully loaded src) while
+  // allowing refreshed recommendation copy to reflect current data.
+  const replacement = createPodcastSimilarityProductCard(item, sectionType);
+  if (!replacement) return;
+
+  ["class", "data-podcast-similarity-card", "data-podcast-similarity-podcast-key", "aria-label"].forEach(
+    (attribute) => {
+      const value = replacement.getAttribute(attribute);
+      if (value === null) card.removeAttribute(attribute);
+      else card.setAttribute(attribute, value);
+    }
+  );
+  const copy = card.querySelector(".podcast-detail-sheet__related-copy");
+  const replacementCopy = replacement.querySelector(".podcast-detail-sheet__related-copy");
+  if (copy && replacementCopy) copy.replaceChildren(...replacementCopy.childNodes);
+}
+
+function hydratePodcastSimilarityProductCard(card) {
+  if (!card || card.dataset.podcastSimilarityHydrated === "true") return;
+  card.dataset.podcastSimilarityHydrated = "true";
+
+  const recommendationId = card.dataset.podcastSimilarityCard;
+  const podcastKey = card.dataset.podcastSimilarityPodcastKey;
+  const candidatePodcast =
+    getRankingDisplayItemByKey(podcastKey) ||
+    state.podcastSimilarityPodcastByRecommendationId[recommendationId];
+  if (!candidatePodcast) return;
+  const cover = card.querySelector(".podcast-detail-sheet__related-cover");
+  setImage(cover, getPodcastImageSources(candidatePodcast), candidatePodcast.title);
+  card.addEventListener("click", (event) => {
+    event.preventDefault();
+    event.stopPropagation();
+    openPodcastDetailFromModal(candidatePodcast, card);
+  });
+}
+
 function hydratePodcastSimilarityProduct(dialog, podcast) {
   const content = dialog.querySelector("[data-podcast-detail-content]");
   const container = content?.querySelector("[data-podcast-similarity-product]");
   if (!container) return;
 
   container.querySelectorAll("[data-podcast-similarity-card]").forEach((card) => {
-    const recommendationId = card.dataset.podcastSimilarityCard;
-    const podcastKey = card.dataset.podcastSimilarityPodcastKey;
-    const candidatePodcast =
-      getRankingDisplayItemByKey(podcastKey) ||
-      state.podcastSimilarityPodcastByRecommendationId[recommendationId];
-    if (!candidatePodcast) return;
-    const cover = card.querySelector(".podcast-detail-sheet__related-cover");
-    setImage(cover, getPodcastImageSources(candidatePodcast), candidatePodcast.title);
-    card.addEventListener("click", (event) => {
-      event.preventDefault();
-      event.stopPropagation();
-      openPodcastDetailFromModal(candidatePodcast, card);
-    });
+    hydratePodcastSimilarityProductCard(card);
   });
 
   const getDesktopRelatedCarouselPageOffsets = (track) => {
@@ -9468,6 +9499,8 @@ function hydratePodcastSimilarityProduct(dialog, podcast) {
   };
 
   container.querySelectorAll("[data-podcast-similarity-scroll]").forEach((button) => {
+    if (button.dataset.podcastSimilarityHydrated === "true") return;
+    button.dataset.podcastSimilarityHydrated = "true";
     button.addEventListener("click", (event) => {
       event.preventDefault();
       event.stopPropagation();
@@ -9505,13 +9538,53 @@ function renderPodcastDetailSimilarityProduct(dialog, podcast) {
   if (!container || state.activePodcastDetailKey !== getPodcastKey(podcast)) return;
 
   const markup = getPodcastSimilarityProductMarkup(podcast);
-  if (!markup) {
+  const recommendations = getPodcastDetailRecommendations(podcast);
+  if (!markup || !recommendations.length) {
     container.replaceChildren();
     return;
   }
 
-  container.outerHTML = markup;
-  hydratePodcastSimilarityProduct(dialog, podcast);
+  const track = container.querySelector(".podcast-detail-sheet__related-track");
+  if (!track) {
+    // The initial asynchronous placeholder has no card/image content to
+    // retain. Replace only that placeholder, never the detail modal.
+    const template = document.createElement("template");
+    template.innerHTML = markup.trim();
+    const replacement = template.content.firstElementChild;
+    if (!replacement) return;
+    container.replaceWith(replacement);
+    hydratePodcastSimilarityProduct(dialog, podcast);
+    return;
+  }
+
+  const existingCardsByPodcastKey = new Map(
+    [...track.querySelectorAll("[data-podcast-similarity-card]")].map((card) => [
+      card.dataset.podcastSimilarityPodcastKey,
+      card
+    ])
+  );
+  const nextCards = [];
+
+  recommendations.forEach(({ item, sectionType }) => {
+    const podcastKey = getPodcastKey(item.podcast);
+    let card = existingCardsByPodcastKey.get(podcastKey);
+    if (card) {
+      updatePodcastSimilarityProductCard(card, item, sectionType);
+      existingCardsByPodcastKey.delete(podcastKey);
+    } else {
+      card = createPodcastSimilarityProductCard(item, sectionType);
+      if (card) hydratePodcastSimilarityProductCard(card);
+    }
+    if (card) nextCards.push(card);
+  });
+
+  // Do not even move cards that are already in their desired position.
+  nextCards.forEach((card, index) => {
+    if (track.children[index] !== card) {
+      track.insertBefore(card, track.children[index] || null);
+    }
+  });
+  existingCardsByPodcastKey.forEach((card) => card.remove());
 }
 
 function schedulePodcastDetailSimilarityProduct(dialog, podcast) {

@@ -9,7 +9,11 @@ assert.notEqual(start, -1, "Canonical modal-group helper must exist.");
 assert.notEqual(end, -1, "Modal recommendation selector must be complete.");
 
 const context = {
-  state: { podcastDisplayGroups: [] },
+  state: {
+    podcastDisplayGroups: [],
+    podcastDetailCanonicalGroupKeyByPodcastKey: {},
+    podcastDetailDisplayGroupByPodcastKey: {}
+  },
   normalizeText: (value) => String(value || "").trim(),
   normalizeComparable: (value) => String(value || "").trim().toLowerCase(),
   normalizeMatchKey: (value) => String(value || "").trim().toLowerCase(),
