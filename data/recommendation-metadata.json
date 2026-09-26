@@ -2,7 +2,7 @@
   "version": 1,
   "source": {
     "path": "data/podcasts.json",
-    "generatedAt": "2026-09-26T19:22:04.349Z",
+    "generatedAt": "2026-09-26T22:11:49.402Z",
     "count": 1279,
     "topicAliases": "config/recommendation-topic-aliases.json",
     "topicAliasVersion": 1,
@@ -8426,6 +8426,45 @@
         "konflikt",
         "stalking",
         "salsamiljoe"
+      ],
+      "topicEligible": true,
+      "genreEligible": true,
+      "recommendationMetadataEligible": true,
+      "metadataIssues": []
+    },
+    {
+      "id": "bitcoin bedraget",
+      "recommendationId": "rec-bitcoin-bedraget-b7005a57412117f84ded38d53136b25a",
+      "recommendationIdentityBasis": "title+link",
+      "identityDuplicateGroup": "",
+      "title": "Bitcoin-bedraget",
+      "mainSeries": "",
+      "primaryGenreRaw": "Dokumentar",
+      "primaryGenre": "Dokumentar",
+      "primaryGenreValid": true,
+      "primaryGenreMappingType": "native",
+      "primaryGenreMappingSource": "Dokumentar",
+      "primaryGenreNeedsReview": false,
+      "primaryGenreReviewReason": "",
+      "secondaryGenre": "True Crime",
+      "secondaryGenreValid": true,
+      "topicsRaw": [
+        "Bitcoinsvindel",
+        "falsk investeringsrådgivning",
+        "økonomisk svindel",
+        "internationale netværk"
+      ],
+      "topicsCanonical": [
+        "Bitcoinsvindel",
+        "falsk investeringsrådgivning",
+        "økonomisk svindel",
+        "internationale netværk"
+      ],
+      "topicKeys": [
+        "bitcoinsvindel",
+        "falsk-investeringsraadgivning",
+        "oekonomisk-svindel",
+        "internationale-netvaerk"
       ],
       "topicEligible": true,
       "genreEligible": true,
@@ -17274,6 +17313,48 @@
         "giftige-stoffer",
         "sundhedsrisici",
         "manglende-indgriben"
+      ],
+      "topicEligible": true,
+      "genreEligible": true,
+      "recommendationMetadataEligible": true,
+      "metadataIssues": []
+    },
+    {
+      "id": "bag dobbeltlukkede døre",
+      "recommendationId": "rec-bag-dobbeltlukkede-doere-717fc83b9f6d242226760d4910da48cf",
+      "recommendationIdentityBasis": "title+link",
+      "identityDuplicateGroup": "",
+      "title": "Bag Dobbeltlukkede Døre",
+      "mainSeries": "",
+      "primaryGenreRaw": "Samfund",
+      "primaryGenre": "Samfund",
+      "primaryGenreValid": true,
+      "primaryGenreMappingType": "native",
+      "primaryGenreMappingSource": "Samfund",
+      "primaryGenreNeedsReview": false,
+      "primaryGenreReviewReason": "",
+      "secondaryGenre": "Viden",
+      "secondaryGenreValid": true,
+      "topicsRaw": [
+        "strafferet",
+        "retssystemet",
+        "forsvarsadvokater",
+        "domstole",
+        "Kriminalforsorgen"
+      ],
+      "topicsCanonical": [
+        "strafferet",
+        "retssystemet",
+        "forsvarsadvokater",
+        "domstole",
+        "Kriminalforsorgen"
+      ],
+      "topicKeys": [
+        "strafferet",
+        "retssystemet",
+        "forsvarsadvokater",
+        "domstole",
+        "kriminalforsorgen"
       ],
       "topicEligible": true,
       "genreEligible": true,
@@ -35554,45 +35635,6 @@
       "metadataIssues": []
     },
     {
-      "id": "bitcoin bedraget",
-      "recommendationId": "rec-bitcoin-bedraget-b7005a57412117f84ded38d53136b25a",
-      "recommendationIdentityBasis": "title+link",
-      "identityDuplicateGroup": "",
-      "title": "Bitcoin-bedraget",
-      "mainSeries": "",
-      "primaryGenreRaw": "Dokumentar",
-      "primaryGenre": "Dokumentar",
-      "primaryGenreValid": true,
-      "primaryGenreMappingType": "native",
-      "primaryGenreMappingSource": "Dokumentar",
-      "primaryGenreNeedsReview": false,
-      "primaryGenreReviewReason": "",
-      "secondaryGenre": "True Crime",
-      "secondaryGenreValid": true,
-      "topicsRaw": [
-        "Bitcoinsvindel",
-        "falsk investeringsrådgivning",
-        "økonomisk svindel",
-        "internationale netværk"
-      ],
-      "topicsCanonical": [
-        "Bitcoinsvindel",
-        "falsk investeringsrådgivning",
-        "økonomisk svindel",
-        "internationale netværk"
-      ],
-      "topicKeys": [
-        "bitcoinsvindel",
-        "falsk-investeringsraadgivning",
-        "oekonomisk-svindel",
-        "internationale-netvaerk"
-      ],
-      "topicEligible": true,
-      "genreEligible": true,
-      "recommendationMetadataEligible": true,
-      "metadataIssues": []
-    },
-    {
       "id": "man stoler vel pa præsten",
       "recommendationId": "rec-man-stoler-vel-paa-praesten-b99c92f94919909948acef2192c26fb5",
       "recommendationIdentityBasis": "title+link",
@@ -48810,48 +48852,6 @@
         "krig",
         "militaerhistorie",
         "udenrigspolitik"
-      ],
-      "topicEligible": true,
-      "genreEligible": true,
-      "recommendationMetadataEligible": true,
-      "metadataIssues": []
-    },
-    {
-      "id": "bag dobbeltlukkede døre",
-      "recommendationId": "rec-bag-dobbeltlukkede-doere-717fc83b9f6d242226760d4910da48cf",
-      "recommendationIdentityBasis": "title+link",
-      "identityDuplicateGroup": "",
-      "title": "Bag Dobbeltlukkede Døre",
-      "mainSeries": "",
-      "primaryGenreRaw": "Samfund",
-      "primaryGenre": "Samfund",
-      "primaryGenreValid": true,
-      "primaryGenreMappingType": "native",
-      "primaryGenreMappingSource": "Samfund",
-      "primaryGenreNeedsReview": false,
-      "primaryGenreReviewReason": "",
-      "secondaryGenre": "Viden",
-      "secondaryGenreValid": true,
-      "topicsRaw": [
-        "strafferet",
-        "retssystemet",
-        "forsvarsadvokater",
-        "domstole",
-        "Kriminalforsorgen"
-      ],
-      "topicsCanonical": [
-        "strafferet",
-        "retssystemet",
-        "forsvarsadvokater",
-        "domstole",
-        "Kriminalforsorgen"
-      ],
-      "topicKeys": [
-        "strafferet",
-        "retssystemet",
-        "forsvarsadvokater",
-        "domstole",
-        "kriminalforsorgen"
       ],
       "topicEligible": true,
       "genreEligible": true,
