@@ -11838,11 +11838,11 @@ function renderPodcastEpisodeOverview(podcast) {
           <input type="search" value="${escapeHtml(episodeState.searchTerm || "")}" placeholder="${escapeHtml(searchPlaceholder)}" data-episode-workspace-search autocomplete="off" />
         </label>
       </div>
-      <p class="podcast-detail-sheet__episode-workspace-summary" data-episode-workspace-summary aria-live="polite">${escapeHtml(getEpisodeWorkspaceSummary(podcast))}</p>
+      <div class="podcast-detail-sheet__episode-mobile-column-header">
+        <p class="podcast-detail-sheet__episode-workspace-summary" data-episode-workspace-summary aria-live="polite">${escapeHtml(getEpisodeWorkspaceSummary(podcast))}</p>
+        <span aria-hidden="true">Din vurdering</span>
+      </div>
       <div class="podcast-detail-sheet__episode-table-wrap">
-        <div class="podcast-detail-sheet__episode-mobile-column-header" aria-hidden="true">
-          <span>Din vurdering</span>
-        </div>
         <table class="podcast-detail-sheet__episode-table${isManualEpisodeList ? " podcast-detail-sheet__episode-table--manual" : ""}${firstColumnLabel === "Udgivelsesdato" ? " podcast-detail-sheet__episode-table--publication-date" : ""}">
           <caption class="sr-only" id="podcastEpisodeOverviewTitle">Episoder i ${escapeHtml(
             podcast.title || "podcasten"

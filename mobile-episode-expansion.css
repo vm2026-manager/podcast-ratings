@@ -1,5 +1,9 @@
 /* Shared mobile expand/collapse treatment for profile panels. */
 html body #podcastDetailSheet .podcast-detail-sheet__episode-mobile-column-header {
+  display: block;
+}
+
+html body #podcastDetailSheet .podcast-detail-sheet__episode-mobile-column-header > span {
   display: none;
 }
 
@@ -98,10 +102,23 @@ html body #podcastDetailSheet .podcast-detail-sheet__episode-mobile-column-heade
   html body #podcastDetailSheet.is-episode-workspace .podcast-detail-sheet__episode-mobile-column-header {
     display: grid !important;
     grid-template-columns: minmax(0, 1fr) 120px !important;
-    padding: 0 16px 7px !important;
+    column-gap: 12px !important;
+    align-items: baseline !important;
+    /* Match the table wrapper's 10px inset plus each card's 16px gutter. */
+    padding: 0 26px 7px !important;
+  }
+  html body #podcastDetailSheet.is-episode-workspace .podcast-detail-sheet__episode-mobile-column-header .podcast-detail-sheet__episode-workspace-summary {
+    grid-column: 1 !important;
+    grid-row: 1 !important;
+    align-self: baseline !important;
+    margin: 0 !important;
+    padding: 0 !important;
   }
   html body #podcastDetailSheet.is-episode-workspace .podcast-detail-sheet__episode-mobile-column-header span {
+    display: block !important;
     grid-column: 2 !important;
+    grid-row: 1 !important;
+    align-self: baseline !important;
     color: #887a70 !important;
     font: 800 .65rem/1 "Manrope", sans-serif !important;
     letter-spacing: .04em !important;
