@@ -11,8 +11,6 @@ const lockedScoreStart = mobileDetailCss.indexOf(
 );
 const lockedScoreRules = mobileDetailCss.slice(lockedScoreStart, mobileDetailCss.indexOf("html body #podcastDetailSheet .podcast-detail-sheet__rating-cell--own .podcast-detail-sheet__episode-rating-lock-help", lockedScoreStart));
 assert.ok(lockedScoreStart >= 0, "mobile calculated-score rules exist");
-assert.match(lockedScoreRules, /align-items:\s*baseline\s*!important/u);
-assert.match(lockedScoreRules, /height:\s*auto\s*!important/u);
 assert.match(lockedScoreRules, /font:\s*950\s+1\.18rem\/1\s+"Manrope"/u);
 assert.match(lockedScoreRules, /own-rating-suffix[\s\S]*align-self:\s*baseline[\s\S]*font:\s*900\s+\.72rem\/1/u);
 assert.match(mobileDetailCss, /podcast-detail-sheet__ratings strong[\s\S]*font-size:\s*1\.18rem\s*!important/u);
@@ -23,16 +21,26 @@ assert.match(
 );
 assert.match(
   mobileDetailCss,
-  /rating-cell--own\.is-episode-rating-locked \{\s*grid-template-rows:\s*20px\s+24px\s+19px\s+minmax\(0,\s*1fr\)/u
+  /rating-cell--own\.is-episode-rating-locked \{\s*grid-template-rows:\s*20px\s+24px\s+19px\s+minmax\(0,\s*1fr\)[\s\S]*grid-template-columns:/u
 );
 assert.match(
   mobileDetailCss,
-  /is-episode-rating-locked > \.podcast-detail-sheet__rating-label \{\s*grid-row:\s*2/u
+  /is-episode-rating-locked > \.podcast-detail-sheet__rating-label \{\s*grid-row:\s*2[\s\S]*grid-column:\s*1\s*\/\s*-1/u
 );
 assert.match(
-  mobileDetailCss,
-  /is-episode-rating-locked \.podcast-detail-sheet__own-rating-picker \{\s*grid-row:\s*3\s*\/\s*span\s+2/u
+  lockedScoreRules,
+  /own-rating-picker \{\s*display:\s*contents\s*!important/u,
+  "the calculated picker cannot span the score and helper rows"
 );
+assert.doesNotMatch(lockedScoreRules, /grid-row:\s*3\s*\/\s*span\s+2/u, "no calculated-score wrapper may span rows 3 and 4");
+assert.match(lockedScoreRules, /rating-icon \{\s*grid-row:\s*1[\s\S]*grid-column:\s*2/u, "calculated icon occupies row 1");
+assert.match(lockedScoreRules, /own-rating-copy \{\s*display:\s*contents/u, "calculated score and helper participate in the parent grid");
+assert.match(lockedScoreRules, /own-rating-input\.is-episode-calculated \{\s*grid-row:\s*3/u, "calculated score occupies row 3");
+assert.match(lockedScoreRules, /inline-size:\s*3ch[\s\S]*block-size:\s*19px/u, "calculated input is constrained to the score slot");
+assert.match(lockedScoreRules, /own-rating-suffix \{\s*grid-row:\s*3/u, "calculated suffix occupies row 3");
+assert.match(lockedScoreRules, /own-rating-copy small \{\s*grid-row:\s*4/u, "calculated helper occupies row 4");
+assert.match(lockedScoreRules, /is-episode-rating-locked > em \{\s*display:\s*none/u, "only one locked helper occupies row 4");
+assert.match(app, /is-episode-calculated[\s\S]*Beregnet fra episoder[\s\S]*own-rating-suffix">\/10/u, "calculated markup retains its value, helper, and suffix");
 
 const bindStart = app.indexOf("function bindPodcastEpisodeOverviewEvents(");
 const bindEnd = app.indexOf("\nfunction ", bindStart + 1);

@@ -1152,27 +1152,20 @@
     display: none !important;
   }
   /* The compact editable picker intentionally hides its supporting chrome at
-     this width. A calculated rating is not editable, however, so retain the
-     icon, label context and /10 suffix as one centered locked presentation. */
+     this width. A calculated rating is not editable, but it must still use
+     the same four explicit grid slots as the other two rating cells. */
   html body #podcastDetailSheet .podcast-detail-sheet__rating-cell--own.is-episode-rating-locked {
     grid-template-rows: 20px 24px 19px minmax(0, 1fr) !important;
-    align-content: stretch !important;
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr) !important;
+    align-content: start !important;
   }
   html body #podcastDetailSheet .podcast-detail-sheet__rating-cell--own.is-episode-rating-locked > .podcast-detail-sheet__rating-label {
     grid-row: 2 !important;
+    grid-column: 1 / -1 !important;
     align-self: center !important;
   }
   html body #podcastDetailSheet .podcast-detail-sheet__rating-cell--own.is-episode-rating-locked .podcast-detail-sheet__own-rating-picker {
-    grid-row: 3 / span 2 !important;
-    width: 100% !important;
-    min-height: 48px !important;
-    grid-template-columns: 20px minmax(0, 1fr) auto !important;
-    align-items: baseline !important;
-    justify-items: center !important;
-    gap: 4px !important;
-    padding: 4px !important;
-    border: 0 !important;
-    background: transparent !important;
+    display: contents !important;
     cursor: pointer !important;
   }
   html body #podcastDetailSheet .podcast-detail-sheet__rating-cell--own.is-episode-rating-locked .podcast-detail-sheet__own-rating-picker:focus-within {
@@ -1185,18 +1178,26 @@
     display: grid !important;
   }
   html body #podcastDetailSheet .podcast-detail-sheet__rating-cell--own.is-episode-rating-locked .podcast-detail-sheet__rating-icon {
+    grid-row: 1 !important;
+    grid-column: 2 !important;
+    align-self: center !important;
     color: #89796d !important;
     background: #f1ebe5 !important;
   }
   html body #podcastDetailSheet .podcast-detail-sheet__rating-cell--own.is-episode-rating-locked .podcast-detail-sheet__own-rating-copy {
-    width: auto !important;
-    justify-items: center !important;
-    text-align: center !important;
+    display: contents !important;
   }
   html body #podcastDetailSheet .podcast-detail-sheet__rating-cell--own.is-episode-rating-locked .podcast-detail-sheet__own-rating-input.is-episode-calculated {
-    width: auto !important;
-    min-width: 0 !important;
-    height: auto !important;
+    grid-row: 3 !important;
+    grid-column: 2 !important;
+    align-self: baseline !important;
+    justify-self: end !important;
+    inline-size: 3ch !important;
+    min-inline-size: 0 !important;
+    block-size: 19px !important;
+    padding: 0 !important;
+    border: 0 !important;
+    appearance: none !important;
     color: #675d56 !important;
     background: transparent !important;
     font: 950 1.18rem/1 "Manrope", sans-serif !important;
@@ -1204,15 +1205,30 @@
     pointer-events: none !important;
   }
   html body #podcastDetailSheet .podcast-detail-sheet__rating-cell--own.is-episode-rating-locked .podcast-detail-sheet__own-rating-suffix {
+    grid-row: 3 !important;
+    grid-column: 3 !important;
     color: #675d56 !important;
     align-self: baseline !important;
+    justify-self: start !important;
     margin-top: 0 !important;
     font: 900 .72rem/1 "Manrope", sans-serif !important;
   }
   html body #podcastDetailSheet .podcast-detail-sheet__rating-cell--own.is-episode-rating-locked .podcast-detail-sheet__own-rating-copy small {
+    grid-row: 4 !important;
+    grid-column: 1 / -1 !important;
+    align-self: start !important;
     color: #89796d !important;
     font-size: .54rem !important;
     text-align: center !important;
+  }
+  html body #podcastDetailSheet .podcast-detail-sheet__rating-cell--own.is-episode-rating-locked > em {
+    display: none !important;
+  }
+  html body #podcastDetailSheet .podcast-detail-sheet__rating-cell--own.is-episode-rating-locked .podcast-detail-sheet__episode-rating-lock-trigger {
+    grid-row: 1 !important;
+    grid-column: 3 !important;
+    align-self: center !important;
+    justify-self: end !important;
   }
   html body #podcastDetailSheet .podcast-detail-sheet__rating-cell--own.is-episode-rating-locked .podcast-detail-sheet__episode-rating-lock-trigger:focus {
     outline: 0 !important;
