@@ -36,9 +36,13 @@ manifest = json.loads((root / 'data/podcast-cover-manifest.json').read_text(enco
 paths = {'data/podcast-cover-manifest.json'}
 ids = []
 for entry in manifest.get('podcasts', []):
-    if entry.get('manualOverride') is not True or entry.get('sourceKind') != 'manual':
+    source_kind = entry.get('sourceKind')
+    is_manual_podcast = entry.get('manualOverride') is True and source_kind == 'manual'
+    is_manual_series = entry.get('manualSeriesOverride') is True and source_kind == 'manual-series'
+    if not (is_manual_podcast or is_manual_series):
         continue
-    required = [entry.get('manualSourcePath'), (entry.get('original') or {}).get('path')]
+    source_path = entry.get('manualSourcePath') if is_manual_podcast else entry.get('manualSeriesSourcePath')
+    required = [source_path, (entry.get('original') or {}).get('path')]
     required.extend(item.get('path') for item in (entry.get('variants') or {}).values())
     if not all(required) or any(not (root / path).is_file() for path in required):
         raise SystemExit(f"Manual-cover entry is incomplete: {entry.get('title') or entry.get('stableKey')}")
