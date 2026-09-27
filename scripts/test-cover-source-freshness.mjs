@@ -59,6 +59,14 @@ result = resolve({ originalImageUrl: "https://example.test/old.jpg", sourceKind:
 assert.equal(result.podcast.preferExternalCoverSource, false, "manual sourceKind remains protected");
 assert.equal(result.sources[0], variants["480"].path);
 
+result = resolve({
+  originalImageUrl: "https://example.test/old.jpg",
+  sourceKind: "manual-series",
+  manualSeriesOverride: true
+});
+assert.equal(result.podcast.preferExternalCoverSource, false, "manual series overrides remain local-first");
+assert.equal(result.sources[0], variants["480"].path);
+
 result = resolve({ originalImageUrl: "" });
 assert.equal(result.podcast.preferExternalCoverSource, false, "missing comparison metadata preserves local-first behavior");
 
@@ -71,7 +79,8 @@ const currentMediano = resolve({ image: mediano.Billedlink, imageFallbacks: [], 
 assert.equal(currentMediano.podcast.preferExternalCoverSource, true, "Mediano Superliga's changed Sheet image is external-first");
 assert.equal(currentMediano.sources[0], mediano.Billedlink);
 
-assert.match(app, /manualOverride === true \|\| normalizeText\(entry\?\.sourceKind\)/u);
+assert.match(app, /manualSeriesOverride === true/u);
+assert.match(app, /sourceKind === "manual-series"/u);
 assert.match(app, /podcast\.preferExternalCoverSource/u);
 assert.match(app, /if \(!responsiveMeta && index === 0\)/u, "external-first covers must not receive a local srcset");
 console.log("Cover source freshness regression checks passed.");

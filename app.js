@@ -2430,7 +2430,12 @@ function applyLocalCoverManifest(podcasts, manifestLookup) {
     podcast.localCoverVariants = variants;
     const manifestOriginalImageUrl = normalizeImageSource(entry?.originalImageUrl);
     const podcastImageUrl = normalizeImageSource(podcast.image);
-    const manualOverride = entry?.manualOverride === true || normalizeText(entry?.sourceKind).toLowerCase() === "manual";
+    const sourceKind = normalizeText(entry?.sourceKind).toLowerCase();
+    const manualOverride =
+      entry?.manualOverride === true ||
+      entry?.manualSeriesOverride === true ||
+      sourceKind === "manual" ||
+      sourceKind === "manual-series";
     podcast.preferExternalCoverSource = Boolean(
       variants.length &&
       /^https?:\/\//i.test(podcastImageUrl) &&

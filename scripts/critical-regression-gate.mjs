@@ -5,6 +5,9 @@ import { fileURLToPath } from "node:url";
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const checks = [
   ["app.js syntax", ["--check", "app.js"]],
+  ["Bakspejl local cover availability", ["scripts/test-bakspejl-cover-availability.mjs"]],
+  ["cover identity resolution", ["scripts/test-cover-identity-resolution.mjs"]],
+  ["cover source freshness", ["scripts/test-cover-source-freshness.mjs"]],
   ["startup rating hydration", ["scripts/test-startup-rating-hydration.mjs"]],
   ["episode archive/source", ["scripts/test-podcast-episode-archive-source-regression.mjs"]],
   ["Mediano episode workspace", ["scripts/test-mediano-episode-workspace-config.mjs"]],
