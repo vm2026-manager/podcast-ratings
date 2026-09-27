@@ -50,7 +50,7 @@ html body #podcastDetailSheet .podcast-detail-sheet__episode-mobile-column-heade
 @media (max-width: 768px) {
   html body #podcastDetailSheet.is-episode-workspace .podcast-detail-sheet__episode-overview {
     display: grid !important;
-    gap: 10px !important;
+    gap: 0 !important;
   }
   html body #podcastDetailSheet.is-episode-workspace .podcast-detail-sheet__episode-overview-toolbar {
     display: grid !important;
@@ -98,6 +98,7 @@ html body #podcastDetailSheet .podcast-detail-sheet__episode-mobile-column-heade
     border: 0 !important;
     border-radius: 0 !important;
     background: transparent !important;
+    padding: 0 10px 10px !important;
   }
   html body #podcastDetailSheet.is-episode-workspace .podcast-detail-sheet__episode-mobile-column-header {
     display: grid !important;
@@ -105,7 +106,7 @@ html body #podcastDetailSheet .podcast-detail-sheet__episode-mobile-column-heade
     column-gap: 12px !important;
     align-items: baseline !important;
     /* Match the table wrapper's 10px inset plus each card's 16px gutter. */
-    padding: 0 26px 7px !important;
+    padding: 10px 26px 5px !important;
   }
   html body #podcastDetailSheet.is-episode-workspace .podcast-detail-sheet__episode-mobile-column-header .podcast-detail-sheet__episode-workspace-summary {
     grid-column: 1 !important;
