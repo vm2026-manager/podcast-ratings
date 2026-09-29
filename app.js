@@ -17251,28 +17251,6 @@ function renderProfileSettingsPage(container) {
           <p class="profile-settings-card__note">Dine valg gemmes automatisk.</p>
         </section>
 
-        <section class="profile-settings-section profile-settings-card profile-settings-card--privacy" data-settings-card="privacy">
-          <div class="profile-settings-card__heading">
-            <p class="profile-eyebrow">Data og privatliv</p>
-            <h3>Dine data</h3>
-            <p>Podcastlisten gemmer kun de oplysninger, der er nødvendige for konto, vurderinger, favoritter og forslag.</p>
-          </div>
-          <div class="profile-settings-card__actions">
-            <button class="profile-button profile-button--secondary" type="button" data-profile-export>Eksportér mine data</button>
-          </div>
-        </section>
-
-        <section class="profile-settings-section profile-settings-card profile-settings-card--recommendations" data-settings-card="recommendations">
-          <div class="profile-settings-card__heading">
-            <p class="profile-eyebrow">Anbefalinger</p>
-            <h3>Start anbefalingerne forfra</h3>
-            <p>Ryd de lokale anbefalingsdata uden at slette dine vurderinger eller gemte podcasts.</p>
-          </div>
-          <div class="profile-settings-card__actions">
-            <button class="profile-button profile-button--secondary" type="button" data-profile-reset-recommendations>Nulstil anbefalinger</button>
-          </div>
-        </section>
-
         <section class="profile-settings-section profile-settings-card profile-settings-card--danger" data-settings-card="danger">
           <div class="profile-settings-card__heading">
             <p class="profile-eyebrow">Farezone</p>
@@ -17456,65 +17434,6 @@ async function updateProfilePassword(form) {
   }
 }
 
-async function exportProfileData() {
-  if (!state.authUser) return;
-  setProfileSettingsMessage("Klargør eksport...", "info");
-
-  try {
-    const userId = state.authUser.id;
-    const exportData = {
-      exportedAt: new Date().toISOString(),
-      account: {
-        id: userId,
-        email: state.authUser.email || null,
-        displayName: getProfileDisplayName() || null
-      },
-      preferences: state.profilePreferences,
-      ratings: Object.entries(state.userRatingsByKey).map(([podcastKey, rating]) => ({
-        podcastKey,
-        rating
-      })),
-      savedPodcasts: Array.from(state.savedPodcastKeys).map((podcastKey) => ({
-        podcastKey,
-        savedAt: state.savedPodcastMetaByKey[podcastKey]?.savedAt || null
-      }))
-    };
-
-    if (state.supabase) {
-      const { data, error } = await state.supabase
-        .from("podcast_suggestions")
-        .select("id,title,podcast_url,platform,comment,status,created_at,updated_at")
-        .eq("suggested_by_user_id", userId);
-      if (!error) {
-        exportData.podcastSuggestions = data || [];
-      }
-    }
-
-    const blob = new Blob([JSON.stringify(exportData, null, 2)], {
-      type: "application/json"
-    });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    const date = new Date().toISOString().slice(0, 10);
-    link.href = url;
-    link.download = `podcastlisten-data-${date}.json`;
-    document.body.appendChild(link);
-    link.click();
-    link.remove();
-    window.setTimeout(() => URL.revokeObjectURL(url), 1000);
-    setProfileSettingsMessage("Dataeksporten er hentet som JSON.", "success");
-  } catch (error) {
-    console.error(error);
-    setProfileSettingsMessage("Dataeksporten kunne ikke oprettes lige nu.", "error");
-  }
-}
-
-function resetProfileRecommendationCaches() {
-  state.exploreUnderratedHourBucket = null;
-  invalidateRankingListCache();
-  setProfileSettingsMessage("Lokale anbefalingscaches er nulstillet. Dine vurderinger og gemte podcasts er bevaret.", "success");
-}
-
 async function deleteProfileAccount(container) {
   const confirmation = normalizeText(container.querySelector("[data-profile-delete-confirm]")?.value);
   if (confirmation !== "SLET") {
@@ -17581,10 +17500,6 @@ function bindProfileSettings(container) {
     });
   });
 
-  container.querySelector("[data-profile-export]")?.addEventListener("click", exportProfileData);
-  container
-    .querySelector("[data-profile-reset-recommendations]")
-    ?.addEventListener("click", resetProfileRecommendationCaches);
   container
     .querySelector("[data-profile-delete-account]")
     ?.addEventListener("click", () => deleteProfileAccount(container));
