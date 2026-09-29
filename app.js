@@ -18120,17 +18120,7 @@ function renderProfilePage() {
           <h2>Indstillinger</h2>
           <a class="profile-menu__item" href="#profil-indstillinger">
             <span aria-hidden="true">${getProfileMenuIconMarkup("settings")}</span>
-            <span><strong>Rediger profil</strong><small>Konto, privatliv og data</small></span>
-            <em aria-hidden="true">&rsaquo;</em>
-          </a>
-          <a class="profile-menu__item" href="#profil-indstillinger">
-            <span aria-hidden="true">${getProfileMenuIconMarkup("settings")}</span>
-            <span><strong>Præferencer</strong><small>Personlige anbefalinger</small></span>
-            <em aria-hidden="true">&rsaquo;</em>
-          </a>
-          <a class="profile-menu__item" href="#profil-indstillinger">
-            <span aria-hidden="true">${getProfileMenuIconMarkup("settings")}</span>
-            <span><strong>Privatliv/data</strong><small>Eksport og kontosletning</small></span>
+            <span><strong>Konto &amp; indstillinger</strong><small>Profil, præferencer og privatliv</small></span>
             <em aria-hidden="true">&rsaquo;</em>
           </a>
           <button class="profile-menu__item profile-menu__item--logout" type="button" data-profile-logout ${state.authBusy ? "disabled" : ""}>
