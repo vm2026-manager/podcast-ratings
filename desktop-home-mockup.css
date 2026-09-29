@@ -13428,14 +13428,6 @@ html body.page-udforsk .explore-card__host + .explore-card__publisher {
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23f15a16' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4 6h16M4 12h16M4 18h16'/%3E%3Ccircle cx='8' cy='6' r='1.8'/%3E%3Ccircle cx='15' cy='12' r='1.8'/%3E%3Ccircle cx='10' cy='18' r='1.8'/%3E%3C/svg%3E") !important;
   }
 
-  html body.page-profil #pageIntroPanel .profile-settings-card[data-settings-card="privacy"]::before {
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23f15a16' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 3 5.5 5.7v5.2c0 4.3 2.2 7.5 6.5 10.1 4.3-2.6 6.5-5.8 6.5-10.1V5.7z'/%3E%3Cpath d='m9.4 12 1.7 1.7 3.7-4'/%3E%3C/svg%3E") !important;
-  }
-
-  html body.page-profil #pageIntroPanel .profile-settings-card[data-settings-card="recommendations"]::before {
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23f15a16' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m12 3 1.7 5.1 5.3.1-4.2 3.1 1.6 5.1-4.4-3-4.4 3 1.6-5.1L5 8.2l5.3-.1z'/%3E%3C/svg%3E") !important;
-  }
-
   html body.page-profil #pageIntroPanel .profile-settings-card[data-settings-card="danger"]::before {
     background-color: #fff0ed !important;
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23b63a30' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 3 2.8 20h18.4z'/%3E%3Cpath d='M12 9v4.5M12 17h.01'/%3E%3C/svg%3E") !important;
@@ -13447,10 +13439,8 @@ html body.page-udforsk .explore-card__host + .explore-card__publisher {
     box-shadow: var(--profile-hover-shadow) !important;
   }
 
-  html body.page-profil #pageIntroPanel .profile-settings-card--display,
-  html body.page-profil #pageIntroPanel .profile-settings-card--privacy,
-  html body.page-profil #pageIntroPanel .profile-settings-card--recommendations {
-    grid-column: span 4 !important;
+  html body.page-profil #pageIntroPanel .profile-settings-card--display {
+    grid-column: 1 / -1 !important;
   }
 
   html body.page-profil #pageIntroPanel .profile-settings-card--danger {
@@ -14173,13 +14163,7 @@ html body.page-udforsk .explore-card__host + .explore-card__publisher {
     width: calc(100vw - 48px) !important;
   }
 
-  html body.page-profil #pageIntroPanel .profile-settings-card--display,
-  html body.page-profil #pageIntroPanel .profile-settings-card--privacy,
-  html body.page-profil #pageIntroPanel .profile-settings-card--recommendations {
-    grid-column: span 6 !important;
-  }
-
-  html body.page-profil #pageIntroPanel .profile-settings-card--recommendations {
+  html body.page-profil #pageIntroPanel .profile-settings-card--display {
     grid-column: 1 / -1 !important;
   }
 
