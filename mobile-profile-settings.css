@@ -107,4 +107,38 @@
     text-decoration: none !important;
   }
   html body.page-profil .profile-tip-card > a:focus-visible { outline: 2px solid rgba(255, 92, 22, .5); outline-offset: 3px; }
+
+  /* Logged-in Settings only: reclaim the nested card gutters without touching other profile views. */
+  html body.page-profil #pageIntroPanel:has(.profile-settings-grid) .profile-subview-card {
+    padding: 12px !important;
+  }
+
+  html body.page-profil #pageIntroPanel:has(.profile-settings-grid) .profile-settings-grid {
+    margin-inline: -12px !important;
+  }
+
+  html body.page-profil #pageIntroPanel:has(.profile-settings-grid) .profile-settings-card {
+    padding: 18px !important;
+  }
+
+  html body.page-profil #pageIntroPanel:has(.profile-settings-grid) .profile-settings-card h3 {
+    font-weight: 700 !important;
+  }
+
+  html body.page-profil #pageIntroPanel:has(.profile-settings-grid) .profile-settings-field,
+  html body.page-profil #pageIntroPanel:has(.profile-settings-grid) .profile-ranking-position-mode legend,
+  html body.page-profil #pageIntroPanel:has(.profile-settings-grid) .profile-ranking-position-option strong {
+    font-weight: 600 !important;
+  }
+
+  html body.page-profil #pageIntroPanel:has(.profile-settings-grid) .profile-settings-field input,
+  html body.page-profil #pageIntroPanel:has(.profile-settings-grid) .profile-settings-field select {
+    font-weight: 500 !important;
+  }
+
+  html body.page-profil #pageIntroPanel:has(.profile-settings-grid) .profile-settings-card__heading > p:last-child,
+  html body.page-profil #pageIntroPanel:has(.profile-settings-grid) .profile-settings-card__note,
+  html body.page-profil #pageIntroPanel:has(.profile-settings-grid) .profile-ranking-position-option small {
+    font-weight: 400 !important;
+  }
 }

@@ -1,6 +1,6 @@
 /* Approved desktop composition for Profil > Indstillinger. */
 @media (min-width: 1101px) {
-  html body.page-profil #pageIntroPanel .profile-page--subview { width: min(calc(100vw - 64px), 1280px); max-width: 1280px; padding: 18px 0 34px; }
+  html body.page-profil #pageIntroPanel .profile-page--subview { width: min(calc(100vw - 64px), 1440px); max-width: 1440px; padding: 18px 0 34px; }
   html body.page-profil #pageIntroPanel .profile-subview-card { gap: 14px; }
   html body.page-profil #pageIntroPanel .profile-subview-card__header { min-height: 146px; padding: 23px 160px 23px 28px; border-radius: 22px; }
   html body.page-profil #pageIntroPanel .profile-subview-card__heading { display: block; min-width: 0; }
@@ -46,7 +46,7 @@
 /* The existing desktop profile layer uses !important; keep this narrow final
    settings composition at the same cascade level. */
 @media (min-width: 1101px) {
-  html body.page-profil #pageIntroPanel .profile-page--subview { width: min(calc(100vw - 64px), 1280px) !important; max-width: 1280px !important; padding: 18px 0 34px !important; }
+  html body.page-profil #pageIntroPanel .profile-page--subview { width: min(calc(100vw - 64px), 1440px) !important; max-width: 1440px !important; padding: 18px 0 34px !important; }
   html body.page-profil #pageIntroPanel .profile-subview-card { gap: 14px !important; }
   html body.page-profil #pageIntroPanel .profile-subview-card__header { min-height: 146px !important; padding: 23px 160px 23px 28px !important; border-radius: 22px !important; }
   html body.page-profil #pageIntroPanel .profile-subview-card__heading { display: block !important; min-width: 0 !important; }
@@ -83,4 +83,16 @@
   html body.page-profil #pageIntroPanel .profile-settings-card--danger .profile-settings-fields--danger { max-width: none !important; }
   html body.page-profil #pageIntroPanel .profile-settings-card--danger .profile-settings-card__actions { margin: 0 !important; }
   html body.page-profil #pageIntroPanel .profile-settings-card--danger .profile-button { min-height: 42px !important; color: #fff !important; border-color: #d13c32 !important; background: #d13c32 !important; }
+
+  /* Keep the settings hierarchy calm: headings lead, while supporting copy recedes. */
+  html body.page-profil #pageIntroPanel .profile-settings-card .profile-eyebrow { font-weight: 600 !important; }
+  html body.page-profil #pageIntroPanel .profile-settings-card h3 { font-weight: 700 !important; }
+  html body.page-profil #pageIntroPanel .profile-settings-card__heading > p:last-child,
+  html body.page-profil #pageIntroPanel .profile-settings-card__note,
+  html body.page-profil #pageIntroPanel .profile-ranking-position-option small { font-weight: 400 !important; }
+  html body.page-profil #pageIntroPanel .profile-ranking-position-mode legend,
+  html body.page-profil #pageIntroPanel .profile-settings-field,
+  html body.page-profil #pageIntroPanel .profile-ranking-position-option strong { font-weight: 600 !important; }
+  html body.page-profil #pageIntroPanel .profile-settings-field input,
+  html body.page-profil #pageIntroPanel .profile-settings-field select { font-weight: 500 !important; }
 }
