@@ -1,18 +1,5 @@
 import { readFile, writeFile } from "node:fs/promises";
 import { discoverDjaevlenChildren } from "./djaevlen-auto-discovery.mjs";
-
-const feedUrl = "https://api.dr.dk/podcasts/v1/feeds/djaevlen-i-detaljen";
-const catalogue = JSON.parse(await readFile("data/podcasts.json", "utf8"));
-const registry = JSON.parse(await readFile("data/auto-discovered-djaevlen.json", "utf8"));
-const response = await fetch(feedUrl, { headers: { accept: "application/rss+xml, application/xml" } });
-if (!response.ok) throw new Error(`DR Djævlen feed failed: ${response.status}`);
-const xml = await response.text();
-const items = [...xml.matchAll(/<item\b[\s\S]*?<\/item>/giu)].map((match) => match[0]);
-const titles = items.flatMap((item) => [...item.matchAll(/<title><!\[CDATA\[([\s\S]*?)\]\]><\/title>|<title>([^<]*)<\/title>/gu)]
-  .map((match) => (match[1] || match[2] || "").trim()).filter(Boolean));
-const result = discoverDjaevlenChildren({ catalogueRows: catalogue.rows, registry, episodeTitles: titles });
-if (result.report.collisions.length || result.report.unsafe.length) {
-  throw new Error(`Unsafe Djævlen discovery: ${JSON.stringify({ collisions: result.report.collisions, unsafe: result.report.unsafe.slice(0, 10) })}`);
-}
-if (result.report.created.length) await writeFile("data/auto-discovered-djaevlen.json", `${JSON.stringify(result.registry, null, 2)}\n`, "utf8");
-console.log(JSON.stringify(result.report, null, 2));
+const app=await readFile("app.js","utf8"),m=app.match(/const LEGACY_PODCAST_RATING_KEY_ALIASES = Object\.freeze\(([\s\S]*?)\n\}\);/u);if(!m)throw new Error("Could not read authoritative legacy rating aliases");const aliases=Function(`return (${m[1]}})`)(),catalogue=JSON.parse(await readFile("data/podcasts.json","utf8")),registry=JSON.parse(await readFile("data/auto-discovered-djaevlen.json","utf8"));
+const response=await fetch("https://api.dr.dk/podcasts/v1/feeds/djaevlen-i-detaljen");if(!response.ok)throw new Error(`DR feed failed: ${response.status}`);const text=await response.text(),decode=v=>String(v||"").replace(/<!\[CDATA\[([\s\S]*?)\]\]>/u,"$1").replace(/&amp;/gu,"&").trim(),field=(i,t)=>decode(i.match(new RegExp(`<${t}[^>]*>([\\s\\S]*?)<\\/${t}>`,"iu"))?.[1]),items=[...text.matchAll(/<item\b[\s\S]*?<\/item>/giu)].map(x=>({guid:field(x[0],"guid"),title:field(x[0],"title"),published_at:new Date(field(x[0],"pubDate")).toISOString()}));
+const result=discoverDjaevlenChildren({catalogueRows:catalogue.rows,registry,aliases,episodeItems:items});if(result.report.collisions.length)throw new Error(`Djævlen identity collisions require review: ${JSON.stringify(result.report.collisions)}`);if(JSON.stringify(registry)!==JSON.stringify(result.registry))await writeFile("data/auto-discovered-djaevlen.json",`${JSON.stringify(result.registry,null,2)}\n`);console.log(JSON.stringify({total_feed_items:items.length,...Object.fromEntries(Object.entries(result.report).map(([k,v])=>[k,v.length])),would_create:result.report.created},null,2));
