@@ -1,7 +1,8 @@
-import { mkdir, rename, writeFile } from "node:fs/promises";
+import { mkdir, readFile, rename, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { parseSupplementarySimilarities } from "./manual-similarity-supplements.mjs";
+import { mergeAutoDiscoveredDjaevlenRows } from "./djaevlen-auto-discovery.mjs";
 
 const SPREADSHEET_BASE_URL =
   "https://docs.google.com/spreadsheets/d/e/2PACX-1vQRBWQdj-WDNN3l9yxIMCCu_O2dYfP7modSODcYgJRoQDG3GYsu83W_wIFyijPx6v8l-W011zrFyOdq/pub";
@@ -784,7 +785,14 @@ async function main() {
     outputSheets.map(async (sheet) => [sheet, await loadSheet(sheet)])
   );
   const podcastsSheet = loadedSheets.find(([sheet]) => sheet.sheetName === "Ark1");
-  const catalogueRows = await slimPodcastRows(filterPodcastRows(podcastsSheet[1].objects));
+  const sheetCatalogueRows = await slimPodcastRows(filterPodcastRows(podcastsSheet[1].objects));
+  // This registry is committed separately from the Sheet export. Sheet rows win
+  // editorially, while a previously allocated auto identity is never discarded.
+  const registry = JSON.parse(await readFile(path.join(repoRoot, "data", "auto-discovered-djaevlen.json"), "utf8"));
+  const catalogueRows = mergeAutoDiscoveredDjaevlenRows(sheetCatalogueRows, registry).map((row) => row.catalogue_id ? row : {
+    ...row,
+    catalogue_id: createCatalogueId({ title: row.Titel, host: row["Vært"], publisher: row.Udgiver, link: row.Link, feed: row.Feed })
+  });
   for (const [sheet, loadedSheet] of loadedSheets) {
     if (sheet.sheetName === "Ark1") {
       await writeJsonFile(

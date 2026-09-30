@@ -1,0 +1,54 @@
+name: Discover Djævlen children
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "17 */6 * * *"
+
+permissions:
+  contents: write
+  pull-requests: write
+  checks: write
+
+jobs:
+  discover:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: "24" }
+      - name: Discover only verified new children
+        id: discover
+        run: node scripts/run-djaevlen-auto-discovery.mjs
+      - name: Detect additive registry change
+        id: changed
+        run: |
+          if git diff --quiet -- data/auto-discovered-djaevlen.json; then echo "value=false" >> "$GITHUB_OUTPUT"; else echo "value=true" >> "$GITHUB_OUTPUT"; fi
+      - name: Regenerate staged catalogue and validate
+        if: steps.changed.outputs.value == 'true'
+        run: |
+          node scripts/sync-sheet-data.mjs --output-dir .sync-stage
+          node scripts/test-djaevlen-auto-discovery.mjs
+          node scripts/test-djaevlen-umbrella-routing.mjs
+          node scripts/test-community-rating-identity.mjs
+          node scripts/validate-podcast-identity.mjs
+          node scripts/critical-regression-gate.mjs
+      - name: Create reviewable additive-registry PR
+        if: steps.changed.outputs.value == 'true'
+        id: pull-request
+        uses: peter-evans/create-pull-request@v7
+        with:
+          token: ${{ github.token }}
+          branch: automation/djaevlen-discovery
+          base: main
+          title: "chore: add verified Djævlen child series"
+          commit-message: "chore: add verified Djævlen child series"
+          body: "Automated additive registry update. Unsafe, ambiguous, or colliding identities fail before a PR can be created."
+          add-paths: |
+            data/auto-discovered-djaevlen.json
+      - name: Enable guarded auto-merge
+        if: steps.changed.outputs.value == 'true' && steps.pull-request.outputs.pull-request-url != ''
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_URL: ${{ steps.pull-request.outputs.pull-request-url }}
+        run: gh pr merge --auto --merge "$PR_URL"
