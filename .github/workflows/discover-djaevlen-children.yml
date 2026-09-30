@@ -35,6 +35,7 @@ jobs:
           node scripts/critical-regression-gate.mjs
       - name: Create reviewable additive-registry PR
         if: steps.changed.outputs.value == 'true'
+        id: pull-request
         uses: peter-evans/create-pull-request@v7
         with:
           token: ${{ github.token }}
@@ -45,3 +46,9 @@ jobs:
           body: "Automated additive registry update. Unsafe, ambiguous, or colliding identities fail before a PR can be created."
           add-paths: |
             data/auto-discovered-djaevlen.json
+      - name: Enable guarded auto-merge
+        if: steps.changed.outputs.value == 'true' && steps.pull-request.outputs.pull-request-url != ''
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_URL: ${{ steps.pull-request.outputs.pull-request-url }}
+        run: gh pr merge --auto --merge "$PR_URL"
