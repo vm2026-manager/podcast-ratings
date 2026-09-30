@@ -73917,6 +73917,86 @@
           "quality": 90
         }
       }
+    },
+    {
+      "stableKey": "magasinet-jennings-manual-series",
+      "podcastId": "magasinet jennings",
+      "appPodcastKey": "magasinet jennings",
+      "title": "Magasinet Jennings",
+      "host": "",
+      "publisher": "Mediano",
+      "mainSeries": "Jennings",
+      "genre": "Sport",
+      "sourceRowNumbers": [],
+      "originalImageUrl": "assets/podcast-covers/manual-originals/series/magasinet_jennings.png",
+      "isDataUri": false,
+      "sourceKind": "manual-series",
+      "manualOverride": false,
+      "manualSeriesOverride": true,
+      "manualSeries": "Jennings",
+      "manualSeriesSourcePath": "assets/podcast-covers/manual-originals/series/magasinet_jennings.png",
+      "sourceFormat": "PNG",
+      "sourceWidth": 1400,
+      "sourceHeight": 1400,
+      "sourceHasTransparency": false,
+      "qualityCategory": "manual-series",
+      "sourceChecksum": "2d98c75d4ea88ed4b490de55c3e880e96766b65babb721f1b6bc64e2bcd98a1e",
+      "successfulSourceChecksum": "2d98c75d4ea88ed4b490de55c3e880e96766b65babb721f1b6bc64e2bcd98a1e",
+      "sourceAuditStatus": "manual-series",
+      "lastAttempt": "2026-09-30T12:10:00Z",
+      "lastSuccess": "2026-09-30T12:10:00Z",
+      "lastError": "",
+      "status": "manual_series_override",
+      "needsPlaceholder": false,
+      "reusedExistingFiles": false,
+      "original": {
+        "path": "data/covers/original/magasinet_jennings.png",
+        "format": "PNG",
+        "contentType": "image/png",
+        "bytes": 1603955,
+        "checksum": "2d98c75d4ea88ed4b490de55c3e880e96766b65babb721f1b6bc64e2bcd98a1e",
+        "width": 1400,
+        "height": 1400,
+        "hasTransparency": false
+      },
+      "variants": {
+        "480": {
+          "path": "data/covers/480/magasinet_jennings.webp",
+          "requestedWidth": 480,
+          "actualWidth": 480,
+          "actualHeight": 480,
+          "format": "WEBP",
+          "contentType": "image/webp",
+          "bytes": 21014,
+          "checksum": "b9f7511a417f03e7b64a62fd9f8bd04a32cf7e58dc1017ed7fab2ddb50a72a7a",
+          "hasTransparency": false,
+          "quality": 82
+        },
+        "800": {
+          "path": "data/covers/800/magasinet_jennings.webp",
+          "requestedWidth": 800,
+          "actualWidth": 800,
+          "actualHeight": 800,
+          "format": "WEBP",
+          "contentType": "image/webp",
+          "bytes": 60926,
+          "checksum": "0abbf355b2732dac3bc9eaa0b99bf8fbc5ed7ebd553b6b4ca7af674217d61fc5",
+          "hasTransparency": false,
+          "quality": 88
+        },
+        "1400": {
+          "path": "data/covers/1400/magasinet_jennings.webp",
+          "requestedWidth": 1400,
+          "actualWidth": 1400,
+          "actualHeight": 1400,
+          "format": "WEBP",
+          "contentType": "image/webp",
+          "bytes": 147140,
+          "checksum": "be971bf641a72041787afe8d43bf212f0bd6b2644ddda9bb33a16377c89b38c5",
+          "hasTransparency": false,
+          "quality": 90
+        }
+      }
     }
   ]
 }
