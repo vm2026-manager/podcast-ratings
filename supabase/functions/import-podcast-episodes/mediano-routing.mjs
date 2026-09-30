@@ -3,7 +3,7 @@
 export const PUBLIC_MEDIANO_RSS_URL = "https://www.spreaker.com/show/6169233/episodes/feed";
 export const MEDIANO_SITE_RSS_URL = "https://www.mediano.nu/oversigt?format=rss";
 
-const enabled = (key, canonicalTitle, podcastKey, aliases, literalStarts = []) => ({ key, canonicalTitle, podcastKey, aliases, literalStarts, status: "enabled" });
+const enabled = (key, canonicalTitle, podcastKey, aliases, literalStarts = [], titleWords = [], priority = 0) => ({ key, canonicalTitle, podcastKey, aliases, literalStarts, titleWords, priority, status: "enabled" });
 const pending = (key, canonicalTitle, proposedPodcastKey, aliases) => ({ key, canonicalTitle, podcastKey: null, proposedPodcastKey, aliases, status: "pending_catalogue" });
 const skipped = (key, canonicalTitle, aliases, reason) => ({ key, canonicalTitle, podcastKey: null, aliases, status: "skip", reason });
 
@@ -38,7 +38,7 @@ export const MEDIANO_PUBLIC_ROUTE_DEFINITIONS = [
   enabled("minimax", "Minimax", "minimax", ["Minimax", "Mini Max"]),
   enabled("fodbold_70erne", "Fodbold var værre i 70'erne", "fodbold var værre i 70 erne", ["Fodbold var værre i 70'erne", "Fodbold var værre i 70’erne"]),
   skipped("fodboldministeriet_source_overlap", "Fodboldministeriet", ["Fodboldministeriet"], "has_dedicated_feed"),
-  enabled("magasinet_jennings", "Magasinet Jennings", "magasinet jennings", ["Magasinet Jennings", "Jennings", "Jennings Ekstra"]),
+  enabled("magasinet_jennings", "Magasinet Jennings", "magasinet jennings", ["Magasinet Jennings", "Jennings", "Jennings Ekstra"], [], ["jennings"], 1),
   // These are verified site titles. Do not route on a person's name alone.
   enabled("troels_bech_i_en_samtale", "Troels Bech i en samtale", "troels bech i en samtale", ["Troels Bech i en samtale", "Troels Bech i en samtale med Thomas Thomasberg", "Landsholdets analytiker: Mounir Akhiat"], ["Troels Bech i en samtale med "]),
   enabled("transfer_special", "Transfer Special", "transfer special", ["Transfer Special"]),
@@ -90,9 +90,12 @@ export function routeMedianoPublicTitle(title, definitions = MEDIANO_PUBLIC_ROUT
   const matches = definitions.filter((definition) => (
     matchesExplicitTitlePrefix(title, definition.aliases)
     || definition.literalStarts?.some((prefix) => normalizedTitle.startsWith(prefix.toLocaleLowerCase("da-DK")))
+    || definition.titleWords?.some((word) => ` ${normalizedTitle} `.includes(` ${normalizeMedianoText(word)} `))
   ));
-  if (matches.length === 1) return { status: matches[0].podcastKey ? "routed" : "known_no_destination", route: matches[0] };
-  if (matches.length > 1) return { status: "ambiguous", routes: matches };
+  const highestPriority = matches.length ? Math.max(...matches.map((definition) => definition.priority || 0)) : 0;
+  const prioritizedMatches = matches.filter((definition) => (definition.priority || 0) === highestPriority);
+  if (prioritizedMatches.length === 1) return { status: prioritizedMatches[0].podcastKey ? "routed" : "known_no_destination", route: prioritizedMatches[0] };
+  if (prioritizedMatches.length > 1) return { status: "ambiguous", routes: prioritizedMatches };
   return { status: "unmatched", routes: [] };
 }
 
@@ -106,8 +109,13 @@ export function buildMedianoPublicFeedRoutes() {
       // Mediano routes retain their strict separator-bound prefix behavior.
       ...(definition.literalStarts?.length
         ? { startsWith: definition.literalStarts }
-        : {})
-    }
+        : {}),
+      // Jennings has verified title variants such as "JENNINGS BREAKING".
+      // This remains scoped to the two feeds built from this shared registry.
+      ...(definition.titleWords?.length ? { words: definition.titleWords } : {})
+    },
+    // The verified Jennings title word wins any coincident Mediano prefix.
+    ...(definition.priority ? { priority: definition.priority } : {})
   }));
 }
 

@@ -12,6 +12,9 @@ export type FeedRouteMatcher = {
   // Literal starts are reserved for verified series conventions that continue
   // in prose rather than with an explicit title separator.
   startsWith?: string[];
+  // Whole words are matched only in the configured field. Use this for a
+  // verified series name that may appear away from the title prefix.
+  words?: string[];
 };
 
 export type FeedRoute = {
@@ -20,6 +23,9 @@ export type FeedRoute = {
   podcast_key: string | null;
   title?: FeedRouteMatcher;
   description?: FeedRouteMatcher;
+  // A higher value resolves an intentional, verified overlap within an
+  // umbrella registry. Routes with the same priority remain ambiguous.
+  priority?: number;
 };
 
 export type FeedConfig = {

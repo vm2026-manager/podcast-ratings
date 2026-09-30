@@ -68,6 +68,18 @@ function normalizeRoutePrefix(value: unknown): string {
     .replace(/\s+/g, " ");
 }
 
+function escapeRegExp(value: string): string {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+function matchesWholeWord(value: string, word: string): boolean {
+  const normalizedWord = normalizeRouteText(word);
+  return Boolean(normalizedWord) && new RegExp(
+    `(^|[^\\p{L}\\p{N}])${escapeRegExp(normalizedWord)}(?=$|[^\\p{L}\\p{N}])`,
+    "u"
+  ).test(value);
+}
+
 function matcherMatches(value: string, matcher: FeedRouteMatcher | undefined): boolean {
   if (!matcher || !value) return false;
   const normalized = normalizeRouteText(value);
@@ -79,6 +91,7 @@ function matcherMatches(value: string, matcher: FeedRouteMatcher | undefined): b
   })) return true;
   if (matcher.prefixes?.length && matchesExplicitTitlePrefix(value, matcher.prefixes)) return true;
   if (matcher.startsWith?.some((prefix) => normalizeRoutePrefix(value).startsWith(normalizeRoutePrefix(prefix)))) return true;
+  if (matcher.words?.some((word) => matchesWholeWord(normalized, word))) return true;
   return (matcher.patterns || []).some((pattern) => {
     const flags = [...new Set(`${pattern.flags.replace(/[gy]/g, "")}iu`.split(""))].join("");
     return new RegExp(pattern.source, flags).test(normalized);
@@ -106,11 +119,17 @@ export function routeEpisodes(episodes: PodcastEpisodeRow[], config: FeedConfig)
   };
   const routed: PodcastEpisodeRow[] = [];
 
+  const highestPriorityMatches = (matches: typeof config.routes) => {
+    if (!matches?.length) return [];
+    const priority = Math.max(...matches.map((route) => route.priority || 0));
+    return matches.filter((route) => (route.priority || 0) === priority);
+  };
+
   for (const episode of episodes) {
     const titleMatches = config.routes.filter((route) => matcherMatches(episode.title, route.title));
-    const matches = titleMatches.length
+    const matches = highestPriorityMatches(titleMatches.length
       ? titleMatches
-      : config.routes.filter((route) => matcherMatches(episode.description || "", route.description));
+      : config.routes.filter((route) => matcherMatches(episode.description || "", route.description)));
     const issue = { external_guid: episode.external_guid, title: episode.title };
 
     if (!matches.length) {
