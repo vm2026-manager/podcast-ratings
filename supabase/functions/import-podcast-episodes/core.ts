@@ -126,10 +126,17 @@ export function routeEpisodes(episodes: PodcastEpisodeRow[], config: FeedConfig)
   };
 
   for (const episode of episodes) {
+    const guidMatches = config.routes.filter((route) => route.external_guids?.includes(episode.external_guid));
     const titleMatches = config.routes.filter((route) => matcherMatches(episode.title, route.title));
-    const matches = highestPriorityMatches(titleMatches.length
-      ? titleMatches
-      : config.routes.filter((route) => matcherMatches(episode.description || "", route.description)));
+    const descriptionMatches = config.routes.filter((route) => matcherMatches(episode.description || "", route.description));
+    // Podimo programme names can appear independently in title and description.
+    // Treat conflicting evidence as ambiguous; only the exact UUID exception
+    // is allowed to override text evidence.
+    const matches = highestPriorityMatches(guidMatches.length
+      ? guidMatches
+      : config.format === "podimo_graphql"
+        ? [...new Set([...titleMatches, ...descriptionMatches])]
+        : titleMatches.length ? titleMatches : descriptionMatches);
     const issue = { external_guid: episode.external_guid, title: episode.title };
 
     if (!matches.length) {
@@ -427,6 +434,41 @@ export function parseRadio4Episodes(json: string): unknown[] {
   }
   if (!Array.isArray(payload)) throw new Error("Invalid Radio4 JSON: expected episode array");
   return payload;
+}
+
+type PodimoEpisode = { id?: unknown; title?: unknown; description?: unknown; coverImage?: unknown; duration?: unknown; publishedOn?: unknown; playAvailable?: unknown };
+
+export function parsePodimoEpisodes(payload: unknown): unknown[] {
+  const episodes = payload && typeof payload === "object" ? (payload as { data?: { episodes?: unknown } }).data?.episodes : null;
+  if (!Array.isArray(episodes)) throw new Error("Invalid Podimo GraphQL response: expected episodes array");
+  return episodes;
+}
+
+export function mapPodimoEpisodes(items: unknown[], config: FeedConfig, now: string) {
+  const episodes: PodcastEpisodeRow[] = [];
+  const errors: Array<Record<string, unknown>> = [];
+  const warnings: Array<Record<string, unknown>> = [];
+  const seen = new Set<string>();
+  for (const [index, item] of items.entries()) {
+    if (!item || typeof item !== "object" || Array.isArray(item)) { errors.push({ index, errors: ["Invalid Podimo episode item"] }); continue; }
+    const entry = item as PodimoEpisode;
+    const guid = normalizeText(entry.id);
+    const title = normalizeText(entry.title);
+    if (!guid || !title || seen.has(guid)) { errors.push({ index, guid: guid || null, title: title || null, errors: [!guid ? "Missing external_guid" : !title ? "Missing title" : "Duplicate GUID in feed"] }); continue; }
+    seen.add(guid);
+    const published = parsePublishedAt(normalizeText(entry.publishedOn) || null);
+    const duration = Number(entry.duration);
+    if (published.warning) warnings.push({ index, guid, warning: published.warning });
+    if (!Number.isFinite(duration) || duration < 0) warnings.push({ index, guid, warning: "Invalid duration" });
+    const exclusionReason = isTeaserOrTrailerTitle(title) ? "teaser_or_trailer" : null;
+    episodes.push({ podcast_key: config.podcast_key, source: config.source, external_guid: guid, external_episode_id: guid, title,
+      description: typeof entry.description === "string" ? entry.description : null, published_at: published.value,
+      duration_seconds: Number.isFinite(duration) && duration >= 0 ? Math.round(duration) : null,
+      episode_url: `https://podimo.com/dk/shows/grebet-af-gvfb/episode/${guid}`, audio_url: null,
+      image_url: normalizeText(entry.coverImage) || null, is_active: exclusionReason === null,
+      metadata: { format: "podimo_graphql", podimo_podcast_id: config.podcast_id || null, play_available: entry.playAvailable ?? null, rateable: exclusionReason === null, exclusion_reason: exclusionReason } });
+  }
+  return { fetched_count: items.length, episodes, errors, warnings, eligibility: getEpisodeFeatureEligibility(episodes, items.length), imported_at: now };
 }
 
 function externalEpisodeIdFromGuid(guid: string): string | null {
@@ -814,11 +856,23 @@ export async function fetchFeedText(url: string, timeoutMs = FEED_TIMEOUT_MS): P
   }
 }
 
+export async function fetchPodimoEpisodes(config: FeedConfig, timeoutMs = FEED_TIMEOUT_MS): Promise<unknown> {
+  if (!config.podcast_id) throw new Error("Podimo feed missing podcast_id");
+  const controller = new AbortController(); const timer = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    const response = await fetch(config.feed_url, { method: "POST", headers: { accept: "application/json", "content-type": "application/json" }, signal: controller.signal,
+      body: JSON.stringify({ query: "query PodcastEpisodesByPodcastId($podcastId: UUID!, $offset: Int, $limit: Int) { episodes: openPodcastEpisodesByPodcastId(podcastId: $podcastId, offset: $offset, limit: $limit) { id title description coverImage duration publishedOn playAvailable } }", variables: { podcastId: config.podcast_id, offset: 0, limit: 100 } }) });
+    if (!response.ok) throw new Error(`Podimo fetch failed: ${response.status}`);
+    return await response.json();
+  } finally { clearTimeout(timer); }
+}
+
 export async function runEpisodeImport(options: {
   feedKey: string;
   repository: ImportRepository;
   feedConfigs?: FeedConfigMap;
   fetchText?: (url: string) => Promise<string>;
+  fetchPodimo?: (config: FeedConfig) => Promise<unknown>;
   now?: () => string;
 }) {
   const startedAt = Date.now();
@@ -835,8 +889,10 @@ export async function runEpisodeImport(options: {
   });
 
   try {
-    const content = await (options.fetchText || fetchFeedText)(config.feed_url);
-    const mapped = config.format === "apple_podcasts_html"
+    const content = config.format === "podimo_graphql" ? null : await (options.fetchText || fetchFeedText)(config.feed_url);
+    const mapped = config.format === "podimo_graphql"
+      ? mapPodimoEpisodes(parsePodimoEpisodes(await (options.fetchPodimo || fetchPodimoEpisodes)(config)), config, now())
+      : config.format === "apple_podcasts_html"
       ? await mapApplePodcastHtmlEpisodes({
           showHtml: content,
           config,
@@ -1105,6 +1161,7 @@ export async function runEpisodeImports(options: {
             repository: options.repository,
             feedConfigs,
             fetchText: options.fetchText,
+            fetchPodimo: options.fetchPodimo,
             now: options.now
           });
         } catch (error) {
