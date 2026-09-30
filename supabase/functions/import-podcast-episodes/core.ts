@@ -893,7 +893,7 @@ export async function fetchPodimoEpisodes(config: FeedConfig, timeoutMs = FEED_T
         if (id) seenEpisodeIds.add(id);
       }
       episodes.push(...pageEpisodes);
-      if (pageEpisodes.length < PODIMO_PAGE_SIZE) return { data: { episodes } };
+      if (pageEpisodes.length < PODIMO_PAGE_SIZE) return { data: { episodes, page_count: page + 1 } };
     }
     throw new Error(`Podimo pagination exceeded ${MAX_PODIMO_PAGES} pages`);
   } catch (error) {
