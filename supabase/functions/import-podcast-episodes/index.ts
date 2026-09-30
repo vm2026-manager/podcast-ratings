@@ -1,7 +1,6 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.4";
-import { fetchFeedText, jsonResponse, runEpisodeImport, runEpisodeImports, safeErrorMessage, selectAppleFeedKeys, selectNormalFeedKeys, selectNormalFeedShard, validateImportRequest } from "./core.ts";
-import { mapApplePodcastHtmlEpisodes } from "./apple-podcasts.ts";
-import { FEED_CONFIGS } from "./feed-config.ts";
+import { jsonResponse, runEpisodeImport, runEpisodeImports, safeErrorMessage, selectAppleFeedKeys, selectNormalFeedKeys, selectNormalFeedShard, validateImportRequest } from "./core.ts";
+import { dryRunConfigError, runAppleDryRun, runPodimoDryRun } from "./dry-run.ts";
 import { createSupabaseImportRepository } from "./repository.ts";
 import { loadRuntimeFeedConfigs } from "./runtime-feed-config.ts";
 
@@ -17,32 +16,12 @@ Deno.serve(async (request) => {
 
   try {
     if (validation.dryRun) {
-      const config = FEED_CONFIGS[validation.feed];
-      if (!config || config.format !== "apple_podcasts_html") {
-        return jsonResponse({ status: "failed", error: "Dry run is available only for Apple Podcasts HTML feeds" }, 400);
-      }
-      const parsed = await mapApplePodcastHtmlEpisodes({
-        showHtml: await fetchFeedText(config.feed_url),
-        config,
-        fetchText: fetchFeedText,
-        now: new Date().toISOString()
-      });
-      return jsonResponse({
-        status: parsed.errors.length ? "partial" : "success",
-        fetched_count: parsed.fetched_count,
-        valid_count: parsed.episodes.length,
-        error_count: parsed.errors.length,
-        errors: parsed.errors.slice(0, 5),
-        episodes: parsed.episodes.map((episode) => ({
-          external_guid: episode.external_guid,
-          title: episode.title,
-          published_at: episode.published_at,
-          duration_seconds: episode.duration_seconds,
-          description_present: Boolean(episode.description),
-          image_present: Boolean(episode.image_url),
-          audio_url: episode.audio_url
-        }))
-      }, parsed.errors.length ? 207 : 200);
+      const runtimeFeeds = await loadRuntimeFeedConfigs();
+      const config = runtimeFeeds.configs[validation.feed];
+      const dryRunError = dryRunConfigError(validation.feed, config);
+      if (dryRunError || !config) return jsonResponse({ status: "failed", error: dryRunError || "Unknown feed config" }, 400);
+      const result = config.format === "podimo_graphql" ? await runPodimoDryRun({ config }) : await runAppleDryRun(config);
+      return jsonResponse(result, result.status === "partial" ? 207 : 200);
     }
     const client = createClient(env("SUPABASE_URL"), env("SUPABASE_SERVICE_ROLE_KEY"), {
       auth: { persistSession: false }
