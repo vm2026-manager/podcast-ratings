@@ -134,10 +134,13 @@ export const FEED_CONFIGS: FeedConfigMap = {
     feed_url: "https://rss.podplaystudio.com/1032.xml"
   },
 
-  "verdens_klogeste_land": {
+  "podimo_verdens_klogeste_land": {
     podcast_key: "verdens klogeste land",
-    source: "simplecast_verdens_klogeste_land_rss",
-    feed_url: "https://feeds.simplecast.com/0iCvEZ1r"
+    source: "podimo_verdens_klogeste_land",
+    format: "podimo_graphql",
+    feed_url: "https://graphql.podimo.com/graphql",
+    podcast_id: "d0c2f206-9e2b-4ec6-9071-c5155c48accd",
+    podimo_show_url: "https://podimo.com/dk/shows/verdensklogesteland"
   },
 
   "borgen_unplugged_2_0": {
