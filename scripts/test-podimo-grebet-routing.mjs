@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { fetchPodimoEpisodes, mapPodimoEpisodes, routeEpisodes, runEpisodeImports, selectNormalFeedKeys } from "../supabase/functions/import-podcast-episodes/core.ts";
+import { fetchPodimoEpisodes, mapPodimoEpisodes, routeEpisodes, runEpisodeImports, runReadOnlyEpisodeDryRun, selectNormalFeedKeys, validateImportRequest } from "../supabase/functions/import-podcast-episodes/core.ts";
 import { FEED_CONFIGS } from "../supabase/functions/import-podcast-episodes/feed-config.ts";
 import { mergeSheetFeedConfigs } from "../supabase/functions/import-podcast-episodes/runtime-feed-config.ts";
 
@@ -49,4 +49,45 @@ assert.equal(livetMerged.configs.livet_ifølge_emil_og_thomas, undefined);
 const normalFeedKeys = selectNormalFeedKeys(FEED_CONFIGS);
 assert.equal(normalFeedKeys.filter((key) => key === "podimo_grebet_af_gvfb").length, 1);
 assert.equal(normalFeedKeys.filter((key) => key === "podimo_livet_ifolge_emil_og_thomas").length, 1);
+
+const forbiddenWrites = { create: 0, upsert: 0, update: 0 };
+const forbiddenRepository = {
+  createImportRun: async () => { forbiddenWrites.create++; throw new Error("dry run must not create an import run"); },
+  upsertEpisodes: async () => { forbiddenWrites.upsert++; throw new Error("dry run must not write episodes"); },
+  updateImportRun: async () => { forbiddenWrites.update++; throw new Error("dry run must not update an import run"); }
+};
+const largePodimoItems = Array.from({ length: 514 }, (_, i) => pageEpisode(`large-${i}`));
+largePodimoItems[0] = { ...largePodimoItems[0], title: "Ærlig æøå episode" };
+largePodimoItems[10] = { ...largePodimoItems[10], title: "Trailer: behold eksklusion" };
+const livetDryRun = await runReadOnlyEpisodeDryRun({
+  feedKey: "podimo_livet_ifolge_emil_og_thomas",
+  fetchPodimo: async () => ({ data: { episodes: largePodimoItems }, pagination: { page_count: 6 } }),
+  repository: forbiddenRepository
+});
+assert.equal(livetDryRun.status, "success"); assert.equal(livetDryRun.fetched_count, 514); assert.equal(livetDryRun.valid_count, 514);
+assert.equal(livetDryRun.page_count, 6); assert.equal(livetDryRun.teaser_trailer_excluded_count, 1); assert.equal(livetDryRun.audio_url_all_null, true);
+assert.equal(livetDryRun.danish_characters_present, true); assert.equal(livetDryRun.episodes.length, 6); assert.deepEqual(forbiddenWrites, { create: 0, upsert: 0, update: 0 });
+const sharedDryRun = await runReadOnlyEpisodeDryRun({ feedKey: "podimo_grebet_af_gvfb", fetchPodimo: async () => ({ data: { episodes: source }, pagination: { page_count: 1 } }) });
+assert.equal(sharedDryRun.routing.route_counts.hotel_romantik, 10); assert.equal(sharedDryRun.routing.route_counts.gift_ved_forste_blik, 28);
+assert.equal(sharedDryRun.routing.unmatched_count, 0); assert.equal(sharedDryRun.routing.ambiguous_count, 0);
+const unknownDryRun = await runReadOnlyEpisodeDryRun({ feedKey: "podimo_grebet_af_gvfb", fetchPodimo: async () => ({ data: { episodes: [{ id: "unknown-dry", title: "Unknown", description: "Unknown" }] } }) });
+assert.equal(unknownDryRun.status, "partial"); assert.equal(unknownDryRun.routing.unmatched_count, 1);
+const ambiguousDryRun = await runReadOnlyEpisodeDryRun({ feedKey: "podimo_grebet_af_gvfb", fetchPodimo: async () => ({ data: { episodes: [{ id: "ambiguous-dry", title: "Hotel Romantik", description: "Gift ved første blik" }] } }) });
+assert.equal(ambiguousDryRun.status, "partial"); assert.equal(ambiguousDryRun.routing.ambiguous_count, 1);
+await assert.rejects(() => runReadOnlyEpisodeDryRun({ feedKey: "podimo_livet_ifolge_emil_og_thomas", fetchPodimo: async () => ({ data: { episodes: "bad" } }) }), /expected episodes array/);
+await assert.rejects(() => runReadOnlyEpisodeDryRun({ feedKey: "not-a-feed" }), /Unknown feed config/);
+const appleShowHtml = '<a href="/dk/podcast/one/id1575533784?i=1000785662463">one</a>';
+const appleEpisodeHtml = '<link rel="canonical" href="https://podcasts.apple.com/dk/podcast/one/id1575533784?i=1000785662463"><script type="application/ld+json">{"@type":"PodcastEpisode","name":"Apple episode","description":"Apple description","datePublished":"2026-08-25","url":"https://podcasts.apple.com/dk/podcast/one/id1575533784?i=1000785662463"}</script>';
+const appleDryRun = await runReadOnlyEpisodeDryRun({
+  feedKey: "apple",
+  feedConfigs: { apple: { podcast_key: "apple", source: "apple", feed_url: "https://apple.test/show", format: "apple_podcasts_html", apple_show_id: "1575533784" } },
+  fetchText: async (url) => url === "https://apple.test/show" ? appleShowHtml : appleEpisodeHtml
+});
+assert.equal(appleDryRun.status, "success"); assert.equal(appleDryRun.valid_count, 1); assert.equal(appleDryRun.episodes[0].audio_url, null);
+const validDryRequest = new Request("https://example.test", { method: "POST", headers: { authorization: "Bearer secret" }, body: JSON.stringify({ feed: "podimo_livet_ifolge_emil_og_thomas", dry_run: true }) });
+assert.equal((await validateImportRequest(validDryRequest, "secret")).ok, true);
+const allDryRequest = new Request("https://example.test", { method: "POST", headers: { authorization: "Bearer secret" }, body: JSON.stringify({ feed: "all", dry_run: true }) });
+const allDryValidation = await validateImportRequest(allDryRequest, "secret"); assert.equal(allDryValidation.ok, false); if (!allDryValidation.ok) assert.equal(allDryValidation.body.error, "Dry run is available only for a single feed");
+const invalidAuthRequest = new Request("https://example.test", { method: "POST", body: JSON.stringify({ feed: "podimo_livet_ifolge_emil_og_thomas", dry_run: true }) });
+const invalidAuthValidation = await validateImportRequest(invalidAuthRequest, "secret"); assert.equal(invalidAuthValidation.ok, false); if (!invalidAuthValidation.ok) assert.equal(invalidAuthValidation.status, 401);
 console.log("Podimo shared-feed routing tests passed");

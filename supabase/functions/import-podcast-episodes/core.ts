@@ -239,6 +239,9 @@ export async function validateImportRequest(request: Request, expectedSecret: st
     if (!feed) {
       return { ok: false as const, status: 400, body: { status: "failed", error: "Missing feed" } };
     }
+    if (body.dry_run === true && (feed === "all" || feed === "apple_all")) {
+      return { ok: false as const, status: 400, body: { status: "failed", error: "Dry run is available only for a single feed" } };
+    }
     const hasShardIndex = body.shard_index !== undefined;
     const hasShardCount = body.shard_count !== undefined;
     if (hasShardIndex !== hasShardCount || (hasShardIndex && feed !== "all")) {
@@ -893,13 +896,105 @@ export async function fetchPodimoEpisodes(config: FeedConfig, timeoutMs = FEED_T
         if (id) seenEpisodeIds.add(id);
       }
       episodes.push(...pageEpisodes);
-      if (pageEpisodes.length < PODIMO_PAGE_SIZE) return { data: { episodes } };
+      if (pageEpisodes.length < PODIMO_PAGE_SIZE) return { data: { episodes }, pagination: { page_count: page + 1 } };
     }
     throw new Error(`Podimo pagination exceeded ${MAX_PODIMO_PAGES} pages`);
   } catch (error) {
     if (error instanceof DOMException && error.name === "AbortError") throw new Error("Podimo fetch timed out");
     throw error;
   } finally { clearTimeout(timer); }
+}
+
+function dryRunEpisodeSample(episodes: PodcastEpisodeRow[]) {
+  const sample = episodes.length <= 6 ? episodes : [...episodes.slice(0, 3), ...episodes.slice(-3)];
+  return sample.map((episode) => ({
+    external_guid: episode.external_guid,
+    title: episode.title,
+    published_at: episode.published_at,
+    duration_seconds: episode.duration_seconds,
+    description_present: Boolean(episode.description),
+    image_present: Boolean(episode.image_url),
+    audio_url: episode.audio_url
+  }));
+}
+
+export async function runReadOnlyEpisodeDryRun(options: {
+  feedKey: string;
+  feedConfigs?: FeedConfigMap;
+  fetchText?: (url: string) => Promise<string>;
+  fetchPodimo?: (config: FeedConfig) => Promise<unknown>;
+  now?: () => string;
+}) {
+  const feedConfigs = options.feedConfigs || FEED_CONFIGS;
+  const config = feedConfigs[options.feedKey];
+  if (!config) throw Object.assign(new Error("Unknown feed config"), { status: 400 });
+  const now = options.now || (() => new Date().toISOString());
+
+  // This function intentionally has no repository argument. It is the only
+  // dry-run path and therefore cannot create runs or write episode rows.
+  if (config.format === "apple_podcasts_html") {
+    const parsed = await mapApplePodcastHtmlEpisodes({
+      showHtml: await (options.fetchText || fetchFeedText)(config.feed_url),
+      config,
+      fetchText: options.fetchText || fetchFeedText,
+      now: now()
+    });
+    return {
+      status: parsed.errors.length ? "partial" : "success",
+      fetched_count: parsed.fetched_count,
+      valid_count: parsed.episodes.length,
+      error_count: parsed.errors.length,
+      errors: parsed.errors.slice(0, 5),
+      episodes: parsed.episodes.map((episode) => ({
+        external_guid: episode.external_guid,
+        title: episode.title,
+        published_at: episode.published_at,
+        duration_seconds: episode.duration_seconds,
+        description_present: Boolean(episode.description),
+        image_present: Boolean(episode.image_url),
+        audio_url: episode.audio_url
+      }))
+    };
+  }
+
+  if (config.format !== "podimo_graphql") {
+    throw Object.assign(new Error("Dry run is available only for Apple Podcasts HTML and Podimo feeds"), { status: 400 });
+  }
+  const payload = await (options.fetchPodimo || fetchPodimoEpisodes)(config);
+  const mapped = mapPodimoEpisodes(parsePodimoEpisodes(payload), config, now());
+  const routing = routeEpisodes(mapped.episodes, config);
+  const routedEpisodes = routing.episodes;
+  const publicationDates = mapped.episodes.map((episode) => episode.published_at).filter((value): value is string => Boolean(value)).sort();
+  const duplicateGuidCount = mapped.errors.filter((error) => Array.isArray(error.errors) && error.errors.includes("Duplicate GUID in feed")).length;
+  const routingIssueCount = (routing.report?.unmatched.length || 0) + (routing.report?.ambiguous.length || 0);
+  const teaserTrailerExcludedCount = mapped.episodes.filter((episode) => getEpisodeExclusionReason(episode) === "teaser_or_trailer").length;
+  return {
+    status: mapped.errors.length || routingIssueCount ? "partial" : "success",
+    source: config.source,
+    podcast_key: config.podcast_key,
+    format: config.format,
+    fetched_count: mapped.fetched_count,
+    valid_count: mapped.episodes.length,
+    routed_valid_count: routedEpisodes.length,
+    error_count: mapped.errors.length,
+    errors: mapped.errors.slice(0, 5),
+    page_count: Number((payload as { pagination?: { page_count?: unknown } })?.pagination?.page_count) || null,
+    earliest_published_at: publicationDates[0] || null,
+    latest_published_at: publicationDates.at(-1) || null,
+    teaser_trailer_excluded_count: teaserTrailerExcludedCount,
+    duplicate_guid_count: duplicateGuidCount,
+    audio_url_all_null: mapped.episodes.every((episode) => episode.audio_url === null),
+    danish_characters_present: mapped.episodes.some((episode) => /[ÆØÅæøå]/.test(`${episode.title} ${episode.description || ""}`)),
+    routing: routing.report && {
+      routed_count: routing.report.routed_count,
+      route_counts: routing.report.route_counts,
+      unmatched_count: routing.report.unmatched.length,
+      unmatched: routing.report.unmatched.slice(0, 5),
+      ambiguous_count: routing.report.ambiguous.length,
+      ambiguous: routing.report.ambiguous.slice(0, 5)
+    },
+    episodes: dryRunEpisodeSample(routedEpisodes)
+  };
 }
 
 export async function runEpisodeImport(options: {
