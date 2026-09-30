@@ -44,6 +44,9 @@ export type FeedConfig = {
   generated_from_sheet?: boolean;
   apple_show_id?: string;
   podcast_id?: string;
+  // Canonical public show URL used to build the episode page URL. This must be
+  // configured per show; adapters must not infer a show slug from a title.
+  podimo_show_url?: string;
   owned_podcast_keys?: string[];
   routes?: FeedRoute[];
   metadata_only?: boolean;
@@ -59,11 +62,20 @@ export const FEED_CONFIGS: FeedConfigMap = {
     format: "podimo_graphql",
     feed_url: "https://graphql.podimo.com/graphql",
     podcast_id: "54f85576-6b0e-4da9-b56a-b1298272ed2b",
+    podimo_show_url: "https://podimo.com/dk/shows/grebet-af-gvfb",
     owned_podcast_keys: ["romantik pa hotellet"],
     routes: [
       { key: "hotel_romantik", podcast_key: "romantik pa hotellet", title: { aliases: ["Hotel Romantik", "Romantik på Hotellet"] }, description: { aliases: ["Hotel Romantik"] } },
       { key: "gift_ved_forste_blik", podcast_key: "grebet af gvfb", description: { aliases: ["Gift ved første blik"] }, external_guids: ["beaa8a13-edc9-4670-85f9-dd4948f543b3"] }
     ]
+  },
+  "podimo_livet_ifolge_emil_og_thomas": {
+    podcast_key: "livet ifølge emil og thomas",
+    source: "podimo_livet_ifolge_emil_og_thomas",
+    format: "podimo_graphql",
+    feed_url: "https://graphql.podimo.com/graphql",
+    podcast_id: "274d3039-b004-4c08-87bf-6b0f952093fb",
+    podimo_show_url: "https://podimo.com/dk/shows/274d3039-b004-4c08-87bf-6b0f952093fb"
   },
   "mediano_public": {
     // Import-run compatibility label; each destination is set by title routing.

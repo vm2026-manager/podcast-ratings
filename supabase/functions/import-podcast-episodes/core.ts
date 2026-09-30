@@ -445,6 +445,8 @@ export function parsePodimoEpisodes(payload: unknown): unknown[] {
 }
 
 export function mapPodimoEpisodes(items: unknown[], config: FeedConfig, now: string) {
+  const showUrl = normalizeText(config.podimo_show_url).replace(/\/+$/, "");
+  if (!showUrl) throw new Error("Podimo feed missing podimo_show_url");
   const episodes: PodcastEpisodeRow[] = [];
   const errors: Array<Record<string, unknown>> = [];
   const warnings: Array<Record<string, unknown>> = [];
@@ -464,7 +466,7 @@ export function mapPodimoEpisodes(items: unknown[], config: FeedConfig, now: str
     episodes.push({ podcast_key: config.podcast_key, source: config.source, external_guid: guid, external_episode_id: guid, title,
       description: typeof entry.description === "string" ? entry.description : null, published_at: published.value,
       duration_seconds: Number.isFinite(duration) && duration >= 0 ? Math.round(duration) : null,
-      episode_url: `https://podimo.com/dk/shows/grebet-af-gvfb/episode/${guid}`, audio_url: null,
+      episode_url: `${showUrl}/episode/${guid}`, audio_url: null,
       image_url: normalizeText(entry.coverImage) || null, is_active: exclusionReason === null,
       metadata: { format: "podimo_graphql", podimo_podcast_id: config.podcast_id || null, play_available: entry.playAvailable ?? null, rateable: exclusionReason === null, exclusion_reason: exclusionReason } });
   }
@@ -856,14 +858,47 @@ export async function fetchFeedText(url: string, timeoutMs = FEED_TIMEOUT_MS): P
   }
 }
 
+export const PODIMO_PAGE_SIZE = 100;
+export const MAX_PODIMO_PAGES = 100;
+
 export async function fetchPodimoEpisodes(config: FeedConfig, timeoutMs = FEED_TIMEOUT_MS): Promise<unknown> {
   if (!config.podcast_id) throw new Error("Podimo feed missing podcast_id");
   const controller = new AbortController(); const timer = setTimeout(() => controller.abort(), timeoutMs);
   try {
-    const response = await fetch(config.feed_url, { method: "POST", headers: { accept: "application/json", "content-type": "application/json" }, signal: controller.signal,
-      body: JSON.stringify({ query: "query PodcastEpisodesByPodcastId($podcastId: UUID!, $offset: Int, $limit: Int) { episodes: openPodcastEpisodesByPodcastId(podcastId: $podcastId, offset: $offset, limit: $limit) { id title description coverImage duration publishedOn playAvailable } }", variables: { podcastId: config.podcast_id, offset: 0, limit: 100 } }) });
-    if (!response.ok) throw new Error(`Podimo fetch failed: ${response.status}`);
-    return await response.json();
+    const episodes: unknown[] = [];
+    const seenEpisodeIds = new Set<string>();
+    const seenPageSignatures = new Set<string>();
+    for (let page = 0; page < MAX_PODIMO_PAGES; page += 1) {
+      const offset = page * PODIMO_PAGE_SIZE;
+      const response = await fetch(config.feed_url, { method: "POST", headers: { accept: "application/json", "content-type": "application/json" }, signal: controller.signal,
+        body: JSON.stringify({ query: "query PodcastEpisodesByPodcastId($podcastId: UUID!, $offset: Int, $limit: Int) { episodes: openPodcastEpisodesByPodcastId(podcastId: $podcastId, offset: $offset, limit: $limit) { id title description coverImage duration publishedOn playAvailable } }", variables: { podcastId: config.podcast_id, offset, limit: PODIMO_PAGE_SIZE } }) });
+      if (!response.ok) throw new Error(`Podimo fetch failed: ${response.status}`);
+      const payload = await response.json();
+      if (payload && typeof payload === "object" && Array.isArray((payload as { errors?: unknown }).errors) && (payload as { errors: unknown[] }).errors.length) {
+        throw new Error("Podimo GraphQL returned errors");
+      }
+      const pageEpisodes = parsePodimoEpisodes(payload);
+      const pageIds = pageEpisodes.map((episode) => {
+        if (!episode || typeof episode !== "object" || Array.isArray(episode)) throw new Error("Podimo pagination returned a malformed episode");
+        const entry = episode as PodimoEpisode;
+        const id = normalizeText(entry.id);
+        if (!id || !normalizeText(entry.title)) throw new Error("Podimo pagination returned a malformed episode");
+        return id;
+      });
+      const signature = pageIds.join("\u001f");
+      if (pageEpisodes.length && seenPageSignatures.has(signature)) throw new Error("Podimo pagination repeated a page");
+      seenPageSignatures.add(signature);
+      for (const id of pageIds) {
+        if (id && seenEpisodeIds.has(id)) throw new Error("Podimo pagination returned a duplicate episode id");
+        if (id) seenEpisodeIds.add(id);
+      }
+      episodes.push(...pageEpisodes);
+      if (pageEpisodes.length < PODIMO_PAGE_SIZE) return { data: { episodes } };
+    }
+    throw new Error(`Podimo pagination exceeded ${MAX_PODIMO_PAGES} pages`);
+  } catch (error) {
+    if (error instanceof DOMException && error.name === "AbortError") throw new Error("Podimo fetch timed out");
+    throw error;
   } finally { clearTimeout(timer); }
 }
 
