@@ -183,3 +183,29 @@ Deno.test("Mediano public routes use explicit title prefixes and protect known e
   assertEquals(fodboldministeriet.episodes.length, 0);
   assertEquals(fodboldministeriet.report?.known_no_destination_counts, { fodboldministeriet_source_overlap: 1 });
 });
+
+Deno.test("Mediano umbrella sources route standalone Jennings title words deterministically", () => {
+  const exactFailingTitle = "JENNINGS BREAKING: Derfor er City kendt skyldige i århundredets retssag - og hvad sker der nu?";
+
+  for (const config of [FEED_CONFIGS.mediano_public, FEED_CONFIGS.mediano_site]) {
+    const exact = routeEpisodes([episode(`${config.source}-exact`, exactFailingTitle)], config);
+    assertEquals(exact.episodes[0].podcast_key, "magasinet jennings");
+    assertEquals(exact.report?.ambiguous.length, 0);
+
+    const later = routeEpisodes([episode(`${config.source}-later`, "Breaking fra JENNINGS: City-nyt")], config);
+    assertEquals(later.episodes[0].podcast_key, "magasinet jennings");
+
+    const caseInsensitive = routeEpisodes([episode(`${config.source}-case`, "Magasinet jEnNiNgS: analyse")], config);
+    assertEquals(caseInsensitive.episodes[0].podcast_key, "magasinet jennings");
+
+    const priority = routeEpisodes([episode(`${config.source}-priority`, "Mediano Superliga: Nyt fra JENNINGS")], config);
+    assertEquals(priority.episodes[0].podcast_key, "magasinet jennings");
+    assertEquals(priority.report?.ambiguous.length, 0);
+
+    const unaffected = routeEpisodes([episode(`${config.source}-unaffected`, "Mediano Superliga: almindelig analyse")], config);
+    assertEquals(unaffected.episodes[0].podcast_key, "mediano superliga");
+
+    const descriptionOnly = routeEpisodes([episode(`${config.source}-description`, "Mediano Superliga: almindelig analyse", "JENNINGS BREAKING")], config);
+    assertEquals(descriptionOnly.episodes[0].podcast_key, "mediano superliga");
+  }
+});
