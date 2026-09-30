@@ -6,6 +6,7 @@ on:
     - cron: "17 */6 * * *"
 
 permissions:
+  actions: write
   contents: write
   pull-requests: write
   checks: write
@@ -46,6 +47,11 @@ jobs:
           body: "Automated additive registry update. Unsafe, ambiguous, or colliding identities fail before a PR can be created."
           add-paths: |
             data/auto-discovered-djaevlen.json
+      - name: Dispatch required regression gate
+        if: steps.changed.outputs.value == 'true' && steps.pull-request.outputs.pull-request-url != ''
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh workflow run critical-regression-gate.yml --ref automation/djaevlen-discovery
       - name: Enable guarded auto-merge
         if: steps.changed.outputs.value == 'true' && steps.pull-request.outputs.pull-request-url != ''
         env:
