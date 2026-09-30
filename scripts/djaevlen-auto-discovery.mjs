@@ -1,4 +1,4 @@
-export const DJAEVLEN_MAIN_SERIES="Djævlen i detaljen", DJAEVLEN_PUBLISHER="DR", DJAEVLEN_COVER="https://api.dr.dk/podcasts/v1/images/urn:dr:podcast:image:66f271c4b75d19480fa40d01.jpg", DJAEVLEN_DISCOVERY_BASELINE="2026-09-23T23:59:59.000Z";
+export const DJAEVLEN_MAIN_SERIES="Djævlen i detaljen", DJAEVLEN_PUBLISHER="DR", DJAEVLEN_COVER="https://api.dr.dk/podcasts/v1/images/urn:dr:podcast:image:66f271c4b75d19480fa40d01.jpg", DJAEVLEN_DISCOVERY_BASELINE="2026-09-23T14:25:00.000Z";
 export const normalizeDjaevlenIdentity=v=>String(v??"").trim().toLocaleLowerCase("da-DK").normalize("NFD").replace(/[\u0300-\u036f]/gu,"").replace(/æ/g,"ae").replace(/ø/g,"oe").replace(/å/g,"aa").replace(/[^a-z0-9]+/gu," ").trim().replace(/\s+/gu," ");
 const hash=v=>{let h=2166136261;for(const c of v){h^=c.charCodeAt(0);h=Math.imul(h,16777619)>>>0;}return h.toString(16).padStart(8,"0")};
 const isDjaevlen=r=>normalizeDjaevlenIdentity(r?.Hovedserie??r?.hovedserie)===normalizeDjaevlenIdentity(DJAEVLEN_MAIN_SERIES);
