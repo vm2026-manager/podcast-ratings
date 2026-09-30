@@ -1,5 +1,6 @@
 import { FEED_CONFIGS, type FeedConfig, type FeedConfigMap } from "./feed-config.ts";
 import { appleShowUrl, parseAppleFeed, parseHttpFeed } from "./feed-syntax.mjs";
+import { buildDjaevlenRoutes, DJAEVLEN_FEED_KEY } from "./djaevlen-routing.mjs";
 
 const PODCASTS_JSON_TIMEOUT_MS = 15000;
 
@@ -12,6 +13,7 @@ export type FeedConfigAudit = {
   duplicate_feed_urls_skipped: Array<{ feed_url: string; skipped_feed_key: string }>;
   invalid_feed_urls_skipped: number;
   missing_podcast_ids_skipped: number;
+  djaevlen_route_count: number;
   total_enabled_feeds: number;
   podcasts_json_url_configured: boolean;
   dynamic_feed_load_error?: string;
@@ -77,7 +79,20 @@ export function mergeSheetFeedConfigs(
   staticConfigs: FeedConfigMap = FEED_CONFIGS
 ): { configs: FeedConfigMap; audit: Omit<FeedConfigAudit, "podcasts_json_url_configured" | "dynamic_feed_load_error"> } {
   const manualStaticConfigs = getManualStaticConfigs(staticConfigs);
-  const configs: FeedConfigMap = { ...manualStaticConfigs };
+  const rows = getPodcastRows(sheetPayload);
+  const djaevlen = buildDjaevlenRoutes(rows);
+  const djaevlenOwner = manualStaticConfigs[DJAEVLEN_FEED_KEY];
+  const configs: FeedConfigMap = {
+    ...manualStaticConfigs,
+    ...(djaevlenOwner ? {
+      [DJAEVLEN_FEED_KEY]: {
+        ...djaevlenOwner,
+        routes: djaevlen.routes,
+        // Never activate an unrouted umbrella feed: there is no safe fallback.
+        enabled: djaevlen.routes.length > 0
+      }
+    } : {})
+  };
   const staticKeys = new Set(Object.keys(manualStaticConfigs));
   const staticPodcastKeys = getStaticPodcastKeys(manualStaticConfigs);
   const seenSources = new Set(Object.values(manualStaticConfigs).map((config) => config.source));
@@ -94,7 +109,7 @@ export function mergeSheetFeedConfigs(
   let invalidFeedUrlsSkipped = 0;
   let missingPodcastIdsSkipped = 0;
 
-  for (const row of getPodcastRows(sheetPayload)) {
+  for (const row of rows) {
     const rawFeed = row.Feed ?? row.feed;
     const apple = parseAppleFeed(rawFeed);
     const feedUrl = parseHttpFeed(rawFeed);
@@ -148,6 +163,7 @@ export function mergeSheetFeedConfigs(
       duplicate_feed_urls_skipped: duplicateFeedUrlsSkipped,
       invalid_feed_urls_skipped: invalidFeedUrlsSkipped,
       missing_podcast_ids_skipped: missingPodcastIdsSkipped,
+      djaevlen_route_count: djaevlen.routes.length,
       total_enabled_feeds: Object.values(configs).filter((config) => config.enabled !== false).length
     }
   };
@@ -184,6 +200,7 @@ export async function loadRuntimeFeedConfigs(options: {
     duplicate_feed_urls_skipped: [],
     invalid_feed_urls_skipped: 0,
     missing_podcast_ids_skipped: 0,
+    djaevlen_route_count: 0,
     total_enabled_feeds: Object.values(staticConfigs).filter((config) => config.enabled !== false).length,
     podcasts_json_url_configured: Boolean(podcastsJsonUrl)
   };

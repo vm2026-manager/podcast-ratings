@@ -10,6 +10,7 @@ const checks = [
   ["cover source freshness", ["scripts/test-cover-source-freshness.mjs"]],
   ["startup rating hydration", ["scripts/test-startup-rating-hydration.mjs"]],
   ["episode archive/source", ["scripts/test-podcast-episode-archive-source-regression.mjs"]],
+  ["Djævlen umbrella routing", ["--experimental-strip-types", "scripts/test-djaevlen-umbrella-routing.mjs"]],
   ["Mediano episode workspace", ["scripts/test-mediano-episode-workspace-config.mjs"]],
   ["episode detail DOM stability", ["scripts/test-podcast-detail-episode-load-dom-stability.mjs"]],
   ["episode own-rating lock", ["scripts/test-podcast-detail-own-rating-lock-behavior.mjs"]],
