@@ -48,7 +48,8 @@ function getPodcastRows(payload: unknown): Array<Record<string, unknown>> {
 function getStaticPodcastKeys(configs: FeedConfigMap): Set<string> {
   return new Set(
     Object.values(configs)
-      .map((config) => normalizePodcastKey(config.podcast_key))
+      .flatMap((config) => [config.podcast_key, ...(config.owned_podcast_keys || [])])
+      .map((key) => normalizePodcastKey(key))
       .filter(Boolean)
   );
 }

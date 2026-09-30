@@ -1,6 +1,6 @@
 import { MEDIANO_SITE_RSS_URL, PUBLIC_MEDIANO_RSS_URL, buildMedianoPublicFeedRoutes } from "./mediano-routing.mjs";
 
-export type FeedFormat = "rss" | "radio4_json" | "dr_lyd_next_data" | "apple_podcasts_html";
+export type FeedFormat = "rss" | "radio4_json" | "dr_lyd_next_data" | "apple_podcasts_html" | "podimo_graphql";
 
 export type FeedRouteMatcher = {
   // Regular expressions are evaluated against normalized, case-folded text.
@@ -26,6 +26,8 @@ export type FeedRoute = {
   // A higher value resolves an intentional, verified overlap within an
   // umbrella registry. Routes with the same priority remain ambiguous.
   priority?: number;
+  // Exact source episode identities for verified exceptions only.
+  external_guids?: string[];
 };
 
 export type FeedConfig = {
@@ -41,6 +43,8 @@ export type FeedConfig = {
   // Generated sheet entries are replaced from PODCASTS_JSON_URL at runtime.
   generated_from_sheet?: boolean;
   apple_show_id?: string;
+  podcast_id?: string;
+  owned_podcast_keys?: string[];
   routes?: FeedRoute[];
   metadata_only?: boolean;
   dedupe_by_episode_url_with_sources?: string[];
@@ -49,6 +53,18 @@ export type FeedConfig = {
 export type FeedConfigMap = Record<string, FeedConfig>;
 
 export const FEED_CONFIGS: FeedConfigMap = {
+  "podimo_grebet_af_gvfb": {
+    podcast_key: "grebet af gvfb",
+    source: "podimo_grebet_af_gvfb",
+    format: "podimo_graphql",
+    feed_url: "https://graphql.podimo.com/graphql",
+    podcast_id: "54f85576-6b0e-4da9-b56a-b1298272ed2b",
+    owned_podcast_keys: ["romantik pa hotellet"],
+    routes: [
+      { key: "hotel_romantik", podcast_key: "romantik pa hotellet", title: { aliases: ["Hotel Romantik", "Romantik på Hotellet"] }, description: { aliases: ["Hotel Romantik"] } },
+      { key: "gift_ved_forste_blik", podcast_key: "grebet af gvfb", description: { aliases: ["Gift ved første blik"] }, external_guids: ["beaa8a13-edc9-4670-85f9-dd4948f543b3"] }
+    ]
+  },
   "mediano_public": {
     // Import-run compatibility label; each destination is set by title routing.
     podcast_key: "mediano superliga",
