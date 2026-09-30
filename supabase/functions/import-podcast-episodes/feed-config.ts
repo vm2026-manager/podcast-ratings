@@ -1,4 +1,5 @@
 import { MEDIANO_SITE_RSS_URL, PUBLIC_MEDIANO_RSS_URL, buildMedianoPublicFeedRoutes } from "./mediano-routing.mjs";
+import { DJAEVLEN_FEED_KEY, DJAEVLEN_FEED_URL, DJAEVLEN_IMPORT_LABEL, DJAEVLEN_SOURCE } from "./djaevlen-routing.mjs";
 
 export type FeedFormat = "rss" | "radio4_json" | "dr_lyd_next_data" | "apple_podcasts_html" | "podimo_graphql";
 
@@ -56,6 +57,15 @@ export type FeedConfig = {
 export type FeedConfigMap = Record<string, FeedConfig>;
 
 export const FEED_CONFIGS: FeedConfigMap = {
+  [DJAEVLEN_FEED_KEY]: {
+    // The historical source is the GUID/episode identity namespace. Routes
+    // are populated only from the runtime catalogue before this feed activates.
+    podcast_key: DJAEVLEN_IMPORT_LABEL,
+    source: DJAEVLEN_SOURCE,
+    feed_url: DJAEVLEN_FEED_URL,
+    routes: [],
+    enabled: false
+  },
   "podimo_grebet_af_gvfb": {
     podcast_key: "grebet af gvfb",
     source: "podimo_grebet_af_gvfb",
