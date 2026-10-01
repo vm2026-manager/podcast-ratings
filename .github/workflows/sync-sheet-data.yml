@@ -26,7 +26,7 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: "20"
+          node-version: "24"
 
       - name: Generate staged JSON from Google Sheets
         run: node scripts/sync-sheet-data.mjs --output-dir .sync-stage
