@@ -98,7 +98,8 @@ const EXPLORE_CLUSTER_HEADERS = [
 
 const ACCESS_TYPE_VALUES = new Map([
   ["gratis", "free"],
-  ["delvist", "partial"],
+  ["delvist", "paid"],
+  ["betalt", "paid"],
   ["betaling", "paid"]
 ]);
 
@@ -377,7 +378,7 @@ function parseEnglishFlag(value, title) {
 
 function mapAccessType(value, title) {
   const normalizedValue = normalizeText(value);
-  if (!normalizedValue) return "";
+  if (!normalizedValue) return "free";
 
   const accessType = ACCESS_TYPE_VALUES.get(
     normalizedValue.toLocaleLowerCase("da-DK")
