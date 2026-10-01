@@ -2,8 +2,8 @@
   "version": 1,
   "source": {
     "path": "data/podcasts.json",
-    "generatedAt": "2026-09-30T12:28:21.487Z",
-    "count": 1283,
+    "generatedAt": "2026-10-01T08:32:59.121Z",
+    "count": 1303,
     "topicAliases": "config/recommendation-topic-aliases.json",
     "topicAliasVersion": 1,
     "genreMapping": "config/recommendation-genre-mapping.json",
@@ -11,16 +11,16 @@
     "stableIdMethod": "frontend-normalized-title",
     "recommendationIdMethod": "metadata-fingerprint-sha256-128-v1"
   },
-  "count": 1283,
+  "count": 1303,
   "summary": {
-    "podcasts": 1283,
-    "validPrimaryGenres": 1264,
+    "podcasts": 1303,
+    "validPrimaryGenres": 1284,
     "invalidPrimaryGenres": 19,
-    "genreEligibleBeforeMapping": 1003,
-    "genreEligibleAfterMapping": 1264,
-    "recommendationMetadataEligibleBeforeMapping": 1003,
-    "recommendationMetadataEligibleAfterMapping": 1264,
-    "primaryGenreMappingNative": 1003,
+    "genreEligibleBeforeMapping": 1023,
+    "genreEligibleAfterMapping": 1284,
+    "recommendationMetadataEligibleBeforeMapping": 1023,
+    "recommendationMetadataEligibleAfterMapping": 1284,
+    "primaryGenreMappingNative": 1023,
     "primaryGenreMappingCapitalization": 99,
     "primaryGenreMappingSpelling": 0,
     "primaryGenreMappingDirect": 162,
@@ -28,36 +28,36 @@
     "primaryGenreMappingUnmapped": 19,
     "uniqueUnmappedPrimaryGenres": 13,
     "conditionalGenreReviews": 0,
-    "withSecondaryGenre": 1053,
-    "withRawTopics": 1283,
-    "withCanonicalTopics": 1283,
-    "topicEligible": 1283,
-    "genreEligible": 1264,
-    "recommendationMetadataEligible": 1264,
+    "withSecondaryGenre": 1071,
+    "withRawTopics": 1303,
+    "withCanonicalTopics": 1303,
+    "topicEligible": 1303,
+    "genreEligible": 1284,
+    "recommendationMetadataEligible": 1284,
     "approvedAliases": 17,
-    "podcastsWithAliasApplied": 97,
-    "rawTopicOccurrences": 4692,
-    "rawUniqueTopicForms": 2922,
-    "canonicalTopicOccurrences": 4692,
-    "canonicalUniqueTopics": 2684,
-    "normalizedTopicIdentities": 2684,
-    "topicVariantGroups": 238,
-    "topicCollisionGroups": 221,
+    "podcastsWithAliasApplied": 98,
+    "rawTopicOccurrences": 4792,
+    "rawUniqueTopicForms": 2956,
+    "canonicalTopicOccurrences": 4792,
+    "canonicalUniqueTopics": 2714,
+    "normalizedTopicIdentities": 2714,
+    "topicVariantGroups": 242,
+    "topicCollisionGroups": 225,
     "approvedAliasTopicGroups": 17,
-    "safeTopicCollisionGroups": 221,
+    "safeTopicCollisionGroups": 225,
     "unsafeTopicCollisionGroups": 0,
-    "podcastsAffectedByTopicNormalization": 352,
+    "podcastsAffectedByTopicNormalization": 361,
     "withinPodcastTopicDuplicatesRemoved": 0,
-    "canonicalTopicsUsedOnce": 1994,
-    "canonicalTopicsAtLeastThree": 346,
-    "canonicalTopicsAtLeastFive": 151,
-    "canonicalTopicsAtLeastTen": 48,
-    "possibleStandaloneRows": 306,
+    "canonicalTopicsUsedOnce": 2000,
+    "canonicalTopicsAtLeastThree": 356,
+    "canonicalTopicsAtLeastFive": 156,
+    "canonicalTopicsAtLeastTen": 49,
+    "possibleStandaloneRows": 317,
     "topicKeyCollisions": 0,
-    "uniqueExistingIds": 1276,
+    "uniqueExistingIds": 1296,
     "duplicateStableIdValues": 7,
     "podcastsSharingStableId": 14,
-    "uniqueRecommendationIds": 1283,
+    "uniqueRecommendationIds": 1303,
     "recommendationIdCollisions": 0,
     "exactDuplicateGroups": 1,
     "likelyDuplicateGroups": 2,
@@ -13708,7 +13708,7 @@
         "Oliekrisen 1973",
         "energikriser",
         "bilfrie søndage",
-        "Dansk økonomi"
+        "dansk økonomi"
       ],
       "topicKeys": [
         "oliekrisen-1973",
@@ -13852,7 +13852,7 @@
       ],
       "topicsCanonical": [
         "livsforandringer",
-        "Venskab",
+        "venskab",
         "personlige fortællinger"
       ],
       "topicKeys": [
@@ -19065,7 +19065,7 @@
       "topicsCanonical": [
         "kærlighed",
         "familierelationer",
-        "Venskab",
+        "venskab",
         "livsvalg"
       ],
       "topicKeys": [
@@ -19583,7 +19583,7 @@
         "kulturdebatter"
       ],
       "topicsCanonical": [
-        "Venskab",
+        "venskab",
         "hverdagsliv",
         "kulturdebatter"
       ],
@@ -20040,7 +20040,7 @@
         "komikerliv"
       ],
       "topicsCanonical": [
-        "Venskab",
+        "venskab",
         "kreative samarbejder",
         "komikerliv"
       ],
@@ -21721,7 +21721,7 @@
       "topicsCanonical": [
         "Erhvervsnyheder",
         "Aktiemarkedet",
-        "Dansk økonomi",
+        "dansk økonomi",
         "virksomheder"
       ],
       "topicKeys": [
@@ -28537,7 +28537,7 @@
       "topicsCanonical": [
         "hverdagsliv",
         "popkultur",
-        "Venskab",
+        "venskab",
         "humor"
       ],
       "topicKeys": [
@@ -28846,7 +28846,7 @@
         "humor"
       ],
       "topicsCanonical": [
-        "Venskab",
+        "venskab",
         "hverdagsliv",
         "humor"
       ],
@@ -30079,7 +30079,7 @@
       "topicsCanonical": [
         "Aktier",
         "finansmarkeder",
-        "Makroøkonomi",
+        "makroøkonomi",
         "markedsnyheder"
       ],
       "topicKeys": [
@@ -30386,7 +30386,7 @@
         "konjunkturer"
       ],
       "topicsCanonical": [
-        "Dansk økonomi",
+        "dansk økonomi",
         "international økonomi",
         "renter",
         "konjunkturer"
@@ -30698,7 +30698,7 @@
         "samfundsbeslutninger"
       ],
       "topicsCanonical": [
-        "Dansk økonomi",
+        "dansk økonomi",
         "magt",
         "værdier",
         "samfundsbeslutninger"
@@ -33127,7 +33127,7 @@
       ],
       "topicsCanonical": [
         "Komik",
-        "Venskab",
+        "venskab",
         "improvisation",
         "hverdagsobservationer"
       ],
@@ -33245,7 +33245,7 @@
       "topicsCanonical": [
         "Komik",
         "improvisation",
-        "Venskab",
+        "venskab",
         "gæstesamtaler"
       ],
       "topicKeys": [
@@ -34408,7 +34408,7 @@
         "barndomsminder"
       ],
       "topicsCanonical": [
-        "Venskab",
+        "venskab",
         "hverdagsobservationer",
         "Komik",
         "barndomsminder"
@@ -40069,7 +40069,7 @@
         "kulturel identitet"
       ],
       "topicsCanonical": [
-        "Venskab",
+        "venskab",
         "voksenliv",
         "familieliv",
         "kulturel identitet"
@@ -45461,7 +45461,7 @@
         "seksualitet"
       ],
       "topicsCanonical": [
-        "Venskab",
+        "venskab",
         "kropssyn",
         "kærlighed",
         "seksualitet"
@@ -47262,7 +47262,7 @@
         "dansk musik",
         "selvmord",
         "sorg",
-        "Venskab"
+        "venskab"
       ],
       "topicKeys": [
         "liss",
@@ -48378,7 +48378,7 @@
         "verdensøkonomi"
       ],
       "topicsCanonical": [
-        "Makroøkonomi",
+        "makroøkonomi",
         "investering",
         "finansmarkeder",
         "geopolitik",
@@ -49020,6 +49020,848 @@
         "konfliktloesning",
         "kommunikation",
         "parforhold"
+      ],
+      "topicEligible": true,
+      "genreEligible": true,
+      "recommendationMetadataEligible": true,
+      "metadataIssues": []
+    },
+    {
+      "id": "data i sport",
+      "recommendationId": "rec-data-i-sport-676e66fe867f4f216d98fedf5a69fff4",
+      "recommendationIdentityBasis": "title+link",
+      "identityDuplicateGroup": "",
+      "title": "Data i Sport",
+      "mainSeries": "",
+      "primaryGenreRaw": "Sport",
+      "primaryGenre": "Sport",
+      "primaryGenreValid": true,
+      "primaryGenreMappingType": "native",
+      "primaryGenreMappingSource": "Sport",
+      "primaryGenreNeedsReview": false,
+      "primaryGenreReviewReason": "",
+      "secondaryGenre": "Viden",
+      "secondaryGenreValid": true,
+      "topicsRaw": [
+        "sportsdata",
+        "præstationsanalyse",
+        "teknologi",
+        "fodbold",
+        "eliteidræt"
+      ],
+      "topicsCanonical": [
+        "sportsdata",
+        "præstationsanalyse",
+        "teknologi",
+        "Fodbold",
+        "eliteidræt"
+      ],
+      "topicKeys": [
+        "sportsdata",
+        "praestationsanalyse",
+        "teknologi",
+        "fodbold",
+        "eliteidraet"
+      ],
+      "topicEligible": true,
+      "genreEligible": true,
+      "recommendationMetadataEligible": true,
+      "metadataIssues": []
+    },
+    {
+      "id": "fodbold forfra",
+      "recommendationId": "rec-fodbold-forfra-efc4959ac930914a303a463bcd29228f",
+      "recommendationIdentityBasis": "title+link",
+      "identityDuplicateGroup": "",
+      "title": "Fodbold Forfra",
+      "mainSeries": "",
+      "primaryGenreRaw": "Sport",
+      "primaryGenre": "Sport",
+      "primaryGenreValid": true,
+      "primaryGenreMappingType": "native",
+      "primaryGenreMappingSource": "Sport",
+      "primaryGenreNeedsReview": false,
+      "primaryGenreReviewReason": "",
+      "secondaryGenre": "Historie",
+      "secondaryGenreValid": true,
+      "topicsRaw": [
+        "fodboldhistorie",
+        "klassiske kampe",
+        "Champions League",
+        "VM",
+        "nostalgi"
+      ],
+      "topicsCanonical": [
+        "Fodboldhistorie",
+        "klassiske kampe",
+        "Champions League",
+        "VM",
+        "nostalgi"
+      ],
+      "topicKeys": [
+        "fodboldhistorie",
+        "klassiske-kampe",
+        "champions-league",
+        "vm",
+        "nostalgi"
+      ],
+      "topicEligible": true,
+      "genreEligible": true,
+      "recommendationMetadataEligible": true,
+      "metadataIssues": []
+    },
+    {
+      "id": "espn laliga",
+      "recommendationId": "rec-espn-laliga-289ce41c64e6dfde2de2b4e5149b6be3",
+      "recommendationIdentityBasis": "title+link",
+      "identityDuplicateGroup": "",
+      "title": "ESPN LALIGA",
+      "mainSeries": "",
+      "primaryGenreRaw": "Sport",
+      "primaryGenre": "Sport",
+      "primaryGenreValid": true,
+      "primaryGenreMappingType": "native",
+      "primaryGenreMappingSource": "Sport",
+      "primaryGenreNeedsReview": false,
+      "primaryGenreReviewReason": "",
+      "secondaryGenre": "",
+      "secondaryGenreValid": true,
+      "topicsRaw": [
+        "La Liga",
+        "spansk fodbold",
+        "Real Madrid",
+        "FC Barcelona",
+        "danske spillere"
+      ],
+      "topicsCanonical": [
+        "La Liga",
+        "spansk fodbold",
+        "Real Madrid",
+        "FC Barcelona",
+        "danske spillere"
+      ],
+      "topicKeys": [
+        "la-liga",
+        "spansk-fodbold",
+        "real-madrid",
+        "fc-barcelona",
+        "danske-spillere"
+      ],
+      "topicEligible": true,
+      "genreEligible": true,
+      "recommendationMetadataEligible": true,
+      "metadataIssues": []
+    },
+    {
+      "id": "monetos",
+      "recommendationId": "rec-monetos-08ed10461e08c66a1f39323f0f0d32d8",
+      "recommendationIdentityBasis": "title+link",
+      "identityDuplicateGroup": "",
+      "title": "Monetos",
+      "mainSeries": "",
+      "primaryGenreRaw": "Sport",
+      "primaryGenre": "Sport",
+      "primaryGenreValid": true,
+      "primaryGenreMappingType": "native",
+      "primaryGenreMappingSource": "Sport",
+      "primaryGenreNeedsReview": false,
+      "primaryGenreReviewReason": "",
+      "secondaryGenre": "Viden",
+      "secondaryGenreValid": true,
+      "topicsRaw": [
+        "Superligaen",
+        "Premier League",
+        "powerrankings",
+        "fodboldanalyse",
+        "transfers"
+      ],
+      "topicsCanonical": [
+        "Superligaen",
+        "Premier League",
+        "powerrankings",
+        "fodboldanalyse",
+        "transfers"
+      ],
+      "topicKeys": [
+        "superligaen",
+        "premier-league",
+        "powerrankings",
+        "fodboldanalyse",
+        "transfers"
+      ],
+      "topicEligible": true,
+      "genreEligible": true,
+      "recommendationMetadataEligible": true,
+      "metadataIssues": []
+    },
+    {
+      "id": "det dumt ik at gøre",
+      "recommendationId": "rec-det-dumt-ik-at-goere-df8e06f5089f0a2dbac71e71854e02e8",
+      "recommendationIdentityBasis": "title+link",
+      "identityDuplicateGroup": "",
+      "title": "Det' dumt ik' at gøre",
+      "mainSeries": "",
+      "primaryGenreRaw": "Underholdning",
+      "primaryGenre": "Underholdning",
+      "primaryGenreValid": true,
+      "primaryGenreMappingType": "native",
+      "primaryGenreMappingSource": "Underholdning",
+      "primaryGenreNeedsReview": false,
+      "primaryGenreReviewReason": "",
+      "secondaryGenre": "",
+      "secondaryGenreValid": true,
+      "topicsRaw": [
+        "venskab",
+        "dating",
+        "hverdagsliv",
+        "personlige historier",
+        "popkultur"
+      ],
+      "topicsCanonical": [
+        "venskab",
+        "dating",
+        "hverdagsliv",
+        "personlige historier",
+        "popkultur"
+      ],
+      "topicKeys": [
+        "venskab",
+        "dating",
+        "hverdagsliv",
+        "personlige-historier",
+        "popkultur"
+      ],
+      "topicEligible": true,
+      "genreEligible": true,
+      "recommendationMetadataEligible": true,
+      "metadataIssues": []
+    },
+    {
+      "id": "ka det passe",
+      "recommendationId": "rec-ka-det-passe-841f2bc32a7855bd9da461ec26ce0b0a",
+      "recommendationIdentityBasis": "title+link",
+      "identityDuplicateGroup": "",
+      "title": "Ka' det passe?",
+      "mainSeries": "",
+      "primaryGenreRaw": "Sladder",
+      "primaryGenre": "Sladder",
+      "primaryGenreValid": true,
+      "primaryGenreMappingType": "native",
+      "primaryGenreMappingSource": "Sladder",
+      "primaryGenreNeedsReview": false,
+      "primaryGenreReviewReason": "",
+      "secondaryGenre": "Underholdning",
+      "secondaryGenreValid": true,
+      "topicsRaw": [
+        "kendte danskere",
+        "reality-tv",
+        "rygter",
+        "popkultur",
+        "internetkultur"
+      ],
+      "topicsCanonical": [
+        "kendte danskere",
+        "reality-tv",
+        "rygter",
+        "popkultur",
+        "internetkultur"
+      ],
+      "topicKeys": [
+        "kendte-danskere",
+        "reality-tv",
+        "rygter",
+        "popkultur",
+        "internetkultur"
+      ],
+      "topicEligible": true,
+      "genreEligible": true,
+      "recommendationMetadataEligible": true,
+      "metadataIssues": []
+    },
+    {
+      "id": "ryd forsiden",
+      "recommendationId": "rec-ryd-forsiden-206d1d6f58d03e125713062ea63ac3a7",
+      "recommendationIdentityBasis": "title+link",
+      "identityDuplicateGroup": "",
+      "title": "Ryd forsiden!",
+      "mainSeries": "",
+      "primaryGenreRaw": "Sladder",
+      "primaryGenre": "Sladder",
+      "primaryGenreValid": true,
+      "primaryGenreMappingType": "native",
+      "primaryGenreMappingSource": "Sladder",
+      "primaryGenreNeedsReview": false,
+      "primaryGenreReviewReason": "",
+      "secondaryGenre": "Underholdning",
+      "secondaryGenreValid": true,
+      "topicsRaw": [
+        "kendte",
+        "kongehuset",
+        "SE og HØR",
+        "tabloidjournalistik",
+        "internetrygter"
+      ],
+      "topicsCanonical": [
+        "kendte",
+        "kongehuset",
+        "SE og HØR",
+        "tabloidjournalistik",
+        "internetrygter"
+      ],
+      "topicKeys": [
+        "kendte",
+        "kongehuset",
+        "se-og-hoer",
+        "tabloidjournalistik",
+        "internetrygter"
+      ],
+      "topicEligible": true,
+      "genreEligible": true,
+      "recommendationMetadataEligible": true,
+      "metadataIssues": []
+    },
+    {
+      "id": "skal for sandheden",
+      "recommendationId": "rec-skaal-for-sandheden-86ca1a342829701c6ee992ad7dab96d0",
+      "recommendationIdentityBasis": "title+link",
+      "identityDuplicateGroup": "",
+      "title": "Skål For Sandheden",
+      "mainSeries": "",
+      "primaryGenreRaw": "Underholdning",
+      "primaryGenre": "Underholdning",
+      "primaryGenreValid": true,
+      "primaryGenreMappingType": "native",
+      "primaryGenreMappingSource": "Underholdning",
+      "primaryGenreNeedsReview": false,
+      "primaryGenreReviewReason": "",
+      "secondaryGenre": "Sladder",
+      "secondaryGenreValid": true,
+      "topicsRaw": [
+        "kendte danskere",
+        "reality",
+        "interviews",
+        "personlige historier",
+        "popkultur"
+      ],
+      "topicsCanonical": [
+        "kendte danskere",
+        "reality",
+        "interviews",
+        "personlige historier",
+        "popkultur"
+      ],
+      "topicKeys": [
+        "kendte-danskere",
+        "reality",
+        "interviews",
+        "personlige-historier",
+        "popkultur"
+      ],
+      "topicEligible": true,
+      "genreEligible": true,
+      "recommendationMetadataEligible": true,
+      "metadataIssues": []
+    },
+    {
+      "id": "makropuls med lars christensen",
+      "recommendationId": "rec-makropuls-med-lars-christensen-f3fddf6f0752d50080d218e7edabbb78",
+      "recommendationIdentityBasis": "title+link",
+      "identityDuplicateGroup": "",
+      "title": "Makropuls – med Lars Christensen",
+      "mainSeries": "",
+      "primaryGenreRaw": "Viden",
+      "primaryGenre": "Viden",
+      "primaryGenreValid": true,
+      "primaryGenreMappingType": "native",
+      "primaryGenreMappingSource": "Viden",
+      "primaryGenreNeedsReview": false,
+      "primaryGenreReviewReason": "",
+      "secondaryGenre": "Samfund",
+      "secondaryGenreValid": true,
+      "topicsRaw": [
+        "makroøkonomi",
+        "inflation",
+        "renter",
+        "finansmarkeder",
+        "geopolitik"
+      ],
+      "topicsCanonical": [
+        "makroøkonomi",
+        "inflation",
+        "renter",
+        "finansmarkeder",
+        "geopolitik"
+      ],
+      "topicKeys": [
+        "makrooekonomi",
+        "inflation",
+        "renter",
+        "finansmarkeder",
+        "geopolitik"
+      ],
+      "topicEligible": true,
+      "genreEligible": true,
+      "recommendationMetadataEligible": true,
+      "metadataIssues": []
+    },
+    {
+      "id": "finansministeriet forklarer",
+      "recommendationId": "rec-finansministeriet-forklarer-54810abc6538c047728915a73416ab46",
+      "recommendationIdentityBasis": "title+link",
+      "identityDuplicateGroup": "",
+      "title": "Finansministeriet Forklarer",
+      "mainSeries": "",
+      "primaryGenreRaw": "Samfund",
+      "primaryGenre": "Samfund",
+      "primaryGenreValid": true,
+      "primaryGenreMappingType": "native",
+      "primaryGenreMappingSource": "Samfund",
+      "primaryGenreNeedsReview": false,
+      "primaryGenreReviewReason": "",
+      "secondaryGenre": "Viden",
+      "secondaryGenreValid": true,
+      "topicsRaw": [
+        "dansk økonomi",
+        "offentlige finanser",
+        "økonomisk råderum",
+        "reformer",
+        "samfundsøkonomi"
+      ],
+      "topicsCanonical": [
+        "dansk økonomi",
+        "offentlige finanser",
+        "økonomisk råderum",
+        "reformer",
+        "samfundsøkonomi"
+      ],
+      "topicKeys": [
+        "dansk-oekonomi",
+        "offentlige-finanser",
+        "oekonomisk-raaderum",
+        "reformer",
+        "samfundsoekonomi"
+      ],
+      "topicEligible": true,
+      "genreEligible": true,
+      "recommendationMetadataEligible": true,
+      "metadataIssues": []
+    },
+    {
+      "id": "granatmysteriet",
+      "recommendationId": "rec-granatmysteriet-f8a5aa3c3e33462ab0686a0315eb86a3",
+      "recommendationIdentityBasis": "title+link",
+      "identityDuplicateGroup": "",
+      "title": "Granatmysteriet",
+      "mainSeries": "",
+      "primaryGenreRaw": "Historie",
+      "primaryGenre": "Historie",
+      "primaryGenreValid": true,
+      "primaryGenreMappingType": "native",
+      "primaryGenreMappingSource": "Historie",
+      "primaryGenreNeedsReview": false,
+      "primaryGenreReviewReason": "",
+      "secondaryGenre": "Dokumentar",
+      "secondaryGenreValid": true,
+      "topicsRaw": [
+        "2. verdenskrig",
+        "modstandsbevægelsen",
+        "Falster",
+        "våbennedkastninger",
+        "sabotage"
+      ],
+      "topicsCanonical": [
+        "2. verdenskrig",
+        "modstandsbevægelsen",
+        "Falster",
+        "våbennedkastninger",
+        "sabotage"
+      ],
+      "topicKeys": [
+        "2-verdenskrig",
+        "modstandsbevaegelsen",
+        "falster",
+        "vaabennedkastninger",
+        "sabotage"
+      ],
+      "topicEligible": true,
+      "genreEligible": true,
+      "recommendationMetadataEligible": true,
+      "metadataIssues": []
+    },
+    {
+      "id": "ren ondskab",
+      "recommendationId": "rec-ren-ondskab-f5804ca4a31c6f3ad49c08c11fde6d87",
+      "recommendationIdentityBasis": "title+link",
+      "identityDuplicateGroup": "",
+      "title": "Ren ondskab",
+      "mainSeries": "",
+      "primaryGenreRaw": "True Crime",
+      "primaryGenre": "True Crime",
+      "primaryGenreValid": true,
+      "primaryGenreMappingType": "native",
+      "primaryGenreMappingSource": "True Crime",
+      "primaryGenreNeedsReview": false,
+      "primaryGenreReviewReason": "",
+      "secondaryGenre": "Dokumentar",
+      "secondaryGenreValid": true,
+      "topicsRaw": [
+        "seriemordere",
+        "drab",
+        "kriminalhistorie",
+        "efterforskning",
+        "retssager"
+      ],
+      "topicsCanonical": [
+        "seriemordere",
+        "drab",
+        "kriminalhistorie",
+        "efterforskning",
+        "retssager"
+      ],
+      "topicKeys": [
+        "seriemordere",
+        "drab",
+        "kriminalhistorie",
+        "efterforskning",
+        "retssager"
+      ],
+      "topicEligible": true,
+      "genreEligible": true,
+      "recommendationMetadataEligible": true,
+      "metadataIssues": []
+    },
+    {
+      "id": "frederik forsvinder",
+      "recommendationId": "rec-frederik-forsvinder-3cee497a30ee88ba614a1ebc822d5079",
+      "recommendationIdentityBasis": "title+link",
+      "identityDuplicateGroup": "",
+      "title": "Frederik Forsvinder",
+      "mainSeries": "",
+      "primaryGenreRaw": "Dokumentar",
+      "primaryGenre": "Dokumentar",
+      "primaryGenreValid": true,
+      "primaryGenreMappingType": "native",
+      "primaryGenreMappingSource": "Dokumentar",
+      "primaryGenreNeedsReview": false,
+      "primaryGenreReviewReason": "",
+      "secondaryGenre": "Samfund",
+      "secondaryGenreValid": true,
+      "topicsRaw": [
+        "psykiatri",
+        "psykisk sygdom",
+        "patientsikkerhed",
+        "selvmord",
+        "sundhedsvæsen"
+      ],
+      "topicsCanonical": [
+        "psykiatri",
+        "psykisk sygdom",
+        "patientsikkerhed",
+        "selvmord",
+        "sundhedsvæsen"
+      ],
+      "topicKeys": [
+        "psykiatri",
+        "psykisk-sygdom",
+        "patientsikkerhed",
+        "selvmord",
+        "sundhedsvaesen"
+      ],
+      "topicEligible": true,
+      "genreEligible": true,
+      "recommendationMetadataEligible": true,
+      "metadataIssues": []
+    },
+    {
+      "id": "rigsretsreporterne",
+      "recommendationId": "rec-rigsretsreporterne-3fd27ba225d87b3959dd5d1457fb5854",
+      "recommendationIdentityBasis": "title+link",
+      "identityDuplicateGroup": "",
+      "title": "Rigsretsreporterne",
+      "mainSeries": "",
+      "primaryGenreRaw": "Samfund",
+      "primaryGenre": "Samfund",
+      "primaryGenreValid": true,
+      "primaryGenreMappingType": "native",
+      "primaryGenreMappingSource": "Samfund",
+      "primaryGenreNeedsReview": false,
+      "primaryGenreReviewReason": "",
+      "secondaryGenre": "Dokumentar",
+      "secondaryGenreValid": true,
+      "topicsRaw": [
+        "Inger Støjberg",
+        "Rigsretten",
+        "dansk politik",
+        "ministeransvar",
+        "udlændingepolitik"
+      ],
+      "topicsCanonical": [
+        "Inger Støjberg",
+        "Rigsretten",
+        "Dansk politik",
+        "ministeransvar",
+        "udlændingepolitik"
+      ],
+      "topicKeys": [
+        "inger-stoejberg",
+        "rigsretten",
+        "dansk-politik",
+        "ministeransvar",
+        "udlaendingepolitik"
+      ],
+      "topicEligible": true,
+      "genreEligible": true,
+      "recommendationMetadataEligible": true,
+      "metadataIssues": [
+        "topic_alias_applied"
+      ]
+    },
+    {
+      "id": "narkofabrikken",
+      "recommendationId": "rec-narkofabrikken-1adfc22dbf92c50d5180d3f95e004abe",
+      "recommendationIdentityBasis": "title+link",
+      "identityDuplicateGroup": "",
+      "title": "Narkofabrikken",
+      "mainSeries": "",
+      "primaryGenreRaw": "True Crime",
+      "primaryGenre": "True Crime",
+      "primaryGenreValid": true,
+      "primaryGenreMappingType": "native",
+      "primaryGenreMappingSource": "True Crime",
+      "primaryGenreNeedsReview": false,
+      "primaryGenreReviewReason": "",
+      "secondaryGenre": "Dokumentar",
+      "secondaryGenreValid": true,
+      "topicsRaw": [
+        "amfetamin",
+        "narkokriminalitet",
+        "Gyllingnæs",
+        "organiseret kriminalitet",
+        "politiefterforskning"
+      ],
+      "topicsCanonical": [
+        "amfetamin",
+        "Narkokriminalitet",
+        "Gyllingnæs",
+        "organiseret kriminalitet",
+        "politiefterforskning"
+      ],
+      "topicKeys": [
+        "amfetamin",
+        "narkokriminalitet",
+        "gyllingnaes",
+        "organiseret-kriminalitet",
+        "politiefterforskning"
+      ],
+      "topicEligible": true,
+      "genreEligible": true,
+      "recommendationMetadataEligible": true,
+      "metadataIssues": []
+    },
+    {
+      "id": "min morfars giftdepot",
+      "recommendationId": "rec-min-morfars-giftdepot-dc6bd1021655bbe1ae107e699b6ce1cd",
+      "recommendationIdentityBasis": "title+link",
+      "identityDuplicateGroup": "",
+      "title": "Min morfars giftdepot",
+      "mainSeries": "",
+      "primaryGenreRaw": "Dokumentar",
+      "primaryGenre": "Dokumentar",
+      "primaryGenreValid": true,
+      "primaryGenreMappingType": "native",
+      "primaryGenreMappingSource": "Dokumentar",
+      "primaryGenreNeedsReview": false,
+      "primaryGenreReviewReason": "",
+      "secondaryGenre": "Historie",
+      "secondaryGenreValid": true,
+      "topicsRaw": [
+        "Cheminova",
+        "Høfde 42",
+        "miljøforurening",
+        "Harboøre Tange",
+        "familiehistorie"
+      ],
+      "topicsCanonical": [
+        "Cheminova",
+        "Høfde 42",
+        "miljøforurening",
+        "Harboøre Tange",
+        "familiehistorie"
+      ],
+      "topicKeys": [
+        "cheminova",
+        "hoefde-42",
+        "miljoeforurening",
+        "harbooere-tange",
+        "familiehistorie"
+      ],
+      "topicEligible": true,
+      "genreEligible": true,
+      "recommendationMetadataEligible": true,
+      "metadataIssues": []
+    },
+    {
+      "id": "romerriget",
+      "recommendationId": "rec-romerriget-a43af314ae5e33571599f5087c8ef57d",
+      "recommendationIdentityBasis": "title+link",
+      "identityDuplicateGroup": "",
+      "title": "RomerRiget",
+      "mainSeries": "",
+      "primaryGenreRaw": "Viden",
+      "primaryGenre": "Viden",
+      "primaryGenreValid": true,
+      "primaryGenreMappingType": "native",
+      "primaryGenreMappingSource": "Viden",
+      "primaryGenreNeedsReview": false,
+      "primaryGenreReviewReason": "",
+      "secondaryGenre": "Historie",
+      "secondaryGenreValid": true,
+      "topicsRaw": [
+        "kulturhistorie",
+        "idéhistorie",
+        "filosofi",
+        "litteratur",
+        "samfund"
+      ],
+      "topicsCanonical": [
+        "kulturhistorie",
+        "idéhistorie",
+        "filosofi",
+        "Litteratur",
+        "samfund"
+      ],
+      "topicKeys": [
+        "kulturhistorie",
+        "idehistorie",
+        "filosofi",
+        "litteratur",
+        "samfund"
+      ],
+      "topicEligible": true,
+      "genreEligible": true,
+      "recommendationMetadataEligible": true,
+      "metadataIssues": []
+    },
+    {
+      "id": "det næste kapitel",
+      "recommendationId": "rec-det-naeste-kapitel-036024f36db68e759f0d0789f2724d83",
+      "recommendationIdentityBasis": "title+link",
+      "identityDuplicateGroup": "",
+      "title": "Det Næste Kapitel",
+      "mainSeries": "",
+      "primaryGenreRaw": "Underholdning",
+      "primaryGenre": "Underholdning",
+      "primaryGenreValid": true,
+      "primaryGenreMappingType": "native",
+      "primaryGenreMappingSource": "Underholdning",
+      "primaryGenreNeedsReview": false,
+      "primaryGenreReviewReason": "",
+      "secondaryGenre": "Samfund",
+      "secondaryGenreValid": true,
+      "topicsRaw": [
+        "portrætinterviews",
+        "personlige historier",
+        "livsvalg",
+        "relationer",
+        "selvforståelse"
+      ],
+      "topicsCanonical": [
+        "Portrætinterviews",
+        "personlige historier",
+        "livsvalg",
+        "relationer",
+        "selvforståelse"
+      ],
+      "topicKeys": [
+        "portraetinterviews",
+        "personlige-historier",
+        "livsvalg",
+        "relationer",
+        "selvforstaaelse"
+      ],
+      "topicEligible": true,
+      "genreEligible": true,
+      "recommendationMetadataEligible": true,
+      "metadataIssues": []
+    },
+    {
+      "id": "bearnaise er dyrenes konge",
+      "recommendationId": "rec-bearnaise-er-dyrenes-konge-b81c0f16db8773039079882f2142ba40",
+      "recommendationIdentityBasis": "title+link",
+      "identityDuplicateGroup": "",
+      "title": "Bearnaise er Dyrenes Konge",
+      "mainSeries": "",
+      "primaryGenreRaw": "Underholdning",
+      "primaryGenre": "Underholdning",
+      "primaryGenreValid": true,
+      "primaryGenreMappingType": "native",
+      "primaryGenreMappingSource": "Underholdning",
+      "primaryGenreNeedsReview": false,
+      "primaryGenreReviewReason": "",
+      "secondaryGenre": "Viden",
+      "secondaryGenreValid": true,
+      "topicsRaw": [
+        "gastronomi",
+        "restauranter",
+        "madanmeldelser",
+        "madkultur",
+        "portrætsamtaler"
+      ],
+      "topicsCanonical": [
+        "gastronomi",
+        "restauranter",
+        "madanmeldelser",
+        "madkultur",
+        "portrætsamtaler"
+      ],
+      "topicKeys": [
+        "gastronomi",
+        "restauranter",
+        "madanmeldelser",
+        "madkultur",
+        "portraetsamtaler"
+      ],
+      "topicEligible": true,
+      "genreEligible": true,
+      "recommendationMetadataEligible": true,
+      "metadataIssues": []
+    },
+    {
+      "id": "24syv dokumentar",
+      "recommendationId": "rec-24syv-dokumentar-ec3e2698ecc98eee4078367aa77471c3",
+      "recommendationIdentityBasis": "title+link",
+      "identityDuplicateGroup": "",
+      "title": "24syv Dokumentar",
+      "mainSeries": "",
+      "primaryGenreRaw": "Dokumentar",
+      "primaryGenre": "Dokumentar",
+      "primaryGenreValid": true,
+      "primaryGenreMappingType": "native",
+      "primaryGenreMappingSource": "Dokumentar",
+      "primaryGenreNeedsReview": false,
+      "primaryGenreReviewReason": "",
+      "secondaryGenre": "Samfund",
+      "secondaryGenreValid": true,
+      "topicsRaw": [
+        "reportage",
+        "radiofeature",
+        "danske skæbner",
+        "undersøgende journalistik",
+        "personlige historier"
+      ],
+      "topicsCanonical": [
+        "reportage",
+        "radiofeature",
+        "danske skæbner",
+        "undersøgende journalistik",
+        "personlige historier"
+      ],
+      "topicKeys": [
+        "reportage",
+        "radiofeature",
+        "danske-skaebner",
+        "undersoegende-journalistik",
+        "personlige-historier"
       ],
       "topicEligible": true,
       "genreEligible": true,
