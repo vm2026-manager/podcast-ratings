@@ -91,7 +91,12 @@ for (const id of ["magasinet jennings", "transfer special", "bruchmann ringer ti
 assert.equal(routePublicMedianoTitle("Magasinet Jennings: FIFA og verden").route.podcastId, "magasinet jennings");
 assert.equal(routePublicMedianoTitle("Jennings: FIFA og verden").route.podcastId, "magasinet jennings");
 assert.equal(routePublicMedianoTitle("Jennings Ekstra: FIFA og verden").route.podcastId, "magasinet jennings");
-assert.equal(routePublicMedianoTitle("Jennings senere i udsendelsen").status, "unmatched");
+assert.equal(routePublicMedianoTitle("Jennings senere i udsendelsen").route.podcastId, "magasinet jennings");
+assert.equal(
+  routePublicMedianoTitle("JENNINGS BREAKING: Derfor er City kendt skyldige i århundredets retssag - og hvad sker der nu?").route.podcastId,
+  "magasinet jennings"
+);
+assert.equal(routePublicMedianoTitle("Jenningsen senere i udsendelsen").status, "unmatched");
 for (const route of MEDIANO_PUBLIC_ROUTE_DEFINITIONS.filter((route) => route.status === "enabled")) {
   assert(cataloguePodcastIds.has(route.podcastKey), `Enabled route must have catalogue Podcast-ID: ${route.key}`);
 }
