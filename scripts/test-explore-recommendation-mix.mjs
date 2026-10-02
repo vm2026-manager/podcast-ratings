@@ -13,6 +13,22 @@ const version = Number(app.match(/const UDFORSK_RECOMMENDATION_VERSION = (\d+);/
 assert.ok(version > 5, "old cluster-first snapshots must be invalidated");
 const minimum = Number(app.match(/const EXPLORE_PERSONAL_MINIMUM_GROUP_SIZE = (\d+);/)[1]);
 
+assert.match(
+  app,
+  /const personalSectionKeys = new Set\([\s\S]*?sectionsToRender\.flatMap/,
+  "editorial recommendations must reserve personal section podcast keys"
+);
+assert.match(
+  app,
+  /getExploreUnderratedGemItems\([\s\S]*?\),\s*personalSectionKeys\s*\)/,
+  "Oversete favoritter must dedupe against personal recommendation rows"
+);
+assert.doesNotMatch(
+  app,
+  /const usedEditorialKeys = new Set\(\);/,
+  "editorial recommendations must not use an isolated dedupe scope"
+);
+
 function fixture() {
   const catalogue = new Map();
   const podcast = (key, host = "", mainSeries = "") => {

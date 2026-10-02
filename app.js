@@ -21757,7 +21757,6 @@ function renderExplorePage() {
     state.exploreUnderratedHourBucket = exploreHourBucket;
     const usedTopKeys = new Set();
     const usedPersonalKeys = new Set();
-    const usedEditorialKeys = new Set();
     const ratedKeys = new Set(Object.keys(state.userRatingsByKey));
     const exploreDepth = getExploreRecommendationDepth(ratedKeys.size);
     const personalSections = getExplorePersonalSections({
@@ -21858,6 +21857,13 @@ function renderExplorePage() {
         return sectionElement;
       };
 
+      const personalSectionKeys = new Set(
+        sectionsToRender.flatMap((section) =>
+          section.items
+            .map((item) => getPodcastKey(item.podcast || item))
+            .filter(Boolean)
+        )
+      );
       const underratedItems = prioritizeExploreItemsForPersonalSnapshot(
         dedupeExploreItems(
           getExploreUnderratedGemItems({
@@ -21868,7 +21874,7 @@ function renderExplorePage() {
               ? getExplorePersonalSnapshotRotationKey("underrated-candidates")
               : exploreHourBucket
           }),
-          usedEditorialKeys
+          personalSectionKeys
         ),
         "undervurderede-perler"
       );
