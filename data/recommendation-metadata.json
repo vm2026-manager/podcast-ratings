@@ -2,7 +2,7 @@
   "version": 1,
   "source": {
     "path": "data/podcasts.json",
-    "generatedAt": "2026-10-02T13:08:27.933Z",
+    "generatedAt": "2026-10-02T18:40:39.365Z",
     "count": 1304,
     "topicAliases": "config/recommendation-topic-aliases.json",
     "topicAliasVersion": 1,
@@ -11344,7 +11344,7 @@
     {
       "id": "single igen sæson 3",
       "recommendationId": "rec-single-igen-saeson-3-8428864a1d8b2a9b5f3534c4047a3f67",
-      "recommendationIdentityBasis": "title+mainSeries+publisher+hosts+year+episodes",
+      "recommendationIdentityBasis": "title+link",
       "identityDuplicateGroup": "",
       "title": "Single igen (sæson 3)",
       "mainSeries": "",
