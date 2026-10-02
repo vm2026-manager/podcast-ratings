@@ -29,6 +29,7 @@ const checks = [
   ["Mediano historical editorial episode ratings", ["scripts/test-mediano-historical-editorial-episode-ratings.mjs"]],
   ["Mounir canonical Mediano editorial rating", ["scripts/test-mediano-mounir-canonical-editorial-rating.mjs"]],
   ["Explore stale-content guard", ["scripts/test-explore-stale-content-guard.mjs"]],
+  ["Explore recommendation mix", ["scripts/test-explore-recommendation-mix.mjs"]],
   ["Explore startup warmup", ["scripts/test-explore-startup-warmup.mjs"]]
 ];
 
