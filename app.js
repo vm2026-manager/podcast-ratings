@@ -18056,11 +18056,6 @@ function renderProfilePage() {
             <span><strong>Kontakt os</strong><small>Send os en besked</small></span>
             <em aria-hidden="true">&rsaquo;</em>
           </a>
-          <a class="profile-menu__item" href="#profil-faq">
-            <span aria-hidden="true">i</span>
-            <span><strong>Om Podcastlisten.dk</strong><small>Læs om idéen bag siden</small></span>
-            <em aria-hidden="true">&rsaquo;</em>
-          </a>
         </section>
         <section class="profile-tip-card">
           <p class="profile-eyebrow">Tip til dig</p>
