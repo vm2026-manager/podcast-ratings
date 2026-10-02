@@ -4,6 +4,8 @@ import { fileURLToPath } from "node:url";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const checks = [
+  ["display-group catalogue", ["scripts/validate-podcast-display-groups.mjs"]],
+  ["Narkobetjenten seasons", ["scripts/test-narkobetjenten-seasons.mjs"]],
   ["app.js syntax", ["--check", "app.js"]],
   ["Bakspejl local cover availability", ["scripts/test-bakspejl-cover-availability.mjs"]],
   ["cover identity resolution", ["scripts/test-cover-identity-resolution.mjs"]],

@@ -20,6 +20,68 @@
         "narkobetjenten sæson 13",
         "narkobetjenten sæson 14",
         "narkobetjenten sæson 15"
+      ],
+      "seasonIdentities": [
+        {
+          "season": 4,
+          "podcast_key": "display-season:narkobetjenten:4",
+          "title": "Narkobetjenten (sæson 4)"
+        },
+        {
+          "season": 5,
+          "podcast_key": "display-season:narkobetjenten:5",
+          "title": "Narkobetjenten (sæson 5)"
+        },
+        {
+          "season": 8,
+          "podcast_key": "display-season:narkobetjenten:8",
+          "title": "Narkobetjenten (sæson 8)"
+        },
+        {
+          "season": 16,
+          "podcast_key": "display-season:narkobetjenten:16",
+          "title": "Narkobetjenten (sæson 16)"
+        },
+        {
+          "season": 17,
+          "podcast_key": "display-season:narkobetjenten:17",
+          "title": "Narkobetjenten (sæson 17)"
+        },
+        {
+          "season": 18,
+          "podcast_key": "display-season:narkobetjenten:18",
+          "title": "Narkobetjenten (sæson 18)"
+        },
+        {
+          "season": 19,
+          "podcast_key": "display-season:narkobetjenten:19",
+          "title": "Narkobetjenten (sæson 19)"
+        },
+        {
+          "season": 20,
+          "podcast_key": "display-season:narkobetjenten:20",
+          "title": "Narkobetjenten (sæson 20)"
+        },
+        {
+          "season": 21,
+          "podcast_key": "display-season:narkobetjenten:21",
+          "title": "Narkobetjenten (sæson 21)"
+        },
+        {
+          "season": 22,
+          "podcast_key": "display-season:narkobetjenten:22",
+          "title": "Narkobetjenten (sæson 22)"
+        },
+        {
+          "season": 23,
+          "podcast_key": "display-season:narkobetjenten:23",
+          "title": "Narkobetjenten (sæson 23)"
+        },
+        {
+          "season": 24,
+          "podcast_key": "display-season:narkobetjenten:24",
+          "title": "Narkobetjenten (sæson 24)"
+        }
       ]
     }
   ]

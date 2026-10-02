@@ -46,6 +46,7 @@ const runtime = new Function("state", "ownRatings", `
   const bindPodcastDetailFilterButtons = () => {};
   const renderFavoriteButton = () => {};
   const isMobileViewport = () => false;
+  ${extract("getDisplayGroupSeasonIdentities")}
   ${extract("getDisplayGroupMemberPodcasts")}
   ${extract("getDisplayGroupUserStats")}
   ${extract("createRankingDisplayGroup")}
