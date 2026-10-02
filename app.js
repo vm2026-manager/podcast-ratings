@@ -4097,6 +4097,15 @@ function getRankingListCacheKey() {
   ].join("||");
 }
 
+function getDisplayGroupSeasonIdentities(group) {
+  // Rating targets only: never add these identities to the public catalogue.
+  return (group?.seasonIdentities || []).map((season) => ({
+    ...mapPodcast({ "Titel": season.title, "Podcast-ID": season.podcast_key }, season.season),
+    isDisplayGroupSeason: true,
+    displayGroupId: group.id
+  }));
+}
+
 function getDisplayGroupMemberPodcasts(group) {
   const members = Array.isArray(group?.memberLegacyKeys) ? group.memberLegacyKeys : [];
   return members.map((legacyKey) => {
@@ -4105,7 +4114,7 @@ function getDisplayGroupMemberPodcasts(group) {
       (podcast) => getLegacyPodcastKey(podcast) === normalizedKey
     );
     return matches.length === 1 ? matches[0] : null;
-  }).filter(Boolean);
+  }).filter(Boolean).concat(getDisplayGroupSeasonIdentities(group));
 }
 
 function getDisplayGroupUserStats(group) {
@@ -4124,7 +4133,7 @@ function createRankingDisplayGroup(group) {
     ) ||
     members.find((podcast) => podcast.image) ||
     members[0];
-  if (!representative || members.length !== group.memberLegacyKeys.length) return null;
+  if (!representative || members.length !== group.memberLegacyKeys.length + (group.seasonIdentities || []).length) return null;
 
   const editorialRatings = members
     .map((podcast) => parseNumber(podcast.ratingValue))
@@ -4138,7 +4147,7 @@ function createRankingDisplayGroup(group) {
     podcastId: "",
     isDisplayGroup: true,
     displayGroupId: group.id,
-    displayGroupMemberKeys: group.memberLegacyKeys.slice(),
+    displayGroupMemberKeys: members.map(getPodcastKey),
     displayGroupMembers: members,
     ratingValue: averageNumbers(editorialRatings),
     userAverageRating: userStats.averageRating,
@@ -12617,8 +12626,8 @@ function renderPodcastDisplayGroupSeasonWorkspace(dialog, displayGroup) {
   content.classList.add("podcast-detail-sheet__content--episode-overview");
   content.innerHTML = `<section class="podcast-detail-sheet__episode-overview" data-podcast-season-overview aria-labelledby="podcastSeasonOverviewTitle">
     <div class="podcast-detail-sheet__episode-overview-toolbar"><button class="podcast-detail-sheet__episode-back" type="button" data-podcast-seasons-back><span aria-hidden="true">&larr;</span><span>Tilbage til podcasten</span></button><h2 class="podcast-detail-sheet__episode-workspace-title">Sæsoner</h2></div>
-    <p class="podcast-detail-sheet__episode-workspace-summary">${members.length} vurderede sæsoner</p>
-    <div class="podcast-detail-sheet__episode-table-wrap"><table class="podcast-detail-sheet__episode-table podcast-detail-sheet__season-table"><caption class="sr-only" id="podcastSeasonOverviewTitle">Sæsoner i ${escapeHtml(displayGroup.title)}</caption><colgroup><col class="season-column-title" /><col class="season-column-editorial" /><col class="season-column-community" /><col class="season-column-own" /></colgroup><thead><tr><th scope="col">Sæson</th><th scope="col">Podcastlisten</th><th scope="col">Brugerne</th><th scope="col">Din vurdering</th></tr></thead><tbody>${members.map((member, index) => { const stat = getCommunityStat(getPodcastKey(member)); const own = getUserRating(getPodcastKey(member)); return `<tr><td data-label="Sæson"><button class="podcast-detail-sheet__season-title" type="button" data-podcast-season-open="${index}"><strong>${escapeHtml(getDisplayGroupSeasonLabel(member))}</strong><small>${escapeHtml(member.title)}</small></button></td><td data-label="Podcastlisten"><strong>${escapeHtml(formatCompactRating(member.ratingValue))}</strong></td><td data-label="Brugerne"><span class="podcast-detail-sheet__episode-source-score"><strong>${hasCommunityRating(stat) ? escapeHtml(formatCompactRating(stat.averageRating)) : "—"}</strong><em>${stat?.ratingCount ? escapeHtml(formatUserRatingCount(stat.ratingCount)) : ""}</em></span></td><td data-label="Din vurdering"><button class="podcast-detail-sheet__episode-own-score${own === null || own === undefined ? " is-empty" : ""}" type="button" data-podcast-season-rate="${index}" aria-label="Vurder ${escapeHtml(member.title)}"><strong>${own === null || own === undefined ? "Vurder" : escapeHtml(formatCompactRating(own))}</strong></button></td></tr>`; }).join("")}</tbody></table></div></section>`;
+    <p class="podcast-detail-sheet__episode-workspace-summary">${members.length} sæsoner · ${members.filter((member) => parseNumber(member.ratingValue) !== null).length} vurderet af Podcastlisten</p>
+    <div class="podcast-detail-sheet__episode-table-wrap"><table class="podcast-detail-sheet__episode-table podcast-detail-sheet__season-table"><caption class="sr-only" id="podcastSeasonOverviewTitle">Sæsoner i ${escapeHtml(displayGroup.title)}</caption><colgroup><col class="season-column-title" /><col class="season-column-editorial" /><col class="season-column-community" /><col class="season-column-own" /></colgroup><thead><tr><th scope="col">Sæson</th><th scope="col">Podcastlisten</th><th scope="col">Brugerne</th><th scope="col">Din vurdering</th></tr></thead><tbody>${members.map((member, index) => { const stat = getCommunityStat(getPodcastKey(member)); const own = getUserRating(getPodcastKey(member)); return `<tr><td data-label="Sæson"><button class="podcast-detail-sheet__season-title" type="button" data-podcast-season-open="${index}"><strong>${escapeHtml(getDisplayGroupSeasonLabel(member))}</strong><small>${escapeHtml(member.title)}</small></button></td><td data-label="Podcastlisten"><strong>${parseNumber(member.ratingValue) === null ? "—" : escapeHtml(formatCompactRating(member.ratingValue))}</strong></td><td data-label="Brugerne"><span class="podcast-detail-sheet__episode-source-score"><strong>${hasCommunityRating(stat) ? escapeHtml(formatCompactRating(stat.averageRating)) : "—"}</strong><em>${stat?.ratingCount ? escapeHtml(formatUserRatingCount(stat.ratingCount)) : ""}</em></span></td><td data-label="Din vurdering"><button class="podcast-detail-sheet__episode-own-score${own === null || own === undefined ? " is-empty" : ""}" type="button" data-podcast-season-rate="${index}" aria-label="Vurder ${escapeHtml(member.title)}"><strong>${own === null || own === undefined ? "Vurder" : escapeHtml(formatCompactRating(own))}</strong></button></td></tr>`; }).join("")}</tbody></table></div></section>`;
   content.querySelector("[data-podcast-seasons-back]")?.addEventListener("click", () => renderPodcastDisplayGroupContent(dialog, displayGroup));
   content.querySelectorAll("[data-podcast-season-rate]").forEach((button) => button.addEventListener("click", () => openRatingDialog(members[Number(button.dataset.podcastSeasonRate)])));
   content.querySelectorAll("[data-podcast-season-open]").forEach((button) => button.addEventListener("click", () => openPodcastDetailFromModal(members[Number(button.dataset.podcastSeasonOpen)], button)));
@@ -12635,7 +12644,7 @@ function renderPodcastDisplayGroupContent(dialog, displayGroup) {
   const userCount = Number(displayGroup.userRatingCount || 0);
   const own = getDisplayGroupOwnRatingStats(members);
   const metadata = getDisplayGroupSharedMetadata(members);
-  const description = String(displayGroup.description || "").trim() || `Samlet overblik over ${members.length} vurderede sæsoner.`;
+  const description = String(displayGroup.description || "").trim() || `Samlet overblik over ${members.length} sæsoner.`;
   const relatedMarkup = getDisplayGroupSimilarityMarkup(displayGroup, members);
   dialog.querySelector("[data-podcast-detail-toolbar-actions]")?.replaceChildren();
   setPodcastDetailPlacementControl(dialog);
@@ -12644,7 +12653,7 @@ function renderPodcastDisplayGroupContent(dialog, displayGroup) {
   content.innerHTML = `
     <header class="podcast-detail-sheet__header">
       <div class="podcast-detail-sheet__cover"><img class="podcast-detail-sheet__image" alt="" loading="lazy" /></div>
-      <div class="podcast-detail-sheet__intro"><div class="podcast-detail-sheet__intro-actions"><span class="podcast-detail-sheet__header-action-icons"><button class="favorite-button podcast-detail-sheet__header-favorite" type="button" data-podcast-detail-favorite aria-label="Gem til senere" title="Gem til senere" data-tooltip="Gem til senere"><span aria-hidden="true"></span></button></span></div><h2 id="podcastDetailTitle">${escapeHtml(displayGroup.title)}</h2><p class="podcast-detail-sheet__meta">${escapeHtml(metadata.host || metadata.publisher || `${members.length} vurderede sæsoner`)}</p><div class="podcast-detail-sheet__chips"><span class="podcast-detail-sheet__episode-entry"><button class="podcast-detail-sheet__episode-entry-button" type="button" data-podcast-seasons-open aria-describedby="podcastSeasonEntryTooltip"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="3" width="14" height="18" rx="2"></rect><path d="M9 8h6M9 12h6M9 16h4"></path></svg><span>Vurder sæsoner</span></button><span class="podcast-detail-sheet__episode-entry-tooltip" id="podcastSeasonEntryTooltip" role="tooltip">Se alle sæsoner og bedøm dem én for én.</span></span>${metadata.genre ? `<button class="podcast-detail-sheet__genre" type="button" data-podcast-detail-filter="genre" data-value="${escapeHtml(metadata.genre)}">${escapeHtml(metadata.genre)}</button>` : ""}${metadata.publisher ? `<button class="podcast-detail-sheet__chip podcast-detail-sheet__publisher" type="button" data-podcast-detail-filter="publisher" data-value="${escapeHtml(metadata.publisher)}">${escapeHtml(metadata.publisher)}</button>` : ""}</div><section class="podcast-detail-sheet__description podcast-detail-sheet__description--desktop"><h3>Om podcasten</h3><p>${escapeHtml(description)}</p></section></div>
+      <div class="podcast-detail-sheet__intro"><div class="podcast-detail-sheet__intro-actions"><span class="podcast-detail-sheet__header-action-icons"><button class="favorite-button podcast-detail-sheet__header-favorite" type="button" data-podcast-detail-favorite aria-label="Gem til senere" title="Gem til senere" data-tooltip="Gem til senere"><span aria-hidden="true"></span></button></span></div><h2 id="podcastDetailTitle">${escapeHtml(displayGroup.title)}</h2><p class="podcast-detail-sheet__meta">${escapeHtml(metadata.host || metadata.publisher || `${members.length} sæsoner`)}</p><div class="podcast-detail-sheet__chips"><span class="podcast-detail-sheet__episode-entry"><button class="podcast-detail-sheet__episode-entry-button" type="button" data-podcast-seasons-open aria-describedby="podcastSeasonEntryTooltip"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="3" width="14" height="18" rx="2"></rect><path d="M9 8h6M9 12h6M9 16h4"></path></svg><span>Vurder sæsoner</span></button><span class="podcast-detail-sheet__episode-entry-tooltip" id="podcastSeasonEntryTooltip" role="tooltip">Se alle sæsoner og bedøm dem én for én.</span></span>${metadata.genre ? `<button class="podcast-detail-sheet__genre" type="button" data-podcast-detail-filter="genre" data-value="${escapeHtml(metadata.genre)}">${escapeHtml(metadata.genre)}</button>` : ""}${metadata.publisher ? `<button class="podcast-detail-sheet__chip podcast-detail-sheet__publisher" type="button" data-podcast-detail-filter="publisher" data-value="${escapeHtml(metadata.publisher)}">${escapeHtml(metadata.publisher)}</button>` : ""}</div><section class="podcast-detail-sheet__description podcast-detail-sheet__description--desktop"><h3>Om podcasten</h3><p>${escapeHtml(description)}</p></section></div>
       <section class="podcast-detail-sheet__description podcast-detail-sheet__description--mobile"><h3>Om podcasten</h3><p data-podcast-detail-description>${escapeHtml(description)}</p><button class="podcast-detail-sheet__description-toggle" type="button" data-podcast-detail-description-toggle aria-expanded="false">Læs mere</button></section>
     </header>
     <section class="podcast-detail-sheet__ratings" aria-label="Vurderinger">
@@ -12653,7 +12662,7 @@ function renderPodcastDisplayGroupContent(dialog, displayGroup) {
       <div class="podcast-detail-sheet__rating-cell podcast-detail-sheet__rating-cell--own podcast-detail-sheet__rating-cell--group-own${own.count ? " is-episode-rating-locked" : ""}"><span class="podcast-detail-sheet__rating-label">Din vurdering</span>${own.count ? `<label class="podcast-detail-sheet__own-rating-control podcast-detail-sheet__own-rating-picker"><span class="podcast-detail-sheet__rating-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="4" y="3" width="16" height="18" rx="3"></rect><path d="M8 8h.01M12 8h.01M16 8h.01M8 12h.01M12 12h.01M16 12h.01M8 16h.01M12 16h.01M16 16h.01"></path></svg></span><span class="podcast-detail-sheet__own-rating-copy"><input class="podcast-detail-sheet__own-rating-input is-episode-calculated" type="text" value="${escapeHtml(formatCompactRating(own.average))}" aria-label="Din vurdering er låst og beregnes fra sæsonvurderinger" aria-describedby="podcastDetailSeasonRatingLockHelp" disabled /><small>Beregnet fra sæsoner</small></span><span class="podcast-detail-sheet__own-rating-suffix">/10</span></label><em>Beregnet fra ${own.count} ${own.count === 1 ? "sæsonvurdering" : "sæsonvurderinger"}</em><button class="podcast-detail-sheet__episode-rating-lock-trigger" type="button" data-podcast-detail-season-rating-lock-trigger aria-label="Hvorfor er din vurdering låst?" aria-describedby="podcastDetailSeasonRatingLockHelp" aria-expanded="false">i</button><div class="podcast-detail-sheet__episode-rating-lock-help" id="podcastDetailSeasonRatingLockHelp" role="tooltip">Din vurdering er låst, fordi den beregnes automatisk ud fra dine sæsonvurderinger. Redigér under Vurder sæsoner.</div>` : `<strong>—<small>/10</small></strong><em>Ingen sæsoner vurderet. Vurdér under Vurder sæsoner.</em>`}</div>
     </section>
     <section class="podcast-detail-sheet__episode-rating-mobile-help" data-podcast-detail-season-rating-mobile-help${own.count ? "" : " hidden"} aria-live="polite">${own.count ? `<p>Din vurdering er låst, fordi den beregnes automatisk ud fra dine sæsonvurderinger. Redigér under Vurder sæsoner.</p>` : ""}</section>
-    <div class="podcast-detail-sheet__recommendation-row">${relatedMarkup}<div class="podcast-detail-sheet__review-status" aria-label="Sæsoner vurderet"><span class="podcast-detail-sheet__review-status-icon" aria-hidden="true">★</span><span><strong>${members.length} sæsoner vurderet</strong><small>Se vurderingerne under Vurder sæsoner</small></span></div></div>`;
+    <div class="podcast-detail-sheet__recommendation-row">${relatedMarkup}<div class="podcast-detail-sheet__review-status" aria-label="Sæsoner vurderet"><span class="podcast-detail-sheet__review-status-icon" aria-hidden="true">★</span><span><strong>${editorialCount} sæsoner vurderet af Podcastlisten</strong><small>Se vurderingerne under Vurder sæsoner</small></span></div></div>`;
   setImage(content.querySelector(".podcast-detail-sheet__cover"), getPodcastImageSources(displayGroup), displayGroup.title);
   hydratePodcastSimilarityProduct(dialog, displayGroup);
   bindPodcastDetailFilterButtons(content, displayGroup);
@@ -24074,6 +24083,11 @@ function applyPodcastDataRefresh(podcastRows, featuredRows, coverManifestLookup 
   state.podcastDisplayGroupById = Object.fromEntries(
     displayGroups.map((group) => [normalizeText(group.id), group])
   );
+  displayGroups.flatMap(getDisplayGroupSeasonIdentities).forEach((podcast) => {
+    // Exact persistence lookup, separate from ranking/search catalogue entries.
+    state.podcastById[getPodcastKey(podcast)] = podcast;
+    state.podcastByKey[getPodcastKey(podcast)] = podcast;
+  });
   rebuildPodcastDetailRecommendationLookups();
   // Supabase and the catalogue start in parallel. Once this valid definition
   // commits, synchronize group aggregates even if an earlier refresh happened

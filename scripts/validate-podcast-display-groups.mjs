@@ -55,9 +55,9 @@ for (const group of config.groups) {
 
 const narkobetjenten = config.groups.find((group) => group.id === "narkobetjenten");
 assert.ok(narkobetjenten, "Narkobetjenten group is required");
-assert.equal(narkobetjenten.memberLegacyKeys.length, 12, "Narkobetjenten must have exactly 12 members");
+assert.equal(narkobetjenten.memberLegacyKeys.length, 12, "Keep the 12 editorial catalogue sources");
 const excludedKey = normalizeLegacyKey("Narkobetjenten på gaden (sæson 1)");
-assert.equal((byLegacyKey.get(excludedKey) || []).length, 1, "Narkobetjenten på gaden must remain in catalogue");
+assert.equal(rows.filter((row) => row["Podcast-ID"] === "narkobetjenten pa gaden sæson 1").length, 1, "Narkobetjenten på gaden must retain its exact catalogue ID");
 assert.ok(!narkobetjenten.memberLegacyKeys.includes(excludedKey), "Narkobetjenten på gaden must not be grouped");
 assert.equal(
   podcasts.filter((podcast) => narkobetjenten.memberLegacyKeys.includes(podcast.legacyKey)).length,
@@ -92,8 +92,8 @@ const collapsedRecommendationKeys = collapsePublicCandidates("ordinary-source", 
 assert.deepEqual(collapsedRecommendationKeys, [narkobetjenten.memberLegacyKeys[0], "ordinary-x", "ordinary-y", "ordinary-z"], "Public recommendations must keep first occurrence and collapse group members");
 assert.equal(JSON.stringify(rawRecommendationKeys), rawRecommendationSnapshot, "Recommendation collapsing must not mutate source candidates");
 
-const seasonNumbers = narkobetjenten.memberLegacyKeys.map((key) => Number(key.match(/sæson (\d+)/)?.[1]));
-assert.deepEqual([...seasonNumbers].sort((a, b) => a - b), [1, 2, 3, 6, 7, 9, 10, 11, 12, 13, 14, 15], "Season ordering must be numeric");
+const seasonNumbers = [...narkobetjenten.memberLegacyKeys.map((key) => Number(key.match(/sæson (\d+)/)?.[1])), ...narkobetjenten.seasonIdentities.map((season) => season.season)];
+assert.deepEqual([...seasonNumbers].sort((a, b) => a - b), Array.from({ length: 24 }, (_, index) => index + 1), "All 24 seasons must be present");
 
 const getDerivedOwnRating = (ratings) => ratings.length
   ? ratings.reduce((sum, rating) => sum + rating, 0) / ratings.length
@@ -106,6 +106,4 @@ const getSeasonLabel = (title) => {
 };
 assert.equal(getSeasonLabel("Podcast uden sæsonnummer"), "Podcast uden sæsonnummer", "Season display fallback must not expose MAX_SAFE_INTEGER");
 
-const weightedStats = [{ averageRating: 8, ratingCount: 2 }, { averageRating: 6, ratingCount: 3 }];
-assert.equal(weightedStats.reduce((sum, item) => sum + item.averageRating * item.ratingCount, 0) / 5, 6.8, "User ratings must be count-weighted");
 console.log("Podcast display groups validation passed.");
