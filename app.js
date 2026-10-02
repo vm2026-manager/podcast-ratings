@@ -638,7 +638,7 @@ const AUTH_PERSISTENCE_STORAGE_KEY = "podcast-ratings-auth-persistence";
 const PROFILE_PREFERENCES_STORAGE_KEY = "podcast-ratings-profile-preferences";
 const EXPLORE_PERSONAL_SEED_HISTORY_STORAGE_KEY =
   "podcast-ratings-explore-personal-seed-history-v1";
-const UDFORSK_RECOMMENDATION_VERSION = 5;
+const UDFORSK_RECOMMENDATION_VERSION = 6;
 const EXPLORE_PERSONAL_SNAPSHOT_STORAGE_KEY =
   "podcast-ratings-explore-personal-snapshots-v2";
 const EXPLORE_PERSONAL_MINIMUM_GROUP_SIZE = 3;
@@ -19227,6 +19227,8 @@ function persistExplorePersonalSnapshot(sections, { dayKey, fingerprint }) {
       fingerprint,
       generatedAt: new Date().toISOString(),
       sections: sections.map((section) => ({
+        clusterId: section.clusterId || "",
+        seedPodcastIds: section.seedPodcastIds || [],
         eyebrow: section.eyebrow,
         title: section.title,
         note: section.note || "",
@@ -19931,7 +19933,7 @@ function getExplorePersonalSections({
   const clusterSections = getExploreClusterSections({ searchParts, genre });
   const fingerprint = `${getExploreRecommendationInputFingerprint()}:clusters-${
     state.exploreClustersStatus === "ready" ? "v1" : "off"
-  }`;
+  }:limit-${limit}:sections-${maxSections}`;
   const canUseSnapshot =
     state.podcastSimilarityProductStatus === "ready" &&
     !searchParts.length &&
@@ -19941,83 +19943,99 @@ function getExplorePersonalSections({
     : null;
   if (cachedSections) return cachedSections;
   const seeds = seedPool.seeds;
-  const sections = clusterSections.slice(0, Math.max(0, maxSections));
+  const sections = [];
   const usedKeys = new Set();
-  const sectionTitles = new Set(sections.map((section) => section.title));
+  const sectionTitles = new Set();
   const renderedPersonalSeeds = [];
-  const absorbedSeedIds = new Set(sections.flatMap((section) => section.seedPodcastIds || []));
-
-  sections.forEach((section) => {
-    section.items.forEach((item) => usedKeys.add(getPodcastKey(item.podcast || item)));
-  });
 
   const pushSection = (section, { minItems = EXPLORE_PERSONAL_MINIMUM_GROUP_SIZE } = {}) => {
-    if (!section?.items?.length || section.items.length < minItems) return false;
+    if (!section?.items?.length) return false;
     if (sections.length >= maxSections || sectionTitles.has(section.title)) return false;
 
-    section.items.forEach((item) => usedKeys.add(getPodcastKey(item.podcast || item)));
+    // Every recommendation reason shares one budget and one set of podcast keys.
+    // Only accepted rows reserve keys, so an undersized row cannot starve fallbacks.
+    const rowKeys = new Set();
+    const items = section.items.filter((item) => {
+      const key = getPodcastKey(item.podcast || item);
+      if (!key || usedKeys.has(key) || rowKeys.has(key)) return false;
+      rowKeys.add(key);
+      return true;
+    }).slice(0, limit);
+    if (items.length < minItems) return false;
+
+    items.forEach((item) => usedKeys.add(getPodcastKey(item.podcast || item)));
     sectionTitles.add(section.title);
-    sections.push(section);
+    sections.push({ ...section, items });
     return true;
   };
 
-  const maxSeedSections = Math.max(1, Math.min(maxSections, 4));
-  for (const seed of seeds) {
-    if (sections.length >= maxSeedSections) break;
-    if (absorbedSeedIds.has(getPodcastKey(seed.podcast))) continue;
-    const items = getExploreSeedSectionItems(seed, {
-      limit,
-      searchParts,
-      genre,
-      usedKeys
-    });
+  const pushNextSeed = (source) => {
+    if (sections.length >= maxSections) return false;
+    for (const seed of seeds) {
+      if (seed.source !== source || renderedPersonalSeeds.includes(seed)) continue;
+      const items = getExploreSeedSectionItems(seed, { limit, searchParts, genre, usedKeys });
+      if (!pushSection({
+        eyebrow: "Personlig anbefaling",
+        title: getExploreSeedTitle(seed),
+        seedPodcastKey: getPodcastKey(seed.podcast),
+        seedPodcastTitle: seed.podcast.title,
+        seedSource: seed.source,
+        seedRating: seed.rating,
+        items
+      })) continue;
 
-    const pushed = pushSection({
-      eyebrow: "Personlig anbefaling",
-      title: getExploreSeedTitle(seed),
-      seedPodcastKey: getPodcastKey(seed.podcast),
-      seedPodcastTitle: seed.podcast.title,
-      seedSource: seed.source,
-      seedRating: seed.rating,
-      items
-    });
-
-    if (pushed) {
       renderedPersonalSeeds.push(seed);
       const diagnostic = seedPool.diagnostics.find((item) => item.key === seed.key);
       if (diagnostic) diagnostic.selected = true;
+      return true;
     }
-  }
+    return false;
+  };
 
-  markExplorePersonalSeedsShown(renderedPersonalSeeds, seedPool.dayKey);
+  const pushNextCluster = () => clusterSections.some((section) => pushSection(section));
+  const hostSignals = profile.hostSignals.map((signal) => ({
+    ...signal,
+    positiveSeedCount: profile.ratingSeeds.filter(
+      (seed) => hostsMatchComparable(signal.value, seed.podcast.host)
+    ).length
+  })).sort((a, b) => b.positiveSeedCount - a.positiveSeedCount || b.weight - a.weight);
+  const pushNextHost = () => {
+    if (sections.length >= maxSections) return false;
+    for (const hostSignal of hostSignals) {
+      const hostSeeds = profile.ratingSeeds.filter((seed) => hostsMatchComparable(hostSignal.value, seed.podcast.host));
+      const excludeKeys = new Set(hostSeeds.map((seed) => seed.key));
+      const items = state.podcasts
+        .filter((podcast) => {
+          const key = getPodcastKey(podcast);
+          return (
+            key &&
+            !profile.ratedKeys.has(key) &&
+            !usedKeys.has(key) &&
+            !excludeKeys.has(key) &&
+            podcast.host &&
+            hostsMatchComparable(hostSignal.value, podcast.host) &&
+            matchesExploreFilters(podcast, searchParts, genre)
+          );
+        })
+        .map((podcast) => getExploreCandidateFit(podcast, profile))
+        .sort((a, b) => b.score - a.score)
+        .slice(0, limit);
 
-  for (const hostSignal of profile.hostSignals) {
-    if (sections.length >= maxSections) break;
-    const hostSeeds = profile.ratingSeeds.filter((seed) => hostsMatchComparable(hostSignal.value, seed.podcast.host));
-    const excludeKeys = new Set(hostSeeds.map((seed) => seed.key));
-    const items = state.podcasts
-      .filter((podcast) => {
-        const key = getPodcastKey(podcast);
-        return (
-          key &&
-          !profile.ratedKeys.has(key) &&
-          !usedKeys.has(key) &&
-          !excludeKeys.has(key) &&
-          podcast.host &&
-          hostsMatchComparable(hostSignal.value, podcast.host) &&
-          matchesExploreFilters(podcast, searchParts, genre)
-        );
-      })
-      .map((podcast) => getExploreCandidateFit(podcast, profile))
-      .sort((a, b) => b.score - a.score)
-      .slice(0, limit);
+      if (pushSection({
+        eyebrow: "Mere med en favoritvært",
+        title: `Mere med ${hostSignal.value}`,
+        items
+      })) return true;
+    }
+    return false;
+  };
 
-    pushSection({
-      eyebrow: "Mere med en favoritv\u00e6rt",
-      title: `Mere med ${hostSignal.value}`,
-      items
-    });
-  }
+  // Reserve the first opportunities for distinct reasons, regardless of how many
+  // clusters exist. A cluster's seeds may also explain a distinct direct row.
+  pushNextSeed("rating");
+  pushNextCluster();
+  pushNextHost();
+  pushNextSeed("rating");
 
   const mainSeriesSignals = Array.from(profile.mainSeriesSignals.entries()).sort((a, b) => b[1] - a[1]);
   for (const [mainSeriesKey] of mainSeriesSignals) {
@@ -20077,6 +20095,14 @@ function getExplorePersonalSections({
       items
     });
   }
+
+  // Fill unused slots when a preferred reason had too few unique candidates.
+  while (sections.length < maxSections && renderedPersonalSeeds.length < 4) {
+    if (!pushNextSeed("rating") && !pushNextSeed("saved")) break;
+  }
+  if (sections.length < maxSections) pushNextHost();
+  if (sections.length < maxSections) pushNextCluster();
+  markExplorePersonalSeedsShown(renderedPersonalSeeds, seedPool.dayKey);
 
   if (sections.length < maxSections) {
     const items = getExplorePersonalCandidateItems(profile, {
