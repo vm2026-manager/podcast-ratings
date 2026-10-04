@@ -23,18 +23,18 @@
       "preserveSourceBytes": true
     }
   },
-  "totalPodcasts": 1087,
-  "totalLocalCovers": 1081,
-  "totalVariants": 2406,
-  "totalOriginals": 1081,
-  "totalVariantFileSizeBytes": 163084923,
-  "totalOriginalFileSizeBytes": 531547446,
-  "totalFileSizeBytes": 694632369,
+  "totalPodcasts": 1088,
+  "totalLocalCovers": 1082,
+  "totalVariants": 2407,
+  "totalOriginals": 1082,
+  "totalVariantFileSizeBytes": 164255938,
+  "totalOriginalFileSizeBytes": 532718461,
+  "totalFileSizeBytes": 696974399,
   "placeholderPodcasts": 6,
   "variantCounts": {
     "480": 1078,
     "800": 770,
-    "1400": 558
+    "1400": 559
   },
   "lastRun": {
     "startedAt": "2026-08-20T19:39:46Z",
@@ -74076,6 +74076,57 @@
       "sourceAuditStatus": "manual",
       "reusedExistingFiles": false,
       "lastError": ""
+    },
+    {
+      "stableKey": "amerikas_kolde_drom_dr_manual",
+      "podcastId": "amerikas kolde drom dr",
+      "appPodcastKey": "amerikas kolde drom dr",
+      "title": "Amerikas kolde drøm",
+      "publisher": "DR",
+      "host": "Asger Juhl",
+      "manualOverride": true,
+      "sourceKind": "manual",
+      "manualSourcePath": "assets/podcast-covers/manual-originals/amerikas_kolde_drom_dr_manual.png",
+      "manualIntakeSourcePath": "assets/podcast-covers/manual-inbox/amerikas kolde drom dr.png",
+      "manualIntakeSourceChecksum": "ee8b2d7766d78a0a41f853de77e24d8af6ba033d815aa63bcec003668a3aee0c",
+      "originalImageUrl": "assets/podcast-covers/manual-originals/amerikas_kolde_drom_dr_manual.png",
+      "sourceChecksum": "8538d8cc53294aee292a39b545b15c103b029c647d5bd9c7d6e961c491b2c224",
+      "successfulSourceChecksum": "8538d8cc53294aee292a39b545b15c103b029c647d5bd9c7d6e961c491b2c224",
+      "sourceFormat": "PNG",
+      "sourceWidth": 1400,
+      "sourceHeight": 1400,
+      "sourceHasTransparency": false,
+      "sourceAuditStatus": "manual",
+      "reusedExistingFiles": false,
+      "lastError": "",
+      "status": "manual_override",
+      "needsPlaceholder": false,
+      "qualityCategory": "manual",
+      "original": {
+        "path": "data/covers/original/amerikas_kolde_drom_dr_manual.png",
+        "format": "PNG",
+        "contentType": "image/png",
+        "bytes": 1171015,
+        "checksum": "8538d8cc53294aee292a39b545b15c103b029c647d5bd9c7d6e961c491b2c224",
+        "width": 1400,
+        "height": 1400,
+        "hasTransparency": false
+      },
+      "variants": {
+        "1400": {
+          "path": "data/covers/1400/amerikas_kolde_drom_dr_manual.png",
+          "format": "PNG",
+          "contentType": "image/png",
+          "bytes": 1171015,
+          "checksum": "8538d8cc53294aee292a39b545b15c103b029c647d5bd9c7d6e961c491b2c224",
+          "width": 1400,
+          "height": 1400,
+          "hasTransparency": false,
+          "requestedWidth": 1400,
+          "actualWidth": 1400,
+          "actualHeight": 1400
+        }
+      }
     }
   ]
 }

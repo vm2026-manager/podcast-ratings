@@ -60,7 +60,12 @@ const sport = podcasts.find(p => p.podcastId === 'mediano sport og perspektiv');
 assert.notEqual(jennings.localCoverVariants[0].path, sport.localCoverVariants[0].path);
 assert.equal(registrations.find(r => r.sourcePath.endsWith('/mediano jennings.png')).podcastId, sport.podcastId);
 assert.equal(registrations.find(r => r.sourcePath.endsWith('/Magasinet Jennings.png')).podcastId, jennings.podcastId);
-for (const id of ['mediano special','bruchmann ringer til','der var engang et mal','amerikas kolde drom dr','bandeland sæson 1','bandeland sæson 2']) {
+const amerikas = registrations.filter(r => r.podcastId === 'amerikas kolde drom dr');
+assert.equal(amerikas.length, 1, 'Amerikas kolde drøm has one explicit verified mapping');
+assert.equal(amerikas[0].sourcePath, 'assets/podcast-covers/manual-inbox/amerikas kolde drom dr.png');
+assert.equal(amerikas[0].sourceSha256, 'ee8b2d7766d78a0a41f853de77e24d8af6ba033d815aa63bcec003668a3aee0c');
+assert.equal(amerikas[0].verdict, 'VERIFIED');
+for (const id of ['mediano special','bruchmann ringer til','der var engang et mal','bandeland sæson 1','bandeland sæson 2']) {
   assert.ok(!registrations.some(r => r.podcastId === id), `${id} remains unresolved`);
 }
 assert.doesNotMatch(read('scripts/publish-manual-podcast-covers.ps1'), /HEAD:main|Invoke-Git|git push/);

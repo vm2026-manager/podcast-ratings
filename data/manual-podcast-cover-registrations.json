@@ -33,6 +33,17 @@
       "expectedImageUrl": "",
       "verdict": "VERIFIED",
       "evidence": "Visual inspection of origin/main assets/podcast-covers/manual-originals/series/magasinet_jennings.png shows the identical studio photograph resized with padding, already explicitly registered to podcastId magasinet jennings. This proves repository asset provenance; SPORT & PERSPEKTIV is a separate image and identity. Verdict revised and printed before registering this source."
+    },
+    {
+      "sourcePath": "assets/podcast-covers/manual-inbox/amerikas kolde drom dr.png",
+      "sourceSha256": "ee8b2d7766d78a0a41f853de77e24d8af6ba033d815aa63bcec003668a3aee0c",
+      "podcastId": "amerikas kolde drom dr",
+      "stableKey": "amerikas_kolde_drom_dr_manual",
+      "expectedTitle": "Amerikas kolde drøm",
+      "expectedPublisher": "DR",
+      "expectedImageUrl": "https://asset.dr.dk/drlyd/images/urn:dr:radio:image:6926eae5f813fbba9054db46",
+      "verdict": "VERIFIED",
+      "evidence": "Source provenance is now verified against the DR image source, as confirmed by the supplied identity review on 2026-10-04. The exact source SHA256 and canonical catalogue ID/title/publisher/image URL match; this registration is no longer unresolved or ambiguous."
     }
   ]
 }
