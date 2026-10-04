@@ -1,0 +1,298 @@
+{
+  "auditedOn": "2026-10-03",
+  "baseCommit": "eabc2fc0e0eeb0ca7feb987b75080af680b1260f",
+  "scope": "All eight files in original local manual-inbox; catalogue is origin/main data plus app local canonical rows. Audit printed before changes.",
+  "files": [
+    {
+      "sourceFilename": "Mediano Special.png",
+      "sourceSha256": "8cedb66159f63c425d9a39dd25861e458d52c0cf66c15420b2f09990d1712918",
+      "candidates": [
+        {
+          "displayTitle": "Mediano Special",
+          "podcastId": "mediano special",
+          "publisher": "Mediano",
+          "catalogueId": null,
+          "slug": null,
+          "aliasesHistoricalIds": [
+            "mediano special hvad siger data om superligaen",
+            "sagen om de 15 point forsvandt fra i lommen af den gamle dame"
+          ],
+          "Billedlink": null,
+          "Link": null,
+          "manifestEntries": [],
+          "localManifestEntries": [],
+          "ratingKey": "mediano special",
+          "editorialRating": null,
+          "ratingEvidence": "app.js getPodcastKey uses canonical ID; getPersistedUserRatingKey retains original stored keys. User ratings were not queried or modified."
+        }
+      ],
+      "verdict": "AMBIGUOUS",
+      "evidence": "Generic Mediano artwork, byte-identical to Der var engang et mål.png. No programme-specific text or provenance."
+    },
+    {
+      "sourceFilename": "Brüchmann ringer til.png",
+      "sourceSha256": "f14169dc2a9fa5e5ad60550bb5434646b06ee95d896c2d2fbf2d3683e868aa4c",
+      "candidates": [
+        {
+          "displayTitle": "Brüchmann ringer til",
+          "podcastId": "bruchmann ringer til",
+          "publisher": "Mediano",
+          "catalogueId": null,
+          "slug": null,
+          "aliasesHistoricalIds": [
+            "kristjaan speakmann"
+          ],
+          "Billedlink": null,
+          "Link": null,
+          "manifestEntries": [],
+          "localManifestEntries": [],
+          "ratingKey": "bruchmann ringer til",
+          "editorialRating": null,
+          "ratingEvidence": "app.js getPodcastKey uses canonical ID; getPersistedUserRatingKey retains original stored keys. User ratings were not queried or modified."
+        }
+      ],
+      "verdict": "AMBIGUOUS",
+      "evidence": "Unlabelled interview photograph; filename cannot verify the asset."
+    },
+    {
+      "sourceFilename": "Der var engang et mål.png",
+      "sourceSha256": "8cedb66159f63c425d9a39dd25861e458d52c0cf66c15420b2f09990d1712918",
+      "candidates": [
+        {
+          "displayTitle": "Der var engang et mål",
+          "podcastId": "der var engang et mal",
+          "publisher": "Mediano",
+          "catalogueId": null,
+          "slug": null,
+          "aliasesHistoricalIds": [
+            "der var engang et mal af peter møller mod farum"
+          ],
+          "Billedlink": null,
+          "Link": null,
+          "manifestEntries": [],
+          "localManifestEntries": [],
+          "ratingKey": "der var engang et mal",
+          "editorialRating": null,
+          "ratingEvidence": "app.js getPodcastKey uses canonical ID; getPersistedUserRatingKey retains original stored keys. User ratings were not queried or modified."
+        }
+      ],
+      "verdict": "AMBIGUOUS",
+      "evidence": "Generic Mediano artwork, byte-identical to Mediano Special.png. No programme-specific text or provenance."
+    },
+    {
+      "sourceFilename": "Magasinet Jennings.png",
+      "sourceSha256": "918856e7febb81c218c43f62bad5975ee4bf3ab7110cb917cc94d44b4c1fbda4",
+      "candidates": [
+        {
+          "displayTitle": "Magasinet Jennings",
+          "podcastId": "magasinet jennings",
+          "publisher": "Mediano",
+          "catalogueId": null,
+          "slug": null,
+          "aliasesHistoricalIds": [
+            "ciao gianni",
+            "vm special om trump infantino indrejseproblemer og manden bag balogun breaking",
+            "vm optakt sadan lyder infantino bag facaden",
+            "sprængfarlig rapport om datagigant det gra marked i england og tryktest af christiansborg",
+            "infantinos mislykkede fredsforsøg dyrt vm og saudisk nedjustering",
+            "fodbold og samfund med wrexham st pauli athletic club vsk og aarhus fremad",
+            "eksklusivt interview med jesper møller om fifa og infantino",
+            "infantino foran genvalg iran overladt til sig selv og fifa i mystisk sponsorat",
+            "forudsigelsesmarkederne er kommet for at blive derfor skal det bekymre dig",
+            "jesper møller ved ikke om dbu vil stemme pa infantino det har vi ikke taget stilling til endnu",
+            "trumps krig sætter fifa i kattepine og european super league er død",
+            "her er scenariet alle frygter betting bag superliga og samtlige divisioner",
+            "vm boykot handboldchef har faet nok og city sag trækker i langdrag",
+            "infantino abner for russisk comeback dbu reagerer",
+            "landskabet for dansk børnefodbold med politiken og fc københavn",
+            "flere priser flere aftaler og flere penge op af fansenes lommer",
+            "fra johnny til donny fredspris fifa og forspil til vm 2026",
+            "whistlebloweren der afslørede qatar sadan snød vi verdenspressen"
+          ],
+          "Billedlink": null,
+          "Link": "https://www.mediano.nu/oversigt/tag/Jennings",
+          "manifestEntries": [
+            {
+              "stableKey": "magasinet-jennings-manual-series",
+              "appPodcastKey": "magasinet jennings",
+              "podcastId": "magasinet jennings",
+              "title": "Magasinet Jennings",
+              "manualSourcePath": null,
+              "manualSeriesSourcePath": "assets/podcast-covers/manual-originals/series/magasinet_jennings.png",
+              "originalImageUrl": "assets/podcast-covers/manual-originals/series/magasinet_jennings.png",
+              "sourceChecksum": "2d98c75d4ea88ed4b490de55c3e880e96766b65babb721f1b6bc64e2bcd98a1e"
+            }
+          ],
+          "localManifestEntries": [],
+          "ratingKey": "magasinet jennings",
+          "editorialRating": null,
+          "ratingEvidence": "app.js getPodcastKey uses canonical ID; getPersistedUserRatingKey retains original stored keys. User ratings were not queried or modified."
+        }
+      ],
+      "verdict": "VERIFIED",
+      "evidence": "Visual inspection of origin/main assets/podcast-covers/manual-originals/series/magasinet_jennings.png shows the identical studio photograph resized with padding, already explicitly registered to podcastId magasinet jennings. This proves repository asset provenance; SPORT & PERSPEKTIV is a separate image and identity. Verdict revised and printed before registering this source."
+    },
+    {
+      "sourceFilename": "mediano jennings.png",
+      "sourceSha256": "c0997af69afa45e3a7fa28d44a78e0eb51e1b1a7505025cd0ec973cdd05c7d15",
+      "candidates": [
+        {
+          "displayTitle": "Mediano Sport og Perspektiv",
+          "podcastId": "mediano sport og perspektiv",
+          "publisher": "Mediano",
+          "catalogueId": "catalogue-v1-4ac0dddf",
+          "slug": null,
+          "aliasesHistoricalIds": [],
+          "Billedlink": "https://images.squarespace-cdn.com/content/v1/573c1b7d01dbae9b52cd0936/6457a2fd-3295-4d68-b413-fa6d4a7269ea/S%26P.png",
+          "Link": "https://www.mediano.nu/sportogperspektiv",
+          "manifestEntries": [],
+          "localManifestEntries": [],
+          "ratingKey": "mediano sport og perspektiv",
+          "editorialRating": null,
+          "ratingEvidence": "app.js getPodcastKey uses canonical ID; getPersistedUserRatingKey retains original stored keys. User ratings were not queried or modified."
+        }
+      ],
+      "verdict": "VERIFIED",
+      "evidence": "Visible SPORT & PERSPEKTIV and Mediano identify the distinct catalogue programme. data/mediano-series-registry-reviews.json records verified programme identity and dedicated channel. No equivalence with Magasinet Jennings."
+    },
+    {
+      "sourceFilename": "Bandeland.png",
+      "sourceSha256": "2676a62004bd9998489952e5cf96b67f2fe6d02ac5278abc0b6c10386063eb3e",
+      "candidates": [
+        {
+          "displayTitle": "Bandeland (sæson 1)",
+          "podcastId": "bandeland sæson 1",
+          "publisher": "Ekstrabladet",
+          "catalogueId": "catalogue-v1-94b35634",
+          "slug": null,
+          "aliasesHistoricalIds": [],
+          "Billedlink": "https://images.squarespace-cdn.com/content/v1/5748ccb020c6471e63e65a8a/4ec184b6-6270-4485-9dd8-6a363ae8c8dd/bandeland.jpeg",
+          "Link": "https://ekstrabladet.dk/podcast/bandeland-ii-broedrene-fra-vaerebro-110/8423654",
+          "manifestEntries": [
+            {
+              "stableKey": "bandeland-saeson-1-01abfdf416",
+              "appPodcastKey": "bandeland sæson 1",
+              "podcastId": null,
+              "title": "Bandeland (sæson 1)",
+              "manualSourcePath": null,
+              "manualSeriesSourcePath": null,
+              "originalImageUrl": "https://images.squarespace-cdn.com/content/v1/5748ccb020c6471e63e65a8a/4ec184b6-6270-4485-9dd8-6a363ae8c8dd/bandeland.jpeg",
+              "sourceChecksum": "aae6f80bc3cd8aa8bdb526205230f5ed1baeffba02f0833df540c3dff8f73d8b"
+            }
+          ],
+          "localManifestEntries": [
+            {
+              "stableKey": "bandeland-saeson-1-01abfdf416",
+              "appPodcastKey": "bandeland sæson 1",
+              "podcastId": null,
+              "title": "Bandeland (sæson 1)",
+              "manualSourcePath": null,
+              "manualSeriesSourcePath": null,
+              "originalImageUrl": "https://images.squarespace-cdn.com/content/v1/5748ccb020c6471e63e65a8a/4ec184b6-6270-4485-9dd8-6a363ae8c8dd/bandeland.jpeg",
+              "sourceChecksum": "aae6f80bc3cd8aa8bdb526205230f5ed1baeffba02f0833df540c3dff8f73d8b"
+            }
+          ],
+          "ratingKey": "bandeland sæson 1",
+          "editorialRating": "7,5",
+          "ratingEvidence": "app.js getPodcastKey uses canonical ID; getPersistedUserRatingKey retains original stored keys. User ratings were not queried or modified."
+        },
+        {
+          "displayTitle": "Bandeland (sæson 2)",
+          "podcastId": "bandeland sæson 2",
+          "publisher": "Ekstrabladet",
+          "catalogueId": "catalogue-v1-5a8d0c6f",
+          "slug": null,
+          "aliasesHistoricalIds": [],
+          "Billedlink": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSQshhlRbYqbd36q634Fqa3q_et-2o1Im7G1Q&s",
+          "Link": null,
+          "manifestEntries": [
+            {
+              "stableKey": "bandeland-saeson-2-c9f9cdbcc0",
+              "appPodcastKey": "bandeland sæson 2",
+              "podcastId": null,
+              "title": "Bandeland (sæson 2)",
+              "manualSourcePath": null,
+              "manualSeriesSourcePath": null,
+              "originalImageUrl": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSQshhlRbYqbd36q634Fqa3q_et-2o1Im7G1Q&s",
+              "sourceChecksum": "cbb2ed97d96c68d00c516443cb6aab5dd159fc1ea470c97600160ca5c8d74a6d"
+            }
+          ],
+          "localManifestEntries": [
+            {
+              "stableKey": "bandeland-saeson-2-c9f9cdbcc0",
+              "appPodcastKey": "bandeland sæson 2",
+              "podcastId": null,
+              "title": "Bandeland (sæson 2)",
+              "manualSourcePath": null,
+              "manualSeriesSourcePath": null,
+              "originalImageUrl": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSQshhlRbYqbd36q634Fqa3q_et-2o1Im7G1Q&s",
+              "sourceChecksum": "cbb2ed97d96c68d00c516443cb6aab5dd159fc1ea470c97600160ca5c8d74a6d"
+            }
+          ],
+          "ratingKey": "bandeland sæson 2",
+          "editorialRating": "6,7",
+          "ratingEvidence": "app.js getPodcastKey uses canonical ID; getPersistedUserRatingKey retains original stored keys. User ratings were not queried or modified."
+        }
+      ],
+      "verdict": "AMBIGUOUS",
+      "evidence": "BANDELAND artwork has no season. Two canonical IDs; season 1 catalogue Link itself refers to Bandeland II. Cannot choose."
+    },
+    {
+      "sourceFilename": "amerikas kolde drom dr.png",
+      "sourceSha256": "ee8b2d7766d78a0a41f853de77e24d8af6ba033d815aa63bcec003668a3aee0c",
+      "candidates": [
+        {
+          "displayTitle": "Amerikas kolde drøm",
+          "podcastId": "amerikas kolde drom dr",
+          "publisher": "DR",
+          "catalogueId": "catalogue-v1-842e28a1",
+          "slug": null,
+          "aliasesHistoricalIds": [],
+          "Billedlink": "https://asset.dr.dk/drlyd/images/urn:dr:radio:image:6926eae5f813fbba9054db46",
+          "Link": "https://www.dr.dk/lyd/p1/amerikas-kolde-droem-2650089237000",
+          "manifestEntries": [],
+          "localManifestEntries": [],
+          "ratingKey": "amerikas kolde drom dr",
+          "editorialRating": null,
+          "ratingEvidence": "app.js getPodcastKey uses canonical ID; getPersistedUserRatingKey retains original stored keys. User ratings were not queried or modified."
+        }
+      ],
+      "verdict": "UNKNOWN",
+      "evidence": "Unlabelled Greenland/ice-cream illustration. Subject and filename alone do not verify provenance."
+    },
+    {
+      "sourceFilename": "gift ved første blik podcast.png",
+      "sourceSha256": "0e18aea9bb58d617b764209779b3fa70038e1836937b445f2a7eabd7302379cf",
+      "candidates": [
+        {
+          "displayTitle": "Gift ved første blik podcasten",
+          "podcastId": "gift ved forste blik podcasten",
+          "publisher": "DR",
+          "catalogueId": "catalogue-v1-7ec79a7d",
+          "slug": null,
+          "aliasesHistoricalIds": [],
+          "Billedlink": "https://asset.dr.dk/drlyd/images/urn:dr:radio:image:6899f93b2c5f73e6b5bd7026?im=AspectCrop%3D%28720%2C720%29%2CxPosition%3D.5%2CyPosition%3D.5%3BResize%3D%28720%2C720%29",
+          "Link": "https://www.dr.dk/lyd/special-radio/gift-ved-foerste-blik-podcasten-4744733872000",
+          "manifestEntries": [],
+          "localManifestEntries": [
+            {
+              "stableKey": "gift-ved-foerste-blik-podcasten-a8fa5f7edc",
+              "appPodcastKey": "gift ved første blik podcasten",
+              "podcastId": null,
+              "title": "Gift ved første blik podcasten",
+              "manualSourcePath": null,
+              "manualSeriesSourcePath": null,
+              "originalImageUrl": "https://asset.dr.dk/drlyd/images/urn:dr:radio:image:6899f93b2c5f73e6b5bd7026?im=AspectCrop%3D%28720%2C720%29%2CxPosition%3D.5%2CyPosition%3D.5%3BResize%3D%28720%2C720%29",
+              "sourceChecksum": "0e18aea9bb58d617b764209779b3fa70038e1836937b445f2a7eabd7302379cf"
+            }
+          ],
+          "ratingKey": "gift ved forste blik podcasten",
+          "editorialRating": null,
+          "ratingEvidence": "app.js getPodcastKey uses canonical ID; getPersistedUserRatingKey retains original stored keys. User ratings were not queried or modified."
+        }
+      ],
+      "verdict": "VERIFIED",
+      "evidence": "Visible exact title and SHA256 match existing local manifest/cache original for the DR image URL: 0e18aea9bb58d617b764209779b3fa70038e1836937b445f2a7eabd7302379cf."
+    }
+  ]
+}

@@ -1,0 +1,38 @@
+{
+  "schemaVersion": 1,
+  "registrations": [
+    {
+      "sourcePath": "assets/podcast-covers/manual-inbox/mediano jennings.png",
+      "sourceSha256": "c0997af69afa45e3a7fa28d44a78e0eb51e1b1a7505025cd0ec973cdd05c7d15",
+      "podcastId": "mediano sport og perspektiv",
+      "stableKey": "mediano_sport_og_perspektiv_manual",
+      "expectedTitle": "Mediano Sport og Perspektiv",
+      "expectedPublisher": "Mediano",
+      "expectedImageUrl": "https://images.squarespace-cdn.com/content/v1/573c1b7d01dbae9b52cd0936/6457a2fd-3295-4d68-b413-fa6d4a7269ea/S%26P.png",
+      "verdict": "VERIFIED",
+      "evidence": "Visible SPORT & PERSPEKTIV and Mediano identify the distinct catalogue programme. data/mediano-series-registry-reviews.json records verified programme identity and dedicated channel. No equivalence with Magasinet Jennings."
+    },
+    {
+      "sourcePath": "assets/podcast-covers/manual-inbox/gift ved første blik podcast.png",
+      "sourceSha256": "0e18aea9bb58d617b764209779b3fa70038e1836937b445f2a7eabd7302379cf",
+      "podcastId": "gift ved forste blik podcasten",
+      "stableKey": "gift_ved_forste_blik_podcasten_manual",
+      "expectedTitle": "Gift ved første blik podcasten",
+      "expectedPublisher": "DR",
+      "expectedImageUrl": "https://asset.dr.dk/drlyd/images/urn:dr:radio:image:6899f93b2c5f73e6b5bd7026?im=AspectCrop%3D%28720%2C720%29%2CxPosition%3D.5%2CyPosition%3D.5%3BResize%3D%28720%2C720%29",
+      "verdict": "VERIFIED",
+      "evidence": "Visible exact title and SHA256 match existing local manifest/cache original for the DR image URL: 0e18aea9bb58d617b764209779b3fa70038e1836937b445f2a7eabd7302379cf."
+    },
+    {
+      "sourcePath": "assets/podcast-covers/manual-inbox/Magasinet Jennings.png",
+      "sourceSha256": "918856e7febb81c218c43f62bad5975ee4bf3ab7110cb917cc94d44b4c1fbda4",
+      "podcastId": "magasinet jennings",
+      "stableKey": "magasinet-jennings-manual-series",
+      "expectedTitle": "Magasinet Jennings",
+      "expectedPublisher": "Mediano",
+      "expectedImageUrl": "",
+      "verdict": "VERIFIED",
+      "evidence": "Visual inspection of origin/main assets/podcast-covers/manual-originals/series/magasinet_jennings.png shows the identical studio photograph resized with padding, already explicitly registered to podcastId magasinet jennings. This proves repository asset provenance; SPORT & PERSPEKTIV is a separate image and identity. Verdict revised and printed before registering this source."
+    }
+  ]
+}
