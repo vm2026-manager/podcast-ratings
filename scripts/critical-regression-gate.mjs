@@ -11,6 +11,7 @@ const checks = [
   ["Bakspejl local cover availability", ["scripts/test-bakspejl-cover-availability.mjs"]],
   ["cover identity resolution", ["scripts/test-cover-identity-resolution.mjs"]],
   ["cover source freshness", ["scripts/test-cover-source-freshness.mjs"]],
+  ["manual cover intake identity", ["scripts/test-manual-cover-intake.mjs"]],
   ["startup rating hydration", ["scripts/test-startup-rating-hydration.mjs"]],
   ["episode archive/source", ["scripts/test-podcast-episode-archive-source-regression.mjs"]],
   ["Djævlen umbrella routing", ["--experimental-strip-types", "scripts/test-djaevlen-umbrella-routing.mjs"]],
