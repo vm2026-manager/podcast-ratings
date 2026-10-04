@@ -9,6 +9,7 @@ permissions:
   actions: write
   checks: write
   contents: write
+  issues: write
   pull-requests: write
 
 concurrency:
@@ -36,10 +37,33 @@ jobs:
           node -e "const fs=require('fs'); for (const path of ['.sync-stage/data/podcasts.json', '.sync-stage/data/featured-reviews.json', '.sync-stage/data/explore-clusters.json']) JSON.parse(fs.readFileSync(path,'utf8')); console.log('Staged catalogue JSON files are valid')"
 
       - name: Hard podcast identity integrity gate
+        id: identity-gate
         env:
           PODCAST_SUPABASE_URL: ${{ vars.PODCAST_SUPABASE_URL }}
           PODCAST_SUPABASE_ANON_KEY: ${{ secrets.PODCAST_SUPABASE_ANON_KEY }}
-        run: node scripts/podcast-identity-integrity.mjs --before data/podcasts.json --candidate .sync-stage/data/podcasts.json --migrations data/podcast-id-migrations.json
+        shell: bash
+        run: |
+          set -o pipefail
+          node scripts/podcast-identity-integrity.mjs --before data/podcasts.json --candidate .sync-stage/data/podcasts.json --migrations data/podcast-id-migrations.json 2>&1 | tee .identity-gate.log
+
+      - name: Alert on blocked catalogue identity
+        if: failure() && steps.identity-gate.outcome == 'failure'
+        uses: actions/github-script@v7
+        env:
+          PODCAST_SUPABASE_URL: ${{ vars.PODCAST_SUPABASE_URL }}
+          PODCAST_SUPABASE_ANON_KEY: ${{ secrets.PODCAST_SUPABASE_ANON_KEY }}
+        with:
+          script: |
+            const { updateIdentityAlert } = await import(`${process.env.GITHUB_WORKSPACE}/scripts/catalogue-identity-alert.mjs`);
+            await updateIdentityAlert({ github, context, core, outcome: "failure" });
+
+      - name: Resolve catalogue identity alert
+        if: success() && steps.identity-gate.outcome == 'success'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { updateIdentityAlert } = await import(`${process.env.GITHUB_WORKSPACE}/scripts/catalogue-identity-alert.mjs`);
+            await updateIdentityAlert({ github, context, core, outcome: "success" });
 
       - name: Promote validated staged JSON
         run: |
