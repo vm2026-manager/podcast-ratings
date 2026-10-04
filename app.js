@@ -237,6 +237,15 @@ const MEDIANO_EPISODE_PODCAST_CONFIG = Object.freeze(
 
 const EPISODE_PODCAST_CONFIG = {
   ...MEDIANO_EPISODE_PODCAST_CONFIG,
+  "krop til salg": {
+    podcastKey: "krop til salg",
+    databasePodcastKey: "krop til salg",
+    enabled: true,
+    displayName: "Krop til salg",
+    searchPlaceholder: "Søg i Krop til salg-episoder",
+    source: "podimo",
+    persistence: "supabase"
+  },
   "mads og a holdet": {
     podcastKey: "mads og a holdet",
     databasePodcastKey: "mads og a holdet",

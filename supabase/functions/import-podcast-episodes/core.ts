@@ -1,6 +1,7 @@
 import { FEED_CONFIGS, type FeedConfig, type FeedConfigMap, type FeedRouteMatcher } from "./feed-config.ts";
 import { mapApplePodcastHtmlEpisodes } from "./apple-podcasts.ts";
 import { matchesExplicitTitlePrefix } from "./mediano-routing.mjs";
+import { syncManualPodimoEpisodes } from "./manual-podimo.ts";
 
 export const FEED_TIMEOUT_MS = 15000;
 export const BATCH_SIZE = 200;
@@ -20,6 +21,7 @@ const PERSISTENT_FIELDS = [
 ] as const;
 
 export type PodcastEpisodeRow = {
+  id?: string;
   podcast_key: string;
   source: string;
   external_guid: string;
@@ -196,6 +198,8 @@ export type ImportRepository = {
   }): Promise<{ id: string }>;
   loadExistingEpisodes(source: string, externalGuids: string[], episodeUrls?: string[], additionalSources?: string[], podcastKeys?: string[]): Promise<PodcastEpisodeRow[]>;
   upsertEpisodes(rows: PodcastEpisodeRow[]): Promise<void>;
+  loadPodcastEpisodes?(podcastKey: string): Promise<PodcastEpisodeRow[]>;
+  updateEpisodeMetadata?(current: PodcastEpisodeRow, next: PodcastEpisodeRow): Promise<void>;
   updateImportRun(id: string, input: Record<string, unknown>): Promise<void>;
 };
 
@@ -454,12 +458,12 @@ export function mapPodimoEpisodes(items: unknown[], config: FeedConfig, now: str
   for (const [index, item] of items.entries()) {
     if (!item || typeof item !== "object" || Array.isArray(item)) { errors.push({ index, errors: ["Invalid Podimo episode item"] }); continue; }
     const entry = item as PodimoEpisode;
-    const guid = normalizeText(entry.id);
-    const title = normalizeText(entry.title);
+    const guid = typeof entry.id === "string" ? entry.id.trim() : "";
+    const title = typeof entry.title === "string" ? entry.title.trim() : "";
     if (!guid || !title || seen.has(guid)) { errors.push({ index, guid: guid || null, title: title || null, errors: [!guid ? "Missing external_guid" : !title ? "Missing title" : "Duplicate GUID in feed"] }); continue; }
     seen.add(guid);
-    const published = parsePublishedAt(normalizeText(entry.publishedOn) || null);
-    const duration = Number(entry.duration);
+    const published = parsePublishedAt(typeof entry.publishedOn === "string" ? entry.publishedOn : null);
+    const duration = typeof entry.duration === "number" ? entry.duration : NaN;
     if (published.warning) warnings.push({ index, guid, warning: published.warning });
     if (!Number.isFinite(duration) || duration < 0) warnings.push({ index, guid, warning: "Invalid duration" });
     const exclusionReason = isTeaserOrTrailerTitle(title) ? "teaser_or_trailer" : null;
@@ -879,13 +883,12 @@ export async function fetchPodimoEpisodes(config: FeedConfig, timeoutMs = FEED_T
       }
       const pageEpisodes = parsePodimoEpisodes(payload);
       const pageIds = pageEpisodes.map((episode) => {
-        if (!episode || typeof episode !== "object" || Array.isArray(episode)) throw new Error("Podimo pagination returned a malformed episode");
+        // Preserve invalid entries for the per-item mapper to report and skip.
+        if (!episode || typeof episode !== "object" || Array.isArray(episode)) return "";
         const entry = episode as PodimoEpisode;
-        const id = normalizeText(entry.id);
-        if (!id || !normalizeText(entry.title)) throw new Error("Podimo pagination returned a malformed episode");
-        return id;
+        return typeof entry.id === "string" ? entry.id.trim() : "";
       });
-      const signature = pageIds.join("\u001f");
+      const signature = JSON.stringify(pageEpisodes);
       if (pageEpisodes.length && seenPageSignatures.has(signature)) throw new Error("Podimo pagination repeated a page");
       seenPageSignatures.add(signature);
       for (const id of pageIds) {
@@ -939,6 +942,19 @@ export async function runEpisodeImport(options: {
       : config.format === "dr_lyd_next_data"
         ? mapDrLydEpisodes(parseDrLydEpisodes(content), config, now())
         : mapEpisodes(parseFeed(content), config, now());
+    if (config.manual_identity_links) {
+      const reconciled = await syncManualPodimoEpisodes(mapped.episodes, config, options.repository);
+      const error_count = reconciled.error_count + mapped.errors.length;
+      const status = error_count || mapped.warnings.length ? "partial" as const : "success" as const;
+      const details = { ...reconciled.details, feed: options.feedKey, invalid_item_count: mapped.errors.length,
+        skipped_invalid_episode: mapped.errors, warnings: mapped.warnings };
+      const summary: ImportSummary = { ...reconciled, status, source: config.source, podcast_key: config.podcast_key,
+        fetched_count: mapped.fetched_count, error_count, runtime_ms: Date.now() - startedAt, details };
+      await options.repository.updateImportRun(importRun.id, { finished_at: now(), status,
+        fetched_count: summary.fetched_count, inserted_count: summary.inserted_count, updated_count: summary.updated_count,
+        skipped_count: summary.skipped_count, error_count, details });
+      return summary;
+    }
     const routing = routeEpisodes(mapped.episodes, config);
     const existing = await options.repository.loadExistingEpisodes(
       config.source,

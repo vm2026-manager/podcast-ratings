@@ -39,7 +39,8 @@ await withMockedFetch(() => ({ data: { episodes: "not-an-array" } }), async () =
   await assert.rejects(() => fetchPodimoEpisodes(config), /expected episodes array/);
 });
 await withMockedFetch(() => ({ data: { episodes: [{}] } }), async () => {
-  await assert.rejects(() => fetchPodimoEpisodes(config), /malformed episode/);
+  const payload = await fetchPodimoEpisodes(config);
+  assert.equal(mapPodimoEpisodes(payload.data.episodes, config, "x").errors.length, 1);
 });
 assert.equal(mapPodimoEpisodes([pageEpisode("url-check")], config, "x").episodes[0].episode_url, "https://podimo.com/dk/shows/grebet-af-gvfb/episode/url-check");
 const livetConfig = FEED_CONFIGS.podimo_livet_ifolge_emil_og_thomas;
