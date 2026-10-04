@@ -12,6 +12,16 @@ const normalizeComparable = (value) => normalizeText(value)
 const podcastId = (row) => normalizeText(row?.["Podcast-ID"]);
 const legacyKey = (row) => normalizeComparable(row?.Titel);
 
+function duplicateIdDiagnostic(id, entries) {
+  return [
+    `duplicate Podcast-ID ${JSON.stringify(id)}`,
+    ...entries.map(
+      ({ row, index }) =>
+        `  catalogue row ${index + 1}, title: ${JSON.stringify(normalizeText(row?.Titel))}`
+    )
+  ].join("\n");
+}
+
 function buildResolver(rows) {
   const byId = new Map();
   const legacyCandidates = new Map();
@@ -44,11 +54,19 @@ export function validatePodcastIdentityContinuity({ previousRows, candidateRows,
   const oldResolve = buildResolver(previousRows);
   const nextResolve = buildResolver(candidateRows);
   const candidateIds = new Set();
-  for (const row of candidateRows) {
+  const candidateRowsById = new Map();
+  for (const [index, row] of candidateRows.entries()) {
     const id = podcastId(row);
     if (!id) errors.push(`blank Podcast-ID for ${JSON.stringify(normalizeText(row?.Titel))}`);
-    else if (candidateIds.has(id)) errors.push(`duplicate Podcast-ID ${JSON.stringify(id)}`);
-    else candidateIds.add(id);
+    else {
+      candidateIds.add(id);
+      const entries = candidateRowsById.get(id) || [];
+      entries.push({ row, index });
+      candidateRowsById.set(id, entries);
+    }
+  }
+  for (const [id, entries] of candidateRowsById) {
+    if (entries.length > 1) errors.push(duplicateIdDiagnostic(id, entries));
   }
   for (const oldRow of previousRows) {
     const oldId = podcastId(oldRow);
