@@ -1,5 +1,6 @@
 import { MEDIANO_SITE_RSS_URL, PUBLIC_MEDIANO_RSS_URL, buildMedianoPublicFeedRoutes } from "./mediano-routing.mjs";
 import { DJAEVLEN_FEED_KEY, DJAEVLEN_FEED_URL, DJAEVLEN_IMPORT_LABEL, DJAEVLEN_SOURCE } from "./djaevlen-routing.mjs";
+import { KROP_MANUAL_LINKS } from "./manual-podimo.ts";
 
 export type FeedFormat = "rss" | "radio4_json" | "dr_lyd_next_data" | "apple_podcasts_html" | "podimo_graphql";
 
@@ -52,11 +53,21 @@ export type FeedConfig = {
   routes?: FeedRoute[];
   metadata_only?: boolean;
   dedupe_by_episode_url_with_sources?: string[];
+  manual_identity_links?: typeof KROP_MANUAL_LINKS;
 };
 
 export type FeedConfigMap = Record<string, FeedConfig>;
 
 export const FEED_CONFIGS: FeedConfigMap = {
+  "podimo_krop_til_salg": {
+    podcast_key: "krop til salg",
+    source: "podimo_krop_til_salg",
+    format: "podimo_graphql",
+    feed_url: "https://graphql.podimo.com/graphql",
+    podcast_id: "616ec836-7d90-4c98-8ad3-9cea17e067e1",
+    podimo_show_url: "https://podimo.com/dk/shows/krop-til-salg",
+    manual_identity_links: KROP_MANUAL_LINKS
+  },
   [DJAEVLEN_FEED_KEY]: {
     // The historical source is the GUID/episode identity namespace. Routes
     // are populated only from the runtime catalogue before this feed activates.
