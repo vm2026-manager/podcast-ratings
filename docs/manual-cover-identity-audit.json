@@ -257,8 +257,9 @@
           "ratingEvidence": "app.js getPodcastKey uses canonical ID; getPersistedUserRatingKey retains original stored keys. User ratings were not queried or modified."
         }
       ],
-      "verdict": "UNKNOWN",
-      "evidence": "Unlabelled Greenland/ice-cream illustration. Subject and filename alone do not verify provenance."
+      "verdict": "VERIFIED",
+      "evidence": "Source provenance is now verified against the DR image source, as confirmed by the supplied identity review on 2026-10-04. The exact source SHA256 and canonical catalogue ID/title/publisher/image URL match; this registration is no longer unresolved or ambiguous.",
+      "verifiedOn": "2026-10-04"
     },
     {
       "sourceFilename": "gift ved første blik podcast.png",

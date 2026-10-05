@@ -24,6 +24,10 @@ Unresolved sources remain in the original local inbox and were neither mapped no
 - `Bandeland.png`: AMBIGUOUS; two season IDs and no season on the artwork; conflicting season link evidence.
 - `amerikas kolde drom dr.png`: UNKNOWN; unlabelled illustration without verified asset provenance.
 
+## Amerikas kolde drøm follow-up — 2026-10-04
+
+The original unresolved verdict above is historical. The supplied identity review now verifies this source against the DR image URL. `amerikas kolde drom dr.png` is explicitly registered to the existing `amerikas kolde drom dr` ID with SHA256 `ee8b2d7766d78a0a41f853de77e24d8af6ba033d815aa63bcec003668a3aee0c`. Only this registration and its derived cover files are added; the other four unresolved files remain untouched. The current verdict is recorded in `manual-cover-identity-audit.json`.
+
 ## Workflow
 
 Install Python 3 with `Pillow==12.2.0` and Node.js. Run `python scripts/intake_manual_podcast_covers.py` to validate/report without writes. After explicit identity and artwork review, add a registry record containing the exact source path, SHA256, canonical ID, stable asset key, expected title/publisher/image URL, VERIFIED verdict and evidence. Never infer a record from its filename. Local canonical additions and explicit historical suppression are read from app.js without changing them.
