@@ -8215,6 +8215,15 @@ async function saveActiveRating() {
   if (!state.supabase || !state.authUser || !state.activeRatingKey || !elements.ratingInput) return;
 
   normalizeRatingInputField({ force: true });
+
+  if (!normalizeText(elements.ratingInput.value)) {
+    const existingRating = getUserRating(state.activeRatingKey);
+    if (existingRating !== null && existingRating !== undefined) {
+      await deleteActiveRating();
+      return;
+    }
+  }
+
   const numericValue = parseRatingInputValue(elements.ratingInput.value);
 
   if (numericValue === null || numericValue < 0 || numericValue > 10) {
@@ -12893,8 +12902,16 @@ async function savePodcastDetailInlineRating(dialog, podcast, input, message) {
     return;
   }
 
-  const numericValue = parseRatingInputValue(input?.value);
-  if (numericValue === null || numericValue < 0 || numericValue > 10) {
+  const podcastKey = getPodcastKey(podcast);
+  const persistedKey = getPersistedUserRatingKey(podcastKey);
+  if (!state.supabase || !state.authUser || !podcastKey || !persistedKey) return;
+
+  const rawValue = normalizeText(input?.value);
+  const isClearingRating = !rawValue;
+  const previousRating = state.userRatingsByKey[podcastKey] ?? null;
+  const numericValue = isClearingRating ? null : parseRatingInputValue(rawValue);
+
+  if (isClearingRating && (previousRating === null || previousRating === undefined)) {
     if (message) {
       message.textContent = "Indtast en score mellem 0 og 10.";
       message.dataset.tone = "warning";
@@ -12902,9 +12919,13 @@ async function savePodcastDetailInlineRating(dialog, podcast, input, message) {
     return;
   }
 
-  const podcastKey = getPodcastKey(podcast);
-  const persistedKey = getPersistedUserRatingKey(podcastKey);
-  if (!state.supabase || !state.authUser || !podcastKey || !persistedKey) return;
+  if (!isClearingRating && (numericValue === null || numericValue < 0 || numericValue > 10)) {
+    if (message) {
+      message.textContent = "Indtast en score mellem 0 og 10.";
+      message.dataset.tone = "warning";
+    }
+    return;
+  }
 
   if (message) {
     message.textContent = "Gemmer…";
@@ -12912,33 +12933,47 @@ async function savePodcastDetailInlineRating(dialog, podcast, input, message) {
   }
 
   try {
-    const { error } = await state.supabase.from("user_ratings").upsert(
-      { user_id: state.authUser.id, podcast_key: persistedKey, rating: numericValue },
-      { onConflict: "user_id,podcast_key" }
-    );
-    if (error) throw error;
+    if (isClearingRating) {
+      const { error } = await state.supabase
+        .from("user_ratings")
+        .delete()
+        .eq("user_id", state.authUser.id)
+        .eq("podcast_key", persistedKey);
+      if (error) throw error;
 
-    const previousRating = state.userRatingsByKey[podcastKey] ?? null;
-    state.userRatingsByKey[podcastKey] = numericValue;
-    state.userRatingPersistedKeyByCanonical[podcastKey] = persistedKey;
-    updateLocalCommunityStatForRating(podcastKey, numericValue, previousRating);
+      delete state.userRatingsByKey[podcastKey];
+      delete state.userRatingPersistedKeyByCanonical[podcastKey];
+      updateLocalCommunityStatForRating(podcastKey, null, previousRating);
+    } else {
+      const { error } = await state.supabase.from("user_ratings").upsert(
+        { user_id: state.authUser.id, podcast_key: persistedKey, rating: numericValue },
+        { onConflict: "user_id,podcast_key" }
+      );
+      if (error) throw error;
+
+      state.userRatingsByKey[podcastKey] = numericValue;
+      state.userRatingPersistedKeyByCanonical[podcastKey] = persistedKey;
+      updateLocalCommunityStatForRating(podcastKey, numericValue, previousRating);
+    }
+
     invalidateExplorePersonalSnapshot();
     rebuildUserRanks();
     render();
     refreshOpenPodcastDetailSheet();
-    setAuthMessage("Din vurdering er gemt.", "success");
+    setAuthMessage(isClearingRating ? "Din vurdering er fjernet." : "Din vurdering er gemt.", "success");
     refreshSupabaseStatePreservingCurrentUserState()
       .then(refreshOpenPodcastDetailSheet)
       .catch((refreshError) => console.error(refreshError));
   } catch (error) {
     console.error(error);
     if (message) {
-      message.textContent = error.message || "Kunne ikke gemme vurderingen.";
+      message.textContent =
+        error.message ||
+        (isClearingRating ? "Kunne ikke fjerne vurderingen." : "Kunne ikke gemme vurderingen.");
       message.dataset.tone = "error";
     }
   }
 }
-
 function renderPodcastDetailSheetContent(
   dialog,
   podcast,
