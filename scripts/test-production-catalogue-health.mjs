@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import {
   MINIMUM_SAFE_PODCAST_CATALOGUE_ROWS,
+  checkProductionCatalogue,
   validateProductionCataloguePayload,
   validateProductionDisplayGroups
 } from "./production-catalogue-health.mjs";
@@ -35,6 +36,28 @@ assert.equal(
 );
 assert.equal(validateProductionDisplayGroups({ version: 1, groups: [] }).ok, true);
 assert.equal(validateProductionDisplayGroups({ version: 2, groups: [] }).ok, false);
+
+const expectedAppSource = "const marker = true;\ninitialPodcastStartup = loadPodcasts();\n";
+const fetchImpl = async (url) => {
+  if (url.includes("/data/podcasts.json")) {
+    return new Response(JSON.stringify({ generatedAt: "expected", rows }), { status: 200 });
+  }
+  if (url.includes("/data/podcast-display-groups.json")) {
+    return new Response(JSON.stringify({ version: 1, groups: [] }), { status: 200 });
+  }
+  return new Response("old app\ninitialPodcastStartup = loadPodcasts();\n", { status: 200 });
+};
+await assert.rejects(
+  checkProductionCatalogue({
+    expectedRows: rows.length,
+    expectedGeneratedAt: "expected",
+    expectedAppSource,
+    fetchImpl,
+    attempts: 1,
+    retryDelays: [0]
+  }),
+  /production app\.js does not match current main/u
+);
 
 const workflow = await readFile(
   new URL("../.github/workflows/production-catalogue-health.yml", import.meta.url),
