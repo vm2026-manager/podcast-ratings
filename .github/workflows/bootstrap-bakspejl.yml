@@ -106,7 +106,7 @@ jobs:
           write('supabase/functions/import-podcast-episodes/core.ts',c);
 
           let app=read('app.js');
-          app=once(app,'  if (!podcastId) return null;\n\n  const rawFeed = normalizeText(podcast?.rawFeed || podcast?.Feed);','  if (!podcastId) return null;\n\n  const mainSeries = normalizeText(podcast?.mainSeries || podcast?.Hovedserie);\n  if (normalizeComparable(mainSeries) === normalizeComparable("Bakspejl")) return { podcastKey: podcastId, databasePodcastKey: podcastId, displayName: podcast?.title || podcastId, searchPlaceholder: `Søg i ${podcast?.title || podcastId}-episoder`, enabled: true, persistence: "supabase", includeManualEpisodes: false };\n\n  const rawFeed = normalizeText(podcast?.rawFeed || podcast?.Feed);','frontend Bakspejl');
+          app=once(app,'  if (!podcastId) return null;\n\n  const rawFeed = normalizeText(podcast?.rawFeed || podcast?.Feed);','  if (!podcastId) return null;\n\n  const mainSeries = normalizeText(podcast?.mainSeries || podcast?.Hovedserie);\n  if (normalizeMatchKey(mainSeries) === normalizeMatchKey("Bakspejl")) return { podcastKey: podcastId, databasePodcastKey: podcastId, displayName: podcast?.title || podcastId, searchPlaceholder: `Søg i ${podcast?.title || podcastId}-episoder`, enabled: true, persistence: "supabase", includeManualEpisodes: false };\n\n  const rawFeed = normalizeText(podcast?.rawFeed || podcast?.Feed);','frontend Bakspejl');
           write('app.js',app);
 
           let sync=read('scripts/sync-sheet-data.mjs');
