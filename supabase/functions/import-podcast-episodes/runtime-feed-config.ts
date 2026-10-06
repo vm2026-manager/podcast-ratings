@@ -1,6 +1,7 @@
 import { FEED_CONFIGS, type FeedConfig, type FeedConfigMap } from "./feed-config.ts";
 import { appleShowUrl, parseAppleFeed, parseHttpFeed } from "./feed-syntax.mjs";
 import { buildDjaevlenRoutes, DJAEVLEN_FEED_KEY } from "./djaevlen-routing.mjs";
+import { buildBakspejlRoutes, BAKSPEJL_FEED_KEY } from "./bakspejl-routing.mjs";
 
 const PODCASTS_JSON_TIMEOUT_MS = 15000;
 
@@ -14,6 +15,7 @@ export type FeedConfigAudit = {
   invalid_feed_urls_skipped: number;
   missing_podcast_ids_skipped: number;
   djaevlen_route_count: number;
+  bakspejl_route_count: number;
   total_enabled_feeds: number;
   podcasts_json_url_configured: boolean;
   dynamic_feed_load_error?: string;
@@ -82,6 +84,8 @@ export function mergeSheetFeedConfigs(
   const rows = getPodcastRows(sheetPayload);
   const djaevlen = buildDjaevlenRoutes(rows);
   const djaevlenOwner = manualStaticConfigs[DJAEVLEN_FEED_KEY];
+  const bakspejl = buildBakspejlRoutes(rows);
+  const bakspejlOwner = manualStaticConfigs[BAKSPEJL_FEED_KEY];
   const configs: FeedConfigMap = {
     ...manualStaticConfigs,
     ...(djaevlenOwner ? {
@@ -91,7 +95,8 @@ export function mergeSheetFeedConfigs(
         // Never activate an unrouted umbrella feed: there is no safe fallback.
         enabled: djaevlen.routes.length > 0
       }
-    } : {})
+    } : {}),
+    ...(bakspejlOwner ? { [BAKSPEJL_FEED_KEY]: { ...bakspejlOwner, routes: bakspejl.routes, enabled: bakspejl.routes.length > 1 } } : {})
   };
   const staticKeys = new Set(Object.keys(manualStaticConfigs));
   const staticPodcastKeys = getStaticPodcastKeys(manualStaticConfigs);
@@ -164,6 +169,7 @@ export function mergeSheetFeedConfigs(
       invalid_feed_urls_skipped: invalidFeedUrlsSkipped,
       missing_podcast_ids_skipped: missingPodcastIdsSkipped,
       djaevlen_route_count: djaevlen.routes.length,
+      bakspejl_route_count: bakspejl.routes.length,
       total_enabled_feeds: Object.values(configs).filter((config) => config.enabled !== false).length
     }
   };
@@ -201,6 +207,7 @@ export async function loadRuntimeFeedConfigs(options: {
     invalid_feed_urls_skipped: 0,
     missing_podcast_ids_skipped: 0,
     djaevlen_route_count: 0,
+    bakspejl_route_count: 0,
     total_enabled_feeds: Object.values(staticConfigs).filter((config) => config.enabled !== false).length,
     podcasts_json_url_configured: Boolean(podcastsJsonUrl)
   };

@@ -10288,6 +10288,9 @@ function getEpisodePodcastConfig(podcastOrKey) {
 
   if (!podcastId) return null;
 
+  const mainSeries = normalizeText(podcast?.mainSeries || podcast?.Hovedserie);
+  if (normalizeMatchKey(mainSeries) === normalizeMatchKey("Bakspejl")) return { podcastKey: podcastId, databasePodcastKey: podcastId, displayName: podcast?.title || podcastId, searchPlaceholder: `Søg i ${podcast?.title || podcastId}-episoder`, enabled: true, persistence: "supabase", includeManualEpisodes: false };
+
   const rawFeed = normalizeText(podcast?.rawFeed || podcast?.Feed);
   const appleMatch = rawFeed.match(/^apple:(\d+)$/i);
   if (appleMatch) {

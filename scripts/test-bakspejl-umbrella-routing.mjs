@@ -1,0 +1,11 @@
+import assert from "node:assert/strict";
+import { buildBakspejlRoutes, BAKSPEJL_FEED_KEY, BAKSPEJL_SOURCE } from "../supabase/functions/import-podcast-episodes/bakspejl-routing.mjs";
+import { mapEpisodes, parseFeed, routeEpisodes } from "../supabase/functions/import-podcast-episodes/core.ts";
+import { mergeSheetFeedConfigs } from "../supabase/functions/import-podcast-episodes/runtime-feed-config.ts";
+const rows=[{Titel:"Geniet i lommen",Hovedserie:"Bakspejl","Podcast-ID":"geniet i lommen"},{Titel:"Da aids kom til Danmark",Hovedserie:"Bakspejl","Podcast-ID":"da aids kom til danmark"},{Titel:"LA Riots",Hovedserie:"Bakspejl","Podcast-ID":"la riots"}];
+const cfg=mergeSheetFeedConfigs({rows}).configs[BAKSPEJL_FEED_KEY]; assert.equal(cfg.source,BAKSPEJL_SOURCE); assert.equal(cfg.enabled,true);
+const xml='<rss><channel><item><guid>a</guid><title>Geniet i lommen 1:4</title></item><item><guid>b</guid><title>Da aids kom til Danmark 2:4</title></item><item><guid>p</guid><title>Hør flere afsnit af denne  i DR Lyd</title></item><item><guid>x</guid><title>Ukendt ny serie 1:3</title></item></channel></rss>';
+const routed=routeEpisodes(mapEpisodes(parseFeed(xml),cfg,"2026-10-06T00:00:00Z").episodes,cfg);
+assert.equal(routed.episodes.find(e=>e.external_guid==='a').podcast_key,'geniet i lommen'); assert.equal(routed.episodes.find(e=>e.external_guid==='b').podcast_key,'da aids kom til danmark');
+assert.equal(routed.episodes.find(e=>e.external_guid==='p').is_active,false); assert.equal(routed.report.unmatched.length,1); assert.equal(buildBakspejlRoutes(rows).routes.length,4);
+console.log('Bakspejl umbrella routing tests passed');
