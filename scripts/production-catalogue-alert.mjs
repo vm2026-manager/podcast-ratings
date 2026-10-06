@@ -11,7 +11,7 @@ export function productionHealthExcerpt(log) {
     );
 
   return (relevant.slice(-80).join("\n") || "No recognized production catalogue diagnostic was captured.")
-    .replace(/\`/gu, "'")
+    .split("`").join("'")
     .replace(/@/gu, "＠")
     .slice(-16000);
 }
