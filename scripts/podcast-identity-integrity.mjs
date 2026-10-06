@@ -1,6 +1,8 @@
 import { readFile } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
 
+export const MINIMUM_SAFE_PODCAST_CATALOGUE_ROWS = 1000;
+
 const normalizeText = (value) => String(value ?? "").trim();
 const normalizeComparable = (value) => normalizeText(value)
   .toLowerCase()
@@ -39,7 +41,7 @@ function candidateHint(oldRow, candidateRows) {
   return podcastId(matches[0]) || "matching candidate has blank Podcast-ID";
 }
 
-export function validatePodcastIdentityContinuity({ previousRows, candidateRows, ratedPodcastKeys = [], migrations = {} }) {
+export function validatePodcastIdentityContinuity({ previousRows, candidateRows, ratedPodcastKeys = [], migrations = {}, minimumCandidateRows = 0 }) {
   const errors = [];
   const oldResolve = buildResolver(previousRows);
   const nextResolve = buildResolver(candidateRows);
@@ -66,6 +68,7 @@ export function validatePodcastIdentityContinuity({ previousRows, candidateRows,
     if (!after) newlyUnresolved.push({ key, before, candidate: candidateHint(previousRows.find((row) => podcastId(row) === before) || {}, candidateRows) });
   }
   for (const failure of newlyUnresolved) errors.push(`rated key ${JSON.stringify(failure.key)} previously resolved to ${JSON.stringify(failure.before)}; candidate: ${failure.candidate}`);
+  if (candidateRows.length < minimumCandidateRows) errors.push(`catalogue count ${candidateRows.length} is below absolute safety minimum ${minimumCandidateRows}`);
   if (candidateRows.length < previousRows.length * 0.9) errors.push(`catalogue count dropped from ${previousRows.length} to ${candidateRows.length}`);
   return { ok: errors.length === 0, errors, totals: { ratedPodcastKeysBefore: ratedPodcastKeys.length, ratedPodcastKeysResolvingBefore: ratedBefore.length, ratedPodcastKeysResolvingAfter: ratedBefore.length - newlyUnresolved.length, newlyUnresolvedRatedPodcastKeys: newlyUnresolved.length }, newlyUnresolved };
 }
@@ -83,7 +86,7 @@ async function main() {
   const response = await fetch(`${url}/rest/v1/podcast_rating_combined_public_stats?select=podcast_key`, { headers: { apikey: key, Authorization: `Bearer ${key}` } });
   if (!response.ok) throw new Error(`CRITICAL PODCAST IDENTITY REGRESSION: could not read public rating keys (${response.status}).`);
   const ratedKeys = (await response.json()).map((row) => row.podcast_key);
-  const result = validatePodcastIdentityContinuity({ previousRows: before, candidateRows: candidate, ratedPodcastKeys: ratedKeys, migrations });
+  const result = validatePodcastIdentityContinuity({ previousRows: before, candidateRows: candidate, ratedPodcastKeys: ratedKeys, migrations, minimumCandidateRows: MINIMUM_SAFE_PODCAST_CATALOGUE_ROWS });
   console.log(JSON.stringify(result.totals, null, 2));
   if (!result.ok) throw new Error(`CRITICAL PODCAST IDENTITY REGRESSION\n- ${result.errors.join("\n- ")}`);
 }

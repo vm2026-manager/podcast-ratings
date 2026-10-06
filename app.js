@@ -23955,16 +23955,84 @@ function extractRowsFromJsonPayload(data, errorMessage) {
   throw new Error(errorMessage);
 }
 
-async function loadPodcastObjectsFromJson() {
-  const response = await fetch(`${JSON_DATA_URL}?v=${DATA_VERSION}`, {
-    cache: "no-store"
-  });
+const MINIMUM_SAFE_PODCAST_CATALOGUE_ROWS = 1000;
+const CRITICAL_CATALOGUE_CACHE_NAME = "podcastlisten-critical-catalogue-v1";
 
-  if (!response.ok) {
-    throw new Error("Kunne ikke hente lokal podcasts.json.");
+function isValidPodcastCataloguePayload(data) {
+  try {
+    return extractRowsFromJsonPayload(data, "").length >= MINIMUM_SAFE_PODCAST_CATALOGUE_ROWS;
+  } catch {
+    return false;
+  }
+}
+
+function isValidPodcastDisplayGroupsPayload(data) {
+  return data?.version === 1 && Array.isArray(data.groups);
+}
+
+async function readCriticalJsonSnapshot(cacheKey) {
+  if (!("caches" in window)) return null;
+
+  try {
+    const cache = await window.caches.open(CRITICAL_CATALOGUE_CACHE_NAME);
+    const response = await cache.match(new Request(new URL(cacheKey, window.location.href).href));
+    return response ? await response.json() : null;
+  } catch {
+    return null;
+  }
+}
+
+async function writeCriticalJsonSnapshot(cacheKey, data) {
+  if (!("caches" in window)) return;
+
+  try {
+    const cache = await window.caches.open(CRITICAL_CATALOGUE_CACHE_NAME);
+    const request = new Request(new URL(cacheKey, window.location.href).href);
+    const response = new Response(JSON.stringify(data), {
+      headers: { "Content-Type": "application/json" }
+    });
+    await cache.put(request, response);
+  } catch (error) {
+    console.warn("Kunne ikke gemme sidste kendte gode katalog-snapshot.", error);
+  }
+}
+
+async function loadCriticalJsonSnapshot({ url, cacheKey, label, validate }) {
+  let networkError = null;
+
+  try {
+    const response = await fetch(url, { cache: "no-store" });
+    if (!response.ok) throw new Error(`${label} svarede med HTTP ${response.status}.`);
+
+    const data = await response.json();
+    if (!validate(data)) throw new Error(`${label} bestod ikke sikkerhedsvalideringen.`);
+
+    await writeCriticalJsonSnapshot(cacheKey, data);
+    return data;
+  } catch (error) {
+    networkError = error;
   }
 
-  const data = await response.json();
+  const cached = await readCriticalJsonSnapshot(cacheKey);
+  if (cached && validate(cached)) {
+    console.warn(
+      `${label} kunne ikke hentes sikkert. Viser sidste kendte gode snapshot i stedet.`,
+      networkError
+    );
+    return cached;
+  }
+
+  throw networkError || new Error(`${label} kunne ikke indlæses.`);
+}
+
+async function loadPodcastObjectsFromJson() {
+  const data = await loadCriticalJsonSnapshot({
+    url: `${JSON_DATA_URL}?v=${DATA_VERSION}`,
+    cacheKey: JSON_DATA_URL,
+    label: "Podcastkataloget",
+    validate: isValidPodcastCataloguePayload
+  });
+
   return extractRowsFromJsonPayload(data, "podcasts.json har ikke forventet format.");
 }
 
@@ -23985,14 +24053,13 @@ async function loadFeaturedReviewObjectsFromJson() {
 }
 
 async function loadPodcastDisplayGroups() {
-  const response = await fetch(`${PODCAST_DISPLAY_GROUPS_URL}?v=${DATA_VERSION}`, {
-    cache: "no-store"
+  const data = await loadCriticalJsonSnapshot({
+    url: `${PODCAST_DISPLAY_GROUPS_URL}?v=${DATA_VERSION}`,
+    cacheKey: PODCAST_DISPLAY_GROUPS_URL,
+    label: "Podcastgrupperne",
+    validate: isValidPodcastDisplayGroupsPayload
   });
-  if (!response.ok) throw new Error("Kunne ikke hente podcast-display-groups.json.");
-  const data = await response.json();
-  if (data?.version !== 1 || !Array.isArray(data.groups)) {
-    throw new Error("podcast-display-groups.json har ikke forventet format.");
-  }
+
   return data.groups.filter((group) =>
     normalizeText(group?.id) &&
     normalizeText(group?.title) &&
@@ -24346,12 +24413,24 @@ function maybeCatchUpPodcastDataRefresh() {
 }
 
 async function loadPodcasts() {
-  const refreshed = await refreshPodcastData({ initial: true, force: true });
+  const retryDelays = [0, 1500, 4000, 10000];
+  let refreshed = false;
+
+  for (const delay of retryDelays) {
+    if (delay) {
+      await new Promise((resolve) => window.setTimeout(resolve, delay));
+    }
+
+    refreshed = await refreshPodcastData({ initial: true, force: true });
+    if (refreshed) break;
+  }
+
   if (refreshed) {
     startPodcastDataRefreshTimer();
     scheduleHomeHeroRotation();
     scheduleBackgroundRouteWarmup();
   }
+
   return refreshed;
 }
 
