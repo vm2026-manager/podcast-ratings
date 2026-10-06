@@ -3,6 +3,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { parseSupplementarySimilarities } from "./manual-similarity-supplements.mjs";
 import { mergeAutoDiscoveredDjaevlenRows } from "./djaevlen-auto-discovery.mjs";
+import { mergeAutoDiscoveredBakspejlRows } from "./bakspejl-auto-discovery.mjs";
 
 const SPREADSHEET_BASE_URL =
   "https://docs.google.com/spreadsheets/d/e/2PACX-1vQRBWQdj-WDNN3l9yxIMCCu_O2dYfP7modSODcYgJRoQDG3GYsu83W_wIFyijPx6v8l-W011zrFyOdq/pub";
@@ -790,7 +791,8 @@ async function main() {
   // This registry is committed separately from the Sheet export. Sheet rows win
   // editorially, while a previously allocated auto identity is never discarded.
   const registry = JSON.parse(await readFile(path.join(repoRoot, "data", "auto-discovered-djaevlen.json"), "utf8"));
-  const catalogueRows = mergeAutoDiscoveredDjaevlenRows(sheetCatalogueRows, registry).map((row) => row.catalogue_id ? row : {
+  const bakspejlRegistry = JSON.parse(await readFile(path.join(repoRoot, "data", "auto-discovered-bakspejl.json"), "utf8"));
+  const catalogueRows = mergeAutoDiscoveredBakspejlRows(mergeAutoDiscoveredDjaevlenRows(sheetCatalogueRows, registry), bakspejlRegistry).map((row) => row.catalogue_id ? row : {
     ...row,
     catalogue_id: createCatalogueId({ title: row.Titel, host: row["Vært"], publisher: row.Udgiver, link: row.Link, feed: row.Feed })
   });
