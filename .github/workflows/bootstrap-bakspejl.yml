@@ -130,8 +130,12 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add app.js scripts data/auto-discovered-bakspejl.json supabase/functions/import-podcast-episodes supabase/migrations/20261006223000_route_bakspejl_existing_episode_identities.sql
           git commit -m "feat: automate Bakspejl umbrella episodes"
-          git push origin HEAD:${GITHUB_REF_NAME}
+          impl=$(git rev-parse HEAD)
+          git checkout -B codex/bakspejl-umbrella-clean origin/main
+          git cherry-pick "$impl"
+          git push origin HEAD:codex/bakspejl-umbrella-clean
       - name: Open PR and enable auto-merge
+        if: ${{ false }}
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
