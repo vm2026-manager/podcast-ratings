@@ -267,7 +267,8 @@ function normalizeText(value: unknown): string {
 }
 
 function isTeaserOrTrailerTitle(value: unknown): boolean {
-  return /\b(?:teaser|trailer)\b/i.test(normalizeText(value));
+  const title = normalizeText(value);
+  return /\b(?:teaser|trailer)\b/i.test(title) || /^hør flere afsnit af denne\b.*\bdr lyd\b/i.test(title);
 }
 
 export function getEpisodeExclusionReason(episode: Record<string, unknown>): string | null {

@@ -1,5 +1,6 @@
 import { MEDIANO_SITE_RSS_URL, PUBLIC_MEDIANO_RSS_URL, buildMedianoPublicFeedRoutes } from "./mediano-routing.mjs";
 import { DJAEVLEN_FEED_KEY, DJAEVLEN_FEED_URL, DJAEVLEN_IMPORT_LABEL, DJAEVLEN_SOURCE } from "./djaevlen-routing.mjs";
+import { BAKSPEJL_FEED_KEY, BAKSPEJL_FEED_URL, BAKSPEJL_IMPORT_LABEL, BAKSPEJL_SOURCE } from "./bakspejl-routing.mjs";
 import { KROP_MANUAL_LINKS } from "./manual-podimo.ts";
 
 export type FeedFormat = "rss" | "radio4_json" | "dr_lyd_next_data" | "apple_podcasts_html" | "podimo_graphql";
@@ -77,6 +78,7 @@ export const FEED_CONFIGS: FeedConfigMap = {
     routes: [],
     enabled: false
   },
+  [BAKSPEJL_FEED_KEY]: { podcast_key: BAKSPEJL_IMPORT_LABEL, source: BAKSPEJL_SOURCE, feed_url: BAKSPEJL_FEED_URL, routes: [], enabled: false },
   "podimo_grebet_af_gvfb": {
     podcast_key: "grebet af gvfb",
     source: "podimo_grebet_af_gvfb",
