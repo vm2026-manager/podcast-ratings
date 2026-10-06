@@ -24346,12 +24346,24 @@ function maybeCatchUpPodcastDataRefresh() {
 }
 
 async function loadPodcasts() {
-  const refreshed = await refreshPodcastData({ initial: true, force: true });
+  const retryDelays = [0, 1500, 4000, 10000];
+  let refreshed = false;
+
+  for (const delay of retryDelays) {
+    if (delay) {
+      await new Promise((resolve) => window.setTimeout(resolve, delay));
+    }
+
+    refreshed = await refreshPodcastData({ initial: true, force: true });
+    if (refreshed) break;
+  }
+
   if (refreshed) {
     startPodcastDataRefreshTimer();
     scheduleHomeHeroRotation();
     scheduleBackgroundRouteWarmup();
   }
+
   return refreshed;
 }
 
