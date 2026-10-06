@@ -56,9 +56,11 @@ async function fetchText(fetchImpl, url) {
 export async function checkProductionCatalogue({
   baseUrl = DEFAULT_PRODUCTION_URL,
   expectedRows = MINIMUM_SAFE_PODCAST_CATALOGUE_ROWS,
+  expectedGeneratedAt = "",
+  expectedAppSource = "",
   fetchImpl = fetch,
-  attempts = 4,
-  retryDelays = [0, 5000, 15000, 30000],
+  attempts = 5,
+  retryDelays = [0, 10000, 20000, 40000, 60000],
   sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
 } = {}) {
   const minimumRows = Math.max(MINIMUM_SAFE_PODCAST_CATALOGUE_ROWS, Math.floor(expectedRows * 0.9));
@@ -83,6 +85,12 @@ export async function checkProductionCatalogue({
 
       if (!appSource.includes("initialPodcastStartup = loadPodcasts();")) {
         errors.push("production app.js is missing the catalogue startup marker");
+      }
+      if (expectedGeneratedAt && catalogue?.generatedAt !== expectedGeneratedAt) {
+        errors.push(`production catalogue generatedAt ${JSON.stringify(catalogue?.generatedAt)} does not match main ${JSON.stringify(expectedGeneratedAt)}`);
+      }
+      if (expectedAppSource && appSource !== expectedAppSource) {
+        errors.push("production app.js does not match current main");
       }
 
       if (!errors.length) {
@@ -111,7 +119,9 @@ async function main() {
     await readFile(new URL("../data/podcasts.json", import.meta.url), "utf8")
   );
   const expectedRows = Array.isArray(repoCatalogue?.rows) ? repoCatalogue.rows.length : 0;
-  const result = await checkProductionCatalogue({ expectedRows });
+  const expectedGeneratedAt = String(repoCatalogue?.generatedAt || "");
+  const expectedAppSource = await readFile(new URL("../app.js", import.meta.url), "utf8");
+  const result = await checkProductionCatalogue({ expectedRows, expectedGeneratedAt, expectedAppSource });
   console.log(JSON.stringify(result, null, 2));
 }
 
