@@ -2,8 +2,8 @@
   "version": 1,
   "source": {
     "path": "data/podcasts.json",
-    "generatedAt": "2026-10-06T17:10:00.464Z",
-    "count": 1307,
+    "generatedAt": "2026-10-07T07:42:44.428Z",
+    "count": 1309,
     "topicAliases": "config/recommendation-topic-aliases.json",
     "topicAliasVersion": 1,
     "genreMapping": "config/recommendation-genre-mapping.json",
@@ -11,16 +11,16 @@
     "stableIdMethod": "frontend-normalized-title",
     "recommendationIdMethod": "metadata-fingerprint-sha256-128-v1"
   },
-  "count": 1307,
+  "count": 1309,
   "summary": {
-    "podcasts": 1307,
-    "validPrimaryGenres": 1288,
+    "podcasts": 1309,
+    "validPrimaryGenres": 1290,
     "invalidPrimaryGenres": 19,
-    "genreEligibleBeforeMapping": 1027,
-    "genreEligibleAfterMapping": 1288,
-    "recommendationMetadataEligibleBeforeMapping": 1027,
-    "recommendationMetadataEligibleAfterMapping": 1288,
-    "primaryGenreMappingNative": 1027,
+    "genreEligibleBeforeMapping": 1029,
+    "genreEligibleAfterMapping": 1290,
+    "recommendationMetadataEligibleBeforeMapping": 1029,
+    "recommendationMetadataEligibleAfterMapping": 1290,
+    "primaryGenreMappingNative": 1029,
     "primaryGenreMappingCapitalization": 99,
     "primaryGenreMappingSpelling": 0,
     "primaryGenreMappingDirect": 162,
@@ -28,19 +28,19 @@
     "primaryGenreMappingUnmapped": 19,
     "uniqueUnmappedPrimaryGenres": 13,
     "conditionalGenreReviews": 0,
-    "withSecondaryGenre": 1074,
-    "withRawTopics": 1307,
-    "withCanonicalTopics": 1307,
-    "topicEligible": 1307,
-    "genreEligible": 1288,
-    "recommendationMetadataEligible": 1288,
+    "withSecondaryGenre": 1075,
+    "withRawTopics": 1309,
+    "withCanonicalTopics": 1309,
+    "topicEligible": 1309,
+    "genreEligible": 1290,
+    "recommendationMetadataEligible": 1290,
     "approvedAliases": 17,
     "podcastsWithAliasApplied": 98,
-    "rawTopicOccurrences": 4811,
-    "rawUniqueTopicForms": 2965,
-    "canonicalTopicOccurrences": 4811,
-    "canonicalUniqueTopics": 2721,
-    "normalizedTopicIdentities": 2721,
+    "rawTopicOccurrences": 4819,
+    "rawUniqueTopicForms": 2971,
+    "canonicalTopicOccurrences": 4819,
+    "canonicalUniqueTopics": 2727,
+    "normalizedTopicIdentities": 2727,
     "topicVariantGroups": 244,
     "topicCollisionGroups": 227,
     "approvedAliasTopicGroups": 17,
@@ -48,16 +48,16 @@
     "unsafeTopicCollisionGroups": 0,
     "podcastsAffectedByTopicNormalization": 365,
     "withinPodcastTopicDuplicatesRemoved": 0,
-    "canonicalTopicsUsedOnce": 2003,
-    "canonicalTopicsAtLeastThree": 357,
+    "canonicalTopicsUsedOnce": 2009,
+    "canonicalTopicsAtLeastThree": 358,
     "canonicalTopicsAtLeastFive": 158,
     "canonicalTopicsAtLeastTen": 49,
-    "possibleStandaloneRows": 319,
+    "possibleStandaloneRows": 320,
     "topicKeyCollisions": 0,
-    "uniqueExistingIds": 1300,
+    "uniqueExistingIds": 1302,
     "duplicateStableIdValues": 7,
     "podcastsSharingStableId": 14,
-    "uniqueRecommendationIds": 1307,
+    "uniqueRecommendationIds": 1309,
     "recommendationIdCollisions": 0,
     "exactDuplicateGroups": 1,
     "likelyDuplicateGroups": 2,
@@ -5981,6 +5981,42 @@
       "metadataIssues": []
     },
     {
+      "id": "brittas hemmelige liv",
+      "recommendationId": "rec-brittas-hemmelige-liv-7c852ab9eaead235ee7b5fdbea7d0f38",
+      "recommendationIdentityBasis": "title+link",
+      "identityDuplicateGroup": "",
+      "title": "Brittas hemmelige liv",
+      "mainSeries": "",
+      "primaryGenreRaw": "True Crime",
+      "primaryGenre": "True Crime",
+      "primaryGenreValid": true,
+      "primaryGenreMappingType": "native",
+      "primaryGenreMappingSource": "True Crime",
+      "primaryGenreNeedsReview": false,
+      "primaryGenreReviewReason": "",
+      "secondaryGenre": "Dokumentar",
+      "secondaryGenreValid": true,
+      "topicsRaw": [
+        "Økonomisk svindel",
+        "misbrug af offentlige midler",
+        "dobbeltliv"
+      ],
+      "topicsCanonical": [
+        "økonomisk svindel",
+        "misbrug af offentlige midler",
+        "dobbeltliv"
+      ],
+      "topicKeys": [
+        "oekonomisk-svindel",
+        "misbrug-af-offentlige-midler",
+        "dobbeltliv"
+      ],
+      "topicEligible": true,
+      "genreEligible": true,
+      "recommendationMetadataEligible": true,
+      "metadataIssues": []
+    },
+    {
       "id": "der er brev",
       "recommendationId": "rec-der-er-brev-1db95e95bf07f7cbc905aed6422b57a6",
       "recommendationIdentityBasis": "title+link",
@@ -9870,6 +9906,48 @@
         "aktuelle-nyheder",
         "samfund",
         "politik"
+      ],
+      "topicEligible": true,
+      "genreEligible": true,
+      "recommendationMetadataEligible": true,
+      "metadataIssues": []
+    },
+    {
+      "id": "manden bag glasset",
+      "recommendationId": "rec-manden-bag-glasset-d6cb5281420e184254826d85dca39cb6",
+      "recommendationIdentityBasis": "title+link",
+      "identityDuplicateGroup": "",
+      "title": "Manden bag glasset",
+      "mainSeries": "Bakspejl",
+      "primaryGenreRaw": "Historie",
+      "primaryGenre": "Historie",
+      "primaryGenreValid": true,
+      "primaryGenreMappingType": "native",
+      "primaryGenreMappingSource": "Historie",
+      "primaryGenreNeedsReview": false,
+      "primaryGenreReviewReason": "",
+      "secondaryGenre": "Samfund",
+      "secondaryGenreValid": true,
+      "topicsRaw": [
+        "Stanislav Petrov",
+        "Den kolde krig",
+        "atomkrig",
+        "Sovjetunionen",
+        "varslingssystemer"
+      ],
+      "topicsCanonical": [
+        "Stanislav Petrov",
+        "Den kolde krig",
+        "atomkrig",
+        "Sovjetunionen",
+        "varslingssystemer"
+      ],
+      "topicKeys": [
+        "stanislav-petrov",
+        "den-kolde-krig",
+        "atomkrig",
+        "sovjetunionen",
+        "varslingssystemer"
       ],
       "topicEligible": true,
       "genreEligible": true,
@@ -39544,42 +39622,6 @@
       "metadataIssues": []
     },
     {
-      "id": "brittas hemmelige liv",
-      "recommendationId": "rec-brittas-hemmelige-liv-7c852ab9eaead235ee7b5fdbea7d0f38",
-      "recommendationIdentityBasis": "title+link",
-      "identityDuplicateGroup": "",
-      "title": "Brittas hemmelige liv",
-      "mainSeries": "",
-      "primaryGenreRaw": "True Crime",
-      "primaryGenre": "True Crime",
-      "primaryGenreValid": true,
-      "primaryGenreMappingType": "native",
-      "primaryGenreMappingSource": "True Crime",
-      "primaryGenreNeedsReview": false,
-      "primaryGenreReviewReason": "",
-      "secondaryGenre": "Dokumentar",
-      "secondaryGenreValid": true,
-      "topicsRaw": [
-        "Økonomisk svindel",
-        "misbrug af offentlige midler",
-        "dobbeltliv"
-      ],
-      "topicsCanonical": [
-        "økonomisk svindel",
-        "misbrug af offentlige midler",
-        "dobbeltliv"
-      ],
-      "topicKeys": [
-        "oekonomisk-svindel",
-        "misbrug-af-offentlige-midler",
-        "dobbeltliv"
-      ],
-      "topicEligible": true,
-      "genreEligible": true,
-      "recommendationMetadataEligible": true,
-      "metadataIssues": []
-    },
-    {
       "id": "ltf den forbudte bande",
       "recommendationId": "rec-ltf-den-forbudte-bande-445a7d9da55dc8995fb7209548e27ae4",
       "recommendationIdentityBasis": "title+link",
@@ -47540,48 +47582,6 @@
       "metadataIssues": []
     },
     {
-      "id": "manden bag glasset",
-      "recommendationId": "rec-manden-bag-glasset-d6cb5281420e184254826d85dca39cb6",
-      "recommendationIdentityBasis": "title+link",
-      "identityDuplicateGroup": "",
-      "title": "Manden bag glasset",
-      "mainSeries": "Bakspejl",
-      "primaryGenreRaw": "Historie",
-      "primaryGenre": "Historie",
-      "primaryGenreValid": true,
-      "primaryGenreMappingType": "native",
-      "primaryGenreMappingSource": "Historie",
-      "primaryGenreNeedsReview": false,
-      "primaryGenreReviewReason": "",
-      "secondaryGenre": "Samfund",
-      "secondaryGenreValid": true,
-      "topicsRaw": [
-        "Stanislav Petrov",
-        "Den kolde krig",
-        "atomkrig",
-        "Sovjetunionen",
-        "varslingssystemer"
-      ],
-      "topicsCanonical": [
-        "Stanislav Petrov",
-        "Den kolde krig",
-        "atomkrig",
-        "Sovjetunionen",
-        "varslingssystemer"
-      ],
-      "topicKeys": [
-        "stanislav-petrov",
-        "den-kolde-krig",
-        "atomkrig",
-        "sovjetunionen",
-        "varslingssystemer"
-      ],
-      "topicEligible": true,
-      "genreEligible": true,
-      "recommendationMetadataEligible": true,
-      "metadataIssues": []
-    },
-    {
       "id": "leopold ii",
       "recommendationId": "rec-leopold-ii-7d98da0dc6fe432874fbb181d681ea1f",
       "recommendationIdentityBasis": "title+link",
@@ -50034,6 +50034,84 @@
       "metadataIssues": [
         "invalid_secondary_genre"
       ]
+    },
+    {
+      "id": "mit livs sexferie",
+      "recommendationId": "rec-mit-livs-sexferie-9a327c65efbe171ee31c716774b40188",
+      "recommendationIdentityBasis": "title+link",
+      "identityDuplicateGroup": "",
+      "title": "Mit Livs Sexferie",
+      "mainSeries": "",
+      "primaryGenreRaw": "Underholdning",
+      "primaryGenre": "Underholdning",
+      "primaryGenreValid": true,
+      "primaryGenreMappingType": "native",
+      "primaryGenreMappingSource": "Underholdning",
+      "primaryGenreNeedsReview": false,
+      "primaryGenreReviewReason": "",
+      "secondaryGenre": "",
+      "secondaryGenreValid": true,
+      "topicsRaw": [
+        "Jamaica",
+        "sexturisme",
+        "satire",
+        "gonzojournalistik"
+      ],
+      "topicsCanonical": [
+        "Jamaica",
+        "sexturisme",
+        "satire",
+        "gonzojournalistik"
+      ],
+      "topicKeys": [
+        "jamaica",
+        "sexturisme",
+        "satire",
+        "gonzojournalistik"
+      ],
+      "topicEligible": true,
+      "genreEligible": true,
+      "recommendationMetadataEligible": true,
+      "metadataIssues": []
+    },
+    {
+      "id": "weekend i lalandia",
+      "recommendationId": "rec-weekend-i-lalandia-7d35e681de1291568dd6892b5ad466e1",
+      "recommendationIdentityBasis": "title+link",
+      "identityDuplicateGroup": "",
+      "title": "Weekend i Lalandia",
+      "mainSeries": "",
+      "primaryGenreRaw": "Underholdning",
+      "primaryGenre": "Underholdning",
+      "primaryGenreValid": true,
+      "primaryGenreMappingType": "native",
+      "primaryGenreMappingSource": "Underholdning",
+      "primaryGenreNeedsReview": false,
+      "primaryGenreReviewReason": "",
+      "secondaryGenre": "Dokumentar",
+      "secondaryGenreValid": true,
+      "topicsRaw": [
+        "Lalandia",
+        "venskab",
+        "feriecentre",
+        "dansk humor"
+      ],
+      "topicsCanonical": [
+        "Lalandia",
+        "venskab",
+        "feriecentre",
+        "dansk humor"
+      ],
+      "topicKeys": [
+        "lalandia",
+        "venskab",
+        "feriecentre",
+        "dansk-humor"
+      ],
+      "topicEligible": true,
+      "genreEligible": true,
+      "recommendationMetadataEligible": true,
+      "metadataIssues": []
     }
   ]
 }
