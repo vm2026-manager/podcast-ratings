@@ -65,6 +65,23 @@ export function createSupabaseImportRepository(client: any): ImportRepository {
         if (error) throw new Error("Cross-source episode identity select failed");
         rows.push(...(data || []));
       }
+
+      // Manual catalogue episodes are permanent identities. Always load them
+      // for routed podcast keys so an RSS/DR episode can enrich the existing
+      // canonical row instead of creating a competing UUID.
+      if (podcastKeys.length) {
+        for (const keyBatch of chunk([...new Set(podcastKeys)], BATCH_SIZE)) {
+          const { data, error } = await client
+            .from("podcast_episodes")
+            .select(SELECT_FIELDS)
+            .in("source", ["manual_catalogue_v1", "manual_catalogue_reviewed_legacy"])
+            .in("podcast_key", keyBatch)
+            .eq("is_active", true);
+          if (error) throw new Error("Manual catalogue episode select failed");
+          rows.push(...(data || []));
+        }
+      }
+
       return [...new Map(
         rows.map((row) => [`${row.source}\u0000${row.external_guid}`, row]),
       ).values()];
