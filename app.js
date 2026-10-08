@@ -10279,6 +10279,10 @@ function getEpisodePodcastConfig(podcastOrKey) {
   const podcastId = getPodcastId(podcast);
   const episodeKey = getEpisodePodcastKey(podcastOrKey);
   const rawKey = typeof podcastOrKey === "string" ? normalizeText(podcastOrKey) : "";
+  const manualEpisodeSource = podcast?.manualEpisodes || podcast?.manual_episodes || podcast?.["Episoder"] || [];
+  const hasManualEpisodes = (Array.isArray(manualEpisodeSource)
+    ? manualEpisodeSource.filter((entry) => normalizeText(typeof entry === "object" ? entry?.title : entry)).length
+    : String(manualEpisodeSource).split(";").map(normalizeText).filter(Boolean).length) >= 2;
   const configKeys = [podcastId, rawKey, episodeKey]
     .flatMap((key) => {
       const normalized = normalizeText(key);
@@ -10299,7 +10303,7 @@ function getEpisodePodcastConfig(podcastOrKey) {
         ? {
             ...config,
             includeManualEpisodes: Boolean(
-              config.includeManualEpisodes || podcastHasManualEpisodeList(podcast)
+              config.includeManualEpisodes || hasManualEpisodes
             )
           }
         : config;
@@ -10324,7 +10328,7 @@ function getEpisodePodcastConfig(podcastOrKey) {
       source: `apple_podcasts_${appleMatch[1]}`,
       enabled: true,
       persistence: "supabase",
-      includeManualEpisodes: podcastHasManualEpisodeList(podcast)
+      includeManualEpisodes: hasManualEpisodes
     };
   }
 
@@ -10345,7 +10349,7 @@ function getEpisodePodcastConfig(podcastOrKey) {
     displayName: podcast?.title || podcastId,
     enabled: true,
     persistence: "supabase",
-    includeManualEpisodes: podcastHasManualEpisodeList(podcast)
+    includeManualEpisodes: hasManualEpisodes
   };
 }
 
