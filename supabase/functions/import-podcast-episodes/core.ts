@@ -68,8 +68,25 @@ function normalizeManualEpisodeIdentityTitle(value: unknown): string {
   return numbered?.[1] || normalized;
 }
 
+function manualEpisodeIdentityMatches(manualTitle: unknown, feedTitle: unknown): boolean {
+  const manual = normalizeManualEpisodeIdentityTitle(manualTitle);
+  const feed = normalizeManualEpisodeIdentityTitle(feedTitle);
+  if (!manual || !feed) return false;
+  if (manual === feed) return true;
+
+  // A manually entered numbered placeholder such as "5:5 -" may later gain
+  // its real subtitle in the feed. Inside the already-routed podcast this is
+  // safe only when the exact episode number prefix agrees.
+  const placeholder = manual.match(/^([0-9]+:[0-9]+)\s*-\s*$/u);
+  return Boolean(placeholder && feed.startsWith(`${placeholder[1]} - `));
+}
+
 function isManualCatalogueSource(value: unknown): boolean {
   return ["manual_catalogue_v1", "manual_catalogue_reviewed_legacy"].includes(normalizeText(value));
+}
+
+function isManualCatalogueIdentity(episode: PodcastEpisodeRow): boolean {
+  return isManualCatalogueSource(episode.source) || episode.metadata?.manual_catalogue_identity === true;
 }
 
 function normalizeRoutePrefix(value: unknown): string {
@@ -1016,7 +1033,7 @@ export async function runEpisodeImport(options: {
     // never fuzzy-match across podcasts. If exactly one manual row matches,
     // enrich that UUID with feed metadata and suppress the competing feed row.
     const existingManualCatalogueEpisodes = existing.filter((episode) =>
-      isManualCatalogueSource(episode.source) && episode.is_active !== false
+      isManualCatalogueIdentity(episode) && episode.is_active !== false
     );
     const manualIdentityMatches = episodesForClassification
       .filter((episode) => isRateableEpisode(episode))
@@ -1024,7 +1041,7 @@ export async function runEpisodeImport(options: {
       episode,
       matches: existingManualCatalogueEpisodes.filter((current) =>
         current.podcast_key === episode.podcast_key &&
-        normalizeManualEpisodeIdentityTitle(current.title) === normalizeManualEpisodeIdentityTitle(episode.title)
+        manualEpisodeIdentityMatches(current.title, episode.title)
       )
     }));
     const manualIdentityDuplicates = manualIdentityMatches.filter(({ matches }) => matches.length === 1);
