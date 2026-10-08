@@ -62,6 +62,33 @@ function normalizeRouteText(value: unknown): string {
     .trim();
 }
 
+function normalizeManualEpisodeIdentityTitle(value: unknown): string {
+  const normalized = normalizeRouteText(value).replace(/^teaser:\s*/u, "");
+  const numbered = normalized.match(/([0-9]+:[0-9]+\s*-\s*.+)$/u);
+  return numbered?.[1] || normalized;
+}
+
+function manualEpisodeIdentityMatches(manualTitle: unknown, feedTitle: unknown): boolean {
+  const manual = normalizeManualEpisodeIdentityTitle(manualTitle);
+  const feed = normalizeManualEpisodeIdentityTitle(feedTitle);
+  if (!manual || !feed) return false;
+  if (manual === feed) return true;
+
+  // A manually entered numbered placeholder such as "5:5 -" may later gain
+  // its real subtitle in the feed. Inside the already-routed podcast this is
+  // safe only when the exact episode number prefix agrees.
+  const placeholder = manual.match(/^([0-9]+:[0-9]+)\s*-\s*$/u);
+  return Boolean(placeholder && feed.startsWith(`${placeholder[1]} - `));
+}
+
+function isManualCatalogueSource(value: unknown): boolean {
+  return ["manual_catalogue_v1", "manual_catalogue_reviewed_legacy"].includes(normalizeText(value));
+}
+
+function isManualCatalogueIdentity(episode: PodcastEpisodeRow): boolean {
+  return isManualCatalogueSource(episode.source) || episode.metadata?.manual_catalogue_identity === true;
+}
+
 function normalizeRoutePrefix(value: unknown): string {
   return String(value || "")
     .normalize("NFKD")
@@ -1000,15 +1027,92 @@ export async function runEpisodeImport(options: {
     const crossSourceIdentityDuplicates = episodesForClassification.filter((episode) =>
       existingCrossSourceEpisodes.some((current) => hasExactCrossSourceEpisodeIdentity(episode, current))
     );
+
+    // A manually created catalogue episode is a permanent identity. Match only
+    // exact normalized episode fingerprints inside the already-routed podcast;
+    // never fuzzy-match across podcasts. If exactly one manual row matches,
+    // enrich that UUID with feed metadata and suppress the competing feed row.
+    const existingManualCatalogueEpisodes = existing.filter((episode) =>
+      isManualCatalogueIdentity(episode) && episode.is_active !== false
+    );
+    const manualIdentityMatches = episodesForClassification
+      .filter((episode) => isRateableEpisode(episode))
+      .map((episode) => ({
+      episode,
+      matches: existingManualCatalogueEpisodes.filter((current) =>
+        current.podcast_key === episode.podcast_key &&
+        manualEpisodeIdentityMatches(current.title, episode.title)
+      )
+    }));
+    const manualIdentityDuplicates = manualIdentityMatches.filter(({ matches }) => matches.length === 1);
+    const manualIdentityConflicts = manualIdentityMatches.filter(({ matches }) => matches.length > 1);
+    let manualMergedCount = 0;
+    let manualMergeErrors = 0;
+
+    for (const { episode, matches } of manualIdentityDuplicates) {
+      const current = matches[0];
+      if (!options.repository.updateEpisodeMetadata) {
+        manualMergeErrors += 1;
+        continue;
+      }
+      try {
+        await options.repository.updateEpisodeMetadata(current, {
+          ...current,
+          description: episode.description || current.description,
+          published_at: episode.published_at || current.published_at,
+          duration_seconds: episode.duration_seconds ?? current.duration_seconds,
+          episode_url: episode.episode_url || current.episode_url,
+          audio_url: episode.audio_url || current.audio_url,
+          image_url: episode.image_url || current.image_url,
+          metadata: {
+            ...(current.metadata || {}),
+            ...(episode.metadata || {}),
+            manual_catalogue: true,
+            manual_episode_key: current.external_episode_id || current.external_guid,
+            identity_version: normalizeText(current.metadata?.identity_version) || "manual_catalogue_v1",
+            rateable: true,
+            exclusion_reason: null,
+            linked_feed_source: episode.source,
+            linked_external_guid: episode.external_guid
+          }
+        });
+        manualMergedCount += 1;
+      } catch (_error) {
+        manualMergeErrors += 1;
+      }
+    }
+
+    if (manualIdentityConflicts.length || manualMergeErrors) {
+      console.warn("[episode-import] manual catalogue identity review required", JSON.stringify({
+        source: config.source,
+        ambiguous_manual_identity_count: manualIdentityConflicts.length,
+        manual_merge_error_count: manualMergeErrors,
+        ambiguous_manual_identities: manualIdentityConflicts.slice(0, 10).map(({ episode, matches }) => ({
+          external_guid: episode.external_guid,
+          title: episode.title,
+          podcast_key: episode.podcast_key,
+          candidate_ids: matches.map((current) => current.id)
+        }))
+      }));
+    }
+
     const routingConflicts = config.routes?.length
       ? episodesForClassification.filter((episode) => {
           const current = existingByGuid.get(episode.external_guid);
           return current && current.podcast_key !== episode.podcast_key;
         })
       : [];
+    const manualDuplicateGuids = new Set(manualIdentityDuplicates.map(({ episode }) => episode.external_guid));
+    const manualConflictGuids = new Set(manualIdentityConflicts.map(({ episode }) => episode.external_guid));
     const unsafeEpisodes = routingConflicts.concat(crossSourceUrlConflicts);
-    const safeEpisodesForClassification = unsafeEpisodes.length || crossSourceUrlDuplicates.length || crossSourceIdentityDuplicates.length
-      ? episodesForClassification.filter((episode) => !unsafeEpisodes.some((conflict) => conflict.external_guid === episode.external_guid) && !crossSourceUrlDuplicates.some((duplicate) => duplicate.external_guid === episode.external_guid) && !crossSourceIdentityDuplicates.some((duplicate) => duplicate.external_guid === episode.external_guid))
+    const safeEpisodesForClassification = unsafeEpisodes.length || crossSourceUrlDuplicates.length || crossSourceIdentityDuplicates.length || manualDuplicateGuids.size || manualConflictGuids.size
+      ? episodesForClassification.filter((episode) =>
+          !unsafeEpisodes.some((conflict) => conflict.external_guid === episode.external_guid) &&
+          !crossSourceUrlDuplicates.some((duplicate) => duplicate.external_guid === episode.external_guid) &&
+          !crossSourceIdentityDuplicates.some((duplicate) => duplicate.external_guid === episode.external_guid) &&
+          !manualDuplicateGuids.has(episode.external_guid) &&
+          !manualConflictGuids.has(episode.external_guid)
+        )
       : episodesForClassification;
     if (routing.report && (routing.report.unmatched.length || routing.report.ambiguous.length || routing.report.known_no_destination.length || routingConflicts.length || crossSourceUrlConflicts.length)) {
       console.warn("[episode-import] routing review required", JSON.stringify({
@@ -1050,8 +1154,8 @@ export async function runEpisodeImport(options: {
     const routingConflictCount = routingConflicts.length + crossSourceUrlConflicts.length;
     const unmatchedCount = routing.report?.unmatched.length || 0;
     const ambiguousCount = routing.report?.ambiguous.length || 0;
-    const routingIssueCount = unmatchedCount + ambiguousCount + routingConflictCount;
-    const error_count = itemErrors + batchErrors + routingIssueCount;
+    const routingIssueCount = unmatchedCount + ambiguousCount + routingConflictCount + manualIdentityConflicts.length;
+    const error_count = itemErrors + batchErrors + routingIssueCount + manualMergeErrors;
     const hasWarnings = mapped.warnings.length > 0;
     const status = routingIssueCount > 0
       ? "partial"
@@ -1064,7 +1168,7 @@ export async function runEpisodeImport(options: {
       podcast_key: config.podcast_key,
       fetched_count: mapped.fetched_count,
       inserted_count: classified.inserted.length - Math.min(batchErrors, classified.inserted.length),
-      updated_count: classified.updated.length - Math.max(0, batchErrors - classified.inserted.length),
+      updated_count: classified.updated.length - Math.max(0, batchErrors - classified.inserted.length) + manualMergedCount,
       skipped_count: classified.skipped_count,
       error_count,
       runtime_ms: Date.now() - startedAt,
@@ -1074,6 +1178,9 @@ export async function runEpisodeImport(options: {
         feed_format: config.format || "rss",
         batch_count: batches.length,
         warning_count: mapped.warnings.length,
+        manual_catalogue_merge_count: manualMergedCount,
+        manual_catalogue_merge_error_count: manualMergeErrors,
+        manual_catalogue_conflict_count: manualIdentityConflicts.length,
         invalid_item_count: itemErrors,
         excluded_entry_count: config.routes?.length
           ? getEpisodeFeatureEligibility(routing.episodes).excludedEntries

@@ -31,6 +31,7 @@ const checks = [
   ["display-group modal lifecycle", ["scripts/test-display-group-modal-lifecycle.mjs"]],
   ["legacy local episode identity", ["scripts/validate-local-episode-identity.mjs"]],
   ["manual catalogue episode identity", ["scripts/validate-manual-catalogue-episode-migration.mjs"]],
+  ["manual episode rating protection", ["--experimental-strip-types", "scripts/test-manual-episode-identity-protection.mjs"]],
   ["Mediano legacy catalogue resolution", ["scripts/test-mediano-legacy-catalogue-resolution.mjs"]],
   ["Mediano historical editorial episode ratings", ["scripts/test-mediano-historical-editorial-episode-ratings.mjs"]],
   ["Mounir canonical Mediano editorial rating", ["scripts/test-mediano-mounir-canonical-editorial-rating.mjs"]],

@@ -65,6 +65,41 @@ export function createSupabaseImportRepository(client: any): ImportRepository {
         if (error) throw new Error("Cross-source episode identity select failed");
         rows.push(...(data || []));
       }
+
+      // Manual catalogue mappings are the identity authority even when the
+      // canonical episode row originally came from RSS/DR. Load mapped UUIDs
+      // by podcast key so a feed can enrich that row without replacing it.
+      if (podcastKeys.length) {
+        const mappedEpisodeIds = new Set<string>();
+        for (const keyBatch of chunk([...new Set(podcastKeys)], BATCH_SIZE)) {
+          const { data: mappings, error: mappingError } = await client
+            .from("manual_catalogue_episode_map")
+            .select("episode_id")
+            .in("podcast_key", keyBatch)
+            .eq("is_active", true);
+          if (mappingError) throw new Error("Manual catalogue mapping select failed");
+          (mappings || []).forEach((mapping) => {
+            if (mapping?.episode_id) mappedEpisodeIds.add(mapping.episode_id);
+          });
+        }
+
+        for (const idBatch of chunk([...mappedEpisodeIds], BATCH_SIZE)) {
+          const { data, error } = await client
+            .from("podcast_episodes")
+            .select(SELECT_FIELDS)
+            .in("id", idBatch)
+            .eq("is_active", true);
+          if (error) throw new Error("Manual catalogue episode select failed");
+          rows.push(...(data || []).map((row) => ({
+            ...row,
+            metadata: {
+              ...(row.metadata || {}),
+              manual_catalogue_identity: true
+            }
+          })));
+        }
+      }
+
       return [...new Map(
         rows.map((row) => [`${row.source}\u0000${row.external_guid}`, row]),
       ).values()];

@@ -8112,12 +8112,13 @@ async function saveActiveEpisodeRating() {
     return;
   }
 
-  const episodeId = state.activeEpisodeRatingId;
-  const episode = getGenstartEpisodeById(episodeId);
+  const requestedEpisodeId = state.activeEpisodeRatingId;
+  const episode = getGenstartEpisodeById(requestedEpisodeId);
   const podcastKey = normalizeText(episode?.podcast_key) || getEpisodePodcastKey(state.activePodcastDetailKey);
   const manualMappingResolved =
     episode?.dataSource !== "manual" ||
-    (await fetchManualCanonicalEpisodeMappings([episode]));
+    (await ensureManualCatalogueEpisodeMapping(episode));
+  const episodeId = getEpisodeKey(episode) || requestedEpisodeId;
   const config = getEpisodeRatingPersistenceConfig(podcastKey, episode);
   const isLocalEpisodeRating = config?.persistence === "local";
   const episodeState = getPodcastEpisodeState(podcastKey);
@@ -8288,12 +8289,13 @@ function updateProfileEpisodeRatingAfterDelete(episodeId) {
 async function deleteActiveEpisodeRating() {
   if (!state.authUser || !state.activeEpisodeRatingId) return;
 
-  const episodeId = state.activeEpisodeRatingId;
-  const episode = getGenstartEpisodeById(episodeId);
+  const requestedEpisodeId = state.activeEpisodeRatingId;
+  const episode = getGenstartEpisodeById(requestedEpisodeId);
   const podcastKey = normalizeText(episode?.podcast_key) || getEpisodePodcastKey(state.activePodcastDetailKey);
   const manualMappingResolved =
     episode?.dataSource !== "manual" ||
-    (await fetchManualCanonicalEpisodeMappings([episode]));
+    (await ensureManualCatalogueEpisodeMapping(episode));
+  const episodeId = getEpisodeKey(episode) || requestedEpisodeId;
   const config = getEpisodeRatingPersistenceConfig(podcastKey, episode);
   const episodeState = getPodcastEpisodeState(podcastKey);
   const previousUserRating = episodeState.userRatingsById[episodeId];
@@ -10277,6 +10279,10 @@ function getEpisodePodcastConfig(podcastOrKey) {
   const podcastId = getPodcastId(podcast);
   const episodeKey = getEpisodePodcastKey(podcastOrKey);
   const rawKey = typeof podcastOrKey === "string" ? normalizeText(podcastOrKey) : "";
+  const manualEpisodeSource = podcast?.manualEpisodes || podcast?.manual_episodes || podcast?.["Episoder"] || [];
+  const hasManualEpisodes = (Array.isArray(manualEpisodeSource)
+    ? manualEpisodeSource.filter((entry) => normalizeText(typeof entry === "object" ? entry?.title : entry)).length
+    : String(manualEpisodeSource).split(";").map(normalizeText).filter(Boolean).length) >= 2;
   const configKeys = [podcastId, rawKey, episodeKey]
     .flatMap((key) => {
       const normalized = normalizeText(key);
@@ -10292,13 +10298,22 @@ function getEpisodePodcastConfig(podcastOrKey) {
 
   for (const configKey of configKeys) {
     const config = EPISODE_PODCAST_CONFIG[configKey];
-    if (config?.enabled) return config;
+    if (config?.enabled) {
+      return config.persistence === "supabase"
+        ? {
+            ...config,
+            includeManualEpisodes: Boolean(
+              config.includeManualEpisodes || hasManualEpisodes
+            )
+          }
+        : config;
+    }
   }
 
   if (!podcastId) return null;
 
   const mainSeries = normalizeText(podcast?.mainSeries || podcast?.Hovedserie);
-  if (normalizeMatchKey(mainSeries) === normalizeMatchKey("Bakspejl")) return { podcastKey: podcastId, databasePodcastKey: podcastId, displayName: podcast?.title || podcastId, searchPlaceholder: `Søg i ${podcast?.title || podcastId}-episoder`, enabled: true, persistence: "supabase", includeManualEpisodes: false };
+  if (normalizeMatchKey(mainSeries) === normalizeMatchKey("Bakspejl")) return { podcastKey: podcastId, databasePodcastKey: podcastId, displayName: podcast?.title || podcastId, searchPlaceholder: `Søg i ${podcast?.title || podcastId}-episoder`, enabled: true, persistence: "supabase", includeManualEpisodes: true };
 
   const rawFeed = normalizeText(podcast?.rawFeed || podcast?.Feed);
   const appleMatch = rawFeed.match(/^apple:(\d+)$/i);
@@ -10312,7 +10327,8 @@ function getEpisodePodcastConfig(podcastOrKey) {
       searchPlaceholder: `Søg i ${podcast?.title || podcastId}-episoder`,
       source: `apple_podcasts_${appleMatch[1]}`,
       enabled: true,
-      persistence: "supabase"
+      persistence: "supabase",
+      includeManualEpisodes: hasManualEpisodes
     };
   }
 
@@ -10332,7 +10348,8 @@ function getEpisodePodcastConfig(podcastOrKey) {
     databasePodcastKey: podcastId,
     displayName: podcast?.title || podcastId,
     enabled: true,
-    persistence: "supabase"
+    persistence: "supabase",
+    includeManualEpisodes: hasManualEpisodes
   };
 }
 
@@ -10770,42 +10787,174 @@ function getEpisodeIdsForQuery(episodes) {
   );
 }
 
+function removeMigratedLocalEpisodeRatingAliases(episode, canonicalEpisodeId) {
+  if (!state.authUser) return true;
+
+  const store = readLocalEpisodeRatingStore();
+  const userRatings = store[state.authUser.id] || {};
+  const ids = new Set([
+    normalizeText(canonicalEpisodeId),
+    normalizeText(episode?.id),
+    normalizeText(episode?.legacy_manual_episode_id)
+  ].filter(Boolean));
+
+  ids.forEach((id) => delete userRatings[id]);
+  store[state.authUser.id] = userRatings;
+  return writeLocalEpisodeRatingStore(store);
+}
+
+async function migrateLocalManualEpisodeRatingToSupabase(episode) {
+  if (!state.supabase || !state.authUser || episode?.dataSource !== "manual") return true;
+
+  const manualEpisodeKey = normalizeText(episode.manual_episode_key);
+  const mapping = state.manualCanonicalEpisodeMappings.get(manualEpisodeKey);
+  const canonicalEpisodeId = normalizeText(mapping?.episodeId);
+  if (!canonicalEpisodeId) return false;
+
+  const store = readLocalEpisodeRatingStore();
+  const userRatings = store[state.authUser.id] || {};
+  const podcastKey = normalizeText(episode.podcast_key) || getEpisodePodcastKey(state.activePodcastDetailKey);
+  const localPodcastKey = getLocalEpisodePodcastKey(podcastKey);
+  const candidateIds = [
+    canonicalEpisodeId,
+    normalizeText(episode.id),
+    normalizeText(episode.legacy_manual_episode_id)
+  ].filter(Boolean);
+
+  let localRating = null;
+  for (const candidateId of candidateIds) {
+    const candidate = userRatings[candidateId];
+    if (!candidate) continue;
+    if (getLocalEpisodePodcastKey(candidate.podcastKey) !== localPodcastKey) continue;
+    localRating = parseNumber(candidate.rating);
+    if (localRating !== null) break;
+  }
+  if (localRating === null) return true;
+
+  const { data: existingRatings, error: existingRatingError } = await state.supabase
+    .from("episode_ratings")
+    .select("rating")
+    .eq("user_id", state.authUser.id)
+    .eq("episode_id", canonicalEpisodeId)
+    .limit(1);
+  if (existingRatingError) throw existingRatingError;
+
+  const existingRating = parseNumber(existingRatings?.[0]?.rating);
+  const episodeState = getPodcastEpisodeState(podcastKey);
+  if (existingRatings?.length) {
+    episodeState.userRatingsById[canonicalEpisodeId] = existingRating;
+    if (existingRating !== localRating) {
+      console.warn("Lokal episodevurdering blev ikke overskrevet i Supabase, fordi en kanonisk vurdering allerede findes.");
+    }
+    return true;
+  }
+
+  const { error } = await state.supabase.from("episode_ratings").insert({
+    user_id: state.authUser.id,
+    episode_id: canonicalEpisodeId,
+    rating: localRating
+  });
+  if (error) {
+    // A concurrent canonical write wins. Never overwrite it with a legacy local value.
+    if (error.code === "23505") return true;
+    throw error;
+  }
+
+  if (!removeMigratedLocalEpisodeRatingAliases(episode, canonicalEpisodeId)) {
+    console.warn("Episodevurderingen blev migreret til Supabase, men den lokale kopi kunne ikke ryddes.");
+  }
+
+  episodeState.userRatingsById[canonicalEpisodeId] = localRating;
+  return true;
+}
+
+async function ensureManualCatalogueEpisodeMapping(episode) {
+  if (episode?.dataSource !== "manual") return true;
+  if (!state.supabase || !state.authUser) return false;
+
+  const manualEpisodeKey = normalizeText(episode.manual_episode_key);
+  const episodeId = normalizeText(episode.id);
+  const podcastKey = normalizeText(episode.podcast_key) || getEpisodePodcastKey(state.activePodcastDetailKey);
+  const title = normalizeText(episode.title);
+  if (!manualEpisodeKey || !episodeId || !podcastKey || !title) return false;
+
+  const existing = state.manualCanonicalEpisodeMappings.get(manualEpisodeKey);
+  if (existing?.episodeId) {
+    await migrateLocalManualEpisodeRatingToSupabase(episode);
+    return true;
+  }
+
+  const { data, error } = await state.supabase.rpc("ensure_manual_catalogue_episode", {
+    p_podcast_key: podcastKey,
+    p_manual_episode_key: manualEpisodeKey,
+    p_episode_id: episodeId,
+    p_title: title,
+    p_legacy_episode_id: normalizeText(episode.legacy_manual_episode_id) || null
+  });
+  if (error) throw error;
+
+  const canonicalEpisodeId = normalizeText(data);
+  if (!canonicalEpisodeId) throw new Error("Den kanoniske episodeidentitet kunne ikke oprettes.");
+
+  state.manualCanonicalEpisodeMappings.set(manualEpisodeKey, {
+    episodeId: canonicalEpisodeId,
+    canonicalSource: MANUAL_CATALOGUE_SOURCE
+  });
+  await migrateLocalManualEpisodeRatingToSupabase(episode);
+  return true;
+}
+
 async function fetchManualCanonicalEpisodeMappings(episodes) {
   if (!state.supabase) return false;
 
-  const manualEpisodeKeys = [...new Set((episodes || [])
-    .filter((episode) => episode?.dataSource === "manual")
+  const manualEpisodes = (episodes || []).filter((episode) => episode?.dataSource === "manual");
+  const manualEpisodeKeys = [...new Set(manualEpisodes
     .map((episode) => normalizeText(episode.manual_episode_key))
     .filter(Boolean))]
     .filter((key) => !state.manualCanonicalEpisodeMappings.has(key));
-  if (!manualEpisodeKeys.length) return true;
 
   manualEpisodeKeys.forEach((key) => state.manualCanonicalResolutionLoadingKeys.add(key));
   try {
-    const { data, error } = await state.supabase
-      .from("manual_catalogue_episode_map")
-      .select("manual_episode_key,episode_id,canonical_source")
-      .in("manual_episode_key", manualEpisodeKeys)
-      .eq("is_active", true);
-    if (error) throw error;
-    (data || []).forEach((row) => {
-      const manualEpisodeKey = normalizeText(row.manual_episode_key);
-      const episodeId = normalizeText(row.episode_id);
-      const canonicalSource = normalizeText(row.canonical_source);
-      if (!manualEpisodeKey || !episodeId) return;
-      if (canonicalSource !== MANUAL_CATALOGUE_SOURCE && canonicalSource !== REVIEWED_LEGACY_MANUAL_CATALOGUE_SOURCE) return;
-      state.manualCanonicalEpisodeMappings.set(manualEpisodeKey, { episodeId, canonicalSource });
-    });
+    if (manualEpisodeKeys.length) {
+      const { data, error } = await state.supabase
+        .from("manual_catalogue_episode_map")
+        .select("manual_episode_key,episode_id,canonical_source")
+        .in("manual_episode_key", manualEpisodeKeys)
+        .eq("is_active", true);
+      if (error) throw error;
+      (data || []).forEach((row) => {
+        const manualEpisodeKey = normalizeText(row.manual_episode_key);
+        const episodeId = normalizeText(row.episode_id);
+        const canonicalSource = normalizeText(row.canonical_source);
+        if (!manualEpisodeKey || !episodeId) return;
+        if (canonicalSource !== MANUAL_CATALOGUE_SOURCE && canonicalSource !== REVIEWED_LEGACY_MANUAL_CATALOGUE_SOURCE) return;
+        state.manualCanonicalEpisodeMappings.set(manualEpisodeKey, { episodeId, canonicalSource });
+      });
+    }
+
+    if (state.authUser) {
+      for (const episode of manualEpisodes) {
+        const key = normalizeText(episode.manual_episode_key);
+        if (!key) continue;
+        if (!state.manualCanonicalEpisodeMappings.has(key)) {
+          await ensureManualCatalogueEpisodeMapping(episode);
+        } else {
+          await migrateLocalManualEpisodeRatingToSupabase(episode);
+        }
+      }
+    }
   } catch (error) {
-    // The migration may not have been applied yet. Keep unresolved episodes on
-    // the legacy local path rather than attempting an invalid foreign-key write.
+    // Keep any unresolved episode on the local fallback path. Existing mapped
+    // episodes remain canonical and are never downgraded.
     console.error("Kunne ikke bekræfte kanoniske manuelle episoder.", error);
     return false;
   } finally {
     manualEpisodeKeys.forEach((key) => state.manualCanonicalResolutionLoadingKeys.delete(key));
   }
 
-  return true;
+  return manualEpisodes.every((episode) =>
+    state.manualCanonicalEpisodeMappings.has(normalizeText(episode.manual_episode_key))
+  );
 }
 
 async function refreshManualEpisodeRatingData(podcastKey, episodes) {
