@@ -1018,7 +1018,9 @@ export async function runEpisodeImport(options: {
     const existingManualCatalogueEpisodes = existing.filter((episode) =>
       isManualCatalogueSource(episode.source) && episode.is_active !== false
     );
-    const manualIdentityMatches = episodesForClassification.map((episode) => ({
+    const manualIdentityMatches = episodesForClassification
+      .filter((episode) => isRateableEpisode(episode))
+      .map((episode) => ({
       episode,
       matches: existingManualCatalogueEpisodes.filter((current) =>
         current.podcast_key === episode.podcast_key &&
@@ -1049,6 +1051,10 @@ export async function runEpisodeImport(options: {
             ...(current.metadata || {}),
             ...(episode.metadata || {}),
             manual_catalogue: true,
+            manual_episode_key: current.external_episode_id || current.external_guid,
+            identity_version: normalizeText(current.metadata?.identity_version) || "manual_catalogue_v1",
+            rateable: true,
+            exclusion_reason: null,
             linked_feed_source: episode.source,
             linked_external_guid: episode.external_guid
           }
