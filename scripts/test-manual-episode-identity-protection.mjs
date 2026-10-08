@@ -164,6 +164,10 @@ function makeRepository(existingRows) {
 }
 
 const migration = await readFile("supabase/migrations/20261008112000_protect_manual_episode_identities.sql", "utf8");
+const mappedIdentityProtectionMigration = await readFile("supabase/migrations/20261008120500_harden_mapped_manual_episode_identity.sql", "utf8");
+assert.match(mappedIdentityProtectionMigration, /has_manual_mapping/);
+assert.match(mappedIdentityProtectionMigration, /active manual catalogue mapping/);
+assert.match(mappedIdentityProtectionMigration, /new\.external_episode_id is distinct from old\.external_episode_id/);
 assert.match(migration, /ensure_manual_catalogue_episode/);
 assert.match(migration, /podcast_episodes_protect_identity/);
 assert.match(migration, /Rated episode .* identity\/visibility is protected/);
