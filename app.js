@@ -8112,12 +8112,13 @@ async function saveActiveEpisodeRating() {
     return;
   }
 
-  const episodeId = state.activeEpisodeRatingId;
-  const episode = getGenstartEpisodeById(episodeId);
+  const requestedEpisodeId = state.activeEpisodeRatingId;
+  const episode = getGenstartEpisodeById(requestedEpisodeId);
   const podcastKey = normalizeText(episode?.podcast_key) || getEpisodePodcastKey(state.activePodcastDetailKey);
   const manualMappingResolved =
     episode?.dataSource !== "manual" ||
     (await ensureManualCatalogueEpisodeMapping(episode));
+  const episodeId = getEpisodeKey(episode) || requestedEpisodeId;
   const config = getEpisodeRatingPersistenceConfig(podcastKey, episode);
   const isLocalEpisodeRating = config?.persistence === "local";
   const episodeState = getPodcastEpisodeState(podcastKey);
@@ -8288,12 +8289,13 @@ function updateProfileEpisodeRatingAfterDelete(episodeId) {
 async function deleteActiveEpisodeRating() {
   if (!state.authUser || !state.activeEpisodeRatingId) return;
 
-  const episodeId = state.activeEpisodeRatingId;
-  const episode = getGenstartEpisodeById(episodeId);
+  const requestedEpisodeId = state.activeEpisodeRatingId;
+  const episode = getGenstartEpisodeById(requestedEpisodeId);
   const podcastKey = normalizeText(episode?.podcast_key) || getEpisodePodcastKey(state.activePodcastDetailKey);
   const manualMappingResolved =
     episode?.dataSource !== "manual" ||
     (await ensureManualCatalogueEpisodeMapping(episode));
+  const episodeId = getEpisodeKey(episode) || requestedEpisodeId;
   const config = getEpisodeRatingPersistenceConfig(podcastKey, episode);
   const episodeState = getPodcastEpisodeState(podcastKey);
   const previousUserRating = episodeState.userRatingsById[episodeId];
@@ -10292,7 +10294,16 @@ function getEpisodePodcastConfig(podcastOrKey) {
 
   for (const configKey of configKeys) {
     const config = EPISODE_PODCAST_CONFIG[configKey];
-    if (config?.enabled) return config;
+    if (config?.enabled) {
+      return config.persistence === "supabase"
+        ? {
+            ...config,
+            includeManualEpisodes: Boolean(
+              config.includeManualEpisodes || podcastHasManualEpisodeList(podcast)
+            )
+          }
+        : config;
+    }
   }
 
   if (!podcastId) return null;
@@ -10312,7 +10323,8 @@ function getEpisodePodcastConfig(podcastOrKey) {
       searchPlaceholder: `Søg i ${podcast?.title || podcastId}-episoder`,
       source: `apple_podcasts_${appleMatch[1]}`,
       enabled: true,
-      persistence: "supabase"
+      persistence: "supabase",
+      includeManualEpisodes: podcastHasManualEpisodeList(podcast)
     };
   }
 
@@ -10332,7 +10344,8 @@ function getEpisodePodcastConfig(podcastOrKey) {
     databasePodcastKey: podcastId,
     displayName: podcast?.title || podcastId,
     enabled: true,
-    persistence: "supabase"
+    persistence: "supabase",
+    includeManualEpisodes: podcastHasManualEpisodeList(podcast)
   };
 }
 
