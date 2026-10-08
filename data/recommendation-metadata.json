@@ -2,7 +2,7 @@
   "version": 1,
   "source": {
     "path": "data/podcasts.json",
-    "generatedAt": "2026-10-08T07:18:04.189Z",
+    "generatedAt": "2026-10-08T14:54:58.380Z",
     "count": 1309,
     "topicAliases": "config/recommendation-topic-aliases.json",
     "topicAliasVersion": 1,
@@ -8501,6 +8501,48 @@
         "falsk-investeringsraadgivning",
         "oekonomisk-svindel",
         "internationale-netvaerk"
+      ],
+      "topicEligible": true,
+      "genreEligible": true,
+      "recommendationMetadataEligible": true,
+      "metadataIssues": []
+    },
+    {
+      "id": "danmarks værste massemorder",
+      "recommendationId": "rec-danmarks-vaerste-massemorder-f27ce9aba72e79e2351d89359e13063a",
+      "recommendationIdentityBasis": "title+link",
+      "identityDuplicateGroup": "",
+      "title": "Danmarks værste massemorder?",
+      "mainSeries": "Djævlen i detaljen",
+      "primaryGenreRaw": "True Crime",
+      "primaryGenre": "True Crime",
+      "primaryGenreValid": true,
+      "primaryGenreMappingType": "native",
+      "primaryGenreMappingSource": "True Crime",
+      "primaryGenreNeedsReview": false,
+      "primaryGenreReviewReason": "",
+      "secondaryGenre": "Dokumentar",
+      "secondaryGenreValid": true,
+      "topicsRaw": [
+        "Erik Solbakke Hansen",
+        "Hotel Hafnia-branden",
+        "pyromani",
+        "tilståelser",
+        "politiefterforskning"
+      ],
+      "topicsCanonical": [
+        "Erik Solbakke Hansen",
+        "Hotel Hafnia-branden",
+        "pyromani",
+        "tilståelser",
+        "politiefterforskning"
+      ],
+      "topicKeys": [
+        "erik-solbakke-hansen",
+        "hotel-hafnia-branden",
+        "pyromani",
+        "tilstaaelser",
+        "politiefterforskning"
       ],
       "topicEligible": true,
       "genreEligible": true,
@@ -18922,6 +18964,45 @@
       "metadataIssues": [
         "topic_alias_applied"
       ]
+    },
+    {
+      "id": "eksterne affærer",
+      "recommendationId": "rec-eksterne-affaerer-01910926bd18e949c1b257bcfd147c19",
+      "recommendationIdentityBasis": "title+link",
+      "identityDuplicateGroup": "",
+      "title": "Eksterne affærer",
+      "mainSeries": "",
+      "primaryGenreRaw": "Samfund",
+      "primaryGenre": "Samfund",
+      "primaryGenreValid": true,
+      "primaryGenreMappingType": "native",
+      "primaryGenreMappingSource": "Samfund",
+      "primaryGenreNeedsReview": false,
+      "primaryGenreReviewReason": "",
+      "secondaryGenre": "Underholdning",
+      "secondaryGenreValid": true,
+      "topicsRaw": [
+        "internationale begivenheder",
+        "international politik",
+        "verdenssituationen",
+        "samfundskommentarer"
+      ],
+      "topicsCanonical": [
+        "internationale begivenheder",
+        "international politik",
+        "verdenssituationen",
+        "samfundskommentarer"
+      ],
+      "topicKeys": [
+        "internationale-begivenheder",
+        "international-politik",
+        "verdenssituationen",
+        "samfundskommentarer"
+      ],
+      "topicEligible": true,
+      "genreEligible": true,
+      "recommendationMetadataEligible": true,
+      "metadataIssues": []
     },
     {
       "id": "styr pa verden",
@@ -48565,48 +48646,6 @@
       "metadataIssues": []
     },
     {
-      "id": "danmarks værste massemorder",
-      "recommendationId": "rec-danmarks-vaerste-massemorder-f27ce9aba72e79e2351d89359e13063a",
-      "recommendationIdentityBasis": "title+link",
-      "identityDuplicateGroup": "",
-      "title": "Danmarks værste massemorder?",
-      "mainSeries": "Djævlen i detaljen",
-      "primaryGenreRaw": "True Crime",
-      "primaryGenre": "True Crime",
-      "primaryGenreValid": true,
-      "primaryGenreMappingType": "native",
-      "primaryGenreMappingSource": "True Crime",
-      "primaryGenreNeedsReview": false,
-      "primaryGenreReviewReason": "",
-      "secondaryGenre": "Dokumentar",
-      "secondaryGenreValid": true,
-      "topicsRaw": [
-        "Erik Solbakke Hansen",
-        "Hotel Hafnia-branden",
-        "pyromani",
-        "tilståelser",
-        "politiefterforskning"
-      ],
-      "topicsCanonical": [
-        "Erik Solbakke Hansen",
-        "Hotel Hafnia-branden",
-        "pyromani",
-        "tilståelser",
-        "politiefterforskning"
-      ],
-      "topicKeys": [
-        "erik-solbakke-hansen",
-        "hotel-hafnia-branden",
-        "pyromani",
-        "tilstaaelser",
-        "politiefterforskning"
-      ],
-      "topicEligible": true,
-      "genreEligible": true,
-      "recommendationMetadataEligible": true,
-      "metadataIssues": []
-    },
-    {
       "id": "la riots",
       "recommendationId": "rec-la-riots-76e7f7a252c18f58a7ff74c20dd764ef",
       "recommendationIdentityBasis": "title+link",
@@ -49946,45 +49985,6 @@
         "cykeltyveri",
         "graverjournalistik",
         "koebenhavn"
-      ],
-      "topicEligible": true,
-      "genreEligible": true,
-      "recommendationMetadataEligible": true,
-      "metadataIssues": []
-    },
-    {
-      "id": "eksterne affærer",
-      "recommendationId": "rec-eksterne-affaerer-01910926bd18e949c1b257bcfd147c19",
-      "recommendationIdentityBasis": "title+link",
-      "identityDuplicateGroup": "",
-      "title": "Eksterne affærer",
-      "mainSeries": "",
-      "primaryGenreRaw": "Samfund",
-      "primaryGenre": "Samfund",
-      "primaryGenreValid": true,
-      "primaryGenreMappingType": "native",
-      "primaryGenreMappingSource": "Samfund",
-      "primaryGenreNeedsReview": false,
-      "primaryGenreReviewReason": "",
-      "secondaryGenre": "Underholdning",
-      "secondaryGenreValid": true,
-      "topicsRaw": [
-        "internationale begivenheder",
-        "international politik",
-        "verdenssituationen",
-        "samfundskommentarer"
-      ],
-      "topicsCanonical": [
-        "internationale begivenheder",
-        "international politik",
-        "verdenssituationen",
-        "samfundskommentarer"
-      ],
-      "topicKeys": [
-        "internationale-begivenheder",
-        "international-politik",
-        "verdenssituationen",
-        "samfundskommentarer"
       ],
       "topicEligible": true,
       "genreEligible": true,
