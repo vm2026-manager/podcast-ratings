@@ -10827,21 +10827,39 @@ async function migrateLocalManualEpisodeRatingToSupabase(episode) {
   }
   if (localRating === null) return true;
 
-  const { error } = await state.supabase.from("episode_ratings").upsert(
-    {
-      user_id: state.authUser.id,
-      episode_id: canonicalEpisodeId,
-      rating: localRating
-    },
-    { onConflict: "user_id,episode_id" }
-  );
-  if (error) throw error;
+  const { data: existingRatings, error: existingRatingError } = await state.supabase
+    .from("episode_ratings")
+    .select("rating")
+    .eq("user_id", state.authUser.id)
+    .eq("episode_id", canonicalEpisodeId)
+    .limit(1);
+  if (existingRatingError) throw existingRatingError;
+
+  const existingRating = parseNumber(existingRatings?.[0]?.rating);
+  const episodeState = getPodcastEpisodeState(podcastKey);
+  if (existingRatings?.length) {
+    episodeState.userRatingsById[canonicalEpisodeId] = existingRating;
+    if (existingRating !== localRating) {
+      console.warn("Lokal episodevurdering blev ikke overskrevet i Supabase, fordi en kanonisk vurdering allerede findes.");
+    }
+    return true;
+  }
+
+  const { error } = await state.supabase.from("episode_ratings").insert({
+    user_id: state.authUser.id,
+    episode_id: canonicalEpisodeId,
+    rating: localRating
+  });
+  if (error) {
+    // A concurrent canonical write wins. Never overwrite it with a legacy local value.
+    if (error.code === "23505") return true;
+    throw error;
+  }
 
   if (!removeMigratedLocalEpisodeRatingAliases(episode, canonicalEpisodeId)) {
     console.warn("Episodevurderingen blev migreret til Supabase, men den lokale kopi kunne ikke ryddes.");
   }
 
-  const episodeState = getPodcastEpisodeState(podcastKey);
   episodeState.userRatingsById[canonicalEpisodeId] = localRating;
   return true;
 }
