@@ -20,6 +20,10 @@ jobs:
         with:
           node-version: 24
       - run: node scripts/critical-regression-gate.mjs
+      - name: Verify regression tests leave the checkout unchanged
+        run: |
+          git diff --exit-code
+          test -z "$(git ls-files --others --exclude-standard)"
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'

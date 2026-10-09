@@ -1,0 +1,190 @@
+{
+  "catalogueCount": 1309,
+  "trueCrimeCount": 242,
+  "podcasts": [
+    {
+      "id": "mørkeland",
+      "slug": "moerkeland",
+      "canonical": "https://podcastlisten.dk/podcast/moerkeland/"
+    },
+    {
+      "id": "genstart",
+      "slug": "genstart",
+      "canonical": "https://podcastlisten.dk/podcast/genstart/"
+    },
+    {
+      "id": "millionærklubben",
+      "slug": "millionaerklubben",
+      "canonical": "https://podcastlisten.dk/podcast/millionaerklubben/"
+    },
+    {
+      "id": "sagen genabnet",
+      "slug": "sagen-genabnet",
+      "canonical": "https://podcastlisten.dk/podcast/sagen-genabnet/"
+    },
+    {
+      "id": "borgerlig tabloid",
+      "slug": "borgerlig-tabloid",
+      "canonical": "https://podcastlisten.dk/podcast/borgerlig-tabloid/"
+    },
+    {
+      "id": "det vi taler om",
+      "slug": "det-vi-taler-om",
+      "canonical": "https://podcastlisten.dk/podcast/det-vi-taler-om/"
+    },
+    {
+      "id": "langt fra løgnen",
+      "slug": "langt-fra-loegnen",
+      "canonical": "https://podcastlisten.dk/podcast/langt-fra-loegnen/"
+    },
+    {
+      "id": "mads og a holdet",
+      "slug": "mads-og-a-holdet",
+      "canonical": "https://podcastlisten.dk/podcast/mads-og-a-holdet/"
+    },
+    {
+      "id": "vanvittig verdenshistorie",
+      "slug": "vanvittig-verdenshistorie",
+      "canonical": "https://podcastlisten.dk/podcast/vanvittig-verdenshistorie/"
+    },
+    {
+      "id": "afhørt",
+      "slug": "afhoert",
+      "canonical": "https://podcastlisten.dk/podcast/afhoert/"
+    },
+    {
+      "id": "fantino og bonde",
+      "slug": "fantino-og-bonde",
+      "canonical": "https://podcastlisten.dk/podcast/fantino-og-bonde/"
+    },
+    {
+      "id": "danske drabssager",
+      "slug": "danske-drabssager",
+      "canonical": "https://podcastlisten.dk/podcast/danske-drabssager/"
+    },
+    {
+      "id": "only in america",
+      "slug": "only-in-america",
+      "canonical": "https://podcastlisten.dk/podcast/only-in-america/"
+    },
+    {
+      "id": "dkpol",
+      "slug": "dkpol",
+      "canonical": "https://podcastlisten.dk/podcast/dkpol/"
+    },
+    {
+      "id": "børsen morgenbriefing",
+      "slug": "boersen-morgenbriefing",
+      "canonical": "https://podcastlisten.dk/podcast/boersen-morgenbriefing/"
+    },
+    {
+      "id": "jagten pa det evige liv",
+      "slug": "jagten-pa-det-evige-liv",
+      "canonical": "https://podcastlisten.dk/podcast/jagten-pa-det-evige-liv/"
+    },
+    {
+      "id": "sig det løgn",
+      "slug": "sig-det-loegn",
+      "canonical": "https://podcastlisten.dk/podcast/sig-det-loegn/"
+    },
+    {
+      "id": "frontlinjen",
+      "slug": "frontlinjen",
+      "canonical": "https://podcastlisten.dk/podcast/frontlinjen/"
+    },
+    {
+      "id": "børsen brænder",
+      "slug": "boersen-braender",
+      "canonical": "https://podcastlisten.dk/podcast/boersen-braender/"
+    },
+    {
+      "id": "hva sa",
+      "slug": "hva-sa",
+      "canonical": "https://podcastlisten.dk/podcast/hva-sa/"
+    },
+    {
+      "id": "112 for knuste hjerter",
+      "slug": "112-for-knuste-hjerter",
+      "canonical": "https://podcastlisten.dk/podcast/112-for-knuste-hjerter/"
+    },
+    {
+      "id": "aftalt spil",
+      "slug": "aftalt-spil",
+      "canonical": "https://podcastlisten.dk/podcast/aftalt-spil/"
+    },
+    {
+      "id": "transferguru",
+      "slug": "transferguru",
+      "canonical": "https://podcastlisten.dk/podcast/transferguru/"
+    },
+    {
+      "id": "grebet af gvfb",
+      "slug": "grebet-af-gvfb",
+      "canonical": "https://podcastlisten.dk/podcast/grebet-af-gvfb/"
+    },
+    {
+      "id": "opskriften pa kærlighed",
+      "slug": "opskriften-pa-kaerlighed",
+      "canonical": "https://podcastlisten.dk/podcast/opskriften-pa-kaerlighed/"
+    },
+    {
+      "id": "bomben",
+      "slug": "bomben",
+      "canonical": "https://podcastlisten.dk/podcast/bomben/"
+    },
+    {
+      "id": "mathias helts talkshow",
+      "slug": "mathias-helts-talkshow",
+      "canonical": "https://podcastlisten.dk/podcast/mathias-helts-talkshow/"
+    },
+    {
+      "id": "tiden",
+      "slug": "tiden",
+      "canonical": "https://podcastlisten.dk/podcast/tiden/"
+    },
+    {
+      "id": "nationens mareridt",
+      "slug": "nationens-mareridt",
+      "canonical": "https://podcastlisten.dk/podcast/nationens-mareridt/"
+    },
+    {
+      "id": "kvart i bold",
+      "slug": "kvart-i-bold",
+      "canonical": "https://podcastlisten.dk/podcast/kvart-i-bold/"
+    }
+  ],
+  "sitemapUrls": [
+    "https://podcastlisten.dk/",
+    "https://podcastlisten.dk/podcast/moerkeland/",
+    "https://podcastlisten.dk/podcast/genstart/",
+    "https://podcastlisten.dk/podcast/millionaerklubben/",
+    "https://podcastlisten.dk/podcast/sagen-genabnet/",
+    "https://podcastlisten.dk/podcast/borgerlig-tabloid/",
+    "https://podcastlisten.dk/podcast/det-vi-taler-om/",
+    "https://podcastlisten.dk/podcast/langt-fra-loegnen/",
+    "https://podcastlisten.dk/podcast/mads-og-a-holdet/",
+    "https://podcastlisten.dk/podcast/vanvittig-verdenshistorie/",
+    "https://podcastlisten.dk/podcast/afhoert/",
+    "https://podcastlisten.dk/podcast/fantino-og-bonde/",
+    "https://podcastlisten.dk/podcast/danske-drabssager/",
+    "https://podcastlisten.dk/podcast/only-in-america/",
+    "https://podcastlisten.dk/podcast/dkpol/",
+    "https://podcastlisten.dk/podcast/boersen-morgenbriefing/",
+    "https://podcastlisten.dk/podcast/jagten-pa-det-evige-liv/",
+    "https://podcastlisten.dk/podcast/sig-det-loegn/",
+    "https://podcastlisten.dk/podcast/frontlinjen/",
+    "https://podcastlisten.dk/podcast/boersen-braender/",
+    "https://podcastlisten.dk/podcast/hva-sa/",
+    "https://podcastlisten.dk/podcast/112-for-knuste-hjerter/",
+    "https://podcastlisten.dk/podcast/aftalt-spil/",
+    "https://podcastlisten.dk/podcast/transferguru/",
+    "https://podcastlisten.dk/podcast/grebet-af-gvfb/",
+    "https://podcastlisten.dk/podcast/opskriften-pa-kaerlighed/",
+    "https://podcastlisten.dk/podcast/bomben/",
+    "https://podcastlisten.dk/podcast/mathias-helts-talkshow/",
+    "https://podcastlisten.dk/podcast/tiden/",
+    "https://podcastlisten.dk/podcast/nationens-mareridt/",
+    "https://podcastlisten.dk/podcast/kvart-i-bold/",
+    "https://podcastlisten.dk/genre/true-crime/"
+  ]
+}

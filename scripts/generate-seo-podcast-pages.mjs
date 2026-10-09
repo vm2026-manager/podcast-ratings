@@ -1,12 +1,9 @@
-import { mkdir, readFile, rm, writeFile } from "node:fs/promises";
+import { readFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { prepareSeoPlan, publishSeoPlan, validateCatalogue, validateSitemap } from "./seo-podcast-safety.mjs";
 
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
-const podcastRoot = path.join(repoRoot, "podcast");
-const trueCrimeRoot = path.join(repoRoot, "genre", "true-crime");
-const podcastsPath = path.join(repoRoot, "data", "podcasts.json");
-const sitemapPath = path.join(repoRoot, "sitemap.xml");
 export const TRUE_CRIME_CANONICAL = "https://podcastlisten.dk/genre/true-crime/";
 
 export const PILOT_PODCAST_IDS = [
@@ -209,29 +206,53 @@ export function renderTrueCrimePage(entries) {
 </html>`;
 }
 
-export function renderSitemap(pages) {
+export function renderSitemap(pages, existingXml) {
+  if (existingXml !== undefined) {
+    validateSitemap(existingXml, { requiredUrls: ["https://podcastlisten.dk/", ...pages.map((page) => page.canonical), TRUE_CRIME_CANONICAL] });
+    // Phase 1 preserves every existing entry, including metadata and manual URLs.
+    return existingXml;
+  }
   return `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${["https://podcastlisten.dk/", ...pages.map((page) => page.canonical), TRUE_CRIME_CANONICAL].map((url) => `  <url><loc>${url}</loc></url>`).join("\n")}\n</urlset>\n`;
 }
 
-export async function generateSeoPodcastPages({ write = true } = {}) {
-  const source = JSON.parse(await readFile(podcastsPath, "utf8"));
+export async function generateSeoPodcastPages({ write = false, root = repoRoot } = {}) {
+  if (typeof write !== "boolean") throw new Error("write must be a boolean");
+  root = path.resolve(root);
+  const baseline = JSON.parse(await readFile(new URL("./seo-podcast-safety-baseline.json", import.meta.url), "utf8"));
+  const stateRelative = "scripts/seo-podcast-safety-state.json";
+  const stateText = await readFile(path.join(root, stateRelative), "utf8");
+  const state = JSON.parse(stateText);
+  if (!Number.isSafeInteger(state.catalogueCount) || state.catalogueCount < baseline.catalogueCount
+      || !Number.isSafeInteger(state.trueCrimeCount) || state.trueCrimeCount < baseline.trueCrimeCount
+      || !Array.isArray(state.sitemapUrls) || new Set(state.sitemapUrls).size !== state.sitemapUrls.length
+      || !baseline.sitemapUrls.every((url) => state.sitemapUrls.includes(url))) {
+    throw new Error("Invalid SEO safety state");
+  }
+  const sourceText = await readFile(path.join(root, "data", "podcasts.json"), "utf8");
+  const source = JSON.parse(sourceText);
+  validateCatalogue(source, baseline, slugFromPodcastId);
+  validateCatalogue(source, state, slugFromPodcastId);
   const pages = resolvePilotPodcasts(source.rows).map(pageData);
   const trueCrimeEntries = trueCrimeData(source.rows);
-  if (write) {
-    await rm(podcastRoot, { recursive: true, force: true });
-    for (const page of pages) {
-      const output = path.join(podcastRoot, page.slug, "index.html");
-      await mkdir(path.dirname(output), { recursive: true });
-      await writeFile(output, renderPage(page), "utf8");
-    }
-    await rm(trueCrimeRoot, { recursive: true, force: true });
-    await mkdir(trueCrimeRoot, { recursive: true });
-    await writeFile(path.join(trueCrimeRoot, "index.html"), renderTrueCrimePage(trueCrimeEntries), "utf8");
-    await writeFile(sitemapPath, renderSitemap(pages), "utf8");
-  }
+  const existingSitemap = await readFile(path.join(root, "sitemap.xml"), "utf8");
+  const sitemapUrls = [...validateSitemap(existingSitemap, { requiredUrls: state.sitemapUrls, minimumUrls: state.sitemapUrls.length })];
+  const outputs = pages.map((page) => ({ relative: `podcast/${page.slug}/index.html`, canonical: page.canonical, id: page.id, content: renderPage(page) }));
+  outputs.push({ relative: "genre/true-crime/index.html", canonical: TRUE_CRIME_CANONICAL, content: renderTrueCrimePage(trueCrimeEntries) });
+  outputs.push({ relative: "sitemap.xml", content: renderSitemap(pages, existingSitemap) });
+  outputs.push({ relative: stateRelative, kind: "state", content: JSON.stringify({ catalogueCount: source.rows.length, trueCrimeCount: trueCrimeEntries.length, sitemapUrls }, null, 2) + "\n" });
+  const plan = await prepareSeoPlan({ root, sourceText, existingSitemap, pages, outputs, baseline });
+  if (plan.snapshots.get(stateRelative) !== stateText) throw new Error("SEO safety state changed during generation");
+  if (write) await publishSeoPlan(plan);
   return pages;
 }
 
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
-  generateSeoPodcastPages().then((pages) => console.log(`Generated ${pages.length} SEO pilot pages.`)).catch((error) => { console.error(error.message); process.exitCode = 1; });
+  const flags = process.argv.slice(2);
+  if (flags.some((flag) => !["--write", "--dry-run"].includes(flag)) || new Set(flags).size !== flags.length || flags.length > 1) {
+    console.error("Usage: node scripts/generate-seo-podcast-pages.mjs [--dry-run | --write]. Deletions are not supported.");
+    process.exitCode = 1;
+  } else {
+    const write = flags.includes("--write");
+    generateSeoPodcastPages({ write }).then((pages) => console.log(`${write ? "Generated" : "Validated (dry-run)"} ${pages.length} SEO pilot pages.`)).catch((error) => { console.error(error.message); process.exitCode = 1; });
+  }
 }
