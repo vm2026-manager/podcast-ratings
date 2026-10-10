@@ -187,6 +187,53 @@ jobs:
               }
             });
 
+      - name: Record blocked catalogue regression gate in GitHub Issues
+        if: always() && steps.required-gate.outcome == 'failure'
+        continue-on-error: true
+        uses: actions/github-script@v7
+        env:
+          CATALOGUE_PR_NUMBER: ${{ steps.catalogue-pr.outputs.number }}
+        with:
+          script: |
+            const title = "Catalogue sync blocked: regression gate";
+            const runUrl = `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`;
+            const pr = process.env.CATALOGUE_PR_NUMBER;
+            const body = [
+              "The Google Sheet was read and the new catalogue was staged, but the required Critical Regression Gate failed. Publication remains blocked.",
+              `Failed run: ${runUrl}`,
+              pr ? `Pending catalogue PR: ${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/pull/${pr}` : "",
+              "Review the first failing regression test in the run logs. Fix the test or data issue; never bypass podcast-identity, rating, or user-data safeguards."
+            ].filter(Boolean).join("\n\n");
+            const openIssues = await github.paginate(github.rest.issues.listForRepo, {
+              ...context.repo, state: "open", per_page: 100
+            });
+            const existing = openIssues.find((item) => !item.pull_request && item.title === title);
+            if (existing) await github.rest.issues.update({ ...context.repo, issue_number: existing.number, body });
+            else await github.rest.issues.create({ ...context.repo, title, body });
+            core.warning("Catalogue promotion blocked. Regression gate incident recorded in GitHub Issues.");
+
+      - name: Resolve regression gate incident on recovery
+        if: always() && steps.required-gate.outcome == 'success'
+        continue-on-error: true
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const title = "Catalogue sync blocked: regression gate";
+            const openIssues = await github.paginate(github.rest.issues.listForRepo, {
+              ...context.repo, state: "open", per_page: 100
+            });
+            const existing = openIssues.find((item) => !item.pull_request && item.title === title);
+            if (existing) {
+              const runUrl = `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`;
+              await github.rest.issues.createComment({
+                ...context.repo, issue_number: existing.number,
+                body: `Critical Regression Gate recovered. Successful run: ${runUrl}`
+              });
+              await github.rest.issues.update({
+                ...context.repo, issue_number: existing.number, state: "closed", state_reason: "completed"
+              });
+            }
+
       - name: Enable automatic merge after required checks
         if: steps.required-gate.outcome == 'success'
         env:
