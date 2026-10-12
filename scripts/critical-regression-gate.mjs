@@ -4,6 +4,7 @@ import { fileURLToPath } from "node:url";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const checks = [
+  ["Static podcast recommendation landing page", ["scripts/test-seo-podcast-anbefalinger.mjs"]],
   ["SEO podcast rendering and existing URLs", ["scripts/test-seo-podcast-pages.mjs"]],
   ["SEO generator safety", ["scripts/test-seo-podcast-safety.mjs"]],
   ["Krop til salg identity-preserving Podimo sync", ["--experimental-strip-types", "scripts/test-krop-podimo-migration.mjs"]],
