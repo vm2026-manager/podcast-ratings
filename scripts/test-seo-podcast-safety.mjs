@@ -32,6 +32,13 @@ async function fixture(run) {
     await mkdir(path.join(root, "data"));
     await mkdir(path.join(root, "scripts"));
     for (const relative of ["data/podcasts.json", "sitemap.xml", "scripts/generate-seo-podcast-pages.mjs", "scripts/seo-podcast-safety.mjs", "scripts/seo-podcast-safety-baseline.json", "scripts/seo-podcast-safety-state.json"]) await cp(path.join(repository, relative), path.join(root, relative));
+    // Freeze the full current catalogue as the fixture's accepted high-water mark.
+    // Otherwise removing one row still passes an older count floor after growth.
+    const stateFile = path.join(root, "scripts/seo-podcast-safety-state.json");
+    const state = JSON.parse(await readFile(stateFile, "utf8"));
+    state.catalogueCount = Math.max(state.catalogueCount, baselineSource.rows.length);
+    state.trueCrimeCount = Math.max(state.trueCrimeCount, baselineSource.rows.filter((row) => row.Genre === "True Crime").length);
+    await writeFile(stateFile, JSON.stringify(state, null, 2) + "\n", "utf8");
     await run(root);
   } finally { await rm(root, { recursive: true, force: true }); }
 }
@@ -150,9 +157,16 @@ test("symlink targets are rejected", async () => fixture(async (root) => {
   await assertBlocked(root, /Unsafe output target/);
 }));
 
-test("successful counts are remembered, including growth above the baseline", async () => fixture(async (root) => {
-  await setSource(root, (s) => { s.rows.push({ ...s.rows.find((r) => r.Genre !== "True Crime"), "Podcast-ID": "additional safety fixture" }); s.count++; });
+test("catalogue growth is accepted and a later drop from its high-water mark is blocked", async () => fixture(async (root) => {
+  const startingCount = baselineSource.rows.length;
+  await setSource(root, (s) => {
+    const template = s.rows.find((r) => r.Genre !== "True Crime");
+    for (let i = 1; i <= 10; i++) s.rows.push({ ...template, "Podcast-ID": `additional safety fixture ${i}` });
+    s.count += 10;
+  });
   await generateSeoPodcastPages({ root, write: true });
+  const state = JSON.parse(await readFile(path.join(root, "scripts/seo-podcast-safety-state.json"), "utf8"));
+  assert.equal(state.catalogueCount, startingCount + 10, "successful growth becomes the new safety floor");
   await setSource(root, () => {});
   await assertBlocked(root, /fall in podcast count/);
 }));
