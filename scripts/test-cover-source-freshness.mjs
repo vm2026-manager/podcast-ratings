@@ -43,6 +43,13 @@ const resolve = ({ image = "https://example.test/current.jpg", imageFallbacks = 
   return { podcast, sources: Array.from(context.getPodcastImageSources(podcast)) };
 };
 
+const tipsbladetSources = Array.from(context.getPodcastImageSources({ podcastId: "transferguru tipsbladet", image: "https://example.test/old-transferguru.jpg", imageFallbacks: [] }));
+assert.deepEqual(tipsbladetSources, ["assets/podcast-covers/manual-originals/series/transferguru_tipsbladet.webp"], "new Tipsbladet identity uses its own local TG artwork");
+const podimoSources = Array.from(context.getPodcastImageSources({ podcastId: "transferguru", image: "https://example.test/podimo.jpg", imageFallbacks: [] }));
+assert.deepEqual(podimoSources, ["https://example.test/podimo.jpg"], "historical Podimo artwork remains untouched");
+const realCoverBytes = await readFile(new URL("../assets/podcast-covers/manual-originals/series/transferguru_tipsbladet.webp", import.meta.url));
+assert.equal(realCoverBytes.subarray(0, 4).toString(), "RIFF", "new cover must exist as a WebP image");
+
 let result = resolve();
 assert.equal(result.podcast.preferExternalCoverSource, false, "current automatic local covers stay local-first");
 assert.deepEqual(result.sources.slice(0, 2), [variants["480"].path, variants["800"].path]);
