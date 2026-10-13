@@ -2673,6 +2673,11 @@ function getImageCandidates(image, alt = "") {
 function getPodcastImageSources(podcast) {
   if (!podcast) return [];
 
+  // A relaunch on a shared feed is a distinct podcast; never inherit the Podimo artwork.
+  if (getPodcastId(podcast) === "transferguru tipsbladet") {
+    return ["assets/podcast-covers/manual-originals/series/transferguru_tipsbladet.webp"];
+  }
+
   const localSources = Array.isArray(podcast.localCoverVariants)
     ? podcast.localCoverVariants.map((variant) => variant.path)
     : [];
