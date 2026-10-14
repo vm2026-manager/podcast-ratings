@@ -2683,6 +2683,11 @@ function getPodcastImageSources(podcast) {
     return ["assets/podcast-covers/manual-originals/series/svindlerne_podimo_saeson_1.webp"];
   }
 
+  // Standalone blue cover; never fall back to artwork for the similarly named Svindlerne.
+  if (getPodcastId(podcast) === "bedraget af en svindler") {
+    return ["assets/podcast-covers/manual-originals/series/bedraget_af_en_svindler.webp"];
+  }
+
   const localSources = Array.isArray(podcast.localCoverVariants)
     ? podcast.localCoverVariants.map((variant) => variant.path)
     : [];
