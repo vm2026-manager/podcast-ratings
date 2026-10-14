@@ -15,3 +15,18 @@ Read-only preflight observed: 956 existing Genstart episodes; 0 before 2023-07-2
 Postflight must verify that the Genstart episode count increases by the number inserted, that the archive target exists exactly once, that existing episode IDs and all 17 ratings are unchanged, and that rerunning the same statement inserts 0. Review the public frontend search to confirm the historical episode appears. Do not use the public `episode_import_runs` table as a log sink for this manual backfill.
 
 Data provenance and limits: OnAir is a third-party archive, not an official DR API. This adds only minimal episode metadata (title, date, duration), no external audio, no descriptions, no guessed canonical IDs. A future authoritative DR old-episode import would require an identity reconciliation step before importing overlapping records.
+
+## Production execution — 2026-10-14
+
+Executed the exact reviewed SQL in Supabase after a successful dry-run and an `EXPLAIN` plan showing an insert with `ON CONFLICT DO NOTHING` and an indexed anti-join.
+
+- 566 inserted; one match for `Jakobs blå øje` (2021-01-22).
+- Genstart episode count: **956 → 1,522**, archive source count **566**, active count **1,518** (four preexisting inactive episodes).
+- Overall episode count **38,300 → 38,866**.
+- Original 956 episode-row fingerprint before/after: `c6a10f808674c045b40eb603367245a1`.
+- Existing global episode rating count **184 → 184**, fingerprint before/after `c263886300a1518554addb913f72efb0`.
+- Genstart-specific rating count **17 → 17**.
+- Exact SQL rerun after import: **0 inserted** (idempotency verified).
+- UI check in a real browser is not yet performed; the public frontend queries `podcast_episodes` by `podcast_key`, `is_active` and `title`, so the record is eligible for normal server-side search.
+
+The SQL is retained as a reproducible **historical record only** and must not be installed as an automatic or recurring job.
