@@ -12,6 +12,8 @@ const landingRelative = "podcast-anbefalinger/index.html";
 const html = await readFile(path.join(root, landingRelative), "utf8");
 const css = await readFile(path.join(root, "podcast-anbefalinger/style.css"), "utf8");
 const home = await readFile(path.join(root, "index.html"), "utf8");
+const app = await readFile(path.join(root, "app.js"), "utf8");
+const homeCss = await readFile(path.join(root, "style.css"), "utf8");
 const source = JSON.parse(await readFile(path.join(root, "data/podcasts.json"), "utf8"));
 const baseline = JSON.parse(await readFile(path.join(root, "scripts/seo-podcast-safety-baseline.json"), "utf8"));
 const state = JSON.parse(await readFile(path.join(root, "scripts/seo-podcast-safety-state.json"), "utf8"));
@@ -36,6 +38,32 @@ assert(!home.includes(`name="description" content="${description}"`));
 assert.match(home, /<a href="\/podcast-anbefalinger\/">Podcastanbefalinger: find din næste podcast<\/a>/);
 for (const term of ["podcastforslag", "gode podcasts", "danske podcasts", "Hvilken podcast skal jeg høre?"]) assert(html.includes(term));
 
+// Preserve the exact SEO identity introduced in phase 2A.
+assert.equal(title, "Podcast anbefalinger – gode danske podcasts | Podcastlisten");
+assert.equal(description, "Find podcast anbefalinger og forslag til gode danske podcasts. Gå på opdagelse i nyheder, true crime, historie og flere genrer på Podcastlisten.");
+assert.match(html, /<h1 id="guide-title">Podcastanbefalinger: find din næste podcast<\/h1>/);
+assert.match(html, /Udvalget er podcastforslag, ikke en rangliste over de bedste podcasts/);
+assert.doesNotMatch(html, /<time\b|Opdateret den|dateModified|AggregateRating|ratingCount/iu, "no unverified dates or user aggregates");
+assert.match(html, /class="primary-link" href="\/#udforsk">Udforsk alle podcasts på Podcastlisten/);
+assert.match(html, /aria-current="page">Podcastforslag/);
+assert.match(html, /class="listening-choices"/);
+assert.equal([...html.matchAll(/<details class="genre-details">/g)].length, 8, "native sections let visitors choose without JS");
+assert.equal([...html.matchAll(/<summary>Se [12] podcastforslag<\/summary>/g)].length, 8);
+assert.equal([...html.matchAll(/class="more-in-genre"/g)].length, 8);
+assert.match(html, /De er ikke brugernes gennemsnitsvurderinger/);
+assert.match(app, /class="home-podcast-guide"><a href="\/podcast-anbefalinger\/">/);
+assert.match(homeCss, /\.page-forside #pageIntroPanel \.home-podcast-guide/);
+const routeStart = app.indexOf("function getRouteInfoFromHash(");
+const routeEnd = app.indexOf("\nfunction ", routeStart + 1);
+assert(routeStart >= 0 && routeEnd > routeStart);
+const routeSource = app.slice(routeStart, routeEnd);
+for (const route of ["forside", "ranglister", "udforsk"]) {
+  assert(html.includes(`href="/#${route}"`), `landing exposes ${route}`);
+  assert(home.includes(`href="#${route}" data-page-link="${route}"`), `existing main navigation supports ${route}`);
+  const resolve = new Function("window", `${routeSource}\nreturn getRouteInfoFromHash();`);
+  assert.equal(resolve({location:{hash:`#${route}`}}).route, route);
+}
+
 const cards = [...html.matchAll(/<article class="podcast-card" data-podcast-id="([^"]+)">([\s\S]*?)<\/article>/g)];
 assert.equal(cards.length, 15, "reviewed selection must render all 15 verified podcasts");
 assert.equal([...html.matchAll(/<section class="genre-section"/g)].length, 8);
@@ -57,7 +85,7 @@ for (const [, encodedId, card] of cards) {
   genres.add(row.Genre);
   assert(card.includes(`href="/?podcast=${encodeURIComponent(id)}"`));
   const rating = row["Vuring (1-10)"];
-  if (rating) assert(card.includes(`<strong>${escape(rating)} / 10</strong>`), `rating must match the catalogue: ${id}`);
+  if (rating) assert(card.includes(`<p class="rating">Redaktionel vurdering: <strong>${escape(rating)} / 10</strong>`), `rating must match the catalogue: ${id}`);
   else assert(!card.includes('class="rating"'), `do not invent ratings: ${id}`);
   for (const [, src] of card.matchAll(/<img[^>]+src="([^"]+)"/g)) {
     assert(src.startsWith("/data/covers/"), "use existing local cover assets");
@@ -73,6 +101,11 @@ for (const [, encodedHref] of html.matchAll(/href="([^"]+)"/g)) {
   const href = decode(encodedHref);
   const url = new URL(href, canonical);
   assert.equal(url.origin, "https://podcastlisten.dk", "links stay within Podcastlisten");
+  if (url.pathname === "/" && url.hash) {
+    assert(["#forside", "#ranglister", "#udforsk"].includes(url.hash), `only verified app hash routes: ${href}`);
+    assert.equal(url.search, "", "do not invent genre query routing");
+  }
+  if (url.searchParams.has("podcast")) assert(seen.has(url.searchParams.get("podcast")), `detail route uses a verified permanent ID: ${href}`);
   if (href.startsWith("#")) assert(ids.includes(url.hash.slice(1)), `in-page link target must exist: ${href}`);
   else if (url.pathname.endsWith("/")) assert((await stat(path.join(root, url.pathname, "index.html"))).isFile(), `internal page must exist: ${href}`);
   else assert((await stat(path.join(root, url.pathname))).isFile());
@@ -85,7 +118,7 @@ const sitemap = await readFile(path.join(root, "sitemap.xml"), "utf8");
 const urls = validateSitemap(sitemap, { requiredUrls: [...baseline.sitemapUrls, ...state.sitemapUrls, canonical], minimumUrls: baseline.sitemapUrls.length + 1 });
 assert(urls.has(canonical));
 assert(state.sitemapUrls.includes(canonical), "the new page is protected by the phase 1 safety record");
-const protectedFiles = [landingRelative, "podcast-anbefalinger/style.css", "sitemap.xml", "index.html", "data/podcasts.json", "scripts/seo-podcast-safety-state.json"];
+const protectedFiles = [landingRelative, "podcast-anbefalinger/style.css", "sitemap.xml", "index.html", "data/podcasts.json", "scripts/seo-podcast-safety-state.json", "app.js", "style.css"];
 async function snapshots(base, files) {
   return Promise.all(files.map(async (file) => ({ file, content: await readFile(path.join(base, file), "utf8"), mtime: (await stat(path.join(base, file))).mtimeMs })));
 }
