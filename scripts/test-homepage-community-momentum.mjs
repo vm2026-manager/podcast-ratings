@@ -5,7 +5,7 @@ import { fileURLToPath } from "node:url";
 const root = new URL("../", import.meta.url);
 const app = await readFile(new URL("app.js", root), "utf8");
 const migration = await readFile(
-  new URL("supabase/migrations/20260921092820_add_public_rating_momentum_stats.sql", root),
+  new URL("supabase/migrations/20261014113719_renew_positive_episode_popularity_activity.sql", root),
   "utf8"
 );
 
@@ -34,10 +34,14 @@ const recent90 = popularityScore({ averageRating: 8, ratingCount: 4, recentUsers
 const old = popularityScore({ averageRating: 8, ratingCount: 4, recentUsers7d: 0, recentUsers30d: 0, recentUsers90d: 0 });
 assert.ok(recent7 > recent30 && recent30 > recent90 && recent90 > old, "momentum decays across 7/30/90-day bands");
 assert.ok(popularityScore({ averageRating: 10, ratingCount: 1, recentUsers7d: 1, recentUsers30d: 1, recentUsers90d: 1 }) < popularityScore(recentActive), "one recent user cannot dominate a broad active audience");
+assert.match(extractFunction("getHomeCommunityPopularitySignals"), /popularityScore: established \* 0\.4 \+ momentum \* 0\.6/u, "40/60 weighting remains unchanged");
 
 assert.match(migration, /group by er\.user_id, pe\.podcast_key/u, "episode rows reduce to one user/podcast rating");
 assert.match(migration, /max\(coalesce\(er\.updated_at, er\.created_at\)\)/u, "episode activity uses newest per-user activity");
-assert.match(migration, /coalesce\(d\.activity_at, e\.activity_at\)/u, "direct-rating precedence also applies to activity");
+assert.match(migration, /coalesce\(d\.rating, e\.rating\)/u, "direct ratings retain rating precedence");
+assert.match(migration, /max\(er\.created_at\) filter \(where er\.rating >= 7\)/u, "only positive episode creations renew activity");
+assert.match(migration, /when d\.user_id is null then e\.activity_at/u, "episode-only activity is unchanged");
+assert.match(migration, /greatest\(coalesce\(d\.activity_at, e\.activity_at\), e\.positive_activity_at\)/u, "positive episode activity can renew direct-rating users");
 assert.match(migration, /recent_users_7d/u);
 assert.match(migration, /recent_users_30d/u);
 assert.match(migration, /recent_users_90d/u);

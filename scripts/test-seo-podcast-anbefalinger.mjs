@@ -64,6 +64,43 @@ for (const route of ["forside", "ranglister", "udforsk"]) {
   assert.equal(resolve({location:{hash:`#${route}`}}).route, route);
 }
 
+// Use the app's actual genre normalization, not raw catalogue labels.
+function appFunction(name) {
+  const start = app.indexOf(`function ${name}(`);
+  const end = app.indexOf("\nfunction ", start + 1);
+  assert(start >= 0 && end > start, `app function exists: ${name}`);
+  return app.slice(start, end);
+}
+const normalizer = new Function(`${appFunction("normalizeText")}\n${appFunction("normalizeComparable")}\n${appFunction("normalizeGenre")}\nreturn normalizeGenre;`)();
+const genresDeclaration = app.match(/const GENRES = (\[[\s\S]*?\]);/);
+assert(genresDeclaration, "read selectable genres from the app");
+const selectableGenres = new Set(JSON.parse(genresDeclaration[1]));
+assert.match(app, /const genre = normalizeGenre\(rawGenre\)/, "catalogue genres are normalized before ranking");
+assert.match(appFunction("getFilteredPodcasts"), /normalizeComparable\(podcast.genre\) !== normalizeComparable\(state.activeFilter.value\)/, "ranking compares normalized genres");
+function validateGenreNavigation(content) {
+  const sections = [...content.matchAll(/<section class="genre-section"[\s\S]*?<\/section>/g)];
+  assert.equal(sections.length, 8);
+  for (const [section] of sections) {
+    const helper = section.match(/<p class="more-in-genre"><a href="([^\"]+)">[^<]+<\/a><span>Vælg ([^<]+) i ranglistens genrefilter\.<\/span><\/p>/);
+    assert(helper, "each section has a concrete, validated next step");
+    const [, href, filter] = helper;
+    assert.equal(href, "/#ranglister");
+    assert(selectableGenres.has(filter) && filter !== "Alle", `selectable ranking filter: ${filter}`);
+    const sectionIds = [...section.matchAll(/data-podcast-id="([^\"]+)"/g)].map((match) => decode(match[1]));
+    assert(sectionIds.length > 0);
+    for (const id of sectionIds) {
+      const rows = source.rows.filter((row) => row["Podcast-ID"] === id);
+      assert.equal(rows.length, 1);
+      assert.equal(normalizer(rows[0].Genre), filter, `filter must include the actual catalogue podcast: ${id}`);
+    }
+  }
+}
+validateGenreNavigation(html);
+for (const invalid of ["Nyheder", "Fodbold", "Forskning", "Snakke", "Kærlighed", "Erhverv"]) {
+  assert.throws(() => validateGenreNavigation(html.replace("Vælg Samfund i", `Vælg ${invalid} i`)), /selectable ranking filter/, `reject nonexistent filter ${invalid}`);
+}
+assert.throws(() => validateGenreNavigation(html.replace("Vælg Sport i", "Vælg Samfund i")), /filter must include/, "a real but mismatched filter is also misleading");
+
 const cards = [...html.matchAll(/<article class="podcast-card" data-podcast-id="([^"]+)">([\s\S]*?)<\/article>/g)];
 assert.equal(cards.length, 15, "reviewed selection must render all 15 verified podcasts");
 assert.equal([...html.matchAll(/<section class="genre-section"/g)].length, 8);

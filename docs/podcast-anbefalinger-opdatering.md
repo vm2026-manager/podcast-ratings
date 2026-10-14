@@ -30,3 +30,5 @@ Denne integration bør være en separat PR: skrivelogik, staging, låsning og sy
 ## Verificerede ruter
 
 Appen bruger hash-routing: `/#forside`, `/#ranglister` og `/#udforsk`. `/?podcast=<permanent-ID>` åbner den eksisterende detaljevisning. Der er ingen eksisterende genreparameter til direkte genrevalg. Genreafsnittene linker derfor til ranglisterne og angiver det præcise genrefilter, brugeren skal vælge. True crime har desuden en eksisterende statisk genreside. Der er ikke tilføjet routing eller nye appfunktioner i fase 2B.
+
+Genrevejledningen kontrolleres mod appens `GENRES` og `normalizeGenre`: Nyheder og Erhverv bliver Samfund, Fodbold bliver Sport, Forskning bliver Viden, og Snakke/Kærlighed bliver Underholdning. Ranglisten sammenligner disse normaliserede genrer. Regressionstesten afviser både filtre, der ikke findes, og eksisterende filtre, som ikke inkluderer afsnittets konkrete katalogpodcasts. Ved fremtidige ændringer skal en genre uden et passende verificeret filter i stedet have en vejledning til appens eksisterende søgning/Udforsk; der må ikke opfindes et filter eller en genreparameter.
