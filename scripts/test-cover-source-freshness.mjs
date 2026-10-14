@@ -53,7 +53,9 @@ assert.equal(realCoverBytes.subarray(0, 4).toString(), "RIFF", "new cover must e
 const svindlerneSources = Array.from(context.getPodcastImageSources({ podcastId: "svindlerne", image: "https://example.test/old-svindlerne.jpg", imageFallbacks: [] }));
 assert.deepEqual(svindlerneSources, ["assets/podcast-covers/manual-originals/series/svindlerne_podimo_saeson_1.webp"], "Svindlerne Podimo always uses verified season-one artwork");
 const distinctSources = Array.from(context.getPodcastImageSources({ podcastId: "bedraget af en svindler", image: "https://example.test/other.jpg", imageFallbacks: [] }));
-assert.deepEqual(distinctSources, ["https://example.test/other.jpg"], "similarly named podcast is untouched");
+assert.deepEqual(distinctSources, ["assets/podcast-covers/manual-originals/series/bedraget_af_en_svindler.webp"], "Bedraget af en svindler must use its dedicated user-supplied cover");
+const bedragetBytes = await readFile(new URL("../assets/podcast-covers/manual-originals/series/bedraget_af_en_svindler.webp", import.meta.url));
+assert.equal(bedragetBytes.subarray(0, 4).toString(), "RIFF", "Bedraget af en svindler cover exists as a WebP image");
 const svindlerneBytes = await readFile(new URL("../assets/podcast-covers/manual-originals/series/svindlerne_podimo_saeson_1.webp", import.meta.url));
 assert.equal(svindlerneBytes.subarray(0, 4).toString(), "RIFF", "Svindlerne cover is present as valid WebP container");
 
