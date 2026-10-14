@@ -2678,6 +2678,11 @@ function getPodcastImageSources(podcast) {
     return ["assets/podcast-covers/manual-originals/series/transferguru_tipsbladet.webp"];
   }
 
+  // Verified Podimo Svindlerne season-one cover, matched strictly by canonical ID.
+  if (getPodcastId(podcast) === "svindlerne") {
+    return ["assets/podcast-covers/manual-originals/series/svindlerne_podimo_saeson_1.webp"];
+  }
+
   const localSources = Array.isArray(podcast.localCoverVariants)
     ? podcast.localCoverVariants.map((variant) => variant.path)
     : [];
