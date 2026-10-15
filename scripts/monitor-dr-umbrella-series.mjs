@@ -1,10 +1,11 @@
 // Read-only DR umbrella-feed monitor. Never creates or rewrites podcast/episode rows.
 import { appendFileSync } from "node:fs";
 import { pathToFileURL } from "node:url";
-import { parseFeed, mapEpisodes, routeEpisodes } from "../supabase/functions/import-podcast-episodes/core.ts";
+import { parseFeed, mapEpisodes, parseDrLydEpisodes, mapDrLydEpisodes, routeEpisodes } from "../supabase/functions/import-podcast-episodes/core.ts";
 import { mergeSheetFeedConfigs } from "../supabase/functions/import-podcast-episodes/runtime-feed-config.ts";
 import { DJAEVLEN_FEED_KEY } from "../supabase/functions/import-podcast-episodes/djaevlen-routing.mjs";
 import { BAKSPEJL_FEED_KEY } from "../supabase/functions/import-podcast-episodes/bakspejl-routing.mjs";
+import { DJAEVLEN_LYD_FULL_FEED_KEY, BAKSPEJL_LYD_FULL_FEED_KEY } from "../supabase/functions/import-podcast-episodes/feed-config.ts";
 
 const FEED_NAMES = {
   [DJAEVLEN_FEED_KEY]: "Djævlen i detaljen",
@@ -19,7 +20,8 @@ function isoDate(value) {
   return Number.isFinite(parsed) ? new Date(parsed).toISOString() : null;
 }
 
-export function detectRecentUmbrellaRoutingGaps({ feedKey, feedXml, config, now, windowDays = 30 }) {
+// Shared conservative review classifier for both RSS and DR Lyd.
+function detectRecentMappedRoutingGaps({feedKey, config, mapped, now, windowDays = 30}) {
   if (!config || !Array.isArray(config.routes)) {
     throw new Error("Missing umbrella feed configuration: " + feedKey);
   }
@@ -27,7 +29,9 @@ export function detectRecentUmbrellaRoutingGaps({ feedKey, feedXml, config, now,
   if (!Number.isFinite(nowMs) || !Number.isFinite(windowDays) || windowDays <= 0) {
     throw new Error("Invalid monitor timestamp or window");
   }
-  const mapped = mapEpisodes(parseFeed(feedXml), config, now);
+  if (!mapped.episodes?.length || mapped.errors?.length) {
+    throw new Error("Incomplete DR source; refusing to mark review as complete: " + feedKey);
+  }
   const routed = routeEpisodes(mapped.episodes, config);
   const byGuid = new Map(mapped.episodes.map((episode) => [episode.external_guid, episode]));
   const thresholdMs = nowMs - windowDays * 86400000;
@@ -42,6 +46,8 @@ export function detectRecentUmbrellaRoutingGaps({ feedKey, feedXml, config, now,
       guid: episode.external_guid,
       published_at: isoDate(episode.published_at),
       teaser_only: Boolean(isTeaser),
+      episode_url: episode.episode_url || null,
+      duration_seconds: episode.duration_seconds ?? null,
       reason: (routed.report?.ambiguous || []).some((item) => item.external_guid === issue.external_guid) ? "ambiguous" : "unmatched",
       route_candidates: issue.route_keys || []
     }];
@@ -59,13 +65,29 @@ export function detectRecentUmbrellaRoutingGaps({ feedKey, feedXml, config, now,
   };
 }
 
+// Retained for unit tests of the legacy RSS behaviour.
+export function detectRecentUmbrellaRoutingGaps({ feedKey, feedXml, config, now, windowDays = 30 }) {
+  const mapped = mapEpisodes(parseFeed(feedXml), config, now);
+  return detectRecentMappedRoutingGaps({feedKey, config, mapped, now, windowDays});
+}
+
+// The production monitor inspects the real full episodes in DR Lyd, not short
+// public RSS teaser proxies. This is metadata-only, without Supabase writes.
+export function detectRecentFullLydRoutingGaps({feedKey, html, config, now, windowDays = 30}) {
+  const mapped = mapDrLydEpisodes(parseDrLydEpisodes(html), config, now);
+  return detectRecentMappedRoutingGaps({feedKey, config, mapped, now, windowDays});
+}
+
 export function formatReviewIssue(results, checkedAt) {
   const candidateCount = results.reduce((n, group) => n + group.candidates.length, 0);
   const failures = results.filter((group) => group.configuration_problem);
   const sections = results.filter((group) => group.candidates.length || group.configuration_problem).map((group) => {
     const list = group.candidates.slice(0, MAX_ISSUE_CANDIDATES).map((entry) => {
       const safeTitle = entry.title.replace(/[\r\n|]/g, " ").slice(0, 160);
-      return `- **${safeTitle}** — ${entry.published_at.slice(0, 10)} (GUID \`${entry.guid}\`, ${entry.teaser_only ? "kun teaser i RSS" : "episode i RSS"}, ${entry.reason})`;
+      const kind = entry.teaser_only ? "kun teaser i RSS" : "fuld episode i DR Lyd";
+      const duration = Number.isFinite(entry.duration_seconds) ? `, ${Math.floor(entry.duration_seconds / 60)}:${String(entry.duration_seconds % 60).padStart(2, "0")}` : "";
+      const link = entry.episode_url?.startsWith("https://www.dr.dk/lyd/") ? ` — [DR Lyd](${entry.episode_url})` : "";
+      return `- **${safeTitle}** — ${entry.published_at.slice(0, 10)} (GUID \`${entry.guid}\`, ${kind}${duration}, ${entry.reason})${link}`;
     });
     if (group.configuration_problem) list.unshift("- **Ingen aktiv sikker serierouting**: tjek podcastkatalogets Hovedserie og Podcast-ID.");
     return `### ${group.feed_name}\n${list.join("\n")}`;
@@ -91,9 +113,9 @@ async function fetchJson(url, fetchFn) {
   return response.json();
 }
 
-async function fetchXml(url, fetchFn) {
-  const response = await fetchFn(url, { headers: { accept: "application/rss+xml, application/xml" } });
-  if (!response.ok) throw new Error(`DR feed fetch failed: ${response.status}`);
+async function fetchHtml(url, fetchFn) {
+  const response = await fetchFn(url, { headers: { accept: "text/html" } });
+  if (!response.ok) throw new Error(`DR Lyd page fetch failed: ${response.status}`);
   return response.text();
 }
 
@@ -103,10 +125,13 @@ export async function checkUmbrellaFeeds({ fetchFn = fetch, catalogueUrl = DEFAU
   if (!Array.isArray(rows) || rows.length === 0) throw new Error("Empty or invalid podcast catalogue; refusing to declare success");
   const configs = mergeSheetFeedConfigs({ rows }).configs;
   const results = [];
-  for (const feedKey of [DJAEVLEN_FEED_KEY, BAKSPEJL_FEED_KEY]) {
-    const config = configs[feedKey];
-    const xml = await fetchXml(config.feed_url, fetchFn);
-    results.push(detectRecentUmbrellaRoutingGaps({ feedKey, feedXml: xml, config, now }));
+  for (const [feedKey, fullFeedKey] of [
+    [DJAEVLEN_FEED_KEY, DJAEVLEN_LYD_FULL_FEED_KEY],
+    [BAKSPEJL_FEED_KEY, BAKSPEJL_LYD_FULL_FEED_KEY]
+  ]) {
+    const config = configs[fullFeedKey];
+    const html = await fetchHtml(config.feed_url, fetchFn);
+    results.push(detectRecentFullLydRoutingGaps({ feedKey, html, config, now }));
   }
   return results;
 }
