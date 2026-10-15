@@ -11,7 +11,7 @@ const FEED_NAMES = {
   [BAKSPEJL_FEED_KEY]: "Bakspejl"
 };
 const ISSUE_MARKER = "<!-- dr-umbrella-series-monitor-v1 -->";
-const DEFAULT_CATALOGUE_URL = "https://podcastlisten.dk/podcasts.json";
+const DEFAULT_CATALOGUE_URL = "https://podcastlisten.dk/data/podcasts.json";
 const MAX_ISSUE_CANDIDATES = 30;
 
 function isoDate(value) {
