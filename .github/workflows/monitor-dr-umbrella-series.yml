@@ -2,6 +2,13 @@ name: Monitor new DR umbrella podcast series
 
 on:
   workflow_dispatch:
+  # Verify a newly merged DR monitor immediately; unrelated pushes do not run it.
+  push:
+    branches: [main]
+    paths:
+      - "scripts/monitor-dr-umbrella-series.mjs"
+      - "scripts/test-monitor-dr-umbrella-series.mjs"
+      - "supabase/functions/import-podcast-episodes/*routing.mjs"
   schedule:
     # Both DR umbrella feeds are imported every 12 hours.
     - cron: "0 4,16 * * *"
