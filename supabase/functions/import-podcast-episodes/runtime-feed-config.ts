@@ -1,4 +1,4 @@
-import { FEED_CONFIGS, type FeedConfig, type FeedConfigMap } from "./feed-config.ts";
+import { FEED_CONFIGS, DJAEVLEN_LYD_FULL_FEED_KEY, BAKSPEJL_LYD_FULL_FEED_KEY, type FeedConfig, type FeedConfigMap } from "./feed-config.ts";
 import { appleShowUrl, parseAppleFeed, parseHttpFeed } from "./feed-syntax.mjs";
 import { buildDjaevlenRoutes, DJAEVLEN_FEED_KEY } from "./djaevlen-routing.mjs";
 import { buildBakspejlRoutes, BAKSPEJL_FEED_KEY } from "./bakspejl-routing.mjs";
@@ -86,6 +86,8 @@ export function mergeSheetFeedConfigs(
   const djaevlenOwner = manualStaticConfigs[DJAEVLEN_FEED_KEY];
   const bakspejl = buildBakspejlRoutes(rows);
   const bakspejlOwner = manualStaticConfigs[BAKSPEJL_FEED_KEY];
+  const djaevlenFullOwner = manualStaticConfigs[DJAEVLEN_LYD_FULL_FEED_KEY];
+  const bakspejlFullOwner = manualStaticConfigs[BAKSPEJL_LYD_FULL_FEED_KEY];
   const configs: FeedConfigMap = {
     ...manualStaticConfigs,
     ...(djaevlenOwner ? {
@@ -96,7 +98,11 @@ export function mergeSheetFeedConfigs(
         enabled: djaevlen.routes.length > 0
       }
     } : {}),
-    ...(bakspejlOwner ? { [BAKSPEJL_FEED_KEY]: { ...bakspejlOwner, routes: bakspejl.routes, enabled: bakspejl.routes.length > 1 } } : {})
+    ...(bakspejlOwner ? { [BAKSPEJL_FEED_KEY]: { ...bakspejlOwner, routes: bakspejl.routes, enabled: bakspejl.routes.length > 1 } } : {}),
+    // Supplemental full-episode adapters use the same exact catalogue routes.
+    // Never activate an umbrella without the authoritative sheet mapping.
+    ...(djaevlenFullOwner ? { [DJAEVLEN_LYD_FULL_FEED_KEY]: { ...djaevlenFullOwner, routes: djaevlen.routes, enabled: djaevlen.routes.length > 0 } } : {}),
+    ...(bakspejlFullOwner ? { [BAKSPEJL_LYD_FULL_FEED_KEY]: { ...bakspejlFullOwner, routes: bakspejl.routes, enabled: bakspejl.routes.length > 1 } } : {})
   };
   const staticKeys = new Set(Object.keys(manualStaticConfigs));
   const staticPodcastKeys = getStaticPodcastKeys(manualStaticConfigs);
