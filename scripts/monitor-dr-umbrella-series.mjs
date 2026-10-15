@@ -73,7 +73,7 @@ export function formatReviewIssue(results, checkedAt) {
   return `${ISSUE_MARKER}
 ## Nye DR-afsnit, der ikke kan placeres sikkert
 
-Kontrolleret ${checkedAt}. **${candidateCount}** nye uafklarede episoder; **${failures.length}** manglende/disabled route-konfigurationer.
+Automatisk kontrol to gange i døgnet. **${candidateCount}** nye uafklarede episoder; **${failures.length}** manglende/disabled route-konfigurationer.
 
 ${sections.join("\n\n")}
 
