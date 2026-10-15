@@ -1,0 +1,21 @@
+name: DR Lyd full-episode metadata probe
+
+on:
+  pull_request:
+    paths:
+      - "scripts/probe-dr-lyd-full-episodes.mjs"
+      - ".github/workflows/probe-dr-lyd-full-episodes.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 4
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+      - run: node --experimental-strip-types scripts/probe-dr-lyd-full-episodes.mjs
