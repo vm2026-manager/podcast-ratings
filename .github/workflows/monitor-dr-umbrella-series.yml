@@ -1,0 +1,39 @@
+name: Monitor new DR umbrella podcast series
+
+on:
+  workflow_dispatch:
+  # Verify a newly merged DR monitor immediately; unrelated pushes do not run it.
+  push:
+    branches: [main]
+    paths:
+      - "scripts/monitor-dr-umbrella-series.mjs"
+      - "scripts/test-monitor-dr-umbrella-series.mjs"
+      - "supabase/functions/import-podcast-episodes/*routing.mjs"
+  schedule:
+    # Both DR umbrella feeds are imported every 12 hours.
+    - cron: "0 4,16 * * *"
+
+permissions:
+  contents: read
+  issues: write
+
+concurrency:
+  group: monitor-dr-umbrella-series
+  cancel-in-progress: false
+
+jobs:
+  detect-missing-series:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+      - name: Verify monitor logic with offline fixtures
+        run: node --experimental-strip-types scripts/test-monitor-dr-umbrella-series.mjs
+      - name: Check public DR feeds and update the review issue
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+        run: node --experimental-strip-types scripts/monitor-dr-umbrella-series.mjs --github-issue
