@@ -83,6 +83,7 @@ const noRoutes = mergeSheetFeedConfigs({ rows:[{ Titel:"Other", Hovedserie:"Othe
 assert.equal(noRoutes[DJAEVLEN_LYD_FULL_FEED_KEY].enabled, false);
 assert.equal(noRoutes[BAKSPEJL_LYD_FULL_FEED_KEY].enabled, false);
 assert.deepEqual(noRoutes[DJAEVLEN_LYD_FULL_FEED_KEY].routes, []);
-assert.equal(noRoutes[BAKSPEJL_LYD_FULL_FEED_KEY].routes.length, 0);
+assert.equal(noRoutes[BAKSPEJL_LYD_FULL_FEED_KEY].routes.length, 1); // existing DR promo exclusion route only
+assert.equal(noRoutes[BAKSPEJL_LYD_FULL_FEED_KEY].routes[0].key, "bakspejl:dr-promo");
 
 console.log("DR Lyd supplemental umbrella full-episode tests passed");
