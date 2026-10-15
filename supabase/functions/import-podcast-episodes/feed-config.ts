@@ -59,6 +59,11 @@ export type FeedConfig = {
 
 export type FeedConfigMap = Record<string, FeedConfig>;
 
+// Supplemental public DR Lyd metadata sources. Keep historical RSS sources active
+// and deduplicate by canonical episode_url rather than changing stored GUIDs.
+export const DJAEVLEN_LYD_FULL_FEED_KEY = "djaevlen_lyd_full";
+export const BAKSPEJL_LYD_FULL_FEED_KEY = "bakspejl_lyd_full";
+
 export const FEED_CONFIGS: FeedConfigMap = {
   "podimo_krop_til_salg": {
     podcast_key: "krop til salg",
@@ -79,6 +84,27 @@ export const FEED_CONFIGS: FeedConfigMap = {
     enabled: false
   },
   [BAKSPEJL_FEED_KEY]: { podcast_key: BAKSPEJL_IMPORT_LABEL, source: BAKSPEJL_SOURCE, feed_url: BAKSPEJL_FEED_URL, routes: [], enabled: false },
+  // DR's public RSS includes only teasers for many recent episodes. The full
+  // episodes have public title, duration, date and permalink in DR Lyd.
+  // Only catalogue-approved destination series are ever imported.
+  [DJAEVLEN_LYD_FULL_FEED_KEY]: {
+    podcast_key: DJAEVLEN_IMPORT_LABEL,
+    source: "dr_lyd_djaevlen_full",
+    format: "dr_lyd_next_data",
+    feed_url: "https://www.dr.dk/lyd/special-radio/djaevlen-i-detaljen-1865892085000",
+    dedupe_by_episode_url_with_sources: [DJAEVLEN_SOURCE],
+    routes: [],
+    enabled: false
+  },
+  [BAKSPEJL_LYD_FULL_FEED_KEY]: {
+    podcast_key: BAKSPEJL_IMPORT_LABEL,
+    source: "dr_lyd_bakspejl_full",
+    format: "dr_lyd_next_data",
+    feed_url: "https://www.dr.dk/lyd/special-radio/bakspejl-2868092680000",
+    dedupe_by_episode_url_with_sources: [BAKSPEJL_SOURCE],
+    routes: [],
+    enabled: false
+  },
   "podimo_grebet_af_gvfb": {
     podcast_key: "grebet af gvfb",
     source: "podimo_grebet_af_gvfb",
