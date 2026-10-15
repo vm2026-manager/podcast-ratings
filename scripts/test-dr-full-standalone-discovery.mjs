@@ -63,6 +63,10 @@ const twice = discoverVerifiedFullStandalone({
 assert.equal(twice.report.created.length, 0, "No duplicate on repeated checks");
 const mergedDr = mergeAutoDiscoveredDjaevlenRows(catalogueRows, result.registry);
 assert.equal(mergedDr.length, catalogueRows.length + 1);
+const published = discoverVerifiedFullStandalone({
+  showKey: "djaevlen", html: source, catalogueRows: mergedDr, registry: result.registry, now
+});
+assert.equal(published.report.created.length, 0, "Published child must not create duplicate routes");
 const drChild = mergedDr.at(-1);
 assert.equal(drChild["Vuring (1-10)"], undefined, "Never fabricate editorial score");
 assert.equal(drChild["Kort beskrivelse"], result.registry.records[0].description);
