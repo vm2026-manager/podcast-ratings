@@ -18,62 +18,82 @@
     <a class="skip-link" href="#indhold">Gå til indhold</a>
     <div class="shell">
       <header class="site-header">
-        <a class="brand" href="/" aria-label="Podcastlisten – forside"><span class="brand-mark" aria-hidden="true">P</span><span>Podcastlisten.dk<small>Podcastguiden</small></span></a>
-        <nav aria-label="Hovednavigation"><a href="/">Forside</a><a href="/#ranglister">Ranglister</a><a href="/genre/true-crime/">True crime</a></nav>
+        <a class="brand" href="/" aria-label="Podcastlisten – forside"><span class="brand-mark" aria-hidden="true">P</span><span>Podcastlisten.dk<small>Find din næste podcastfavorit</small></span></a>
+        <nav aria-label="Hovednavigation"><a href="/">Forside</a><a href="/#ranglister">Ranglister</a><a href="/#udforsk">Udforsk</a><a href="/podcast-anbefalinger/" aria-current="page">Podcastforslag</a></nav>
       </header>
       <main id="indhold">
         <section class="hero" aria-labelledby="guide-title">
           <p class="eyebrow">Find din næste lytteoplevelse</p>
           <h1 id="guide-title">Podcastanbefalinger: find din næste podcast</h1>
           <p>Leder du efter gode podcasts, eller tænker du: Hvilken podcast skal jeg høre? Her får du podcastforslag på tværs af genrer, så du kan finde noget, der passer til dine interesser.</p>
-          <p>Gå på opdagelse i udvalget af danske podcasts nedenfor. Du finder beskrivelser fra Podcastlistens katalog og links til mere podcastinfo. Se de registrerede vurderinger, hvor de findes, og vælg selv din næste lytteoplevelse.</p>
-          <p class="source-note">Udvalget er en genreguide. Beskrivelser og katalogvurderinger er fra kataloget den <time datetime="2026-10-09">9. oktober 2026</time>. Følg podcastens link for at se dens aktuelle oplysninger i Podcastlisten.</p>
+          <div class="hero-actions">
+            <a class="primary-link" href="/#udforsk">Udforsk alle podcasts på Podcastlisten</a>
+            <a class="secondary-link" href="/#ranglister">Se ranglisterne</a>
+          </div>
+          <p class="source-note">Udvalget er podcastforslag, ikke en rangliste over de bedste podcasts. Beskrivelser og redaktionelle vurderinger kommer fra Podcastlistens katalog. Følg podcastens link for at se de aktuelle oplysninger og brugernes vurderinger.</p>
+          <h2 class="chooser-heading">Hvad har du lyst til at høre?</h2>
+          <nav class="listening-choices" aria-label="Vælg din lytteoplevelse">
+            <a href="#nyheder"><strong>Forstå dagens historier</strong><span>Nyheder og perspektiver</span></a>
+            <a href="#historie"><strong>Fordyb dig i en fortælling</strong><span>Historiske begivenheder</span></a>
+            <a href="#samtaler"><strong>Lyt med til en samtale</strong><span>Gæster, kærlighed og relationer</span></a>
+            <a href="#underholdning"><strong>Find humor og hverdagsliv</strong><span>Talkshows og popkultur</span></a>
+          </nav>
           <nav class="genre-nav" aria-label="Find podcastforslag efter genre"><a href="#nyheder">Nyheder</a><a href="#true-crime">True crime</a><a href="#historie">Historie</a><a href="#underholdning">Underholdning</a><a href="#samtaler">Samtaler og relationer</a><a href="#samfund">Økonomi og samfund</a><a href="#fodbold">Fodbold</a><a href="#forskning">Forskning</a></nav>
         </section>
     <section class="genre-section" id="nyheder" aria-labelledby="heading-nyheder">
       <h2 id="heading-nyheder">Nyheder</h2>
       <p class="section-intro">Podcastforslag om aktuelle historier og perspektiver på nyhedsbilledet.</p>
-      <div class="podcast-grid">
+      <details class="genre-details">
+        <summary>Se 2 podcastforslag</summary>
+        <div class="podcast-grid">
         <article class="podcast-card" data-podcast-id="genstart">
           <div class="card-heading"><img class="cover" src="/data/covers/480/genstart-3feb134f1b.webp" alt="Cover til Genstart" width="88" height="88" loading="lazy" decoding="async" /><div><h3 class="podcast-title"><a href="/podcast/genstart/">Genstart</a></h3><p class="genre">Nyheder</p></div></div>
           <p class="description">DR går tæt på aktuelle historier, konflikter og personer i nyhedsbilledet.</p>
-          <p class="rating">Podcastlistens vurdering: <strong>7,9 / 10</strong></p>
+          <p class="rating">Redaktionel vurdering: <strong>7,9 / 10</strong></p>
           <a class="podcast-link" href="/?podcast=genstart">Se Genstart i Podcastlisten →</a>
         </article>
         <article class="podcast-card" data-podcast-id="tiden">
           <div class="card-heading"><img class="cover" src="/data/covers/480/tiden-c929799b79.webp" alt="Cover til Tiden" width="88" height="88" loading="lazy" decoding="async" /><div><h3 class="podcast-title"><a href="/podcast/tiden/">Tiden</a></h3><p class="genre">Nyheder</p></div></div>
           <p class="description">DR’s nyhedspodcast om dagens vigtigste historier, konflikter og perspektiver.</p>
-          <p class="rating">Podcastlistens vurdering: <strong>7,7 / 10</strong></p>
+          <p class="rating">Redaktionel vurdering: <strong>7,7 / 10</strong></p>
           <a class="podcast-link" href="/?podcast=tiden">Se Tiden i Podcastlisten →</a>
         </article>
       </div>
+      </details>
+      <p class="more-in-genre"><a href="/#ranglister">Find flere podcasts: nyheder</a><span>Vælg Samfund i ranglistens genrefilter.</span></p>
     </section>
     <section class="genre-section" id="true-crime" aria-labelledby="heading-true-crime">
       <h2 id="heading-true-crime">True crime</h2>
       <p class="section-intro">Kriminalsager og efterforskning. Find også flere titler i vores true crime-guide. <a href="/genre/true-crime/">Se alle true crime-podcasts</a>.</p>
-      <div class="podcast-grid">
+      <details class="genre-details">
+        <summary>Se 2 podcastforslag</summary>
+        <div class="podcast-grid">
         <article class="podcast-card" data-podcast-id="danske drabssager">
           <div class="card-heading"><img class="cover" src="/data/covers/480/danske-drabssager-46f931707b.webp" alt="Cover til Danske Drabssager" width="88" height="88" loading="lazy" decoding="async" /><div><h3 class="podcast-title"><a href="/podcast/danske-drabssager/">Danske Drabssager</a></h3><p class="genre">True Crime</p></div></div>
           <p class="description">Stine Bolther gennemgår danske drabssager med fokus på efterforskning og ofre.</p>
-          <p class="rating">Podcastlistens vurdering: <strong>7,7 / 10</strong></p>
+          <p class="rating">Redaktionel vurdering: <strong>7,7 / 10</strong></p>
           <a class="podcast-link" href="/?podcast=danske%20drabssager">Se Danske Drabssager i Podcastlisten →</a>
         </article>
         <article class="podcast-card" data-podcast-id="afhørt">
           <div class="card-heading"><img class="cover" src="/data/covers/480/afhoert-34fce51822.webp" alt="Cover til Afhørt" width="88" height="88" loading="lazy" decoding="async" /><div><h3 class="podcast-title"><a href="/podcast/afhoert/">Afhørt</a></h3><p class="genre">True Crime</p></div></div>
           <p class="description">Linette Krøger Jespersen afhører gæster og sager med true crime-blik og nysgerrighed.</p>
-          <p class="rating">Podcastlistens vurdering: <strong>7,4 / 10</strong></p>
+          <p class="rating">Redaktionel vurdering: <strong>7,4 / 10</strong></p>
           <a class="podcast-link" href="/?podcast=afh%C3%B8rt">Se Afhørt i Podcastlisten →</a>
         </article>
       </div>
+      </details>
+      <p class="more-in-genre"><a href="/#ranglister">Find flere podcasts: true crime</a><span>Vælg True Crime i ranglistens genrefilter.</span></p>
     </section>
     <section class="genre-section" id="historie" aria-labelledby="heading-historie">
       <h2 id="heading-historie">Historie</h2>
       <p class="section-intro">Fortællinger fra historien, fra atomvåben til usædvanlige begivenheder.</p>
-      <div class="podcast-grid">
+      <details class="genre-details">
+        <summary>Se 2 podcastforslag</summary>
+        <div class="podcast-grid">
         <article class="podcast-card" data-podcast-id="bomben">
           <div class="card-heading"><img class="cover" src="/data/covers/480/bomben-8d2c50dd3e.webp" alt="Cover til Bomben" width="88" height="88" loading="lazy" decoding="async" /><div><h3 class="podcast-title"><a href="/podcast/bomben/">Bomben</a></h3><p class="genre">Historie</p></div></div>
           <p class="description">Radio IIII-serie om atomvåbnenes historie fra Hiroshima til en ny urolig verdensorden.</p>
-          <p class="rating">Podcastlistens vurdering: <strong>7,5 / 10</strong></p>
+          <p class="rating">Redaktionel vurdering: <strong>7,5 / 10</strong></p>
           <a class="podcast-link" href="/?podcast=bomben">Se Bomben i Podcastlisten →</a>
         </article>
         <article class="podcast-card" data-podcast-id="vanvittig verdenshistorie">
@@ -83,11 +103,15 @@
           <a class="podcast-link" href="/?podcast=vanvittig%20verdenshistorie">Se Vanvittig Verdenshistorie i Podcastlisten →</a>
         </article>
       </div>
+      </details>
+      <p class="more-in-genre"><a href="/#ranglister">Find flere podcasts: historie</a><span>Vælg Historie i ranglistens genrefilter.</span></p>
     </section>
     <section class="genre-section" id="underholdning" aria-labelledby="heading-underholdning">
       <h2 id="heading-underholdning">Underholdning</h2>
       <p class="section-intro">Talkshows og samtaler om hverdagsliv, kultur og popkultur.</p>
-      <div class="podcast-grid">
+      <details class="genre-details">
+        <summary>Se 2 podcastforslag</summary>
+        <div class="podcast-grid">
         <article class="podcast-card" data-podcast-id="fantino og bonde">
           <div class="card-heading"><span class="cover cover-letter" aria-hidden="true">F</span><div><h3 class="podcast-title"><a href="/podcast/fantino-og-bonde/">Fantino og Bonde</a></h3><p class="genre">Underholdning</p></div></div>
           <p class="description">Maria Fantino og Christian Bonde taler om hverdagsliv, kultur og alt det mærkelige imellem.</p>
@@ -101,33 +125,41 @@
           <a class="podcast-link" href="/?podcast=mathias%20helts%20talkshow">Se Mathias Helts Talkshow i Podcastlisten →</a>
         </article>
       </div>
+      </details>
+      <p class="more-in-genre"><a href="/#ranglister">Find flere podcasts: underholdning</a><span>Vælg Underholdning i ranglistens genrefilter.</span></p>
     </section>
     <section class="genre-section" id="samtaler" aria-labelledby="heading-samtaler">
       <h2 id="heading-samtaler">Samtaler og relationer</h2>
       <p class="section-intro">Lange samtaler med gæster og fortællinger om kærlighed og hjertesorg.</p>
-      <div class="podcast-grid">
+      <details class="genre-details">
+        <summary>Se 2 podcastforslag</summary>
+        <div class="podcast-grid">
         <article class="podcast-card" data-podcast-id="hva sa">
           <div class="card-heading"><img class="cover" src="/data/covers/480/hva-sa-45e3292278.webp" alt="Cover til Hva så?!" width="88" height="88" loading="lazy" decoding="async" /><div><h3 class="podcast-title"><a href="/podcast/hva-sa/">Hva så?!</a></h3><p class="genre">Snakke</p></div></div>
           <p class="description">Christian Fuhlendorff møder kendte gæster til lange, nysgerrige samtaler.</p>
-          <p class="rating">Podcastlistens vurdering: <strong>7,8 / 10</strong></p>
+          <p class="rating">Redaktionel vurdering: <strong>7,8 / 10</strong></p>
           <a class="podcast-link" href="/?podcast=hva%20sa">Se Hva så?! i Podcastlisten →</a>
         </article>
         <article class="podcast-card" data-podcast-id="112 for knuste hjerter">
           <div class="card-heading"><img class="cover" src="/data/covers/480/112-for-knuste-hjerter-5ce74f9201.webp" alt="Cover til 112 for knuste hjerter" width="88" height="88" loading="lazy" decoding="async" /><div><h3 class="podcast-title"><a href="/podcast/112-for-knuste-hjerter/">112 for knuste hjerter</a></h3><p class="genre">Kærlighed</p></div></div>
           <p class="description">Maria Jencel taler med gæster om hjertesorg, kærlighed og livet efter bruddet.</p>
-          <p class="rating">Podcastlistens vurdering: <strong>7,7 / 10</strong></p>
+          <p class="rating">Redaktionel vurdering: <strong>7,7 / 10</strong></p>
           <a class="podcast-link" href="/?podcast=112%20for%20knuste%20hjerter">Se 112 for knuste hjerter i Podcastlisten →</a>
         </article>
       </div>
+      </details>
+      <p class="more-in-genre"><a href="/#ranglister">Find flere podcasts: samtaler og relationer</a><span>Vælg Underholdning i ranglistens genrefilter.</span></p>
     </section>
     <section class="genre-section" id="samfund" aria-labelledby="heading-samfund">
       <h2 id="heading-samfund">Økonomi og samfund</h2>
       <p class="section-intro">Podcastforslag om penge, politik og samfund.</p>
-      <div class="podcast-grid">
+      <details class="genre-details">
+        <summary>Se 2 podcastforslag</summary>
+        <div class="podcast-grid">
         <article class="podcast-card" data-podcast-id="børsen brænder">
           <div class="card-heading"><img class="cover" src="/data/covers/480/boersen-braender-0119a37d8c.webp" alt="Cover til Børsen brænder" width="88" height="88" loading="lazy" decoding="async" /><div><h3 class="podcast-title"><a href="/podcast/boersen-braender/">Børsen brænder</a></h3><p class="genre">Erhverv</p></div></div>
           <p class="description">Økonomipodcast om penge, markeder og hvordan finans bliver til politik.</p>
-          <p class="rating">Podcastlistens vurdering: <strong>7,0 / 10</strong></p>
+          <p class="rating">Redaktionel vurdering: <strong>7,0 / 10</strong></p>
           <a class="podcast-link" href="/?podcast=b%C3%B8rsen%20br%C3%A6nder">Se Børsen brænder i Podcastlisten →</a>
         </article>
         <article class="podcast-card" data-podcast-id="only in america">
@@ -137,36 +169,46 @@
           <a class="podcast-link" href="/?podcast=only%20in%20america">Se Only in America i Podcastlisten →</a>
         </article>
       </div>
+      </details>
+      <p class="more-in-genre"><a href="/#ranglister">Find flere podcasts: økonomi og samfund</a><span>Vælg Samfund i ranglistens genrefilter.</span></p>
     </section>
     <section class="genre-section" id="fodbold" aria-labelledby="heading-fodbold">
       <h2 id="heading-fodbold">Fodbold</h2>
       <p class="section-intro">Handler, rygter, debat og analyser fra fodboldens verden.</p>
-      <div class="podcast-grid">
+      <details class="genre-details">
+        <summary>Se 2 podcastforslag</summary>
+        <div class="podcast-grid">
         <article class="podcast-card" data-podcast-id="transferguru">
           <div class="card-heading"><img class="cover" src="/data/covers/480/transferguru-3e4385161b.webp" alt="Cover til Transferguru" width="88" height="88" loading="lazy" decoding="async" /><div><h3 class="podcast-title"><a href="/podcast/transferguru/">Transferguru</a></h3><p class="genre">Fodbold</p></div></div>
           <p class="description">Transferguru går tæt på fodboldens handler, rygter og spillet bag kulissen.</p>
-          <p class="rating">Podcastlistens vurdering: <strong>7,7 / 10</strong></p>
+          <p class="rating">Redaktionel vurdering: <strong>7,7 / 10</strong></p>
           <a class="podcast-link" href="/?podcast=transferguru">Se Transferguru i Podcastlisten →</a>
         </article>
         <article class="podcast-card" data-podcast-id="kvart i bold">
           <div class="card-heading"><img class="cover" src="/data/covers/480/kvart-i-bold-db81d083a4.webp" alt="Cover til Kvart i bold" width="88" height="88" loading="lazy" decoding="async" /><div><h3 class="podcast-title"><a href="/podcast/kvart-i-bold/">Kvart i bold</a></h3><p class="genre">Fodbold</p></div></div>
           <p class="description">Aktuel fodboldsnak med debat, analyser og kant fra den danske fodboldverden.</p>
-          <p class="rating">Podcastlistens vurdering: <strong>6,8 / 10</strong></p>
+          <p class="rating">Redaktionel vurdering: <strong>6,8 / 10</strong></p>
           <a class="podcast-link" href="/?podcast=kvart%20i%20bold">Se Kvart i bold i Podcastlisten →</a>
         </article>
       </div>
+      </details>
+      <p class="more-in-genre"><a href="/#ranglister">Find flere podcasts: fodbold</a><span>Vælg Sport i ranglistens genrefilter.</span></p>
     </section>
     <section class="genre-section" id="forskning" aria-labelledby="heading-forskning">
       <h2 id="heading-forskning">Forskning</h2>
       <p class="section-intro">Et podcastforslag til dig, der er nysgerrig på videnskab og livet.</p>
-      <div class="podcast-grid">
+      <details class="genre-details">
+        <summary>Se 1 podcastforslag</summary>
+        <div class="podcast-grid">
         <article class="podcast-card" data-podcast-id="jagten pa det evige liv">
           <div class="card-heading"><img class="cover" src="/data/covers/480/jagten-pa-det-evige-liv-17142f48e4.webp" alt="Cover til Jagten på det evige liv" width="88" height="88" loading="lazy" decoding="async" /><div><h3 class="podcast-title"><a href="/podcast/jagten-pa-det-evige-liv/">Jagten på det evige liv</a></h3><p class="genre">Forskning</p></div></div>
           <p class="description">En nysgerrig jagt på, om videnskaben kan forlænge livet markant.</p>
-          <p class="rating">Podcastlistens vurdering: <strong>7,8 / 10</strong></p>
+          <p class="rating">Redaktionel vurdering: <strong>7,8 / 10</strong></p>
           <a class="podcast-link" href="/?podcast=jagten%20pa%20det%20evige%20liv">Se Jagten på det evige liv i Podcastlisten →</a>
         </article>
       </div>
+      </details>
+      <p class="more-in-genre"><a href="/#ranglister">Find flere podcasts: forskning</a><span>Vælg Viden i ranglistens genrefilter.</span></p>
     </section>
         <section class="help" aria-labelledby="help-heading">
           <h2 id="help-heading">Sådan finder du gode danske podcasts</h2>
@@ -176,10 +218,10 @@
           <h3>Hvor finder jeg flere podcastforslag?</h3>
           <p>Besøg <a href="/#udforsk">Udforsk i Podcastlisten</a>, eller gå videre til <a href="/genre/true-crime/">guiden til true crime-podcasts</a>. Podcastlisten har flere genrer og titler end dem, du ser i dette udvalg.</p>
           <h3>Hvad betyder vurderingerne?</h3>
-          <p>Scorerne på denne side er de vurderinger ud af 10, der er registreret i Podcastlistens katalog. En podcast uden vist score har ingen katalogvurdering i dette udvalg. Beskrivelserne og dine egne interesser kan også hjælpe dig med at finde en podcast.</p>
+          <p>Scorerne på denne side er redaktionelle katalogvurderinger ud af 10. De er ikke brugernes gennemsnitsvurderinger og bestemmer ikke rækkefølgen i udvalget. En podcast uden vist score har ingen katalogvurdering i dette udvalg. Se podcasten i Podcastlisten for at finde brugernes vurderinger.</p>
         </section>
       </main>
-      <footer class="site-footer"><span>Podcastlisten.dk · Podcastguiden</span><a href="/">Tilbage til Podcastlisten</a></footer>
+      <footer class="site-footer"><span>Podcastlisten.dk · Find din næste podcastfavorit</span><nav aria-label="Videre i Podcastlisten"><a href="/#forside">Forside</a> · <a href="/#ranglister">Ranglister</a> · <a href="/#udforsk">Udforsk</a></nav></footer>
     </div>
   </body>
 </html>

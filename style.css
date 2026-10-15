@@ -29703,3 +29703,8 @@ html body [data-suggestion-id].is-notification-target {
     height: 44px !important;
   }
 }
+
+/* Static podcast guide: visible alongside the existing home actions. */
+.page-forside #pageIntroPanel .home-podcast-guide { margin: 18px 0 0; font-size: 14px; line-height: 1.5; }
+.page-forside #pageIntroPanel .home-podcast-guide a { color: var(--text); text-underline-offset: .2em; }
+.page-forside #pageIntroPanel .home-podcast-guide a:focus-visible { outline: 3px solid var(--accent-deep); outline-offset: 4px; }
