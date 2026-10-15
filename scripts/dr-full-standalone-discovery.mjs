@@ -59,9 +59,20 @@ export function discoverVerifiedFullStandalone({
   if (!Array.isArray(catalogueRows) || !catalogueRows.length || !registry ||
       !Array.isArray(registry.records)) throw new Error("Missing authoritative catalogue or registry");
 
-  const existingRows = [...catalogueRows, ...registry.records.map((record) => ({
-    Titel: record.title, "Podcast-ID": record.podcast_id, Hovedserie: record.hovedserie
-  }))];
+  // data/podcasts.json already includes merged registry entries. Do not
+  // append a second route for an existing identity (ambiguous same-key match).
+  const existingRows = [...catalogueRows];
+  for (const record of registry.records) {
+    const already = existingRows.find((row) => row["Podcast-ID"] === record.podcast_id);
+    if (already) {
+      if (show.normalize(already.Titel) !== record.discovery_key ||
+          show.normalize(already.Hovedserie) !== show.normalize(show.parent)) {
+        throw new Error("Registry / published catalogue identity conflict");
+      }
+    } else {
+      existingRows.push({ Titel: record.title, "Podcast-ID": record.podcast_id, Hovedserie: record.hovedserie });
+    }
+  }
   const feed = mergeSheetFeedConfigs({ rows: existingRows }).configs[show.feedKey];
   if (!feed?.enabled || !feed?.routes?.length) throw new Error("No active DR umbrella catalogue routes");
   const mapped = mapDrLydEpisodes(parseDrLydEpisodes(html), feed, now);
