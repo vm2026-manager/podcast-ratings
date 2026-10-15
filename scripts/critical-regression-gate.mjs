@@ -24,6 +24,7 @@ const checks = [
   ["Djævlen umbrella routing", ["--experimental-strip-types", "scripts/test-djaevlen-umbrella-routing.mjs"]],
   ["Bakspejl umbrella routing", ["--experimental-strip-types", "scripts/test-bakspejl-umbrella-routing.mjs"]],
   ["New DR umbrella series monitor", ["--experimental-strip-types", "scripts/test-monitor-dr-umbrella-series.mjs"]],
+  ["DR Lyd supplemental full episodes and RSS identity preservation", ["--experimental-strip-types", "scripts/test-dr-lyd-supplemental-umbrella.mjs"]],
   ["Mediano episode workspace", ["scripts/test-mediano-episode-workspace-config.mjs"]],
   ["episode detail DOM stability", ["scripts/test-podcast-detail-episode-load-dom-stability.mjs"]],
   ["episode own-rating lock", ["scripts/test-podcast-detail-own-rating-lock-behavior.mjs"]],
