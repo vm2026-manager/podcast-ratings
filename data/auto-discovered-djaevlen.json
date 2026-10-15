@@ -13,7 +13,8 @@
       "title": "Dræberurten",
       "hovedserie": "Djævlen i detaljen",
       "publisher": "DR",
-      "cover": "https://api.dr.dk/podcasts/v1/images/urn:dr:podcast:image:66f271c4b75d19480fa40d01.jpg"
+      "cover": "https://api.dr.dk/podcasts/v1/images/urn:dr:podcast:image:66f271c4b75d19480fa40d01.jpg",
+      "description": "Dræberurten er en episode af DR-podcasten Djævlen i detaljen, udgivet 14. oktober 2026."
     }
   ]
 }
