@@ -35,4 +35,17 @@ for (const target of cases) {
     console.error(target.name + ": " + String(error));
   }
 }
+try {
+  const response = await fetch("https://podcastlisten.dk/podcasts.json", { signal: AbortSignal.timeout(15000) });
+  if (!response.ok) throw new Error("podcasts.json HTTP " + response.status);
+  const raw = await response.json();
+  const rows = Array.isArray(raw) ? raw : raw.rows;
+  const matches = rows.filter(row => /^(?:dræberurten|djævlen i detaljen|bakspejl|la riots|danmarks værste massemorder\\??)$/i.test(String(row.Titel || "").trim()));
+  console.log("CATALOGUE_MATCHES", JSON.stringify(matches.map(row => ({
+    title: row.Titel, podcast_id: row["Podcast-ID"], main_series: row.Hovedserie, feed: row.Feed
+  })), null, 2));
+} catch (error) {
+  errors++;
+  console.error("CATALOGUE_QUERY: " + String(error));
+}
 if (errors) process.exitCode = 1;
