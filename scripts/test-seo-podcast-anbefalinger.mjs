@@ -35,7 +35,11 @@ assert(description.length >= 100 && description.length <= 160);
 assert(title.includes("Podcast anbefalinger") && title.includes("gode danske podcasts"));
 assert(!home.includes(`<title>${title}</title>`));
 assert(!home.includes(`name="description" content="${description}"`));
-assert.match(home, /<a href="\/podcast-anbefalinger\/">Podcastanbefalinger: find din næste podcast<\/a>/);
+for (const [name, content] of [["app.js", app], ["index.html", home]]) {
+  assert.doesNotMatch(content, /home-podcast-guide|podcast-guide-link/, `${name}: misplaced guide elements stay removed`);
+  assert.doesNotMatch(content, /\/podcast-anbefalinger(?:\/|["?#])/, `${name}: do not insert a replacement SEO link in any app view`);
+}
+assert.doesNotMatch(homeCss, /\.(?:home-podcast-guide|podcast-guide-link)\b/, "removed links leave no orphan styling");
 for (const term of ["podcastforslag", "gode podcasts", "danske podcasts", "Hvilken podcast skal jeg høre?"]) assert(html.includes(term));
 
 // Preserve the exact SEO identity introduced in phase 2A.
@@ -51,8 +55,6 @@ assert.equal([...html.matchAll(/<details class="genre-details">/g)].length, 8, "
 assert.equal([...html.matchAll(/<summary>Se [12] podcastforslag<\/summary>/g)].length, 8);
 assert.equal([...html.matchAll(/class="more-in-genre"/g)].length, 8);
 assert.match(html, /De er ikke brugernes gennemsnitsvurderinger/);
-assert.match(app, /class="home-podcast-guide"><a href="\/podcast-anbefalinger\/">/);
-assert.match(homeCss, /\.page-forside #pageIntroPanel \.home-podcast-guide/);
 const routeStart = app.indexOf("function getRouteInfoFromHash(");
 const routeEnd = app.indexOf("\nfunction ", routeStart + 1);
 assert(routeStart >= 0 && routeEnd > routeStart);

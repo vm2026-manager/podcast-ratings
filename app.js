@@ -22695,7 +22695,6 @@ function renderRoute() {
               ${homeCtaRankingIcon}Se ranglister
             </a>
           </div>
-          <p class="home-podcast-guide"><a href="/podcast-anbefalinger/">Brug for inspiration? Find podcastforslag efter genre →</a></p>
         </div>
         ${
           loggedIn
