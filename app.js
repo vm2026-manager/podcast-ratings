@@ -2688,6 +2688,11 @@ function getPodcastImageSources(podcast) {
     return ["assets/podcast-covers/manual-originals/series/bedraget_af_en_svindler.webp"];
   }
 
+  // User-supplied standalone cover, matched by canonical podcast ID.
+  if (getPodcastId(podcast) === "fra fodboldstjerne til narkohaj") {
+    return ["assets/podcast-covers/manual-originals/series/fra_fodboldstjerne_til_narkohaj.avif"];
+  }
+
   const localSources = Array.isArray(podcast.localCoverVariants)
     ? podcast.localCoverVariants.map((variant) => variant.path)
     : [];

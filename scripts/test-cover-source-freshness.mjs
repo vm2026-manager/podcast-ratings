@@ -59,6 +59,13 @@ assert.equal(bedragetBytes.subarray(0, 4).toString(), "RIFF", "Bedraget af en sv
 const svindlerneBytes = await readFile(new URL("../assets/podcast-covers/manual-originals/series/svindlerne_podimo_saeson_1.webp", import.meta.url));
 assert.equal(svindlerneBytes.subarray(0, 4).toString(), "RIFF", "Svindlerne cover is present as valid WebP container");
 
+const narkohajSources = Array.from(context.getPodcastImageSources({ podcastId: "fra fodboldstjerne til narkohaj", image: "https://example.test/outdated.jpg", imageFallbacks: [] }));
+assert.deepEqual(narkohajSources, ["assets/podcast-covers/manual-originals/series/fra_fodboldstjerne_til_narkohaj.avif"], "dedicated uploaded photo must override stale external artwork");
+const unrelatedCoverSources = Array.from(context.getPodcastImageSources({ podcastId: "transferguru", image: "https://example.test/podimo.jpg", imageFallbacks: [] }));
+assert.deepEqual(unrelatedCoverSources, ["https://example.test/podimo.jpg"], "other podcast identities must not be changed");
+const narkohajBytes = await readFile(new URL("../assets/podcast-covers/manual-originals/series/fra_fodboldstjerne_til_narkohaj.avif", import.meta.url));
+assert.equal(narkohajBytes.subarray(4, 12).toString(), "ftypavif", "new photo must be a valid AVIF container");
+
 let result = resolve();
 assert.equal(result.podcast.preferExternalCoverSource, false, "current automatic local covers stay local-first");
 assert.deepEqual(result.sources.slice(0, 2), [variants["480"].path, variants["800"].path]);
