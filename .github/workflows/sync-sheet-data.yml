@@ -14,7 +14,6 @@ on:
 
 permissions:
   actions: write
-  checks: write
   contents: write
   issues: write
   pull-requests: write
@@ -120,7 +119,8 @@ jobs:
           body: |
             Automated, validated catalogue sync from the public Podcastlisten Google Sheet.
 
-            The normal Critical Regression Gate must pass before this PR can merge.
+            The independent Critical Regression Gate workflow must pass before this PR can merge.
+            Approve its pending workflow run: PRs created with GITHUB_TOKEN require workflow approval.
           add-paths: |
             data/podcasts.json
             data/featured-reviews.json
@@ -140,59 +140,17 @@ jobs:
             echo "head_sha=$(echo "$pr_json" | jq -r .headRefOid)" >> "$GITHUB_OUTPUT"
           fi
 
-      - name: Start required regression check
-        id: required-check
-        if: steps.catalogue-pr.outputs.head_sha != ''
-        uses: actions/github-script@v7
-        env:
-          HEAD_SHA: ${{ steps.catalogue-pr.outputs.head_sha }}
-        with:
-          script: |
-            const check = await github.rest.checks.create({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              name: "Critical Regression Gate",
-              head_sha: process.env.HEAD_SHA,
-              status: "in_progress",
-              output: {
-                title: "Critical Regression Gate",
-                summary: "Running the repository's required regression gate for the catalogue PR."
-              }
-            });
-            core.setOutput("id", String(check.data.id));
-
+      # Preflight only: never publish the independent workflow's required check here.
+      # Its full verification (including Python and checkout cleanliness) must pass.
       - name: Run required regression gate against catalogue head
         id: required-gate
-        if: steps.required-check.outputs.id != ''
+        if: steps.catalogue-pr.outputs.head_sha != ''
         env:
           HEAD_SHA: ${{ steps.catalogue-pr.outputs.head_sha }}
         run: |
           git fetch --no-tags origin "$HEAD_SHA"
           git checkout --detach "$HEAD_SHA"
           node scripts/critical-regression-gate.mjs
-
-      - name: Complete required regression check
-        if: always() && steps.required-check.outputs.id != ''
-        uses: actions/github-script@v7
-        env:
-          CHECK_ID: ${{ steps.required-check.outputs.id }}
-          GATE_OUTCOME: ${{ steps.required-gate.outcome }}
-        with:
-          script: |
-            const passed = process.env.GATE_OUTCOME === "success";
-            await github.rest.checks.update({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              check_run_id: Number(process.env.CHECK_ID),
-              status: "completed",
-              conclusion: passed ? "success" : "failure",
-              output: {
-                title: "Critical Regression Gate",
-                summary: passed
-                  ? "The required regression gate passed for this catalogue PR commit."
-                  : "The required regression gate failed for this catalogue PR commit."
-              }
-            });
 
       - name: Record blocked catalogue regression gate in GitHub Issues
         if: always() && steps.required-gate.outcome == 'failure'
@@ -246,14 +204,15 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           PR_URL: ${{ steps.create-pull-request.outputs.pull-request-url }}
+          HEAD_SHA: ${{ steps.catalogue-pr.outputs.head_sha }}
         run: |
           set +e
-          gh pr merge --auto --merge "$PR_URL"
+          gh pr merge --auto --merge --match-head-commit "$HEAD_SHA" "$PR_URL"
           status=$?
           set -e
           if [ "$status" -ne 0 ]; then
             echo "::warning::Could not enable auto-merge for $PR_URL. The validated PR remains open for normal review/merge."
             echo "Auto-merge could not be enabled for $PR_URL; the PR remains open." >> "$GITHUB_STEP_SUMMARY"
           else
-            echo "Auto-merge enabled for $PR_URL after required checks pass." >> "$GITHUB_STEP_SUMMARY"
+            echo "Auto-merge requested for $PR_URL. The independent Critical Regression Gate must pass; approve its pending workflow run if required." >> "$GITHUB_STEP_SUMMARY"
           fi
