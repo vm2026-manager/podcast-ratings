@@ -2,6 +2,13 @@ name: Sync Podcastlisten catalogue
 
 on:
   workflow_dispatch:
+  # A workflow change on main also starts one validated catalogue sync.
+  # Routine catalogue updates still use the existing schedule, not Supabase cron.
+  push:
+    branches:
+      - main
+    paths:
+      - ".github/workflows/sync-sheet-data.yml"
   schedule:
     - cron: "7,37 * * * *"
 
