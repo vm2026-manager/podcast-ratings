@@ -402,15 +402,17 @@ function validateAccessEvidenceUrl(value, title) {
   try {
     parsedUrl = new URL(normalizedValue);
   } catch {
-    throw new Error(
-      `Ugyldig URL i Kilde${formatEditorialRowLabel(title)}: ${JSON.stringify(normalizedValue)}.`
+    console.warn(
+      `Ugyldig URL i Kilde${formatEditorialRowLabel(title)}: ${JSON.stringify(normalizedValue)}. Ignorerer kildefeltet, men bevarer podcastrækken.`
     );
+    return "";
   }
 
   if (parsedUrl.protocol !== "https:" && parsedUrl.protocol !== "http:") {
-    throw new Error(
-      `Kilde skal bruge http eller https${formatEditorialRowLabel(title)}: ${JSON.stringify(normalizedValue)}.`
+    console.warn(
+      `Kilde skal bruge http eller https${formatEditorialRowLabel(title)}: ${JSON.stringify(normalizedValue)}. Ignorerer kildefeltet, men bevarer podcastrækken.`
     );
+    return "";
   }
 
   return normalizedValue;
