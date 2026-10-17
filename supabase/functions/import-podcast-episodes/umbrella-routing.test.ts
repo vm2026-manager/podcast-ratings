@@ -102,6 +102,28 @@ Deno.test("Tipsbladet Lyd's 49 inspected episodes route deterministically", () =
   assertEquals(report.ambiguous.length, 0);
 });
 
+Deno.test("new free Transferguru episodes stay separate from Podimo and existing Tipsbladet series", () => {
+  const inputs = [
+    episode("Buzzsprout-19937866", "Hvem har haft det BEDSTE transfervindue i Superligaen? | Transferguru"),
+    episode("Buzzsprout-19966521", "FCK TIL SALG: En kæmpe nyhed for dansk fodbold! | Transferguru"),
+    episode("future-prefix", "Transferguru: En ny transferhistorie"),
+    episode("other-1", "Kan FCK stikke af fra FCM? | Superligaens Sandheder - Episode 18", "Transferguru er tilbage"),
+    episode("other-2", "FARZAM: Brøndby skal af med tre profiler! | Transfer Talk, Episode 3", "Transferguru nævnes i beskrivelsen"),
+    episode("unknown", "Fodbold og Transferguru rygter", "Transferguru er tilbage")
+  ];
+  const { episodes, report } = routeEpisodes(inputs, FEED_CONFIGS.tipsbladet_lyd);
+  assertEquals(episodes.map(({ external_guid, podcast_key }) => [external_guid, podcast_key]), [
+    ["Buzzsprout-19937866", "transferguru tipsbladet"],
+    ["Buzzsprout-19966521", "transferguru tipsbladet"],
+    ["future-prefix", "transferguru tipsbladet"],
+    ["other-1", "superligaens sandheder"],
+    ["other-2", "transfer talk"]
+  ]);
+  assertEquals(report?.route_counts, { transferguru_tipsbladet: 3, superligaens_sandheder: 1, transfer_talk: 1 });
+  assertEquals(report?.unmatched.map((issue) => issue.external_guid), ["unknown"]);
+  assertEquals(report?.ambiguous.length, 0);
+});
+
 Deno.test("normal feeds retain their direct podcast destination", () => {
   const directConfig: FeedConfig = { podcast_key: "normal", source: "normal_rss", feed_url: "https://example.test/feed" };
   const original = episode("normal-1", "Normal episode");

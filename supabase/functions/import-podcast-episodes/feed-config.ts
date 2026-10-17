@@ -196,6 +196,13 @@ export const FEED_CONFIGS: FeedConfigMap = {
     feed_url: "https://feeds.buzzsprout.com/2307562.rss",
     routes: [
       {
+        // The independent free relaunch lives under this distinct Google Sheets Podcast-ID.
+        // Title-only markers avoid accidental matches in other series' descriptions.
+        key: "transferguru_tipsbladet",
+        podcast_key: "transferguru tipsbladet",
+        title: { patterns: [/^transferguru\s*[:|–—-]\s*.+/i, /\|\s*transferguru(?:\s*[-–—]\s*(?:episode|afsnit)\s*\d+)?\s*$/i] }
+      },
+      {
         key: "transfer_talk",
         podcast_key: "transfer talk",
         title: { patterns: [/\btransfer\s*[- ]?\s*talk\b/i] },

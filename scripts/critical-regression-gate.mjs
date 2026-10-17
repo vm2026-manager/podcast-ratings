@@ -22,6 +22,7 @@ const checks = [
   ["manual cover intake identity", ["scripts/test-manual-cover-intake.mjs"]],
   ["startup rating hydration", ["scripts/test-startup-rating-hydration.mjs"]],
   ["episode archive/source", ["scripts/test-podcast-episode-archive-source-regression.mjs"]],
+  ["Tipsbladet Transferguru identity and routing", ["--experimental-strip-types", "scripts/test-tipsbladet-transferguru-routing.mjs"]],
   ["Djævlen umbrella routing", ["--experimental-strip-types", "scripts/test-djaevlen-umbrella-routing.mjs"]],
   ["Bakspejl umbrella routing", ["--experimental-strip-types", "scripts/test-bakspejl-umbrella-routing.mjs"]],
   ["New DR umbrella series monitor", ["--experimental-strip-types", "scripts/test-monitor-dr-umbrella-series.mjs"]],
