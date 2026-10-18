@@ -40,7 +40,7 @@ for (const [name, content] of [["app.js", app], ["index.html", home]]) {
   assert.doesNotMatch(content, /\/podcast-anbefalinger(?:\/|["?#])/, `${name}: do not insert a replacement SEO link in any app view`);
 }
 assert.doesNotMatch(homeCss, /\.(?:home-podcast-guide|podcast-guide-link)\b/, "removed links leave no orphan styling");
-for (const term of ["podcastforslag", "gode podcasts", "danske podcasts", "Hvilken podcast skal jeg høre?"]) assert(html.includes(term));
+for (const term of ["podcastforslag", "gode podcasts", "danske podcasts", "Hvilken podcast skal jeg høre?", "Brug forslagene som inspiration"]) assert(html.includes(term));
 
 // Preserve the exact SEO identity introduced in phase 2A.
 assert.equal(title, "Podcast anbefalinger – gode danske podcasts | Podcastlisten");
