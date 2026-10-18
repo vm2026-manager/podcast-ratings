@@ -55,6 +55,9 @@ export type FeedConfig = {
   metadata_only?: boolean;
   dedupe_by_episode_url_with_sources?: string[];
   manual_identity_links?: typeof KROP_MANUAL_LINKS;
+  // Version-controlled evidence for an exact same-show RSS relocation. Never
+  // populate from Sheet input; changed GUIDs require a separate identity plan.
+  reviewed_sheet_feeds?: Array<{ from_url: string; to_url: string; same_show_and_guids: true; evidence: string }>;
 };
 
 export type FeedConfigMap = Record<string, FeedConfig>;
@@ -369,8 +372,11 @@ export const FEED_CONFIGS: FeedConfigMap = {
 
   "har_du_hoert": {
     podcast_key: "har du hørt",
-    source: "omny_har_du_hoert_rss",
-    feed_url: "https://www.omnycontent.com/d/playlist/414edbb4-4b91-4960-8650-ad4000dbc027/27e90989-ce53-4ba3-ae6a-ad4800e68fc9/b0a50925-4c9f-47f5-81b7-ad4800e68fd2/podcast.rss"
+    // Apple 1851213764 identifies Nikita/Viaplay. The old Omny import was
+    // William Ejsing's different show: never reuse its GUID/source namespace.
+    // Existing Omny rows/UUIDs remain untouched; see the UI source boundary.
+    source: "transistor_har_du_hoert_nikita_rss",
+    feed_url: "https://feeds.transistor.fm/har-du-hort-med-nikita-klaestrup"
   },
 
   "hvis_du_vil_vide_mere": {
