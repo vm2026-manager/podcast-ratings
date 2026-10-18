@@ -82,6 +82,8 @@ function fixture() {
     EXPLORE_PERSONAL_SNAPSHOT_STORAGE_KEY: "snapshot",
     isLoggedIn: () => true,
     getPodcastKey: (p) => p?.key,
+    resolvePublicPodcastDisplayItem: (p) => p,
+    getPublicDisplayPodcasts: () => [...catalogue.values()],
     normalizeComparable: (s) => String(s || "").toLowerCase().trim(),
     getExplorePreferenceProfile: () => profile,
     getExploreDailySeedPool: () => ({

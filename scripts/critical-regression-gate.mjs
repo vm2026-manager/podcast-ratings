@@ -17,6 +17,7 @@ const checks = [
   ["production catalogue health", ["scripts/test-production-catalogue-health.mjs"]],
   ["display-group catalogue", ["scripts/validate-podcast-display-groups.mjs"]],
   ["Narkobetjenten seasons", ["scripts/test-narkobetjenten-seasons.mjs"]],
+  ["Narkobetjenten public display and community season eligibility", ["scripts/test-narkobetjenten-public-display.mjs"]],
   ["app.js syntax", ["--check", "app.js"]],
   ["Bakspejl local cover availability", ["scripts/test-bakspejl-cover-availability.mjs"]],
   ["cover identity resolution", ["scripts/test-cover-identity-resolution.mjs"]],
