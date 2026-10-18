@@ -23,18 +23,18 @@
       "preserveSourceBytes": true
     }
   },
-  "totalPodcasts": 1088,
-  "totalLocalCovers": 1082,
-  "totalVariants": 2407,
-  "totalOriginals": 1082,
-  "totalVariantFileSizeBytes": 164255938,
-  "totalOriginalFileSizeBytes": 532718461,
-  "totalFileSizeBytes": 696974399,
+  "totalPodcasts": 1087,
+  "totalLocalCovers": 1081,
+  "totalVariants": 2404,
+  "totalOriginals": 1081,
+  "totalVariantFileSizeBytes": 164168512,
+  "totalOriginalFileSizeBytes": 531561886,
+  "totalFileSizeBytes": 695730398,
   "placeholderPodcasts": 6,
   "variantCounts": {
-    "480": 1078,
-    "800": 770,
-    "1400": 559
+    "480": 1077,
+    "800": 769,
+    "1400": 558
   },
   "lastRun": {
     "startedAt": "2026-08-20T19:39:46Z",
@@ -3379,85 +3379,6 @@
           "quality": 88
         }
       }
-    },
-    {
-      "stableKey": "det-levende-bevis-4f6d5ab6c4",
-      "appPodcastKey": "Det levende bevis",
-      "title": "Det levende bevis",
-      "host": "Frederik Hugo Ledegaard Thim",
-      "publisher": "DR",
-      "mainSeries": "",
-      "genre": "True crime",
-      "sourceRowNumbers": [
-        45
-      ],
-      "originalImageUrl": "assets/podcast-covers/manual-originals/det-levende-bevis-4f6d5ab6c4.png",
-      "isDataUri": false,
-      "sourceKind": "manual",
-      "sourceFormat": "PNG",
-      "sourceWidth": 1400,
-      "sourceHeight": 1400,
-      "sourceHasTransparency": false,
-      "qualityCategory": "manual",
-      "sourceChecksum": "a46f03297018cb2b5103d6e4edfaedfa790523de9efee8648e8a6e9d637e0c04",
-      "sourceAuditStatus": "manual",
-      "lastAttempt": "2026-08-12T10:58:21Z",
-      "successfulSourceChecksum": "a46f03297018cb2b5103d6e4edfaedfa790523de9efee8648e8a6e9d637e0c04",
-      "status": "manual_override",
-      "needsPlaceholder": false,
-      "lastSuccess": "2026-08-12T10:58:21Z",
-      "lastError": "",
-      "reusedExistingFiles": false,
-      "original": {
-        "path": "data/covers/original/det-levende-bevis-4f6d5ab6c4.png",
-        "format": "PNG",
-        "contentType": "image/png",
-        "bytes": 1156575,
-        "checksum": "a46f03297018cb2b5103d6e4edfaedfa790523de9efee8648e8a6e9d637e0c04",
-        "width": 1400,
-        "height": 1400,
-        "hasTransparency": false
-      },
-      "variants": {
-        "480": {
-          "path": "data/covers/480/det-levende-bevis-4f6d5ab6c4.webp",
-          "requestedWidth": 480,
-          "actualWidth": 480,
-          "actualHeight": 480,
-          "format": "WEBP",
-          "contentType": "image/webp",
-          "bytes": 10088,
-          "checksum": "fa85a7caa5dc7b7b9b6f0d76aa4a7b01d348d0d54ada87403a86d3fa54a58b51",
-          "hasTransparency": false,
-          "quality": 82
-        },
-        "800": {
-          "path": "data/covers/800/det-levende-bevis-4f6d5ab6c4.webp",
-          "requestedWidth": 800,
-          "actualWidth": 800,
-          "actualHeight": 800,
-          "format": "WEBP",
-          "contentType": "image/webp",
-          "bytes": 23694,
-          "checksum": "dc5debcd1db728519aeff2a2624a5723474a2b643130c80fb51aab7405498db6",
-          "hasTransparency": false,
-          "quality": 88
-        },
-        "1400": {
-          "path": "data/covers/1400/det-levende-bevis-4f6d5ab6c4.webp",
-          "requestedWidth": 1400,
-          "actualWidth": 1400,
-          "actualHeight": 1400,
-          "format": "WEBP",
-          "contentType": "image/webp",
-          "bytes": 53644,
-          "checksum": "036b358f86287d0821cb45147dd720af06f00f39d93e25a5f90c681467562019",
-          "hasTransparency": false,
-          "quality": 90
-        }
-      },
-      "manualOverride": true,
-      "manualSourcePath": "assets/podcast-covers/manual-originals/det-levende-bevis-4f6d5ab6c4.png"
     },
     {
       "stableKey": "operation-romeo-022e981dc4",
