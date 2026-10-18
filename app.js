@@ -540,7 +540,11 @@ const EPISODE_PODCAST_CONFIG = {
     enabled: true,
     displayName: "Har du hørt?",
     searchPlaceholder: "Søg i Har du hørt?-episoder",
-    source: "omny",
+    source: "transistor",
+    // Explicit identity boundary for a legacy wrong-show import. This is not
+    // the normal archive policy: other podcasts retain all historical sources.
+    episodeSources: ["transistor_har_du_hoert_nikita_rss"],
+    historicalEpisodeLabels: { omny_har_du_hoert_rss: "Har du hørt? — William Ejsing (arkiv)" },
     persistence: "supabase"
   },
   "hvis du vil vide mere": {
@@ -10401,6 +10405,26 @@ function usesLocalEpisodePersistence(podcastOrKey) {
   return Boolean(config?.persistence === "local");
 }
 
+function applyPodcastEpisodeSourceBoundary(query, config, prefix = "") {
+  return config?.episodeSources?.length
+    ? query.in(`${prefix}source`, config.episodeSources)
+    : query;
+}
+
+function episodeMatchesPodcastSourceBoundary(episode, config) {
+  return !config?.episodeSources?.length || config.episodeSources.includes(episode?.source);
+}
+
+function orderPodcastEpisodes(query, config) {
+  const ordered = query.order("published_at", { ascending: false });
+  return config?.episodeSources?.length ? ordered.order("id", { ascending: true }) : ordered;
+}
+
+function getHistoricalEpisodeDisplayName(episode) {
+  const config = getEpisodePodcastConfig(episode?.podcast_key);
+  return config?.historicalEpisodeLabels?.[episode?.source] || "";
+}
+
 function getEpisodeDatabasePodcastKey(configOrPodcast) {
   const config =
     configOrPodcast &&
@@ -10746,12 +10770,16 @@ function getEpisodeUserRating(episodeId) {
 
 function getPodcastEpisodeUserRatingSummary(podcastOrKey) {
   const episodeState = getPodcastEpisodeState(podcastOrKey);
+  const config = getEpisodePodcastConfig(podcastOrKey);
   const ratingsById =
     state.authUser && episodeState.parentUserRatingsResolvedFor === state.authUser.id
       ? episodeState.parentUserRatingsById
       : episodeState.userRatingsById;
-  const ratings = Object.values(ratingsById)
-    .map((value) => parseNumber(value))
+  const ratings = Object.entries(ratingsById)
+    .filter(([id]) => !config?.episodeSources?.length ||
+      (!getGenstartEpisodeById(id) && ratingsById === episodeState.parentUserRatingsById) ||
+      episodeMatchesPodcastSourceBoundary(getGenstartEpisodeById(id), config))
+    .map(([, value]) => parseNumber(value))
     .filter((value) => value !== null);
   const count = ratings.length;
 
@@ -10774,12 +10802,13 @@ async function fetchPodcastEpisodeParentRatings(podcastOrKey) {
   try {
     // Query from the user's rows and join the parent episode. This is deliberately
     // independent of the visible episode page, so older ratings still count.
-    const { data, error } = await state.supabase
+    const query = state.supabase
       .from("episode_ratings")
-      .select("episode_id,rating,podcast_episodes!inner(podcast_key,is_active)")
+      .select("episode_id,rating,podcast_episodes!inner(podcast_key,is_active,source)")
       .eq("user_id", request.userId)
       .eq("podcast_episodes.podcast_key", getEpisodeDatabasePodcastKey(config))
       .eq("podcast_episodes.is_active", true);
+    const { data, error } = await applyPodcastEpisodeSourceBoundary(query, config, "podcast_episodes.");
 
     if (error) throw error;
     if (!isCurrentUserScopedRequest(request)) return;
@@ -11175,7 +11204,7 @@ async function fetchProfileEpisodeRatings({ append = false } = {}) {
     if (ids.length) {
       const { data: episodes, error: episodeError } = await state.supabase
         .from("podcast_episodes")
-        .select("id,podcast_key,title,description,published_at,duration_seconds,episode_url,audio_url,image_url,is_active")
+        .select("id,podcast_key,title,description,published_at,duration_seconds,episode_url,audio_url,image_url,is_active,source")
         .in("id", ids);
 
       if (episodeError) throw episodeError;
@@ -11186,7 +11215,7 @@ async function fetchProfileEpisodeRatings({ append = false } = {}) {
         if (id) {
           episodeRatings.episodeMetaById[id] = episode;
           const rating = rows.find((item) => normalizeText(item.episode_id) === id);
-          if (rating) {
+          if (rating && episodeMatchesPodcastSourceBoundary(episode, getEpisodePodcastConfig(episode.podcast_key))) {
             getPodcastEpisodeState(episode.podcast_key).userRatingsById[id] = parseNumber(rating.rating);
           }
         }
@@ -11222,7 +11251,8 @@ function createProfileEpisodeRatingCardElement(item) {
   const episode = getGenstartEpisodeById(episodeId);
   const podcastKey = normalizeText(episode?.podcast_key) || getDefaultEpisodePodcastKey();
   const podcast = resolvePodcastByStoredKey(podcastKey);
-  const podcastName = getEpisodePodcastDisplayName(podcast || podcastKey);
+  const historicalLabel = getHistoricalEpisodeDisplayName(episode);
+  const podcastName = historicalLabel || getEpisodePodcastDisplayName(podcast || podcastKey);
   const stat = getEpisodeStat(episodeId);
   const userRating = parseNumber(item.rating);
   const hasPublicRating = stat && Number(stat.ratingCount || 0) > 0 && stat.averageRating !== null;
@@ -11248,7 +11278,7 @@ function createProfileEpisodeRatingCardElement(item) {
   placeholder.textContent = "Episode";
   placeholder.hidden = true;
   cover.append(image, placeholder);
-  setImageWithFallbackSource(cover, episode?.image_url, getPodcastImageSources(podcast), title);
+  setImageWithFallbackSource(cover, episode?.image_url, historicalLabel ? [] : getPodcastImageSources(podcast), title);
 
   const meta = [date, duration].filter(Boolean).join(" · ");
   const copy = document.createElement("div");
@@ -11518,12 +11548,12 @@ async function fetchGenstartEpisodes({ append = false } = {}) {
   episodeState.error = "";
 
   try {
-    const { data, error, count } = await state.supabase
+    const query = state.supabase
       .from("podcast_episodes")
-      .select("id,podcast_key,title,description,published_at,duration_seconds,episode_url,audio_url,image_url,external_guid,is_active,metadata", { count: "exact" })
+      .select("id,podcast_key,title,description,published_at,duration_seconds,episode_url,audio_url,image_url,external_guid,is_active,metadata,source", { count: "exact" })
       .eq("podcast_key", getEpisodeDatabasePodcastKey(config))
-      .eq("is_active", true)
-      .order("published_at", { ascending: false })
+      .eq("is_active", true);
+    const { data, error, count } = await orderPodcastEpisodes(applyPodcastEpisodeSourceBoundary(query, config), config)
       .range(offset, offset + EPISODE_PAGE_SIZE - 1);
 
     if (error) throw error;
@@ -11578,13 +11608,13 @@ async function searchGenstartEpisodes(term, token, { append = false } = {}) {
 
   try {
     const pattern = `%${getSupabaseLikePattern(cleanTerm)}%`;
-    const { data, error, count } = await state.supabase
+    const query = state.supabase
       .from("podcast_episodes")
-      .select("id,podcast_key,title,description,published_at,duration_seconds,episode_url,audio_url,image_url,external_guid,is_active,metadata", { count: "exact" })
+      .select("id,podcast_key,title,description,published_at,duration_seconds,episode_url,audio_url,image_url,external_guid,is_active,metadata,source", { count: "exact" })
       .eq("podcast_key", getEpisodeDatabasePodcastKey(config))
-      .eq("is_active", true)
-      .or(`title.ilike.${pattern},description.ilike.${pattern}`)
-      .order("published_at", { ascending: false })
+      .eq("is_active", true);
+    const { data, error, count } = await orderPodcastEpisodes(applyPodcastEpisodeSourceBoundary(query, config)
+      .or(`title.ilike.${pattern},description.ilike.${pattern}`), config)
       .range(offset, offset + EPISODE_PAGE_SIZE - 1);
 
     if (token !== episodeState.searchToken) return;
@@ -12384,9 +12414,10 @@ function renderPodcastEpisodeDetailContent(dialog, podcast, episode, { backLabel
   const duration = formatEpisodeDuration(episode.duration_seconds);
   const description = getEpisodeDescription(episode);
   const link = getEpisodeLink(episode);
-  const displayName = getEpisodePodcastDisplayName(podcast);
+  const historicalLabel = getHistoricalEpisodeDisplayName(episode);
+  const displayName = historicalLabel || getEpisodePodcastDisplayName(podcast);
   const parentPodcastKey = normalizeText(episode?.podcast_key);
-  const parentPodcast = parentPodcastKey ? state.podcastByKey[parentPodcastKey] : null;
+  const parentPodcast = !historicalLabel && parentPodcastKey ? state.podcastByKey[parentPodcastKey] : null;
   const parentPodcastTitle = normalizeText(parentPodcast?.title);
   const canOpenParentPodcast =
     backLabel === "Tilbage til Profil" && !isMobileViewport() && Boolean(parentPodcast && parentPodcastTitle);
@@ -12446,7 +12477,7 @@ function renderPodcastEpisodeDetailContent(dialog, podcast, episode, { backLabel
   `;
 
   const cover = content.querySelector(".podcast-detail-sheet__episode-detail-cover");
-  setImageWithFallbackSource(cover, episode.image_url, getPodcastImageSources(podcast), episode.title || podcast.title);
+  setImageWithFallbackSource(cover, episode.image_url, historicalLabel ? [] : getPodcastImageSources(podcast), episode.title || podcast.title);
 
   content.querySelector("[data-podcast-episode-back]")?.addEventListener("click", (event) => {
     event.preventDefault();

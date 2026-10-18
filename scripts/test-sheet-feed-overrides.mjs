@@ -43,9 +43,9 @@ assert.equal(newApple.configs.apple_1851213764.enabled, false);
 for (const url of ["https://open.podimo.com/podcast/61f4484d-f2d7-4fa3-b7c7-892d78fc5bff",
   "https://feeds.transistor.fm/har-du-hort-med-nikita-klaestrup"]) {
   const incident = mergeSheetFeedConfigs([row(url, "har du hørt")]);
-  assert.equal(incident.configs.har_du_hoert.source, "omny_har_du_hoert_rss");
-  assert.notEqual(incident.configs.har_du_hoert.feed_url, url);
-  assert.ok(incident.audit.feed_warnings.some(entry => entry.podcast_key === "har du hørt"));
+  assert.equal(incident.configs.har_du_hoert.source, "transistor_har_du_hoert_nikita_rss");
+  assert.equal(incident.configs.har_du_hoert.feed_url, "https://feeds.transistor.fm/har-du-hort-med-nikita-klaestrup");
+  assert.equal(incident.audit.feed_warnings.some(entry => entry.podcast_key === "har du hørt"), url.includes("podimo"));
 }
 for (const extra of [{ format: "podimo_graphql" }, { format: "dr_lyd_next_data" }, { routes: [] },
   { owned_podcast_keys: [] }, { manual_identity_links: [] }, { dedupe_by_episode_url_with_sources: [] }, { metadata_only: true }]) {
