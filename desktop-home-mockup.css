@@ -358,7 +358,7 @@
   }
 
   html body.page-forside #pageIntroPanel .home-hero .intro::after {
-    content: "Udforsk tusindvis af podcasts, få personlige anbefalinger og gem dine favoritter – alt samlet ét sted." !important;
+    content: attr(data-mobile-intro) !important;
     display: block !important;
     font: 600 0.84rem / 1.52 "Manrope", sans-serif !important;
   }
@@ -1826,7 +1826,7 @@ html body #podcastDetailSheet .podcast-detail-sheet__related-copy small {
   }
 
   html body.page-forside #pageIntroPanel .home-hero .intro::after {
-    content: "Udforsk tusindvis af podcasts, få personlige anbefalinger og gem dine favoritter – alt samlet ét sted." !important;
+    content: attr(data-mobile-intro) !important;
     display: block !important;
     width: 100% !important;
     max-width: 505px !important;
@@ -2701,7 +2701,7 @@ html body #podcastDetailSheet .podcast-detail-sheet__related-copy small {
   }
 
   html body.page-forside #pageIntroPanel .home-hero__copy > p.intro::before {
-    content: "Udforsk tusindvis af podcasts, få personlige anbefalinger og gem dine favoritter – alt samlet ét sted." !important;
+    content: attr(data-mobile-intro) !important;
     display: block !important;
     max-width: 505px !important;
     color: #615851 !important;

@@ -1148,7 +1148,6 @@ const elements = {
   featuredScore: document.getElementById("featuredScore"),
   featuredDate: document.getElementById("featuredDate"),
   featuredText: document.getElementById("featuredText"),
-  featuredParams: document.getElementById("featuredParams"),
   featuredDots: document.getElementById("featuredDots"),
   pageIntroPanel: document.getElementById("pageIntroPanel"),
   mobileHomeSearchOverlay: document.getElementById("mobileHomeSearchOverlay"),
@@ -15834,7 +15833,6 @@ function renderFeaturedReview() {
     !elements.featuredMeta ||
     !elements.featuredScore ||
     !elements.featuredText ||
-    !elements.featuredParams ||
     !elements.featuredDots
   ) {
     return;
@@ -15871,47 +15869,6 @@ function renderFeaturedReview() {
       elements.featuredImage.alt = "";
     }
   }
-
-  elements.featuredParams.innerHTML = "";
-
-  review.params.forEach((param) => {
-    const rawValue = normalizeText(param.value);
-    if (!rawValue) return;
-
-    const number = parseNumber(rawValue);
-    const row = document.createElement("div");
-    row.className = "featured-param";
-
-    const label = document.createElement("span");
-    label.className = "featured-param-name";
-    label.textContent = param.label;
-
-    if (number === null) {
-      row.classList.add("is-na");
-
-      const value = document.createElement("span");
-      value.className = "featured-param-value";
-      value.textContent = rawValue;
-
-      row.append(label, value);
-    } else {
-      const bar = document.createElement("div");
-      bar.className = "featured-param-bar";
-
-      const fill = document.createElement("span");
-      fill.className = "featured-param-fill";
-      fill.style.width = `${Math.max(0, Math.min(100, number * 10))}%`;
-
-      const value = document.createElement("span");
-      value.className = "featured-param-value";
-      value.textContent = formatRating(rawValue);
-
-      bar.appendChild(fill);
-      row.append(label, bar, value);
-    }
-
-    elements.featuredParams.appendChild(row);
-  });
 
   elements.featuredDots.innerHTML = "";
 
@@ -22633,7 +22590,7 @@ function renderRoute() {
     const showHomeCommunityCta = !loggedIn;
     const homeDisplayName = getHomeDisplayName();
     const mobileHeroTitle = "Find din næste podcastfavorit";
-    const mobileHeroIntro = "Se personlige favoritter, brugernes vurderinger og find noget nyt at lytte til.";
+    const mobileHeroIntro = "Find og vurder podcasts, gem dine favoritter, og se, hvor du kan lytte.";
     const mobileHeroPodcastIds = ["millionærklubben", "genstart", "det vi taler om"];
     const mobileHeroPodcastCovers = mobileHeroPodcastIds.map((id, index) => {
       const podcast = state.podcastById[id] || state.podcasts.find((item) => getPodcastId(item) === id);
