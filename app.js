@@ -651,7 +651,7 @@ const AUTH_PERSISTENCE_STORAGE_KEY = "podcast-ratings-auth-persistence";
 const PROFILE_PREFERENCES_STORAGE_KEY = "podcast-ratings-profile-preferences";
 const EXPLORE_PERSONAL_SEED_HISTORY_STORAGE_KEY =
   "podcast-ratings-explore-personal-seed-history-v1";
-const UDFORSK_RECOMMENDATION_VERSION = 6;
+const UDFORSK_RECOMMENDATION_VERSION = 7;
 const EXPLORE_PERSONAL_SNAPSHOT_STORAGE_KEY =
   "podcast-ratings-explore-personal-snapshots-v2";
 const EXPLORE_PERSONAL_MINIMUM_GROUP_SIZE = 3;
@@ -9409,6 +9409,18 @@ function resolvePublicPodcastDisplayItem(podcast) {
   return displayGroup ? createRankingDisplayGroup(displayGroup) || podcast : podcast;
 }
 
+function getPublicDisplayPodcasts(source = state.podcasts) {
+  const seenKeys = new Set();
+  return source.reduce((podcasts, podcast) => {
+    const displayItem = resolvePublicPodcastDisplayItem(podcast);
+    const key = getPodcastKey(displayItem);
+    if (!displayItem || !key || seenKeys.has(key)) return podcasts;
+    seenKeys.add(key);
+    podcasts.push(displayItem);
+    return podcasts;
+  }, []);
+}
+
 function collapseRecommendationCandidatesForPublicDisplay(sourcePodcast, candidates) {
   const sourcePublicKey = getPodcastKey(resolvePublicPodcastDisplayItem(sourcePodcast));
   const seenKeys = new Set();
@@ -9703,7 +9715,7 @@ function getMainSeriesPodcasts(mainSeries) {
   if (!seriesKey) return [];
 
   const seen = new Set();
-  return state.podcasts
+  return getPublicDisplayPodcasts()
     .filter((podcast) => normalizeComparable(podcast.mainSeries) === seriesKey)
     .filter((podcast) => {
       const key = getPodcastKey(podcast);
@@ -13840,6 +13852,19 @@ function createHomePopularCardElement(podcast, options = {}) {
   card.setAttribute("aria-label", `Åbn detaljer om ${podcast.title}`);
 
   const openPodcastDetails = () => {
+    if (podcast.displayGroupItem) {
+      openPodcastDetailSheet(podcast.displayGroupItem, card, {
+        allowDesktop: true,
+        navigationKeys: options.navigationKeys
+      });
+      const dialog = document.getElementById("podcastDetailSheet");
+      renderPodcastDisplayGroupSeasonWorkspace(dialog, podcast.displayGroupItem);
+      const seasonIndex = [...podcast.displayGroupItem.displayGroupMembers]
+        .sort((left, right) => getDisplayGroupSeasonNumber(left) - getDisplayGroupSeasonNumber(right))
+        .findIndex((member) => getPodcastKey(member) === key);
+      dialog.querySelector(`[data-podcast-season-rate="${seasonIndex}"]`)?.focus();
+      return;
+    }
     openPodcastDetailSheet(podcast, card, {
       allowDesktop: true,
       navigationKeys: options.navigationKeys
@@ -13873,18 +13898,18 @@ function getHomeLatestEditorialReviews() {
   getHomeFeaturedReviewQueue().forEach((review) => {
     weeklyKeys.add(normalizeMatchKey(review.matchTitle || review.title));
     const podcast = getPodcastForFeaturedReview(review);
-    if (podcast) weeklyKeys.add(getPodcastKey(podcast));
+    if (podcast) weeklyKeys.add(getPodcastKey(resolvePublicPodcastDisplayItem(podcast)));
   });
 
   const reviewsByPodcastKey = new Map();
   state.allReviews.forEach((review) => {
     const podcast = getPodcastForFeaturedReview(review);
-    const key = podcast ? getPodcastKey(podcast) : "";
+    const key = podcast ? getPodcastKey(resolvePublicPodcastDisplayItem(podcast)) : "";
     if (key && normalizeText(review.review)) reviewsByPodcastKey.set(key, review);
   });
 
   const seen = new Set();
-  return state.podcasts
+  return getPublicDisplayPodcasts()
     .filter((podcast) => parseNumber(podcast.ratingValue) !== null && podcast.ratingDateObject)
     .filter((podcast) => {
       const key = getPodcastKey(podcast);
@@ -14017,7 +14042,9 @@ function getHomeFeaturedReviewQueue() {
 
 function getPodcastForFeaturedReview(review) {
   const reviewKey = normalizeMatchKey(review?.matchTitle || review?.title);
-  return reviewKey ? state.podcastByKey[reviewKey] || null : null;
+  return reviewKey
+    ? resolvePublicPodcastDisplayItem(state.podcastByKey[reviewKey] || null)
+    : null;
 }
 
 function openHomeFeaturedReview(review, trigger) {
@@ -14928,7 +14955,7 @@ function renderHomeRecent(container) {
 }
 
 function getHomeRecentPodcasts() {
-  return state.podcasts
+  return getPublicDisplayPodcasts()
     .filter(
       (podcast) =>
         podcast.ratingDateObject &&
@@ -19453,7 +19480,12 @@ function readExplorePersonalSnapshot({ dayKey, fingerprint }) {
       .map((section) => ({
         ...section,
         items: (section.items || [])
-          .map((item) => ({ ...item, podcast: state.podcastByKey[item.key] }))
+          .map((item) => ({
+            ...item,
+            podcast: resolvePublicPodcastDisplayItem(
+              getRankingDisplayItemByKey(item.key) || state.podcastByKey[item.key]
+            )
+          }))
           .filter((item) => item.podcast)
       }))
       .filter((section) => section.items.length >= EXPLORE_PERSONAL_MINIMUM_GROUP_SIZE);
@@ -19574,7 +19606,7 @@ function getExplorePersonalCandidateItems(
     minTasteScore = 0.1
   } = {}
 ) {
-  return state.podcasts
+  return getPublicDisplayPodcasts()
     .filter((podcast) => {
       const key = getPodcastKey(podcast);
       return (
@@ -19717,7 +19749,7 @@ function getExploreRecommendationItems({ limit = 8, searchParts = [], genre = "A
     return [];
   }
 
-  const items = state.podcasts
+  const items = getPublicDisplayPodcasts()
     .filter((podcast) => {
       const key = getPodcastKey(podcast);
       return (
@@ -19752,7 +19784,7 @@ function getExploreRelatedItems(seed, { limit = 6, searchParts = [], genre = "Al
   const ratedKeys = new Set(Object.keys(state.userRatingsByKey));
   const seedKey = getPodcastKey(seed.podcast);
 
-  return state.podcasts
+  return getPublicDisplayPodcasts()
     .filter((podcast) => {
       const key = getPodcastKey(podcast);
       if (key === seedKey || ratedKeys.has(key)) return false;
@@ -19881,7 +19913,7 @@ function getExploreSeedSectionItems(
   const ratedKeys = new Set(Object.keys(state.userRatingsByKey));
   const seedKey = getPodcastKey(seed.podcast);
 
-  return state.podcasts
+  return getPublicDisplayPodcasts()
     .filter((podcast) => {
       const key = getPodcastKey(podcast);
       return (
@@ -20205,7 +20237,10 @@ function getExplorePersonalSections({
     // Every recommendation reason shares one budget and one set of podcast keys.
     // Only accepted rows reserve keys, so an undersized row cannot starve fallbacks.
     const rowKeys = new Set();
-    const items = section.items.filter((item) => {
+    const items = section.items.map((item) => ({
+      ...item,
+      podcast: resolvePublicPodcastDisplayItem(item.podcast || item)
+    })).filter((item) => {
       const key = getPodcastKey(item.podcast || item);
       if (!key || usedKeys.has(key) || rowKeys.has(key)) return false;
       rowKeys.add(key);
@@ -20254,7 +20289,7 @@ function getExplorePersonalSections({
     for (const hostSignal of hostSignals) {
       const hostSeeds = profile.ratingSeeds.filter((seed) => hostsMatchComparable(hostSignal.value, seed.podcast.host));
       const excludeKeys = new Set(hostSeeds.map((seed) => seed.key));
-      const items = state.podcasts
+      const items = getPublicDisplayPodcasts()
         .filter((podcast) => {
           const key = getPodcastKey(podcast);
           return (
@@ -20301,7 +20336,7 @@ function getExplorePersonalSections({
         .filter((seed) => normalizeComparable(seed.podcast.mainSeries) === mainSeriesKey)
         .map((seed) => seed.key)
     );
-    const items = state.podcasts
+    const items = getPublicDisplayPodcasts()
       .filter((podcast) => {
         const key = getPodcastKey(podcast);
         return (
@@ -20702,7 +20737,7 @@ function getHomeTimeRotatedItem(items, hourBucket = getExploreHourBucket(), salt
 }
 
 function getPodcastlistenPlacementPool(start, end) {
-  return state.podcasts
+  return getPublicDisplayPodcasts()
     .filter((podcast) => {
       const placement = Number(podcast.placement);
       return (
@@ -20724,7 +20759,7 @@ function getPodcastlistenPlacementPool(start, end) {
 
 function getPodcastlistenTopPodcasts(limit = HOME_ROTATION_TOP_LIMIT) {
   const seenKeys = new Set();
-  return state.podcasts
+  return getPublicDisplayPodcasts()
     .filter(
       (podcast) =>
         getPodcastKey(podcast) &&
@@ -20806,6 +20841,36 @@ function getHomeCommunityPopularitySignals(stat) {
   };
 }
 
+function getHomeCommunityPopularSourcePodcasts() {
+  const seasonPodcasts = state.podcastDisplayGroups
+    .filter((group) => group.rankingEnabled)
+    .flatMap((group) => getDisplayGroupSeasonIdentities(group));
+  const groupItems = new Map();
+  return [...state.podcasts, ...seasonPodcasts].map((podcast) => {
+    const group = state.podcastDetailDisplayGroupByPodcastKey[getPodcastKey(podcast)];
+    if (!group) return podcast;
+    let displayGroup = groupItems.get(group.id);
+    if (!displayGroup) {
+      displayGroup = createRankingDisplayGroup(group);
+      groupItems.set(group.id, displayGroup);
+    }
+    if (!displayGroup) return podcast;
+    const representative = displayGroup.displayGroupMembers.find((member) => member.image) || displayGroup;
+    return {
+      ...representative,
+      ...podcast,
+      image: representative.image,
+      imageSources: representative.imageSources,
+      host: representative.host,
+      publisher: representative.publisher,
+      genre: representative.genre,
+      mainSeries: representative.mainSeries,
+      isDisplayGroupSeason: true,
+      displayGroupItem: displayGroup
+    };
+  });
+}
+
 function getHomeCommunityPopularCandidatePools(
   limit = HOME_POPULAR_CAROUSEL_POOL_LIMIT
 ) {
@@ -20815,7 +20880,7 @@ function getHomeCommunityPopularCandidatePools(
     tertiary: []
   };
 
-  state.podcasts.forEach((podcast) => {
+  getHomeCommunityPopularSourcePodcasts().forEach((podcast) => {
     const stat = getCommunityStat(getPodcastKey(podcast));
     const communityRating = parseNumber(stat?.averageRating);
     const rawCount = Number(stat?.ratingCount);
@@ -21125,9 +21190,9 @@ function getHomeTopPodcastCta(hourBucket = getExploreHourBucket()) {
 }
 
 function getHomeSavedPodcastCta(hourBucket = getExploreHourBucket()) {
-  const savedPool = Array.from(state.savedPodcastKeys)
-    .map((key) => state.podcastByKey[key])
-    .filter(Boolean)
+  const savedPool = getPublicDisplayPodcasts(
+    Array.from(state.savedPodcastKeys).map((key) => state.podcastByKey[key]).filter(Boolean)
+  )
     .sort((a, b) =>
       normalizeText(a.title).localeCompare(normalizeText(b.title), "da", {
         sensitivity: "base"
@@ -21150,7 +21215,7 @@ function getExploreUnderratedGemItems({
   const ratedKeys = new Set(Object.keys(state.userRatingsByKey));
   const seenKeys = new Set();
 
-  const eligiblePodcasts = state.podcasts
+  const eligiblePodcasts = getPublicDisplayPodcasts()
     .filter((podcast) => {
       const key = getPodcastKey(podcast);
       // `isUnderratedPearl` deliberately retains the historic Google Sheet
@@ -21201,7 +21266,7 @@ function getExploreFavoriteGenreSections({ searchParts = [], genre = "Alle", max
     .sort((a, b) => b[1] - a[1])
     .slice(0, Math.max(0, maxSections))
     .map(([genreName]) => {
-      const candidates = state.podcasts
+      const candidates = getPublicDisplayPodcasts()
         .filter(
           (podcast) =>
             podcast.genre === genreName &&
@@ -21737,7 +21802,7 @@ function renderExploreGenreSections(container, { searchTerm = "", genre = "Alle"
   let sectionCount = 0;
 
   visibleGenres.forEach((genreName) => {
-    const candidates = state.podcasts
+    const candidates = getPublicDisplayPodcasts()
       .filter(
         (podcast) =>
           podcast.genre === genreName &&
