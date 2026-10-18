@@ -21,6 +21,19 @@ const manifest = JSON.parse(await readFile(path.join(root, "data/podcast-cover-m
 const escape = (value) => String(value).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
 const decode = (value) => value.replace(/&#39;/g, "'").replace(/&quot;/g, '"').replace(/&gt;/g, ">").replace(/&lt;/g, "<").replace(/&amp;/g, "&");
 
+const homepageTitle = "Podcastlisten – podcastanbefalinger og anmeldelser af danske podcasts";
+const homepageDescription = "Find podcastanbefalinger og inspiration til gode danske podcasts. Udforsk anmeldelser, ranglister, episoder og brugervurderinger på Podcastlisten.";
+assert.equal([...home.matchAll(/<title>/g)].length, 1, "homepage has exactly one title");
+assert.equal([...home.matchAll(/name="description"/g)].length, 1, "homepage has exactly one meta description");
+assert.equal([...home.matchAll(/rel="canonical"/g)].length, 1, "homepage has exactly one canonical URL");
+assert.equal(home.match(/<title>([^<]+)<\/title>/)?.[1], homepageTitle);
+assert.equal(home.match(/name="description"\s+content="([^"]+)"/)?.[1], homepageDescription);
+assert(home.includes('<link rel="canonical" href="https://podcastlisten.dk/" />'));
+assert(home.includes(`<meta property="og:title" content="${homepageTitle}" />`));
+assert(home.includes(`<meta property="og:description" content="${homepageDescription}" />`));
+assert([...home.matchAll(/<h1\b/g)].length <= 1, "homepage does not contain duplicate H1 headings");
+assert.doesNotMatch(home, /href="\/podcast-anbefalinger\//, "homepage has no navigation link to the separate SEO landing page");
+
 assert.match(html, /^<!DOCTYPE html>\s*<html lang="da">/);
 assert.equal([...html.matchAll(/<title>/g)].length, 1);
 assert.equal([...html.matchAll(/<h1\b/g)].length, 1);
