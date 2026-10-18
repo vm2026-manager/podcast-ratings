@@ -21,7 +21,7 @@ Deno.serve(async (request) => {
       const dryRunError = dryRunConfigError(validation.feed, config);
       if (dryRunError || !config) return jsonResponse({ status: "failed", error: dryRunError || "Unknown feed config" }, 400);
       const result = config.format === "podimo_graphql" ? await runPodimoDryRun({ config }) : await runAppleDryRun(config);
-      return jsonResponse(result, result.status === "partial" ? 207 : 200);
+      return jsonResponse({ ...result, feed_config_audit: runtimeFeeds.audit }, result.status === "partial" ? 207 : 200);
     }
     const client = createClient(env("SUPABASE_URL"), env("SUPABASE_SERVICE_ROLE_KEY"), {
       auth: { persistSession: false }
@@ -29,6 +29,9 @@ Deno.serve(async (request) => {
     const repository = createSupabaseImportRepository(client);
     const runtimeFeeds = await loadRuntimeFeedConfigs();
     console.log("[episode-import] feed configuration", JSON.stringify(runtimeFeeds.audit));
+    if (runtimeFeeds.audit.feed_warnings.length) {
+      console.warn("[episode-import] Sheet feed review required", JSON.stringify(runtimeFeeds.audit.feed_warnings));
+    }
     const allFeedKeys = validation.feed === "all"
       ? validation.shardIndex !== null
         ? selectNormalFeedShard(runtimeFeeds.configs, validation.shardIndex, validation.shardCount!)

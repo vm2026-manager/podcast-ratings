@@ -1,11 +1,15 @@
 import { FEED_CONFIGS, DJAEVLEN_LYD_FULL_FEED_KEY, BAKSPEJL_LYD_FULL_FEED_KEY, type FeedConfig, type FeedConfigMap } from "./feed-config.ts";
 import { appleShowUrl, parseAppleFeed, parseHttpFeed } from "./feed-syntax.mjs";
+import { applySheetFeedPolicy, type FeedResolution } from "./sheet-feed-policy.ts";
 import { buildDjaevlenRoutes, DJAEVLEN_FEED_KEY } from "./djaevlen-routing.mjs";
 import { buildBakspejlRoutes, BAKSPEJL_FEED_KEY } from "./bakspejl-routing.mjs";
 
 const PODCASTS_JSON_TIMEOUT_MS = 15000;
 
 export type FeedConfigAudit = {
+  feed_resolutions: FeedResolution[];
+  feed_warnings: FeedResolution[];
+  active_feeds: Array<{ feed_key: string; podcast_key: string; feed_url: string; source: string; enabled: boolean; origin: string }>;
   static_feed_count: number;
   dynamic_sheet_feed_count: number;
   duplicates_skipped: number;
@@ -104,11 +108,12 @@ export function mergeSheetFeedConfigs(
     ...(djaevlenFullOwner ? { [DJAEVLEN_LYD_FULL_FEED_KEY]: { ...djaevlenFullOwner, routes: djaevlen.routes, enabled: djaevlen.routes.length > 0 } } : {}),
     ...(bakspejlFullOwner ? { [BAKSPEJL_LYD_FULL_FEED_KEY]: { ...bakspejlFullOwner, routes: bakspejl.routes, enabled: bakspejl.routes.length > 1 } } : {})
   };
+  const policy = applySheetFeedPolicy(rows, configs, getPodcastId, normalizePodcastKey);
   const staticKeys = new Set(Object.keys(manualStaticConfigs));
   const staticPodcastKeys = getStaticPodcastKeys(manualStaticConfigs);
   const seenSources = new Set(Object.values(manualStaticConfigs).map((config) => config.source));
   const seenFeedUrls = new Set(
-    Object.values(manualStaticConfigs)
+    Object.values(configs)
       .map((config) => parseHttpFeed(config.feed_url)?.toLowerCase())
       .filter(Boolean)
   );
@@ -121,6 +126,7 @@ export function mergeSheetFeedConfigs(
   let missingPodcastIdsSkipped = 0;
 
   for (const row of rows) {
+    if (policy.handled.has(row)) continue;
     const rawFeed = row.Feed ?? row.feed;
     const apple = parseAppleFeed(rawFeed);
     const feedUrl = parseHttpFeed(rawFeed);
@@ -138,7 +144,7 @@ export function mergeSheetFeedConfigs(
       continue;
     }
 
-    // Static configs own special adapters and always take precedence.
+    // Existing owners were resolved/reported by the policy above.
     const source = apple ? `apple_podcasts_${apple.appleShowId}` : `sheet_${feedKey}_rss`;
     const normalizedFeedUrl = feedUrl?.toLowerCase();
     if (staticKeys.has(feedKey) || seenPodcastKeys.has(podcastKey) || seenSources.has(source) || (apple && seenAppleShowIds.has(apple.appleShowId)) || (!apple && normalizedFeedUrl && seenFeedUrls.has(normalizedFeedUrl))) {
@@ -166,14 +172,22 @@ export function mergeSheetFeedConfigs(
   return {
     configs,
     audit: {
+      feed_resolutions: policy.resolutions,
+      feed_warnings: policy.resolutions.filter(entry => entry.origin === "review_required"),
+      active_feeds: Object.entries(configs).map(([key, config]) => ({
+        feed_key: key, podcast_key: config.podcast_key, feed_url: config.feed_url,
+        source: config.source, enabled: config.enabled !== false,
+        origin: policy.resolutions.some(entry => entry.podcast_key === config.podcast_key && entry.origin === "sheet_override")
+          ? "sheet_override" : staticKeys.has(key) ? "static" : "sheet"
+      })),
       static_feed_count: Object.keys(manualStaticConfigs).length,
       dynamic_sheet_feed_count: dynamicSheetFeedCount,
       duplicates_skipped: duplicatesSkipped,
       duplicate_feed_urls_detected: findDuplicateFeedUrls(configs).length,
       duplicate_feed_urls: findDuplicateFeedUrls(configs),
       duplicate_feed_urls_skipped: duplicateFeedUrlsSkipped,
-      invalid_feed_urls_skipped: invalidFeedUrlsSkipped,
-      missing_podcast_ids_skipped: missingPodcastIdsSkipped,
+      invalid_feed_urls_skipped: invalidFeedUrlsSkipped + policy.resolutions.filter(entry => entry.reason === "invalid_or_non_rss_feed").length,
+      missing_podcast_ids_skipped: missingPodcastIdsSkipped + policy.resolutions.filter(entry => entry.reason === "missing_podcast_id").length,
       djaevlen_route_count: djaevlen.routes.length,
       bakspejl_route_count: bakspejl.routes.length,
       total_enabled_feeds: Object.values(configs).filter((config) => config.enabled !== false).length
@@ -204,6 +218,12 @@ export async function loadRuntimeFeedConfigs(options: {
   const staticConfigs = getManualStaticConfigs(options.staticConfigs || FEED_CONFIGS);
   const podcastsJsonUrl = parseHttpFeed(options.podcastsJsonUrl || Deno.env.get("PODCASTS_JSON_URL"));
   const baseAudit = {
+    feed_resolutions: [],
+    feed_warnings: [],
+    active_feeds: Object.entries(staticConfigs).map(([key, config]) => ({
+      feed_key: key, podcast_key: config.podcast_key, feed_url: config.feed_url,
+      source: config.source, enabled: config.enabled !== false, origin: "static"
+    })),
     static_feed_count: Object.keys(staticConfigs).length,
     dynamic_sheet_feed_count: 0,
     duplicates_skipped: 0,

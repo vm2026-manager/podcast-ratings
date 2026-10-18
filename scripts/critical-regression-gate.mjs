@@ -4,6 +4,7 @@ import { fileURLToPath } from "node:url";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const checks = [
+  ["Sheet feed override safety and audit", ["--experimental-strip-types", "scripts/test-sheet-feed-overrides.mjs"]],
   ["homepage community momentum", ["scripts/test-homepage-community-momentum.mjs"]],
   ["Static podcast recommendation landing page", ["scripts/test-seo-podcast-anbefalinger.mjs"]],
   ["SEO podcast rendering and existing URLs", ["scripts/test-seo-podcast-pages.mjs"]],

@@ -55,6 +55,9 @@ export type FeedConfig = {
   metadata_only?: boolean;
   dedupe_by_episode_url_with_sources?: string[];
   manual_identity_links?: typeof KROP_MANUAL_LINKS;
+  // Version-controlled evidence for an exact same-show RSS relocation. Never
+  // populate from Sheet input; changed GUIDs require a separate identity plan.
+  reviewed_sheet_feeds?: Array<{ from_url: string; to_url: string; same_show_and_guids: true; evidence: string }>;
 };
 
 export type FeedConfigMap = Record<string, FeedConfig>;
