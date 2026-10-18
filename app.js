@@ -1215,7 +1215,8 @@ const mobileHomeSearchOverlayState = {
   activeIndex: -1,
   viewportCleanup: null,
   viewportFrame: 0,
-  outsidePointerCleanup: null
+  outsidePointerCleanup: null,
+  openedRoute: null
 };
 
 function applyViewModePreference() {
@@ -1809,6 +1810,7 @@ function closeMobileHomeSearchOverlay({ clearInput = true } = {}) {
   } = elements;
   if (!overlay) return;
 
+  mobileHomeSearchOverlayState.openedRoute = null;
   mobileHomeSearchOverlayState.viewportCleanup?.();
   mobileHomeSearchOverlayState.viewportCleanup = null;
   if (mobileHomeSearchOverlayState.viewportFrame) {
@@ -1835,6 +1837,7 @@ function openMobileHomeSearchOverlay() {
   } = elements;
   if (!overlay || !input) return false;
 
+  mobileHomeSearchOverlayState.openedRoute = getRouteInfoFromHash().rawRoute || "forside";
   deactivateHomePodcastSearchFocus();
   overlay.hidden = false;
   overlay.setAttribute("aria-hidden", "false");
@@ -22460,9 +22463,14 @@ function renderExplorePage() {
 }
 
 function renderRoute() {
-  closeMobileHomeSearchOverlay({ clearInput: false });
-  deactivateHomePodcastSearchFocus();
   const { rawRoute, route } = getRouteInfoFromHash();
+  if (
+    mobileHomeSearchOverlayState.openedRoute !== null &&
+    mobileHomeSearchOverlayState.openedRoute !== (rawRoute || "forside")
+  ) {
+    closeMobileHomeSearchOverlay({ clearInput: false });
+  }
+  deactivateHomePodcastSearchFocus();
   if (rawRoute === "gemte") {
     window.location.replace("#profil-gemte");
     return null;
