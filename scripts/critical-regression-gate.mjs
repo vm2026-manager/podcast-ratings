@@ -23,6 +23,7 @@ const checks = [
   ["cover source freshness", ["scripts/test-cover-source-freshness.mjs"]],
   ["manual cover intake identity", ["scripts/test-manual-cover-intake.mjs"]],
   ["startup rating hydration", ["scripts/test-startup-rating-hydration.mjs"]],
+  ["mobile home search stays open during data refresh", ["scripts/test-mobile-home-search-overlay-lifecycle.mjs"]],
   ["episode archive/source", ["scripts/test-podcast-episode-archive-source-regression.mjs"]],
   ["Tipsbladet Transferguru identity and routing", ["--experimental-strip-types", "scripts/test-tipsbladet-transferguru-routing.mjs"]],
   ["Djævlen umbrella routing", ["--experimental-strip-types", "scripts/test-djaevlen-umbrella-routing.mjs"]],
