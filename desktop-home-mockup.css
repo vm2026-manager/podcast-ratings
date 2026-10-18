@@ -1321,6 +1321,30 @@
   }
 }
 
+/* Keep the fixed mobile cover artwork clear of the copy on the narrowest phones. */
+@media (max-width: 359px) {
+  html body.page-forside #pageIntroPanel .home-hero__copy > h1,
+  html body.page-forside #pageIntroPanel .home-hero__copy > p.intro {
+    width: 8.5rem !important;
+    max-width: 8.5rem !important;
+  }
+
+  html body.page-forside #pageIntroPanel .home-hero__copy > p.intro::after {
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+
+  html body.page-forside #pageIntroPanel .home-hero__headline-line {
+    white-space: normal !important;
+    overflow-wrap: normal !important;
+  }
+
+  html body.page-forside.page-forside #pageIntroPanel .home-hero h1[data-mobile-title] {
+    font-size: 1.125rem !important;
+    line-height: 1.2 !important;
+  }
+}
+
 /* Superseded intermediate modal composition; the consolidated active layer is at file end. */
 @media (min-width: 769px) and (max-width: 768px) {
   html body #podcastDetailSheet .podcast-detail-sheet__panel {
@@ -19273,5 +19297,18 @@ html body:has(#profileListDialog.profile-list-dialog--ratings) #ratingDialog:not
     color: #65554a !important;
     font-size: 1rem !important;
     line-height: 1.65 !important;
+  }
+}
+
+/* Forside desktop: hold introen fri af podcast-covers ved alle desktopbredder.
+   Den synlige tekst tegnes i ::before i den eksisterende desktop-styling. */
+@media (min-width: 769px) {
+  html body.page-forside #pageIntroPanel .home-hero__copy > p.intro,
+  html body.page-forside #pageIntroPanel .home-hero__copy > p.intro::before {
+    box-sizing: border-box !important;
+    width: 100% !important;
+    max-width: min(100%, 26.5rem) !important;
+    white-space: normal !important;
+    overflow-wrap: break-word !important;
   }
 }
