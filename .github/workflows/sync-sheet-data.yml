@@ -152,6 +152,22 @@ jobs:
           git checkout --detach "$HEAD_SHA"
           node scripts/critical-regression-gate.mjs
 
+      # PRs created with GITHUB_TOKEN do not reliably trigger their own pull_request checks.
+      # workflow_dispatch is the supported exception and runs the full independent gate.
+      - name: Dispatch independent required regression workflow
+        if: steps.required-gate.outcome == 'success'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          HEAD_SHA: ${{ steps.catalogue-pr.outputs.head_sha }}
+        run: |
+          current_head=$(gh api "repos/${GITHUB_REPOSITORY}/git/ref/heads/automation/catalogue-sync" --jq .object.sha)
+          if [ "$current_head" != "$HEAD_SHA" ]; then
+            echo "::error::Catalogue PR head moved after preflight; refusing stale regression dispatch."
+            exit 1
+          fi
+          gh workflow run critical-regression-gate.yml --ref automation/catalogue-sync
+          echo "Independent Critical Regression Gate dispatched for $HEAD_SHA. Merge still requires its passing check." >> "$GITHUB_STEP_SUMMARY"
+
       - name: Record blocked catalogue regression gate in GitHub Issues
         if: always() && steps.required-gate.outcome == 'failure'
         continue-on-error: true
