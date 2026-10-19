@@ -5,6 +5,34 @@ const LOCAL_EPISODE_DATA_URL = "data/podcast-episodes.json";
 const RECOMMENDATION_METADATA_URL = "data/recommendation-metadata.json";
 const PODCAST_SIMILARITY_PRODUCT_URL = "data/podcast-similarity-product-v1.3.json";
 const PODCAST_DISPLAY_GROUPS_URL = "data/podcast-display-groups.json";
+
+// Official square artworks from each matching DR LYD Tyran subseries page.
+// Exact existing catalogue Podcast-ID only; never infer identities from the title.
+// Source index: https://www.dr.dk/lyd/p3/tyran-4747004850000
+const TYRAN_OFFICIAL_SQUARE_IMAGE_IDS = Object.freeze({
+  "ayatollah khomeini": "696f3b31753c04e7ed879d0b",
+  "benito mussolini": "689097bbab10e7b0b6977e33",
+  "bokassa": "68944676de2818e2a02f4bdf",
+  "ceausescu": "69205604a90450d1bd85ffe7",
+  "charles taylor": "69b27b8d2b11372a7da944f6",
+  "enver hoxha": "69d8daa9fb001330decce834",
+  "franco": "6890920cab10e7b0b6975544",
+  "hirohito": "6890922a2e199a1c531f835c",
+  "idi amin": "68909215ab10e7b0b69756c7",
+  "kim il sung og kim jong il": "689092222e199a1c531f82a9",
+  "lenin": "68909209ab10e7b0b697551a",
+  "leopold ii": "6a96ae037472ce653345f984",
+  "mao": "68bed3d32b60b4c321271a43",
+  "milosevic": "6890922bab10e7b0b69759ec",
+  "muammar gaddafi": "6a0c0f4e7b148e5451e16710",
+  "nijasov": "6890920a2e199a1c531f7fad",
+  "papa doc": "68909221ab10e7b0b697587e",
+  "pinochet": "689092062e199a1c531f7f2a",
+  "pol pot": "68909219ab10e7b0b697574e",
+  "saddam hussein": "6890920f2e199a1c531f8095",
+  "suharto": "689092012e199a1c531f7ebc",
+  "trujillo": "6901d9eb91066218a4c409de",
+});
 const EXPLORE_CLUSTERS_URL = "data/explore-clusters.json";
 
 const GENRES = [
@@ -2699,6 +2727,13 @@ function getPodcastImageSources(podcast) {
     return ["assets/podcast-covers/manual-originals/series/fra_fodboldstjerne_til_narkohaj.avif"];
   }
 
+  // Fixed DR series artwork takes precedence over old generic manifest/sheet artwork.
+  // Existing local/external sources remain fallback candidates if DR is unavailable.
+  const tyranSquareImageId = TYRAN_OFFICIAL_SQUARE_IMAGE_IDS[getPodcastId(podcast)];
+  const tyranSquareImage = tyranSquareImageId
+    ? `https://asset.dr.dk/drlyd/images/urn:dr:radio:image:${tyranSquareImageId}?im=AspectCrop%3D%28720%2C720%29%2CxPosition%3D.5%2CyPosition%3D.5%3BResize%3D%28720%2C720%29`
+    : "";
+
   const localSources = Array.isArray(podcast.localCoverVariants)
     ? podcast.localCoverVariants.map((variant) => variant.path)
     : [];
@@ -2711,6 +2746,7 @@ function getPodcastImageSources(podcast) {
   return Array.from(
     new Set(
       [
+        tyranSquareImage,
         ...(podcast.preferExternalCoverSource ? externalSources : localSources),
         ...(podcast.preferExternalCoverSource ? localSources : externalSources)
       ]

@@ -31,7 +31,11 @@ const context = {
     .sort((left, right) => left.width - right.width)
 };
 context.globalThis = context;
-vm.runInNewContext(`${extract("applyLocalCoverManifest")}\n${extract("getPodcastImageSources")}`, context);
+const tyranMapStart = app.indexOf("const TYRAN_OFFICIAL_SQUARE_IMAGE_IDS = Object.freeze({");
+const tyranMapEnd = app.indexOf("});", tyranMapStart);
+assert.ok(tyranMapStart >= 0 && tyranMapEnd > tyranMapStart, "Official DR Tyran image map must exist");
+const tyranImageMap = app.slice(tyranMapStart, tyranMapEnd + 3);
+vm.runInNewContext(`${tyranImageMap}\n${extract("applyLocalCoverManifest")}\n${extract("getPodcastImageSources")}`, context);
 
 const variants = {
   "480": { path: "data/covers/480/current.webp", width: 480 },
