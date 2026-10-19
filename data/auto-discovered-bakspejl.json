@@ -2,7 +2,17 @@
   "version": 1,
   "baseline_published_at": "2026-10-06T20:32:20.000Z",
   "processed_guids": [
-    "11162611014"
+    "11162611014",
+    "11162611015"
   ],
-  "records": []
+  "records": [
+    {
+      "discovery_key": "den spanske borgerkrig",
+      "podcast_id": "bakspejl-auto-v1-4962cdc5",
+      "title": "Den spanske borgerkrig",
+      "hovedserie": "Bakspejl",
+      "publisher": "DR",
+      "cover": "https://api.dr.dk/podcasts/v1/images/urn:dr:podcast:image:67e14d6f6273e8fc7077aa53.jpg"
+    }
+  ]
 }
