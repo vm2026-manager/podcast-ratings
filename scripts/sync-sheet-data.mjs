@@ -787,6 +787,31 @@ async function syncSheet(sheet, loadedSheet, catalogueRows = []) {
   console.log(`Skrev ${slimRows.length} rækker til ${sheet.outputPath}`);
 }
 
+// The current Sheet replaced the Flashback parent with two child-series rows.
+// Preserve the exact already-published canonical parent until it is restored in Sheets.
+// Never synthesize an identity or disable the global ID/rating integrity gate.
+function preserveFlashbackParentIdentity(sheetRows, previousRows) {
+  const parentId = "flashback politiken";
+  if (sheetRows.some((row) => row["Podcast-ID"] === parentId)) return sheetRows;
+  const requiredChildren = ["tsunamien i 2004", "em i 1992"];
+  const flashbackChildIds = new Set(sheetRows
+    .filter((row) => row.Hovedserie === "Flashback")
+    .map((row) => row["Podcast-ID"]));
+  if (!requiredChildren.every((id) => flashbackChildIds.has(id))) return sheetRows;
+  const savedParents = (Array.isArray(previousRows) ? previousRows : [])
+    .filter((row) => row["Podcast-ID"] === parentId);
+  if (
+    savedParents.length !== 1 ||
+    savedParents[0].Titel !== "Flashback" ||
+    savedParents[0].Udgiver !== "Politiken" ||
+    !savedParents[0].catalogue_id
+  ) {
+    throw new Error("Kan ikke bevare den eksakte Flashback-moderidentitet fra forrige katalog.");
+  }
+  console.warn("Flashback-moderpost mangler i Sheet; bevarer uændret tidligere Podcast-ID flashback politiken indtil originalrækken er tilbage.");
+  return [...sheetRows, savedParents[0]];
+}
+
 async function main() {
   const outputDirectoryIndex = process.argv.indexOf("--output-dir");
   const outputDirectory = outputDirectoryIndex === -1 ? "" : process.argv[outputDirectoryIndex + 1];
@@ -799,11 +824,13 @@ async function main() {
   );
   const podcastsSheet = loadedSheets.find(([sheet]) => sheet.sheetName === "Ark1");
   const sheetCatalogueRows = await slimPodcastRows(filterPodcastRows(podcastsSheet[1].objects));
+  const previousCatalogue = JSON.parse(await readFile(path.join(repoRoot, "data", "podcasts.json"), "utf8"));
+  const identitySafeSheetRows = preserveFlashbackParentIdentity(sheetCatalogueRows, previousCatalogue.rows);
   // This registry is committed separately from the Sheet export. Sheet rows win
   // editorially, while a previously allocated auto identity is never discarded.
   const registry = JSON.parse(await readFile(path.join(repoRoot, "data", "auto-discovered-djaevlen.json"), "utf8"));
   const bakspejlRegistry = JSON.parse(await readFile(path.join(repoRoot, "data", "auto-discovered-bakspejl.json"), "utf8"));
-  const catalogueRows = mergeAutoDiscoveredBakspejlRows(mergeAutoDiscoveredDjaevlenRows(sheetCatalogueRows, registry), bakspejlRegistry).map((row) => row.catalogue_id ? row : {
+  const catalogueRows = mergeAutoDiscoveredBakspejlRows(mergeAutoDiscoveredDjaevlenRows(identitySafeSheetRows, registry), bakspejlRegistry).map((row) => row.catalogue_id ? row : {
     ...row,
     catalogue_id: createCatalogueId({ title: row.Titel, host: row["Vært"], publisher: row.Udgiver, link: row.Link, feed: row.Feed })
   });
@@ -829,6 +856,7 @@ if (process.argv[1] && path.resolve(process.argv[1]) === __filename) {
 
 export {
   buildPodcastPayload,
+  preserveFlashbackParentIdentity,
   buildExploreClustersPayload,
   createCatalogueId,
   getField,
