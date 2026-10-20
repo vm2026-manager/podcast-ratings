@@ -2716,8 +2716,10 @@ function getPodcastImageSources(podcast) {
   if (!podcast) return [];
 
   // Exact original JPEGs override the generic shared Omny image for these two child series.
-  const flashbackImage = FLASHBACK_UPLOADED_COVER_BY_ID[getPodcastId(podcast)];
-  if (flashbackImage) return [flashbackImage];
+  const flashbackPodcastId = getPodcastId(podcast);
+  if (flashbackPodcastId === "tsunamien i 2004" || flashbackPodcastId === "em i 1992") {
+    return [FLASHBACK_UPLOADED_COVER_BY_ID[flashbackPodcastId]];
+  }
 
   // A relaunch on a shared feed is a distinct podcast; never inherit the Podimo artwork.
   if (getPodcastId(podcast) === "transferguru tipsbladet") {
