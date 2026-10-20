@@ -16,6 +16,7 @@ const checks = [
   ["Bounded cross-source episode URL lookup preserves existing IDs", ["--experimental-strip-types", "scripts/test-cross-source-episode-url-batching.mjs"]],
   ["Episode feed configuration coverage", ["--experimental-strip-types", "scripts/test-episode-feed-coverage.mjs"]],
   ["sheet access source isolation", ["scripts/test-sync-sheet-access.mjs"]],
+  ["Flashback parent identity preservation", ["scripts/test-flashback-parent-preservation.mjs"]],
   ["catalogue identity alerts", ["scripts/test-catalogue-identity-alert.mjs"]],
   ["production catalogue health", ["scripts/test-production-catalogue-health.mjs"]],
   ["display-group catalogue", ["scripts/validate-podcast-display-groups.mjs"]],
