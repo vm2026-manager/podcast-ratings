@@ -44,4 +44,27 @@ try {
 assert.equal(invalidEvidenceWarnings.length, 3, "each invalid evidence field emits a warning");
 assert.ok(invalidEvidenceWarnings.every((message) => message.includes("Ignorerer kildefeltet")));
 
+
+const flashbackWarnings = [];
+console.warn = (message) => flashbackWarnings.push(message);
+try {
+  const em1992 = { Titel: "EM i 1992" };
+  applyEditorialAccessMetadata(em1992, {
+    Adgang: "Betaling",
+    Kilde: "Politiken / Apple Podcasts",
+    "Tjekket dato": "20-10-2026"
+  }, "EM i 1992");
+  assert.equal(em1992.accessType, "paid");
+  assert.equal(em1992.accessEvidenceUrl, undefined);
+  assert.equal(em1992.accessCheckedAt, "2026-10-20");
+  assert.throws(() => applyEditorialAccessMetadata({}, { "Tjekket dato": "31-02-2026" }, "Ugyldig dato"), /gyldig dato/);
+  assert.throws(() => applyEditorialAccessMetadata({}, { "Tjekket dato": "2026-02-29" }, "Ugyldig dato"), /gyldig dato/);
+  assert.throws(() => applyEditorialAccessMetadata({}, { "Tjekket dato": "20/10/2026" }, "Ugyldigt format"), /formatet/);
+} finally {
+  console.warn = originalWarn;
+}
+assert.equal(flashbackWarnings.length, 2);
+assert.ok(flashbackWarnings.some((message) => message.includes("Normaliserer Tjekket dato")));
+assert.ok(flashbackWarnings.some((message) => message.includes("Ignorerer kildefeltet")));
+
 console.log("Sheet access mapping tests passed.");

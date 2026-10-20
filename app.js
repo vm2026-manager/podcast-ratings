@@ -6,6 +6,14 @@ const RECOMMENDATION_METADATA_URL = "data/recommendation-metadata.json";
 const PODCAST_SIMILARITY_PRODUCT_URL = "data/podcast-similarity-product-v1.3.json";
 const PODCAST_DISPLAY_GROUPS_URL = "data/podcast-display-groups.json";
 
+// Original user-supplied Flashback covers; exact existing Sheet Podcast-ID only.
+// Keep the parent 'flashback politiken' cover unchanged.
+const FLASHBACK_UPLOADED_COVER_BY_ID = Object.freeze({
+  "tsunamien i 2004": "assets/podcast-covers/manual-originals/series/flashback_tsunamien_i_2004.jpg",
+  "em i 1992": "assets/podcast-covers/manual-originals/series/flashback_em_i_1992.jpg"
+});
+
+
 // Official square artworks from each matching DR LYD Tyran subseries page.
 // Exact existing catalogue Podcast-ID only; never infer identities from the title.
 // Source index: https://www.dr.dk/lyd/p3/tyran-4747004850000
@@ -2706,6 +2714,12 @@ function getImageCandidates(image, alt = "") {
 
 function getPodcastImageSources(podcast) {
   if (!podcast) return [];
+
+  // Exact original JPEGs override the generic shared Omny image for these two child series.
+  const flashbackPodcastId = getPodcastId(podcast);
+  if (flashbackPodcastId === "tsunamien i 2004" || flashbackPodcastId === "em i 1992") {
+    return [FLASHBACK_UPLOADED_COVER_BY_ID[flashbackPodcastId]];
+  }
 
   // A relaunch on a shared feed is a distinct podcast; never inherit the Podimo artwork.
   if (getPodcastId(podcast) === "transferguru tipsbladet") {

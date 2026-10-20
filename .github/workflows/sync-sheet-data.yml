@@ -4,6 +4,7 @@ on:
   workflow_dispatch:
   # A workflow change on main also starts one validated catalogue sync.
   # Routine catalogue updates still use the existing schedule, not Supabase cron.
+  # A workflow-only push safely triggers a one-time sync after an importer fix.
   push:
     branches:
       - main

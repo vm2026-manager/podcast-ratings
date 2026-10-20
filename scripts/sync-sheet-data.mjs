@@ -422,15 +422,19 @@ function validateAccessCheckedAt(value, title) {
   const normalizedValue = normalizeText(value);
   if (!normalizedValue) return "";
 
-  const match = normalizedValue.match(/^(\d{4})-(\d{2})-(\d{2})$/);
-  if (!match) {
+  const isoMatch = normalizedValue.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  const danishMatch = normalizedValue.match(/^(\d{2})-(\d{2})-(\d{4})$/);
+  if (!isoMatch && !danishMatch) {
     throw new Error(
-      `Tjekket dato skal have formatet YYYY-MM-DD${formatEditorialRowLabel(title)}: ${JSON.stringify(normalizedValue)}.`
+      `Tjekket dato skal have formatet YYYY-MM-DD eller DD-MM-YYYY${formatEditorialRowLabel(title)}: ${JSON.stringify(normalizedValue)}.`
     );
   }
 
-  const [, year, month, day] = match;
-  const parsedDate = new Date(`${normalizedValue}T00:00:00.000Z`);
+  const year = isoMatch ? isoMatch[1] : danishMatch[3];
+  const month = isoMatch ? isoMatch[2] : danishMatch[2];
+  const day = isoMatch ? isoMatch[3] : danishMatch[1];
+  const isoDate = `${year}-${month}-${day}`;
+  const parsedDate = new Date(`${isoDate}T00:00:00.000Z`);
   if (
     Number.isNaN(parsedDate.getTime()) ||
     parsedDate.getUTCFullYear() !== Number(year) ||
@@ -442,7 +446,12 @@ function validateAccessCheckedAt(value, title) {
     );
   }
 
-  return normalizedValue;
+  if (danishMatch) {
+    console.warn(
+      `Normaliserer Tjekket dato fra DD-MM-YYYY til YYYY-MM-DD${formatEditorialRowLabel(title)}: ${JSON.stringify(normalizedValue)} -> ${isoDate}.`
+    );
+  }
+  return isoDate;
 }
 
 function applyEditorialAccessMetadata(podcast, row, title) {
