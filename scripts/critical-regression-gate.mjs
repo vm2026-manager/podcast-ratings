@@ -25,6 +25,7 @@ const checks = [
   ["Bakspejl local cover availability", ["scripts/test-bakspejl-cover-availability.mjs"]],
   ["cover identity resolution", ["scripts/test-cover-identity-resolution.mjs"]],
   ["DR Tyran unique series covers", ["scripts/test-tyran-individual-covers.mjs"]],
+  ["Flashback exact uploaded originals and identity routing", ["scripts/test-flashback-original-covers.mjs"]],
   ["Det levende bevis DR cover identity and stale override removal", ["scripts/test-det-levende-bevis-cover.mjs"]],
   ["cover source freshness", ["scripts/test-cover-source-freshness.mjs"]],
   ["manual cover intake identity", ["scripts/test-manual-cover-intake.mjs"]],
