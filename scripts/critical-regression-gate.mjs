@@ -12,6 +12,7 @@ const checks = [
   ["SEO generator safety", ["scripts/test-seo-podcast-safety.mjs"]],
   ["Krop til salg identity-preserving Podimo sync", ["--experimental-strip-types", "scripts/test-krop-podimo-migration.mjs"]],
   ["Podimo pagination and existing sources", ["--experimental-strip-types", "scripts/test-podimo-grebet-routing.mjs"]],
+  ["Småt Brændbart and 112 for knuste hjerter Podimo import identities", ["--experimental-strip-types", "scripts/test-two-podimo-show-imports.mjs"]],
   ["sheet access source isolation", ["scripts/test-sync-sheet-access.mjs"]],
   ["catalogue identity alerts", ["scripts/test-catalogue-identity-alert.mjs"]],
   ["production catalogue health", ["scripts/test-production-catalogue-health.mjs"]],
