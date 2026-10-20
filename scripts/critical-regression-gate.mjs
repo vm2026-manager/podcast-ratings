@@ -14,6 +14,7 @@ const checks = [
   ["Podimo pagination and existing sources", ["--experimental-strip-types", "scripts/test-podimo-grebet-routing.mjs"]],
   ["Småt Brændbart and 112 for knuste hjerter Podimo import identities", ["--experimental-strip-types", "scripts/test-two-podimo-show-imports.mjs"]],
   ["Bounded cross-source episode URL lookup preserves existing IDs", ["--experimental-strip-types", "scripts/test-cross-source-episode-url-batching.mjs"]],
+  ["Episode feed configuration coverage", ["--experimental-strip-types", "scripts/test-episode-feed-coverage.mjs"]],
   ["sheet access source isolation", ["scripts/test-sync-sheet-access.mjs"]],
   ["catalogue identity alerts", ["scripts/test-catalogue-identity-alert.mjs"]],
   ["production catalogue health", ["scripts/test-production-catalogue-health.mjs"]],
