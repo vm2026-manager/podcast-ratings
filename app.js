@@ -1002,6 +1002,7 @@ const state = {
   rankingMovementByKey: new Map(),
   rankingMovementLoadAttempted: false,
   rankingMovementLoading: false,
+  rankingDisplayRankCache: new WeakMap(),
   rankingSourceTouched: false,
   userRankingSort: "rating",
   userRankingDirection: "desc",
@@ -4414,7 +4415,7 @@ function comparePodcastsByActiveRankingOrder(a, b) {
 }
 
 function getPodcastUserRank(podcast) {
-  const key = getPodcastKey(podcast);
+  const key = getRankingMovementKey(podcast) || getPodcastKey(podcast);
   if (state.userRankByKey[key]) return state.userRankByKey[key];
   return podcast.userRank || null;
 }
@@ -4492,7 +4493,8 @@ function getUtcDateDaysAgo(days) {
 async function loadRankingMovementSnapshot() {
   if (
     state.rankingMovementLoadAttempted || state.rankingMovementLoading ||
-    !isRankingMovementEligible() || !state.supabase || !window.PodcastRankingMovement
+    !isRankingMovementDataReady() || !isRankingMovementEligible() ||
+    !state.supabase || !window.PodcastRankingMovement
   ) return;
 
   state.rankingMovementLoading = true;
@@ -4536,6 +4538,10 @@ async function loadRankingMovementSnapshot() {
   }
 }
 
+function isRankingMovementDataReady() {
+  return state.communityStatsHasSuccessfulLoad && state.podcastDisplayGroupsReady;
+}
+
 function normalizeRankingPositionMode(value) {
   return value === "fixed" ? "fixed" : "dynamic";
 }
@@ -4571,14 +4577,22 @@ function getRankingDisplayRank(index) {
     state.userRankingSort !== "rating" || state.userRankingDirection !== "desc" ||
     hasDesktopOwnRatingSort()
   ) return index + 1;
-  const podcast = list[index];
-  if (!podcast) return index + 1;
-  const score = window.PodcastRankingMovement?.displayScore(getPodcastRatingForActiveSource(podcast));
-  if (score === null || score === undefined) return index + 1;
-  const firstMatchingIndex = list.findIndex(
-    (candidate) => window.PodcastRankingMovement?.displayScore(getPodcastRatingForActiveSource(candidate)) === score
-  );
-  return firstMatchingIndex >= 0 ? firstMatchingIndex + 1 : index + 1;
+  let ranks = state.rankingDisplayRankCache.get(list);
+  if (!ranks) {
+    ranks = new Array(list.length);
+    const firstRankByScore = new Map();
+    list.forEach((podcast, listIndex) => {
+      const score = window.PodcastRankingMovement?.displayScore(getPodcastRatingForActiveSource(podcast));
+      if (score === null || score === undefined) {
+        ranks[listIndex] = listIndex + 1;
+        return;
+      }
+      if (!firstRankByScore.has(score)) firstRankByScore.set(score, listIndex + 1);
+      ranks[listIndex] = firstRankByScore.get(score);
+    });
+    state.rankingDisplayRankCache.set(list, ranks);
+  }
+  return ranks[index] ?? index + 1;
 }
 
 function rebuildUserRanks() {

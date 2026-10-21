@@ -54,6 +54,50 @@ const groupDelta = movement.movementMap(
   { keyOf: (entry) => entry.key, scoreOf: (entry) => entry.score }
 );
 assert.equal(groupDelta.get("display-group:narkobetjenten"), 0);
+
+// Repeated rank lookups over a load-all ranking score each row exactly once.
+const app = fs.readFileSync(new URL("../app.js", import.meta.url), "utf8");
+function extractFunction(name) {
+  const start = app.indexOf(`function ${name}(`);
+  assert.ok(start >= 0, `${name} must exist`);
+  let depth = 0;
+  for (let index = start; index < app.length; index += 1) {
+    if (app[index] === "{") depth += 1;
+    if (app[index] === "}" && --depth === 0) return app.slice(start, index + 1);
+  }
+  throw new Error(`Could not extract ${name}`);
+}
+const getRankingDisplayRank = new Function(
+  "state", "getFilteredPodcasts", "getPodcastRatingForActiveSource", "hasDesktopOwnRatingSort", "window",
+  `${extractFunction("getRankingDisplayRank")}; return getRankingDisplayRank;`
+)(
+  {
+    rankingPositionMode: "dynamic", rankingSource: "users", sort: "placement-asc",
+    userRankingSort: "rating", userRankingDirection: "desc", desktopOwnRatingSortActive: false,
+    rankingDisplayRankCache: new WeakMap()
+  },
+  () => largeList,
+  (podcast) => { scoreReads += 1; return podcast.score; },
+  () => false,
+  { PodcastRankingMovement: movement }
+);
+let scoreReads = 0;
+const largeList = Array.from({ length: 1300 }, (_, index) => ({
+  score: 10 - Math.floor(index / 2) / 10
+}));
+const ranks = Array.from({ length: largeList.length }, (_, index) => getRankingDisplayRank(index));
+assert.deepEqual(ranks.slice(0, 6), [1, 1, 3, 3, 5, 5]);
+assert.equal(ranks[1299], 1299);
+assert.equal(scoreReads, 1300, "a 1,300-item list must be scored once per list generation");
+assert.equal(getRankingDisplayRank(0), 1);
+assert.equal(scoreReads, 1300, "cached rank reads must not rescan scores");
+const getPodcastUserRank = new Function(
+  "state", "getRankingMovementKey", "getPodcastKey",
+  `${extractFunction("getPodcastUserRank")}; return getPodcastUserRank;`
+)({ userRankByKey: { "display-group:narkobetjenten": 7 } },
+  (podcast) => podcast.isDisplayGroup ? "display-group:narkobetjenten" : "",
+  () => "narkobetjenten");
+assert.equal(getPodcastUserRank({ isDisplayGroup: true }), 7, "synthetic groups use the same rank key as rank rebuilding");
 assert.equal(movement.compareSnapshotsToCurrent(current, historical, {
   expectedDate: "2026-10-14", historicalDate: "2026-10-13"
 }).size, 0);

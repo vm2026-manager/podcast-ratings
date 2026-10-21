@@ -55,14 +55,16 @@ html body.page-ranglister .desktop-ranking-row__rank .ranking-movement {
   }
 
   html body.page-ranglister .placement-value--with-movement {
-    width: 100%;
-    line-height: 21px;
+    display: block !important;
+    width: 100% !important;
+    height: 21px !important;
+    line-height: 21px !important;
   }
 
   html body.page-ranglister .podcast-card__placement .ranking-movement {
-    margin: -1px 0 0;
+    margin: 0;
     font-size: 0.46rem;
-    line-height: 10px;
+    line-height: 10px !important;
     letter-spacing: -0.02em;
   }
 }
