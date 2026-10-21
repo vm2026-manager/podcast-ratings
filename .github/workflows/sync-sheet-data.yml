@@ -113,7 +113,11 @@ jobs:
         if: steps.catalogue.outputs.changed == 'true'
         uses: peter-evans/create-pull-request@v7
         with:
-          token: ${{ github.token }}
+          # A dedicated repository-scoped PAT / GitHub App token triggers real
+          # pull_request checks. GITHUB_TOKEN-created PRs instead await approval;
+          # workflow_dispatch checks do not satisfy the required PR check.
+          # The fallback preserves the current protected, manual-approval path.
+          token: ${{ secrets.CATALOGUE_SYNC_PR_TOKEN || github.token }}
           branch: automation/catalogue-sync
           base: main
           title: Sync Podcastlisten catalogue
@@ -122,7 +126,7 @@ jobs:
             Automated, validated catalogue sync from the public Podcastlisten Google Sheet.
 
             The independent Critical Regression Gate workflow must pass before this PR can merge.
-            Approve its pending workflow run: PRs created with GITHUB_TOKEN require workflow approval.
+            If CATALOGUE_SYNC_PR_TOKEN is not configured, GitHub requires approval of the pull_request workflow; workflow_dispatch alone does not satisfy branch protection.
           add-paths: |
             data/podcasts.json
             data/featured-reviews.json
@@ -216,6 +220,16 @@ jobs:
                 ...context.repo, issue_number: existing.number, state: "closed", state_reason: "completed"
               });
             }
+
+      - name: Report when unattended catalogue merging is not configured
+        if: steps.catalogue-pr.outputs.number != ''
+        env:
+          HAS_TRUSTED_PR_TOKEN: ${{ secrets.CATALOGUE_SYNC_PR_TOKEN != '' }}
+        run: |
+          if [ "$HAS_TRUSTED_PR_TOKEN" != "true" ]; then
+            echo "::warning::CATALOGUE_SYNC_PR_TOKEN is missing. PR tests may require manual approval; a workflow_dispatch check cannot satisfy required PR checks."
+            echo "Unattended merge not fully configured: set a repo-scoped CATALOGUE_SYNC_PR_TOKEN to trigger the required pull_request check automatically." >> "$GITHUB_STEP_SUMMARY"
+          fi
 
       - name: Enable automatic merge after required checks
         if: steps.required-gate.outcome == 'success'
