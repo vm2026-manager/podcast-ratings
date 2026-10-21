@@ -34,6 +34,7 @@ function createFetchHarness(state, responses) {
     "state",
     "PODCAST_RATING_PUBLIC_STATS_VIEW",
     "canonicalizeCommunityStats",
+    "fetchDisplayGroupCommunityStats",
     "invalidateRankingListCache",
     "setAuthMessage",
     "console",
@@ -42,6 +43,7 @@ function createFetchHarness(state, responses) {
     state,
     "podcast_rating_public_stats",
     (rows) => ({ statsByKey: Object.fromEntries(rows.map((row) => [row.podcast_key, row])), unresolvedKeys: [] }),
+    async () => {},
     () => { state.cacheInvalidations = (state.cacheInvalidations || 0) + 1; },
     (...args) => messages.push(args),
     { error() {}, warn() {} }
