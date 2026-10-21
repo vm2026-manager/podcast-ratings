@@ -1,0 +1,70 @@
+.ranking-movement {
+  display: inline-block;
+  flex: 0 0 auto;
+  margin-left: 0.38rem;
+  color: #187342;
+  font: 800 0.68rem/1.1 "Manrope", Inter, system-ui, sans-serif;
+  white-space: nowrap;
+  vertical-align: middle;
+}
+
+.ranking-movement--down {
+  color: #b4232d;
+}
+
+.ranking-movement--steady {
+  color: #65584e;
+}
+
+html body.page-ranglister .podcast-card__placement:has(.ranking-movement) {
+  display: grid;
+  grid-template-columns: max-content max-content;
+  column-gap: 7px;
+  align-items: center;
+}
+
+html body.page-ranglister .podcast-card__placement:has(.ranking-movement) .placement-label {
+  grid-column: 1 / -1;
+}
+
+html body.page-ranglister .placement-value--with-movement {
+  display: inline-block;
+}
+
+html body.page-ranglister .desktop-ranking-rank:has(.ranking-movement),
+html body.page-ranglister .desktop-ranking-row__rank:has(.ranking-movement) {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: flex-start !important;
+  gap: 0.38rem !important;
+  white-space: nowrap !important;
+}
+
+html body.page-ranglister .desktop-ranking-rank .ranking-movement,
+html body.page-ranglister .desktop-ranking-row__rank .ranking-movement {
+  margin-left: 0;
+  font-size: 0.64rem;
+}
+
+@media (max-width: 700px) {
+  html body.page-ranglister .podcast-card__placement:has(.ranking-movement) {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 0;
+  }
+
+  html body.page-ranglister .placement-value--with-movement {
+    display: block !important;
+    width: 100% !important;
+    height: 21px !important;
+    line-height: 21px !important;
+  }
+
+  html body.page-ranglister .podcast-card__placement .ranking-movement {
+    margin: 0;
+    font-size: 0.46rem;
+    line-height: 10px !important;
+    letter-spacing: -0.02em;
+  }
+}

@@ -1007,6 +1007,10 @@ const state = {
   freeOnly: false,
   languageFilter: "all",
   rankingSource: "mads",
+  rankingMovementByKey: new Map(),
+  rankingMovementLoadAttempted: false,
+  rankingMovementLoading: false,
+  rankingDisplayRankCache: new WeakMap(),
   rankingSourceTouched: false,
   userRankingSort: "rating",
   userRankingDirection: "desc",
@@ -4425,7 +4429,7 @@ function comparePodcastsByActiveRankingOrder(a, b) {
 }
 
 function getPodcastUserRank(podcast) {
-  const key = getPodcastKey(podcast);
+  const key = getRankingMovementKey(podcast) || getPodcastKey(podcast);
   if (state.userRankByKey[key]) return state.userRankByKey[key];
   return podcast.userRank || null;
 }
@@ -4446,6 +4450,110 @@ function getPodcastPlacementDisplay(podcast) {
     value: podcast.placement,
     label: "Placering"
   };
+}
+
+function isRankingMovementEligible() {
+  return Boolean(window.PodcastRankingMovement?.isEligible({
+    route: isRankingRoute() ? "ranglister" : "other",
+    source: state.rankingSource,
+    hasFilter: Boolean(state.activeFilter || state.activePublisherFilter || state.activeMainSeriesFilter || state.freeOnly || state.languageFilter !== "all"),
+    hasSearch: Boolean(state.searchTerm),
+    hasMinimumRating: state.minimumRating > 0,
+    freeOnly: state.freeOnly,
+    languageFilter: state.languageFilter === "all" ? "" : state.languageFilter,
+    ownRatingSort: state.desktopOwnRatingSortActive || hasDesktopOwnRatingSort(),
+    userSort: state.userRankingSort,
+    direction: state.userRankingDirection,
+    sort: state.sort
+  }));
+}
+
+function getRankingMovementKey(podcast) {
+  if (podcast?.isDisplayGroup) {
+    return podcast.displayGroupId ? `display-group:${podcast.displayGroupId}` : "";
+  }
+  return getPodcastId(podcast);
+}
+
+function getRankingMovementMarkup(podcast) {
+  if (!isRankingMovementEligible() || !state.rankingMovementByKey.size) return "";
+  const key = getRankingMovementKey(podcast);
+  if (!key || !state.rankingMovementByKey.has(key)) return "";
+  const id = getRankingMovementId(podcast);
+  const delta = state.rankingMovementByKey.get(key);
+  if (delta === 0) {
+    return `<span id="${id}" class="ranking-movement ranking-movement--steady" aria-label="Uændret placering siden sidste uge">–</span>`;
+  }
+  const gain = delta > 0;
+  const count = Math.abs(delta);
+  const label = `${gain ? "Steget" : "Faldet"} ${count} ${count === 1 ? "placering" : "placeringer"} siden sidste uge`;
+  return `<span id="${id}" class="ranking-movement ${gain ? "ranking-movement--up" : "ranking-movement--down"}" aria-label="${escapeHtml(label)}">${gain ? "▲" : "▼"}${count}</span>`;
+}
+
+function getRankingMovementId(podcast) {
+  if (!isRankingMovementEligible()) return "";
+  const key = getRankingMovementKey(podcast);
+  if (!key || !state.rankingMovementByKey.has(key)) return "";
+  return `ranking-movement-${key.replace(/[^a-zA-Z0-9_-]/g, "-")}`;
+}
+
+function getUtcDateDaysAgo(days) {
+  const date = new Date();
+  date.setUTCHours(0, 0, 0, 0);
+  date.setUTCDate(date.getUTCDate() - days);
+  return date.toISOString().slice(0, 10);
+}
+
+async function loadRankingMovementSnapshot() {
+  if (
+    state.rankingMovementLoadAttempted || state.rankingMovementLoading ||
+    !isRankingMovementDataReady() || !isRankingMovementEligible() ||
+    !state.supabase || !window.PodcastRankingMovement
+  ) return;
+
+  state.rankingMovementLoading = true;
+  const snapshotDate = getUtcDateDaysAgo(7);
+  try {
+    const { data, error } = await state.supabase
+      .from("podcast_ranking_rating_snapshots")
+      .select("snapshot_date,source,podcast_key,average_rating,rating_count")
+      .eq("snapshot_date", snapshotDate)
+      .eq("source", "users")
+      .limit(1000);
+    if (error) throw error;
+
+    const currentEntries = getRankingCandidates()
+      .map((podcast) => ({
+        key: getRankingMovementKey(podcast),
+        averageRating: getPodcastRatingForActiveSource(podcast),
+        ratingCount: getCommunityRatingCount(podcast)
+      }))
+      .filter((entry) => entry.key && entry.averageRating !== null && entry.ratingCount > 0);
+    const rows = Array.isArray(data) ? data : [];
+    const actualDate = rows.length ? rows[0].snapshot_date : snapshotDate;
+    state.rankingMovementByKey = window.PodcastRankingMovement.compareSnapshotsToCurrent(
+      currentEntries,
+      rows,
+      {
+        expectedDate: snapshotDate,
+        historicalDate: actualDate,
+        keyOf: (entry) => entry.key,
+        scoreOf: (entry) => entry.averageRating,
+        resolveCanonicalKey: (key) => key.startsWith("display-group:") ? key : (resolveCanonicalPodcastId(key) || "")
+      }
+    );
+  } catch (error) {
+    console.warn("Ranglistehistorik kunne ikke hentes.", error);
+    state.rankingMovementByKey = new Map();
+  } finally {
+    state.rankingMovementLoadAttempted = true;
+    state.rankingMovementLoading = false;
+    if (isRankingRoute()) renderPodcastGrid();
+  }
+}
+
+function isRankingMovementDataReady() {
+  return state.communityStatsHasSuccessfulLoad && state.podcastDisplayGroupsReady;
 }
 
 function normalizeRankingPositionMode(value) {
@@ -4476,34 +4584,52 @@ function persistRankingPositionMode(value) {
 }
 
 function getRankingDisplayRank(index) {
-  return state.rankingPositionMode === "dynamic" ? index + 1 : null;
+  if (state.rankingPositionMode !== "dynamic") return null;
+  const list = getFilteredPodcasts();
+  if (
+    state.rankingSource !== "users" || state.sort !== "placement-asc" ||
+    state.userRankingSort !== "rating" || state.userRankingDirection !== "desc" ||
+    hasDesktopOwnRatingSort()
+  ) return index + 1;
+  let ranks = state.rankingDisplayRankCache.get(list);
+  if (!ranks) {
+    ranks = new Array(list.length);
+    const firstRankByScore = new Map();
+    list.forEach((podcast, listIndex) => {
+      const score = window.PodcastRankingMovement?.displayScore(getPodcastRatingForActiveSource(podcast));
+      if (score === null || score === undefined) {
+        ranks[listIndex] = listIndex + 1;
+        return;
+      }
+      if (!firstRankByScore.has(score)) firstRankByScore.set(score, listIndex + 1);
+      ranks[listIndex] = firstRankByScore.get(score);
+    });
+    state.rankingDisplayRankCache.set(list, ranks);
+  }
+  return ranks[index] ?? index + 1;
 }
 
 function rebuildUserRanks() {
-  const ranked = state.podcasts
+  const ranked = getRankingCandidates()
     .map((podcast) => {
-      const key = getPodcastKey(podcast);
-      const stat = getCommunityStat(key);
-      const averageRating = stat?.averageRating ?? podcast.userAverageRating;
+      const key = getRankingMovementKey(podcast) || getPodcastKey(podcast);
+      const averageRating = getCommunityStat(key)?.averageRating ?? podcast.userAverageRating;
 
       return {
         key,
-        podcast,
-        averageRating: parseNumber(averageRating)
+        averageRating: window.PodcastRankingMovement?.displayScore(averageRating) ?? parseNumber(averageRating)
       };
     })
     .filter((item) => item.averageRating !== null)
-    .sort((a, b) => {
-      if (b.averageRating !== a.averageRating) {
-        return b.averageRating - a.averageRating;
-      }
-
-      return compareRandomTieBreaker(a.podcast, b.podcast);
-    });
+    .sort((a, b) => b.averageRating - a.averageRating || a.key.localeCompare(b.key));
 
   state.userRankByKey = {};
+  let previousRating = null;
+  let currentRank = 0;
   ranked.forEach((item, index) => {
-    state.userRankByKey[item.key] = index + 1;
+    if (item.averageRating !== previousRating) currentRank = index + 1;
+    previousRating = item.averageRating;
+    state.userRankByKey[item.key] = currentRank;
   });
 }
 
@@ -6709,8 +6835,9 @@ function createDesktopRankingTopCardElement(podcast, displayRank = null) {
   article.className = "podcast-card desktop-ranking-top-card";
   article.dataset.key = key;
   article.innerHTML = `
-    <span class="desktop-ranking-rank" aria-label="Placering ${escapeHtml(String(rankText))}">
+    <span class="desktop-ranking-rank">
       ${escapeHtml(rankLabel)}
+      ${getRankingMovementMarkup(podcast)}
     </span>
     <button
       class="favorite-button desktop-ranking-top-card__favorite"
@@ -6784,7 +6911,7 @@ function createDesktopRankingTableRowElement(podcast, displayRank = null) {
   article.dataset.key = key;
   article.setAttribute("role", "row");
   article.innerHTML = `
-    <span class="desktop-ranking-row__rank" role="cell" aria-label="Placering ${escapeHtml(String(rankText))}">${escapeHtml(rankLabel)}</span>
+    <span class="desktop-ranking-row__rank" role="cell">${escapeHtml(rankLabel)}${getRankingMovementMarkup(podcast)}</span>
     <div class="desktop-ranking-row__podcast" role="cell">
       <button
         class="desktop-ranking-row__cover desktop-ranking-cover"
@@ -15455,9 +15582,12 @@ function createPodcastReviewCardElement(podcast, review, key, displayRank = null
   placement.className = "podcast-card__placement";
   if (hasDisplayedPlacement) {
     placement.innerHTML = `
-      <span class="placement-value">#${displayedPlacement}</span>
+      <span class="placement-value${getRankingMovementMarkup(podcast) ? " placement-value--with-movement" : ""}">#${displayedPlacement}</span>
+      ${getRankingMovementMarkup(podcast)}
       <span class="placement-label">${placementDisplay.label}</span>
     `;
+    const movementId = getRankingMovementId(podcast);
+    if (movementId) article.setAttribute("aria-describedby", movementId);
   } else {
     placement.classList.add("podcast-card__placement--unranked");
     placement.innerHTML = `
@@ -15641,9 +15771,12 @@ function createPodcastCardElement(podcast, displayRank = null) {
 
   if (hasDisplayedPlacement) {
     placement.innerHTML = `
-      <span class="placement-value">#${displayedPlacement}</span>
+      <span class="placement-value${getRankingMovementMarkup(podcast) ? " placement-value--with-movement" : ""}">#${displayedPlacement}</span>
+      ${getRankingMovementMarkup(podcast)}
       <span class="placement-label">${placementDisplay.label}</span>
     `;
+    const movementId = getRankingMovementId(podcast);
+    if (movementId) article.setAttribute("aria-describedby", movementId);
   } else {
     placement.classList.add("podcast-card__placement--unranked");
     placement.innerHTML = `
@@ -15838,6 +15971,8 @@ function renderPodcastGrid() {
     renderDesktopRankingDataState(rankingDataState);
     return;
   }
+
+  void loadRankingMovementSnapshot();
 
   const filtered = getFilteredPodcasts();
   const isMobileTail = isMobileRankingRoute() && state.mobileRankingTailMode;
