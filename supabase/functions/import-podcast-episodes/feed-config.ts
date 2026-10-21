@@ -185,6 +185,15 @@ export const FEED_CONFIGS: FeedConfigMap = {
     podimo_show_url: "https://podimo.com/dk/shows/verdensklogesteland"
   },
 
+  "podimo_smat_braendbart": {
+    podcast_key: "smat brændbart",
+    source: "podimo_smat_braendbart",
+    format: "podimo_graphql",
+    feed_url: "https://graphql.podimo.com/graphql",
+    podcast_id: "0db490b8-907e-4f35-bd48-60eae9f8805b",
+    podimo_show_url: "https://podimo.com/dk/shows/smat-braendbart"
+  },
+
   "borgen_unplugged_2_0": {
     podcast_key: "borgen unplugged 2 0",
     source: "soundcloud_borgen_unplugged_rss",
@@ -252,8 +261,14 @@ export const FEED_CONFIGS: FeedConfigMap = {
 
   "112_for_knuste_hjerter": {
     podcast_key: "112 for knuste hjerter",
-    source: "spreaker_112_for_knuste_hjerter_rss",
-    feed_url: "https://www.spreaker.com/show/4961180/episodes/feed"
+    source: "podimo_112_for_knuste_hjerter",
+    format: "podimo_graphql",
+    feed_url: "https://graphql.podimo.com/graphql",
+    podcast_id: "acb176b6-9a09-475e-9bab-52432506f02b",
+    podimo_show_url: "https://podimo.com/dk/shows/112-for-knuste-hjerter",
+    // Keep historical Spreaker rows and ratings. Exact title/date fingerprints
+    // prevent the new Podimo source from creating a second episode row.
+    dedupe_by_episode_url_with_sources: ["spreaker_112_for_knuste_hjerter_rss"]
   },
 
   "langt_fra_lognen": {

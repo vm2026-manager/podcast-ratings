@@ -1,5 +1,10 @@
 import { BATCH_SIZE, chunk, type ImportRepository, type PodcastEpisodeRow } from "./core.ts";
 
+// Bound exact cross-source URL lookups: Podimo episode URLs are long enough
+// for a 200-item PostgREST filter to exceed the gateway request-target limit.
+// Preserve every URL and every historical identity check; only chunk size changes.
+const CROSS_SOURCE_EPISODE_URL_BATCH_SIZE = 20;
+
 const SELECT_FIELDS = [
   "id",
   "podcast_key",
@@ -43,7 +48,7 @@ export function createSupabaseImportRepository(client: any): ImportRepository {
       // Supplemental sources are deduplicated only against their explicitly
       // configured primary sources, through exact canonical URL equality.
       if (episodeUrls.length && additionalSources.length) {
-        for (const urlBatch of chunk(episodeUrls, BATCH_SIZE)) {
+        for (const urlBatch of chunk(episodeUrls, CROSS_SOURCE_EPISODE_URL_BATCH_SIZE)) {
           const { data, error } = await client
             .from("podcast_episodes")
             .select(SELECT_FIELDS)
