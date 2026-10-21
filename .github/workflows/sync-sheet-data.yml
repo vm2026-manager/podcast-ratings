@@ -40,6 +40,27 @@ jobs:
       - name: Generate staged JSON from Google Sheets
         run: node scripts/sync-sheet-data.mjs --output-dir .sync-stage
 
+      - name: Preserve last published timestamps for unchanged catalogue content
+        run: |
+          node --input-type=module <<'NODE'
+          import { readFile, writeFile } from 'node:fs/promises';
+          for (const file of ['data/podcasts.json', 'data/explore-clusters.json']) {
+            const stagePath = `.sync-stage/${file}`;
+            const [published, candidate] = await Promise.all([
+              readFile(file, 'utf8'),
+              readFile(stagePath, 'utf8')
+            ]);
+            const publishedData = JSON.parse(published);
+            const candidateData = JSON.parse(candidate);
+            delete publishedData.generatedAt;
+            delete candidateData.generatedAt;
+            if (JSON.stringify(publishedData) === JSON.stringify(candidateData)) {
+              await writeFile(stagePath, published, 'utf8');
+              console.log(`Unchanged ${file}: preserving existing generatedAt`);
+            }
+          }
+          NODE
+
       - name: Validate staged catalogue schema
         run: |
           node -e "const fs=require('fs'); for (const path of ['.sync-stage/data/podcasts.json', '.sync-stage/data/featured-reviews.json', '.sync-stage/data/explore-clusters.json']) JSON.parse(fs.readFileSync(path,'utf8')); console.log('Staged catalogue JSON files are valid')"
