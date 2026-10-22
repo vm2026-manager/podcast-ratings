@@ -47,7 +47,7 @@
     <link rel="stylesheet" href="access-status.css?v=20260904-access-tooltip-v1" />
     <link rel="stylesheet" href="responsive-robustness.css?v=20260910-site-wide-zoom-v1" />
     <link rel="stylesheet" href="profile-logged-out-desktop.css?v=20260913-profile-logged-out-hero-v1" />
-    <link rel="stylesheet" href="ranking-movement.css?v=20261022-ranking-movement-desktop-v3" />
+    <link rel="stylesheet" href="ranking-movement.css?v=20261022-ranking-changes-toggle-v1" />
 
     <script
       data-goatcounter="https://podcastlisten.goatcounter.com/count"
@@ -434,7 +434,12 @@
             <section class="ranking-list-panel" aria-labelledby="rankingListHeading">
               <section class="ranking-toolbar" aria-live="polite">
                 <h2 id="rankingListHeading">Rangliste over podcasts</h2>
-                <p id="resultsText">Indl&#230;ser podcasts...</p>
+                <div class="ranking-toolbar__results">
+                  <p id="resultsText">Indl&#230;ser podcasts...</p>
+                  <button id="rankingMovementToggle" class="ranking-movement-toggle" type="button" aria-pressed="false" aria-controls="podcastGrid" hidden>
+                    Vis &#230;ndringer
+                  </button>
+                </div>
                 <button id="mobileSortToggle" class="mobile-sort-toggle" type="button">
                   &#8645; Lavest
                 </button>
