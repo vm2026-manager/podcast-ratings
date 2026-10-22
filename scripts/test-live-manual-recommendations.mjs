@@ -31,8 +31,7 @@ const catalog = [
   { id: "same-series", podcastId: "same-series", title: "Samme serie", mainSeries: "Serie" },
   { id: "manual-false", podcastId: "det falske match", title: "Det falske match" },
   { id: "manual-danger", podcastId: "et farligt match", title: "Et farligt match" },
-  { id: "stale-love", podcastId: "opskriften pa kærlighed", title: "Opskriften på kærlighed" },
-  { id: "stale-swipe", podcastId: "swipe match date", title: "Swipe. Match. Date." },
+  // Stale product references below model entries removed from the live catalogue.
   ...Array.from({ length: 6 }, (_, index) => ({
     id: `automatic-${index + 1}`,
     podcastId: `automatic-${index + 1}`,
@@ -151,7 +150,8 @@ const liveSecondRenderIds = Array.from(
   (candidate) => candidate.item.podcast.podcastId
 );
 assert.deepEqual(liveSecondRenderIds.slice(0, 2), ["det falske match", "et farligt match"]);
-assert.ok(!liveSecondRenderIds.includes("opskriften pa kærlighed"));
-assert.ok(!liveSecondRenderIds.includes("swipe match date"));
+const liveManualIds = liveProduct.manualSupplementaryResults.map((result) => result.existingId);
+assert.ok(!liveManualIds.includes("opskriften pa kærlighed"));
+assert.ok(!liveManualIds.includes("swipe match date"));
 
 console.log("Live catalogue manual recommendation test passed.");

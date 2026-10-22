@@ -1,13 +1,23 @@
 import { readFile } from "node:fs/promises";
 
-export const PRODUCTION_CATALOGUE_ALERT_TITLE = "Production catalogue health alert";
+// Share the same open issue with the Sheet sync workflow so one stalled
+// publication cannot fan out into separate, competing alerts.
+export const PRODUCTION_CATALOGUE_ALERT_TITLE = "Catalogue sync blocked: unattended publication";
+const HEALTH_SECTION_MARKER = "<!-- production-catalogue-health -->";
+
+function mergeHealthSection(existingBody, healthBody) {
+  const existing = String(existingBody || "");
+  const markerIndex = existing.indexOf(HEALTH_SECTION_MARKER);
+  const retained = markerIndex < 0 ? existing : existing.slice(0, markerIndex).trimEnd();
+  return [retained, HEALTH_SECTION_MARKER, healthBody].filter(Boolean).join("\n\n");
+}
 
 export function productionHealthExcerpt(log) {
   const relevant = String(log)
     .split(/\r?\n/u)
     .filter((line) =>
-      /^(?:Error: )?CRITICAL PRODUCTION CATALOGUE HEALTH FAILURE\b/u.test(line) ||
-      /^- (?:catalogue row count |blank Podcast-ID |duplicate Podcast-ID |podcast-display-groups\.json |production app\.js |https:\/\/podcastlisten\.dk\/)/u.test(line)
+      /^(?:Error: )?CRITICAL (?:PRODUCTION CATALOGUE HEALTH|CATALOGUE PIPELINE) FAILURE\b/u.test(line) ||
+      /^- (?:catalogue row count |blank Podcast-ID |duplicate Podcast-ID |podcast-display-groups\.json |production app\.js |production data\/|Google Sheet changes |Changed Podcast-ID|The scheduled catalogue sync|No catalogue sync run|Latest catalogue sync run|Catalogue PR #|https:\/\/podcastlisten\.dk\/)/u.test(line)
     );
 
   return (relevant.slice(-80).join("\n") || "No recognized production catalogue diagnostic was captured.")
@@ -56,12 +66,18 @@ ${productionHealthExcerpt(log)}
 ~~~`;
 
     if (alert) {
-      await github.rest.issues.createComment({ ...context.repo, issue_number: alert.number, body });
+      await github.rest.issues.update({
+        ...context.repo,
+        issue_number: alert.number,
+        body: mergeHealthSection(alert.body, body),
+        assignees: [context.repo.owner]
+      });
     } else {
       await github.rest.issues.create({
         ...context.repo,
         title: PRODUCTION_CATALOGUE_ALERT_TITLE,
-        body
+        body,
+        assignees: [context.repo.owner]
       });
     }
     return;
