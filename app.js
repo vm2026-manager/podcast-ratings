@@ -2725,6 +2725,11 @@ function getPodcastImageSources(podcast) {
     return [FLASHBACK_UPLOADED_COVER_BY_ID[flashbackPodcastId]];
   }
 
+  // User-supplied replacement, matched strictly by the canonical podcast ID.
+  if (getPodcastId(podcast) === "de efterladte") {
+    return ["assets/podcast-covers/manual-originals/series/de_efterladte.png"];
+  }
+
   // A relaunch on a shared feed is a distinct podcast; never inherit the Podimo artwork.
   if (getPodcastId(podcast) === "transferguru tipsbladet") {
     return ["assets/podcast-covers/manual-originals/series/transferguru_tipsbladet.webp"];
