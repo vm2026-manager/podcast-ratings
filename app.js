@@ -1009,6 +1009,7 @@ const state = {
   rankingSource: "mads",
   rankingMovementByKey: new Map(),
   rankingMovementPeriodLabel: "",
+  rankingMovementSnapshotValid: false,
   rankingMovementLoadAttempted: false,
   rankingMovementLoading: false,
   rankingSourceTouched: false,
@@ -4572,17 +4573,31 @@ function getRankingMovementKey(podcast) {
   return getPodcastId(podcast);
 }
 
+// Verified recent catalogue listings are separate from editorial rating dates.
+// Keep the first-listing date for the full seven-day suppression window. Do not
+// infer it from Afgivet vurdering: a new editorial rating can belong to an old listing.
+const RANKING_MOVEMENT_FIRST_LISTED_AT = Object.freeze({
+  "leopold ii": "2026-10-17T17:10:00Z"
+});
+
+function getRankingMovementFirstListedAt(podcast) {
+  const key = getRankingMovementKey(podcast);
+  return key ? RANKING_MOVEMENT_FIRST_LISTED_AT[key] || null : null;
+}
+
+function isVerifiedNewRankingListing(podcast) {
+  const key = getRankingMovementKey(podcast);
+  return Boolean(key && Object.prototype.hasOwnProperty.call(RANKING_MOVEMENT_FIRST_LISTED_AT, key));
+}
+
 function getRankingMovementMarkup(podcast) {
   if (!isRankingMovementEligible() || !state.rankingMovementByKey.size) return "";
   const key = getRankingMovementKey(podcast);
   if (!key || !state.rankingMovementByKey.has(key)) return "";
   const id = getRankingMovementId(podcast);
   const delta = state.rankingMovementByKey.get(key);
+  if (!Number.isFinite(delta) || delta === 0) return "";
   const periodLabel = state.rankingMovementPeriodLabel || "de seneste 7 dage";
-  if (delta === 0) {
-    const label = `Uændret placering ${periodLabel}`;
-    return `<span id="${id}" class="ranking-movement ranking-movement--steady" aria-label="${escapeHtml(label)}" title="${escapeHtml(label)}">–</span>`;
-  }
   const gain = delta > 0;
   const count = Math.abs(delta);
   const label = `${gain ? "Steget" : "Faldet"} ${count} ${count === 1 ? "placering" : "placeringer"} ${periodLabel}`;
@@ -4592,7 +4607,7 @@ function getRankingMovementMarkup(podcast) {
 function getRankingMovementId(podcast) {
   if (!isRankingMovementEligible()) return "";
   const key = getRankingMovementKey(podcast);
-  if (!key || !state.rankingMovementByKey.has(key)) return "";
+  if (!key || !state.rankingMovementByKey.has(key) || !Number.isFinite(state.rankingMovementByKey.get(key)) || state.rankingMovementByKey.get(key) === 0) return "";
   return `ranking-movement-${key.replace(/[^a-zA-Z0-9_-]/g, "-")}`;
 }
 
@@ -4605,6 +4620,7 @@ async function loadRankingMovementSnapshot() {
 
   state.rankingMovementLoading = true;
   state.rankingMovementPeriodLabel = "";
+  state.rankingMovementSnapshotValid = false;
   const baseline = window.PodcastRankingMovement.getSnapshotBaseline(new Date());
   if (!baseline) {
     state.rankingMovementByKey = new Map();
@@ -4625,7 +4641,9 @@ async function loadRankingMovementSnapshot() {
       .map((podcast) => ({
         key: getRankingMovementKey(podcast),
         averageRating: getPodcastRatingForActiveSource(podcast),
-        ratingCount: getCommunityRatingCount(podcast)
+        ratingCount: getCommunityRatingCount(podcast),
+        firstListedAt: getRankingMovementFirstListedAt(podcast),
+        knownNewListing: isVerifiedNewRankingListing(podcast)
       }))
       .filter((entry) => entry.key && entry.averageRating !== null && entry.ratingCount > 0);
     const rows = Array.isArray(data) ? data : [];
@@ -4641,7 +4659,8 @@ async function loadRankingMovementSnapshot() {
           resolveCanonicalKey: (key) => key.startsWith("display-group:") ? key : (resolveCanonicalPodcastId(key) || "")
         }
       );
-      if (state.rankingMovementByKey.size) state.rankingMovementPeriodLabel = baseline.periodLabel;
+      state.rankingMovementSnapshotValid = true;
+      state.rankingMovementPeriodLabel = baseline.periodLabel;
     } else {
       state.rankingMovementByKey = new Map();
     }
@@ -4658,9 +4677,16 @@ async function loadRankingMovementSnapshot() {
 
 function setRankingResultsText(text) {
   if (!elements.resultsText) return;
-  const hasMovementLabel =
-    state.rankingMovementByKey.size > 0 && state.rankingMovementPeriodLabel && isRankingMovementEligible();
-  const movementNote = hasMovementLabel ? ` · Ranglistepile ${state.rankingMovementPeriodLabel}` : "";
+  const canSummarize = state.rankingMovementSnapshotValid && state.rankingMovementPeriodLabel && isRankingMovementEligible();
+  const movedCount = canSummarize
+    ? [...state.rankingMovementByKey.values()].filter((delta) => Number.isFinite(delta) && delta !== 0).length
+    : 0;
+  const movementStatus = !canSummarize
+    ? ""
+    : movedCount === 0
+      ? `Ingen placeringsændringer ${state.rankingMovementPeriodLabel}`
+      : `${movedCount} ${movedCount === 1 ? "podcast har" : "podcasts har"} ændret placering ${state.rankingMovementPeriodLabel}`;
+  const movementNote = movementStatus ? ` · ${movementStatus}` : "";
   elements.resultsText.textContent = `${text}${movementNote}`;
 }
 

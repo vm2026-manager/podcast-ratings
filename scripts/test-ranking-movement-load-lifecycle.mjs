@@ -20,11 +20,13 @@ const isRankingMovementDataReady = extractFunction("isRankingMovementDataReady")
 const loadRankingMovementSnapshot = extractFunction("loadRankingMovementSnapshot");
 const setRankingResultsText = extractFunction("setRankingResultsText");
 const getRankingMovementMarkup = extractFunction("getRankingMovementMarkup");
+const getRankingMovementId = extractFunction("getRankingMovementId");
 
 const state = {
   rankingMovementLoadAttempted: false,
   rankingMovementLoading: false,
   rankingMovementPeriodLabel: "",
+  rankingMovementSnapshotValid: false,
   communityStatsHasSuccessfulLoad: false,
   podcastDisplayGroupsReady: false,
   rankingMovementByKey: new Map(),
@@ -77,7 +79,8 @@ const movementApi = {
 };
 const load = new Function(
   "state", "isRankingMovementDataReady", "isRankingMovementEligible", "window",
-  "getRankingCandidates", "getRankingMovementKey", "getPodcastRatingForActiveSource", "getCommunityRatingCount",
+  "getRankingCandidates", "getRankingMovementKey", "getRankingMovementFirstListedAt", "isVerifiedNewRankingListing",
+  "getPodcastRatingForActiveSource", "getCommunityRatingCount",
   "resolveCanonicalPodcastId", "isRankingRoute", "renderPodcastGrid", "console",
   `${loadRankingMovementSnapshot}; return loadRankingMovementSnapshot;`
 )(
@@ -87,6 +90,8 @@ const load = new Function(
   { PodcastRankingMovement: movementApi },
   () => [{ id: "podcast-a" }],
   (podcast) => podcast.id,
+  () => null,
+  () => false,
   () => 8.4,
   () => 5,
   (key) => key,
@@ -115,6 +120,7 @@ assert.equal(historyQueries, 1);
 assert.equal(selectedDate, "2026-10-20");
 assert.equal(state.rankingMovementLoadAttempted, true);
 assert.equal(state.rankingMovementPeriodLabel, "siden 20. oktober");
+assert.equal(state.rankingMovementSnapshotValid, true);
 assert.equal(state.rankingMovementByKey.get("podcast-a"), 1);
 assert.equal(renders, 1);
 
@@ -125,9 +131,16 @@ const movementMarkup = new Function(
 const upMarkup = movementMarkup({});
 assert.match(upMarkup, /Steget 1 placering siden 20\. oktober/);
 assert.match(upMarkup, /title="Steget 1 placering siden 20\. oktober"/);
+state.rankingMovementByKey.set("podcast-a", -11);
+assert.match(movementMarkup({}), /Faldet 11 placeringer siden 20\. oktober/);
 state.rankingMovementByKey.set("podcast-a", 0);
 const steadyMarkup = movementMarkup({});
-assert.match(steadyMarkup, /Uændret placering siden 20\. oktober/);
+assert.equal(steadyMarkup, "", "unchanged positions have no dash or movement marker");
+const movementId = new Function(
+  "state", "isRankingMovementEligible", "getRankingMovementKey",
+  `${getRankingMovementId}; return getRankingMovementId;`
+)(state, () => true, () => "podcast-a");
+assert.equal(movementId({}), "", "unchanged positions do not create dangling aria-describedby IDs");
 
 // The visible ranking note and assistive labels use the same period wording.
 const resultsElement = { textContent: "" };
@@ -135,7 +148,29 @@ const setResults = new Function(
   "state", "elements", "isRankingMovementEligible", `${setRankingResultsText}; return setRankingResultsText;`
 )(state, { resultsText: resultsElement }, () => true);
 setResults("Viser 18 af 263 podcasts");
-assert.equal(resultsElement.textContent, "Viser 18 af 263 podcasts · Ranglistepile siden 20. oktober");
+assert.equal(resultsElement.textContent, "Viser 18 af 263 podcasts · Ingen placeringsændringer siden 20. oktober");
+state.rankingMovementByKey = new Map([["a", 1], ["b", 0], ["c", -11]]);
+setResults("Viser 18 af 263 podcasts");
+assert.equal(resultsElement.textContent, "Viser 18 af 263 podcasts · 2 podcasts har ændret placering siden 20. oktober");
+state.rankingMovementByKey = new Map();
+setResults("Viser 18 af 263 podcasts");
+assert.equal(resultsElement.textContent, "Viser 18 af 263 podcasts · Ingen placeringsændringer siden 20. oktober", "a valid empty cohort is a genuine zero-movement result");
+state.rankingMovementPeriodLabel = "de seneste 7 dage";
+state.rankingMovementByKey = new Map([["a", 2]]);
+setResults("Viser 18 af 263 podcasts");
+assert.equal(resultsElement.textContent, "Viser 18 af 263 podcasts · 1 podcast har ændret placering de seneste 7 dage");
+state.rankingMovementPeriodLabel = "siden 20. oktober";
+state.rankingMovementByKey = new Map();
+const ineligibleResults = new Function(
+  "state", "elements", "isRankingMovementEligible", `${setRankingResultsText}; return setRankingResultsText;`
+)(state, { resultsText: resultsElement }, () => false);
+ineligibleResults("Viser 18 af 263 podcasts");
+assert.equal(resultsElement.textContent, "Viser 18 af 263 podcasts", "editorial or filtered rankings do not show the user-ranking status");
+state.rankingMovementByKey = new Map([["a", 1]]);
+state.rankingMovementSnapshotValid = false;
+setResults("Viser 18 af 263 podcasts");
+assert.equal(resultsElement.textContent, "Viser 18 af 263 podcasts", "missing history is not presented as zero movement");
+state.rankingMovementSnapshotValid = true;
 
 // A later date selects exactly seven UTC calendar days prior. Missing or
 // partial history is not replaced with the initial snapshot.
@@ -143,6 +178,7 @@ async function resetPageLoad(nextBaseline, nextResponse) {
   baseline = nextBaseline;
   response = nextResponse;
   state.rankingMovementLoadAttempted = false;
+  state.rankingMovementSnapshotValid = false;
   state.rankingMovementPeriodLabel = "stale label";
   state.rankingMovementByKey = new Map([["stale", 99]]);
   await load();
@@ -153,6 +189,7 @@ await resetPageLoad(baseline, response);
 assert.equal(selectedDate, "2026-10-21");
 assert.equal(state.rankingMovementByKey.size, 0);
 assert.equal(state.rankingMovementPeriodLabel, "");
+assert.equal(state.rankingMovementSnapshotValid, false);
 
 response = {
   data: [{ snapshot_date: "2026-10-21", source: "users", podcast_key: "podcast-a", average_rating: 8.2, rating_count: 4 }],
@@ -163,6 +200,7 @@ await resetPageLoad(baseline, response);
 assert.equal(selectedDate, "2026-10-21");
 assert.equal(state.rankingMovementByKey.size, 0, "partial baseline fails closed");
 assert.equal(state.rankingMovementPeriodLabel, "");
+assert.equal(state.rankingMovementSnapshotValid, false);
 assert.equal(historyQueries, 3, "one bounded query per eligible page load");
 
 console.log("Ranking movement baseline and hydration lifecycle regression tests passed.");
