@@ -9,6 +9,30 @@ const movement = context.globalThis.PodcastRankingMovement;
 const resolve = (key) => ({ "old-alias-a": "a", "old-alias-b": "b" }[key] || key);
 const rank = (entries, field = "score") => movement.rankSequential(entries, (entry) => entry.key, (entry) => entry[field]);
 
+for (const date of ["2026-10-22T12:00:00Z", "2026-10-26T23:59:59Z", "2026-10-27T03:16:59Z"]) {
+  assert.deepEqual({ ...movement.getSnapshotBaseline(new Date(date)) }, {
+    snapshotDate: "2026-10-20", periodLabel: "siden 20. oktober", mode: "initial"
+  });
+}
+assert.deepEqual({ ...movement.getSnapshotBaseline(new Date("2026-10-27T03:17:00Z")) }, {
+  snapshotDate: "2026-10-20", periodLabel: "de seneste 7 dage", mode: "seven-day"
+});
+assert.deepEqual({ ...movement.getSnapshotBaseline(new Date("2026-10-28T03:17:00Z")) }, {
+  snapshotDate: "2026-10-21", periodLabel: "de seneste 7 dage", mode: "seven-day"
+}, "once weekly mode begins, a missing future baseline must not fall back to 20 October");
+assert.equal(movement.getSnapshotBaseline(new Date("invalid")), null);
+
+const completeRows = [
+  { snapshot_date: "2026-10-20", source: "users", podcast_key: "a", average_rating: 8.2, rating_count: 3 },
+  { snapshot_date: "2026-10-20", source: "users", podcast_key: "b", average_rating: 8.1, rating_count: 1 }
+];
+assert.equal(movement.hasCompleteSnapshot(completeRows, 2, "2026-10-20"), true);
+assert.equal(movement.hasCompleteSnapshot(completeRows.slice(0, 1), 2, "2026-10-20"), false, "partial baseline response fails closed");
+assert.equal(movement.hasCompleteSnapshot([], 0, "2026-10-20"), false, "missing baseline fails closed");
+assert.equal(movement.hasCompleteSnapshot(completeRows, 2, "2026-10-21"), false, "wrong-date baseline fails closed");
+assert.equal(movement.hasCompleteSnapshot(completeRows.map((row) => ({ ...row, source: "mads" })), 2, "2026-10-20"), false);
+assert.equal(movement.hasCompleteSnapshot([completeRows[0], completeRows[0]], 2, "2026-10-20"), false, "duplicate identity makes a snapshot incomplete");
+
 const ties = rank([
   { key: "e", score: 8.9 }, { key: "d", score: 9.1 }, { key: "c", score: 9.1 },
   { key: "b", score: 9.3 }, { key: "a", score: 9.5 }
