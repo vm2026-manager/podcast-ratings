@@ -36,6 +36,7 @@ const checks = [
   ["startup rating hydration", ["scripts/test-startup-rating-hydration.mjs"]],
   ["ranking movement scoring, entrant stability, and 1,300-item ranks", ["scripts/test-ranking-movement.mjs"]],
   ["ranking movement hydration lifecycle", ["scripts/test-ranking-movement-load-lifecycle.mjs"]],
+  ["ranking changes-only presentation preserves original ranks and movement arrows", ["scripts/test-ranking-changes-view.mjs"]],
   ["community ranking load safety", ["scripts/test-community-ranking-load-safety.mjs"]],
   ["mobile home search stays open during data refresh", ["scripts/test-mobile-home-search-overlay-lifecycle.mjs"]],
   ["episode archive/source", ["scripts/test-podcast-episode-archive-source-regression.mjs"]],
