@@ -596,10 +596,10 @@ function parseInlineImage(value) {
   };
 }
 
-async function writeInlineImageFile(assetBaseName, inlineImage) {
+async function writeInlineImageFile(assetBaseName, inlineImage, outputDirectory = "") {
   const extension = IMAGE_EXTENSION_BY_MIME[inlineImage.mimeType] || "png";
   const relativePath = `data/covers/${assetBaseName}.${extension}`;
-  const absolutePath = path.join(repoRoot, relativePath);
+  const absolutePath = path.join(repoRoot, outputDirectory, relativePath);
 
   await mkdir(path.dirname(absolutePath), { recursive: true });
   await writeFile(absolutePath, Buffer.from(inlineImage.base64, "base64"));
@@ -607,7 +607,7 @@ async function writeInlineImageFile(assetBaseName, inlineImage) {
   return relativePath.replace(/\\/g, "/");
 }
 
-async function sanitizeExportValue(outputKey, value, assetBaseName) {
+async function sanitizeExportValue(outputKey, value, assetBaseName, outputDirectory = "") {
   const normalizedValue = normalizeText(value);
 
   if (!normalizedValue) {
@@ -618,21 +618,22 @@ async function sanitizeExportValue(outputKey, value, assetBaseName) {
     const inlineImage = parseInlineImage(normalizedValue);
 
     if (inlineImage) {
-      return writeInlineImageFile(assetBaseName, inlineImage);
+      return writeInlineImageFile(assetBaseName, inlineImage, outputDirectory);
     }
   }
 
   return normalizedValue;
 }
 
-async function pickFields(row, fieldMap, assetBaseName) {
+async function pickFields(row, fieldMap, assetBaseName, outputDirectory = "") {
   const output = {};
 
   for (const { output: outputKey, candidates } of fieldMap) {
     const value = await sanitizeExportValue(
       outputKey,
       getField(row, candidates),
-      assetBaseName
+      assetBaseName,
+      outputDirectory
     );
 
     if (value) {
@@ -653,7 +654,7 @@ function filterFeaturedRows(rows) {
   );
 }
 
-async function slimPodcastRows(rows) {
+async function slimPodcastRows(rows, outputDirectory = "") {
   const slimRows = [];
 
   for (let index = 0; index < rows.length; index += 1) {
@@ -661,7 +662,7 @@ async function slimPodcastRows(rows) {
     const title = getField(row, ["Titel", "Title"]);
     const placement = getField(row, ["Placering", "Rank", "Rangering"]) || String(index + 1);
     const assetBaseName = `${String(placement).padStart(3, "0")}-${slugify(title) || `podcast-${index + 1}`}`;
-    const podcast = await pickFields(row, PODCAST_FIELDS, assetBaseName);
+    const podcast = await pickFields(row, PODCAST_FIELDS, assetBaseName, outputDirectory);
     podcast.catalogue_id = createCatalogueId({
       title,
       host: getField(row, ["Vært", "Vaert", "Host", "Værter"]),
@@ -698,7 +699,7 @@ async function slimPodcastRows(rows) {
   return slimRows;
 }
 
-async function slimFeaturedRows(rows) {
+async function slimFeaturedRows(rows, outputDirectory = "") {
   const slimRows = [];
 
   for (let index = 0; index < rows.length; index += 1) {
@@ -706,7 +707,7 @@ async function slimFeaturedRows(rows) {
     const title = getField(row, ["Titel"]) || getField(row, ["Matchtitel"]);
     const order = getField(row, ["Visningsrækkefølge"]) || String(index + 1);
     const assetBaseName = `featured-${String(order).padStart(3, "0")}-${slugify(title) || `review-${index + 1}`}`;
-    slimRows.push(await pickFields(row, FEATURED_FIELDS, assetBaseName));
+    slimRows.push(await pickFields(row, FEATURED_FIELDS, assetBaseName, outputDirectory));
   }
 
   return slimRows;
@@ -758,7 +759,7 @@ async function loadSheet(sheet) {
   return { gid, objects: rowsToObjects(parsedRows) };
 }
 
-async function syncSheet(sheet, loadedSheet, catalogueRows = []) {
+async function syncSheet(sheet, loadedSheet, catalogueRows = [], assetOutputDirectory = "") {
   const { gid, objects } = loadedSheet;
   if (sheet.sheetName === "Udforsk-klynger") {
     const payload = buildExploreClustersPayload(objects, catalogueRows);
@@ -774,7 +775,7 @@ async function syncSheet(sheet, loadedSheet, catalogueRows = []) {
 
   const slimRows =
     sheet.sheetName === "Udvalgte vurderinger"
-      ? await slimFeaturedRows(filteredRows)
+      ? await slimFeaturedRows(filteredRows, assetOutputDirectory)
       : await slimPodcastRows(filteredRows);
 
   const payload =
@@ -823,7 +824,7 @@ async function main() {
     outputSheets.map(async (sheet) => [sheet, await loadSheet(sheet)])
   );
   const podcastsSheet = loadedSheets.find(([sheet]) => sheet.sheetName === "Ark1");
-  const sheetCatalogueRows = await slimPodcastRows(filterPodcastRows(podcastsSheet[1].objects));
+  const sheetCatalogueRows = await slimPodcastRows(filterPodcastRows(podcastsSheet[1].objects), outputDirectory);
   const previousCatalogue = JSON.parse(await readFile(path.join(repoRoot, "data", "podcasts.json"), "utf8"));
   const identitySafeSheetRows = preserveFlashbackParentIdentity(sheetCatalogueRows, previousCatalogue.rows);
   // This registry is committed separately from the Sheet export. Sheet rows win
@@ -842,7 +843,7 @@ async function main() {
       );
       console.log(`Skrev ${catalogueRows.length} rækker til ${sheet.outputPath}`);
     } else {
-      await syncSheet(sheet, loadedSheet, catalogueRows);
+      await syncSheet(sheet, loadedSheet, catalogueRows, outputDirectory);
     }
   }
 }

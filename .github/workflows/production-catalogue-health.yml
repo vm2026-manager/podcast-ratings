@@ -9,8 +9,10 @@ on:
     - cron: "*/15 * * * *"
 
 permissions:
+  actions: read
   contents: read
   issues: write
+  pull-requests: read
 
 concurrency:
   group: production-catalogue-health
@@ -28,15 +30,32 @@ jobs:
         with:
           node-version: "24"
 
+      - name: Read-only compare of published Google Sheets with main
+        id: sheet-source-check
+        shell: bash
+        run: |
+          set -o pipefail
+          node scripts/sync-sheet-data.mjs --output-dir .sync-health 2>&1 | tee .production-catalogue-health.log
+          node scripts/check-sheet-source-drift.mjs --candidate-dir .sync-health 2>&1 | tee -a .production-catalogue-health.log
+
+      - name: Check scheduled sync freshness and pending catalogue PR age
+        id: pipeline-watch
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -o pipefail
+          node scripts/catalogue-pipeline-watch.mjs 2>&1 | tee -a .production-catalogue-health.log
+
       - name: Check production catalogue
         id: health-check
         shell: bash
         run: |
           set -o pipefail
-          node scripts/production-catalogue-health.mjs 2>&1 | tee .production-catalogue-health.log
+          node scripts/production-catalogue-health.mjs 2>&1 | tee -a .production-catalogue-health.log
 
       - name: Alert on production catalogue failure
-        if: failure() && steps.health-check.outcome == 'failure'
+        if: failure() && (steps.sheet-source-check.outcome == 'failure' || steps.pipeline-watch.outcome == 'failure' || steps.health-check.outcome == 'failure')
         uses: actions/github-script@v7
         with:
           script: |
@@ -44,7 +63,7 @@ jobs:
             await updateProductionCatalogueAlert({ github, context, core, outcome: "failure" });
 
       - name: Resolve production catalogue alert
-        if: success() && steps.health-check.outcome == 'success'
+        if: success() && steps.sheet-source-check.outcome == 'success' && steps.pipeline-watch.outcome == 'success' && steps.health-check.outcome == 'success' && steps.health-check.outputs.pendingDeployment != 'true'
         uses: actions/github-script@v7
         with:
           script: |

@@ -15,8 +15,8 @@ on:
     - cron: "7,37 * * * *"
 
 permissions:
-  actions: write
-  contents: write
+  actions: read
+  contents: read
   issues: write
   pull-requests: write
 
@@ -110,20 +110,47 @@ jobs:
       - name: Detect catalogue changes
         id: catalogue
         run: |
-          if git diff --quiet -- data/podcasts.json; then
+          if git diff --quiet -- data/podcasts.json data/featured-reviews.json data/explore-clusters.json; then
             echo "changed=false" >> "$GITHUB_OUTPUT"
           else
             echo "changed=true" >> "$GITHUB_OUTPUT"
           fi
+          if git diff --quiet -- data/podcasts.json; then
+            echo "podcasts_changed=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "podcasts_changed=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Require trusted token for unattended pull_request checks
+        id: token-preflight
+        if: steps.catalogue.outputs.changed == 'true'
+        env:
+          CATALOGUE_SYNC_PR_TOKEN: ${{ secrets.CATALOGUE_SYNC_PR_TOKEN }}
+        run: |
+          if [ -z "$CATALOGUE_SYNC_PR_TOKEN" ]; then
+            echo "::error::CATALOGUE_SYNC_PR_TOKEN is missing. Refusing to create a catalogue PR without its real pull_request checks."
+            exit 1
+          fi
+
+      - name: Verify trusted token is valid
+        id: token-check
+        if: steps.catalogue.outputs.changed == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.CATALOGUE_SYNC_PR_TOKEN }}
+        run: |
+          if ! gh api "repos/${GITHUB_REPOSITORY}" --silent; then
+            echo "::error::CATALOGUE_SYNC_PR_TOKEN is invalid, expired, or lacks repository metadata access. Refusing publication."
+            exit 1
+          fi
 
       - name: Regenerate recommendation product
-        if: steps.catalogue.outputs.changed == 'true'
+        if: steps.catalogue.outputs.podcasts_changed == 'true'
         run: |
           node scripts/build-recommendation-metadata.mjs
           node scripts/build-current-podcast-similarity-product-v1.3.mjs
 
       - name: Validate regenerated recommendation product
-        if: steps.catalogue.outputs.changed == 'true'
+        if: steps.catalogue.outputs.podcasts_changed == 'true'
         run: |
           node scripts/test-recommendation-metadata.mjs
           node scripts/test-current-podcast-similarity-product-v1.3.mjs
@@ -134,11 +161,7 @@ jobs:
         if: steps.catalogue.outputs.changed == 'true'
         uses: peter-evans/create-pull-request@v7
         with:
-          # A dedicated repository-scoped PAT / GitHub App token triggers real
-          # pull_request checks. GITHUB_TOKEN-created PRs instead await approval;
-          # workflow_dispatch checks do not satisfy the required PR check.
-          # The fallback preserves the current protected, manual-approval path.
-          token: ${{ secrets.CATALOGUE_SYNC_PR_TOKEN || github.token }}
+          token: ${{ secrets.CATALOGUE_SYNC_PR_TOKEN }}
           branch: automation/catalogue-sync
           base: main
           title: Sync Podcastlisten catalogue
@@ -154,6 +177,7 @@ jobs:
             data/explore-clusters.json
             data/recommendation-metadata.json
             data/podcast-similarity-product-v1.3.json
+            data/covers/
 
       - name: Read current catalogue PR head
         id: catalogue-pr
@@ -167,105 +191,108 @@ jobs:
             echo "head_sha=$(echo "$pr_json" | jq -r .headRefOid)" >> "$GITHUB_OUTPUT"
           fi
 
-      # Preflight only: never publish the independent workflow's required check here.
-      # Its full verification (including Python and checkout cleanliness) must pass.
-      - name: Run required regression gate against catalogue head
+      - name: Wait for the real pull_request regression gate on current PR head
         id: required-gate
         if: steps.catalogue-pr.outputs.head_sha != ''
+        continue-on-error: true
         env:
           HEAD_SHA: ${{ steps.catalogue-pr.outputs.head_sha }}
-        run: |
-          git fetch --no-tags origin "$HEAD_SHA"
-          git checkout --detach "$HEAD_SHA"
-          node scripts/critical-regression-gate.mjs
-
-      # PRs created with GITHUB_TOKEN do not reliably trigger their own pull_request checks.
-      # workflow_dispatch is the supported exception and runs the full independent gate.
-      - name: Dispatch independent required regression workflow
-        if: steps.required-gate.outcome == 'success'
-        env:
           GH_TOKEN: ${{ github.token }}
-          HEAD_SHA: ${{ steps.catalogue-pr.outputs.head_sha }}
         run: |
-          current_head=$(gh api "repos/${GITHUB_REPOSITORY}/git/ref/heads/automation/catalogue-sync" --jq .object.sha)
-          if [ "$current_head" != "$HEAD_SHA" ]; then
-            echo "::error::Catalogue PR head moved after preflight; refusing stale regression dispatch."
-            exit 1
-          fi
-          gh workflow run critical-regression-gate.yml --ref automation/catalogue-sync
-          echo "Independent Critical Regression Gate dispatched for $HEAD_SHA. Merge still requires its passing check." >> "$GITHUB_STEP_SUMMARY"
+          for attempt in $(seq 1 60); do
+            pr_json=$(gh pr list --base main --head automation/catalogue-sync --state open --json number,headRefOid --jq '.[0]')
+            pr_head=$(echo "$pr_json" | jq -r '.headRefOid // empty')
+            if [ "$pr_head" != "$HEAD_SHA" ]; then
+              echo "::error::Catalogue PR head changed while waiting; refusing to use a stale regression result."
+              exit 1
+            fi
+            run_json=$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs?event=pull_request&head_sha=${HEAD_SHA}&per_page=100")
+            gate=$(echo "$run_json" | jq -c --arg sha "$HEAD_SHA" '[.workflow_runs[] | select(.name == "Critical Regression Gate") | select(.head_sha == $sha)] | sort_by(.created_at) | last // empty')
+            conclusion=$(echo "$gate" | jq -r '.conclusion // empty')
+            status=$(echo "$gate" | jq -r '.status // empty')
+            if [ "$status" = "completed" ]; then
+              if [ "$conclusion" != "success" ]; then
+                echo "::error::The real pull_request Critical Regression Gate concluded $conclusion for $HEAD_SHA."
+                exit 1
+              fi
+              current_head=$(gh pr list --base main --head automation/catalogue-sync --state open --json headRefOid --jq '.[0].headRefOid // empty')
+              if [ "$current_head" != "$HEAD_SHA" ]; then
+                echo "::error::Catalogue PR head changed after the required check passed; refusing auto-merge."
+                exit 1
+              fi
+              echo "Verified pull_request Critical Regression Gate success on $HEAD_SHA"
+              exit 0
+            fi
+            sleep 20
+          done
+          echo "::error::Timed out waiting for the real pull_request Critical Regression Gate on $HEAD_SHA."
+          exit 1
 
       - name: Record blocked catalogue regression gate in GitHub Issues
-        if: always() && steps.required-gate.outcome == 'failure'
-        continue-on-error: true
+        if: always() && (steps.token-preflight.outcome == 'failure' || steps.token-check.outcome == 'failure' || steps.create-pull-request.outcome == 'failure' || steps.required-gate.outcome == 'failure')
         uses: actions/github-script@v7
         env:
           CATALOGUE_PR_NUMBER: ${{ steps.catalogue-pr.outputs.number }}
+          TOKEN_PREFLIGHT: ${{ steps.token-preflight.outcome }}
+          TOKEN_CHECK: ${{ steps.token-check.outcome }}
+          PR_CREATION: ${{ steps.create-pull-request.outcome }}
+          GATE_OUTCOME: ${{ steps.required-gate.outcome }}
         with:
           script: |
-            const title = "Catalogue sync blocked: regression gate";
+            const title = "Catalogue sync blocked: unattended publication";
             const runUrl = `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`;
             const pr = process.env.CATALOGUE_PR_NUMBER;
+            const missingToken = process.env.TOKEN_PREFLIGHT === "failure";
             const body = [
-              "The Google Sheet was read and the new catalogue was staged, but the required Critical Regression Gate failed. Publication remains blocked.",
+              "The Google Sheet produced changes, but unattended publication is blocked. No changes were merged or published.",
+              missingToken
+                ? "CATALOGUE_SYNC_PR_TOKEN is missing. Add it as a repository Actions secret using a fine-grained token scoped only to this repository: Contents (read and write), Pull requests (read and write), Metadata (read). Ensure the token is valid and permitted to start pull_request workflows."
+                : `Publication step outcomes: token preflight=${process.env.TOKEN_PREFLIGHT || "not run"}, token API check=${process.env.TOKEN_CHECK || "not run"}, PR creation=${process.env.PR_CREATION || "not run"}, real pull_request gate=${process.env.GATE_OUTCOME || "not run"}. Inspect the failed run step. A workflow_dispatch run does not satisfy the required pull_request check.`,
               `Failed run: ${runUrl}`,
               pr ? `Pending catalogue PR: ${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/pull/${pr}` : "",
-              "Review the first failing regression test in the run logs. Fix the test or data issue; never bypass podcast-identity, rating, or user-data safeguards."
+              "Restore the trusted token or fix the failed workflow step. Never bypass identity safeguards or required branch protection."
             ].filter(Boolean).join("\n\n");
             const openIssues = await github.paginate(github.rest.issues.listForRepo, {
               ...context.repo, state: "open", per_page: 100
             });
             const existing = openIssues.find((item) => !item.pull_request && item.title === title);
-            if (existing) await github.rest.issues.update({ ...context.repo, issue_number: existing.number, body });
-            else await github.rest.issues.create({ ...context.repo, title, body });
-            core.warning("Catalogue promotion blocked. Regression gate incident recorded in GitHub Issues.");
-
-      - name: Resolve regression gate incident on recovery
-        if: always() && steps.required-gate.outcome == 'success'
-        continue-on-error: true
-        uses: actions/github-script@v7
-        with:
-          script: |
-            const title = "Catalogue sync blocked: regression gate";
-            const openIssues = await github.paginate(github.rest.issues.listForRepo, {
-              ...context.repo, state: "open", per_page: 100
-            });
-            const existing = openIssues.find((item) => !item.pull_request && item.title === title);
-            if (existing) {
-              const runUrl = `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`;
-              await github.rest.issues.createComment({
-                ...context.repo, issue_number: existing.number,
-                body: `Critical Regression Gate recovered. Successful run: ${runUrl}`
-              });
-              await github.rest.issues.update({
-                ...context.repo, issue_number: existing.number, state: "closed", state_reason: "completed"
-              });
-            }
-
-      - name: Report when unattended catalogue merging is not configured
-        if: steps.catalogue-pr.outputs.number != ''
-        env:
-          HAS_TRUSTED_PR_TOKEN: ${{ secrets.CATALOGUE_SYNC_PR_TOKEN != '' }}
-        run: |
-          if [ "$HAS_TRUSTED_PR_TOKEN" != "true" ]; then
-            echo "::warning::CATALOGUE_SYNC_PR_TOKEN is missing. PR tests may require manual approval; a workflow_dispatch check cannot satisfy required PR checks."
-            echo "Unattended merge not fully configured: set a repo-scoped CATALOGUE_SYNC_PR_TOKEN to trigger the required pull_request check automatically." >> "$GITHUB_STEP_SUMMARY"
-          fi
+            if (existing) await github.rest.issues.update({ ...context.repo, issue_number: existing.number, body, assignees: [context.repo.owner] });
+            else await github.rest.issues.create({ ...context.repo, title, body, assignees: [context.repo.owner] });
+            core.setFailed("Catalogue publication blocked; deduplicated issue created or updated.");
 
       - name: Enable automatic merge after required checks
+        id: auto-merge
         if: steps.required-gate.outcome == 'success'
         env:
           GH_TOKEN: ${{ github.token }}
           PR_URL: ${{ steps.create-pull-request.outputs.pull-request-url }}
           HEAD_SHA: ${{ steps.catalogue-pr.outputs.head_sha }}
         run: |
-          set +e
           gh pr merge --auto --merge --match-head-commit "$HEAD_SHA" "$PR_URL"
-          status=$?
-          set -e
-          if [ "$status" -ne 0 ]; then
-            echo "::warning::Could not enable auto-merge for $PR_URL. The validated PR remains open for normal review/merge."
-            echo "Auto-merge could not be enabled for $PR_URL; the PR remains open." >> "$GITHUB_STEP_SUMMARY"
-          else
-            echo "Auto-merge requested for $PR_URL. The independent Critical Regression Gate must pass; approve its pending workflow run if required." >> "$GITHUB_STEP_SUMMARY"
-          fi
+          echo "Auto-merge enabled only after the real required pull_request gate passed on $HEAD_SHA." >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Record blocked automatic merge in GitHub Issues
+        if: always() && steps.auto-merge.outcome == 'failure'
+        uses: actions/github-script@v7
+        env:
+          CATALOGUE_PR_NUMBER: ${{ steps.catalogue-pr.outputs.number }}
+          HEAD_SHA: ${{ steps.catalogue-pr.outputs.head_sha }}
+        with:
+          script: |
+            const title = "Catalogue sync blocked: unattended publication";
+            const runUrl = `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`;
+            const pr = process.env.CATALOGUE_PR_NUMBER;
+            const body = [
+              "The Google Sheet produced changes and the real pull_request Critical Regression Gate passed, but GitHub did not accept automatic merge. No changes were merged or published.",
+              `PR head SHA: ${process.env.HEAD_SHA || "unknown"}`,
+              `Failed run: ${runUrl}`,
+              pr ? `Pending catalogue PR: ${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/pull/${pr}` : "",
+              "Inspect the failed automatic-merge step and repository rules. Do not bypass required checks or identity safeguards."
+            ].filter(Boolean).join("\n\n");
+            const openIssues = await github.paginate(github.rest.issues.listForRepo, {
+              ...context.repo, state: "open", per_page: 100
+            });
+            const existing = openIssues.find((item) => !item.pull_request && item.title === title);
+            if (existing) await github.rest.issues.update({ ...context.repo, issue_number: existing.number, body, assignees: [context.repo.owner] });
+            else await github.rest.issues.create({ ...context.repo, title, body, assignees: [context.repo.owner] });
+            core.setFailed("Automatic merge was blocked; deduplicated issue created or updated.");
