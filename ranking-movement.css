@@ -29,7 +29,9 @@ html body.page-ranglister .ranking-movement-preview {
   flex-wrap: wrap;
   align-items: center;
   gap: 0.4rem 0.8rem;
+  width: 100%;
   min-width: 0;
+  justify-self: stretch;
   margin: -0.25rem 0 0.15rem;
 }
 
@@ -138,16 +140,32 @@ html body.page-ranglister .desktop-ranking-row__rank .ranking-movement--down {
 }
 
 @media (max-width: 700px) {
+  html body.page-ranglister .ranking-list-panel .ranking-toolbar {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 0.55rem !important;
+  }
+
+  html body.page-ranglister .ranking-toolbar > * {
+    order: 0 !important;
+    width: 100%;
+    min-width: 0;
+  }
+
   html body.page-ranglister .ranking-toolbar__results {
-    grid-area: count;
-    flex: 1 1 auto;
+    display: flex !important;
+    flex: none !important;
     align-items: flex-start;
     gap: 0.45rem;
   }
 
   html body.page-ranglister .ranking-movement-preview {
-    grid-row: 3;
-    grid-column: 1 / -1;
+    grid-row: auto !important;
+    grid-column: auto !important;
+    justify-self: stretch !important;
+    width: 100% !important;
+    flex: none !important;
     align-items: stretch;
     gap: 0.35rem;
     margin-top: 0;
@@ -156,13 +174,15 @@ html body.page-ranglister .desktop-ranking-row__rank .ranking-movement--down {
   html body.page-ranglister .ranking-movement-preview__item {
     flex: 1 1 100%;
     display: grid;
+    width: 100%;
     grid-template-columns: max-content minmax(0, 1fr) max-content;
     align-items: baseline;
     gap: 0.35rem;
   }
 
   html body.page-ranglister #resultsText {
-    flex: 1 1 0;
+    flex: 1 1 auto;
+    width: auto;
     white-space: normal !important;
     line-height: 1.35;
   }
