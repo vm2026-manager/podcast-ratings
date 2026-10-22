@@ -12,10 +12,6 @@
   color: #b4232d;
 }
 
-.ranking-movement--steady {
-  color: #65584e;
-}
-
 html body.page-ranglister .podcast-card__placement:has(.ranking-movement) {
   display: grid;
   grid-template-columns: max-content max-content;
@@ -53,11 +49,6 @@ html body.page-ranglister .desktop-ranking-row__rank .ranking-movement {
 html body.page-ranglister .desktop-ranking-rank .ranking-movement--down,
 html body.page-ranglister .desktop-ranking-row__rank .ranking-movement--down {
   color: #a51f2b;
-}
-
-html body.page-ranglister .desktop-ranking-rank .ranking-movement--steady,
-html body.page-ranglister .desktop-ranking-row__rank .ranking-movement--steady {
-  color: #65584e;
 }
 
 @media (max-width: 700px) {
