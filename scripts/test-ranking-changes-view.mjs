@@ -82,6 +82,81 @@ const full = presentationFn();
 assert.equal(full.length, podcasts.length, "normal ranking remains unfiltered automatically");
 assert.equal(displayRankFn(176, podcasts[176]), 177);
 
+// The above-the-fold preview derives real examples from full sorted ranking data.
+const previewPodcasts = Array.from({ length: 190 }, (_, index) => ({
+  key: `podcast-${index + 1}`,
+  title: `Podcast ${index + 1}`
+}));
+previewPodcasts[171].title = "Jagten på det evige liv";
+previewPodcasts[172].title = "Livet ifølge Emil og Thomas";
+previewPodcasts[174].title = "Stærkeste fald";
+previewPodcasts.splice(7, 2, { isDisplayGroup: true, displayGroupId: "series", title: "Seriegruppe" }, { isDisplayGroup: true, displayGroupId: "series", title: "Duplicate series group" });
+state.rankingChangesOnly = false;
+state.rankingMovementSnapshotValid = true;
+state.rankingMovementPeriodLabel = "siden 20. oktober";
+state.rankingMovementByKey = new Map([
+  ["podcast-172", 18],
+  ["podcast-173", -1],
+  ["podcast-175", -3],
+  ["podcast-4", 2],
+  ["display-group:series", 1]
+]);
+const previewFn = new Function(
+  "state", "getFilteredPodcasts", "getRankingMovementKey", "isRankingMovementEligible",
+  `${extractFunction("getRankingMovementPreviewItems")}; return getRankingMovementPreviewItems;`
+)(state, () => previewPodcasts, getKey, eligibleFn);
+let previewItems = previewFn(previewPodcasts);
+assert.deepEqual(previewItems.map((item) => [item.rank, item.delta]), [[172, 18], [175, -3]], "preview uses strongest real gain and fall, ordered by original rank");
+assert.equal(previewItems[0].podcast.title, "Jagten på det evige liv");
+state.rankingMovementByKey = new Map([["podcast-172", 18], ["podcast-4", 2], ["display-group:series", 1]]);
+previewItems = previewFn(previewPodcasts);
+assert.deepEqual(previewItems.map((item) => [item.rank, item.delta]), [[4, 2], [172, 18]], "one-direction movement falls back to the two strongest genuine movers");
+assert.equal(previewItems.filter((item) => getKey(item.podcast) === "display-group:series").length, 0, "preview does not use a weaker duplicate display-group example");
+state.rankingMovementByKey = new Map([["display-group:series", 1]]);
+assert.deepEqual(previewFn(previewPodcasts).map((item) => item.rank), [8], "duplicate synthetic groups produce only one preview example at the first group's original rank");
+state.rankingMovementSnapshotValid = false;
+assert.deepEqual(previewFn(previewPodcasts), [], "missing historical data never creates a preview");
+state.rankingMovementSnapshotValid = true;
+state.rankingMovementByKey = new Map([["podcast-172", 0]]);
+assert.deepEqual(previewFn(previewPodcasts), [], "zero movement never creates a preview");
+state.rankingMovementByKey = new Map([["podcast-172", 18]]);
+eligible = false;
+assert.deepEqual(previewFn(previewPodcasts), [], "editorial or incompatible ranking controls never create a preview");
+eligible = true;
+state.rankingChangesOnly = true;
+assert.deepEqual(previewFn(previewPodcasts), [], "preview is hidden when the optional changes-only view is active");
+state.rankingChangesOnly = false;
+state.rankingMovementByKey = new Map([["podcast-172", 18], ["podcast-175", -3]]);
+
+const previewElement = { hidden: true, innerHTML: "", replaceChildren() { this.cleared = true; } };
+const renderPreview = new Function(
+  "state", "elements", "getRankingMovementPreviewItems", "getFilteredPodcasts", "escapeHtml",
+  `${extractFunction("renderRankingMovementPreview")}; return renderRankingMovementPreview;`
+)(state, { rankingMovementPreview: previewElement }, previewFn, () => previewPodcasts, (value) => String(value));
+renderPreview(previewPodcasts);
+assert.equal(previewElement.hidden, false, "valid genuine movements render automatically");
+assert.match(previewElement.innerHTML, /ranking-movement--up/);
+assert.match(previewElement.innerHTML, /ranking-movement--down/);
+assert.match(previewElement.innerHTML, /#172/);
+assert.match(previewElement.innerHTML, /siden 20\. oktober/);
+assert.match(previewElement.innerHTML, /Jagten på det evige liv/);
+assert.match(previewElement.innerHTML, /aria-label="Steget 18 placeringer for Jagten på det evige liv, nu nummer 172 siden 20\. oktober"/);
+
+const normalMovementMarkup = new Function(
+  "state", "isRankingMovementEligible", "getRankingMovementKey", "getRankingMovementId", "escapeHtml",
+  `${extractFunction("getRankingMovementMarkup")}; return getRankingMovementMarkup;`
+)(state, eligibleFn, getKey, (podcast) => `movement-${getKey(podcast)}`, (value) => String(value));
+assert.match(normalMovementMarkup(previewPodcasts[171]), /ranking-movement--up/);
+assert.match(normalMovementMarkup(previewPodcasts[171]), />▲18</, "automatic full-list arrows remain rendered outside the preview");
+assert.equal(displayRankFn(171, previewPodcasts[171]), 172, "the normal full ranking keeps the mover at #172 while the preview is displayed");
+state.rankingMovementByKey = new Map([
+  ["podcast-3", -6],
+  ["display-group:series", 2],
+  ["podcast-175", 19],
+  ["leopold ii", 0],
+  ["podcast-4", 0]
+]);
+
 state.rankingChangesOnly = true;
 const changed = presentationFn();
 assert.deepEqual(changed.map(getKey), ["podcast-3", "display-group:series", "podcast-175"], "changed rows retain original order and duplicate synthetic keys are shown once");
@@ -108,9 +183,9 @@ const syncToggle = new Function(
   `${extractFunction("syncRankingMovementToggle")}; return syncRankingMovementToggle;`
 )(state, elements, countFn, eligibleFn);
 const setResults = new Function(
-  "state", "elements", "isRankingMovementEligible", "getGenuineRankingMovementCount", "syncRankingMovementToggle",
+  "state", "elements", "isRankingMovementEligible", "getGenuineRankingMovementCount", "syncRankingMovementToggle", "renderRankingMovementPreview",
   `${extractFunction("setRankingResultsText")}; return setRankingResultsText;`
-)(state, elements, eligibleFn, countFn, syncToggle);
+)(state, elements, eligibleFn, countFn, syncToggle, () => {});
 
 state.rankingChangesOnly = false;
 setResults("Viser 200 podcasts.");
