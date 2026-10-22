@@ -64,7 +64,7 @@ const groupRender = extractFunction("renderPodcastDisplayGroupContent");
 assert.match(groupRender, /is-episode-rating-locked/u);
 assert.match(groupRender, /is-episode-calculated/u);
 assert.match(groupRender, /disabled/u);
-assert.match(groupRender, /Beregnet fra \$\{own\.count\} sæsonvurderinger\. Redigér under Vurder sæsoner\./u);
+assert.match(groupRender, /Beregnet fra \$\{own\.count\} \$\{own\.count === 1 \? "sæsonvurdering" : "sæsonvurderinger"\}/u);
 assert.match(app, /data-podcast-season-rate/u);
 assert.doesNotMatch(groupRender, /data-podcast-detail-inline-rating-save/u);
 assert.match(app, /function getDisplayGroupOwnRatingStats\(members\)/u);

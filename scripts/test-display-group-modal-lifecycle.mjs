@@ -36,9 +36,11 @@ const runtime = new Function("state", "ownRatings", `
   const formatCompactRating = (value) => Number(value).toFixed(1).replace('.', ',');
   const formatUserRatingCount = (count) => String(count) + (count === 1 ? ' bruger' : ' brugere');
   const escapeHtml = (value) => String(value);
+  const isValidPodcastLink = (value) => typeof value === 'string' && value.startsWith('https://');
   const getDisplayGroupSeasonNumber = (podcast) => Number(podcast.key.split('-').at(-1));
   const getDisplayGroupSharedMetadata = () => ({});
   const getDisplayGroupSimilarityMarkup = () => '<div data-related>related</div>';
+  const getPodcastAccessIndicatorMarkup = () => '';
   const setPodcastDetailPlacementControl = () => {};
   const setImage = () => {};
   const getPodcastImageSources = () => ({});
