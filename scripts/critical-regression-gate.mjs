@@ -20,6 +20,7 @@ const checks = [
   ["catalogue identity alerts", ["scripts/test-catalogue-identity-alert.mjs"]],
   ["production catalogue health", ["scripts/test-production-catalogue-health.mjs"]],
   ["display-group catalogue", ["scripts/validate-podcast-display-groups.mjs"]],
+  ["Kirsten season parsing and episode routing", ["--experimental-strip-types", "scripts/test-kirsten-apple-season-numbering.mjs"]],
   ["Narkobetjenten seasons", ["scripts/test-narkobetjenten-seasons.mjs"]],
   ["Narkobetjenten public display and community season eligibility", ["scripts/test-narkobetjenten-public-display.mjs"]],
   ["app.js syntax", ["--check", "app.js"]],

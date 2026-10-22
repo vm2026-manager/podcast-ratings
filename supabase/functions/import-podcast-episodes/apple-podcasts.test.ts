@@ -41,3 +41,18 @@ Deno.test("Apple episode parser matches the requested ID and never exposes playb
   assert(!JSON.stringify(mapped.episodes).includes("protected.example"));
   assertEquals(mapped.episodes[0].is_active, false);
 });
+
+Deno.test("Kirsten numbering uses season-local descriptions and matched Apple Season only", () => {
+  const page = (id: string, description: string, appleFields = "") => `
+    <link rel="canonical" href="https://podcasts.apple.com/dk/podcast/kirsten/id1715936714?i=${id}">
+    <script type="application/ld+json">{"@type":"PodcastEpisode","name":"Titel","description":${JSON.stringify(description)},"url":"https://podcasts.apple.com/dk/podcast/kirsten/id1715936714?i=${id}"}</script>
+    <script id="serialized-server-data">{"episode":{"adamId":"${id}","storeUrl":"https://podcasts.apple.com/dk/podcast/kirsten/id1715936714?i=${id}",${appleFields}}}</script>`;
+  const s1 = parseApplePodcastEpisodePage(page("1000000000001", "Afsnit 1.", '"seasonNumber":1,"episodeNumber":1'), "1000000000001");
+  assertEquals([s1.seasonNumber, s1.seasonEpisodeNumber, s1.seasonNumberSource], [1, 1, "apple_season_and_description"]);
+  const s2 = parseApplePodcastEpisodePage(page("1000000000002", "Sæson 2 - afsnit 1.", '"seasonNumber":2,"episodeNumber":26'), "1000000000002");
+  assertEquals([s2.seasonNumber, s2.seasonEpisodeNumber], [2, 1], "Global Apple Episode 26 must not replace local episode 1");
+  const s3 = parseApplePodcastEpisodePage(page("1000000000003", "Sæson 3, afsnit 8."), "1000000000003");
+  assertEquals([s3.seasonNumber, s3.seasonEpisodeNumber], [3, 8]);
+  const ambiguous = parseApplePodcastEpisodePage(page("1000000000004", "Afsnit 2.", '"episodeNumber":2'), "1000000000004");
+  assertEquals([ambiguous.seasonNumber, ambiguous.seasonEpisodeNumber], [null, null], "A local number alone cannot establish its season");
+});

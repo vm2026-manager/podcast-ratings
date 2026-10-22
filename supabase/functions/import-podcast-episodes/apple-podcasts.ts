@@ -87,6 +87,19 @@ function durationSeconds(value: unknown): number | null {
   return Number.isFinite(duration) && duration > 0 ? Math.round(duration) : null;
 }
 
+function seasonEpisodeNumbers(description: string | null, metadata: Record<string, unknown> | null) {
+  const explicit = text(description).match(/^\s*Sæson\s+(\d+)\s*[,–—-]\s*afsnit\s+(\d+)\b/i);
+  if (explicit) return { season: Number(explicit[1]), episode: Number(explicit[2]), seasonSource: "description" };
+
+  // Apple Episode is a show-wide index; it is never the season-local number.
+  const localEpisode = text(description).match(/^\s*Afsnit\s+(\d+)\b/i);
+  const appleSeason = Number(metadata?.seasonNumber ?? metadata?.season);
+  if (localEpisode && Number.isInteger(appleSeason) && appleSeason > 0) {
+    return { season: appleSeason, episode: Number(localEpisode[1]), seasonSource: "apple_season_and_description" };
+  }
+  return null;
+}
+
 function isTeaserOrTrailer(title: string): boolean {
   return /\b(?:teaser|trailer)\b/i.test(title);
 }
@@ -125,6 +138,7 @@ export function parseApplePodcastEpisodePage(html: string, requestedEpisodeId: s
   const jsonLdUrl = text(ld.url);
   if (episodeIdFromUrl(jsonLdUrl) !== requestedEpisodeId) throw new Error("Apple JSON-LD identity mismatch");
   const description = text(ld.description) || null;
+  const numbering = seasonEpisodeNumbers(description, metadata);
   const releaseDate = text(metadata?.releaseDate);
   const publishedAt = releaseDate || text(ld.datePublished) || null;
   const duration = durationSeconds(metadata?.duration);
@@ -136,6 +150,9 @@ export function parseApplePodcastEpisodePage(html: string, requestedEpisodeId: s
     episodeId: requestedEpisodeId,
     title,
     description,
+    seasonNumber: numbering?.season ?? null,
+    seasonEpisodeNumber: numbering?.episode ?? null,
+    seasonNumberSource: numbering?.seasonSource ?? null,
     publishedAt,
     durationSeconds: duration,
     episodeUrl: canonical,
@@ -182,6 +199,11 @@ export async function mapApplePodcastHtmlEpisodes(options: {
           apple_episode_id: parsed.episodeId,
           apple_channel_only: parsed.channelOnly,
           apple_page_url: parsed.episodeUrl,
+          ...(parsed.seasonNumber && parsed.seasonEpisodeNumber ? {
+            apple_season_number: parsed.seasonNumber,
+            apple_season_episode_number: parsed.seasonEpisodeNumber,
+            apple_season_number_source: parsed.seasonNumberSource
+          } : {}),
           rateable: exclusionReason === null,
           exclusion_reason: exclusionReason
         }

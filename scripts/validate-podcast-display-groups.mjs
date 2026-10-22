@@ -92,6 +92,20 @@ const collapsedRecommendationKeys = collapsePublicCandidates("ordinary-source", 
 assert.deepEqual(collapsedRecommendationKeys, [narkobetjenten.memberLegacyKeys[0], "ordinary-x", "ordinary-y", "ordinary-z"], "Public recommendations must keep first occurrence and collapse group members");
 assert.equal(JSON.stringify(rawRecommendationKeys), rawRecommendationSnapshot, "Recommendation collapsing must not mutate source candidates");
 
+const kirsten = config.groups.find((group) => group.id === "kirsten-ringer-til-rasmus");
+assert.ok(kirsten, "Kirsten ringer til Rasmus display group is configured");
+assert.deepEqual(kirsten.memberLegacyKeys, ["kirsten ringer til rasmus sæson 4"], "Only the existing catalogue identity remains a real member");
+assert.equal(kirsten.representativeMemberLegacyKey, "kirsten ringer til rasmus sæson 4");
+assert.deepEqual(
+  [...kirsten.memberLegacyKeys.map((key) => Number(key.match(/sæson (\d+)/)?.[1])), ...kirsten.seasonIdentities.map((season) => season.season)].sort((a, b) => a - b),
+  [1, 2, 3, 4, 5, 6],
+  "Kirsten group has exactly six individually rateable seasons"
+);
+assert.equal(kirsten.episodeConfig.databasePodcastKey, "kirsten ringer til rasmus sæson 4", "Episodes stay under the historic podcast key");
+assert.equal(kirsten.episodeConfig.source, "apple_podcasts_1715936714", "Episode source stays on the verified Apple show ID");
+assert.equal(rows.filter((row) => row["Podcast-ID"] === "kirsten ringer til rasmus sæson 4").length, 1, "Kirsten keeps a single catalogue podcast identity");
+assert.equal(rows.find((row) => row["Podcast-ID"] === "kirsten ringer til rasmus sæson 4")["Vuring (1-10)"], "8,1", "Existing season 4 editorial score is preserved");
+
 const seasonNumbers = [...narkobetjenten.memberLegacyKeys.map((key) => Number(key.match(/sæson (\d+)/)?.[1])), ...narkobetjenten.seasonIdentities.map((season) => season.season)];
 assert.deepEqual([...seasonNumbers].sort((a, b) => a - b), Array.from({ length: 24 }, (_, index) => index + 1), "All 24 seasons must be present");
 

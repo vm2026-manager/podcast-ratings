@@ -3366,7 +3366,7 @@ function getPodcastKey(podcast) {
 }
 
 function getEpisodePodcastKey(podcastOrKey) {
-  if (typeof podcastOrKey === "object") return getLegacyPodcastKey(podcastOrKey);
+  if (typeof podcastOrKey === "object") return normalizeText(podcastOrKey?._displayGroupEpisodeStateKey) || getLegacyPodcastKey(podcastOrKey);
   const resolved = resolvePodcastByStoredKey(podcastOrKey);
   return resolved ? getLegacyPodcastKey(resolved) : normalizeMatchKey(podcastOrKey);
 }
@@ -4198,6 +4198,24 @@ function getDisplayGroupSeasonIdentities(group) {
     isDisplayGroupSeason: true,
     displayGroupId: group.id
   }));
+}
+
+function getDisplayGroupEpisodeSeason(podcastOrKey) {
+  const podcast = typeof podcastOrKey === "object" ? podcastOrKey : resolvePodcastByStoredKey(podcastOrKey);
+  const key = normalizeMatchKey(typeof podcastOrKey === "string" ? podcastOrKey : getPodcastKey(podcast));
+  if (!key) return null;
+  for (const group of state.podcastDisplayGroups || []) {
+    const config = group.episodeConfig;
+    if (!config?.databasePodcastKey || !config?.source) continue;
+    const synthetic = (group.seasonIdentities || []).find((season) => normalizeMatchKey(season.podcast_key) === key);
+    const member = (group.memberLegacyKeys || []).find((legacyKey) => normalizeMatchKey(legacyKey) === key);
+    const season = synthetic?.season ?? (member ? Number(normalizeText(member).match(/sæson\s+(\d+)/i)?.[1]) : null);
+    if (Number.isInteger(Number(season)) && Number(season) > 0) {
+      const seasonKey = synthetic?.podcast_key || member;
+      return { ...config, podcastKey: seasonKey, stateKey: seasonKey, seasonNumber: Number(season), displayName: `${group.title} (sæson ${season})` };
+    }
+  }
+  return null;
 }
 
 function getDisplayGroupMemberPodcasts(group) {
@@ -8311,7 +8329,7 @@ async function saveActiveEpisodeRating() {
 
   const requestedEpisodeId = state.activeEpisodeRatingId;
   const episode = getGenstartEpisodeById(requestedEpisodeId);
-  const podcastKey = normalizeText(episode?.podcast_key) || getEpisodePodcastKey(state.activePodcastDetailKey);
+  const podcastKey = normalizeText(episode?._displayGroupEpisodeStateKey) || normalizeText(episode?.podcast_key) || getEpisodePodcastKey(state.activePodcastDetailKey);
   const manualMappingResolved =
     episode?.dataSource !== "manual" ||
     (await ensureManualCatalogueEpisodeMapping(episode));
@@ -8488,7 +8506,7 @@ async function deleteActiveEpisodeRating() {
 
   const requestedEpisodeId = state.activeEpisodeRatingId;
   const episode = getGenstartEpisodeById(requestedEpisodeId);
-  const podcastKey = normalizeText(episode?.podcast_key) || getEpisodePodcastKey(state.activePodcastDetailKey);
+  const podcastKey = normalizeText(episode?._displayGroupEpisodeStateKey) || normalizeText(episode?.podcast_key) || getEpisodePodcastKey(state.activePodcastDetailKey);
   const manualMappingResolved =
     episode?.dataSource !== "manual" ||
     (await ensureManualCatalogueEpisodeMapping(episode));
@@ -10488,6 +10506,7 @@ function getEpisodePodcastConfig(podcastOrKey) {
   const podcastId = getPodcastId(podcast);
   const episodeKey = getEpisodePodcastKey(podcastOrKey);
   const rawKey = typeof podcastOrKey === "string" ? normalizeText(podcastOrKey) : "";
+  const displayGroupEpisode = getDisplayGroupEpisodeSeason(podcastOrKey);
   const manualEpisodeSource = podcast?.manualEpisodes || podcast?.manual_episodes || podcast?.["Episoder"] || [];
   const hasManualEpisodes = (Array.isArray(manualEpisodeSource)
     ? manualEpisodeSource.filter((entry) => normalizeText(typeof entry === "object" ? entry?.title : entry)).length
@@ -10517,6 +10536,17 @@ function getEpisodePodcastConfig(podcastOrKey) {
           }
         : config;
     }
+  }
+
+  if (displayGroupEpisode) {
+    return {
+      ...displayGroupEpisode,
+      enabled: true,
+      persistence: "supabase",
+      episodeSources: [displayGroupEpisode.source],
+      searchPlaceholder: `Søg i ${displayGroupEpisode.displayName}-episoder`,
+      pageSize: 150
+    };
   }
 
   if (!podcastId) return null;
@@ -10833,7 +10863,7 @@ function getPodcastEpisodeState(podcastOrKey) {
     : "";
 
   const podcastKey = localEpisodeKey || (config
-    ? getEpisodeDatabasePodcastKey(config)
+    ? normalizeText(config.stateKey) || getEpisodeDatabasePodcastKey(config)
     : normalizeText(
         typeof podcastOrKey === "string"
           ? getEpisodePodcastKey(podcastOrKey)
@@ -10989,7 +11019,7 @@ async function fetchPodcastEpisodeParentRatings(podcastOrKey) {
     // independent of the visible episode page, so older ratings still count.
     const query = state.supabase
       .from("episode_ratings")
-      .select("episode_id,rating,podcast_episodes!inner(podcast_key,is_active,source)")
+      .select("episode_id,rating,podcast_episodes!inner(podcast_key,is_active,source,description,metadata)")
       .eq("user_id", request.userId)
       .eq("podcast_episodes.podcast_key", getEpisodeDatabasePodcastKey(config))
       .eq("podcast_episodes.is_active", true);
@@ -11003,6 +11033,7 @@ async function fetchPodcastEpisodeParentRatings(podcastOrKey) {
       const episodeId = normalizeText(item.episode_id);
       const rating = parseNumber(item.rating);
       if (!episodeId || rating === null) return;
+      if (config.seasonNumber && getAppleSeasonEpisodeNumber(item.podcast_episodes)?.season !== config.seasonNumber) return;
       ratingsById[episodeId] = rating;
       episodeState.userRatingsById[episodeId] = rating;
     });
@@ -11738,13 +11769,16 @@ async function fetchGenstartEpisodes({ append = false } = {}) {
       .select("id,podcast_key,title,description,published_at,duration_seconds,episode_url,audio_url,image_url,external_guid,is_active,metadata,source", { count: "exact" })
       .eq("podcast_key", getEpisodeDatabasePodcastKey(config))
       .eq("is_active", true);
+    const pageSize = Number(config.pageSize || EPISODE_PAGE_SIZE);
     const { data, error, count } = await orderPodcastEpisodes(applyPodcastEpisodeSourceBoundary(query, config), config)
-      .range(offset, offset + EPISODE_PAGE_SIZE - 1);
+      .range(offset, offset + pageSize - 1);
 
     if (error) throw error;
 
     const fetchedRows = data || [];
-    const rows = getRateablePodcastEpisodes(fetchedRows);
+    const rows = getRateablePodcastEpisodes(fetchedRows).map((episode) => config.stateKey
+      ? { ...episode, _displayGroupEpisodeStateKey: config.stateKey }
+      : episode);
     const manualEpisodes = getConfiguredManualEpisodes(config);
     if (manualEpisodes.length) await refreshManualEpisodeRatingData(config.podcastKey, manualEpisodes);
     const mergedItems = append
@@ -11758,7 +11792,7 @@ async function fetchGenstartEpisodes({ append = false } = {}) {
       ? manualEpisodes.length
       : Math.max(0, mergedItems.length - rows.length);
     episodeState.totalCount = Number.isFinite(count) ? count + uniqueManualEpisodeCount : null;
-    episodeState.hasMore = fetchedRows.length === EPISODE_PAGE_SIZE && (
+    episodeState.hasMore = fetchedRows.length === pageSize && (
       episodeState.totalCount === null || offset + fetchedRows.length < episodeState.totalCount
     );
     episodeState.fetchedAt = Date.now();
@@ -12034,25 +12068,50 @@ function getEpisodeWorkspaceEpisodes(podcast) {
   const searchTerm = normalizeText(episodeState.searchTerm);
   const config = getEpisodePodcastConfig(podcast);
 
-  if (!searchTerm) return episodeState.items;
-  if (config?.dataSource !== "local" && config) return getVisibleGenstartEpisodes();
+  const season = Number(config?.seasonNumber || 0);
+  const filterSeason = (episodes) => {
+    const filtered = season ? episodes.filter((episode) => getAppleSeasonEpisodeNumber(episode)?.season === season) : episodes;
+    return season ? filtered.slice().sort((a, b) => getAppleSeasonEpisodeNumber(a).episode - getAppleSeasonEpisodeNumber(b).episode) : filtered;
+  };
+  if (!searchTerm) return filterSeason(episodeState.items);
+  if (config?.dataSource !== "local" && config) return filterSeason(getVisibleGenstartEpisodes());
 
   const comparableSearch = normalizeComparable(searchTerm);
-  return episodeState.items.filter((episode) =>
+  return filterSeason(episodeState.items.filter((episode) =>
     normalizeComparable(episode.title || "").includes(comparableSearch)
-  );
+  ));
+}
+
+function getAppleSeasonEpisodeNumber(episode) {
+  const metadata = episode?.metadata && typeof episode.metadata === "object" ? episode.metadata : {};
+  const metadataSeason = Number(metadata.apple_season_number);
+  const metadataEpisode = Number(metadata.apple_season_episode_number);
+  if (Number.isInteger(metadataSeason) && metadataSeason > 0 && Number.isInteger(metadataEpisode) && metadataEpisode > 0) {
+    return { season: metadataSeason, episode: metadataEpisode };
+  }
+  const description = normalizeText(episode?.description);
+  const explicitSeason = description.match(/^\s*Sæson\s+(\d+)\s*[,–—-]\s*afsnit\s+(\d+)\b/i);
+  if (explicitSeason) return { season: Number(explicitSeason[1]), episode: Number(explicitSeason[2]) };
+  const seasonless = description.match(/^\s*Afsnit\s+(\d+)\b/i);
+  const appleSeason = Number(metadata.apple_season_number);
+  if (seasonless && Number.isInteger(appleSeason) && appleSeason > 0) return { season: appleSeason, episode: Number(seasonless[1]) };
+  return null;
 }
 
 function getEpisodeWorkspaceSummary(podcast) {
   const episodeState = getPodcastEpisodeState(podcast);
+  const config = getEpisodePodcastConfig(podcast);
   const hasSearch = normalizeText(episodeState.searchTerm).length > 0;
   const loaded = getEpisodeWorkspaceEpisodes(podcast).length;
-  const total = hasSearch
-    ? (episodeState.searchTotalCount ?? loaded)
-    : (episodeState.totalCount ?? loaded);
+  const hasMore = hasSearch ? episodeState.searchHasMore : episodeState.hasMore;
   const visible = Math.min(loaded, episodeState.workspaceVisibleCount || EPISODE_WORKSPACE_PAGE_SIZE);
-  if (!total && hasSearch) return "Ingen episoder matcher din s\u00f8gning.";
-  if (!total) return "Der er endnu ingen episoder at vise.";
+  if (!loaded && hasSearch) return "Ingen episoder matcher din s\u00f8gning.";
+  if (!loaded) return "Der er endnu ingen episoder at vise.";
+  if (config?.seasonNumber) {
+    if (hasMore) return visible < loaded ? `Viser ${visible} af ${loaded} episoder` : `Viser ${loaded} episoder`;
+    return visible < loaded ? `Viser ${visible} af ${loaded} episoder` : `${loaded} episoder`;
+  }
+  const total = hasSearch ? (episodeState.searchTotalCount ?? loaded) : (episodeState.totalCount ?? loaded);
   return visible < total ? `Viser ${visible} af ${total} episoder` : `${total} episoder`;
 }
 
@@ -12117,7 +12176,7 @@ function renderPodcastEpisodeOverviewRows(podcast) {
     .slice(0, episodeState.workspaceVisibleCount || EPISODE_WORKSPACE_PAGE_SIZE)
     .map((episode, index) => {
       const episodeId = getEpisodeKey(episode);
-      const episodeNumber = Number(episode.episode_number || index + 1);
+      const episodeNumber = Number(episode.episode_number || getAppleSeasonEpisodeNumber(episode)?.episode || index + 1);
       // Only surface an upstream publication date when the episode actually has
       // one. Manual catalogue entries intentionally have no inferred date.
       const publicationDate = showPublicationDate ? formatEpisodeDate(episode.published_at) : "";
@@ -13033,7 +13092,7 @@ function renderPodcastDisplayGroupSeasonWorkspace(dialog, displayGroup) {
   content.innerHTML = `<section class="podcast-detail-sheet__episode-overview" data-podcast-season-overview aria-labelledby="podcastSeasonOverviewTitle">
     <div class="podcast-detail-sheet__episode-overview-toolbar"><button class="podcast-detail-sheet__episode-back" type="button" data-podcast-seasons-back><span aria-hidden="true">&larr;</span><span>Tilbage til podcasten</span></button><h2 class="podcast-detail-sheet__episode-workspace-title">Sæsoner</h2></div>
     <p class="podcast-detail-sheet__episode-workspace-summary">${members.length} sæsoner · ${members.filter((member) => parseNumber(member.ratingValue) !== null).length} vurderet af Podcastlisten</p>
-    <div class="podcast-detail-sheet__episode-table-wrap"><table class="podcast-detail-sheet__episode-table podcast-detail-sheet__season-table"><caption class="sr-only" id="podcastSeasonOverviewTitle">Sæsoner i ${escapeHtml(displayGroup.title)}</caption><colgroup><col class="season-column-title" /><col class="season-column-editorial" /><col class="season-column-community" /><col class="season-column-own" /></colgroup><thead><tr><th scope="col">Sæson</th><th scope="col">Podcastlisten</th><th scope="col">Brugerne</th><th scope="col">Din vurdering</th></tr></thead><tbody>${members.map((member, index) => { const stat = getCommunityStat(getPodcastKey(member)); const own = getUserRating(getPodcastKey(member)); return `<tr><td data-label="Sæson"><button class="podcast-detail-sheet__season-title" type="button" data-podcast-season-open="${index}"><strong>${escapeHtml(getDisplayGroupSeasonLabel(member))}</strong><small>${escapeHtml(member.title)}</small></button></td><td data-label="Podcastlisten"><strong>${parseNumber(member.ratingValue) === null ? "—" : escapeHtml(formatCompactRating(member.ratingValue))}</strong></td><td data-label="Brugerne"><span class="podcast-detail-sheet__episode-source-score"><strong>${hasCommunityRating(stat) ? escapeHtml(formatCompactRating(stat.averageRating)) : "—"}</strong><em>${stat?.ratingCount ? escapeHtml(formatUserRatingCount(stat.ratingCount)) : ""}</em></span></td><td data-label="Din vurdering"><button class="podcast-detail-sheet__episode-own-score${own === null || own === undefined ? " is-empty" : ""}" type="button" data-podcast-season-rate="${index}" aria-label="Vurder ${escapeHtml(member.title)}"><strong>${own === null || own === undefined ? "Vurder" : escapeHtml(formatCompactRating(own))}</strong></button></td></tr>`; }).join("")}</tbody></table></div></section>`;
+    <div class="podcast-detail-sheet__episode-table-wrap"><table class="podcast-detail-sheet__episode-table podcast-detail-sheet__season-table"><caption class="sr-only" id="podcastSeasonOverviewTitle">Sæsoner i ${escapeHtml(displayGroup.title)}</caption><colgroup><col class="season-column-title" /><col class="season-column-editorial" /><col class="season-column-community" /><col class="season-column-own" /></colgroup><thead><tr><th scope="col">Sæson</th><th scope="col">Podcastlisten</th><th scope="col">Brugerne</th><th scope="col">Din vurdering</th></tr></thead><tbody>${members.map((member, index) => { const stat = getCommunityStat(getPodcastKey(member)); const own = getUserRating(getPodcastKey(member)); const seasonLabel = getDisplayGroupSeasonLabel(member); return `<tr><td data-label="Sæson"><button class="podcast-detail-sheet__season-title" type="button" data-podcast-season-open="${index}"><strong>${escapeHtml(seasonLabel)}</strong><small>${escapeHtml(member.title)}</small></button></td><td data-label="${escapeHtml(seasonLabel)} · Podcastlisten"><strong>${parseNumber(member.ratingValue) === null ? "—" : escapeHtml(formatCompactRating(member.ratingValue))}</strong></td><td data-label="Brugerne"><span class="podcast-detail-sheet__episode-source-score"><strong>${hasCommunityRating(stat) ? escapeHtml(formatCompactRating(stat.averageRating)) : "—"}</strong><em>${stat?.ratingCount ? escapeHtml(formatUserRatingCount(stat.ratingCount)) : ""}</em></span></td><td data-label="Din vurdering"><button class="podcast-detail-sheet__episode-own-score${own === null || own === undefined ? " is-empty" : ""}" type="button" data-podcast-season-rate="${index}" aria-label="Vurder ${escapeHtml(member.title)}"><strong>${own === null || own === undefined ? "Vurder" : escapeHtml(formatCompactRating(own))}</strong></button></td></tr>`; }).join("")}</tbody></table></div></section>`;
   content.querySelector("[data-podcast-seasons-back]")?.addEventListener("click", () => renderPodcastDisplayGroupContent(dialog, displayGroup));
   content.querySelectorAll("[data-podcast-season-rate]").forEach((button) => button.addEventListener("click", () => openRatingDialog(members[Number(button.dataset.podcastSeasonRate)])));
   content.querySelectorAll("[data-podcast-season-open]").forEach((button) => button.addEventListener("click", () => openPodcastDetailFromModal(members[Number(button.dataset.podcastSeasonOpen)], button)));
