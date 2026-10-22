@@ -1010,7 +1010,6 @@ const state = {
   rankingMovementByKey: new Map(),
   rankingMovementLoadAttempted: false,
   rankingMovementLoading: false,
-  rankingDisplayRankCache: new WeakMap(),
   rankingSourceTouched: false,
   userRankingSort: "rating",
   userRankingDirection: "desc",
@@ -4584,29 +4583,7 @@ function persistRankingPositionMode(value) {
 }
 
 function getRankingDisplayRank(index) {
-  if (state.rankingPositionMode !== "dynamic") return null;
-  const list = getFilteredPodcasts();
-  if (
-    state.rankingSource !== "users" || state.sort !== "placement-asc" ||
-    state.userRankingSort !== "rating" || state.userRankingDirection !== "desc" ||
-    hasDesktopOwnRatingSort()
-  ) return index + 1;
-  let ranks = state.rankingDisplayRankCache.get(list);
-  if (!ranks) {
-    ranks = new Array(list.length);
-    const firstRankByScore = new Map();
-    list.forEach((podcast, listIndex) => {
-      const score = window.PodcastRankingMovement?.displayScore(getPodcastRatingForActiveSource(podcast));
-      if (score === null || score === undefined) {
-        ranks[listIndex] = listIndex + 1;
-        return;
-      }
-      if (!firstRankByScore.has(score)) firstRankByScore.set(score, listIndex + 1);
-      ranks[listIndex] = firstRankByScore.get(score);
-    });
-    state.rankingDisplayRankCache.set(list, ranks);
-  }
-  return ranks[index] ?? index + 1;
+  return state.rankingPositionMode === "dynamic" ? index + 1 : null;
 }
 
 function rebuildUserRanks() {
@@ -4617,19 +4594,15 @@ function rebuildUserRanks() {
 
       return {
         key,
-        averageRating: window.PodcastRankingMovement?.displayScore(averageRating) ?? parseNumber(averageRating)
+        averageRating: parseNumber(averageRating)
       };
     })
     .filter((item) => item.averageRating !== null)
-    .sort((a, b) => b.averageRating - a.averageRating || a.key.localeCompare(b.key));
+    .sort((a, b) => b.averageRating - a.averageRating || (a.key < b.key ? -1 : a.key > b.key ? 1 : 0));
 
   state.userRankByKey = {};
-  let previousRating = null;
-  let currentRank = 0;
   ranked.forEach((item, index) => {
-    if (item.averageRating !== previousRating) currentRank = index + 1;
-    previousRating = item.averageRating;
-    state.userRankByKey[item.key] = currentRank;
+    state.userRankByKey[item.key] = index + 1;
   });
 }
 

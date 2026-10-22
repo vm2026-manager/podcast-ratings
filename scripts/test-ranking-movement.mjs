@@ -7,15 +7,31 @@ const context = { globalThis: {} };
 vm.runInNewContext(source, context);
 const movement = context.globalThis.PodcastRankingMovement;
 const resolve = (key) => ({ "old-alias-a": "a", "old-alias-b": "b" }[key] || key);
-const rank = (entries, field = "score") => movement.rankCompetition(entries, (entry) => entry.key, (entry) => entry[field]);
+const rank = (entries, field = "score") => movement.rankSequential(entries, (entry) => entry.key, (entry) => entry[field]);
 
 const ties = rank([
-  { key: "a", score: 9.5 }, { key: "b", score: 9.3 }, { key: "c", score: 9.1 },
-  { key: "d", score: 9.1 }, { key: "e", score: 8.9 }
+  { key: "e", score: 8.9 }, { key: "d", score: 9.1 }, { key: "c", score: 9.1 },
+  { key: "b", score: 9.3 }, { key: "a", score: 9.5 }
 ]);
-assert.deepEqual(["a", "b", "c", "d", "e"].map((key) => ties.get(key)), [1, 2, 3, 3, 5]);
+assert.deepEqual(["a", "b", "c", "d", "e"].map((key) => ties.get(key)), [1, 2, 3, 4, 5]);
+const equalTie = rank([{ key: "z", score: 8 }, { key: "a", score: 8 }]);
+assert.equal(equalTie.get("a"), 1);
+assert.equal(equalTie.get("z"), 2);
 assert.equal(movement.displayScore(9.04), 9);
 assert.equal(movement.displayScore(9.05), 9.1);
+
+// Equal displayed one-decimal scores are ordered by their exact averages.
+const precise = rank([{ key: "b", score: 9.149 }, { key: "a", score: 9.14 }]);
+assert.equal(precise.get("b"), 1);
+assert.equal(precise.get("a"), 2);
+const movementPrecise = movement.movementMap(
+  [{ key: "a", score: 9.14 }, { key: "b", score: 9.149 }],
+  [{ podcast_key: "a", average_rating: 9.149, rating_count: 1 },
+   { podcast_key: "b", average_rating: 9.14, rating_count: 1 }],
+  { keyOf: (entry) => entry.key, scoreOf: (entry) => entry.score }
+);
+assert.equal(movementPrecise.get("a"), -1);
+assert.equal(movementPrecise.get("b"), 1);
 
 const current = [
   { key: "a", score: 9.5 }, { key: "new-high", score: 9.4 },
@@ -37,16 +53,19 @@ assert.equal(deltas.has("discontinued"), false);
 assert.equal(deltas.get("b"), 0);
 assert.equal(deltas.get("c"), 0);
 
-const overtakes = movement.movementMap(
-  [{ key: "a", score: 9.2 }, { key: "b", score: 9.5 }, { key: "c", score: 9.1 }],
+// A new high scorer does not shift the common cohort; actual swaps do.
+const withEntrant = movement.movementMap(
+  [{ key: "a", score: 9.2 }, { key: "new-high", score: 10 }, { key: "b", score: 9.5 }, { key: "c", score: 9.1 }],
   [{ podcast_key: "a", average_rating: 9.5, rating_count: 1 },
    { podcast_key: "b", average_rating: 9.2, rating_count: 1 },
-   { podcast_key: "c", average_rating: 9.1, rating_count: 1 }],
+   { podcast_key: "c", average_rating: 9.1, rating_count: 1 },
+   { podcast_key: "discontinued-high", average_rating: 20, rating_count: 1 }],
   { keyOf: (entry) => entry.key, scoreOf: (entry) => entry.score }
 );
-assert.equal(overtakes.get("a"), -1);
-assert.equal(overtakes.get("b"), 1);
-assert.equal(overtakes.get("c"), 0);
+assert.equal(withEntrant.has("new-high"), false);
+assert.equal(withEntrant.get("a"), -1);
+assert.equal(withEntrant.get("b"), 1);
+assert.equal(withEntrant.get("c"), 0);
 
 const groupDelta = movement.movementMap(
   [{ key: "display-group:narkobetjenten", score: 9.2 }],
@@ -55,7 +74,6 @@ const groupDelta = movement.movementMap(
 );
 assert.equal(groupDelta.get("display-group:narkobetjenten"), 0);
 
-// Repeated rank lookups over a load-all ranking score each row exactly once.
 const app = fs.readFileSync(new URL("../app.js", import.meta.url), "utf8");
 function extractFunction(name) {
   const start = app.indexOf(`function ${name}(`);
@@ -68,29 +86,13 @@ function extractFunction(name) {
   throw new Error(`Could not extract ${name}`);
 }
 const getRankingDisplayRank = new Function(
-  "state", "getFilteredPodcasts", "getPodcastRatingForActiveSource", "hasDesktopOwnRatingSort", "window",
-  `${extractFunction("getRankingDisplayRank")}; return getRankingDisplayRank;`
-)(
-  {
-    rankingPositionMode: "dynamic", rankingSource: "users", sort: "placement-asc",
-    userRankingSort: "rating", userRankingDirection: "desc", desktopOwnRatingSortActive: false,
-    rankingDisplayRankCache: new WeakMap()
-  },
-  () => largeList,
-  (podcast) => { scoreReads += 1; return podcast.score; },
-  () => false,
-  { PodcastRankingMovement: movement }
-);
-let scoreReads = 0;
-const largeList = Array.from({ length: 1300 }, (_, index) => ({
-  score: 10 - Math.floor(index / 2) / 10
-}));
-const ranks = Array.from({ length: largeList.length }, (_, index) => getRankingDisplayRank(index));
-assert.deepEqual(ranks.slice(0, 6), [1, 1, 3, 3, 5, 5]);
-assert.equal(ranks[1299], 1299);
-assert.equal(scoreReads, 1300, "a 1,300-item list must be scored once per list generation");
+  "state", `${extractFunction("getRankingDisplayRank")}; return getRankingDisplayRank;`
+)({ rankingPositionMode: "dynamic" });
+assert.deepEqual(Array.from({ length: 1300 }, (_, index) => getRankingDisplayRank(index)),
+  Array.from({ length: 1300 }, (_, index) => index + 1));
 assert.equal(getRankingDisplayRank(0), 1);
-assert.equal(scoreReads, 1300, "cached rank reads must not rescan scores");
+assert.equal(new Function("state", `${extractFunction("getRankingDisplayRank")}; return getRankingDisplayRank;`)({ rankingPositionMode: "fixed" })(0), null);
+
 const getPodcastUserRank = new Function(
   "state", "getRankingMovementKey", "getPodcastKey",
   `${extractFunction("getPodcastUserRank")}; return getPodcastUserRank;`
@@ -98,6 +100,21 @@ const getPodcastUserRank = new Function(
   (podcast) => podcast.isDisplayGroup ? "display-group:narkobetjenten" : "",
   () => "narkobetjenten");
 assert.equal(getPodcastUserRank({ isDisplayGroup: true }), 7, "synthetic groups use the same rank key as rank rebuilding");
+
+const rebuildUserRanks = new Function(
+  "state", "getRankingCandidates", "getRankingMovementKey", "getPodcastKey", "getCommunityStat", "window", "parseNumber",
+  `${extractFunction("rebuildUserRanks")}; return rebuildUserRanks;`
+);
+const podcasts = [
+  { key: "a", score: 9.14 }, { key: "b", score: 9.149 },
+  { key: "z-tie", score: 8.5 }, { key: "a-tie", score: 8.5 }, { key: "lower", score: 8.4 }
+];
+const rankState = { userRankByKey: {} };
+rebuildUserRanks(rankState, () => podcasts, (podcast) => podcast.key.startsWith("display-group:") ? podcast.key : "",
+  (podcast) => podcast.key, (key) => ({ averageRating: podcasts.find((podcast) => podcast.key === key)?.score }), { PodcastRankingMovement: movement },
+  (value) => Number.isFinite(Number(value)) ? Number(value) : null)();
+assert.deepEqual(Object.entries(rankState.userRankByKey), [["b", 1], ["a", 2], ["a-tie", 3], ["z-tie", 4], ["lower", 5]]);
+
 assert.equal(movement.compareSnapshotsToCurrent(current, historical, {
   expectedDate: "2026-10-14", historicalDate: "2026-10-13"
 }).size, 0);
