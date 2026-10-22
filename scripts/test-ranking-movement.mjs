@@ -43,6 +43,13 @@ assert.equal(equalTie.get("a"), 1);
 assert.equal(equalTie.get("z"), 2);
 assert.equal(movement.displayScore(9.04), 9);
 assert.equal(movement.displayScore(9.05), 9.1);
+assert.equal(movement.isWithinNewListingWindow("2026-10-17T17:10:00Z", "2026-10-22T12:00:00Z"), true);
+assert.equal(movement.isWithinNewListingWindow("2026-10-17T17:10:00Z", "2026-10-24T17:10:00Z"), false);
+assert.equal(movement.isWithinNewListingWindow("not-a-date", "2026-10-22T12:00:00Z"), false);
+assert.equal(movement.isWithinNewListingWindow(null, "2026-10-22T12:00:00Z"), false,
+  "missing first-listing metadata does not turn an editorial rating date into a listing date");
+assert.equal(movement.isWithinNewListingWindow(null, "2026-10-22T12:00:00Z", true), true,
+  "a verified new-listing record with a missing date fails closed");
 
 // Equal displayed one-decimal scores are ordered by their exact averages.
 const precise = rank([{ key: "b", score: 9.149 }, { key: "a", score: 9.14 }]);
@@ -91,6 +98,44 @@ assert.equal(withEntrant.get("a"), -1);
 assert.equal(withEntrant.get("b"), 1);
 assert.equal(withEntrant.get("c"), 0);
 
+// Verified new listing, despite appearing in the historical snapshot, has no movement marker.
+const firstWeekEntrant = movement.movementMap(
+  [{ key: "leopold ii", score: 10, firstListedAt: "2026-10-17T17:10:00Z", knownNewListing: true },
+   { key: "established-a", score: 9 }, { key: "established-b", score: 8 }],
+  [{ podcast_key: "leopold ii", average_rating: 8.5, rating_count: 1 },
+   { podcast_key: "established-a", average_rating: 9, rating_count: 2 },
+   { podcast_key: "established-b", average_rating: 8, rating_count: 2 }],
+  { keyOf: (entry) => entry.key, scoreOf: (entry) => entry.score, now: "2026-10-22T12:00:00Z" }
+);
+assert.equal(firstWeekEntrant.has("leopold ii"), false);
+assert.equal(firstWeekEntrant.get("established-a"), 0,
+  "a new listing entering ahead of an established podcast cannot create a false downward movement");
+assert.equal(firstWeekEntrant.get("established-b"), 0, "established podcasts retain their historical comparison");
+
+const missingNewListingDate = movement.movementMap(
+  [{ key: "known-new", score: 7.4, knownNewListing: true }],
+  [{ podcast_key: "known-new", average_rating: 7.5, rating_count: 1 }],
+  { keyOf: (entry) => entry.key, scoreOf: (entry) => entry.score, now: "2026-10-22T12:00:00Z" }
+);
+assert.equal(missingNewListingDate.has("known-new"), false, "known new listing without a usable date fails closed");
+
+const afterFirstWeek = movement.movementMap(
+  [{ key: "leopold ii", score: 7.4, firstListedAt: "2026-10-17T17:10:00Z", knownNewListing: true },
+   { key: "established", score: 7.5 }],
+  [{ podcast_key: "leopold ii", average_rating: 7.5, rating_count: 1 },
+   { podcast_key: "established", average_rating: 7.4, rating_count: 2 }],
+  { keyOf: (entry) => entry.key, scoreOf: (entry) => entry.score, now: "2026-10-25T12:00:00Z" }
+);
+assert.equal(afterFirstWeek.get("leopold ii"), -1, "real movement resumes after the seven-day new-listing window");
+
+// A new editorial rating date is not a catalogue listing date: established podcasts retain real arrows.
+const editorialNew = movement.movementMap(
+  [{ key: "editorially-re-rated", score: 7.4, editorialRatingDate: "2026-10-21" }],
+  [{ podcast_key: "editorially-re-rated", average_rating: 7.5, rating_count: 1 }],
+  { keyOf: (entry) => entry.key, scoreOf: (entry) => entry.score, now: "2026-10-22T12:00:00Z" }
+);
+assert.equal(editorialNew.get("editorially-re-rated"), 0);
+
 const groupDelta = movement.movementMap(
   [{ key: "display-group:narkobetjenten", score: 9.2 }],
   [{ podcast_key: "display-group:narkobetjenten", average_rating: 9, rating_count: 8 }],
@@ -99,6 +144,12 @@ const groupDelta = movement.movementMap(
 assert.equal(groupDelta.get("display-group:narkobetjenten"), 0);
 
 const app = fs.readFileSync(new URL("../app.js", import.meta.url), "utf8");
+const movementCss = fs.readFileSync(new URL("../ranking-movement.css", import.meta.url), "utf8");
+const desktopCss = fs.readFileSync(new URL("../desktop-home-mockup.css", import.meta.url), "utf8");
+assert.match(desktopCss, /grid-template-columns:\s*94px minmax\(220px/);
+assert.match(desktopCss, /grid-template-columns:\s*94px minmax\(190px/);
+assert.match(movementCss, /font-size:\s*0\.78rem/);
+assert.match(movementCss, /@media \(max-width: 700px\)[\s\S]*height: 36px !important/);
 function extractFunction(name) {
   const start = app.indexOf(`function ${name}(`);
   assert.ok(start >= 0, `${name} must exist`);
@@ -124,6 +175,20 @@ const getPodcastUserRank = new Function(
   (podcast) => podcast.isDisplayGroup ? "display-group:narkobetjenten" : "",
   () => "narkobetjenten");
 assert.equal(getPodcastUserRank({ isDisplayGroup: true }), 7, "synthetic groups use the same rank key as rank rebuilding");
+
+const listingMetadata = { "leopold ii": "2026-10-17T17:10:00Z" };
+const getRankingMovementFirstListedAt = new Function(
+  "getRankingMovementKey", "RANKING_MOVEMENT_FIRST_LISTED_AT",
+  `${extractFunction("getRankingMovementFirstListedAt")}; return getRankingMovementFirstListedAt;`
+)((podcast) => podcast.key, listingMetadata);
+const isVerifiedNewRankingListing = new Function(
+  "getRankingMovementKey", "RANKING_MOVEMENT_FIRST_LISTED_AT",
+  `${extractFunction("isVerifiedNewRankingListing")}; return isVerifiedNewRankingListing;`
+)((podcast) => podcast.key, listingMetadata);
+assert.equal(getRankingMovementFirstListedAt({ key: "leopold ii" }), "2026-10-17T17:10:00Z");
+assert.equal(isVerifiedNewRankingListing({ key: "leopold ii" }), true);
+assert.equal(isVerifiedNewRankingListing({ key: "editorially-re-rated" }), false,
+  "editorial rating dates are not used as first-listing dates");
 
 const rebuildUserRanks = new Function(
   "state", "getRankingCandidates", "getRankingMovementKey", "getPodcastKey", "getCommunityStat", "window", "parseNumber",

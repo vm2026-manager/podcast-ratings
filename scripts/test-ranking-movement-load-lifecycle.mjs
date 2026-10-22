@@ -77,7 +77,8 @@ const movementApi = {
 };
 const load = new Function(
   "state", "isRankingMovementDataReady", "isRankingMovementEligible", "window",
-  "getRankingCandidates", "getRankingMovementKey", "getPodcastRatingForActiveSource", "getCommunityRatingCount",
+  "getRankingCandidates", "getRankingMovementKey", "getRankingMovementFirstListedAt", "isVerifiedNewRankingListing",
+  "getPodcastRatingForActiveSource", "getCommunityRatingCount",
   "resolveCanonicalPodcastId", "isRankingRoute", "renderPodcastGrid", "console",
   `${loadRankingMovementSnapshot}; return loadRankingMovementSnapshot;`
 )(
@@ -87,6 +88,8 @@ const load = new Function(
   { PodcastRankingMovement: movementApi },
   () => [{ id: "podcast-a" }],
   (podcast) => podcast.id,
+  () => null,
+  () => false,
   () => 8.4,
   () => 5,
   (key) => key,

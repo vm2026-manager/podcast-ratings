@@ -4480,6 +4480,23 @@ function getRankingMovementKey(podcast) {
   return getPodcastId(podcast);
 }
 
+// Verified recent catalogue listings are separate from editorial rating dates.
+// Keep the first-listing date for the full seven-day suppression window. Do not
+// infer it from Afgivet vurdering: a new editorial rating can belong to an old listing.
+const RANKING_MOVEMENT_FIRST_LISTED_AT = Object.freeze({
+  "leopold ii": "2026-10-17T17:10:00Z"
+});
+
+function getRankingMovementFirstListedAt(podcast) {
+  const key = getRankingMovementKey(podcast);
+  return key ? RANKING_MOVEMENT_FIRST_LISTED_AT[key] || null : null;
+}
+
+function isVerifiedNewRankingListing(podcast) {
+  const key = getRankingMovementKey(podcast);
+  return Boolean(key && Object.prototype.hasOwnProperty.call(RANKING_MOVEMENT_FIRST_LISTED_AT, key));
+}
+
 function getRankingMovementMarkup(podcast) {
   if (!isRankingMovementEligible() || !state.rankingMovementByKey.size) return "";
   const key = getRankingMovementKey(podcast);
@@ -4533,7 +4550,9 @@ async function loadRankingMovementSnapshot() {
       .map((podcast) => ({
         key: getRankingMovementKey(podcast),
         averageRating: getPodcastRatingForActiveSource(podcast),
-        ratingCount: getCommunityRatingCount(podcast)
+        ratingCount: getCommunityRatingCount(podcast),
+        firstListedAt: getRankingMovementFirstListedAt(podcast),
+        knownNewListing: isVerifiedNewRankingListing(podcast)
       }))
       .filter((entry) => entry.key && entry.averageRating !== null && entry.ratingCount > 0);
     const rows = Array.isArray(data) ? data : [];
