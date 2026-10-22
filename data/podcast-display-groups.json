@@ -2,6 +2,28 @@
   "version": 1,
   "groups": [
     {
+      "id": "kirsten-ringer-til-rasmus",
+      "title": "Kirsten ringer til Rasmus",
+      "description": "Kirsten Birgit ringer til Rasmus Bruun. Vurdér de seks sæsoner hver for sig.",
+      "representativeMemberLegacyKey": "kirsten ringer til rasmus sæson 4",
+      "rankingEnabled": true,
+      "memberLegacyKeys": [
+        "kirsten ringer til rasmus sæson 4"
+      ],
+      "seasonIdentities": [
+        { "season": 1, "podcast_key": "display-season:kirsten-ringer-til-rasmus:1", "title": "Kirsten ringer til Rasmus (sæson 1)" },
+        { "season": 2, "podcast_key": "display-season:kirsten-ringer-til-rasmus:2", "title": "Kirsten ringer til Rasmus (sæson 2)" },
+        { "season": 3, "podcast_key": "display-season:kirsten-ringer-til-rasmus:3", "title": "Kirsten ringer til Rasmus (sæson 3)" },
+        { "season": 5, "podcast_key": "display-season:kirsten-ringer-til-rasmus:5", "title": "Kirsten ringer til Rasmus (sæson 5)" },
+        { "season": 6, "podcast_key": "display-season:kirsten-ringer-til-rasmus:6", "title": "Kirsten ringer til Rasmus (sæson 6)" }
+      ],
+      "episodeConfig": {
+        "databasePodcastKey": "kirsten ringer til rasmus sæson 4",
+        "source": "apple_podcasts_1715936714",
+        "appleShowId": "1715936714"
+      }
+    },
+    {
       "id": "narkobetjenten",
       "title": "Narkobetjenten",
       "description": "En tidligere narkobetjent fortæller om sine erfaringer fra et arbejdsliv tæt på kriminalitet, efterforskning og den kriminelle underverden. På tværs af sæsonerne handler podcasten om politiarbejde, kriminelle miljøer og de mennesker og sager, han har mødt undervejs.",

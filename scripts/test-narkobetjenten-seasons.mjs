@@ -55,14 +55,14 @@ assert.equal(context.createRankingDisplayGroup(group).userAverageRating,7);
 assert.equal(context.getCommunityStat('display-group:narkobetjenten').ratingCount,2);
 assert.equal(context.getCommunityStat(identities[0].podcastId).averageRating,9);
 const candidates = context.getRankingCandidates();
-assert.equal(candidates.filter(p=>p.isDisplayGroup).length,1);
+assert.equal(candidates.filter(p=>p.isDisplayGroup && p.displayGroupId==='narkobetjenten').length,1);
 assert.equal(candidates.filter(p=>p.isDisplayGroupSeason).length,0);
 assert.ok(candidates.some(p=>p.podcastId==='narkobetjenten pa gaden sæson 1'));
 assert.equal(JSON.stringify(state.podcasts),snapshot);
 for(let i=0;i<24;i++) rateButtons.push({ dataset:{podcastSeasonRate:String(i)},addEventListener(event,handler){this.click=handler;} });
 context.renderPodcastDisplayGroupSeasonWorkspace({ querySelector:selector=>selector==='[data-podcast-detail-content]'?content:null,classList:{add(){}} },display);
 assert.ok(content.innerHTML.includes('24 sæsoner · 12 vurderet af Podcastlisten'));
-assert.equal((content.innerHTML.match(/data-label="Podcastlisten"><strong>—/g)||[]).length,12);
+assert.equal((content.innerHTML.match(/data-label="[^"]*Podcastlisten"><strong>—/g)||[]).length,12);
 assert.equal((content.innerHTML.match(/data-podcast-season-rate=/g)||[]).length,24);
 for (const [i,button] of rateButtons.entries()) { button.click(); assert.equal(context.getDisplayGroupSeasonNumber(opened),i+1); rated.set(context.getPodcastKey(opened),i%2?8:6); }
 assert.equal(context.getDisplayGroupOwnRatingStats(members).average,7);

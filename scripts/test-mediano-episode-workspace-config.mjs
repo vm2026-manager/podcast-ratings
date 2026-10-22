@@ -27,6 +27,7 @@ const context = {
   EPISODE_DATABASE_KEY_ALIASES: {},
   getPodcastId: (podcast) => String(podcast?.podcastId ?? "").trim().toLowerCase(),
   getEpisodePodcastKey: (podcast) => String(podcast?.podcastId ?? podcast ?? "").trim().toLowerCase(),
+  getDisplayGroupEpisodeSeason: () => null,
   resolvePodcastByStoredKey: () => null
 };
 context.globalThis = context;
