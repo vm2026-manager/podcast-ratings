@@ -25,6 +25,7 @@ const checks = [
   ["app.js syntax", ["--check", "app.js"]],
   ["Bakspejl local cover availability", ["scripts/test-bakspejl-cover-availability.mjs"]],
   ["cover identity resolution", ["scripts/test-cover-identity-resolution.mjs"]],
+  ["De efterladte supplied cover identity and responsive source", ["scripts/test-de-efterladte-cover.mjs"]],
   ["DR Tyran unique series covers", ["scripts/test-tyran-individual-covers.mjs"]],
   ["Flashback exact uploaded originals and identity routing", ["scripts/test-flashback-original-covers.mjs"]],
   ["Det levende bevis DR cover identity and stale override removal", ["scripts/test-det-levende-bevis-cover.mjs"]],
