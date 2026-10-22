@@ -1008,6 +1008,7 @@ const state = {
   languageFilter: "all",
   rankingSource: "mads",
   rankingMovementByKey: new Map(),
+  rankingMovementPeriodLabel: "",
   rankingMovementLoadAttempted: false,
   rankingMovementLoading: false,
   rankingSourceTouched: false,
@@ -4480,13 +4481,15 @@ function getRankingMovementMarkup(podcast) {
   if (!key || !state.rankingMovementByKey.has(key)) return "";
   const id = getRankingMovementId(podcast);
   const delta = state.rankingMovementByKey.get(key);
+  const periodLabel = state.rankingMovementPeriodLabel || "de seneste 7 dage";
   if (delta === 0) {
-    return `<span id="${id}" class="ranking-movement ranking-movement--steady" aria-label="Uændret placering siden sidste uge">–</span>`;
+    const label = `Uændret placering ${periodLabel}`;
+    return `<span id="${id}" class="ranking-movement ranking-movement--steady" aria-label="${escapeHtml(label)}" title="${escapeHtml(label)}">–</span>`;
   }
   const gain = delta > 0;
   const count = Math.abs(delta);
-  const label = `${gain ? "Steget" : "Faldet"} ${count} ${count === 1 ? "placering" : "placeringer"} siden sidste uge`;
-  return `<span id="${id}" class="ranking-movement ${gain ? "ranking-movement--up" : "ranking-movement--down"}" aria-label="${escapeHtml(label)}">${gain ? "▲" : "▼"}${count}</span>`;
+  const label = `${gain ? "Steget" : "Faldet"} ${count} ${count === 1 ? "placering" : "placeringer"} ${periodLabel}`;
+  return `<span id="${id}" class="ranking-movement ${gain ? "ranking-movement--up" : "ranking-movement--down"}" aria-label="${escapeHtml(label)}" title="${escapeHtml(label)}">${gain ? "▲" : "▼"}${count}</span>`;
 }
 
 function getRankingMovementId(podcast) {
@@ -4494,13 +4497,6 @@ function getRankingMovementId(podcast) {
   const key = getRankingMovementKey(podcast);
   if (!key || !state.rankingMovementByKey.has(key)) return "";
   return `ranking-movement-${key.replace(/[^a-zA-Z0-9_-]/g, "-")}`;
-}
-
-function getUtcDateDaysAgo(days) {
-  const date = new Date();
-  date.setUTCHours(0, 0, 0, 0);
-  date.setUTCDate(date.getUTCDate() - days);
-  return date.toISOString().slice(0, 10);
 }
 
 async function loadRankingMovementSnapshot() {
@@ -4511,12 +4507,19 @@ async function loadRankingMovementSnapshot() {
   ) return;
 
   state.rankingMovementLoading = true;
-  const snapshotDate = getUtcDateDaysAgo(7);
+  state.rankingMovementPeriodLabel = "";
+  const baseline = window.PodcastRankingMovement.getSnapshotBaseline(new Date());
+  if (!baseline) {
+    state.rankingMovementByKey = new Map();
+    state.rankingMovementLoadAttempted = true;
+    state.rankingMovementLoading = false;
+    return;
+  }
   try {
-    const { data, error } = await state.supabase
+    const { data, count, error } = await state.supabase
       .from("podcast_ranking_rating_snapshots")
-      .select("snapshot_date,source,podcast_key,average_rating,rating_count")
-      .eq("snapshot_date", snapshotDate)
+      .select("snapshot_date,source,podcast_key,average_rating,rating_count", { count: "exact" })
+      .eq("snapshot_date", baseline.snapshotDate)
       .eq("source", "users")
       .limit(1000);
     if (error) throw error;
@@ -4529,26 +4532,39 @@ async function loadRankingMovementSnapshot() {
       }))
       .filter((entry) => entry.key && entry.averageRating !== null && entry.ratingCount > 0);
     const rows = Array.isArray(data) ? data : [];
-    const actualDate = rows.length ? rows[0].snapshot_date : snapshotDate;
-    state.rankingMovementByKey = window.PodcastRankingMovement.compareSnapshotsToCurrent(
-      currentEntries,
-      rows,
-      {
-        expectedDate: snapshotDate,
-        historicalDate: actualDate,
-        keyOf: (entry) => entry.key,
-        scoreOf: (entry) => entry.averageRating,
-        resolveCanonicalKey: (key) => key.startsWith("display-group:") ? key : (resolveCanonicalPodcastId(key) || "")
-      }
-    );
+    if (window.PodcastRankingMovement.hasCompleteSnapshot(rows, count, baseline.snapshotDate)) {
+      state.rankingMovementByKey = window.PodcastRankingMovement.compareSnapshotsToCurrent(
+        currentEntries,
+        rows,
+        {
+          expectedDate: baseline.snapshotDate,
+          historicalDate: rows[0].snapshot_date,
+          keyOf: (entry) => entry.key,
+          scoreOf: (entry) => entry.averageRating,
+          resolveCanonicalKey: (key) => key.startsWith("display-group:") ? key : (resolveCanonicalPodcastId(key) || "")
+        }
+      );
+      if (state.rankingMovementByKey.size) state.rankingMovementPeriodLabel = baseline.periodLabel;
+    } else {
+      state.rankingMovementByKey = new Map();
+    }
   } catch (error) {
     console.warn("Ranglistehistorik kunne ikke hentes.", error);
     state.rankingMovementByKey = new Map();
+    state.rankingMovementPeriodLabel = "";
   } finally {
     state.rankingMovementLoadAttempted = true;
     state.rankingMovementLoading = false;
     if (isRankingRoute()) renderPodcastGrid();
   }
+}
+
+function setRankingResultsText(text) {
+  if (!elements.resultsText) return;
+  const hasMovementLabel =
+    state.rankingMovementByKey.size > 0 && state.rankingMovementPeriodLabel && isRankingMovementEligible();
+  const movementNote = hasMovementLabel ? ` · Ranglistepile ${state.rankingMovementPeriodLabel}` : "";
+  elements.resultsText.textContent = `${text}${movementNote}`;
 }
 
 function isRankingMovementDataReady() {
@@ -5110,7 +5126,7 @@ function loadNextMobileRankingBatch({ trigger = "manual", token = null } = {}) {
   }
 
   if (elements.resultsText) {
-    elements.resultsText.textContent = getResultsText(filtered.length, end);
+    setRankingResultsText(getResultsText(filtered.length, end));
   }
 
   updateLoadMoreUi(filtered.length, end);
@@ -15976,7 +15992,7 @@ function renderPodcastGrid() {
   renderDesktopRankingDataWarning(rankingDataState);
 
   if (elements.resultsText) {
-    elements.resultsText.textContent = getResultsText(filtered.length, visible.length);
+    setRankingResultsText(getResultsText(filtered.length, visible.length));
   }
 
   updateLoadMoreUi(filtered.length, isMobileTail ? filtered.length : visible.length);

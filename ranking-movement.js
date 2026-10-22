@@ -1,4 +1,38 @@
 (function attachRankingMovement(root) {
+  const INITIAL_SNAPSHOT_DATE = "2026-10-20";
+  const SEVEN_DAY_SWITCH_AT = Date.parse("2026-10-27T03:17:00Z");
+
+  function getSnapshotBaseline(now = new Date()) {
+    const timestamp = now instanceof Date ? now.getTime() : Date.parse(now);
+    if (!Number.isFinite(timestamp)) return null;
+    if (timestamp < SEVEN_DAY_SWITCH_AT) {
+      return { snapshotDate: INITIAL_SNAPSHOT_DATE, periodLabel: "siden 20. oktober", mode: "initial" };
+    }
+    const date = new Date(timestamp);
+    date.setUTCHours(0, 0, 0, 0);
+    date.setUTCDate(date.getUTCDate() - 7);
+    return { snapshotDate: date.toISOString().slice(0, 10), periodLabel: "de seneste 7 dage", mode: "seven-day" };
+  }
+
+  function hasCompleteSnapshot(rows, reportedCount, expectedDate) {
+    if (
+      !Array.isArray(rows) || !rows.length || rows.length >= 1000 ||
+      !Number.isInteger(reportedCount) || reportedCount !== rows.length
+    ) return false;
+
+    const keys = new Set();
+    return rows.every((row) => {
+      const key = String(row.podcast_key || "").trim();
+      const count = Number(row.rating_count);
+      if (
+        row.snapshot_date !== expectedDate || row.source !== "users" || !key ||
+        numericScore(row.average_rating) === null || !Number.isFinite(count) || count <= 0 || keys.has(key)
+      ) return false;
+      keys.add(key);
+      return true;
+    });
+  }
+
   function displayScore(value) {
     const number = Number(value);
     return Number.isFinite(number) ? Number(number.toFixed(1)) : null;
@@ -97,5 +131,13 @@
     );
   }
 
-  root.PodcastRankingMovement = Object.freeze({ displayScore, rankSequential, movementMap, compareSnapshotsToCurrent, isEligible });
+  root.PodcastRankingMovement = Object.freeze({
+    displayScore,
+    getSnapshotBaseline,
+    hasCompleteSnapshot,
+    rankSequential,
+    movementMap,
+    compareSnapshotsToCurrent,
+    isEligible
+  });
 })(typeof window !== "undefined" ? window : globalThis);

@@ -18,9 +18,13 @@ function extractFunction(name) {
 
 const isRankingMovementDataReady = extractFunction("isRankingMovementDataReady");
 const loadRankingMovementSnapshot = extractFunction("loadRankingMovementSnapshot");
+const setRankingResultsText = extractFunction("setRankingResultsText");
+const getRankingMovementMarkup = extractFunction("getRankingMovementMarkup");
+
 const state = {
   rankingMovementLoadAttempted: false,
   rankingMovementLoading: false,
+  rankingMovementPeriodLabel: "",
   communityStatsHasSuccessfulLoad: false,
   podcastDisplayGroupsReady: false,
   rankingMovementByKey: new Map(),
@@ -28,28 +32,51 @@ const state = {
 };
 let historyQueries = 0;
 let renders = 0;
+let selectedDate = "";
+let baseline = { snapshotDate: "2026-10-20", periodLabel: "siden 20. oktober", mode: "initial" };
+let response = {
+  data: [{ snapshot_date: "2026-10-20", source: "users", podcast_key: "podcast-a", average_rating: 8.2, rating_count: 4 }],
+  count: 1,
+  error: null
+};
 state.supabase = {
   from(table) {
     assert.equal(table, "podcast_ranking_rating_snapshots");
     return {
-      select() { return this; },
-      eq() { return this; },
+      select(columns, options) {
+        assert.equal(columns, "snapshot_date,source,podcast_key,average_rating,rating_count");
+        assert.deepEqual(options, { count: "exact" });
+        return this;
+      },
+      eq(column, value) {
+        if (column === "snapshot_date") selectedDate = value;
+        if (column === "source") assert.equal(value, "users");
+        return this;
+      },
       limit(size) {
         assert.equal(size, 1000);
         historyQueries += 1;
-        return Promise.resolve({
-          data: [{
-            snapshot_date: "2026-10-14", source: "users", podcast_key: "podcast-a",
-            average_rating: 8.2, rating_count: 4
-          }], error: null
-        });
+        return Promise.resolve(response);
       }
     };
   }
 };
 const ready = new Function("state", `${isRankingMovementDataReady}; return isRankingMovementDataReady;`)(state);
+const movementApi = {
+  getSnapshotBaseline: () => baseline,
+  hasCompleteSnapshot(rows, count, date) {
+    return rows.length > 0 && rows.length === count && rows.every((row) => row.snapshot_date === date && row.source === "users");
+  },
+  compareSnapshotsToCurrent(current, rows, options) {
+    assert.equal(options.expectedDate, baseline.snapshotDate);
+    assert.equal(options.historicalDate, baseline.snapshotDate);
+    assert.equal(rows.length, 1);
+    assert.equal(current[0].averageRating, 8.4);
+    return new Map([["podcast-a", 1]]);
+  }
+};
 const load = new Function(
-  "state", "isRankingMovementDataReady", "isRankingMovementEligible", "window", "getUtcDateDaysAgo",
+  "state", "isRankingMovementDataReady", "isRankingMovementEligible", "window",
   "getRankingCandidates", "getRankingMovementKey", "getPodcastRatingForActiveSource", "getCommunityRatingCount",
   "resolveCanonicalPodcastId", "isRankingRoute", "renderPodcastGrid", "console",
   `${loadRankingMovementSnapshot}; return loadRankingMovementSnapshot;`
@@ -57,8 +84,7 @@ const load = new Function(
   state,
   ready,
   () => true,
-  { PodcastRankingMovement: { compareSnapshotsToCurrent: () => new Map([["podcast-a", 1]]) } },
-  () => "2026-10-14",
+  { PodcastRankingMovement: movementApi },
   () => [{ id: "podcast-a" }],
   (podcast) => podcast.id,
   () => 8.4,
@@ -69,8 +95,7 @@ const load = new Function(
   { warn() {} }
 );
 
-// Initial slow startup and a failed first community request must not spend the
-// page's single historical read attempt or lock an empty comparison in memory.
+// A slow or failed community-stat load must not use the one history request.
 await load();
 assert.equal(historyQueries, 0);
 assert.equal(state.rankingMovementLoadAttempted, false);
@@ -79,8 +104,7 @@ await load();
 assert.equal(historyQueries, 0);
 assert.equal(state.rankingMovementLoadAttempted, false);
 
-// Recovery is allowed once rating data and catalogue display groups are both
-// hydrated. The snapshot is fetched once and subsequent renders reuse it.
+// The initial comparison reads the verified 20 October snapshot only once.
 state.communityStatsHasSuccessfulLoad = true;
 await load();
 assert.equal(historyQueries, 0, "display-group readiness also gates comparison");
@@ -88,8 +112,57 @@ state.podcastDisplayGroupsReady = true;
 await load();
 await load();
 assert.equal(historyQueries, 1);
+assert.equal(selectedDate, "2026-10-20");
 assert.equal(state.rankingMovementLoadAttempted, true);
+assert.equal(state.rankingMovementPeriodLabel, "siden 20. oktober");
 assert.equal(state.rankingMovementByKey.get("podcast-a"), 1);
 assert.equal(renders, 1);
 
-console.log("Ranking movement hydration lifecycle regression tests passed.");
+const movementMarkup = new Function(
+  "state", "isRankingMovementEligible", "getRankingMovementKey", "getRankingMovementId", "escapeHtml",
+  `${getRankingMovementMarkup}; return getRankingMovementMarkup;`
+)(state, () => true, () => "podcast-a", () => "movement-podcast-a", (value) => value);
+const upMarkup = movementMarkup({});
+assert.match(upMarkup, /Steget 1 placering siden 20\. oktober/);
+assert.match(upMarkup, /title="Steget 1 placering siden 20\. oktober"/);
+state.rankingMovementByKey.set("podcast-a", 0);
+const steadyMarkup = movementMarkup({});
+assert.match(steadyMarkup, /Uændret placering siden 20\. oktober/);
+
+// The visible ranking note and assistive labels use the same period wording.
+const resultsElement = { textContent: "" };
+const setResults = new Function(
+  "state", "elements", "isRankingMovementEligible", `${setRankingResultsText}; return setRankingResultsText;`
+)(state, { resultsText: resultsElement }, () => true);
+setResults("Viser 18 af 263 podcasts");
+assert.equal(resultsElement.textContent, "Viser 18 af 263 podcasts · Ranglistepile siden 20. oktober");
+
+// A later date selects exactly seven UTC calendar days prior. Missing or
+// partial history is not replaced with the initial snapshot.
+async function resetPageLoad(nextBaseline, nextResponse) {
+  baseline = nextBaseline;
+  response = nextResponse;
+  state.rankingMovementLoadAttempted = false;
+  state.rankingMovementPeriodLabel = "stale label";
+  state.rankingMovementByKey = new Map([["stale", 99]]);
+  await load();
+}
+baseline = { snapshotDate: "2026-10-21", periodLabel: "de seneste 7 dage", mode: "seven-day" };
+response = { data: [], count: 0, error: null };
+await resetPageLoad(baseline, response);
+assert.equal(selectedDate, "2026-10-21");
+assert.equal(state.rankingMovementByKey.size, 0);
+assert.equal(state.rankingMovementPeriodLabel, "");
+
+response = {
+  data: [{ snapshot_date: "2026-10-21", source: "users", podcast_key: "podcast-a", average_rating: 8.2, rating_count: 4 }],
+  count: 2,
+  error: null
+};
+await resetPageLoad(baseline, response);
+assert.equal(selectedDate, "2026-10-21");
+assert.equal(state.rankingMovementByKey.size, 0, "partial baseline fails closed");
+assert.equal(state.rankingMovementPeriodLabel, "");
+assert.equal(historyQueries, 3, "one bounded query per eligible page load");
+
+console.log("Ranking movement baseline and hydration lifecycle regression tests passed.");
