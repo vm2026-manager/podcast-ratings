@@ -13277,8 +13277,10 @@ function bindPodcastDetailFilterButtons(content, podcast) {
 }
 
 function getDisplayGroupSharedMetadata(members) {
+  const catalogueMembers = members.filter((member) => !member?.isDisplayGroupSeason);
+  const metadataMembers = catalogueMembers.length ? catalogueMembers : members;
   const sharedValue = (field) => {
-    const values = members.map((member) => String(member?.[field] || "").trim()).filter(Boolean);
+    const values = metadataMembers.map((member) => String(member?.[field] || "").trim()).filter(Boolean);
     if (!values.length) return "";
     const normalized = new Set(values.map(normalizeComparable));
     return normalized.size === 1 ? values[0] : "";
@@ -13295,8 +13297,9 @@ function getDisplayGroupSharedMetadata(members) {
 function getDisplayGroupRecommendations(displayGroup, members) {
   if (state.podcastSimilarityProductStatus === "idle") loadPodcastSimilarityProductData();
   const memberKeys = new Set(members.map(getPodcastKey));
+  const catalogueMembers = members.filter((member) => !member?.isDisplayGroupSeason);
   const candidates = new Map();
-  members.forEach((member) => {
+  catalogueMembers.forEach((member) => {
     const recommendations = getPodcastDetailDynamicRecommendations(
       member,
       getValidatedPodcastSimilarityProduct(member)
@@ -13359,6 +13362,9 @@ function renderPodcastDisplayGroupContent(dialog, displayGroup) {
   const metadata = getDisplayGroupSharedMetadata(members);
   const description = String(displayGroup.description || "").trim() || `Samlet overblik over ${members.length} sæsoner.`;
   const relatedMarkup = getDisplayGroupSimilarityMarkup(displayGroup, members);
+  const externalLinkMarkup = isValidPodcastLink(displayGroup.link)
+    ? `<a class="podcast-detail-sheet__header-link" href="${escapeHtml(displayGroup.link)}" target="_blank" rel="noopener noreferrer" aria-label="Link til podcasten" title="Link til podcasten" data-tooltip="Link til podcasten"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 5h5v5M19 5l-9 9"></path><path d="M19 14v4a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1h4"></path></svg></a>`
+    : "";
   dialog.querySelector("[data-podcast-detail-toolbar-actions]")?.replaceChildren();
   setPodcastDetailPlacementControl(dialog);
   state.podcastDetailView = "displayGroup";
@@ -13366,7 +13372,7 @@ function renderPodcastDisplayGroupContent(dialog, displayGroup) {
   content.innerHTML = `
     <header class="podcast-detail-sheet__header">
       <div class="podcast-detail-sheet__cover"><img class="podcast-detail-sheet__image" alt="" loading="lazy" /></div>
-      <div class="podcast-detail-sheet__intro"><div class="podcast-detail-sheet__intro-actions"><span class="podcast-detail-sheet__header-action-icons"><button class="favorite-button podcast-detail-sheet__header-favorite" type="button" data-podcast-detail-favorite aria-label="Gem til senere" title="Gem til senere" data-tooltip="Gem til senere"><span aria-hidden="true"></span></button></span></div><h2 id="podcastDetailTitle">${escapeHtml(displayGroup.title)}</h2><p class="podcast-detail-sheet__meta">${escapeHtml(metadata.host || metadata.publisher || `${members.length} sæsoner`)}</p><div class="podcast-detail-sheet__chips"><span class="podcast-detail-sheet__episode-entry"><button class="podcast-detail-sheet__episode-entry-button" type="button" data-podcast-seasons-open aria-describedby="podcastSeasonEntryTooltip"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="3" width="14" height="18" rx="2"></rect><path d="M9 8h6M9 12h6M9 16h4"></path></svg><span>Vurder sæsoner</span></button><span class="podcast-detail-sheet__episode-entry-tooltip" id="podcastSeasonEntryTooltip" role="tooltip">Se alle sæsoner og bedøm dem én for én.</span></span>${metadata.genre ? `<button class="podcast-detail-sheet__genre" type="button" data-podcast-detail-filter="genre" data-value="${escapeHtml(metadata.genre)}">${escapeHtml(metadata.genre)}</button>` : ""}${metadata.publisher ? `<button class="podcast-detail-sheet__chip podcast-detail-sheet__publisher" type="button" data-podcast-detail-filter="publisher" data-value="${escapeHtml(metadata.publisher)}">${escapeHtml(metadata.publisher)}</button>` : ""}</div><section class="podcast-detail-sheet__description podcast-detail-sheet__description--desktop"><h3>Om podcasten</h3><p>${escapeHtml(description)}</p></section></div>
+      <div class="podcast-detail-sheet__intro"><div class="podcast-detail-sheet__intro-actions"><span class="podcast-detail-sheet__header-action-icons"><button class="favorite-button podcast-detail-sheet__header-favorite" type="button" data-podcast-detail-favorite aria-label="Gem til senere" title="Gem til senere" data-tooltip="Gem til senere"><span aria-hidden="true"></span></button>${externalLinkMarkup}</span></div><h2 id="podcastDetailTitle">${escapeHtml(displayGroup.title)}</h2>${getPodcastAccessIndicatorMarkup(displayGroup, { detail: true })}<p class="podcast-detail-sheet__meta">${escapeHtml(metadata.host || metadata.publisher || `${members.length} sæsoner`)}</p><div class="podcast-detail-sheet__chips"><span class="podcast-detail-sheet__episode-entry"><button class="podcast-detail-sheet__episode-entry-button" type="button" data-podcast-seasons-open aria-describedby="podcastSeasonEntryTooltip"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="3" width="14" height="18" rx="2"></rect><path d="M9 8h6M9 12h6M9 16h4"></path></svg><span>Vurder sæsoner</span></button><span class="podcast-detail-sheet__episode-entry-tooltip" id="podcastSeasonEntryTooltip" role="tooltip">Se alle sæsoner og bedøm dem én for én.</span></span>${metadata.genre ? `<button class="podcast-detail-sheet__genre" type="button" data-podcast-detail-filter="genre" data-value="${escapeHtml(metadata.genre)}">${escapeHtml(metadata.genre)}</button>` : ""}${metadata.publisher ? `<button class="podcast-detail-sheet__chip podcast-detail-sheet__publisher" type="button" data-podcast-detail-filter="publisher" data-value="${escapeHtml(metadata.publisher)}">${escapeHtml(metadata.publisher)}</button>` : ""}</div><section class="podcast-detail-sheet__description podcast-detail-sheet__description--desktop"><h3>Om podcasten</h3><p>${escapeHtml(description)}</p></section></div>
       <section class="podcast-detail-sheet__description podcast-detail-sheet__description--mobile"><h3>Om podcasten</h3><p data-podcast-detail-description>${escapeHtml(description)}</p><button class="podcast-detail-sheet__description-toggle" type="button" data-podcast-detail-description-toggle aria-expanded="false">Læs mere</button></section>
     </header>
     <section class="podcast-detail-sheet__ratings" aria-label="Vurderinger">

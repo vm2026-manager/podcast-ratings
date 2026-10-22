@@ -22,6 +22,7 @@ const checks = [
   ["display-group catalogue", ["scripts/validate-podcast-display-groups.mjs"]],
   ["Kirsten season parsing and episode routing", ["--experimental-strip-types", "scripts/test-kirsten-apple-season-numbering.mjs"]],
   ["Kirsten season rating integrity across workspace switches", ["scripts/test-kirsten-season-rating-integrity.mjs"]],
+  ["Kirsten display-group recovery and synthetic recommendation-source exclusion", ["scripts/test-kirsten-display-group-regressions.mjs"]],
   ["Narkobetjenten seasons", ["scripts/test-narkobetjenten-seasons.mjs"]],
   ["Narkobetjenten public display and community season eligibility", ["scripts/test-narkobetjenten-public-display.mjs"]],
   ["app.js syntax", ["--check", "app.js"]],
