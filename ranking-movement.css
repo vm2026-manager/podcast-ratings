@@ -23,6 +23,54 @@ html body.page-ranglister #resultsText {
   min-width: 0;
 }
 
+html body.page-ranglister .ranking-movement-preview {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem 0.8rem;
+  min-width: 0;
+  margin: -0.25rem 0 0.15rem;
+}
+
+html body.page-ranglister .ranking-movement-preview[hidden] {
+  display: none !important;
+}
+
+html body.page-ranglister .ranking-movement-preview__item {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.28rem;
+  min-width: 0;
+  max-width: 100%;
+  padding: 0.32rem 0.52rem;
+  border: 1px solid rgba(111, 98, 87, 0.13);
+  border-radius: 9px;
+  background: rgba(255, 255, 255, 0.56);
+  color: #51483f;
+  font-size: 0.78rem;
+  font-weight: 700;
+  line-height: 1.25;
+}
+
+html body.page-ranglister .ranking-movement-preview__item .ranking-movement {
+  margin: 0;
+  font-size: 0.78rem;
+}
+
+html body.page-ranglister .ranking-movement-preview__title {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+html body.page-ranglister .ranking-movement-preview__rank {
+  flex: 0 0 auto;
+  white-space: nowrap;
+  color: #74685e;
+  font-size: 0.72rem;
+  font-weight: 800;
+}
+
 html body.page-ranglister .ranking-movement-toggle {
   flex: 0 0 auto;
   min-height: 34px;
@@ -95,6 +143,22 @@ html body.page-ranglister .desktop-ranking-row__rank .ranking-movement--down {
     flex: 1 1 auto;
     align-items: flex-start;
     gap: 0.45rem;
+  }
+
+  html body.page-ranglister .ranking-movement-preview {
+    grid-row: 3;
+    grid-column: 1 / -1;
+    align-items: stretch;
+    gap: 0.35rem;
+    margin-top: 0;
+  }
+
+  html body.page-ranglister .ranking-movement-preview__item {
+    flex: 1 1 100%;
+    display: grid;
+    grid-template-columns: max-content minmax(0, 1fr) max-content;
+    align-items: baseline;
+    gap: 0.35rem;
   }
 
   html body.page-ranglister #resultsText {
