@@ -25,7 +25,7 @@ for (const [name, body] of [["loader", loader], ["search", search]]) {
 }
 
 assert.match(loader, /const pageSize = Number\(config\.pageSize \|\| EPISODE_PAGE_SIZE\)[\s\S]*?\.range\(offset, offset \+ pageSize - 1\)/u, "loader keeps configurable Vis flere pagination");
-assert.match(search, /\.range\(offset, offset \+ EPISODE_PAGE_SIZE - 1\)/u, "search keeps result pagination");
+assert.match(search, /const pageSize = Number\(config\.pageSize \|\| EPISODE_PAGE_SIZE\)[\s\S]*?\.range\(offset, offset \+ pageSize - 1\)/u, "search keeps configurable result pagination");
 assert.match(search, /title\.ilike\.\$\{pattern\},description\.ilike\.\$\{pattern\}/u, "search still searches title and description");
 assert.match(loader, /mergeEpisodes\(rows, manualEpisodes\)/u, "manual catalogue episodes remain merged through their existing separation path");
 assert.match(search, /mergeEpisodes\(rows, manualEpisodes\)/u, "manual catalogue search remains separated and merged");

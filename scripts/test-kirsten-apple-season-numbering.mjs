@@ -56,11 +56,12 @@ assert.equal(group.memberLegacyKeys[0], "kirsten ringer til rasmus sæson 4");
 assert.deepEqual([...group.seasonIdentities.map((entry) => entry.season), 4].sort((a, b) => a - b), [1, 2, 3, 4, 5, 6]);
 const normalizeMatchKey = (value) => String(value ?? "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/[^a-z0-9æøå ]/g, " ").replace(/\s+/g, " ").trim();
 const getDisplayGroupEpisodeSeason = new Function("state", "normalizeText", "normalizeMatchKey", "resolvePodcastByStoredKey", "getPodcastKey", `
+  ${extract("getDisplayGroupSeasonIdentityKey")}
   ${extract("getDisplayGroupEpisodeSeason")}
   return getDisplayGroupEpisodeSeason;
 `)({ podcastDisplayGroups: groupConfig.groups }, (value) => String(value ?? "").trim(), normalizeMatchKey,
   (key) => key === "kirsten ringer til rasmus sæson 4" ? { podcastId: key, legacyKey: key } : null,
-  (podcast) => podcast?.podcastId || podcast?.legacyKey || "");
+  (podcast) => podcast?._displayGroupEpisodeStateKey || podcast?.podcast_key || podcast?.podcastId || podcast?.legacyKey || "");
 for (const season of [1, 2, 3, 4, 5, 6]) {
   const key = season === 4 ? "kirsten ringer til rasmus sæson 4" : `display-season:kirsten-ringer-til-rasmus:${season}`;
   const routed = getDisplayGroupEpisodeSeason(key);

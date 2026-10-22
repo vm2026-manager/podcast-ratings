@@ -64,6 +64,8 @@ reset();
 const context = vm.createContext({ console, Date, EPISODE_PAGE_SIZE: 16,
   state: { supabase: { from: table => new Query(table) }, activePodcastDetailKey: key, authUser: { id: "user" } },
   getEpisodePodcastConfig: () => activeConfig, getPodcastEpisodeState: () => episodeState,
+  filterEpisodesToConfigSeason: rows => rows,
+  getEpisodeKey: episode => episode?.id ?? null,
   getEpisodeDatabasePodcastKey: c => c.databasePodcastKey,
   getRateablePodcastEpisodes: rows => rows, getConfiguredManualEpisodes: () => [],
   mergeEpisodes: (a, b) => [...new Map([...a, ...b].map(row => [row.id, row])).values()],
@@ -115,7 +117,7 @@ assert.deepEqual(calls.at(-1).orders.map(([field]) => field), ["published_at"]);
 assert.equal(context.episodeMatchesPodcastSourceBoundary(legacy[0], config), false);
 assert.equal(context.episodeMatchesPodcastSourceBoundary(legacy[0], activeConfig), true);
 const profile = extract("fetchProfileEpisodeRatings");
-assert.match(profile, /episodeMatchesPodcastSourceBoundary\(episode, getEpisodePodcastConfig/);
+assert.match(profile, /const episodeConfig = getEpisodePodcastConfig\(episode\);[\s\S]*episodeMatchesPodcastSourceBoundary\(episode, episodeConfig\)/);
 assert.match(profile, /\.in\("id", ids\)/); // Personal history still resolves its original UUIDs.
 
 // Import a colliding GUID into a separate source twice; legacy rows and all

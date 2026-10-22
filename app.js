@@ -1032,6 +1032,7 @@ const state = {
   ratingDialogMode: "podcast",
   activePodcastDetailKey: null,
   activeEpisodeRatingId: null,
+  activeEpisodeRatingContext: null,
   podcastDetailView: "detail",
   podcastDetailMainSeriesValue: "",
   podcastDetailMainSeriesSourceKey: null,
@@ -1079,6 +1080,7 @@ const state = {
     // The detail score must cover every episode a user has rated, not merely
     // the current page of the episode workspace.
     parentUserRatingsById: {},
+    parentEpisodesById: {},
     parentUserRatingsResolvedFor: "",
     parentUserRatingsLoading: false,
     statsLoadingIds: new Set(),
@@ -3366,7 +3368,7 @@ function getPodcastKey(podcast) {
 }
 
 function getEpisodePodcastKey(podcastOrKey) {
-  if (typeof podcastOrKey === "object") return normalizeText(podcastOrKey?._displayGroupEpisodeStateKey) || getLegacyPodcastKey(podcastOrKey);
+  if (typeof podcastOrKey === "object") return normalizeText(podcastOrKey?._displayGroupEpisodeStateKey) || normalizeText(podcastOrKey?.podcast_key) || getPodcastId(podcastOrKey) || getLegacyPodcastKey(podcastOrKey);
   const resolved = resolvePodcastByStoredKey(podcastOrKey);
   return resolved ? getLegacyPodcastKey(resolved) : normalizeMatchKey(podcastOrKey);
 }
@@ -4202,7 +4204,27 @@ function getDisplayGroupSeasonIdentities(group) {
 
 function getDisplayGroupEpisodeSeason(podcastOrKey) {
   const podcast = typeof podcastOrKey === "object" ? podcastOrKey : resolvePodcastByStoredKey(podcastOrKey);
-  const key = normalizeMatchKey(typeof podcastOrKey === "string" ? podcastOrKey : getPodcastKey(podcast));
+  if (podcast && typeof podcast === "object" && podcast._displayGroupEpisodeStateKey) {
+    return getDisplayGroupEpisodeSeason(podcast._displayGroupEpisodeStateKey);
+  }
+  if (podcast && typeof podcast === "object" && podcast.podcast_key && podcast.source) {
+    for (const group of state.podcastDisplayGroups || []) {
+      const groupConfig = group.episodeConfig;
+      if (
+        normalizeMatchKey(podcast.podcast_key) !== normalizeMatchKey(groupConfig?.databasePodcastKey) ||
+        !groupConfig?.source || normalizeText(podcast.source) !== normalizeText(groupConfig.source)
+      ) continue;
+
+      const season = getAppleSeasonEpisodeNumber(podcast)?.season;
+      const seasonKey = getDisplayGroupSeasonIdentityKey(group, season);
+      if (!seasonKey) {
+        return { ...groupConfig, podcastKey: groupConfig.databasePodcastKey, stateKey: groupConfig.databasePodcastKey, seasonNumber: null, displayName: group.title, displayGroupId: group.id };
+      }
+      return { ...groupConfig, podcastKey: seasonKey, stateKey: seasonKey, seasonNumber: Number(season), displayName: `${group.title} (sæson ${season})`, displayGroupId: group.id };
+    }
+  }
+
+  const key = normalizeMatchKey(typeof podcastOrKey === "string" ? podcastOrKey : getEpisodePodcastKey(podcast));
   if (!key) return null;
   for (const group of state.podcastDisplayGroups || []) {
     const config = group.episodeConfig;
@@ -4212,10 +4234,62 @@ function getDisplayGroupEpisodeSeason(podcastOrKey) {
     const season = synthetic?.season ?? (member ? Number(normalizeText(member).match(/sæson\s+(\d+)/i)?.[1]) : null);
     if (Number.isInteger(Number(season)) && Number(season) > 0) {
       const seasonKey = synthetic?.podcast_key || member;
-      return { ...config, podcastKey: seasonKey, stateKey: seasonKey, seasonNumber: Number(season), displayName: `${group.title} (sæson ${season})` };
+      return { ...config, podcastKey: seasonKey, stateKey: seasonKey, seasonNumber: Number(season), displayName: `${group.title} (sæson ${season})`, displayGroupId: group.id };
     }
   }
   return null;
+}
+
+function getDisplayGroupSeasonIdentityKey(group, seasonNumber) {
+  const season = Number(seasonNumber);
+  if (!Number.isInteger(season) || season <= 0) return "";
+  const synthetic = (group?.seasonIdentities || []).find((identity) => Number(identity.season) === season);
+  if (synthetic?.podcast_key) return normalizeText(synthetic.podcast_key);
+  const member = (group?.memberLegacyKeys || []).find((key) => Number(normalizeText(key).match(/sæson\s+(\d+)/i)?.[1]) === season);
+  return normalizeText(member);
+}
+
+function getEpisodeRatingContext(episode) {
+  const episodeId = getEpisodeKey(episode);
+  if (!episodeId) return null;
+
+  const displayGroupConfig = getDisplayGroupEpisodeSeason(episode);
+  if (displayGroupConfig) {
+    const parsedEpisodeNumber = getAppleSeasonEpisodeNumber(episode);
+    const seasonNumber = Number(parsedEpisodeNumber?.season);
+    const group = (state.podcastDisplayGroups || []).find((item) => item.id === displayGroupConfig.displayGroupId);
+    const seasonKey = Number.isInteger(seasonNumber) && seasonNumber > 0
+      ? getDisplayGroupSeasonIdentityKey(group, seasonNumber)
+      : "";
+    const validSeason = Boolean(seasonKey) &&
+      (!displayGroupConfig.seasonNumber || Number(displayGroupConfig.seasonNumber) === seasonNumber);
+    const podcastKey = normalizeText(displayGroupConfig.stateKey) || normalizeText(displayGroupConfig.databasePodcastKey);
+    const taggedEpisode = validSeason
+      ? { ...episode, _displayGroupEpisodeStateKey: podcastKey }
+      : episode;
+    return {
+      episodeId,
+      episode: taggedEpisode,
+      podcastKey,
+      seasonNumber: validSeason ? seasonNumber : null,
+      databasePodcastKey: displayGroupConfig.databasePodcastKey,
+      source: displayGroupConfig.source,
+      displayGroupId: displayGroupConfig.displayGroupId,
+      config: getEpisodePodcastConfig(podcastKey),
+      canSyncParent: validSeason
+    };
+  }
+
+  const podcastKey = normalizeText(episode?._displayGroupEpisodeStateKey) ||
+    normalizeText(episode?.podcast_key) || getEpisodePodcastKey(state.activePodcastDetailKey);
+  return {
+    episodeId,
+    episode,
+    podcastKey,
+    seasonNumber: null,
+    config: getEpisodePodcastConfig(podcastKey, episode),
+    canSyncParent: true
+  };
 }
 
 function getDisplayGroupMemberPodcasts(group) {
@@ -6346,10 +6420,12 @@ async function synchronizeEpisodeDerivedParentRating(
   const episodeKey = local
     ? getLocalEpisodePodcastKey(podcastKey)
     : getEpisodePodcastKey(podcastKey);
-  const canonicalKey = resolveCanonicalPodcastId(podcastKey);
+  const episodeConfig = getEpisodePodcastConfig(podcastKey);
+  const canonicalKey = getEpisodeParentRatingKey(podcastKey);
   if (!episodeKey || !canonicalKey) return;
   const summary = getPodcastEpisodeUserRatingSummary(episodeKey);
   const backup = getEpisodeParentRatingBackup(episodeKey, { local });
+  if (hasProtectedDisplayGroupSeasonRating(episodeConfig, canonicalKey, backup)) return;
   const nextEffectiveRating =
     summary.count > 0
       ? Math.round(Number(summary.average) * 10) / 10
@@ -6379,7 +6455,7 @@ async function reconcileExistingEpisodeDerivedParentRating(podcastKey) {
   const episodeKey = local
     ? getLocalEpisodePodcastKey(podcastKey)
     : getEpisodePodcastKey(podcastKey);
-  const canonicalKey = resolveCanonicalPodcastId(podcastKey);
+  const canonicalKey = getEpisodeParentRatingKey(podcastKey);
   const summary = getPodcastEpisodeUserRatingSummary(episodeKey);
   if (!state.authUser || !episodeKey || !canonicalKey || summary.count === 0) return;
 
@@ -6414,6 +6490,20 @@ async function reconcileExistingEpisodeDerivedParentRating(podcastKey) {
   } finally {
     state.episodeParentRatingSyncPendingKeys.delete(episodeKey);
   }
+}
+
+function getEpisodeParentRatingKey(podcastKey) {
+  const config = getEpisodePodcastConfig(podcastKey);
+  if (config?.displayGroupId && config.seasonNumber) {
+    return normalizeText(config.stateKey || config.podcastKey || podcastKey);
+  }
+  return resolveCanonicalPodcastId(podcastKey);
+}
+
+function hasProtectedDisplayGroupSeasonRating(config, parentRatingKey, backup) {
+  if (!config?.displayGroupId || !config.seasonNumber) return false;
+  if (backup) return Boolean(backup.hasManualRating);
+  return parseNumber(state.userRatingsByKey[parentRatingKey]) !== null;
 }
 
 function getExploreSortStats(podcast) {
@@ -8119,13 +8209,16 @@ function openRatingDialog(podcast) {
   }, 40);
 }
 
-function openEpisodeRatingDialog(episode) {
+function openEpisodeRatingDialog(episode, suppliedContext = null) {
   const episodeId = getEpisodeKey(episode);
+  const episodeRatingContext = suppliedContext || getEpisodeRatingContext(episode);
+  if (!episodeRatingContext || episodeRatingContext.episodeId !== episodeId) return;
 
   if (!isLoggedIn()) {
     state.pendingAuthAction = {
       type: "episodeRating",
-      episodeId
+      episodeId,
+      episodeRatingContext
     };
     showAuthPrompt("login");
     setAuthMessage("Log ind for at gemme din vurdering af episoden.", "warning", "dialog");
@@ -8140,6 +8233,7 @@ function openEpisodeRatingDialog(episode) {
   state.ratingDialogMode = "episode";
   state.activeRatingKey = null;
   state.activeEpisodeRatingId = episodeId;
+  state.activeEpisodeRatingContext = episodeRatingContext;
   elements.ratingDialog?.classList.add("rating-dialog--episode");
   const eyebrow = elements.ratingDialog?.querySelector(".rating-dialog__eyebrow");
   if (eyebrow) eyebrow.textContent = "Episodevurdering";
@@ -8184,6 +8278,7 @@ function closeRatingDialog() {
 
   state.activeRatingKey = null;
   state.activeEpisodeRatingId = null;
+  state.activeEpisodeRatingContext = null;
   updateRatingDialogMessage("");
   elements.ratingDialog.classList.add("is-hidden");
   elements.ratingDialog.setAttribute("aria-hidden", "true");
@@ -8220,8 +8315,8 @@ function completePendingAuthAction() {
   }
 
   if (pending.type === "episodeRating") {
-    const episode = getGenstartEpisodeById(pending.episodeId);
-    if (episode) openEpisodeRatingDialog(episode);
+    const episode = pending.episodeRatingContext?.episode || getGenstartEpisodeById(pending.episodeId);
+    if (episode) openEpisodeRatingDialog(episode, pending.episodeRatingContext || null);
     return;
   }
 
@@ -8295,7 +8390,8 @@ async function finalizeSavedEpisodeRating({
   episodeId,
   podcastKey,
   rating,
-  previousEffectiveParentRating
+  previousEffectiveParentRating,
+  episodeRatingContext
 }) {
   try {
     await refreshSingleEpisodeStat(episodeId);
@@ -8305,12 +8401,14 @@ async function finalizeSavedEpisodeRating({
     console.error("Kunne ikke opdatere episodens ratingstatistik efter gemning.", error);
   }
 
-  try {
-    await synchronizeEpisodeDerivedParentRating(podcastKey, previousEffectiveParentRating, {
-      refreshUi: false
-    });
-  } catch (error) {
-    console.error("Kunne ikke synkronisere podcastens afledte vurdering.", error);
+  if (episodeRatingContext?.canSyncParent !== false) {
+    try {
+      await synchronizeEpisodeDerivedParentRating(podcastKey, previousEffectiveParentRating, {
+        refreshUi: false
+      });
+    } catch (error) {
+      console.error("Kunne ikke synkronisere podcastens afledte vurdering.", error);
+    }
   }
 
   updateProfileEpisodeRatingAfterSave(episodeId, rating);
@@ -8328,8 +8426,13 @@ async function saveActiveEpisodeRating() {
   }
 
   const requestedEpisodeId = state.activeEpisodeRatingId;
-  const episode = getGenstartEpisodeById(requestedEpisodeId);
-  const podcastKey = normalizeText(episode?._displayGroupEpisodeStateKey) || normalizeText(episode?.podcast_key) || getEpisodePodcastKey(state.activePodcastDetailKey);
+  const episodeRatingContext = state.activeEpisodeRatingContext || getEpisodeRatingContext(getGenstartEpisodeById(requestedEpisodeId));
+  const episode = episodeRatingContext?.episode || getGenstartEpisodeById(requestedEpisodeId);
+  const podcastKey = normalizeText(episodeRatingContext?.podcastKey) || normalizeText(episode?._displayGroupEpisodeStateKey) || normalizeText(episode?.podcast_key) || getEpisodePodcastKey(state.activePodcastDetailKey);
+  if (!episodeRatingContext || episodeRatingContext.episodeId !== requestedEpisodeId) {
+    updateRatingDialogMessage("Sæsonen for denne episode kunne ikke bekræftes. Vurderingen blev ikke gemt.", "error");
+    return;
+  }
   const manualMappingResolved =
     episode?.dataSource !== "manual" ||
     (await ensureManualCatalogueEpisodeMapping(episode));
@@ -8339,8 +8442,8 @@ async function saveActiveEpisodeRating() {
   const episodeState = getPodcastEpisodeState(podcastKey);
   const previousUserRating = episodeState.userRatingsById[episodeId];
   const previousEpisodeSummary = getPodcastEpisodeUserRatingSummary(podcastKey);
-  const previousEffectiveParentRating =
-    state.userRatingsByKey[resolveCanonicalPodcastId(podcastKey)] ?? null;
+  const parentRatingKey = getEpisodeParentRatingKey(podcastKey);
+  const previousEffectiveParentRating = state.userRatingsByKey[parentRatingKey] ?? null;
   const originalSaveLabel = elements.ratingSaveButton?.textContent || "Gem vurdering";
 
   setAuthBusy(true);
@@ -8363,11 +8466,13 @@ async function saveActiveEpisodeRating() {
       if (!saveLocalEpisodeRating(podcastKey, episodeId, numericValue)) {
         throw new Error("Kunne ikke gemme episodevurderingen lokalt.");
       }
-      await synchronizeEpisodeDerivedParentRating(
-        podcastKey,
-        previousEffectiveParentRating,
-        { local: true }
-      );
+      if (episodeRatingContext.canSyncParent) {
+        await synchronizeEpisodeDerivedParentRating(
+          podcastKey,
+          previousEffectiveParentRating,
+          { local: true }
+        );
+      }
       closeRatingDialog();
       updatePodcastEpisodeOverview(document.getElementById("podcastDetailSheet"));
       refreshOpenPodcastDetailSheet();
@@ -8401,7 +8506,8 @@ async function saveActiveEpisodeRating() {
       episodeId,
       podcastKey,
       rating: numericValue,
-      previousEffectiveParentRating
+      previousEffectiveParentRating,
+      episodeRatingContext
     });
   } catch (error) {
     if (config?.persistence === "local") {
@@ -8505,8 +8611,13 @@ async function deleteActiveEpisodeRating() {
   if (!state.authUser || !state.activeEpisodeRatingId) return;
 
   const requestedEpisodeId = state.activeEpisodeRatingId;
-  const episode = getGenstartEpisodeById(requestedEpisodeId);
-  const podcastKey = normalizeText(episode?._displayGroupEpisodeStateKey) || normalizeText(episode?.podcast_key) || getEpisodePodcastKey(state.activePodcastDetailKey);
+  const episodeRatingContext = state.activeEpisodeRatingContext || getEpisodeRatingContext(getGenstartEpisodeById(requestedEpisodeId));
+  const episode = episodeRatingContext?.episode || getGenstartEpisodeById(requestedEpisodeId);
+  const podcastKey = normalizeText(episodeRatingContext?.podcastKey) || normalizeText(episode?._displayGroupEpisodeStateKey) || normalizeText(episode?.podcast_key) || getEpisodePodcastKey(state.activePodcastDetailKey);
+  if (!episodeRatingContext || episodeRatingContext.episodeId !== requestedEpisodeId) {
+    updateRatingDialogMessage("Sæsonen for denne episode kunne ikke bekræftes. Vurderingen blev ikke ændret.", "error");
+    return;
+  }
   const manualMappingResolved =
     episode?.dataSource !== "manual" ||
     (await ensureManualCatalogueEpisodeMapping(episode));
@@ -8514,8 +8625,8 @@ async function deleteActiveEpisodeRating() {
   const config = getEpisodeRatingPersistenceConfig(podcastKey, episode);
   const episodeState = getPodcastEpisodeState(podcastKey);
   const previousUserRating = episodeState.userRatingsById[episodeId];
-  const previousEffectiveParentRating =
-    state.userRatingsByKey[resolveCanonicalPodcastId(podcastKey)] ?? null;
+  const parentRatingKey = getEpisodeParentRatingKey(podcastKey);
+  const previousEffectiveParentRating = state.userRatingsByKey[parentRatingKey] ?? null;
 
   setAuthBusy(true);
   updateRatingDialogMessage("");
@@ -8532,11 +8643,13 @@ async function deleteActiveEpisodeRating() {
       closeRatingDialog();
       updatePodcastEpisodeOverviewRatingRow(episodeId);
       updateOpenEpisodeDetailScores();
-      await synchronizeEpisodeDerivedParentRating(
-        podcastKey,
-        previousEffectiveParentRating,
-        { local: true }
-      );
+      if (episodeRatingContext.canSyncParent) {
+        await synchronizeEpisodeDerivedParentRating(
+          podcastKey,
+          previousEffectiveParentRating,
+          { local: true }
+        );
+      }
       updatePodcastEpisodeOverview(document.getElementById("podcastDetailSheet"));
       refreshOpenPodcastDetailSheet();
       setAuthMessage("Din episodevurdering er fjernet.", "success");
@@ -8560,10 +8673,12 @@ async function deleteActiveEpisodeRating() {
     closeRatingDialog();
     updatePodcastEpisodeOverviewRatingRow(episodeId);
     updateOpenEpisodeDetailScores();
-    await synchronizeEpisodeDerivedParentRating(
-      podcastKey,
-      previousEffectiveParentRating
-    );
+    if (episodeRatingContext.canSyncParent) {
+      await synchronizeEpisodeDerivedParentRating(
+        podcastKey,
+        previousEffectiveParentRating
+      );
+    }
     await refreshSingleEpisodeStat(episodeId);
     updateGenstartEpisodeSection();
     updateOpenEpisodeDetailScores();
@@ -10851,6 +10966,10 @@ function createEmptyPodcastEpisodeState() {
     workspaceVisibleCount: EPISODE_WORKSPACE_PAGE_SIZE,
     statsById: {},
     userRatingsById: {},
+    parentUserRatingsById: {},
+    parentEpisodesById: {},
+    parentUserRatingsResolvedFor: "",
+    parentUserRatingsLoading: false,
     statsLoadingIds: new Set(),
     userRatingLoadingIds: new Set()
   };
@@ -10990,10 +11109,25 @@ function getPodcastEpisodeUserRatingSummary(podcastOrKey) {
     state.authUser && episodeState.parentUserRatingsResolvedFor === state.authUser.id
       ? episodeState.parentUserRatingsById
       : episodeState.userRatingsById;
+  const episodesById = new Map([
+    ...(episodeState.items || []),
+    ...(episodeState.searchResults || []),
+    ...Object.values(state.profileEpisodeRatings?.episodeMetaById || {}),
+    ...Object.values(episodeState.parentEpisodesById || {})
+  ].map((episode) => [getEpisodeKey(episode), episode]));
   const ratings = Object.entries(ratingsById)
-    .filter(([id]) => !config?.episodeSources?.length ||
-      (!getGenstartEpisodeById(id) && ratingsById === episodeState.parentUserRatingsById) ||
-      episodeMatchesPodcastSourceBoundary(getGenstartEpisodeById(id), config))
+    .filter(([id]) => {
+      const episode = episodesById.get(id);
+      if (config?.seasonNumber) {
+        return Boolean(episode) &&
+          getAppleSeasonEpisodeNumber(episode)?.season === Number(config.seasonNumber) &&
+          episodeMatchesPodcastSourceBoundary(episode, config);
+      }
+      const resolvedEpisode = episode || getGenstartEpisodeById(id);
+      return !config?.episodeSources?.length ||
+        (!resolvedEpisode && ratingsById === episodeState.parentUserRatingsById) ||
+        episodeMatchesPodcastSourceBoundary(resolvedEpisode, config);
+    })
     .map(([, value]) => parseNumber(value))
     .filter((value) => value !== null);
   const count = ratings.length;
@@ -11029,15 +11163,19 @@ async function fetchPodcastEpisodeParentRatings(podcastOrKey) {
     if (!isCurrentUserScopedRequest(request)) return;
 
     const ratingsById = {};
+    const parentEpisodesById = {};
     (data || []).forEach((item) => {
       const episodeId = normalizeText(item.episode_id);
       const rating = parseNumber(item.rating);
       if (!episodeId || rating === null) return;
-      if (config.seasonNumber && getAppleSeasonEpisodeNumber(item.podcast_episodes)?.season !== config.seasonNumber) return;
+      const parentEpisode = item.podcast_episodes;
+      if (config.seasonNumber && getAppleSeasonEpisodeNumber(parentEpisode)?.season !== Number(config.seasonNumber)) return;
       ratingsById[episodeId] = rating;
       episodeState.userRatingsById[episodeId] = rating;
+      parentEpisodesById[episodeId] = { ...parentEpisode, id: episodeId, podcast_key: config.databasePodcastKey, _displayGroupEpisodeStateKey: config.stateKey };
     });
     episodeState.parentUserRatingsById = ratingsById;
+    episodeState.parentEpisodesById = parentEpisodesById;
     episodeState.parentUserRatingsResolvedFor = request.userId;
   } catch (error) {
     if (isCurrentUserScopedRequest(request)) console.error(error);
@@ -11319,7 +11457,7 @@ async function fetchEpisodeRatingMetaForEpisodes(episodes, { force = false, upda
   (episodes || []).forEach((episode) => {
     const id = getEpisodeKey(episode);
     if (!id) return;
-    const podcastKey = normalizeText(episode?.podcast_key) || state.activePodcastDetailKey || "";
+    const podcastKey = normalizeText(episode?._displayGroupEpisodeStateKey) || normalizeText(episode?.podcast_key) || state.activePodcastDetailKey || "";
     if (!groups.has(podcastKey)) groups.set(podcastKey, []);
     groups.get(podcastKey).push(id);
   });
@@ -11344,9 +11482,15 @@ function getAllCachedEpisodes() {
   );
 }
 
-function getGenstartEpisodeById(id) {
+function getGenstartEpisodeById(id, preferredPodcastOrKey = state.activePodcastDetailKey) {
   const target = normalizeText(id);
   if (!target) return null;
+  if (preferredPodcastOrKey) {
+    const episodeState = getPodcastEpisodeState(preferredPodcastOrKey);
+    const preferredEpisode = mergeEpisodes(episodeState.items, episodeState.searchResults)
+      .find((episode) => getEpisodeKey(episode) === target);
+    if (preferredEpisode) return preferredEpisode;
+  }
   return (
     getAllCachedEpisodes().find((episode) => getEpisodeKey(episode) === target) ||
     state.profileEpisodeRatings.episodeMetaById[target] ||
@@ -11420,7 +11564,7 @@ async function fetchProfileEpisodeRatings({ append = false } = {}) {
     if (ids.length) {
       const { data: episodes, error: episodeError } = await state.supabase
         .from("podcast_episodes")
-        .select("id,podcast_key,title,description,published_at,duration_seconds,episode_url,audio_url,image_url,is_active,source")
+        .select("id,podcast_key,title,description,published_at,duration_seconds,episode_url,audio_url,image_url,is_active,metadata,source")
         .in("id", ids);
 
       if (episodeError) throw episodeError;
@@ -11431,8 +11575,9 @@ async function fetchProfileEpisodeRatings({ append = false } = {}) {
         if (id) {
           episodeRatings.episodeMetaById[id] = episode;
           const rating = rows.find((item) => normalizeText(item.episode_id) === id);
-          if (rating && episodeMatchesPodcastSourceBoundary(episode, getEpisodePodcastConfig(episode.podcast_key))) {
-            getPodcastEpisodeState(episode.podcast_key).userRatingsById[id] = parseNumber(rating.rating);
+          const episodeConfig = getEpisodePodcastConfig(episode);
+          if (rating && episodeMatchesPodcastSourceBoundary(episode, episodeConfig)) {
+            getPodcastEpisodeState(episode).userRatingsById[id] = parseNumber(rating.rating);
           }
         }
       });
@@ -11649,7 +11794,8 @@ function updateProfileEpisodeRatingAfterSave(episodeId, rating) {
 }
 
 function openProfileEpisodeDetail(episodeId, triggerElement = null) {
-  const episode = getGenstartEpisodeById(episodeId);
+  const normalizedEpisodeId = normalizeText(episodeId);
+  const episode = state.profileEpisodeRatings.episodeMetaById[normalizedEpisodeId] || getGenstartEpisodeById(normalizedEpisodeId);
   const podcastKey = normalizeText(episode?.podcast_key) || getDefaultEpisodePodcastKey();
   const podcast = state.podcastByKey[podcastKey] || {
     key: podcastKey,
@@ -11776,7 +11922,7 @@ async function fetchGenstartEpisodes({ append = false } = {}) {
     if (error) throw error;
 
     const fetchedRows = data || [];
-    const rows = getRateablePodcastEpisodes(fetchedRows).map((episode) => config.stateKey
+    const rows = getRateablePodcastEpisodes(filterEpisodesToConfigSeason(fetchedRows, config)).map((episode) => config.stateKey
       ? { ...episode, _displayGroupEpisodeStateKey: config.stateKey }
       : episode);
     const manualEpisodes = getConfiguredManualEpisodes(config);
@@ -11786,8 +11932,8 @@ async function fetchGenstartEpisodes({ append = false } = {}) {
       : mergeEpisodes(rows, manualEpisodes);
     episodeState.items = mergedItems;
     episodeState.remoteLoadedCount = append
-      ? episodeState.remoteLoadedCount + rows.length
-      : rows.length;
+      ? episodeState.remoteLoadedCount + fetchedRows.length
+      : fetchedRows.length;
     const uniqueManualEpisodeCount = append
       ? manualEpisodes.length
       : Math.max(0, mergedItems.length - rows.length);
@@ -11832,25 +11978,28 @@ async function searchGenstartEpisodes(term, token, { append = false } = {}) {
       .select("id,podcast_key,title,description,published_at,duration_seconds,episode_url,audio_url,image_url,external_guid,is_active,metadata,source", { count: "exact" })
       .eq("podcast_key", getEpisodeDatabasePodcastKey(config))
       .eq("is_active", true);
+    const pageSize = Number(config.pageSize || EPISODE_PAGE_SIZE);
     const { data, error, count } = await orderPodcastEpisodes(applyPodcastEpisodeSourceBoundary(query, config)
       .or(`title.ilike.${pattern},description.ilike.${pattern}`), config)
-      .range(offset, offset + EPISODE_PAGE_SIZE - 1);
+      .range(offset, offset + pageSize - 1);
 
     if (token !== episodeState.searchToken) return;
     if (error) throw error;
 
     const fetchedRows = data || [];
-    const rows = getRateablePodcastEpisodes(fetchedRows);
+    const rows = getRateablePodcastEpisodes(filterEpisodesToConfigSeason(fetchedRows, config)).map((episode) => config.stateKey
+      ? { ...episode, _displayGroupEpisodeStateKey: config.stateKey }
+      : episode);
     const manualEpisodes = getConfiguredManualEpisodes(config, cleanTerm);
     episodeState.searchResults = append
       ? mergeEpisodes(episodeState.searchResults, rows)
       : mergeEpisodes(rows, manualEpisodes);
     episodeState.searchRemoteLoadedCount = append
-      ? episodeState.searchRemoteLoadedCount + rows.length
-      : rows.length;
+      ? episodeState.searchRemoteLoadedCount + fetchedRows.length
+      : fetchedRows.length;
     episodeState.searchResolved = true;
     episodeState.searchTotalCount = Number.isFinite(count) ? count + manualEpisodes.length : null;
-    episodeState.searchHasMore = fetchedRows.length === EPISODE_PAGE_SIZE && (
+    episodeState.searchHasMore = fetchedRows.length === pageSize && (
       episodeState.searchTotalCount === null || offset + fetchedRows.length < episodeState.searchTotalCount
     );
     fetchEpisodeRatingMetaForEpisodes(rows).catch(console.error);
@@ -12096,6 +12245,13 @@ function getAppleSeasonEpisodeNumber(episode) {
   const appleSeason = Number(metadata.apple_season_number);
   if (seasonless && Number.isInteger(appleSeason) && appleSeason > 0) return { season: appleSeason, episode: Number(seasonless[1]) };
   return null;
+}
+
+function filterEpisodesToConfigSeason(episodes, config) {
+  if (!config?.seasonNumber) return episodes || [];
+  return (episodes || []).filter((episode) =>
+    getAppleSeasonEpisodeNumber(episode)?.season === Number(config.seasonNumber)
+  );
 }
 
 function getEpisodeWorkspaceSummary(podcast) {
@@ -12432,7 +12588,7 @@ function bindPodcastEpisodeOverviewEvents(dialog, podcast) {
       const episodeId = button.dataset.episodeOverviewRatingId;
       const target = normalizeText(episodeId);
       const episode =
-        getGenstartEpisodeById(episodeId) ||
+        getGenstartEpisodeById(episodeId, podcast) ||
         getPodcastManualEpisodes(podcast).find((item) => getEpisodeKey(item) === target);
 
       if (episode) openEpisodeRatingDialog(episode);
@@ -12575,7 +12731,7 @@ function bindGenstartEpisodeSectionEvents(dialog, podcast) {
     button.addEventListener("click", (event) => {
       event.preventDefault();
       event.stopPropagation();
-      const episode = getGenstartEpisodeById(button.dataset.genstartEpisodeId);
+      const episode = getGenstartEpisodeById(button.dataset.genstartEpisodeId, podcast);
       if (!episode) return;
       const content = dialog.querySelector("[data-podcast-detail-content]");
       state.podcastDetailEpisodeScrollTop = content?.scrollTop || 0;
@@ -12585,7 +12741,7 @@ function bindGenstartEpisodeSectionEvents(dialog, podcast) {
   });
 
   section.querySelectorAll("[data-genstart-episode-cover]").forEach((cover) => {
-    const episode = getGenstartEpisodeById(cover.dataset.genstartEpisodeCover);
+    const episode = getGenstartEpisodeById(cover.dataset.genstartEpisodeCover, podcast);
     if (!episode) return;
     setImageWithFallbackSource(cover, episode.image_url, getPodcastImageSources(podcast), episode.title || podcast.title);
   });
@@ -16468,6 +16624,7 @@ function clearUserScopedState({ clearUi = false } = {}) {
   Object.values(state.podcastEpisodesByKey).forEach((episodeState) => {
     episodeState.userRatingsById = {};
     episodeState.parentUserRatingsById = {};
+    episodeState.parentEpisodesById = {};
     episodeState.parentUserRatingsResolvedFor = "";
     episodeState.parentUserRatingsLoading = false;
     episodeState.userRatingLoadingIds = new Set();
@@ -16497,6 +16654,7 @@ function clearUserScopedState({ clearUi = false } = {}) {
   if (clearUi) {
     state.activeRatingKey = null;
     state.activeEpisodeRatingId = null;
+    state.activeEpisodeRatingContext = null;
     state.ratingDialogMode = "podcast";
     state.exploreSuggestionDialogOpen = false;
   }
