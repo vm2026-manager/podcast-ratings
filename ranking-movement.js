@@ -4,6 +4,16 @@
     return Number.isFinite(number) ? Number(number.toFixed(1)) : null;
   }
 
+  function numericScore(value) {
+    if (value === null || value === undefined || (typeof value === "string" && value.trim() === "")) return null;
+    const number = Number(value);
+    return Number.isFinite(number) ? number : null;
+  }
+
+  function compareKeys(a, b) {
+    return a < b ? -1 : a > b ? 1 : 0;
+  }
+
   function normalizeKey(value, resolveCanonicalKey) {
     const key = String(value || "").trim();
     if (!key) return "";
@@ -11,18 +21,14 @@
     return resolveCanonicalKey(key) || key;
   }
 
-  function rankCompetition(entries, keyOf, scoreOf) {
+  function rankSequential(entries, keyOf, scoreOf) {
     const ranked = entries
-      .map((entry) => ({ entry, key: keyOf(entry), score: displayScore(scoreOf(entry)) }))
+      .map((entry) => ({ key: keyOf(entry), score: numericScore(scoreOf(entry)) }))
       .filter((item) => item.key && item.score !== null)
-      .sort((a, b) => b.score - a.score || a.key.localeCompare(b.key));
+      .sort((a, b) => b.score - a.score || compareKeys(a.key, b.key));
     const positions = new Map();
-    let previousScore = null;
-    let currentPosition = 0;
     ranked.forEach((item, index) => {
-      if (item.score !== previousScore) currentPosition = index + 1;
-      previousScore = item.score;
-      positions.set(item.key, currentPosition);
+      positions.set(item.key, index + 1);
     });
     return positions;
   }
@@ -35,7 +41,7 @@
     const duplicateCurrentKeys = new Set();
     currentEntries.forEach((entry) => {
       const key = normalizeKey(keyOf(entry), resolveCanonicalKey);
-      const score = displayScore(scoreOf(entry));
+      const score = numericScore(scoreOf(entry));
       if (!key || score === null) return;
       if (currentByKey.has(key)) duplicateCurrentKeys.add(key);
       else currentByKey.set(key, { key, score });
@@ -46,7 +52,7 @@
     const ambiguous = new Set();
     historicalRows.forEach((row) => {
       const key = normalizeKey(row.podcast_key, resolveCanonicalKey);
-      const score = displayScore(row.average_rating);
+      const score = numericScore(row.average_rating);
       if (!key || score === null || Number(row.rating_count) <= 0) return;
       if (historicalByKey.has(key)) {
         const existing = historicalByKey.get(key);
@@ -60,8 +66,8 @@
     const cohort = [...currentByKey.keys()]
       .filter((key) => historicalByKey.has(key))
       .map((key) => ({ key, current: currentByKey.get(key).score, previous: historicalByKey.get(key).score }));
-    const currentRanks = rankCompetition(cohort, (item) => item.key, (item) => item.current);
-    const historicalRanks = rankCompetition(cohort, (item) => item.key, (item) => item.previous);
+    const currentRanks = rankSequential(cohort, (item) => item.key, (item) => item.current);
+    const historicalRanks = rankSequential(cohort, (item) => item.key, (item) => item.previous);
     const movements = new Map();
     cohort.forEach((item) => {
       movements.set(item.key, historicalRanks.get(item.key) - currentRanks.get(item.key));
@@ -91,5 +97,5 @@
     );
   }
 
-  root.PodcastRankingMovement = Object.freeze({ displayScore, rankCompetition, movementMap, compareSnapshotsToCurrent, isEligible });
+  root.PodcastRankingMovement = Object.freeze({ displayScore, rankSequential, movementMap, compareSnapshotsToCurrent, isEligible });
 })(typeof window !== "undefined" ? window : globalThis);
