@@ -1,6 +1,15 @@
 (function attachRankingMovement(root) {
   const INITIAL_SNAPSHOT_DATE = "2026-10-20";
   const SEVEN_DAY_SWITCH_AT = Date.parse("2026-10-27T03:17:00Z");
+  const NEW_LISTING_SUPPRESSION_DAYS = 7;
+
+  function isWithinNewListingWindow(firstListedAt, now = new Date(), knownNewListing = false) {
+    if (!firstListedAt) return Boolean(knownNewListing);
+    const listedAt = firstListedAt instanceof Date ? firstListedAt.getTime() : Date.parse(firstListedAt);
+    const timestamp = now instanceof Date ? now.getTime() : Date.parse(now);
+    if (!Number.isFinite(listedAt) || !Number.isFinite(timestamp) || listedAt > timestamp) return Boolean(knownNewListing);
+    return timestamp - listedAt < NEW_LISTING_SUPPRESSION_DAYS * 24 * 60 * 60 * 1000;
+  }
 
   function getSnapshotBaseline(now = new Date()) {
     const timestamp = now instanceof Date ? now.getTime() : Date.parse(now);
@@ -72,13 +81,20 @@
     const scoreOf = options.scoreOf || ((entry) => entry.averageRating);
     const resolveCanonicalKey = options.resolveCanonicalKey || ((key) => key);
     const currentByKey = new Map();
+    const currentFirstListedAtByKey = new Map();
     const duplicateCurrentKeys = new Set();
     currentEntries.forEach((entry) => {
       const key = normalizeKey(keyOf(entry), resolveCanonicalKey);
       const score = numericScore(scoreOf(entry));
       if (!key || score === null) return;
       if (currentByKey.has(key)) duplicateCurrentKeys.add(key);
-      else currentByKey.set(key, { key, score });
+      else {
+        currentByKey.set(key, { key, score });
+        currentFirstListedAtByKey.set(key, {
+          firstListedAt: entry.firstListedAt || null,
+          knownNewListing: entry.knownNewListing === true
+        });
+      }
     });
     duplicateCurrentKeys.forEach((key) => currentByKey.delete(key));
 
@@ -97,8 +113,13 @@
     });
     ambiguous.forEach((key) => historicalByKey.delete(key));
 
+    const now = options.now || new Date();
     const cohort = [...currentByKey.keys()]
       .filter((key) => historicalByKey.has(key))
+      .filter((key) => {
+        const listing = currentFirstListedAtByKey.get(key) || {};
+        return !isWithinNewListingWindow(listing.firstListedAt, now, listing.knownNewListing);
+      })
       .map((key) => ({ key, current: currentByKey.get(key).score, previous: historicalByKey.get(key).score }));
     const currentRanks = rankSequential(cohort, (item) => item.key, (item) => item.current);
     const historicalRanks = rankSequential(cohort, (item) => item.key, (item) => item.previous);
@@ -133,6 +154,7 @@
 
   root.PodcastRankingMovement = Object.freeze({
     displayScore,
+    isWithinNewListingWindow,
     getSnapshotBaseline,
     hasCompleteSnapshot,
     rankSequential,
