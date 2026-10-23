@@ -30,6 +30,16 @@ function hash(value) {
   return h.toString(16).padStart(8, "0");
 }
 
+function numberedSeriesTitle(title) {
+  const match = String(title || "").trim().match(/^(.{2,90}?)\s+([1-9]\d*)\s*:\s*([1-9]\d*)\s+-\s+(.{2,})$/u);
+  if (!match) return null;
+  const ordinal = Number(match[2]);
+  const total = Number(match[3]);
+  // DR's numbered mini-series use a bounded, one-based N:M episode prefix.
+  if (!Number.isSafeInteger(ordinal) || !Number.isSafeInteger(total) || ordinal > total || total > 30) return null;
+  return { title: match[1].trim(), ordinal, total };
+}
+
 function verifiedFullEpisode(episode, show, baselineMs, nowMs) {
   const title = String(episode.title || "").trim();
   const date = Date.parse(episode.published_at || "");
@@ -38,13 +48,14 @@ function verifiedFullEpisode(episode, show, baselineMs, nowMs) {
       !episode.is_active || !Number.isInteger(episode.duration_seconds) ||
       episode.duration_seconds < 600 || episode.duration_seconds > 10800 ||
       !/^\d+$/.test(String(episode.metadata?.dr_lyd_production_number || ""))) return false;
-  // Numbered series remain handled by the existing, stricter series discovery.
-  if (/\b\d+\s*:\s*\d+\b/u.test(title)) return false;
   if (/^(?:teaser|trailer|bonus|arkiv|hør flere afsnit|repris)\b/iu.test(title)) return false;
   let url;
   try { url = new URL(episode.episode_url); } catch { return false; }
+  const episodePath = url.pathname.startsWith(show.path)
+    ? url.pathname.slice(show.path.length).replace(/^\/+|\/+$/gu, "")
+    : "";
   return url.protocol === "https:" && url.hostname === "www.dr.dk" &&
-    url.pathname.startsWith(show.path) && !url.search && !url.hash;
+    Boolean(episodePath) && !url.search && !url.hash;
 }
 
 export function discoverVerifiedFullStandalone({
@@ -86,11 +97,22 @@ export function discoverVerifiedFullStandalone({
   const normalize = show.normalize;
   const titleCounts = new Map();
   const numberedParents = new Set();
+  const numberedTotals = new Map();
+  const numberedTotalConflicts = new Set();
+  const malformedNumberedParents = new Set();
   for (const episode of mapped.episodes) {
     const key = normalize(episode.title);
     titleCounts.set(key, (titleCounts.get(key) || 0) + 1);
-    const numbered = episode.title.match(/^(.+?)\s+\d+\s*:\s*\d+\b/iu);
-    if (numbered) numberedParents.add(normalize(numbered[1]));
+    const numbered = numberedSeriesTitle(episode.title);
+    const numberedPrefix = episode.title.match(/^(.+?)\s+\d+\s*:\s*\d+\b/u);
+    if (numberedPrefix) malformedNumberedParents.add(normalize(numberedPrefix[1]));
+    if (numbered) {
+      const parentKey = normalize(numbered.title);
+      numberedParents.add(parentKey);
+      const previousTotal = numberedTotals.get(parentKey);
+      if (previousTotal !== undefined && previousTotal !== numbered.total) numberedTotalConflicts.add(parentKey);
+      numberedTotals.set(parentKey, numbered.total);
+    }
   }
   const titles = new Map();
   const ids = new Set();
@@ -102,26 +124,36 @@ export function discoverVerifiedFullStandalone({
   }
   const protectedAliases = new Set(Object.entries(aliases).flatMap(([key, value]) =>
     [normalize(key), normalize(value)]).filter(Boolean));
-  const processed = new Set(registry.processed_full_guids || []);
+  const processed = new Set(registry.processed_full_production_numbers || []);
+  const processedGuids = new Set(registry.processed_full_guids || []);
   const next = structuredClone(registry);
   const report = { created: [], collisions: [], unsafe: [], already_registered: [], eligible_checked: 0 };
   for (const episode of mapped.episodes) {
-    if (!unmatched.has(episode.external_guid) ||
-        !verifiedFullEpisode(episode, show, baselineMs, nowMs) ||
-        processed.has(episode.external_guid)) continue;
+    if (!unmatched.has(episode.external_guid) || !verifiedFullEpisode(episode, show, baselineMs, nowMs)) continue;
+    const productionNumber = String(episode.metadata?.dr_lyd_production_number || "");
+    if (processed.has(productionNumber) || processedGuids.has(episode.external_guid)) continue;
     report.eligible_checked++;
-    const key = normalize(episode.title);
+    const numbered = numberedSeriesTitle(episode.title);
+    const hasNumberedPrefix = /^.+?\s+\d+\s*:\s*\d+\b/u.test(episode.title);
+    const childTitle = numbered?.title || episode.title;
+    const key = normalize(childTitle);
     const matches = titles.get(key) || [];
-    if (!key || titleCounts.get(key) !== 1 || numberedParents.has(key) || protectedAliases.has(key)) {
+    if (!key || (hasNumberedPrefix && !numbered) ||
+        (numbered && ((titleCounts.get(key) || 0) > 0 || numberedTotalConflicts.has(key))) ||
+        (!numbered && titleCounts.get(key) !== 1) || (!numbered && (numberedParents.has(key) || malformedNumberedParents.has(key))) || protectedAliases.has(key)) {
       report.unsafe.push({ title: episode.title, guid: episode.external_guid, reason: "non-unique, related numbered season or protected alias" });
       continue;
     }
     if (matches.length) {
       if (matches.some((row) => normalize(row.Hovedserie) !== normalize(show.parent)) ||
           new Set(matches.map((row) => row["Podcast-ID"])).size > 1) {
-        report.collisions.push({ title: episode.title, guid: episode.external_guid, reason: "cross-catalogue title collision" });
+        report.collisions.push({ title: childTitle, guid: episode.external_guid, reason: "cross-catalogue title collision" });
       } else {
-        report.already_registered.push({ title: episode.title, guid: episode.external_guid });
+        report.already_registered.push({ title: childTitle, guid: episode.external_guid });
+        next.processed_full_production_numbers ||= [];
+        if (!next.processed_full_production_numbers.includes(productionNumber)) next.processed_full_production_numbers.push(productionNumber);
+        next.processed_full_guids ||= [];
+        if (!next.processed_full_guids.includes(episode.external_guid)) next.processed_full_guids.push(episode.external_guid);
       }
       continue;
     }
@@ -131,17 +163,19 @@ export function discoverVerifiedFullStandalone({
       continue;
     }
     const record = {
-      discovery_key: key, podcast_id: podcastId, title: episode.title,
+      discovery_key: key, podcast_id: podcastId, title: childTitle,
       hovedserie: show.parent, publisher: "DR", cover: show.cover,
-      description: episode.title + " er et afsnit af DR-podcasten " + show.parent + "."
+      description: childTitle + " er et afsnit af DR-podcasten " + show.parent + "."
     };
     next.records.push(record);
+    next.processed_full_production_numbers ||= [];
+    next.processed_full_production_numbers.push(productionNumber);
     next.processed_full_guids ||= [];
     next.processed_full_guids.push(episode.external_guid);
     ids.add(podcastId);
     titles.set(key, [{ Titel: record.title, "Podcast-ID": podcastId, Hovedserie: show.parent }]);
-    processed.add(episode.external_guid);
-    report.created.push({ ...record, episode_guid: episode.external_guid, episode_url: episode.episode_url });
+    processed.add(productionNumber);
+    report.created.push({ ...record, episode_guid: episode.external_guid, production_number: productionNumber, episode_url: episode.episode_url });
   }
   return { registry: next, report, fetched: mapped.fetched_count };
 }
