@@ -60,6 +60,24 @@ for (const [title, podcastKey] of [
 ]) {
   assert.equal(routeEpisodes([{ ...candidate, title }], activeConfig).episodes[0]?.podcast_key, podcastKey, title);
 }
+for (const route of activeConfig.routes.filter((entry) => entry.podcast_key && entry.title)) {
+  const titlePrefix = route.title.prefixes?.[0] || route.title.startsWith?.[0] || route.title.words?.[0];
+  if (!titlePrefix) continue;
+  const title = `${titlePrefix}${titlePrefix.endsWith(" ") ? "" : ": "}test`;
+  assert.equal(routeEpisodes([{ ...candidate, title }], activeConfig).episodes[0]?.podcast_key, route.podcast_key, route.key);
+}
+
+const descriptionFirstConfig = {
+  ...activeConfig,
+  routes: [
+    { key: "verified_description_series", podcast_key: "verified description series", description: { aliases: ["Verified series evidence"] } },
+    ...activeConfig.routes
+  ]
+};
+assert.equal(
+  routeEpisodes([{ ...candidate, description: "Verified series evidence in the public description" }], descriptionFirstConfig).episodes[0]?.podcast_key,
+  "verified description series"
+);
 
 const noCategory = { ...candidate, metadata: { ...candidate.metadata, rss_categories: ["Podcast"] } };
 assert.equal(routeEpisodes([noCategory], activeConfig).episodes.length, 0);
