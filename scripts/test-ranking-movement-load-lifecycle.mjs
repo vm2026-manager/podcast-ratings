@@ -127,7 +127,7 @@ assert.equal(renders, 1);
 const movementMarkup = new Function(
   "state", "isRankingMovementEligible", "getRankingMovementKey", "getRankingMovementId", "escapeHtml",
   `${getRankingMovementMarkup}; return getRankingMovementMarkup;`
-)(state, () => true, () => "podcast-a", () => "movement-podcast-a", (value) => value);
+)(state, () => true, (podcast) => podcast?.id || "podcast-a", () => "movement-podcast-a", (value) => value);
 const upMarkup = movementMarkup({});
 assert.match(upMarkup, /Steget 1 placering siden 20\. oktober/);
 assert.match(upMarkup, /title="Steget 1 placering siden 20\. oktober"/);
@@ -135,21 +135,31 @@ state.rankingMovementByKey.set("podcast-a", -11);
 assert.match(movementMarkup({}), /Faldet 11 placeringer siden 20\. oktober/);
 state.rankingMovementByKey.set("podcast-a", 0);
 const steadyMarkup = movementMarkup({});
-assert.equal(steadyMarkup, "", "unchanged positions have no dash or movement marker");
+assert.match(steadyMarkup, /ranking-movement--steady/);
+assert.match(steadyMarkup, />–</, "verified zero movement displays a neutral en dash");
+assert.match(steadyMarkup, /aria-label="Uændret placering siden 20\. oktober"/);
+state.rankingMovementPeriodLabel = "de seneste 7 dage";
+assert.match(movementMarkup({}), /aria-label="Uændret placering de seneste 7 dage"/, "verified zero movement follows the active seven-day baseline wording");
+state.rankingMovementPeriodLabel = "siden 20. oktober";
 const movementId = new Function(
   "state", "isRankingMovementEligible", "getRankingMovementKey",
   `${getRankingMovementId}; return getRankingMovementId;`
-)(state, () => true, () => "podcast-a");
-assert.equal(movementId({}), "", "unchanged positions do not create dangling aria-describedby IDs");
+)(state, () => true, (podcast) => podcast?.id || "podcast-a");
+assert.equal(movementId({}), "ranking-movement-podcast-a", "unchanged markers have a matching aria-describedby ID");
+assert.equal(movementMarkup({ id: "missing-history" }), "", "a missing cohort entry has no marker");
+assert.equal(movementId({ id: "missing-history" }), "", "a missing cohort entry has no dangling ID");
+state.rankingMovementSnapshotValid = false;
+assert.equal(movementMarkup({}), "", "an invalid snapshot does not create a false neutral marker");
+assert.equal(movementId({}), "", "an invalid snapshot has no marker ID");
+state.rankingMovementSnapshotValid = true;
 
 // The visible ranking note and assistive labels use the same period wording.
 const resultsElement = { textContent: "" };
 const setResults = new Function(
-  "state", "elements", "isRankingMovementEligible", "getGenuineRankingMovementCount", "syncRankingMovementToggle",
+  "state", "elements", "isRankingMovementEligible", "getGenuineRankingMovementCount",
   `${setRankingResultsText}; return setRankingResultsText;`
-)(state, { resultsText: resultsElement, rankingMovementToggle: null }, () => true,
-  () => [...state.rankingMovementByKey.values()].filter((delta) => Number.isFinite(delta) && delta !== 0).length,
-  () => {});
+)(state, { resultsText: resultsElement }, () => true,
+  () => [...state.rankingMovementByKey.values()].filter((delta) => Number.isFinite(delta) && delta !== 0).length);
 setResults("Viser 18 af 263 podcasts");
 assert.equal(resultsElement.textContent, "Viser 18 af 263 podcasts · Ingen placeringsændringer siden 20. oktober");
 state.rankingMovementByKey = new Map([["a", 1], ["b", 0], ["c", -11]]);
@@ -165,9 +175,9 @@ assert.equal(resultsElement.textContent, "Viser 18 af 263 podcasts · 1 podcast 
 state.rankingMovementPeriodLabel = "siden 20. oktober";
 state.rankingMovementByKey = new Map();
 const ineligibleResults = new Function(
-  "state", "elements", "isRankingMovementEligible", "getGenuineRankingMovementCount", "syncRankingMovementToggle",
+  "state", "elements", "isRankingMovementEligible", "getGenuineRankingMovementCount",
   `${setRankingResultsText}; return setRankingResultsText;`
-)(state, { resultsText: resultsElement, rankingMovementToggle: null }, () => false, () => 0, () => {});
+)(state, { resultsText: resultsElement }, () => false, () => 0);
 ineligibleResults("Viser 18 af 263 podcasts");
 assert.equal(resultsElement.textContent, "Viser 18 af 263 podcasts", "editorial or filtered rankings do not show the user-ranking status");
 state.rankingMovementByKey = new Map([["a", 1]]);
