@@ -1164,7 +1164,6 @@ const elements = {
   rankingUserSortButtons: document.querySelectorAll("[data-ranking-user-sort]"),
   resultsText: document.getElementById("resultsText"),
   rankingMovementToggle: document.getElementById("rankingMovementToggle"),
-  rankingMovementPreview: document.getElementById("rankingMovementPreview"),
   rankingToolbar: document.querySelector(".ranking-toolbar"),
   podcastGrid: document.getElementById("podcastGrid"),
   recentGrid: document.getElementById("recentGrid"),
@@ -4692,7 +4691,6 @@ function setRankingResultsText(text) {
   const viewNote = state.rankingChangesOnly ? "Viser kun podcasts med ændret placering" : "";
   elements.resultsText.textContent = [text, viewNote, movementStatus].filter(Boolean).join(" · ");
   syncRankingMovementToggle();
-  renderRankingMovementPreview();
 }
 
 function isRankingMovementDataReady() {
@@ -4735,70 +4733,6 @@ function getGenuineRankingMovementCount() {
     if (key && Number.isFinite(delta) && delta !== 0) seenKeys.add(key);
   });
   return seenKeys.size;
-}
-
-function getRankingMovementPreviewItems(podcasts = getFilteredPodcasts()) {
-  if (
-    !state.rankingMovementSnapshotValid || !state.rankingMovementPeriodLabel ||
-    !isRankingMovementEligible() || state.rankingChangesOnly
-  ) return [];
-
-  const candidates = [];
-  const seenKeys = new Set();
-  podcasts.forEach((podcast, index) => {
-    const key = getRankingMovementKey(podcast);
-    const delta = key ? state.rankingMovementByKey.get(key) : null;
-    if (!key || !Number.isFinite(delta) || delta === 0 || seenKeys.has(key)) return;
-    seenKeys.add(key);
-    candidates.push({ podcast, delta, rank: index + 1 });
-  });
-
-  if (!candidates.length) return [];
-
-  let strongestGain = null;
-  let strongestFall = null;
-  candidates.forEach((candidate) => {
-    if (candidate.delta > 0 && (!strongestGain || candidate.delta > strongestGain.delta)) {
-      strongestGain = candidate;
-    }
-    if (candidate.delta < 0 && (!strongestFall || candidate.delta < strongestFall.delta)) {
-      strongestFall = candidate;
-    }
-  });
-
-  const selected = strongestGain && strongestFall
-    ? [strongestGain, strongestFall]
-    : [...candidates]
-      .sort((left, right) => Math.abs(right.delta) - Math.abs(left.delta) || left.rank - right.rank)
-      .slice(0, 2);
-  return selected.sort((left, right) => left.rank - right.rank);
-}
-
-function renderRankingMovementPreview(podcasts = null) {
-  const container = elements.rankingMovementPreview;
-  if (!container) return;
-
-  const previewItems = getRankingMovementPreviewItems(podcasts || getFilteredPodcasts());
-  if (!previewItems.length) {
-    container.replaceChildren();
-    container.hidden = true;
-    return;
-  }
-
-  container.innerHTML = previewItems.map(({ podcast, delta, rank }) => {
-    const gain = delta > 0;
-    const count = Math.abs(delta);
-    const title = podcast.title || podcast.name || "Podcast";
-    const accessibleLabel = `${gain ? "Steget" : "Faldet"} ${count} ${count === 1 ? "placering" : "placeringer"} for ${title}, nu nummer ${rank} ${state.rankingMovementPeriodLabel}`;
-    return `
-      <span class="ranking-movement-preview__item" role="listitem" aria-label="${escapeHtml(accessibleLabel)}">
-        <span class="ranking-movement ranking-movement--${gain ? "up" : "down"}" aria-hidden="true">${gain ? "▲" : "▼"}${count}</span>
-        <span class="ranking-movement-preview__title">${escapeHtml(title)}</span>
-        <span class="ranking-movement-preview__rank">#${rank}</span>
-      </span>
-    `;
-  }).join("");
-  container.hidden = false;
 }
 
 function getRankingPresentationPodcasts(podcasts = getFilteredPodcasts()) {
@@ -16327,7 +16261,6 @@ function renderDesktopRankingDataState(dataState) {
     elements.resultsText.textContent = dataState.title;
   }
   syncRankingMovementToggle();
-  renderRankingMovementPreview();
 
   updateLoadMoreUi(0, 0);
   disconnectMobileRankingObserver();

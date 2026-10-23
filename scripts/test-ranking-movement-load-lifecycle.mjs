@@ -145,11 +145,11 @@ assert.equal(movementId({}), "", "unchanged positions do not create dangling ari
 // The visible ranking note and assistive labels use the same period wording.
 const resultsElement = { textContent: "" };
 const setResults = new Function(
-  "state", "elements", "isRankingMovementEligible", "getGenuineRankingMovementCount", "syncRankingMovementToggle", "renderRankingMovementPreview",
+  "state", "elements", "isRankingMovementEligible", "getGenuineRankingMovementCount", "syncRankingMovementToggle",
   `${setRankingResultsText}; return setRankingResultsText;`
 )(state, { resultsText: resultsElement, rankingMovementToggle: null }, () => true,
   () => [...state.rankingMovementByKey.values()].filter((delta) => Number.isFinite(delta) && delta !== 0).length,
-  () => {}, () => {});
+  () => {});
 setResults("Viser 18 af 263 podcasts");
 assert.equal(resultsElement.textContent, "Viser 18 af 263 podcasts · Ingen placeringsændringer siden 20. oktober");
 state.rankingMovementByKey = new Map([["a", 1], ["b", 0], ["c", -11]]);
@@ -165,9 +165,9 @@ assert.equal(resultsElement.textContent, "Viser 18 af 263 podcasts · 1 podcast 
 state.rankingMovementPeriodLabel = "siden 20. oktober";
 state.rankingMovementByKey = new Map();
 const ineligibleResults = new Function(
-  "state", "elements", "isRankingMovementEligible", "getGenuineRankingMovementCount", "syncRankingMovementToggle", "renderRankingMovementPreview",
+  "state", "elements", "isRankingMovementEligible", "getGenuineRankingMovementCount", "syncRankingMovementToggle",
   `${setRankingResultsText}; return setRankingResultsText;`
-)(state, { resultsText: resultsElement, rankingMovementToggle: null }, () => false, () => 0, () => {}, () => {});
+)(state, { resultsText: resultsElement, rankingMovementToggle: null }, () => false, () => 0, () => {});
 ineligibleResults("Viser 18 af 263 podcasts");
 assert.equal(resultsElement.textContent, "Viser 18 af 263 podcasts", "editorial or filtered rankings do not show the user-ranking status");
 state.rankingMovementByKey = new Map([["a", 1]]);
