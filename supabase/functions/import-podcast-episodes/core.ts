@@ -1,6 +1,6 @@
 import { FEED_CONFIGS, type FeedConfig, type FeedConfigMap, type FeedRouteMatcher } from "./feed-config.ts";
 import { mapApplePodcastHtmlEpisodes } from "./apple-podcasts.ts";
-import { matchesExplicitTitlePrefix } from "./mediano-routing.mjs";
+import { matchesExplicitTitlePrefix, MEDIANO_SITE_RSS_URL } from "./mediano-routing.mjs";
 import { syncManualPodimoEpisodes } from "./manual-podimo.ts";
 
 export const FEED_TIMEOUT_MS = 15000;
@@ -158,6 +158,15 @@ export function routeEpisodes(episodes: PodcastEpisodeRow[], config: FeedConfig)
     const guidMatches = config.routes.filter((route) => route.external_guids?.includes(episode.external_guid));
     const titleMatches = config.routes.filter((route) => matcherMatches(episode.title, route.title));
     const descriptionMatches = config.routes.filter((route) => matcherMatches(episode.description || "", route.description));
+    const isOfficialMedianoSiteFeed = config.source === "mediano_site_rss" && config.feed_url === MEDIANO_SITE_RSS_URL;
+    const episodeCategories = Array.isArray(episode.metadata?.rss_categories)
+      ? (episode.metadata.rss_categories as unknown[]).filter((category): category is string => typeof category === "string")
+      : [];
+    const categoryMatches = isOfficialMedianoSiteFeed && !titleMatches.length && !descriptionMatches.length && !guidMatches.length
+      ? config.routes.filter((route) => route.categories?.some((category) =>
+        episodeCategories.some((episodeCategory) => normalizeRouteText(episodeCategory) === normalizeRouteText(category))
+      ))
+      : [];
     // Podimo programme names can appear independently in title and description.
     // Treat conflicting evidence as ambiguous; only the exact UUID exception
     // is allowed to override text evidence.
@@ -165,7 +174,7 @@ export function routeEpisodes(episodes: PodcastEpisodeRow[], config: FeedConfig)
       ? guidMatches
       : config.format === "podimo_graphql"
         ? [...new Set([...titleMatches, ...descriptionMatches])]
-        : titleMatches.length ? titleMatches : descriptionMatches);
+        : titleMatches.length ? titleMatches : descriptionMatches.length ? descriptionMatches : categoryMatches);
     const issue = { external_guid: episode.external_guid, title: episode.title };
 
     if (!matches.length) {
@@ -438,6 +447,9 @@ export function parseFeed(xml: string) {
         pubDate: xmlTag(itemBlock, "pubDate"),
         duration: xmlTag(itemBlock, "duration"),
         link: xmlTag(itemBlock, "link"),
+        categories: [...itemBlock.matchAll(/<(?:[\w.-]+:)?category\b[^>]*>([\s\S]*?)<\/(?:[\w.-]+:)?category>/gi)]
+          .map((match) => decodeXmlEntities(match[1]).trim())
+          .filter(Boolean),
         enclosure_url: xmlAttr(enclosureTag, "url"),
         enclosure_type: xmlAttr(enclosureTag, "type"),
         image_url: xmlAttr(imageTag, "href")
@@ -554,6 +566,9 @@ export function mapEpisodes(feed: ReturnType<typeof parseFeed>, config: FeedConf
         feed_url: config.feed_url,
         enclosure_type: item.enclosure_type || null,
         original_pub_date: item.pubDate || null,
+        ...(config.source === "mediano_site_rss" && config.feed_url === MEDIANO_SITE_RSS_URL && item.categories.length
+          ? { rss_categories: item.categories }
+          : {}),
         metadata_only: config.metadata_only === true,
         rateable: exclusionReason === null,
         exclusion_reason: exclusionReason

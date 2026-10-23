@@ -26,6 +26,9 @@ export type FeedRoute = {
   podcast_key: string | null;
   title?: FeedRouteMatcher;
   description?: FeedRouteMatcher;
+  // Exact public RSS category labels. Category routes are only evaluated as a
+  // fallback and are restricted to the official Mediano site feed in core.ts.
+  categories?: string[];
   // A higher value resolves an intentional, verified overlap within an
   // umbrella registry. Routes with the same priority remain ambiguous.
   priority?: number;
