@@ -52,6 +52,7 @@ const checks = [
   ["DR Lyd supplemental full episodes and RSS identity preservation", ["--experimental-strip-types", "scripts/test-dr-lyd-supplemental-umbrella.mjs"]],
   ["Future verified DR single-episode discovery", ["--experimental-strip-types", "scripts/test-dr-full-standalone-discovery.mjs"]],
   ["Mediano episode workspace", ["scripts/test-mediano-episode-workspace-config.mjs"]],
+  ["Støt Mediano category routing", ["--experimental-strip-types", "scripts/test-stot-mediano-category-routing.mjs"]],
   ["episode detail DOM stability", ["scripts/test-podcast-detail-episode-load-dom-stability.mjs"]],
   ["episode own-rating lock", ["scripts/test-podcast-detail-own-rating-lock-behavior.mjs"]],
   ["mobile podcast-detail rating alignment", ["scripts/test-mobile-podcast-detail-regressions.mjs"]],

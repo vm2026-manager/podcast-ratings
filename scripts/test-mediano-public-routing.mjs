@@ -91,7 +91,12 @@ for (const id of ["magasinet jennings", "transfer special", "bruchmann ringer ti
 assert.equal(routePublicMedianoTitle("Magasinet Jennings: FIFA og verden").route.podcastId, "magasinet jennings");
 assert.equal(routePublicMedianoTitle("Jennings: FIFA og verden").route.podcastId, "magasinet jennings");
 assert.equal(routePublicMedianoTitle("Jennings Ekstra: FIFA og verden").route.podcastId, "magasinet jennings");
-assert.equal(routePublicMedianoTitle("Jennings senere i udsendelsen").status, "unmatched");
+assert.equal(routePublicMedianoTitle("Jennings senere i udsendelsen").route.podcastId, "magasinet jennings");
+assert.equal(
+  routePublicMedianoTitle("JENNINGS BREAKING: Derfor er City kendt skyldige i århundredets retssag - og hvad sker der nu?").route.podcastId,
+  "magasinet jennings"
+);
+assert.equal(routePublicMedianoTitle("Jenningsen senere i udsendelsen").status, "unmatched");
 for (const route of MEDIANO_PUBLIC_ROUTE_DEFINITIONS.filter((route) => route.status === "enabled")) {
   assert(cataloguePodcastIds.has(route.podcastKey), `Enabled route must have catalogue Podcast-ID: ${route.key}`);
 }
@@ -102,7 +107,10 @@ assert.equal(plan.candidates.filter((mapping) => mapping.targetExistsInCatalogue
 const stotInterface = describeStotMedianoSource();
 assert.equal(stotInterface.feed_url, "https://www.mediano.nu/oversigt?format=rss");
 assert.equal(stotInterface.metadata_only, true);
-assert.equal(stotInterface.activation, "enabled_metadata_only");
+assert.equal(stotInterface.activation, "blocked_pending_catalogue");
+const stotRoute = stotInterface.routes.find((route) => route.key === "stot_mediano");
+assert.equal(stotRoute.podcast_key, null);
+assert.deepEqual(stotRoute.categories, ["Støt Mediano"]);
 for (const historicalPodcastId of [
   "hammer og bruchmann", "superliga for voksne", "superzoom", "mediano em speciel 2021",
   "fodbold var værre i 70 erne", "den store talentserie", "vm manager special", "hammers kaffebar", "souplesse", "super"

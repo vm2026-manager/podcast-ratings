@@ -6,6 +6,9 @@ export const MEDIANO_SITE_RSS_URL = "https://www.mediano.nu/oversigt?format=rss"
 const enabled = (key, canonicalTitle, podcastKey, aliases, literalStarts = [], titleWords = [], priority = 0) => ({ key, canonicalTitle, podcastKey, aliases, literalStarts, titleWords, priority, status: "enabled" });
 const pending = (key, canonicalTitle, proposedPodcastKey, aliases) => ({ key, canonicalTitle, podcastKey: null, proposedPodcastKey, aliases, status: "pending_catalogue" });
 const skipped = (key, canonicalTitle, aliases, reason) => ({ key, canonicalTitle, podcastKey: null, aliases, status: "skip", reason });
+const pendingCategory = (key, canonicalTitle, proposedPodcastKey, categories) => ({
+  key, canonicalTitle, podcastKey: null, proposedPodcastKey, aliases: [], categories, status: "pending_catalogue"
+});
 
 export const MEDIANO_PUBLIC_ROUTE_DEFINITIONS = [
   enabled("mediano_superliga", "Mediano Superliga", "mediano superliga", ["Mediano Superliga"]),
@@ -61,7 +64,10 @@ export const MEDIANO_PUBLIC_ROUTE_DEFINITIONS = [
   pending("mediano_socrates", "Mediano Sócrates", "mediano socrates", ["Mediano Sócrates"]),
   pending("mediano_talks", "Mediano Talks", "mediano talks", ["Mediano Talks"]),
   pending("hillsborough_katastrofen", "Hillsborough-katastrofen", "hillsborough katastrofen", ["Hillsborough-katastrofen 1989", "Hillsborough Dokumentar"]),
-  pending("superligaens_storste_ojeblikke", "Superligaens største øjeblikke", "superligaens storste ojeblikke", ["Superligaens største øjeblikke"])
+  pending("superligaens_storste_ojeblikke", "Superligaens største øjeblikke", "superligaens storste ojeblikke", ["Superligaens største øjeblikke"]),
+  // Category-only fallback: stays blocked until the authoritative catalogue
+  // sync confirms the permanent Podcast-ID `stot mediano`.
+  pendingCategory("stot_mediano", "Støt Mediano", "stot mediano", ["Støt Mediano"])
 ];
 
 export function normalizeMedianoText(value) {
@@ -103,7 +109,7 @@ export function buildMedianoPublicFeedRoutes() {
   return MEDIANO_PUBLIC_ROUTE_DEFINITIONS.map((definition) => ({
     key: definition.key,
     podcast_key: definition.podcastKey,
-    title: {
+    ...(definition.aliases?.length ? { title: {
       prefixes: definition.aliases,
       // Deliberately scoped to the verified Troels title convention. Other
       // Mediano routes retain their strict separator-bound prefix behavior.
@@ -113,7 +119,8 @@ export function buildMedianoPublicFeedRoutes() {
       // Jennings has verified title variants such as "JENNINGS BREAKING".
       // This remains scoped to the two feeds built from this shared registry.
       ...(definition.titleWords?.length ? { words: definition.titleWords } : {})
-    },
+    } } : {}),
+    ...(definition.categories?.length ? { categories: definition.categories } : {}),
     // The verified Jennings title word wins any coincident Mediano prefix.
     ...(definition.priority ? { priority: definition.priority } : {})
   }));
@@ -127,6 +134,6 @@ export function describeStotMedianoSource() {
     feed_url: MEDIANO_SITE_RSS_URL,
     routes: buildMedianoPublicFeedRoutes(),
     metadata_only: true,
-    activation: "enabled_metadata_only"
+    activation: "blocked_pending_catalogue"
   };
 }

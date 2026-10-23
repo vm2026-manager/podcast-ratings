@@ -1,5 +1,5 @@
 import { assertEquals } from "https://deno.land/std@0.224.0/assert/mod.ts";
-import { runEpisodeImport, routeEpisodes, type PodcastEpisodeRow } from "./core.ts";
+import { mapEpisodes, parseFeed, runEpisodeImport, routeEpisodes, type PodcastEpisodeRow } from "./core.ts";
 import { FEED_CONFIGS, type FeedConfig } from "./feed-config.ts";
 import { MEDIANO_PUBLIC_ROUTE_DEFINITIONS } from "./mediano-routing.mjs";
 
@@ -204,6 +204,112 @@ Deno.test("Mediano public routes use explicit title prefixes and protect known e
   const fodboldministeriet = routeEpisodes([episode("ministeriet", "Fodboldministeriet: test")], config);
   assertEquals(fodboldministeriet.episodes.length, 0);
   assertEquals(fodboldministeriet.report?.known_no_destination_counts, { fodboldministeriet_source_overlap: 1 });
+});
+
+Deno.test("Støt Mediano categories are a source-isolated fallback behind known series", () => {
+  const config = FEED_CONFIGS.mediano_site;
+  const stotRoute = config.routes?.find((route) => route.key === "stot_mediano");
+  assertEquals(stotRoute?.podcast_key, null, "the catalogue destination must remain blocked until Sheet sync confirms it");
+  assertEquals(stotRoute?.categories, ["Støt Mediano"]);
+
+  const feed = parseFeed(`<rss><channel><title>Mediano</title>
+    <item><guid>europa-special-20261022</guid><title>Europa Special: Sort dansk aften med dumme røde kort</title>
+      <pubDate>Thu, 22 Oct 2026 23:56:21 +0000</pubDate><link>https://www.mediano.nu/oversigt/eurospecial221026</link>
+      <category>Podcast</category><category>Støt Mediano</category><category>Fodbold Danmark</category>
+      <enclosure url="https://private.example/member-audio.mp3" /></item>
+  </channel></rss>`);
+  const mapped = mapEpisodes(feed, config, "2026-10-23T00:00:00.000Z");
+  const stotEpisode = mapped.episodes[0];
+  assertEquals(stotEpisode.metadata.rss_categories, ["Podcast", "Støt Mediano", "Fodbold Danmark"]);
+  assertEquals(stotEpisode.metadata.metadata_only, true);
+  assertEquals(stotEpisode.audio_url, null);
+
+  const pending = routeEpisodes([stotEpisode], config);
+  assertEquals(pending.episodes, []);
+  assertEquals(pending.report?.known_no_destination_counts, { stot_mediano: 1 });
+
+  const readyConfig: FeedConfig = {
+    ...config,
+    routes: [...(config.routes || []).map((route) => route.key === "stot_mediano" ? { ...route, podcast_key: "stot mediano" } : route)]
+  };
+  const routed = routeEpisodes([stotEpisode], readyConfig);
+  assertEquals(routed.episodes.map((item) => item.podcast_key), ["stot mediano"]);
+
+  const existingSeries = [
+    ["Mediano PL: Runde 10", "mediano pl"],
+    ["Mediano Superliga: Analyse", "mediano superliga"],
+    ["Superliga Preview: Optakt", "superliga preview"],
+    ["Max Mediano: Update", "max mediano"],
+    ["Magasinet Jennings: FIFA", "magasinet jennings"]
+  ] as const;
+  for (const [title, expectedPodcastKey] of existingSeries) {
+    const candidate = { ...stotEpisode, title };
+    assertEquals(routeEpisodes([candidate], readyConfig).episodes[0]?.podcast_key, expectedPodcastKey, title);
+  }
+
+  const unmarked = { ...stotEpisode, metadata: { ...stotEpisode.metadata, rss_categories: ["Podcast"] } };
+  assertEquals(routeEpisodes([unmarked], readyConfig).episodes, []);
+  assertEquals(routeEpisodes([stotEpisode], { ...readyConfig, source: "mediano_public_rss" }).episodes, []);
+  assertEquals(routeEpisodes([stotEpisode], { ...readyConfig, feed_url: "https://mirror.example/feed.xml" }).episodes, []);
+
+  const ambiguousConfig: FeedConfig = {
+    ...readyConfig,
+    routes: [
+      { key: "one", podcast_key: "one", title: { aliases: ["Europa Special"] } },
+      { key: "two", podcast_key: "two", title: { aliases: ["Europa Special"] } },
+      ...(readyConfig.routes || [])
+    ]
+  };
+  const ambiguous = routeEpisodes([stotEpisode], ambiguousConfig);
+  assertEquals(ambiguous.episodes, []);
+  assertEquals(ambiguous.report?.ambiguous.length, 1);
+
+  const duplicateFeed = parseFeed(`<rss><channel>
+    <item><guid>duplicate-stot</guid><title>Europa Special: Sort dansk aften med dumme røde kort</title><category>Støt Mediano</category></item>
+    <item><guid>duplicate-stot</guid><title>Europa Special: Sort dansk aften med dumme røde kort</title><category>Støt Mediano</category></item>
+  </channel></rss>`);
+  const duplicateMapped = mapEpisodes(duplicateFeed, readyConfig, "2026-10-23T00:00:00.000Z");
+  assertEquals(duplicateMapped.episodes.length, 1);
+  assertEquals(duplicateMapped.errors.length, 1);
+});
+
+Deno.test("an enabled Støt Mediano category import is idempotent", async () => {
+  const sourceConfig = FEED_CONFIGS.mediano_site;
+  const feedConfigs = {
+    mediano_site: {
+      ...sourceConfig,
+      routes: (sourceConfig.routes || []).map((route) => route.key === "stot_mediano" ? { ...route, podcast_key: "stot mediano" } : route)
+    }
+  };
+  const xml = `<rss><channel><title>Mediano</title>
+    <item><guid>europa-special-idempotency</guid><title>Europa Special: Sort dansk aften med dumme røde kort</title>
+      <pubDate>Thu, 22 Oct 2026 23:56:21 +0000</pubDate><link>https://www.mediano.nu/oversigt/eurospecial221026</link>
+      <category>Støt Mediano</category><enclosure url="https://private.example/member-audio.mp3" /></item>
+  </channel></rss>`;
+  const stored: PodcastEpisodeRow[] = [];
+  const writes: PodcastEpisodeRow[][] = [];
+  const repository = {
+    createImportRun: async () => ({ id: `stot-run-${writes.length}` }),
+    loadExistingEpisodes: async () => stored,
+    upsertEpisodes: async (rows: PodcastEpisodeRow[]) => { writes.push(rows); stored.push(...rows); },
+    updateImportRun: async () => undefined
+  };
+  const run = () => runEpisodeImport({
+    feedKey: "mediano_site", feedConfigs, repository,
+    fetchText: async () => xml,
+    now: () => "2026-10-23T00:00:00.000Z"
+  });
+
+  const first = await run();
+  const second = await run();
+  assertEquals(writes.length, 1);
+  assertEquals(writes[0][0].podcast_key, "stot mediano");
+  assertEquals(writes[0][0].episode_url, "https://www.mediano.nu/oversigt/eurospecial221026");
+  assertEquals(writes[0][0].audio_url, null);
+  assertEquals(first.inserted_count, 1);
+  assertEquals(second.inserted_count, 0);
+  assertEquals(second.updated_count, 0);
+  assertEquals(second.skipped_count, 1);
 });
 
 Deno.test("Mediano umbrella sources route standalone Jennings title words deterministically", () => {
