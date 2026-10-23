@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { mapEpisodes, parseFeed, routeEpisodes, runEpisodeImport } from "../supabase/functions/import-podcast-episodes/core.ts";
 import { FEED_CONFIGS } from "../supabase/functions/import-podcast-episodes/feed-config.ts";
+import { loadRuntimeFeedConfigs, mergeSheetFeedConfigs } from "../supabase/functions/import-podcast-episodes/runtime-feed-config.ts";
 
 const sourceConfig = FEED_CONFIGS.mediano_site;
 const xml = `<rss><channel><title>Mediano</title>
@@ -27,6 +28,28 @@ const pendingRoute = sourceConfig.routes.find((route) => route.key === "stot_med
 assert.equal(pendingRoute.podcast_key, null);
 assert.equal(pendingRoute.categories.includes("Støt Mediano"), true);
 
+const catalogueBase = { rows: [{ Titel: "Støt Mediano", "Podcast-ID": "stot mediano" }] };
+const mergedActive = mergeSheetFeedConfigs(catalogueBase).configs;
+assert.equal(mergedActive.mediano_site.routes.find((route) => route.key === "stot_mediano").podcast_key, "stot mediano");
+assert.equal(mergedActive.mediano_public.routes.find((route) => route.key === "stot_mediano").podcast_key, null);
+for (const rows of [
+  [],
+  [{ Titel: "Støt Mediano", "Podcast-ID": "other id" }],
+  [{ Titel: "Other title", "Podcast-ID": "stot mediano" }],
+  [{ Titel: "Støt Mediano", "Podcast-ID": "stot mediano" }, { Titel: "Støt Mediano", "Podcast-ID": "stot mediano" }],
+  [{ Titel: "Støt Mediano", "Podcast-ID": "stot mediano" }, { Titel: "Other title", "Podcast-ID": "stot mediano" }]
+]) {
+  const merged = mergeSheetFeedConfigs({ rows }).configs;
+  assert.equal(merged.mediano_site.routes.find((route) => route.key === "stot_mediano").podcast_key, null);
+  assert.equal(merged.mediano_public.routes.find((route) => route.key === "stot_mediano").podcast_key, null);
+}
+const failedLoad = await loadRuntimeFeedConfigs({
+  podcastsJsonUrl: "https://catalogue.example/podcasts.json",
+  fetchPayload: async () => { throw new Error("catalogue unavailable"); }
+});
+assert.equal(failedLoad.configs.mediano_site.routes.find((route) => route.key === "stot_mediano").podcast_key, null);
+assert.match(failedLoad.audit.dynamic_feed_load_error, /catalogue unavailable/);
+
 const pendingWrites = [];
 const pendingRepository = {
   createImportRun: async () => ({ id: "pending-stot" }),
@@ -45,10 +68,7 @@ assert.deepEqual(pendingWrites, []);
 assert.equal(pendingResult.inserted_count, 0);
 assert.equal(pendingResult.details.routing.known_no_destination_counts.stot_mediano, 1);
 
-const activeConfig = {
-  ...sourceConfig,
-  routes: sourceConfig.routes.map((route) => route.key === "stot_mediano" ? { ...route, podcast_key: "stot mediano" } : route)
-};
+const activeConfig = mergedActive.mediano_site;
 assert.deepEqual(routeEpisodes([candidate], activeConfig).episodes.map((episode) => episode.podcast_key), ["stot mediano"]);
 
 for (const [title, podcastKey] of [

@@ -53,6 +53,19 @@ function getPodcastRows(payload: unknown): Array<Record<string, unknown>> {
   return [];
 }
 
+function hasVerifiedStotMedianoIdentity(rows: Array<Record<string, unknown>>): boolean {
+  const expectedId = "stot mediano";
+  const expectedTitle = "Støt Mediano";
+  const candidates = rows.filter((row) => {
+    const id = getPodcastId(row).normalize("NFC").toLocaleLowerCase("da-DK");
+    const title = String(row.Titel ?? "").trim().normalize("NFC").toLocaleLowerCase("da-DK");
+    return id === expectedId || title === expectedTitle.toLocaleLowerCase("da-DK");
+  });
+  return candidates.length === 1 &&
+    getPodcastId(candidates[0]) === expectedId &&
+    String(candidates[0].Titel ?? "").trim().normalize("NFC") === expectedTitle;
+}
+
 function getStaticPodcastKeys(configs: FeedConfigMap): Set<string> {
   return new Set(
     Object.values(configs)
@@ -108,6 +121,19 @@ export function mergeSheetFeedConfigs(
     ...(djaevlenFullOwner ? { [DJAEVLEN_LYD_FULL_FEED_KEY]: { ...djaevlenFullOwner, routes: djaevlen.routes, enabled: djaevlen.routes.length > 0 } } : {}),
     ...(bakspejlFullOwner ? { [BAKSPEJL_LYD_FULL_FEED_KEY]: { ...bakspejlFullOwner, routes: bakspejl.routes, enabled: bakspejl.routes.length > 1 } } : {})
   };
+  // Støt Mediano is a category-only destination. Activate only this route,
+  // and only from one exact canonical identity in the fetched catalogue.
+  if (hasVerifiedStotMedianoIdentity(rows)) {
+    const siteFeed = configs.mediano_site;
+    if (siteFeed?.routes?.some((route) => route.key === "stot_mediano")) {
+      configs.mediano_site = {
+        ...siteFeed,
+        routes: siteFeed.routes.map((route) => route.key === "stot_mediano"
+          ? { ...route, podcast_key: "stot mediano" }
+          : route)
+      };
+    }
+  }
   const policy = applySheetFeedPolicy(rows, configs, getPodcastId, normalizePodcastKey);
   const staticKeys = new Set(Object.keys(manualStaticConfigs));
   const staticPodcastKeys = getStaticPodcastKeys(manualStaticConfigs);
