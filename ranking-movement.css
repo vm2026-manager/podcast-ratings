@@ -12,6 +12,10 @@
   color: #b4232d;
 }
 
+.ranking-movement--steady {
+  color: #74685e;
+}
+
 html body.page-ranglister .ranking-toolbar__results {
   display: flex;
   align-items: center;
@@ -21,33 +25,6 @@ html body.page-ranglister .ranking-toolbar__results {
 
 html body.page-ranglister #resultsText {
   min-width: 0;
-}
-
-html body.page-ranglister .ranking-movement-toggle {
-  flex: 0 0 auto;
-  min-height: 34px;
-  padding: 0.35rem 0.75rem;
-  border: 1px solid rgba(255, 92, 22, 0.26);
-  border-radius: 999px;
-  background: rgba(255, 244, 237, 0.9);
-  color: #8c3a14;
-  font: 800 0.76rem/1.1 "Manrope", Inter, system-ui, sans-serif;
-  white-space: nowrap;
-  cursor: pointer;
-}
-
-html body.page-ranglister .ranking-movement-toggle:hover {
-  background: #ffede2;
-  border-color: rgba(255, 92, 22, 0.46);
-}
-
-html body.page-ranglister .ranking-movement-toggle:focus-visible {
-  outline: 3px solid rgba(255, 92, 22, 0.55);
-  outline-offset: 2px;
-}
-
-html body.page-ranglister .ranking-movement-toggle[hidden] {
-  display: none !important;
 }
 
 html body.page-ranglister .podcast-card__placement:has(.ranking-movement) {
@@ -89,6 +66,11 @@ html body.page-ranglister .desktop-ranking-row__rank .ranking-movement--down {
   color: #a51f2b;
 }
 
+html body.page-ranglister .desktop-ranking-rank .ranking-movement--steady,
+html body.page-ranglister .desktop-ranking-row__rank .ranking-movement--steady {
+  color: #74685e;
+}
+
 @media (max-width: 700px) {
   html body.page-ranglister .ranking-toolbar__results {
     grid-area: count;
@@ -101,12 +83,6 @@ html body.page-ranglister .desktop-ranking-row__rank .ranking-movement--down {
     flex: 1 1 0;
     white-space: normal !important;
     line-height: 1.35;
-  }
-
-  html body.page-ranglister .ranking-movement-toggle {
-    min-height: 34px;
-    padding: 0.3rem 0.58rem;
-    font-size: 0.7rem;
   }
 
   html body.page-ranglister .podcast-card__placement:has(.ranking-movement) {
