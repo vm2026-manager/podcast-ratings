@@ -23,7 +23,7 @@ const parentFetch = extractFunction("fetchPodcastEpisodeParentRatings");
 const detailState = extractFunction("getPodcastDetailEpisodeRatingState");
 const summary = extractFunction("getPodcastEpisodeUserRatingSummary");
 
-assert.match(parentFetch, /podcast_episodes!inner\(podcast_key,is_active\)/u);
+assert.match(parentFetch, /podcast_episodes!inner\(podcast_key,is_active(?:,[^)]+)?\)/u);
 assert.match(parentFetch, /\.eq\("podcast_episodes\.podcast_key"/u);
 assert.match(parentFetch, /\.eq\("podcast_episodes\.is_active", true\)/u);
 assert.match(parentFetch, /if \(!isCurrentUserScopedRequest\(request\)\) return;/u);
@@ -42,7 +42,7 @@ const episodeState = {
   loading: false
 };
 const helpers = new Function(
-  "state", "getPodcastEpisodeState", "getEpisodePodcastConfig", "getEpisodeIdsForQuery", "podcastSupportsEpisodes", "parseNumber",
+  "state", "getPodcastEpisodeState", "getEpisodePodcastConfig", "getEpisodeIdsForQuery", "podcastSupportsEpisodes", "parseNumber", "getEpisodeKey", "getGenstartEpisodeById", "episodeMatchesPodcastSourceBoundary",
   `${summary}\n${detailState}; return { getPodcastEpisodeUserRatingSummary, getPodcastDetailEpisodeRatingState };`
 )(
   state,
@@ -50,7 +50,10 @@ const helpers = new Function(
   () => ({ dataSource: "supabase" }),
   (items) => items.map((item) => item.id),
   () => true,
-  (value) => Number.isFinite(Number(value)) ? Number(value) : null
+  (value) => Number.isFinite(Number(value)) ? Number(value) : null,
+  (episode) => String(episode?.id || episode?.episode_id || ""),
+  () => null,
+  () => true
 );
 
 let result = helpers.getPodcastDetailEpisodeRatingState({ key: "frontlinjen" });
@@ -93,7 +96,7 @@ const parentEpisodeState = {
 };
 const parentFetchRun = new Function(
   "state", "getEpisodePodcastConfig", "getPodcastEpisodeState", "getUserScopedRequestContext", "isCurrentUserScopedRequest",
-  "getEpisodeDatabasePodcastKey", "normalizeText", "parseNumber", "console",
+  "getEpisodeDatabasePodcastKey", "normalizeText", "parseNumber", "console", "applyPodcastEpisodeSourceBoundary",
   `${parentFetch}; return fetchPodcastEpisodeParentRatings;`
 )(
   parentState,
@@ -104,7 +107,8 @@ const parentFetchRun = new Function(
   () => "frontlinjen",
   (value) => String(value || "").trim(),
   (value) => Number(value),
-  { error() { assert.fail("stale parent query must be silent"); } }
+  { error() { assert.fail("stale parent query must be silent"); } },
+  (query) => query
 );
 const pendingA = parentFetchRun({ key: "frontlinjen" });
 parentState.authUser = null;
