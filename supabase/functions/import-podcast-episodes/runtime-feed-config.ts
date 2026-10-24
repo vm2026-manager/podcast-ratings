@@ -1,8 +1,9 @@
 import { FEED_CONFIGS, DJAEVLEN_LYD_FULL_FEED_KEY, BAKSPEJL_LYD_FULL_FEED_KEY, type FeedConfig, type FeedConfigMap } from "./feed-config.ts";
-import { appleShowUrl, parseAppleFeed, parseHttpFeed } from "./feed-syntax.mjs";
+import { appleShowUrl, parseAppleFeed, parseHttpFeed, parsePodimoShowFeed } from "./feed-syntax.mjs";
 import { applySheetFeedPolicy, type FeedResolution } from "./sheet-feed-policy.ts";
 import { buildDjaevlenRoutes, DJAEVLEN_FEED_KEY } from "./djaevlen-routing.mjs";
 import { buildBakspejlRoutes, BAKSPEJL_FEED_KEY } from "./bakspejl-routing.mjs";
+import { PODIMO_ONGOING_HISTORICAL_SOURCES } from "./podimo-source-registry.ts";
 
 const PODCASTS_JSON_TIMEOUT_MS = 15000;
 
@@ -133,6 +134,30 @@ export function mergeSheetFeedConfigs(
           : route)
       };
     }
+  }
+  // Activate only an exact Sheet Podcast-ID + Podimo show-ID match to a
+  // historical source already verified in production. Unknown IDs, aliases,
+  // stale shows and any existing owner ambiguity remain review-required.
+  for (const row of rows) {
+    const rawFeed = row.Feed ?? row.feed;
+    const podimo = parsePodimoShowFeed(rawFeed);
+    const podcastId = getPodcastId(row);
+    if (!podimo || !podcastId) continue;
+    const historical = PODIMO_ONGOING_HISTORICAL_SOURCES.find(entry =>
+      normalizePodcastKey(entry.podcast_key) === normalizePodcastKey(podcastId) &&
+      entry.podcast_id === podimo.showId);
+    if (!historical || configs[historical.source]) continue;
+    if (Object.values(configs).some(config => normalizePodcastKey(config.podcast_key) === normalizePodcastKey(podcastId))) continue;
+    configs[historical.source] = {
+      podcast_key: historical.podcast_key,
+      source: historical.source,
+      feed_url: "https://graphql.podimo.com/graphql",
+      format: "podimo_graphql",
+      podcast_id: historical.podcast_id,
+      podimo_show_url: podimo.url,
+      podimo_history_overlap_minimum: 3,
+      generated_from_sheet: true
+    };
   }
   const policy = applySheetFeedPolicy(rows, configs, getPodcastId, normalizePodcastKey);
   const staticKeys = new Set(Object.keys(manualStaticConfigs));

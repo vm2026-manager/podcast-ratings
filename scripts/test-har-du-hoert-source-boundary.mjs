@@ -142,5 +142,6 @@ assert.equal(stored.filter(e => e.source === source).length, 1);
 assert.equal(JSON.stringify({ legacy, ratings }), original);
 const drift = mergeSheetFeedConfigs([{ "Podcast-ID": key, Feed: "https://example.test/future.rss" }]);
 assert.equal(drift.configs.har_du_hoert.source, source);
-assert.equal(drift.audit.feed_warnings[0].reason, "identity_review_required");
+assert.equal(drift.configs.har_du_hoert.sheet_feed_change.minimum_guid_overlap, 3,
+  "ordinary RSS relocations keep the historical source and require GUID overlap before importing");
 console.log("Har du hørt: source isolation, pagination/search, ratings and legacy UUID preservation PASS");

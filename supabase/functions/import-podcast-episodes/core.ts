@@ -1006,6 +1006,17 @@ export async function runEpisodeImport(options: {
       config.dedupe_by_episode_url_with_sources,
       [...new Set(routing.episodes.map((episode) => episode.podcast_key))]
     );
+    if (config.sheet_feed_change || config.podimo_history_overlap_minimum) {
+      const guids = new Set(routing.episodes.map(episode => episode.external_guid));
+      const overlap = new Set(existing
+        .filter(episode => episode.source === config.source && episode.podcast_key === config.podcast_key && guids.has(episode.external_guid))
+        .map(episode => episode.external_guid));
+      const minimum = config.sheet_feed_change?.minimum_guid_overlap || config.podimo_history_overlap_minimum || 0;
+      if (overlap.size < minimum) {
+        const provider = config.podimo_history_overlap_minimum ? "Podimo" : "Sheet RSS";
+        throw new Error(`${provider} identity review required: ${overlap.size} exact historical GUID matches; ${minimum} required`);
+      }
+    }
     const episodesForClassification =
       config.format === "dr_lyd_next_data"
         ? routing.episodes.map((episode) => {
@@ -1280,7 +1291,18 @@ export async function runEpisodeImport(options: {
         skipped_count: 0,
         error_count: 1,
         error_message: message,
-        details: { feed: options.feedKey }
+        details: {
+          feed: options.feedKey,
+          ...(config.sheet_feed_change ? {
+            identity_review_required: message.includes("Sheet RSS identity review required"),
+            sheet_feed_change: config.sheet_feed_change
+          } : {}),
+          ...(config.podimo_history_overlap_minimum ? {
+            identity_review_required: message.includes("Podimo identity review required"),
+            podimo_history_overlap_minimum: config.podimo_history_overlap_minimum,
+            podimo_podcast_id: config.podcast_id
+          } : {})
+        }
       });
     } catch (_error) {
       failed.error = "Import failed and import log update failed";

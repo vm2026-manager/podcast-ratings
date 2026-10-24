@@ -61,6 +61,13 @@ export type FeedConfig = {
   // Version-controlled evidence for an exact same-show RSS relocation. Never
   // populate from Sheet input; changed GUIDs require a separate identity plan.
   reviewed_sheet_feeds?: Array<{ from_url: string; to_url: string; same_show_and_guids: true; evidence: string }>;
+  // A Google Sheets RSS relocation is provisional until the existing source
+  // returns at least three exact GUID matches from this new URL. The importer
+  // validates this against its normal existing-episode lookup before any write.
+  sheet_feed_change?: { from_url: string; to_url: string; minimum_guid_overlap: number };
+  // Historically mapped Podimo sources are enabled from the Sheet only after
+  // the ordinary same-source episode lookup proves GUID continuity.
+  podimo_history_overlap_minimum?: number;
 };
 
 export type FeedConfigMap = Record<string, FeedConfig>;
@@ -79,6 +86,15 @@ export const FEED_CONFIGS: FeedConfigMap = {
     podcast_id: "616ec836-7d90-4c98-8ad3-9cea17e067e1",
     podimo_show_url: "https://podimo.com/dk/shows/krop-til-salg",
     manual_identity_links: KROP_MANUAL_LINKS
+  },
+  "podimo_q_og_co": {
+    podcast_key: "q og co",
+    source: "podimo_q_og_co",
+    format: "podimo_graphql",
+    feed_url: "https://graphql.podimo.com/graphql",
+    podcast_id: "1aba8d20-8fbd-4606-aed0-1329f597cf32",
+    podimo_show_url: "https://podimo.com/dk/shows/q-og-co",
+    podimo_history_overlap_minimum: 3
   },
   [DJAEVLEN_FEED_KEY]: {
     // The historical source is the GUID/episode identity namespace. Routes

@@ -97,11 +97,27 @@ export function applySheetFeedPolicy(
     const review = config.reviewed_sheet_feeds?.find(entry =>
       entry.from_url === config.feed_url && entry.to_url === url &&
       entry.same_show_and_guids === true && entry.evidence.trim().length > 0);
-    if (!review) { report("identity_review_required"); continue; }
-    // Preserve canonical ID, source, enablement and all identity-related options.
-    configs[key] = { ...config, feed_url: url };
+    if (!review && (config.format !== undefined && config.format !== "rss")) {
+      report("special_adapter_preserved"); continue;
+    }
+    if (!review && config.format === "rss" && !isOrdinaryRssUrl(config.feed_url)) {
+      report("special_adapter_preserved"); continue;
+    }
+    // For ordinary RSS, validate continuity using the importer's existing
+    // same-source GUID lookup before it writes any episodes. This makes Sheet
+    // relocations self-service while preserving the historical identity space.
+    // Protected adapters and Apple/Podimo identity changes remain review-only.
+    configs[key] = {
+      ...config,
+      feed_url: url,
+      ...(!review ? { sheet_feed_change: {
+        from_url: config.feed_url,
+        to_url: url,
+        minimum_guid_overlap: 3
+      } } : {})
+    };
     active.splice(0, active.length, url);
-    report("reviewed_same_show_and_guids", "sheet_override");
+    report(review ? "reviewed_same_show_and_guids" : "rss_relocation_pending_guid_overlap", "sheet_override");
   }
   return { handled, resolutions };
 }
