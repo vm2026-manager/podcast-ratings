@@ -20,6 +20,10 @@ assert.doesNotMatch(desktopCss, /grid-template-columns:\s*94px minmax\(190px, 2f
 const movementWrap = movementCss.match(/@media\s*\(min-width:\s*1101px\)\s*\{([\s\S]*?)\n\}/)?.[1] || "";
 assert.match(movementWrap, /\.desktop-ranking-row__rank:has\(\.ranking-movement\)\s*\{[\s\S]*?flex-wrap:\s*wrap\s*!important;[\s\S]*?white-space:\s*normal\s*!important;/,
   "desktop table rank and movement can wrap within the first column");
+assert.match(movementWrap, /\.desktop-ranking-row__rank:has\(\.ranking-movement\)\s*\{[\s\S]*?justify-content:\s*flex-end\s*!important;/,
+  "desktop table rank and movement align to the cover-side edge of the existing rank column");
+assert.match(movementWrap, /\.desktop-ranking-row__rank:has\(\.ranking-movement\)\s*\{[\s\S]*?padding-right:\s*4px\s*!important;/,
+  "rank markers retain a 12px minimum cover gap at compact desktop widths");
 assert.doesNotMatch(movementCss, /@media\s*\(max-width:\s*700px\)[\s\S]*?desktop-ranking-row__rank/,
   "the desktop rank wrapping rule does not leak into mobile cards");
 
@@ -28,7 +32,7 @@ assert.match(tableRule, /grid-template-columns:\s*58px minmax\(0, 1fr\)/,
   "desktop cover size and podcast text column remain unchanged");
 assert.match(indexHtml, /desktop-home-mockup\.css\?v=20261024-ranking-column-80-v1/,
   "desktop ranking CSS has a fresh cache key");
-assert.match(indexHtml, /ranking-movement\.css\?v=20261024-ranking-rank-wrap-v1/,
-  "movement wrapping CSS has a fresh cache key");
+assert.match(indexHtml, /ranking-movement\.css\?v=20261024-ranking-rank-align-v2/,
+  "desktop rank alignment CSS has a fresh cache key");
 
 console.log("Desktop ranking rank-column and movement-wrap regression checks passed.");
