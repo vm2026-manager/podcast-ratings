@@ -17,7 +17,11 @@ assert.equal(overridden.audit.active_feeds[0].origin, "sheet_override");
 assert.equal(overridden.audit.feed_resolutions[0].differs_from_sheet, false);
 assert.deepEqual(merge([row(oldUrl)]).configs.legacy_key, reviewed);
 assert.equal(merge([row(oldUrl)]).audit.feed_warnings.length, 0);
-assert.equal(merge([row(newUrl)], config).audit.feed_warnings[0].reason, "identity_review_required");
+const automaticCandidate = merge([row(newUrl)], config);
+assert.equal(automaticCandidate.configs.legacy_key.sheet_feed_change.minimum_guid_overlap, 3);
+assert.equal(automaticCandidate.configs.legacy_key.source, config.source);
+assert.equal(automaticCandidate.audit.feed_warnings.length, 0,
+  "ordinary RSS changes are validated against historical GUIDs by the existing import run");
 for (const value of ["not a URL", "javascript:alert(1)", "https://open.podimo.com/podcast/show", "https://open.spotify.com/show/test"]) {
   const result = merge([row(value)]);
   assert.equal(result.configs.legacy_key.feed_url, oldUrl);
@@ -77,7 +81,8 @@ assert.equal(merge([row(newUrl)], { ...reviewed, enabled: false }).configs.legac
 const umbrella = { ...reviewed, podcast_key: "umbrella", routes: [{ key: "child", podcast_key: "canonical id" }] };
 assert.deepEqual(merge([row(newUrl)], umbrella).configs, { legacy_key: umbrella });
 assert.equal(merge([row(newUrl)], umbrella).audit.feed_warnings[0].reason, "special_or_ambiguous_owner");
-assert.equal(merge([row(newUrl)], { ...reviewed, feed_url: "https://example.test/different.rss" }).audit.feed_warnings[0].reason, "identity_review_required");
+assert.equal(merge([row(newUrl)], { ...reviewed, feed_url: "https://example.test/different.rss" }).configs.legacy_key.sheet_feed_change.from_url,
+  "https://example.test/different.rss");
 
 // A reviewed relocation uses the existing GUID/source and UUID, with no insert.
 const existing = { id: "562b97ef-d267-4062-b65e-ef4aa904631e", podcast_key: config.podcast_key,
@@ -120,6 +125,46 @@ assert.equal(dr.configs.dr_new.feed_url, "https://api.dr.dk/podcasts/v1/feeds/ex
 const fallback = await loadRuntimeFeedConfigs({ podcastsJsonUrl: "https://example.test/catalogue.json", staticConfigs: { legacy_key: config }, fetchPayload: async () => { throw Error("offline"); } });
 assert.equal(fallback.audit.dynamic_feed_load_error, "offline");
 assert.equal(fallback.audit.active_feeds[0].feed_url, oldUrl);
+const changedFeedConfig = automaticCandidate.configs.legacy_key;
+const rejectedWrites = [];
+const lowOverlapRepository = {
+  async createImportRun() { return { id: "review-run" }; },
+  async loadExistingEpisodes() { return [existing]; },
+  async upsertEpisodes(rows) { rejectedWrites.push(...rows); },
+  async updateEpisodeMetadata() {},
+  async updateImportRun() {}
+};
+const lowOverlap = await runEpisodeImport({ feedKey: "legacy_key", feedConfigs: automaticCandidate.configs,
+  repository: lowOverlapRepository,
+  fetchText: async () => '<rss><channel><item><guid>stable-guid</guid><title>Existing</title></item>' +
+    '<item><guid>new-a</guid><title>New A</title></item><item><guid>new-b</guid><title>New B</title></item></channel></rss>' });
+assert.equal(lowOverlap.status, "failed");
+assert.match(lowOverlap.error, /1 exact historical GUID matches; 3 required/);
+assert.equal(rejectedWrites.length, 0, "an unsafe feed change cannot write new episodes");
+assert.equal(changedFeedConfig.source, existing.source, "a relocation never changes historical provenance");
+const historical = ["stable-guid", "stable-guid-2", "stable-guid-3"].map((guid, index) => ({
+  ...existing, id: `historical-uuid-${index + 1}`, external_guid: guid, external_episode_id: guid,
+  title: `Episode ${index + 1}`
+}));
+const safeWrites = [];
+const verifiedRepository = {
+  async createImportRun() { return { id: "verified-run" }; },
+  async loadExistingEpisodes() { return historical; },
+  async upsertEpisodes(rows) { safeWrites.push(...rows); },
+  async updateEpisodeMetadata() {},
+  async updateImportRun() {}
+};
+const safeRelocation = await runEpisodeImport({ feedKey: "legacy_key", feedConfigs: automaticCandidate.configs,
+  repository: verifiedRepository,
+  fetchText: async () => '<rss><channel>' + ["stable-guid", "stable-guid-2", "stable-guid-3", "new-guid"]
+    .map((guid, index) => `<item><guid>${guid}</guid><title>Episode ${index + 1}</title></item>`).join("") +
+    '</channel></rss>' });
+assert.notEqual(safeRelocation.status, "failed");
+assert.equal(safeWrites.length, 4);
+for (const prior of historical) {
+  assert.equal(safeWrites.find(row => row.external_guid === prior.external_guid).source, prior.source);
+  assert.equal(safeWrites.find(row => row.external_guid === prior.external_guid).podcast_key, prior.podcast_key);
+}
 const index = await readFile(new URL("../supabase/functions/import-podcast-episodes/index.ts", import.meta.url), "utf8");
 assert.match(index, /console.warn\("\[episode-import\] Sheet feed review required"/);
 assert.match(index, /feed_config_audit: runtimeFeeds.audit/);
