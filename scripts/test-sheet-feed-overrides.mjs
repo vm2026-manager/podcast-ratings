@@ -37,6 +37,28 @@ assert.equal(owned.audit.feed_warnings[0].reason, "feed_owned_by_other_podcast")
 const apple = merge([row("apple:1851213764")]);
 assert.equal(apple.configs.legacy_key.feed_url, oldUrl);
 assert.equal(apple.audit.feed_warnings[0].reason, "special_adapter_preserved");
+const knownPodimoId = "0db490b8-907e-4f35-bd48-60eae9f8805b";
+const knownPodimoConfig = { podcast_key: "canonical id", source: "podimo_historical_source",
+  feed_url: "https://graphql.podimo.com/graphql", format: "podimo_graphql", podcast_id: knownPodimoId,
+  podimo_show_url: "https://podimo.com/dk/shows/canonical-id" };
+const knownPodimo = mergeSheetFeedConfigs([row(`https://open.podimo.com/podcast/${knownPodimoId}`)], { legacy_key: knownPodimoConfig });
+assert.deepEqual(knownPodimo.configs.legacy_key, knownPodimoConfig,
+  "an exact Podimo show ID uses its existing GraphQL adapter and historical source unchanged");
+assert.equal(knownPodimo.audit.feed_warnings.length, 0);
+for (const feed of [
+  "https://open.podimo.com/podcast/ffffffff-ffff-ffff-ffff-ffffffffffff",
+  "https://open.podimo.com/podcast/0db490b8-907e-4f35-bd48-60eae9f8805b?next=show"
+]) {
+  const unsafePodimo = mergeSheetFeedConfigs([row(feed)], { legacy_key: knownPodimoConfig });
+  assert.equal(unsafePodimo.configs.legacy_key.feed_url, knownPodimoConfig.feed_url);
+  assert.equal(unsafePodimo.audit.feed_warnings[0].reason,
+    feed.includes("?") ? "invalid_or_non_rss_feed" : "podimo_show_id_mismatch");
+}
+const unknownPodimo = mergeSheetFeedConfigs([row(
+  "https://open.podimo.com/podcast/1aba8d20-8fbd-4606-aed0-1329f597cf32", "q og co")], {});
+assert.equal(unknownPodimo.configs.q_og_co, undefined,
+  "a new Podimo show cannot become a dynamic RSS source");
+assert.equal(unknownPodimo.audit.feed_warnings[0].reason, "podimo_adapter_review_required");
 const newApple = mergeSheetFeedConfigs([row("apple:1851213764", "new")], {});
 assert.equal(newApple.configs.apple_1851213764.format, "apple_podcasts_html");
 assert.equal(newApple.configs.apple_1851213764.enabled, false);
