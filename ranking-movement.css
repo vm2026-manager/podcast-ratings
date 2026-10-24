@@ -72,7 +72,8 @@ html body.page-ranglister .desktop-ranking-row__rank .ranking-movement--steady {
 }
 
 @media (min-width: 1101px) {
-  html body.page-ranglister .desktop-ranking-row__rank:has(.ranking-movement) {
+  html body.page-ranglister .desktop-ranking-row__rank:has(.ranking-movement),
+  html body.page-ranglister .desktop-ranking-row__rank:not(:has(.ranking-movement)) {
     display: flex !important;
     flex-wrap: wrap !important;
     justify-content: flex-end !important;
@@ -80,6 +81,18 @@ html body.page-ranglister .desktop-ranking-row__rank .ranking-movement--steady {
     column-gap: 0.38rem !important;
     row-gap: 0 !important;
     white-space: normal !important;
+  }
+
+  html body.page-ranglister .desktop-ranking-row__rank .ranking-movement {
+    flex: 0 0 2rem;
+    box-sizing: border-box;
+  }
+
+  html body.page-ranglister .desktop-ranking-row__rank:not(:has(.ranking-movement))::after {
+    content: "";
+    flex: 0 0 2rem;
+    visibility: hidden;
+    pointer-events: none;
   }
 }
 
