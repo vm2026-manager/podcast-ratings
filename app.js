@@ -345,6 +345,16 @@ const EPISODE_PODCAST_CONFIG = {
     source: "buzzsprout",
     persistence: "supabase"
   },
+  "transferguru tipsbladet": {
+    podcastKey: "transferguru tipsbladet",
+    databasePodcastKey: "transferguru tipsbladet",
+    enabled: true,
+    displayName: "Transferguru",
+    searchPlaceholder: "Søg i Transferguru-episoder",
+    source: "buzzsprout",
+    episodeSources: ["buzzsprout_tipsbladet_lyd_rss"],
+    persistence: "supabase"
+  },
   "spillet bag spillet": {
     podcastKey: "spillet bag spillet",
     databasePodcastKey: "spillet bag spillet",
