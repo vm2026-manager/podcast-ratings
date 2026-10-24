@@ -7060,6 +7060,10 @@ function createDesktopRankingTableRowElement(podcast, displayRank = null) {
   const rankText =
     displayRank ?? (placementDisplay.hasPlacement ? placementDisplay.value : "\u2014");
   const rankLabel = formatDesktopRankingPlacement(rankText);
+  const rankDigits = String(rankLabel).match(/\d/g)?.length ?? 0;
+  const rankClass = rankDigits >= 4
+    ? "desktop-ranking-row__rank desktop-ranking-row__rank--wide-number"
+    : "desktop-ranking-row__rank";
   const scoreText = score.value === null ? "\u2014" : formatCompactRating(score.value);
   const ownScoreText = ownScore === null ? "\u2014" : formatCompactRating(ownScore);
   const hasExternalLink = isValidPodcastLink(podcast.link);
@@ -7068,7 +7072,7 @@ function createDesktopRankingTableRowElement(podcast, displayRank = null) {
   article.dataset.key = key;
   article.setAttribute("role", "row");
   article.innerHTML = `
-    <span class="desktop-ranking-row__rank" role="cell">${escapeHtml(rankLabel)}${getRankingMovementMarkup(podcast)}</span>
+    <span class="${rankClass}" role="cell"><span class="desktop-ranking-row__number">${escapeHtml(rankLabel)}</span>${getRankingMovementMarkup(podcast)}</span>
     <div class="desktop-ranking-row__podcast" role="cell">
       <button
         class="desktop-ranking-row__cover desktop-ranking-cover"

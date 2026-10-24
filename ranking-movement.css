@@ -74,25 +74,34 @@ html body.page-ranglister .desktop-ranking-row__rank .ranking-movement--steady {
 @media (min-width: 1101px) {
   html body.page-ranglister .desktop-ranking-row__rank:has(.ranking-movement),
   html body.page-ranglister .desktop-ranking-row__rank:not(:has(.ranking-movement)) {
-    display: flex !important;
-    flex-wrap: wrap !important;
-    justify-content: flex-end !important;
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) 26px !important;
+    align-items: start !important;
+    justify-content: stretch !important;
     padding-right: 4px !important;
-    column-gap: 0.38rem !important;
-    row-gap: 0 !important;
+    column-gap: 2px !important;
     white-space: normal !important;
   }
 
-  html body.page-ranglister .desktop-ranking-row__rank .ranking-movement {
-    flex: 0 0 2rem;
-    box-sizing: border-box;
+  html body.page-ranglister .desktop-ranking-row__number {
+    grid-column: 1;
+    min-width: 0;
+    justify-self: end;
+    text-align: right;
+    white-space: nowrap !important;
   }
 
-  html body.page-ranglister .desktop-ranking-row__rank:not(:has(.ranking-movement))::after {
-    content: "";
-    flex: 0 0 2rem;
-    visibility: hidden;
-    pointer-events: none;
+  html body.page-ranglister .desktop-ranking-row__rank--wide-number .desktop-ranking-row__number {
+    grid-column: 1 / -1;
+  }
+
+  html body.page-ranglister .desktop-ranking-row__rank .ranking-movement {
+    grid-column: 2;
+    min-width: 0;
+    max-width: 100%;
+    box-sizing: border-box;
+    overflow-wrap: anywhere;
+    white-space: normal !important;
   }
 }
 
