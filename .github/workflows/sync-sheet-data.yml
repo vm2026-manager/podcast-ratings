@@ -264,7 +264,9 @@ jobs:
         id: auto-merge
         if: steps.required-gate.outcome == 'success'
         env:
-          GH_TOKEN: ${{ github.token }}
+          # GITHUB_TOKEN is intentionally read-only for this protected PR flow.
+          # Reuse the trusted repository token already checked before PR creation.
+          GH_TOKEN: ${{ secrets.CATALOGUE_SYNC_PR_TOKEN }}
           PR_URL: ${{ steps.create-pull-request.outputs.pull-request-url }}
           HEAD_SHA: ${{ steps.catalogue-pr.outputs.head_sha }}
         run: |

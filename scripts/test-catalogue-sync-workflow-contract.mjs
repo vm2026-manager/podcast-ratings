@@ -14,6 +14,8 @@ assert.match(workflow, /event=pull_request&head_sha=\$\{HEAD_SHA\}/u);
 assert.match(workflow, /select\(\.head_sha == \$sha\)/u);
 assert.match(workflow, /if \[ "\$conclusion" != "success" \]/u);
 assert.doesNotMatch(workflow, /gh workflow run critical-regression-gate/u);
+assert.match(workflow, /Enable automatic merge after required checks[\s\S]*?GH_TOKEN: \$\{\{ secrets\.CATALOGUE_SYNC_PR_TOKEN \}\}/u);
+assert.doesNotMatch(workflow, /Enable automatic merge after required checks[\s\S]*?GH_TOKEN: \$\{\{ github\.token \}\}/u);
 assert.match(workflow, /gh pr merge --auto --merge --match-head-commit "\$HEAD_SHA"/u);
 assert.match(workflow, /if: steps\.required-gate\.outcome == 'success'/u);
 assert.match(workflow, /data\/podcasts\.json data\/featured-reviews\.json data\/explore-clusters\.json/u);
