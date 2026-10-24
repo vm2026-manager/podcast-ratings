@@ -23,13 +23,13 @@
       "preserveSourceBytes": true
     }
   },
-  "totalPodcasts": 1087,
-  "totalLocalCovers": 1081,
-  "totalVariants": 2404,
-  "totalOriginals": 1081,
-  "totalVariantFileSizeBytes": 164168512,
-  "totalOriginalFileSizeBytes": 531561886,
-  "totalFileSizeBytes": 695730398,
+  "totalPodcasts": 1088,
+  "totalLocalCovers": 1082,
+  "totalVariants": 2407,
+  "totalOriginals": 1082,
+  "totalVariantFileSizeBytes": 164643486,
+  "totalOriginalFileSizeBytes": 534611681,
+  "totalFileSizeBytes": 699255167,
   "placeholderPodcasts": 6,
   "variantCounts": {
     "480": 1077,
@@ -74046,6 +74046,82 @@
           "requestedWidth": 1400,
           "actualWidth": 1400,
           "actualHeight": 1400
+        }
+      }
+    },
+    {
+      "stableKey": "bryllupsgaesterne-f6a7408ecb",
+      "appPodcastKey": "bryllupsgaesterne",
+      "title": "Bryllupsgæsterne",
+      "host": "Krister Moltzen & Tim Hinman",
+      "publisher": "Third Ear",
+      "mainSeries": "Third Ear",
+      "genre": "True Crime",
+      "originalImageUrl": "assets/podcast-covers/manual-originals/bryllupsgaesterne-f6a7408ecb.png",
+      "isDataUri": false,
+      "sourceKind": "manual",
+      "manualOverride": true,
+      "manualSourcePath": "assets/podcast-covers/manual-originals/bryllupsgaesterne-f6a7408ecb.png",
+      "sourceFormat": "PNG",
+      "sourceWidth": 1400,
+      "sourceHeight": 1400,
+      "sourceHasTransparency": false,
+      "qualityCategory": "manual",
+      "sourceChecksum": "a804f6e8fa0291517c3b898b3eb726c378af202cd37a4866fa72fc128e9dd25b",
+      "successfulSourceChecksum": "a804f6e8fa0291517c3b898b3eb726c378af202cd37a4866fa72fc128e9dd25b",
+      "sourceAuditStatus": "manual",
+      "lastAttempt": "2026-10-24T16:53:34Z",
+      "lastSuccess": "2026-10-24T16:53:34Z",
+      "lastError": "",
+      "status": "manual_override",
+      "needsPlaceholder": false,
+      "reusedExistingFiles": false,
+      "original": {
+        "path": "data/covers/original/bryllupsgaesterne-f6a7408ecb.png",
+        "format": "PNG",
+        "contentType": "image/png",
+        "bytes": 3049795,
+        "checksum": "a804f6e8fa0291517c3b898b3eb726c378af202cd37a4866fa72fc128e9dd25b",
+        "width": 1400,
+        "height": 1400,
+        "hasTransparency": false
+      },
+      "variants": {
+        "480": {
+          "path": "data/covers/480/bryllupsgaesterne-f6a7408ecb.webp",
+          "requestedWidth": 480,
+          "actualWidth": 480,
+          "actualHeight": 480,
+          "format": "WEBP",
+          "contentType": "image/webp",
+          "bytes": 35546,
+          "checksum": "c78e69f847232f3ec49b106d099c68a96c8a40cb35b8c70d683edc7d070b5059",
+          "hasTransparency": false,
+          "quality": 82
+        },
+        "800": {
+          "path": "data/covers/800/bryllupsgaesterne-f6a7408ecb.webp",
+          "requestedWidth": 800,
+          "actualWidth": 800,
+          "actualHeight": 800,
+          "format": "WEBP",
+          "contentType": "image/webp",
+          "bytes": 117160,
+          "checksum": "ca24989efde94a394524523b46e630b18b6ab7bd1f2a5a94616ad34474b22631",
+          "hasTransparency": false,
+          "quality": 88
+        },
+        "1400": {
+          "path": "data/covers/1400/bryllupsgaesterne-f6a7408ecb.webp",
+          "requestedWidth": 1400,
+          "actualWidth": 1400,
+          "actualHeight": 1400,
+          "format": "WEBP",
+          "contentType": "image/webp",
+          "bytes": 322268,
+          "checksum": "9264945fab0ec61fb35e10de0151ec2e044ddddbad62e42b7e12214bb45e3f8f",
+          "hasTransparency": false,
+          "quality": 90
         }
       }
     }
