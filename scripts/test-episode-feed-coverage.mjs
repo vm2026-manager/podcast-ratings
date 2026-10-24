@@ -21,18 +21,23 @@ assert.equal(check.catalogue_rows, 6);
 assert.equal(check.catalogue_rows_with_feed, 5);
 assert.equal(check.findings.length, 3);
 assert.deepEqual(new Set(check.findings.map(x => x.cause)),
-  new Set(["missing_or_disabled_import_adapter", "missing_podcast_id"]));
-assert.equal(check.findings.filter(x => x.podcast_key === "another podimo").length, 1);
+  new Set(["podimo_adapter_review_required", "missing_or_disabled_import_adapter", "missing_podcast_id"]));
+assert.equal(check.findings.find(x => x.podcast_key === "another podimo")?.cause,
+  "podimo_adapter_review_required");
 assert.ok(!check.findings.some(x => x.podcast_key === "ordinary rss"), "valid RSS gets a runtime adapter");
 assert.ok(!check.findings.some(x => x.podcast_key === "smat brændbart"), "matching Podimo show is covered");
 const mismatch = checkEpisodeFeedCoverage({ rows: [row("smat brændbart", 
   "https://open.podimo.com/podcast/ffffffff-ffff-ffff-ffff-ffffffffffff")] },
   { podimo_smat_braendbart: podimo });
 assert.equal(mismatch.findings[0].cause, "podimo_show_id_mismatch");
+const malformedPodimo = checkEpisodeFeedCoverage({ rows: [row("unverified",
+  "https://open.podimo.com/podcast/0db490b8-907e-4f35-bd48-60eae9f8805b?redirect=rss")] }, {});
+assert.equal(malformedPodimo.findings[0].cause, "missing_or_disabled_import_adapter");
 const disabled = checkEpisodeFeedCoverage({ rows: [row("archived", "https://example.test/feed.xml")] },
   { old: { podcast_key: "archived", source: "old", feed_url: "https://example.test/feed.xml", enabled: false } });
 assert.equal(disabled.findings[0].cause, "missing_or_disabled_import_adapter");
 const alternate = checkEpisodeFeedCoverage({ rows: [row("smat brændbart", podimoUrl)] },
   { alternative: { podcast_key: "smat brændbart", source: "rss_alternative", feed_url: "https://example.test/working.rss", format: "rss" } });
-assert.equal(alternate.findings.length, 0, "a code-owned alternative RSS is not silently re-routed");
+assert.equal(alternate.findings[0].cause, "podimo_adapter_review_required",
+  "an unrelated RSS adapter cannot satisfy a Podimo show-link row");
 console.log("Offline episode-feed adapter coverage regression: PASS");

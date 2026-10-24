@@ -1,5 +1,5 @@
 import type { FeedConfig, FeedConfigMap } from "./feed-config.ts";
-import { appleShowUrl, parseAppleFeed, parseHttpFeed } from "./feed-syntax.mjs";
+import { appleShowUrl, parseAppleFeed, parseHttpFeed, parsePodimoShowFeed } from "./feed-syntax.mjs";
 
 export type FeedResolution = {
   podcast_key: string;
@@ -12,7 +12,8 @@ export type FeedResolution = {
 
 export function sheetFeedUrl(raw: unknown): string {
   const apple = parseAppleFeed(raw);
-  return apple ? appleShowUrl(apple.appleShowId) : parseHttpFeed(raw);
+  const podimo = parsePodimoShowFeed(raw);
+  return apple ? appleShowUrl(apple.appleShowId) : podimo?.url || parseHttpFeed(raw);
 }
 
 export function isOrdinaryRssUrl(raw: unknown): boolean {
@@ -52,6 +53,7 @@ export function applySheetFeedPolicy(
   const owners = Object.entries(configs);
   for (const candidate of candidates) {
     const { row, id, raw, url } = candidate;
+    const podimo = parsePodimoShowFeed(raw);
     const matches = owners.filter(([, c]) => [c.podcast_key, ...(c.owned_podcast_keys || []),
       ...(c.routes || []).flatMap(route => route.podcast_key ? [route.podcast_key] : [])]
       .some(key => normalizeId(key) === normalizeId(id)));
@@ -62,6 +64,16 @@ export function applySheetFeedPolicy(
         origin, differs_from_sheet: !active.includes(url), reason });
     };
     if (!id) { report("missing_podcast_id"); continue; }
+    if (podimo) {
+      if (matches.length === 1 && matches[0][1].format === "podimo_graphql" &&
+          matches[0][1].podcast_id?.toLowerCase() === podimo.showId &&
+          normalizeId(matches[0][1].podcast_key) === normalizeId(id)) {
+        report("verified_podimo_show_identity", "static");
+      } else {
+        report(matches.length ? "podimo_show_id_mismatch" : "podimo_adapter_review_required");
+      }
+      continue;
+    }
     if (!url || (!parseAppleFeed(raw) && !isOrdinaryRssUrl(url) && !active.includes(url))) {
       report("invalid_or_non_rss_feed"); continue;
     }

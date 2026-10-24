@@ -2,6 +2,7 @@ import { readFile, writeFile } from "node:fs/promises";
 import { pathToFileURL } from "node:url";
 import { FEED_CONFIGS } from "../supabase/functions/import-podcast-episodes/feed-config.ts";
 import { mergeSheetFeedConfigs } from "../supabase/functions/import-podcast-episodes/runtime-feed-config.ts";
+import { parsePodimoShowFeed } from "../supabase/functions/import-podcast-episodes/feed-syntax.mjs";
 
 // Read-only catalogue-to-adapter audit. No feed fetch, database, secrets, cron
 // changes or production writes. Safe for Supabase Free.
@@ -34,12 +35,16 @@ export function checkEpisodeFeedCoverage(payload, staticConfigs = FEED_CONFIGS) 
     const owners = Object.values(configs).filter(config => ownedKeys(config)
       .some(owned => normalizeKey(owned) === key));
     const enabled = owners.filter(config => config.enabled !== false && config.metadata_only !== true);
-    const match = feed.match(/^https:\/\/open\.podimo\.com\/podcast\/([\da-f]{8}-[\da-f]{4}-[\da-f]{4}-[\da-f]{4}-[\da-f]{12})(?:[/?#]|$)/iu);
-    if (match) {
-      const showId = match[1].toLowerCase();
-      const podimo = enabled.filter(config => config.format === "podimo_graphql");
-      if (podimo.length && !podimo.some(config => String(config.podcast_id || "").toLowerCase() === showId)) {
+    const podimo = parsePodimoShowFeed(feed);
+    if (podimo) {
+      const showId = podimo.showId;
+      const podimoAdapters = enabled.filter(config => config.format === "podimo_graphql");
+      if (podimoAdapters.length && !podimoAdapters.some(config => String(config.podcast_id || "").toLowerCase() === showId)) {
         findings.push({ podcast_key: podcastKey, title, cause: "podimo_show_id_mismatch" });
+        continue;
+      }
+      if (!podimoAdapters.length) {
+        findings.push({ podcast_key: podcastKey, title, cause: "podimo_adapter_review_required" });
         continue;
       }
     }
