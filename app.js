@@ -2934,7 +2934,10 @@ function scheduleBackgroundRouteWarmup() {
 
   const run = () => {
     backgroundRouteWarmupScheduled = false;
-    ["forside", "ranglister", "udforsk", "profil"].forEach((route, index) => {
+    const routes = ["forside", "ranglister"];
+    if (window.location.hash === "#udforsk") routes.push("udforsk");
+    routes.push("profil");
+    routes.forEach((route, index) => {
       window.setTimeout(() => warmRouteAssets(route), index * 90);
     });
   };
@@ -25218,7 +25221,11 @@ function startInitialExplorePersonalization() {
   initialExplorePersonalizationStartup = Promise.resolve()
     .then(() => initialPodcastStartup)
     .then(() => {
-      if (!state.authUser || state.podcastDataStatus !== "ready") return;
+      if (
+        !state.authUser ||
+        state.podcastDataStatus !== "ready" ||
+        window.location.hash !== "#udforsk"
+      ) return;
       warmExploreRouteAssets();
     })
     .catch((error) => {
