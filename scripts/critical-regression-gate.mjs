@@ -42,7 +42,7 @@ const checks = [
   ["ranking movement scoring, entrant stability, and 1,300-item ranks", ["scripts/test-ranking-movement.mjs"]],
   ["ranking movement hydration lifecycle", ["scripts/test-ranking-movement-load-lifecycle.mjs"]],
   ["full ranking retains sequential positions and verified movement markers", ["scripts/test-ranking-full-list.mjs"]],
-  ["desktop ranking rank column and wrapped long movements", ["scripts/test-desktop-ranking-column.mjs"]],
+  ["desktop ranking rank grid geometry in Chromium", ["scripts/test-desktop-ranking-column.mjs"]],
   ["community ranking load safety", ["scripts/test-community-ranking-load-safety.mjs"]],
   ["mobile home search stays open during data refresh", ["scripts/test-mobile-home-search-overlay-lifecycle.mjs"]],
   ["episode archive/source", ["scripts/test-podcast-episode-archive-source-regression.mjs"]],
