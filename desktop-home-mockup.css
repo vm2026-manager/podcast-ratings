@@ -17804,7 +17804,7 @@ html body #podcastDetailSheet [data-podcast-detail-placement]:empty {
   html body.page-ranglister .desktop-ranking-table__head,
   html body.page-ranglister .desktop-ranking-row {
     display: grid !important;
-    grid-template-columns: 94px minmax(220px, 2.02fr) minmax(105px, 0.95fr) minmax(226px, 1.08fr) minmax(110px, 0.8fr) 82px !important;
+    grid-template-columns: 80px minmax(220px, 2.02fr) minmax(105px, 0.95fr) minmax(226px, 1.08fr) minmax(110px, 0.8fr) 82px !important;
     gap: 12px !important;
     align-items: center !important;
   }
@@ -18188,7 +18188,7 @@ html body #podcastDetailSheet [data-podcast-detail-placement]:empty {
 
   html body.page-ranglister .desktop-ranking-table__head,
   html body.page-ranglister .desktop-ranking-row {
-    grid-template-columns: 94px minmax(190px, 2fr) minmax(90px, 0.82fr) minmax(226px, 1.08fr) minmax(100px, 0.76fr) 74px !important;
+    grid-template-columns: 80px minmax(190px, 2fr) minmax(90px, 0.82fr) minmax(226px, 1.08fr) minmax(100px, 0.76fr) 74px !important;
     gap: 8px !important;
     padding-left: 12px !important;
     padding-right: 12px !important;

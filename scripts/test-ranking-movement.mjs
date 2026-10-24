@@ -146,8 +146,8 @@ assert.equal(groupDelta.get("display-group:narkobetjenten"), 0);
 const app = fs.readFileSync(new URL("../app.js", import.meta.url), "utf8");
 const movementCss = fs.readFileSync(new URL("../ranking-movement.css", import.meta.url), "utf8");
 const desktopCss = fs.readFileSync(new URL("../desktop-home-mockup.css", import.meta.url), "utf8");
-assert.match(desktopCss, /grid-template-columns:\s*94px minmax\(220px/);
-assert.match(desktopCss, /grid-template-columns:\s*94px minmax\(190px/);
+assert.match(desktopCss, /grid-template-columns:\s*80px minmax\(220px/);
+assert.match(desktopCss, /grid-template-columns:\s*80px minmax\(190px/);
 assert.match(movementCss, /font-size:\s*0\.78rem/);
 assert.match(movementCss, /@media \(max-width: 700px\)[\s\S]*height: 36px !important/);
 function extractFunction(name) {

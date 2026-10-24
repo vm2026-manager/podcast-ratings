@@ -71,6 +71,16 @@ html body.page-ranglister .desktop-ranking-row__rank .ranking-movement--steady {
   color: #74685e;
 }
 
+@media (min-width: 1101px) {
+  html body.page-ranglister .desktop-ranking-row__rank:has(.ranking-movement) {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    column-gap: 0.38rem !important;
+    row-gap: 0 !important;
+    white-space: normal !important;
+  }
+}
+
 @media (max-width: 700px) {
   html body.page-ranglister .ranking-toolbar__results {
     grid-area: count;
