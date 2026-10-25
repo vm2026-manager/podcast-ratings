@@ -2,7 +2,7 @@
   "version": 1,
   "source": {
     "path": "data/podcasts.json",
-    "generatedAt": "2026-10-25T08:50:19.047Z",
+    "generatedAt": "2026-10-25T10:07:14.272Z",
     "count": 1340,
     "topicAliases": "config/recommendation-topic-aliases.json",
     "topicAliasVersion": 1,
@@ -14879,6 +14879,45 @@
         "fankultur",
         "stadionoplevelser",
         "supporteridentitet"
+      ],
+      "topicEligible": true,
+      "genreEligible": true,
+      "recommendationMetadataEligible": true,
+      "metadataIssues": []
+    },
+    {
+      "id": "farfars to liv",
+      "recommendationId": "rec-farfars-to-liv-2c6a9dbcdd372584078df6f10bfe0168",
+      "recommendationIdentityBasis": "title+link",
+      "identityDuplicateGroup": "",
+      "title": "Farfars to liv",
+      "mainSeries": "Third Ear",
+      "primaryGenreRaw": "Dokumentar",
+      "primaryGenre": "Dokumentar",
+      "primaryGenreValid": true,
+      "primaryGenreMappingType": "native",
+      "primaryGenreMappingSource": "Dokumentar",
+      "primaryGenreNeedsReview": false,
+      "primaryGenreReviewReason": "",
+      "secondaryGenre": "Historie",
+      "secondaryGenreValid": true,
+      "topicsRaw": [
+        "Familiehemmeligheder",
+        "dobbeltliv",
+        "identitet",
+        "generationshistorie"
+      ],
+      "topicsCanonical": [
+        "familiehemmeligheder",
+        "dobbeltliv",
+        "identitet",
+        "generationshistorie"
+      ],
+      "topicKeys": [
+        "familiehemmeligheder",
+        "dobbeltliv",
+        "identitet",
+        "generationshistorie"
       ],
       "topicEligible": true,
       "genreEligible": true,
@@ -40363,45 +40402,6 @@
         "samlekort",
         "black-lotus",
         "samlermarkedet"
-      ],
-      "topicEligible": true,
-      "genreEligible": true,
-      "recommendationMetadataEligible": true,
-      "metadataIssues": []
-    },
-    {
-      "id": "farfars to liv",
-      "recommendationId": "rec-farfars-to-liv-2c6a9dbcdd372584078df6f10bfe0168",
-      "recommendationIdentityBasis": "title+link",
-      "identityDuplicateGroup": "",
-      "title": "Farfars to liv",
-      "mainSeries": "Third Ear",
-      "primaryGenreRaw": "Dokumentar",
-      "primaryGenre": "Dokumentar",
-      "primaryGenreValid": true,
-      "primaryGenreMappingType": "native",
-      "primaryGenreMappingSource": "Dokumentar",
-      "primaryGenreNeedsReview": false,
-      "primaryGenreReviewReason": "",
-      "secondaryGenre": "Historie",
-      "secondaryGenreValid": true,
-      "topicsRaw": [
-        "Familiehemmeligheder",
-        "dobbeltliv",
-        "identitet",
-        "generationshistorie"
-      ],
-      "topicsCanonical": [
-        "familiehemmeligheder",
-        "dobbeltliv",
-        "identitet",
-        "generationshistorie"
-      ],
-      "topicKeys": [
-        "familiehemmeligheder",
-        "dobbeltliv",
-        "identitet",
-        "generationshistorie"
       ],
       "topicEligible": true,
       "genreEligible": true,
