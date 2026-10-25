@@ -165,7 +165,10 @@ export function discoverVerifiedFullStandalone({
     const record = {
       discovery_key: key, podcast_id: podcastId, title: childTitle,
       hovedserie: show.parent, publisher: "DR", cover: show.cover,
-      description: childTitle + " er et afsnit af DR-podcasten " + show.parent + "."
+      source_episode_guid: episode.external_guid,
+      source_url: episode.episode_url,
+      source_description: episode.description || "",
+      needs_editorial_review: true
     };
     next.records.push(record);
     next.processed_full_production_numbers ||= [];

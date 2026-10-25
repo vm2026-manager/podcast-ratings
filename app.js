@@ -9587,9 +9587,9 @@ function getPodcastDetailDynamicRecommendations(podcast, validated) {
       const isManual = manualCandidateKeys.has(candidateKey);
       const ratingDistance = Math.abs((Number(podcast.ratingValue) || 0) - (Number(candidatePodcast.ratingValue) || 0));
       const score =
-        (isManual ? 15 : 0) +
-        (sameSeries ? 45 : 0) +
-        Math.min(sharedTopics.length, 3) * 18 +
+        (isManual ? 45 : 0) +
+        (sameSeries ? 12 : 0) +
+        Math.min(sharedTopics.length, 3) * 25 +
         (sameGenre ? 18 : 0) +
         (secondaryGenreMatch ? 8 : 0) +
         (sameHost ? 9 : 0) +
@@ -9623,15 +9623,15 @@ function getPodcastDetailDynamicRecommendations(podcast, validated) {
         },
         sectionType: sameSeries ? "same-series" : "similar",
         sameSeries,
+        hasTopicMatch: sharedTopics.length > 0,
         score,
         index
       };
     })
     .sort((left, right) => right.score - left.score || left.index - right.index);
 
-  // Keep the strongest relationship signals ahead of broad catalogue matches:
-  // main-series first, then manual editorial links, then automatic matches, then
-  // generic fill. The single public list must preserve those source priorities.
+  // Preserve explicit editorial links, then rank concrete content matches
+  // before broad same-series fallback and generic catalogue fill.
   // Build the complete pool before applying diversity so same-series candidates
   // cannot consume every visible slot ahead of validated product matches.
   const candidatePool = [];
@@ -9658,13 +9658,14 @@ function getPodcastDetailDynamicRecommendations(podcast, validated) {
     .map((candidate) => scoredCandidatesByKey.get(getPodcastKey(candidate)))
     .filter(Boolean);
 
-  appendPhase(sameSeriesCandidates);
   appendPhase(manualCandidatesInCatalogueOrder);
+  appendPhase(scoredCandidates.filter((candidate) => candidate.hasTopicMatch));
   appendPhase(
     scoredCandidates.filter((candidate) =>
       productCandidatesByKey.has(getPodcastKey(candidate?.item?.podcast))
     )
   );
+  appendPhase(sameSeriesCandidates);
   appendPhase(scoredCandidates);
   // Keep the complete priority-ordered pool available until after public
   // display groups have been collapsed. Limiting here lets same-series entries

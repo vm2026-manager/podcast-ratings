@@ -813,6 +813,20 @@ function preserveFlashbackParentIdentity(sheetRows, previousRows) {
   return [...sheetRows, savedParents[0]];
 }
 
+function preserveCatalogueIdsByPodcastId(rows, previousRows) {
+  const previousById = new Map();
+  for (const row of Array.isArray(previousRows) ? previousRows : []) {
+    const id = normalizeText(row?.["Podcast-ID"]);
+    if (!id) continue;
+    if (previousById.has(id)) throw new Error(`Previous catalogue contains duplicate Podcast-ID ${JSON.stringify(id)}.`);
+    previousById.set(id, row);
+  }
+  return rows.map((row) => {
+    const previous = previousById.get(normalizeText(row?.["Podcast-ID"]));
+    return previous?.catalogue_id ? { ...row, catalogue_id: previous.catalogue_id } : row;
+  });
+}
+
 async function main() {
   const outputDirectoryIndex = process.argv.indexOf("--output-dir");
   const outputDirectory = outputDirectoryIndex === -1 ? "" : process.argv[outputDirectoryIndex + 1];
@@ -831,7 +845,8 @@ async function main() {
   // editorially, while a previously allocated auto identity is never discarded.
   const registry = JSON.parse(await readFile(path.join(repoRoot, "data", "auto-discovered-djaevlen.json"), "utf8"));
   const bakspejlRegistry = JSON.parse(await readFile(path.join(repoRoot, "data", "auto-discovered-bakspejl.json"), "utf8"));
-  const catalogueRows = mergeAutoDiscoveredBakspejlRows(mergeAutoDiscoveredDjaevlenRows(identitySafeSheetRows, registry), bakspejlRegistry).map((row) => row.catalogue_id ? row : {
+  const mergedCatalogueRows = mergeAutoDiscoveredBakspejlRows(mergeAutoDiscoveredDjaevlenRows(identitySafeSheetRows, registry), bakspejlRegistry);
+  const catalogueRows = preserveCatalogueIdsByPodcastId(mergedCatalogueRows, previousCatalogue.rows).map((row) => row.catalogue_id ? row : {
     ...row,
     catalogue_id: createCatalogueId({ title: row.Titel, host: row["Vært"], publisher: row.Udgiver, link: row.Link, feed: row.Feed })
   });
@@ -858,6 +873,7 @@ if (process.argv[1] && path.resolve(process.argv[1]) === __filename) {
 export {
   buildPodcastPayload,
   preserveFlashbackParentIdentity,
+  preserveCatalogueIdsByPodcastId,
   buildExploreClustersPayload,
   createCatalogueId,
   getField,
