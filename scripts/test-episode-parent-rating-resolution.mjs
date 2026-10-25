@@ -27,7 +27,7 @@ assert.match(parentFetch, /podcast_episodes!inner\(podcast_key,is_active(?:,[^)]
 assert.match(parentFetch, /\.eq\("podcast_episodes\.podcast_key"/u);
 assert.match(parentFetch, /\.eq\("podcast_episodes\.is_active", true\)/u);
 assert.match(parentFetch, /if \(!isCurrentUserScopedRequest\(request\)\) return;/u);
-assert.match(detailState, /usesParentRatingQuery[\s\S]*?parentUserRatingsResolvedFor === state\.authUser\.id/u, "production episode state resolves from the complete parent query, not loaded page IDs");
+assert.match(detailState, /episodeConfig\?\.persistence === "supabase"/u, "parent query is selected from persistence configuration");
 assert.match(detailState, /parentUserRatingsResolvedFor === state\.authUser\.id/u);
 
 const state = { authUser: { id: "user-a" } };
@@ -47,17 +47,17 @@ const helpers = new Function(
 )(
   state,
   () => episodeState,
-  () => ({ dataSource: "supabase" }),
+  () => ({ dataSource: "supabase", persistence: "supabase" }),
   (items) => items.map((item) => item.id),
   () => true,
-  (value) => Number.isFinite(Number(value)) ? Number(value) : null,
+  (value) => value === null || value === undefined || value === "" ? null : Number.isFinite(Number(value)) ? Number(value) : null,
   (episode) => String(episode?.id || episode?.episode_id || ""),
   () => null,
   () => true
 );
 
 let result = helpers.getPodcastDetailEpisodeRatingState({ key: "frontlinjen" });
-assert.deepEqual(result, { resolved: true, count: 1, average: 6.6 }, "an older-page rating immediately locks and supplies the parent score");
+assert.deepEqual(result, { resolved: true, error: "", count: 1, average: 6.6 }, "an older-page rating immediately locks and supplies the parent score");
 
 episodeState.parentUserRatingsById = { "older-page-episode": 6.6, "another-older-page-episode": 8 };
 result = helpers.getPodcastDetailEpisodeRatingState({ key: "frontlinjen" });
@@ -67,6 +67,37 @@ episodeState.parentUserRatingsById = {};
 result = helpers.getPodcastDetailEpisodeRatingState({ key: "frontlinjen" });
 assert.equal(result.resolved, true, "a completed empty query unlocks manual podcast rating");
 assert.equal(result.count, 0);
+
+// A manual-only podcast has no episode config and never waits for the parent
+// query marker that exists on every episode state.
+const manualEpisodeState = {
+  items: [{ id: "manual-1" }, { id: "manual-2" }],
+  userRatingsById: { "manual-1": null, "manual-2": null },
+  parentUserRatingsResolvedFor: "",
+  eligibilityResolved: true,
+  loading: false
+};
+const manualHelpers = new Function(
+  "state", "getPodcastEpisodeState", "getEpisodePodcastConfig", "getEpisodeIdsForQuery", "podcastSupportsEpisodes", "parseNumber", "getEpisodeKey", "getGenstartEpisodeById", "episodeMatchesPodcastSourceBoundary",
+  `${summary}\n${detailState}; return getPodcastDetailEpisodeRatingState;`
+)(
+  { authUser: { id: "user-a" } },
+  () => manualEpisodeState,
+  () => null,
+  (items) => items.map((item) => item.id),
+  () => true,
+  (value) => value === null || value === undefined || value === "" ? null : Number.isFinite(Number(value)) ? Number(value) : null,
+  (episode) => String(episode?.id || ""),
+  () => null,
+  () => true
+);
+assert.deepEqual(manualHelpers({ key: "bitcoin bedraget" }), { resolved: true, error: "", count: 0, average: null }, "manual episodes resolve from their completed local/canonical rating load");
+
+episodeState.parentUserRatingsError = "Episodevurderingerne kunne ikke hentes lige nu.";
+result = helpers.getPodcastDetailEpisodeRatingState({ key: "frontlinjen" });
+assert.equal(result.resolved, false, "a failed parent query stays unresolved instead of becoming zero ratings");
+assert.match(result.error, /kunne ikke hentes/u);
+episodeState.parentUserRatingsError = "";
 
 // A logout/account switch invalidates both the authoritative result and its
 // resolved marker, so a prior user's score cannot be displayed for the next user.
@@ -100,7 +131,7 @@ const parentFetchRun = new Function(
   `${parentFetch}; return fetchPodcastEpisodeParentRatings;`
 )(
   parentState,
-  () => ({ dataSource: "supabase" }),
+  () => ({ dataSource: "supabase", persistence: "supabase" }),
   () => parentEpisodeState,
   () => ({ userId: parentState.authUser?.id || "", generation: parentState.userScopedRequestGeneration }),
   (request) => parentState.authUser?.id === request.userId && parentState.userScopedRequestGeneration === request.generation,
@@ -119,5 +150,25 @@ responseA.resolve({ data: [{ episode_id: "older-page-episode", rating: 6.6 }], e
 await pendingA;
 assert.deepEqual(parentEpisodeState.parentUserRatingsById, {}, "late A parent result is discarded");
 assert.equal(parentEpisodeState.parentUserRatingsResolvedFor, "", "late A response cannot resolve B's detail state");
+
+// Query failures surface an explicit retryable error and never set the
+// resolved marker that would unlock a direct podcast rating.
+const failedParentState = {
+  authUser: { id: "user-a" },
+  userScopedRequestGeneration: 1,
+  supabase: { from() { return { select() { return this; }, eq() { return this; }, then(resolve) { return Promise.resolve({ data: null, error: new Error("network") }).then(resolve); } }; } }
+};
+const failedEpisodeState = { userRatingsById: {}, parentUserRatingsById: {}, parentUserRatingsResolvedFor: "", parentUserRatingsLoading: false, parentUserRatingsError: "" };
+const failedFetch = parentFetchRun;
+const failureHarness = new Function(
+  "state", "getEpisodePodcastConfig", "getPodcastEpisodeState", "getUserScopedRequestContext", "isCurrentUserScopedRequest",
+  "getEpisodeDatabasePodcastKey", "normalizeText", "parseNumber", "console", "applyPodcastEpisodeSourceBoundary",
+  `${parentFetch}; return fetchPodcastEpisodeParentRatings;`
+)(failedParentState, () => ({ dataSource: "supabase", persistence: "supabase" }), () => failedEpisodeState,
+  () => ({ userId: "user-a", generation: 1 }), () => true, () => "frontlinjen", String, Number,
+  { error() {} }, (query) => query);
+await failureHarness({ key: "frontlinjen" });
+assert.equal(failedEpisodeState.parentUserRatingsResolvedFor, "", "a failed query is never marked resolved");
+assert.match(failedEpisodeState.parentUserRatingsError, /kunne ikke hentes/u, "a failed query produces an explicit retry state");
 
 console.log("Episode-parent rating resolution regression checks passed.");

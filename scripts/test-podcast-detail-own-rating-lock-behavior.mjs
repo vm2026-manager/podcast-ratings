@@ -68,7 +68,8 @@ class FakeRatingCell extends FakeElement {
       "data-podcast-detail-inline-rating-reveal",
       "data-podcast-detail-inline-rating-save",
       "data-podcast-detail-inline-rating-message",
-      "data-podcast-detail-episode-rating-lock-trigger"
+      "data-podcast-detail-episode-rating-lock-trigger",
+      "data-podcast-detail-episode-rating-retry"
     ]) {
       if (value.includes(name)) {
         const node = new FakeElement();
@@ -113,7 +114,7 @@ function createHarness({ eligible = false, ratings = {}, manualRating = null, ac
   const state = { authUser: { id: "user-1" }, activePodcastDetailKey: activeKey, podcastDetailView: "detail" };
   const saveCalls = [];
   const helpers = new Function(
-    "state", "podcastSupportsEpisodes", "getPodcastEpisodeState", "getEpisodeIdsForQuery",
+    "state", "podcastSupportsEpisodes", "getPodcastEpisodeState", "getEpisodePodcastConfig", "getEpisodeIdsForQuery",
     "getPodcastEpisodeUserRatingSummary", "getPodcastKey", "getUserRating", "formatCompactRating", "escapeHtml",
     "savePodcastDetailInlineRating",
     `${runtimeSource}; return { getPodcastDetailEpisodeRatingState, canEditPodcastDetailInlineRating, getPodcastDetailOwnRatingMarkup, updatePodcastDetailOwnRatingCell };`
@@ -121,6 +122,7 @@ function createHarness({ eligible = false, ratings = {}, manualRating = null, ac
     state,
     () => true,
     () => episodeState,
+    () => null,
     (items) => items.map((item) => item.id),
     () => {
       const values = Object.values(episodeState.userRatingsById).filter((value) => value !== null && value !== undefined);
@@ -146,6 +148,16 @@ function createHarness({ eligible = false, ratings = {}, manualRating = null, ac
     recommendations: { id: "recommendation-node" }
   };
   return { state, episodeState, helpers, dialog, ratingCell, mobileLockHelp, saveCalls, podcast: { key: "podcast-a" } };
+}
+
+// Query errors are visible and retain the lock until an explicit retry succeeds.
+{
+  const h = createHarness({ eligible: false });
+  h.episodeState.userRatingError = "Episodevurderingerne kunne ikke hentes lige nu.";
+  h.helpers.updatePodcastDetailOwnRatingCell(h.dialog, h.podcast);
+  assert.match(h.ratingCell.innerHTML, /Episodevurderingerne kunne ikke hentes lige nu/u);
+  assert.ok(h.ratingCell.querySelector("[data-podcast-detail-episode-rating-retry]"), "a safe retry button replaces the permanent loading state");
+  assert.equal(h.ratingCell.querySelector("[data-podcast-detail-inline-rating-save]"), null, "a failed query cannot expose direct podcast rating");
 }
 
 // An unrated manual podcast uses the same reveal control, but presents it as a
