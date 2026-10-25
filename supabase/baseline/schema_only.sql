@@ -364,7 +364,7 @@ begin
 
   return canonical_id;
 end
-$function$
+$function$;
 
 CREATE OR REPLACE FUNCTION public.episode_identity_fingerprint(value text)
  RETURNS text
@@ -385,7 +385,7 @@ AS $function$
     title
   )
   from normalized
-$function$
+$function$;
 
 CREATE OR REPLACE FUNCTION public.get_display_group_community_stats(p_display_group_ids text[])
  RETURNS TABLE(display_group_id text, average_rating numeric, rating_count integer)
@@ -450,7 +450,7 @@ join (select distinct display_group_id from requested_members) as supported_grou
 left join per_user_group_ratings
   on per_user_group_ratings.display_group_id = requested_group_ids.display_group_id
 group by requested_group_ids.display_group_id;
-$function$
+$function$;
 
 CREATE OR REPLACE FUNCTION public.is_podcast_suggestions_admin()
  RETURNS boolean
@@ -459,7 +459,7 @@ CREATE OR REPLACE FUNCTION public.is_podcast_suggestions_admin()
  SET search_path TO 'public', 'auth'
 AS $function$
   select lower(coalesce(auth.jwt() ->> 'email', '')) in ('aspmads@hotmail.com');
-$function$
+$function$;
 
 CREATE OR REPLACE FUNCTION public.mark_podcast_suggestion_response_seen(p_suggestion_id uuid)
  RETURNS TABLE(id uuid, user_seen_response_at timestamp with time zone)
@@ -486,7 +486,7 @@ begin
       using errcode = 'P0002';
   end if;
 end;
-$function$
+$function$;
 
 CREATE OR REPLACE FUNCTION public.mark_podcast_suggestion_seen_by_moderator(p_suggestion_id uuid)
  RETURNS TABLE(id uuid, moderator_seen_at timestamp with time zone)
@@ -512,7 +512,7 @@ begin
       using errcode = 'P0002';
   end if;
 end;
-$function$
+$function$;
 
 CREATE OR REPLACE FUNCTION public.moderate_podcast_suggestion(p_suggestion_id uuid, p_status text, p_admin_note text DEFAULT NULL::text)
  RETURNS TABLE(id uuid, status text, reviewed_at timestamp with time zone, reviewed_by_user_id uuid, admin_note text)
@@ -555,7 +555,7 @@ begin
       using errcode = 'P0002';
   end if;
 end;
-$function$
+$function$;
 
 CREATE OR REPLACE FUNCTION public.moderate_podcast_suggestion(p_suggestion_id uuid, p_status text, p_admin_note text DEFAULT NULL::text, p_catalogue_podcast_id text DEFAULT NULL::text)
  RETURNS TABLE(id uuid, status text, reviewed_at timestamp with time zone, reviewed_by_user_id uuid, admin_note text, catalogue_podcast_id text)
@@ -609,7 +609,7 @@ begin
       using errcode = 'P0002';
   end if;
 end;
-$function$
+$function$;
 
 CREATE OR REPLACE FUNCTION public.protect_episode_identity_and_ratings()
  RETURNS trigger
@@ -686,7 +686,7 @@ begin
 
   return new;
 end
-$function$
+$function$;
 
 CREATE OR REPLACE FUNCTION public.protect_manual_catalogue_episode_map()
  RETURNS trigger
@@ -718,7 +718,7 @@ begin
 
   return new;
 end
-$function$
+$function$;
 
 CREATE OR REPLACE FUNCTION public.protect_podcast_episode_identity()
  RETURNS trigger
@@ -808,7 +808,7 @@ begin
 
   return new;
 end
-$function$
+$function$;
 
 CREATE OR REPLACE FUNCTION public.set_podcast_suggestion_updated_at()
  RETURNS trigger
@@ -818,7 +818,7 @@ begin
   new.updated_at = now();
   return new;
 end;
-$function$
+$function$;
 
 CREATE OR REPLACE FUNCTION public.set_updated_at()
  RETURNS trigger
@@ -828,7 +828,7 @@ begin
   new.updated_at = now();
   return new;
 end;
-$function$
+$function$;
 
 -- Views
 
@@ -837,7 +837,7 @@ CREATE OR REPLACE VIEW public.episode_rating_public_stats AS
     round(avg(rating), 1) AS average_rating,
     count(*)::integer AS rating_count
    FROM episode_ratings
-  GROUP BY episode_id;;
+  GROUP BY episode_id;
 
 CREATE OR REPLACE VIEW public.podcast_rating_combined_public_stats AS
  WITH direct_ratings AS (
@@ -875,14 +875,14 @@ CREATE OR REPLACE VIEW public.podcast_rating_combined_public_stats AS
     count(*) FILTER (WHERE activity_at >= (now() - '90 days'::interval))::integer AS recent_users_90d,
     count(*) FILTER (WHERE activity_at >= (now() - '7 days'::interval))::numeric + 0.35 * count(*) FILTER (WHERE activity_at >= (now() - '30 days'::interval) AND activity_at < (now() - '7 days'::interval))::numeric + 0.10 * count(*) FILTER (WHERE activity_at >= (now() - '90 days'::interval) AND activity_at < (now() - '30 days'::interval))::numeric AS momentum_score
    FROM effective_user_ratings
-  GROUP BY podcast_key;;
+  GROUP BY podcast_key;
 
 CREATE OR REPLACE VIEW public.rating_public_stats AS
  SELECT podcast_key,
     round(avg(rating), 1) AS average_rating,
     count(*)::integer AS rating_count
    FROM user_ratings
-  GROUP BY podcast_key;;
+  GROUP BY podcast_key;
 
 -- Row-level security state and policies
 

@@ -42,6 +42,11 @@ assert.match(baseline, /CREATE TABLE public\.manual_catalogue_episode_map\s*\(/i
 assert.match(baseline, /manual_catalogue_episode_map_episode_id_key UNIQUE \(episode_id\)/i);
 assert.match(baseline, /episode_ratings_episode_id_fkey FOREIGN KEY \(episode_id\) REFERENCES podcast_episodes\(id\) ON DELETE RESTRICT/i);
 assert.match(baseline, /CREATE POLICY .*episode_ratings/i);
+assert.equal(
+  (baseline.match(/CREATE OR REPLACE FUNCTION /g) || []).length,
+  (baseline.match(/\$function\$;/g) || []).length,
+  "all catalog functions need SQL terminators"
+);
 assert.match(baseline, /CREATE TRIGGER podcast_episodes_protect_identity/i);
 assert.match(baseline, /ALTER TABLE public\.episode_ratings ENABLE ROW LEVEL SECURITY/i);
 assert.doesNotMatch(baseline, /ALTER TABLE public\.episode_identity_history ENABLE ROW LEVEL SECURITY/i);
