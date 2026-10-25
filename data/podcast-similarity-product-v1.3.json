@@ -476217,61 +476217,6 @@
       "supplementarySimilaritiesRaw": "narkobetjenten og den kriminelle underverden sæson 2; narkobetjenten og den kriminelle underverden sæson 3; narkobetjenten og den kriminelle underverden sæson 6; narkobetjenten pa gaden sæson 1",
       "automaticSimilarResults": [
         {
-          "recommendationId": "rec-narkobetjenten-og-den-kriminelle-underverden-saeson-6-dd38d8938fcb1579a759561812c2bc84",
-          "existingId": "narkobetjenten og den kriminelle underverden sæson 6",
-          "title": "Narkobetjenten og den kriminelle underverden (Sæson 6)",
-          "publisher": "Podimo",
-          "authoritativeMainSeries": "",
-          "primaryGenre": "True Crime",
-          "secondaryGenre": "Samfund",
-          "topicsCanonical": [
-            "Narkokriminalitet",
-            "politiarbejde",
-            "informanter",
-            "Undercoverarbejde"
-          ],
-          "editorialScore": 7.8,
-          "image": "https://renedahlandersen.dk/wp-content/uploads/2023/02/Cover_Artwork-Narkobetjenten-2022-scaled.jpg",
-          "link": "https://podimo.com/dk/shows/2eecebe9-bbbc-4eae-84f9-43a0f80f23a2",
-          "contentSimilarityScore": 73.3771,
-          "topicSimilarityScore": 58.3771,
-          "genreSimilarityScore": 15,
-          "sharedTopics": [
-            "Narkokriminalitet",
-            "politiarbejde",
-            "Undercoverarbejde"
-          ],
-          "similarityReason": "Fælles emner: Narkokriminalitet, politiarbejde m.fl.",
-          "candidateType": "content_similarity"
-        },
-        {
-          "recommendationId": "rec-narkobetjenten-saeson-14-d9da4eeef697d7f1684b6d47397c62ee",
-          "existingId": "narkobetjenten sæson 14",
-          "title": "Narkobetjenten (sæson 14)",
-          "publisher": "Podimo",
-          "authoritativeMainSeries": "",
-          "primaryGenre": "True Crime",
-          "secondaryGenre": "Samfund",
-          "topicsCanonical": [
-            "Narkokriminalitet",
-            "politiarbejde",
-            "kriminelle miljøer"
-          ],
-          "editorialScore": 7.8,
-          "image": "https://renedahlandersen.dk/wp-content/uploads/2023/02/Cover_Artwork-Narkobetjenten-2022-scaled.jpg",
-          "link": "https://podimo.com/dk/shows/narkobetjenten",
-          "contentSimilarityScore": 72.7955,
-          "topicSimilarityScore": 57.7955,
-          "genreSimilarityScore": 15,
-          "sharedTopics": [
-            "Narkokriminalitet",
-            "politiarbejde",
-            "kriminelle miljøer"
-          ],
-          "similarityReason": "Fælles emner: Narkokriminalitet, politiarbejde m.fl.",
-          "candidateType": "content_similarity"
-        },
-        {
           "recommendationId": "rec-undercover-3b0546814c86ed8b2ff861901b1f1970",
           "existingId": "undercover",
           "title": "Undercover",
@@ -476433,61 +476378,6 @@
       "manualSupplementaryResults": [],
       "combinedSimilarResults": [
         {
-          "recommendationId": "rec-narkobetjenten-og-den-kriminelle-underverden-saeson-6-dd38d8938fcb1579a759561812c2bc84",
-          "existingId": "narkobetjenten og den kriminelle underverden sæson 6",
-          "title": "Narkobetjenten og den kriminelle underverden (Sæson 6)",
-          "publisher": "Podimo",
-          "authoritativeMainSeries": "",
-          "primaryGenre": "True Crime",
-          "secondaryGenre": "Samfund",
-          "topicsCanonical": [
-            "Narkokriminalitet",
-            "politiarbejde",
-            "informanter",
-            "Undercoverarbejde"
-          ],
-          "editorialScore": 7.8,
-          "image": "https://renedahlandersen.dk/wp-content/uploads/2023/02/Cover_Artwork-Narkobetjenten-2022-scaled.jpg",
-          "link": "https://podimo.com/dk/shows/2eecebe9-bbbc-4eae-84f9-43a0f80f23a2",
-          "contentSimilarityScore": 73.3771,
-          "topicSimilarityScore": 58.3771,
-          "genreSimilarityScore": 15,
-          "sharedTopics": [
-            "Narkokriminalitet",
-            "politiarbejde",
-            "Undercoverarbejde"
-          ],
-          "similarityReason": "Fælles emner: Narkokriminalitet, politiarbejde m.fl.",
-          "candidateType": "content_similarity"
-        },
-        {
-          "recommendationId": "rec-narkobetjenten-saeson-14-d9da4eeef697d7f1684b6d47397c62ee",
-          "existingId": "narkobetjenten sæson 14",
-          "title": "Narkobetjenten (sæson 14)",
-          "publisher": "Podimo",
-          "authoritativeMainSeries": "",
-          "primaryGenre": "True Crime",
-          "secondaryGenre": "Samfund",
-          "topicsCanonical": [
-            "Narkokriminalitet",
-            "politiarbejde",
-            "kriminelle miljøer"
-          ],
-          "editorialScore": 7.8,
-          "image": "https://renedahlandersen.dk/wp-content/uploads/2023/02/Cover_Artwork-Narkobetjenten-2022-scaled.jpg",
-          "link": "https://podimo.com/dk/shows/narkobetjenten",
-          "contentSimilarityScore": 72.7955,
-          "topicSimilarityScore": 57.7955,
-          "genreSimilarityScore": 15,
-          "sharedTopics": [
-            "Narkokriminalitet",
-            "politiarbejde",
-            "kriminelle miljøer"
-          ],
-          "similarityReason": "Fælles emner: Narkokriminalitet, politiarbejde m.fl.",
-          "candidateType": "content_similarity"
-        },
-        {
           "recommendationId": "rec-undercover-3b0546814c86ed8b2ff861901b1f1970",
           "existingId": "undercover",
           "title": "Undercover",
@@ -476648,61 +476538,6 @@
       ],
       "similarResults": [
         {
-          "recommendationId": "rec-narkobetjenten-og-den-kriminelle-underverden-saeson-6-dd38d8938fcb1579a759561812c2bc84",
-          "existingId": "narkobetjenten og den kriminelle underverden sæson 6",
-          "title": "Narkobetjenten og den kriminelle underverden (Sæson 6)",
-          "publisher": "Podimo",
-          "authoritativeMainSeries": "",
-          "primaryGenre": "True Crime",
-          "secondaryGenre": "Samfund",
-          "topicsCanonical": [
-            "Narkokriminalitet",
-            "politiarbejde",
-            "informanter",
-            "Undercoverarbejde"
-          ],
-          "editorialScore": 7.8,
-          "image": "https://renedahlandersen.dk/wp-content/uploads/2023/02/Cover_Artwork-Narkobetjenten-2022-scaled.jpg",
-          "link": "https://podimo.com/dk/shows/2eecebe9-bbbc-4eae-84f9-43a0f80f23a2",
-          "contentSimilarityScore": 73.3771,
-          "topicSimilarityScore": 58.3771,
-          "genreSimilarityScore": 15,
-          "sharedTopics": [
-            "Narkokriminalitet",
-            "politiarbejde",
-            "Undercoverarbejde"
-          ],
-          "similarityReason": "Fælles emner: Narkokriminalitet, politiarbejde m.fl.",
-          "candidateType": "content_similarity"
-        },
-        {
-          "recommendationId": "rec-narkobetjenten-saeson-14-d9da4eeef697d7f1684b6d47397c62ee",
-          "existingId": "narkobetjenten sæson 14",
-          "title": "Narkobetjenten (sæson 14)",
-          "publisher": "Podimo",
-          "authoritativeMainSeries": "",
-          "primaryGenre": "True Crime",
-          "secondaryGenre": "Samfund",
-          "topicsCanonical": [
-            "Narkokriminalitet",
-            "politiarbejde",
-            "kriminelle miljøer"
-          ],
-          "editorialScore": 7.8,
-          "image": "https://renedahlandersen.dk/wp-content/uploads/2023/02/Cover_Artwork-Narkobetjenten-2022-scaled.jpg",
-          "link": "https://podimo.com/dk/shows/narkobetjenten",
-          "contentSimilarityScore": 72.7955,
-          "topicSimilarityScore": 57.7955,
-          "genreSimilarityScore": 15,
-          "sharedTopics": [
-            "Narkokriminalitet",
-            "politiarbejde",
-            "kriminelle miljøer"
-          ],
-          "similarityReason": "Fælles emner: Narkokriminalitet, politiarbejde m.fl.",
-          "candidateType": "content_similarity"
-        },
-        {
           "recommendationId": "rec-undercover-3b0546814c86ed8b2ff861901b1f1970",
           "existingId": "undercover",
           "title": "Undercover",
@@ -476862,10 +476697,10 @@
         }
       ],
       "sameSeriesResults": [],
-      "automaticSimilarResultCount": 8,
+      "automaticSimilarResultCount": 6,
       "manualSupplementaryResultCount": 0,
-      "combinedSimilarResultCount": 8,
-      "similarResultCount": 8,
+      "combinedSimilarResultCount": 6,
+      "similarResultCount": 6,
       "sameSeriesResultCount": 0,
       "showSimilarSection": true,
       "showSameSeriesSection": false,
@@ -476880,59 +476715,6 @@
       "supplementarySimilaritiesRaw": "narkobetjenten og den kriminelle underverden sæson 1; narkobetjenten og den kriminelle underverden sæson 3; narkobetjenten sæson 7; narkobetjenten pa gaden sæson 1",
       "automaticSimilarResults": [
         {
-          "recommendationId": "rec-narkobetjenten-og-den-kriminelle-underverden-saeson-6-dd38d8938fcb1579a759561812c2bc84",
-          "existingId": "narkobetjenten og den kriminelle underverden sæson 6",
-          "title": "Narkobetjenten og den kriminelle underverden (Sæson 6)",
-          "publisher": "Podimo",
-          "authoritativeMainSeries": "",
-          "primaryGenre": "True Crime",
-          "secondaryGenre": "Samfund",
-          "topicsCanonical": [
-            "Narkokriminalitet",
-            "politiarbejde",
-            "informanter",
-            "Undercoverarbejde"
-          ],
-          "editorialScore": 7.8,
-          "image": "https://renedahlandersen.dk/wp-content/uploads/2023/02/Cover_Artwork-Narkobetjenten-2022-scaled.jpg",
-          "link": "https://podimo.com/dk/shows/2eecebe9-bbbc-4eae-84f9-43a0f80f23a2",
-          "contentSimilarityScore": 70.2434,
-          "topicSimilarityScore": 55.2434,
-          "genreSimilarityScore": 15,
-          "sharedTopics": [
-            "Narkokriminalitet",
-            "politiarbejde"
-          ],
-          "similarityReason": "Fælles emner: Narkokriminalitet og politiarbejde",
-          "candidateType": "content_similarity"
-        },
-        {
-          "recommendationId": "rec-narkobetjenten-saeson-14-d9da4eeef697d7f1684b6d47397c62ee",
-          "existingId": "narkobetjenten sæson 14",
-          "title": "Narkobetjenten (sæson 14)",
-          "publisher": "Podimo",
-          "authoritativeMainSeries": "",
-          "primaryGenre": "True Crime",
-          "secondaryGenre": "Samfund",
-          "topicsCanonical": [
-            "Narkokriminalitet",
-            "politiarbejde",
-            "kriminelle miljøer"
-          ],
-          "editorialScore": 7.8,
-          "image": "https://renedahlandersen.dk/wp-content/uploads/2023/02/Cover_Artwork-Narkobetjenten-2022-scaled.jpg",
-          "link": "https://podimo.com/dk/shows/narkobetjenten",
-          "contentSimilarityScore": 70.2434,
-          "topicSimilarityScore": 55.2434,
-          "genreSimilarityScore": 15,
-          "sharedTopics": [
-            "Narkokriminalitet",
-            "politiarbejde"
-          ],
-          "similarityReason": "Fælles emner: Narkokriminalitet og politiarbejde",
-          "candidateType": "content_similarity"
-        },
-        {
           "recommendationId": "rec-vi-ejer-byen-e6091a7bceb4b157aa585d498cbe8dd4",
           "existingId": "vi ejer byen",
           "title": "Vi ejer byen",
@@ -477091,59 +476873,6 @@
       "manualSupplementaryResults": [],
       "combinedSimilarResults": [
         {
-          "recommendationId": "rec-narkobetjenten-og-den-kriminelle-underverden-saeson-6-dd38d8938fcb1579a759561812c2bc84",
-          "existingId": "narkobetjenten og den kriminelle underverden sæson 6",
-          "title": "Narkobetjenten og den kriminelle underverden (Sæson 6)",
-          "publisher": "Podimo",
-          "authoritativeMainSeries": "",
-          "primaryGenre": "True Crime",
-          "secondaryGenre": "Samfund",
-          "topicsCanonical": [
-            "Narkokriminalitet",
-            "politiarbejde",
-            "informanter",
-            "Undercoverarbejde"
-          ],
-          "editorialScore": 7.8,
-          "image": "https://renedahlandersen.dk/wp-content/uploads/2023/02/Cover_Artwork-Narkobetjenten-2022-scaled.jpg",
-          "link": "https://podimo.com/dk/shows/2eecebe9-bbbc-4eae-84f9-43a0f80f23a2",
-          "contentSimilarityScore": 70.2434,
-          "topicSimilarityScore": 55.2434,
-          "genreSimilarityScore": 15,
-          "sharedTopics": [
-            "Narkokriminalitet",
-            "politiarbejde"
-          ],
-          "similarityReason": "Fælles emner: Narkokriminalitet og politiarbejde",
-          "candidateType": "content_similarity"
-        },
-        {
-          "recommendationId": "rec-narkobetjenten-saeson-14-d9da4eeef697d7f1684b6d47397c62ee",
-          "existingId": "narkobetjenten sæson 14",
-          "title": "Narkobetjenten (sæson 14)",
-          "publisher": "Podimo",
-          "authoritativeMainSeries": "",
-          "primaryGenre": "True Crime",
-          "secondaryGenre": "Samfund",
-          "topicsCanonical": [
-            "Narkokriminalitet",
-            "politiarbejde",
-            "kriminelle miljøer"
-          ],
-          "editorialScore": 7.8,
-          "image": "https://renedahlandersen.dk/wp-content/uploads/2023/02/Cover_Artwork-Narkobetjenten-2022-scaled.jpg",
-          "link": "https://podimo.com/dk/shows/narkobetjenten",
-          "contentSimilarityScore": 70.2434,
-          "topicSimilarityScore": 55.2434,
-          "genreSimilarityScore": 15,
-          "sharedTopics": [
-            "Narkokriminalitet",
-            "politiarbejde"
-          ],
-          "similarityReason": "Fælles emner: Narkokriminalitet og politiarbejde",
-          "candidateType": "content_similarity"
-        },
-        {
           "recommendationId": "rec-vi-ejer-byen-e6091a7bceb4b157aa585d498cbe8dd4",
           "existingId": "vi ejer byen",
           "title": "Vi ejer byen",
@@ -477301,59 +477030,6 @@
       ],
       "similarResults": [
         {
-          "recommendationId": "rec-narkobetjenten-og-den-kriminelle-underverden-saeson-6-dd38d8938fcb1579a759561812c2bc84",
-          "existingId": "narkobetjenten og den kriminelle underverden sæson 6",
-          "title": "Narkobetjenten og den kriminelle underverden (Sæson 6)",
-          "publisher": "Podimo",
-          "authoritativeMainSeries": "",
-          "primaryGenre": "True Crime",
-          "secondaryGenre": "Samfund",
-          "topicsCanonical": [
-            "Narkokriminalitet",
-            "politiarbejde",
-            "informanter",
-            "Undercoverarbejde"
-          ],
-          "editorialScore": 7.8,
-          "image": "https://renedahlandersen.dk/wp-content/uploads/2023/02/Cover_Artwork-Narkobetjenten-2022-scaled.jpg",
-          "link": "https://podimo.com/dk/shows/2eecebe9-bbbc-4eae-84f9-43a0f80f23a2",
-          "contentSimilarityScore": 70.2434,
-          "topicSimilarityScore": 55.2434,
-          "genreSimilarityScore": 15,
-          "sharedTopics": [
-            "Narkokriminalitet",
-            "politiarbejde"
-          ],
-          "similarityReason": "Fælles emner: Narkokriminalitet og politiarbejde",
-          "candidateType": "content_similarity"
-        },
-        {
-          "recommendationId": "rec-narkobetjenten-saeson-14-d9da4eeef697d7f1684b6d47397c62ee",
-          "existingId": "narkobetjenten sæson 14",
-          "title": "Narkobetjenten (sæson 14)",
-          "publisher": "Podimo",
-          "authoritativeMainSeries": "",
-          "primaryGenre": "True Crime",
-          "secondaryGenre": "Samfund",
-          "topicsCanonical": [
-            "Narkokriminalitet",
-            "politiarbejde",
-            "kriminelle miljøer"
-          ],
-          "editorialScore": 7.8,
-          "image": "https://renedahlandersen.dk/wp-content/uploads/2023/02/Cover_Artwork-Narkobetjenten-2022-scaled.jpg",
-          "link": "https://podimo.com/dk/shows/narkobetjenten",
-          "contentSimilarityScore": 70.2434,
-          "topicSimilarityScore": 55.2434,
-          "genreSimilarityScore": 15,
-          "sharedTopics": [
-            "Narkokriminalitet",
-            "politiarbejde"
-          ],
-          "similarityReason": "Fælles emner: Narkokriminalitet og politiarbejde",
-          "candidateType": "content_similarity"
-        },
-        {
           "recommendationId": "rec-vi-ejer-byen-e6091a7bceb4b157aa585d498cbe8dd4",
           "existingId": "vi ejer byen",
           "title": "Vi ejer byen",
@@ -477510,10 +477186,10 @@
         }
       ],
       "sameSeriesResults": [],
-      "automaticSimilarResultCount": 8,
+      "automaticSimilarResultCount": 6,
       "manualSupplementaryResultCount": 0,
-      "combinedSimilarResultCount": 8,
-      "similarResultCount": 8,
+      "combinedSimilarResultCount": 6,
+      "similarResultCount": 6,
       "sameSeriesResultCount": 0,
       "showSimilarSection": true,
       "showSameSeriesSection": false,
@@ -477528,32 +477204,6 @@
       "supplementarySimilaritiesRaw": "narkobetjenten og den kriminelle underverden sæson 2; narkobetjenten sæson 9; narkobetjenten sæson 10; narkobetjenten sæson 11",
       "automaticSimilarResults": [
         {
-          "recommendationId": "rec-narkobetjenten-saeson-14-d9da4eeef697d7f1684b6d47397c62ee",
-          "existingId": "narkobetjenten sæson 14",
-          "title": "Narkobetjenten (sæson 14)",
-          "publisher": "Podimo",
-          "authoritativeMainSeries": "",
-          "primaryGenre": "True Crime",
-          "secondaryGenre": "Samfund",
-          "topicsCanonical": [
-            "Narkokriminalitet",
-            "politiarbejde",
-            "kriminelle miljøer"
-          ],
-          "editorialScore": 7.8,
-          "image": "https://renedahlandersen.dk/wp-content/uploads/2023/02/Cover_Artwork-Narkobetjenten-2022-scaled.jpg",
-          "link": "https://podimo.com/dk/shows/narkobetjenten",
-          "contentSimilarityScore": 62.7812,
-          "topicSimilarityScore": 47.7812,
-          "genreSimilarityScore": 15,
-          "sharedTopics": [
-            "kriminelle miljøer",
-            "politiarbejde"
-          ],
-          "similarityReason": "Fælles emner: kriminelle miljøer og politiarbejde",
-          "candidateType": "content_similarity"
-        },
-        {
           "recommendationId": "rec-partners-in-crime-dad48e44123c7f6b87d67922a01e5173",
           "existingId": "partners in crime",
           "title": "Partners in crime",
@@ -477733,32 +477383,6 @@
       "manualSupplementaryResults": [],
       "combinedSimilarResults": [
         {
-          "recommendationId": "rec-narkobetjenten-saeson-14-d9da4eeef697d7f1684b6d47397c62ee",
-          "existingId": "narkobetjenten sæson 14",
-          "title": "Narkobetjenten (sæson 14)",
-          "publisher": "Podimo",
-          "authoritativeMainSeries": "",
-          "primaryGenre": "True Crime",
-          "secondaryGenre": "Samfund",
-          "topicsCanonical": [
-            "Narkokriminalitet",
-            "politiarbejde",
-            "kriminelle miljøer"
-          ],
-          "editorialScore": 7.8,
-          "image": "https://renedahlandersen.dk/wp-content/uploads/2023/02/Cover_Artwork-Narkobetjenten-2022-scaled.jpg",
-          "link": "https://podimo.com/dk/shows/narkobetjenten",
-          "contentSimilarityScore": 62.7812,
-          "topicSimilarityScore": 47.7812,
-          "genreSimilarityScore": 15,
-          "sharedTopics": [
-            "kriminelle miljøer",
-            "politiarbejde"
-          ],
-          "similarityReason": "Fælles emner: kriminelle miljøer og politiarbejde",
-          "candidateType": "content_similarity"
-        },
-        {
           "recommendationId": "rec-partners-in-crime-dad48e44123c7f6b87d67922a01e5173",
           "existingId": "partners in crime",
           "title": "Partners in crime",
@@ -477937,32 +477561,6 @@
       ],
       "similarResults": [
         {
-          "recommendationId": "rec-narkobetjenten-saeson-14-d9da4eeef697d7f1684b6d47397c62ee",
-          "existingId": "narkobetjenten sæson 14",
-          "title": "Narkobetjenten (sæson 14)",
-          "publisher": "Podimo",
-          "authoritativeMainSeries": "",
-          "primaryGenre": "True Crime",
-          "secondaryGenre": "Samfund",
-          "topicsCanonical": [
-            "Narkokriminalitet",
-            "politiarbejde",
-            "kriminelle miljøer"
-          ],
-          "editorialScore": 7.8,
-          "image": "https://renedahlandersen.dk/wp-content/uploads/2023/02/Cover_Artwork-Narkobetjenten-2022-scaled.jpg",
-          "link": "https://podimo.com/dk/shows/narkobetjenten",
-          "contentSimilarityScore": 62.7812,
-          "topicSimilarityScore": 47.7812,
-          "genreSimilarityScore": 15,
-          "sharedTopics": [
-            "kriminelle miljøer",
-            "politiarbejde"
-          ],
-          "similarityReason": "Fælles emner: kriminelle miljøer og politiarbejde",
-          "candidateType": "content_similarity"
-        },
-        {
           "recommendationId": "rec-partners-in-crime-dad48e44123c7f6b87d67922a01e5173",
           "existingId": "partners in crime",
           "title": "Partners in crime",
@@ -478140,10 +477738,10 @@
         }
       ],
       "sameSeriesResults": [],
-      "automaticSimilarResultCount": 8,
+      "automaticSimilarResultCount": 7,
       "manualSupplementaryResultCount": 0,
-      "combinedSimilarResultCount": 8,
-      "similarResultCount": 8,
+      "combinedSimilarResultCount": 7,
+      "similarResultCount": 7,
       "sameSeriesResultCount": 0,
       "showSimilarSection": true,
       "showSameSeriesSection": false,
@@ -478158,61 +477756,6 @@
       "supplementarySimilaritiesRaw": "narkobetjenten sæson 7; narkobetjenten sæson 9; narkobetjenten sæson 10; narkobetjenten sæson 11",
       "automaticSimilarResults": [
         {
-          "recommendationId": "rec-narkobetjenten-saeson-15-4fad196849feb275bd0271256bd5ac14",
-          "existingId": "narkobetjenten sæson 15",
-          "title": "Narkobetjenten (sæson 15)",
-          "publisher": "Podimo",
-          "authoritativeMainSeries": "",
-          "primaryGenre": "True Crime",
-          "secondaryGenre": "Samfund",
-          "topicsCanonical": [
-            "Narkokriminalitet",
-            "politiarbejde",
-            "informanter",
-            "etiske dilemmaer"
-          ],
-          "editorialScore": 7.7,
-          "image": "https://renedahlandersen.dk/wp-content/uploads/2023/02/Cover_Artwork-Narkobetjenten-2022-scaled.jpg",
-          "link": "https://podimo.com/dk/shows/narkobetjenten",
-          "contentSimilarityScore": 74.7569,
-          "topicSimilarityScore": 59.7569,
-          "genreSimilarityScore": 15,
-          "sharedTopics": [
-            "Narkokriminalitet",
-            "politiarbejde",
-            "informanter"
-          ],
-          "similarityReason": "Fælles emner: Narkokriminalitet, politiarbejde m.fl.",
-          "candidateType": "content_similarity"
-        },
-        {
-          "recommendationId": "rec-narkobetjenten-saeson-7-877f11b4c56426fd908491778e9ba924",
-          "existingId": "narkobetjenten sæson 7",
-          "title": "Narkobetjenten (Sæson 7)",
-          "publisher": "Podimo",
-          "authoritativeMainSeries": "",
-          "primaryGenre": "True Crime",
-          "secondaryGenre": "Samfund",
-          "topicsCanonical": [
-            "Narkokriminalitet",
-            "politiarbejde",
-            "informanter"
-          ],
-          "editorialScore": 7.5,
-          "image": "https://renedahlandersen.dk/wp-content/uploads/2023/02/Cover_Artwork-Narkobetjenten-2022-scaled.jpg",
-          "link": "https://podimo.com/dk/shows/2eecebe9-bbbc-4eae-84f9-43a0f80f23a2",
-          "contentSimilarityScore": 74.7569,
-          "topicSimilarityScore": 59.7569,
-          "genreSimilarityScore": 15,
-          "sharedTopics": [
-            "Narkokriminalitet",
-            "politiarbejde",
-            "informanter"
-          ],
-          "similarityReason": "Fælles emner: Narkokriminalitet, politiarbejde m.fl.",
-          "candidateType": "content_similarity"
-        },
-        {
           "recommendationId": "rec-vi-ejer-byen-e6091a7bceb4b157aa585d498cbe8dd4",
           "existingId": "vi ejer byen",
           "title": "Vi ejer byen",
@@ -478372,61 +477915,6 @@
       "manualSupplementaryResults": [],
       "combinedSimilarResults": [
         {
-          "recommendationId": "rec-narkobetjenten-saeson-15-4fad196849feb275bd0271256bd5ac14",
-          "existingId": "narkobetjenten sæson 15",
-          "title": "Narkobetjenten (sæson 15)",
-          "publisher": "Podimo",
-          "authoritativeMainSeries": "",
-          "primaryGenre": "True Crime",
-          "secondaryGenre": "Samfund",
-          "topicsCanonical": [
-            "Narkokriminalitet",
-            "politiarbejde",
-            "informanter",
-            "etiske dilemmaer"
-          ],
-          "editorialScore": 7.7,
-          "image": "https://renedahlandersen.dk/wp-content/uploads/2023/02/Cover_Artwork-Narkobetjenten-2022-scaled.jpg",
-          "link": "https://podimo.com/dk/shows/narkobetjenten",
-          "contentSimilarityScore": 74.7569,
-          "topicSimilarityScore": 59.7569,
-          "genreSimilarityScore": 15,
-          "sharedTopics": [
-            "Narkokriminalitet",
-            "politiarbejde",
-            "informanter"
-          ],
-          "similarityReason": "Fælles emner: Narkokriminalitet, politiarbejde m.fl.",
-          "candidateType": "content_similarity"
-        },
-        {
-          "recommendationId": "rec-narkobetjenten-saeson-7-877f11b4c56426fd908491778e9ba924",
-          "existingId": "narkobetjenten sæson 7",
-          "title": "Narkobetjenten (Sæson 7)",
-          "publisher": "Podimo",
-          "authoritativeMainSeries": "",
-          "primaryGenre": "True Crime",
-          "secondaryGenre": "Samfund",
-          "topicsCanonical": [
-            "Narkokriminalitet",
-            "politiarbejde",
-            "informanter"
-          ],
-          "editorialScore": 7.5,
-          "image": "https://renedahlandersen.dk/wp-content/uploads/2023/02/Cover_Artwork-Narkobetjenten-2022-scaled.jpg",
-          "link": "https://podimo.com/dk/shows/2eecebe9-bbbc-4eae-84f9-43a0f80f23a2",
-          "contentSimilarityScore": 74.7569,
-          "topicSimilarityScore": 59.7569,
-          "genreSimilarityScore": 15,
-          "sharedTopics": [
-            "Narkokriminalitet",
-            "politiarbejde",
-            "informanter"
-          ],
-          "similarityReason": "Fælles emner: Narkokriminalitet, politiarbejde m.fl.",
-          "candidateType": "content_similarity"
-        },
-        {
           "recommendationId": "rec-vi-ejer-byen-e6091a7bceb4b157aa585d498cbe8dd4",
           "existingId": "vi ejer byen",
           "title": "Vi ejer byen",
@@ -478585,61 +478073,6 @@
       ],
       "similarResults": [
         {
-          "recommendationId": "rec-narkobetjenten-saeson-15-4fad196849feb275bd0271256bd5ac14",
-          "existingId": "narkobetjenten sæson 15",
-          "title": "Narkobetjenten (sæson 15)",
-          "publisher": "Podimo",
-          "authoritativeMainSeries": "",
-          "primaryGenre": "True Crime",
-          "secondaryGenre": "Samfund",
-          "topicsCanonical": [
-            "Narkokriminalitet",
-            "politiarbejde",
-            "informanter",
-            "etiske dilemmaer"
-          ],
-          "editorialScore": 7.7,
-          "image": "https://renedahlandersen.dk/wp-content/uploads/2023/02/Cover_Artwork-Narkobetjenten-2022-scaled.jpg",
-          "link": "https://podimo.com/dk/shows/narkobetjenten",
-          "contentSimilarityScore": 74.7569,
-          "topicSimilarityScore": 59.7569,
-          "genreSimilarityScore": 15,
-          "sharedTopics": [
-            "Narkokriminalitet",
-            "politiarbejde",
-            "informanter"
-          ],
-          "similarityReason": "Fælles emner: Narkokriminalitet, politiarbejde m.fl.",
-          "candidateType": "content_similarity"
-        },
-        {
-          "recommendationId": "rec-narkobetjenten-saeson-7-877f11b4c56426fd908491778e9ba924",
-          "existingId": "narkobetjenten sæson 7",
-          "title": "Narkobetjenten (Sæson 7)",
-          "publisher": "Podimo",
-          "authoritativeMainSeries": "",
-          "primaryGenre": "True Crime",
-          "secondaryGenre": "Samfund",
-          "topicsCanonical": [
-            "Narkokriminalitet",
-            "politiarbejde",
-            "informanter"
-          ],
-          "editorialScore": 7.5,
-          "image": "https://renedahlandersen.dk/wp-content/uploads/2023/02/Cover_Artwork-Narkobetjenten-2022-scaled.jpg",
-          "link": "https://podimo.com/dk/shows/2eecebe9-bbbc-4eae-84f9-43a0f80f23a2",
-          "contentSimilarityScore": 74.7569,
-          "topicSimilarityScore": 59.7569,
-          "genreSimilarityScore": 15,
-          "sharedTopics": [
-            "Narkokriminalitet",
-            "politiarbejde",
-            "informanter"
-          ],
-          "similarityReason": "Fælles emner: Narkokriminalitet, politiarbejde m.fl.",
-          "candidateType": "content_similarity"
-        },
-        {
           "recommendationId": "rec-vi-ejer-byen-e6091a7bceb4b157aa585d498cbe8dd4",
           "existingId": "vi ejer byen",
           "title": "Vi ejer byen",
@@ -478797,10 +478230,10 @@
         }
       ],
       "sameSeriesResults": [],
-      "automaticSimilarResultCount": 8,
+      "automaticSimilarResultCount": 6,
       "manualSupplementaryResultCount": 0,
-      "combinedSimilarResultCount": 8,
-      "similarResultCount": 8,
+      "combinedSimilarResultCount": 6,
+      "similarResultCount": 6,
       "sameSeriesResultCount": 0,
       "showSimilarSection": true,
       "showSameSeriesSection": false,
@@ -479229,61 +478662,6 @@
       "supplementarySimilaritiesRaw": "narkobetjenten sæson 11; narkobetjenten sæson 12; narkobetjenten sæson 14; narkobetjenten sæson 15",
       "automaticSimilarResults": [
         {
-          "recommendationId": "rec-narkobetjenten-og-den-kriminelle-underverden-saeson-6-dd38d8938fcb1579a759561812c2bc84",
-          "existingId": "narkobetjenten og den kriminelle underverden sæson 6",
-          "title": "Narkobetjenten og den kriminelle underverden (Sæson 6)",
-          "publisher": "Podimo",
-          "authoritativeMainSeries": "",
-          "primaryGenre": "True Crime",
-          "secondaryGenre": "Samfund",
-          "topicsCanonical": [
-            "Narkokriminalitet",
-            "politiarbejde",
-            "informanter",
-            "Undercoverarbejde"
-          ],
-          "editorialScore": 7.8,
-          "image": "https://renedahlandersen.dk/wp-content/uploads/2023/02/Cover_Artwork-Narkobetjenten-2022-scaled.jpg",
-          "link": "https://podimo.com/dk/shows/2eecebe9-bbbc-4eae-84f9-43a0f80f23a2",
-          "contentSimilarityScore": 74.7569,
-          "topicSimilarityScore": 59.7569,
-          "genreSimilarityScore": 15,
-          "sharedTopics": [
-            "Narkokriminalitet",
-            "politiarbejde",
-            "informanter"
-          ],
-          "similarityReason": "Fælles emner: Narkokriminalitet, politiarbejde m.fl.",
-          "candidateType": "content_similarity"
-        },
-        {
-          "recommendationId": "rec-narkobetjenten-saeson-7-877f11b4c56426fd908491778e9ba924",
-          "existingId": "narkobetjenten sæson 7",
-          "title": "Narkobetjenten (Sæson 7)",
-          "publisher": "Podimo",
-          "authoritativeMainSeries": "",
-          "primaryGenre": "True Crime",
-          "secondaryGenre": "Samfund",
-          "topicsCanonical": [
-            "Narkokriminalitet",
-            "politiarbejde",
-            "informanter"
-          ],
-          "editorialScore": 7.5,
-          "image": "https://renedahlandersen.dk/wp-content/uploads/2023/02/Cover_Artwork-Narkobetjenten-2022-scaled.jpg",
-          "link": "https://podimo.com/dk/shows/2eecebe9-bbbc-4eae-84f9-43a0f80f23a2",
-          "contentSimilarityScore": 74.7569,
-          "topicSimilarityScore": 59.7569,
-          "genreSimilarityScore": 15,
-          "sharedTopics": [
-            "Narkokriminalitet",
-            "politiarbejde",
-            "informanter"
-          ],
-          "similarityReason": "Fælles emner: Narkokriminalitet, politiarbejde m.fl.",
-          "candidateType": "content_similarity"
-        },
-        {
           "recommendationId": "rec-vi-ejer-byen-e6091a7bceb4b157aa585d498cbe8dd4",
           "existingId": "vi ejer byen",
           "title": "Vi ejer byen",
@@ -479391,61 +478769,6 @@
       "manualSupplementaryResults": [],
       "combinedSimilarResults": [
         {
-          "recommendationId": "rec-narkobetjenten-og-den-kriminelle-underverden-saeson-6-dd38d8938fcb1579a759561812c2bc84",
-          "existingId": "narkobetjenten og den kriminelle underverden sæson 6",
-          "title": "Narkobetjenten og den kriminelle underverden (Sæson 6)",
-          "publisher": "Podimo",
-          "authoritativeMainSeries": "",
-          "primaryGenre": "True Crime",
-          "secondaryGenre": "Samfund",
-          "topicsCanonical": [
-            "Narkokriminalitet",
-            "politiarbejde",
-            "informanter",
-            "Undercoverarbejde"
-          ],
-          "editorialScore": 7.8,
-          "image": "https://renedahlandersen.dk/wp-content/uploads/2023/02/Cover_Artwork-Narkobetjenten-2022-scaled.jpg",
-          "link": "https://podimo.com/dk/shows/2eecebe9-bbbc-4eae-84f9-43a0f80f23a2",
-          "contentSimilarityScore": 74.7569,
-          "topicSimilarityScore": 59.7569,
-          "genreSimilarityScore": 15,
-          "sharedTopics": [
-            "Narkokriminalitet",
-            "politiarbejde",
-            "informanter"
-          ],
-          "similarityReason": "Fælles emner: Narkokriminalitet, politiarbejde m.fl.",
-          "candidateType": "content_similarity"
-        },
-        {
-          "recommendationId": "rec-narkobetjenten-saeson-7-877f11b4c56426fd908491778e9ba924",
-          "existingId": "narkobetjenten sæson 7",
-          "title": "Narkobetjenten (Sæson 7)",
-          "publisher": "Podimo",
-          "authoritativeMainSeries": "",
-          "primaryGenre": "True Crime",
-          "secondaryGenre": "Samfund",
-          "topicsCanonical": [
-            "Narkokriminalitet",
-            "politiarbejde",
-            "informanter"
-          ],
-          "editorialScore": 7.5,
-          "image": "https://renedahlandersen.dk/wp-content/uploads/2023/02/Cover_Artwork-Narkobetjenten-2022-scaled.jpg",
-          "link": "https://podimo.com/dk/shows/2eecebe9-bbbc-4eae-84f9-43a0f80f23a2",
-          "contentSimilarityScore": 74.7569,
-          "topicSimilarityScore": 59.7569,
-          "genreSimilarityScore": 15,
-          "sharedTopics": [
-            "Narkokriminalitet",
-            "politiarbejde",
-            "informanter"
-          ],
-          "similarityReason": "Fælles emner: Narkokriminalitet, politiarbejde m.fl.",
-          "candidateType": "content_similarity"
-        },
-        {
           "recommendationId": "rec-vi-ejer-byen-e6091a7bceb4b157aa585d498cbe8dd4",
           "existingId": "vi ejer byen",
           "title": "Vi ejer byen",
@@ -479552,61 +478875,6 @@
       ],
       "similarResults": [
         {
-          "recommendationId": "rec-narkobetjenten-og-den-kriminelle-underverden-saeson-6-dd38d8938fcb1579a759561812c2bc84",
-          "existingId": "narkobetjenten og den kriminelle underverden sæson 6",
-          "title": "Narkobetjenten og den kriminelle underverden (Sæson 6)",
-          "publisher": "Podimo",
-          "authoritativeMainSeries": "",
-          "primaryGenre": "True Crime",
-          "secondaryGenre": "Samfund",
-          "topicsCanonical": [
-            "Narkokriminalitet",
-            "politiarbejde",
-            "informanter",
-            "Undercoverarbejde"
-          ],
-          "editorialScore": 7.8,
-          "image": "https://renedahlandersen.dk/wp-content/uploads/2023/02/Cover_Artwork-Narkobetjenten-2022-scaled.jpg",
-          "link": "https://podimo.com/dk/shows/2eecebe9-bbbc-4eae-84f9-43a0f80f23a2",
-          "contentSimilarityScore": 74.7569,
-          "topicSimilarityScore": 59.7569,
-          "genreSimilarityScore": 15,
-          "sharedTopics": [
-            "Narkokriminalitet",
-            "politiarbejde",
-            "informanter"
-          ],
-          "similarityReason": "Fælles emner: Narkokriminalitet, politiarbejde m.fl.",
-          "candidateType": "content_similarity"
-        },
-        {
-          "recommendationId": "rec-narkobetjenten-saeson-7-877f11b4c56426fd908491778e9ba924",
-          "existingId": "narkobetjenten sæson 7",
-          "title": "Narkobetjenten (Sæson 7)",
-          "publisher": "Podimo",
-          "authoritativeMainSeries": "",
-          "primaryGenre": "True Crime",
-          "secondaryGenre": "Samfund",
-          "topicsCanonical": [
-            "Narkokriminalitet",
-            "politiarbejde",
-            "informanter"
-          ],
-          "editorialScore": 7.5,
-          "image": "https://renedahlandersen.dk/wp-content/uploads/2023/02/Cover_Artwork-Narkobetjenten-2022-scaled.jpg",
-          "link": "https://podimo.com/dk/shows/2eecebe9-bbbc-4eae-84f9-43a0f80f23a2",
-          "contentSimilarityScore": 74.7569,
-          "topicSimilarityScore": 59.7569,
-          "genreSimilarityScore": 15,
-          "sharedTopics": [
-            "Narkokriminalitet",
-            "politiarbejde",
-            "informanter"
-          ],
-          "similarityReason": "Fælles emner: Narkokriminalitet, politiarbejde m.fl.",
-          "candidateType": "content_similarity"
-        },
-        {
           "recommendationId": "rec-vi-ejer-byen-e6091a7bceb4b157aa585d498cbe8dd4",
           "existingId": "vi ejer byen",
           "title": "Vi ejer byen",
@@ -479712,10 +478980,10 @@
         }
       ],
       "sameSeriesResults": [],
-      "automaticSimilarResultCount": 6,
+      "automaticSimilarResultCount": 4,
       "manualSupplementaryResultCount": 0,
-      "combinedSimilarResultCount": 6,
-      "similarResultCount": 6,
+      "combinedSimilarResultCount": 4,
+      "similarResultCount": 4,
       "sameSeriesResultCount": 0,
       "showSimilarSection": true,
       "showSameSeriesSection": false,
@@ -479730,62 +478998,6 @@
       "supplementarySimilaritiesRaw": "narkobetjenten sæson 7; narkobetjenten sæson 10; narkobetjenten sæson 12; narkobetjenten sæson 14",
       "automaticSimilarResults": [
         {
-          "recommendationId": "rec-narkobetjenten-og-den-kriminelle-underverden-saeson-6-dd38d8938fcb1579a759561812c2bc84",
-          "existingId": "narkobetjenten og den kriminelle underverden sæson 6",
-          "title": "Narkobetjenten og den kriminelle underverden (Sæson 6)",
-          "publisher": "Podimo",
-          "authoritativeMainSeries": "",
-          "primaryGenre": "True Crime",
-          "secondaryGenre": "Samfund",
-          "topicsCanonical": [
-            "Narkokriminalitet",
-            "politiarbejde",
-            "informanter",
-            "Undercoverarbejde"
-          ],
-          "editorialScore": 7.8,
-          "image": "https://renedahlandersen.dk/wp-content/uploads/2023/02/Cover_Artwork-Narkobetjenten-2022-scaled.jpg",
-          "link": "https://podimo.com/dk/shows/2eecebe9-bbbc-4eae-84f9-43a0f80f23a2",
-          "contentSimilarityScore": 74.7569,
-          "topicSimilarityScore": 59.7569,
-          "genreSimilarityScore": 15,
-          "sharedTopics": [
-            "Narkokriminalitet",
-            "politiarbejde",
-            "informanter"
-          ],
-          "similarityReason": "Fælles emner: Narkokriminalitet, politiarbejde m.fl.",
-          "candidateType": "content_similarity"
-        },
-        {
-          "recommendationId": "rec-narkobetjenten-saeson-15-4fad196849feb275bd0271256bd5ac14",
-          "existingId": "narkobetjenten sæson 15",
-          "title": "Narkobetjenten (sæson 15)",
-          "publisher": "Podimo",
-          "authoritativeMainSeries": "",
-          "primaryGenre": "True Crime",
-          "secondaryGenre": "Samfund",
-          "topicsCanonical": [
-            "Narkokriminalitet",
-            "politiarbejde",
-            "informanter",
-            "etiske dilemmaer"
-          ],
-          "editorialScore": 7.7,
-          "image": "https://renedahlandersen.dk/wp-content/uploads/2023/02/Cover_Artwork-Narkobetjenten-2022-scaled.jpg",
-          "link": "https://podimo.com/dk/shows/narkobetjenten",
-          "contentSimilarityScore": 74.7569,
-          "topicSimilarityScore": 59.7569,
-          "genreSimilarityScore": 15,
-          "sharedTopics": [
-            "Narkokriminalitet",
-            "politiarbejde",
-            "informanter"
-          ],
-          "similarityReason": "Fælles emner: Narkokriminalitet, politiarbejde m.fl.",
-          "candidateType": "content_similarity"
-        },
-        {
           "recommendationId": "rec-vi-ejer-byen-e6091a7bceb4b157aa585d498cbe8dd4",
           "existingId": "vi ejer byen",
           "title": "Vi ejer byen",
@@ -479893,62 +479105,6 @@
       "manualSupplementaryResults": [],
       "combinedSimilarResults": [
         {
-          "recommendationId": "rec-narkobetjenten-og-den-kriminelle-underverden-saeson-6-dd38d8938fcb1579a759561812c2bc84",
-          "existingId": "narkobetjenten og den kriminelle underverden sæson 6",
-          "title": "Narkobetjenten og den kriminelle underverden (Sæson 6)",
-          "publisher": "Podimo",
-          "authoritativeMainSeries": "",
-          "primaryGenre": "True Crime",
-          "secondaryGenre": "Samfund",
-          "topicsCanonical": [
-            "Narkokriminalitet",
-            "politiarbejde",
-            "informanter",
-            "Undercoverarbejde"
-          ],
-          "editorialScore": 7.8,
-          "image": "https://renedahlandersen.dk/wp-content/uploads/2023/02/Cover_Artwork-Narkobetjenten-2022-scaled.jpg",
-          "link": "https://podimo.com/dk/shows/2eecebe9-bbbc-4eae-84f9-43a0f80f23a2",
-          "contentSimilarityScore": 74.7569,
-          "topicSimilarityScore": 59.7569,
-          "genreSimilarityScore": 15,
-          "sharedTopics": [
-            "Narkokriminalitet",
-            "politiarbejde",
-            "informanter"
-          ],
-          "similarityReason": "Fælles emner: Narkokriminalitet, politiarbejde m.fl.",
-          "candidateType": "content_similarity"
-        },
-        {
-          "recommendationId": "rec-narkobetjenten-saeson-15-4fad196849feb275bd0271256bd5ac14",
-          "existingId": "narkobetjenten sæson 15",
-          "title": "Narkobetjenten (sæson 15)",
-          "publisher": "Podimo",
-          "authoritativeMainSeries": "",
-          "primaryGenre": "True Crime",
-          "secondaryGenre": "Samfund",
-          "topicsCanonical": [
-            "Narkokriminalitet",
-            "politiarbejde",
-            "informanter",
-            "etiske dilemmaer"
-          ],
-          "editorialScore": 7.7,
-          "image": "https://renedahlandersen.dk/wp-content/uploads/2023/02/Cover_Artwork-Narkobetjenten-2022-scaled.jpg",
-          "link": "https://podimo.com/dk/shows/narkobetjenten",
-          "contentSimilarityScore": 74.7569,
-          "topicSimilarityScore": 59.7569,
-          "genreSimilarityScore": 15,
-          "sharedTopics": [
-            "Narkokriminalitet",
-            "politiarbejde",
-            "informanter"
-          ],
-          "similarityReason": "Fælles emner: Narkokriminalitet, politiarbejde m.fl.",
-          "candidateType": "content_similarity"
-        },
-        {
           "recommendationId": "rec-vi-ejer-byen-e6091a7bceb4b157aa585d498cbe8dd4",
           "existingId": "vi ejer byen",
           "title": "Vi ejer byen",
@@ -480055,62 +479211,6 @@
       ],
       "similarResults": [
         {
-          "recommendationId": "rec-narkobetjenten-og-den-kriminelle-underverden-saeson-6-dd38d8938fcb1579a759561812c2bc84",
-          "existingId": "narkobetjenten og den kriminelle underverden sæson 6",
-          "title": "Narkobetjenten og den kriminelle underverden (Sæson 6)",
-          "publisher": "Podimo",
-          "authoritativeMainSeries": "",
-          "primaryGenre": "True Crime",
-          "secondaryGenre": "Samfund",
-          "topicsCanonical": [
-            "Narkokriminalitet",
-            "politiarbejde",
-            "informanter",
-            "Undercoverarbejde"
-          ],
-          "editorialScore": 7.8,
-          "image": "https://renedahlandersen.dk/wp-content/uploads/2023/02/Cover_Artwork-Narkobetjenten-2022-scaled.jpg",
-          "link": "https://podimo.com/dk/shows/2eecebe9-bbbc-4eae-84f9-43a0f80f23a2",
-          "contentSimilarityScore": 74.7569,
-          "topicSimilarityScore": 59.7569,
-          "genreSimilarityScore": 15,
-          "sharedTopics": [
-            "Narkokriminalitet",
-            "politiarbejde",
-            "informanter"
-          ],
-          "similarityReason": "Fælles emner: Narkokriminalitet, politiarbejde m.fl.",
-          "candidateType": "content_similarity"
-        },
-        {
-          "recommendationId": "rec-narkobetjenten-saeson-15-4fad196849feb275bd0271256bd5ac14",
-          "existingId": "narkobetjenten sæson 15",
-          "title": "Narkobetjenten (sæson 15)",
-          "publisher": "Podimo",
-          "authoritativeMainSeries": "",
-          "primaryGenre": "True Crime",
-          "secondaryGenre": "Samfund",
-          "topicsCanonical": [
-            "Narkokriminalitet",
-            "politiarbejde",
-            "informanter",
-            "etiske dilemmaer"
-          ],
-          "editorialScore": 7.7,
-          "image": "https://renedahlandersen.dk/wp-content/uploads/2023/02/Cover_Artwork-Narkobetjenten-2022-scaled.jpg",
-          "link": "https://podimo.com/dk/shows/narkobetjenten",
-          "contentSimilarityScore": 74.7569,
-          "topicSimilarityScore": 59.7569,
-          "genreSimilarityScore": 15,
-          "sharedTopics": [
-            "Narkokriminalitet",
-            "politiarbejde",
-            "informanter"
-          ],
-          "similarityReason": "Fælles emner: Narkokriminalitet, politiarbejde m.fl.",
-          "candidateType": "content_similarity"
-        },
-        {
           "recommendationId": "rec-vi-ejer-byen-e6091a7bceb4b157aa585d498cbe8dd4",
           "existingId": "vi ejer byen",
           "title": "Vi ejer byen",
@@ -480216,10 +479316,10 @@
         }
       ],
       "sameSeriesResults": [],
-      "automaticSimilarResultCount": 6,
+      "automaticSimilarResultCount": 4,
       "manualSupplementaryResultCount": 0,
-      "combinedSimilarResultCount": 6,
-      "similarResultCount": 6,
+      "combinedSimilarResultCount": 4,
+      "similarResultCount": 4,
       "sameSeriesResultCount": 0,
       "showSimilarSection": true,
       "showSameSeriesSection": false,
@@ -480234,61 +479334,6 @@
       "supplementarySimilaritiesRaw": "narkobetjenten sæson 10; narkobetjenten sæson 11; narkobetjenten sæson 13; narkobetjenten sæson 14",
       "automaticSimilarResults": [
         {
-          "recommendationId": "rec-narkobetjenten-og-den-kriminelle-underverden-saeson-6-dd38d8938fcb1579a759561812c2bc84",
-          "existingId": "narkobetjenten og den kriminelle underverden sæson 6",
-          "title": "Narkobetjenten og den kriminelle underverden (Sæson 6)",
-          "publisher": "Podimo",
-          "authoritativeMainSeries": "",
-          "primaryGenre": "True Crime",
-          "secondaryGenre": "Samfund",
-          "topicsCanonical": [
-            "Narkokriminalitet",
-            "politiarbejde",
-            "informanter",
-            "Undercoverarbejde"
-          ],
-          "editorialScore": 7.8,
-          "image": "https://renedahlandersen.dk/wp-content/uploads/2023/02/Cover_Artwork-Narkobetjenten-2022-scaled.jpg",
-          "link": "https://podimo.com/dk/shows/2eecebe9-bbbc-4eae-84f9-43a0f80f23a2",
-          "contentSimilarityScore": 74.7569,
-          "topicSimilarityScore": 59.7569,
-          "genreSimilarityScore": 15,
-          "sharedTopics": [
-            "Narkokriminalitet",
-            "politiarbejde",
-            "informanter"
-          ],
-          "similarityReason": "Fælles emner: Narkokriminalitet, politiarbejde m.fl.",
-          "candidateType": "content_similarity"
-        },
-        {
-          "recommendationId": "rec-narkobetjenten-saeson-7-877f11b4c56426fd908491778e9ba924",
-          "existingId": "narkobetjenten sæson 7",
-          "title": "Narkobetjenten (Sæson 7)",
-          "publisher": "Podimo",
-          "authoritativeMainSeries": "",
-          "primaryGenre": "True Crime",
-          "secondaryGenre": "Samfund",
-          "topicsCanonical": [
-            "Narkokriminalitet",
-            "politiarbejde",
-            "informanter"
-          ],
-          "editorialScore": 7.5,
-          "image": "https://renedahlandersen.dk/wp-content/uploads/2023/02/Cover_Artwork-Narkobetjenten-2022-scaled.jpg",
-          "link": "https://podimo.com/dk/shows/2eecebe9-bbbc-4eae-84f9-43a0f80f23a2",
-          "contentSimilarityScore": 74.7569,
-          "topicSimilarityScore": 59.7569,
-          "genreSimilarityScore": 15,
-          "sharedTopics": [
-            "Narkokriminalitet",
-            "politiarbejde",
-            "informanter"
-          ],
-          "similarityReason": "Fælles emner: Narkokriminalitet, politiarbejde m.fl.",
-          "candidateType": "content_similarity"
-        },
-        {
           "recommendationId": "rec-vi-ejer-byen-e6091a7bceb4b157aa585d498cbe8dd4",
           "existingId": "vi ejer byen",
           "title": "Vi ejer byen",
@@ -480396,61 +479441,6 @@
       "manualSupplementaryResults": [],
       "combinedSimilarResults": [
         {
-          "recommendationId": "rec-narkobetjenten-og-den-kriminelle-underverden-saeson-6-dd38d8938fcb1579a759561812c2bc84",
-          "existingId": "narkobetjenten og den kriminelle underverden sæson 6",
-          "title": "Narkobetjenten og den kriminelle underverden (Sæson 6)",
-          "publisher": "Podimo",
-          "authoritativeMainSeries": "",
-          "primaryGenre": "True Crime",
-          "secondaryGenre": "Samfund",
-          "topicsCanonical": [
-            "Narkokriminalitet",
-            "politiarbejde",
-            "informanter",
-            "Undercoverarbejde"
-          ],
-          "editorialScore": 7.8,
-          "image": "https://renedahlandersen.dk/wp-content/uploads/2023/02/Cover_Artwork-Narkobetjenten-2022-scaled.jpg",
-          "link": "https://podimo.com/dk/shows/2eecebe9-bbbc-4eae-84f9-43a0f80f23a2",
-          "contentSimilarityScore": 74.7569,
-          "topicSimilarityScore": 59.7569,
-          "genreSimilarityScore": 15,
-          "sharedTopics": [
-            "Narkokriminalitet",
-            "politiarbejde",
-            "informanter"
-          ],
-          "similarityReason": "Fælles emner: Narkokriminalitet, politiarbejde m.fl.",
-          "candidateType": "content_similarity"
-        },
-        {
-          "recommendationId": "rec-narkobetjenten-saeson-7-877f11b4c56426fd908491778e9ba924",
-          "existingId": "narkobetjenten sæson 7",
-          "title": "Narkobetjenten (Sæson 7)",
-          "publisher": "Podimo",
-          "authoritativeMainSeries": "",
-          "primaryGenre": "True Crime",
-          "secondaryGenre": "Samfund",
-          "topicsCanonical": [
-            "Narkokriminalitet",
-            "politiarbejde",
-            "informanter"
-          ],
-          "editorialScore": 7.5,
-          "image": "https://renedahlandersen.dk/wp-content/uploads/2023/02/Cover_Artwork-Narkobetjenten-2022-scaled.jpg",
-          "link": "https://podimo.com/dk/shows/2eecebe9-bbbc-4eae-84f9-43a0f80f23a2",
-          "contentSimilarityScore": 74.7569,
-          "topicSimilarityScore": 59.7569,
-          "genreSimilarityScore": 15,
-          "sharedTopics": [
-            "Narkokriminalitet",
-            "politiarbejde",
-            "informanter"
-          ],
-          "similarityReason": "Fælles emner: Narkokriminalitet, politiarbejde m.fl.",
-          "candidateType": "content_similarity"
-        },
-        {
           "recommendationId": "rec-vi-ejer-byen-e6091a7bceb4b157aa585d498cbe8dd4",
           "existingId": "vi ejer byen",
           "title": "Vi ejer byen",
@@ -480557,61 +479547,6 @@
       ],
       "similarResults": [
         {
-          "recommendationId": "rec-narkobetjenten-og-den-kriminelle-underverden-saeson-6-dd38d8938fcb1579a759561812c2bc84",
-          "existingId": "narkobetjenten og den kriminelle underverden sæson 6",
-          "title": "Narkobetjenten og den kriminelle underverden (Sæson 6)",
-          "publisher": "Podimo",
-          "authoritativeMainSeries": "",
-          "primaryGenre": "True Crime",
-          "secondaryGenre": "Samfund",
-          "topicsCanonical": [
-            "Narkokriminalitet",
-            "politiarbejde",
-            "informanter",
-            "Undercoverarbejde"
-          ],
-          "editorialScore": 7.8,
-          "image": "https://renedahlandersen.dk/wp-content/uploads/2023/02/Cover_Artwork-Narkobetjenten-2022-scaled.jpg",
-          "link": "https://podimo.com/dk/shows/2eecebe9-bbbc-4eae-84f9-43a0f80f23a2",
-          "contentSimilarityScore": 74.7569,
-          "topicSimilarityScore": 59.7569,
-          "genreSimilarityScore": 15,
-          "sharedTopics": [
-            "Narkokriminalitet",
-            "politiarbejde",
-            "informanter"
-          ],
-          "similarityReason": "Fælles emner: Narkokriminalitet, politiarbejde m.fl.",
-          "candidateType": "content_similarity"
-        },
-        {
-          "recommendationId": "rec-narkobetjenten-saeson-7-877f11b4c56426fd908491778e9ba924",
-          "existingId": "narkobetjenten sæson 7",
-          "title": "Narkobetjenten (Sæson 7)",
-          "publisher": "Podimo",
-          "authoritativeMainSeries": "",
-          "primaryGenre": "True Crime",
-          "secondaryGenre": "Samfund",
-          "topicsCanonical": [
-            "Narkokriminalitet",
-            "politiarbejde",
-            "informanter"
-          ],
-          "editorialScore": 7.5,
-          "image": "https://renedahlandersen.dk/wp-content/uploads/2023/02/Cover_Artwork-Narkobetjenten-2022-scaled.jpg",
-          "link": "https://podimo.com/dk/shows/2eecebe9-bbbc-4eae-84f9-43a0f80f23a2",
-          "contentSimilarityScore": 74.7569,
-          "topicSimilarityScore": 59.7569,
-          "genreSimilarityScore": 15,
-          "sharedTopics": [
-            "Narkokriminalitet",
-            "politiarbejde",
-            "informanter"
-          ],
-          "similarityReason": "Fælles emner: Narkokriminalitet, politiarbejde m.fl.",
-          "candidateType": "content_similarity"
-        },
-        {
           "recommendationId": "rec-vi-ejer-byen-e6091a7bceb4b157aa585d498cbe8dd4",
           "existingId": "vi ejer byen",
           "title": "Vi ejer byen",
@@ -480717,10 +479652,10 @@
         }
       ],
       "sameSeriesResults": [],
-      "automaticSimilarResultCount": 6,
+      "automaticSimilarResultCount": 4,
       "manualSupplementaryResultCount": 0,
-      "combinedSimilarResultCount": 6,
-      "similarResultCount": 6,
+      "combinedSimilarResultCount": 4,
+      "similarResultCount": 4,
       "sameSeriesResultCount": 0,
       "showSimilarSection": true,
       "showSameSeriesSection": false,
@@ -480735,61 +479670,6 @@
       "supplementarySimilaritiesRaw": "narkobetjenten sæson 12; narkobetjenten sæson 14; narkobetjenten sæson 15; narkobetjenten pa gaden sæson 1",
       "automaticSimilarResults": [
         {
-          "recommendationId": "rec-narkobetjenten-og-den-kriminelle-underverden-saeson-6-dd38d8938fcb1579a759561812c2bc84",
-          "existingId": "narkobetjenten og den kriminelle underverden sæson 6",
-          "title": "Narkobetjenten og den kriminelle underverden (Sæson 6)",
-          "publisher": "Podimo",
-          "authoritativeMainSeries": "",
-          "primaryGenre": "True Crime",
-          "secondaryGenre": "Samfund",
-          "topicsCanonical": [
-            "Narkokriminalitet",
-            "politiarbejde",
-            "informanter",
-            "Undercoverarbejde"
-          ],
-          "editorialScore": 7.8,
-          "image": "https://renedahlandersen.dk/wp-content/uploads/2023/02/Cover_Artwork-Narkobetjenten-2022-scaled.jpg",
-          "link": "https://podimo.com/dk/shows/2eecebe9-bbbc-4eae-84f9-43a0f80f23a2",
-          "contentSimilarityScore": 74.7569,
-          "topicSimilarityScore": 59.7569,
-          "genreSimilarityScore": 15,
-          "sharedTopics": [
-            "Narkokriminalitet",
-            "politiarbejde",
-            "informanter"
-          ],
-          "similarityReason": "Fælles emner: Narkokriminalitet, politiarbejde m.fl.",
-          "candidateType": "content_similarity"
-        },
-        {
-          "recommendationId": "rec-narkobetjenten-saeson-7-877f11b4c56426fd908491778e9ba924",
-          "existingId": "narkobetjenten sæson 7",
-          "title": "Narkobetjenten (Sæson 7)",
-          "publisher": "Podimo",
-          "authoritativeMainSeries": "",
-          "primaryGenre": "True Crime",
-          "secondaryGenre": "Samfund",
-          "topicsCanonical": [
-            "Narkokriminalitet",
-            "politiarbejde",
-            "informanter"
-          ],
-          "editorialScore": 7.5,
-          "image": "https://renedahlandersen.dk/wp-content/uploads/2023/02/Cover_Artwork-Narkobetjenten-2022-scaled.jpg",
-          "link": "https://podimo.com/dk/shows/2eecebe9-bbbc-4eae-84f9-43a0f80f23a2",
-          "contentSimilarityScore": 74.7569,
-          "topicSimilarityScore": 59.7569,
-          "genreSimilarityScore": 15,
-          "sharedTopics": [
-            "Narkokriminalitet",
-            "politiarbejde",
-            "informanter"
-          ],
-          "similarityReason": "Fælles emner: Narkokriminalitet, politiarbejde m.fl.",
-          "candidateType": "content_similarity"
-        },
-        {
           "recommendationId": "rec-vi-ejer-byen-e6091a7bceb4b157aa585d498cbe8dd4",
           "existingId": "vi ejer byen",
           "title": "Vi ejer byen",
@@ -480897,61 +479777,6 @@
       "manualSupplementaryResults": [],
       "combinedSimilarResults": [
         {
-          "recommendationId": "rec-narkobetjenten-og-den-kriminelle-underverden-saeson-6-dd38d8938fcb1579a759561812c2bc84",
-          "existingId": "narkobetjenten og den kriminelle underverden sæson 6",
-          "title": "Narkobetjenten og den kriminelle underverden (Sæson 6)",
-          "publisher": "Podimo",
-          "authoritativeMainSeries": "",
-          "primaryGenre": "True Crime",
-          "secondaryGenre": "Samfund",
-          "topicsCanonical": [
-            "Narkokriminalitet",
-            "politiarbejde",
-            "informanter",
-            "Undercoverarbejde"
-          ],
-          "editorialScore": 7.8,
-          "image": "https://renedahlandersen.dk/wp-content/uploads/2023/02/Cover_Artwork-Narkobetjenten-2022-scaled.jpg",
-          "link": "https://podimo.com/dk/shows/2eecebe9-bbbc-4eae-84f9-43a0f80f23a2",
-          "contentSimilarityScore": 74.7569,
-          "topicSimilarityScore": 59.7569,
-          "genreSimilarityScore": 15,
-          "sharedTopics": [
-            "Narkokriminalitet",
-            "politiarbejde",
-            "informanter"
-          ],
-          "similarityReason": "Fælles emner: Narkokriminalitet, politiarbejde m.fl.",
-          "candidateType": "content_similarity"
-        },
-        {
-          "recommendationId": "rec-narkobetjenten-saeson-7-877f11b4c56426fd908491778e9ba924",
-          "existingId": "narkobetjenten sæson 7",
-          "title": "Narkobetjenten (Sæson 7)",
-          "publisher": "Podimo",
-          "authoritativeMainSeries": "",
-          "primaryGenre": "True Crime",
-          "secondaryGenre": "Samfund",
-          "topicsCanonical": [
-            "Narkokriminalitet",
-            "politiarbejde",
-            "informanter"
-          ],
-          "editorialScore": 7.5,
-          "image": "https://renedahlandersen.dk/wp-content/uploads/2023/02/Cover_Artwork-Narkobetjenten-2022-scaled.jpg",
-          "link": "https://podimo.com/dk/shows/2eecebe9-bbbc-4eae-84f9-43a0f80f23a2",
-          "contentSimilarityScore": 74.7569,
-          "topicSimilarityScore": 59.7569,
-          "genreSimilarityScore": 15,
-          "sharedTopics": [
-            "Narkokriminalitet",
-            "politiarbejde",
-            "informanter"
-          ],
-          "similarityReason": "Fælles emner: Narkokriminalitet, politiarbejde m.fl.",
-          "candidateType": "content_similarity"
-        },
-        {
           "recommendationId": "rec-vi-ejer-byen-e6091a7bceb4b157aa585d498cbe8dd4",
           "existingId": "vi ejer byen",
           "title": "Vi ejer byen",
@@ -481058,61 +479883,6 @@
       ],
       "similarResults": [
         {
-          "recommendationId": "rec-narkobetjenten-og-den-kriminelle-underverden-saeson-6-dd38d8938fcb1579a759561812c2bc84",
-          "existingId": "narkobetjenten og den kriminelle underverden sæson 6",
-          "title": "Narkobetjenten og den kriminelle underverden (Sæson 6)",
-          "publisher": "Podimo",
-          "authoritativeMainSeries": "",
-          "primaryGenre": "True Crime",
-          "secondaryGenre": "Samfund",
-          "topicsCanonical": [
-            "Narkokriminalitet",
-            "politiarbejde",
-            "informanter",
-            "Undercoverarbejde"
-          ],
-          "editorialScore": 7.8,
-          "image": "https://renedahlandersen.dk/wp-content/uploads/2023/02/Cover_Artwork-Narkobetjenten-2022-scaled.jpg",
-          "link": "https://podimo.com/dk/shows/2eecebe9-bbbc-4eae-84f9-43a0f80f23a2",
-          "contentSimilarityScore": 74.7569,
-          "topicSimilarityScore": 59.7569,
-          "genreSimilarityScore": 15,
-          "sharedTopics": [
-            "Narkokriminalitet",
-            "politiarbejde",
-            "informanter"
-          ],
-          "similarityReason": "Fælles emner: Narkokriminalitet, politiarbejde m.fl.",
-          "candidateType": "content_similarity"
-        },
-        {
-          "recommendationId": "rec-narkobetjenten-saeson-7-877f11b4c56426fd908491778e9ba924",
-          "existingId": "narkobetjenten sæson 7",
-          "title": "Narkobetjenten (Sæson 7)",
-          "publisher": "Podimo",
-          "authoritativeMainSeries": "",
-          "primaryGenre": "True Crime",
-          "secondaryGenre": "Samfund",
-          "topicsCanonical": [
-            "Narkokriminalitet",
-            "politiarbejde",
-            "informanter"
-          ],
-          "editorialScore": 7.5,
-          "image": "https://renedahlandersen.dk/wp-content/uploads/2023/02/Cover_Artwork-Narkobetjenten-2022-scaled.jpg",
-          "link": "https://podimo.com/dk/shows/2eecebe9-bbbc-4eae-84f9-43a0f80f23a2",
-          "contentSimilarityScore": 74.7569,
-          "topicSimilarityScore": 59.7569,
-          "genreSimilarityScore": 15,
-          "sharedTopics": [
-            "Narkokriminalitet",
-            "politiarbejde",
-            "informanter"
-          ],
-          "similarityReason": "Fælles emner: Narkokriminalitet, politiarbejde m.fl.",
-          "candidateType": "content_similarity"
-        },
-        {
           "recommendationId": "rec-vi-ejer-byen-e6091a7bceb4b157aa585d498cbe8dd4",
           "existingId": "vi ejer byen",
           "title": "Vi ejer byen",
@@ -481218,10 +479988,10 @@
         }
       ],
       "sameSeriesResults": [],
-      "automaticSimilarResultCount": 6,
+      "automaticSimilarResultCount": 4,
       "manualSupplementaryResultCount": 0,
-      "combinedSimilarResultCount": 6,
-      "similarResultCount": 6,
+      "combinedSimilarResultCount": 4,
+      "similarResultCount": 4,
       "sameSeriesResultCount": 0,
       "showSimilarSection": true,
       "showSameSeriesSection": false,
@@ -481236,61 +480006,6 @@
       "supplementarySimilaritiesRaw": "narkobetjenten sæson 13; narkobetjenten sæson 15; narkobetjenten sæson 12; narkobetjenten sæson 11",
       "automaticSimilarResults": [
         {
-          "recommendationId": "rec-narkobetjenten-og-den-kriminelle-underverden-saeson-1-281d1fc87079733572fcd973b7db9264",
-          "existingId": "narkobetjenten og den kriminelle underverden sæson 1",
-          "title": "Narkobetjenten og den kriminelle underverden (Sæson 1)",
-          "publisher": "Podimo",
-          "authoritativeMainSeries": "",
-          "primaryGenre": "True Crime",
-          "secondaryGenre": "Samfund",
-          "topicsCanonical": [
-            "Narkokriminalitet",
-            "Undercoverarbejde",
-            "politiarbejde",
-            "kriminelle miljøer"
-          ],
-          "editorialScore": 8,
-          "image": "https://renedahlandersen.dk/wp-content/uploads/2023/02/Cover_Artwork-Narkobetjenten-2022-scaled.jpg",
-          "link": "https://podimo.com/dk/shows/narkobetjenten",
-          "contentSimilarityScore": 72.7955,
-          "topicSimilarityScore": 57.7955,
-          "genreSimilarityScore": 15,
-          "sharedTopics": [
-            "Narkokriminalitet",
-            "politiarbejde",
-            "kriminelle miljøer"
-          ],
-          "similarityReason": "Fælles emner: Narkokriminalitet, politiarbejde m.fl.",
-          "candidateType": "content_similarity"
-        },
-        {
-          "recommendationId": "rec-narkobetjenten-og-den-kriminelle-underverden-saeson-2-b6c6df54f3f277b8e5e088c43ed5764f",
-          "existingId": "narkobetjenten og den kriminelle underverden sæson 2",
-          "title": "Narkobetjenten & den kriminelle underverden (Sæson 2)",
-          "publisher": "Podimo",
-          "authoritativeMainSeries": "",
-          "primaryGenre": "True Crime",
-          "secondaryGenre": "Samfund",
-          "topicsCanonical": [
-            "Narkokriminalitet",
-            "politiarbejde",
-            "fængselsliv",
-            "exit fra kriminalitet"
-          ],
-          "editorialScore": 8.2,
-          "image": "https://renedahlandersen.dk/wp-content/uploads/2023/02/Cover_Artwork-Narkobetjenten-2022-scaled.jpg",
-          "link": "https://podimo.com/dk/shows/2eecebe9-bbbc-4eae-84f9-43a0f80f23a2",
-          "contentSimilarityScore": 70.2434,
-          "topicSimilarityScore": 55.2434,
-          "genreSimilarityScore": 15,
-          "sharedTopics": [
-            "Narkokriminalitet",
-            "politiarbejde"
-          ],
-          "similarityReason": "Fælles emner: Narkokriminalitet og politiarbejde",
-          "candidateType": "content_similarity"
-        },
-        {
           "recommendationId": "rec-station-llll-4acd80bbf4bfc450a36f30d237c16d66",
           "existingId": "station llll",
           "title": "Station llll",
@@ -481449,61 +480164,6 @@
       "manualSupplementaryResults": [],
       "combinedSimilarResults": [
         {
-          "recommendationId": "rec-narkobetjenten-og-den-kriminelle-underverden-saeson-1-281d1fc87079733572fcd973b7db9264",
-          "existingId": "narkobetjenten og den kriminelle underverden sæson 1",
-          "title": "Narkobetjenten og den kriminelle underverden (Sæson 1)",
-          "publisher": "Podimo",
-          "authoritativeMainSeries": "",
-          "primaryGenre": "True Crime",
-          "secondaryGenre": "Samfund",
-          "topicsCanonical": [
-            "Narkokriminalitet",
-            "Undercoverarbejde",
-            "politiarbejde",
-            "kriminelle miljøer"
-          ],
-          "editorialScore": 8,
-          "image": "https://renedahlandersen.dk/wp-content/uploads/2023/02/Cover_Artwork-Narkobetjenten-2022-scaled.jpg",
-          "link": "https://podimo.com/dk/shows/narkobetjenten",
-          "contentSimilarityScore": 72.7955,
-          "topicSimilarityScore": 57.7955,
-          "genreSimilarityScore": 15,
-          "sharedTopics": [
-            "Narkokriminalitet",
-            "politiarbejde",
-            "kriminelle miljøer"
-          ],
-          "similarityReason": "Fælles emner: Narkokriminalitet, politiarbejde m.fl.",
-          "candidateType": "content_similarity"
-        },
-        {
-          "recommendationId": "rec-narkobetjenten-og-den-kriminelle-underverden-saeson-2-b6c6df54f3f277b8e5e088c43ed5764f",
-          "existingId": "narkobetjenten og den kriminelle underverden sæson 2",
-          "title": "Narkobetjenten & den kriminelle underverden (Sæson 2)",
-          "publisher": "Podimo",
-          "authoritativeMainSeries": "",
-          "primaryGenre": "True Crime",
-          "secondaryGenre": "Samfund",
-          "topicsCanonical": [
-            "Narkokriminalitet",
-            "politiarbejde",
-            "fængselsliv",
-            "exit fra kriminalitet"
-          ],
-          "editorialScore": 8.2,
-          "image": "https://renedahlandersen.dk/wp-content/uploads/2023/02/Cover_Artwork-Narkobetjenten-2022-scaled.jpg",
-          "link": "https://podimo.com/dk/shows/2eecebe9-bbbc-4eae-84f9-43a0f80f23a2",
-          "contentSimilarityScore": 70.2434,
-          "topicSimilarityScore": 55.2434,
-          "genreSimilarityScore": 15,
-          "sharedTopics": [
-            "Narkokriminalitet",
-            "politiarbejde"
-          ],
-          "similarityReason": "Fælles emner: Narkokriminalitet og politiarbejde",
-          "candidateType": "content_similarity"
-        },
-        {
           "recommendationId": "rec-station-llll-4acd80bbf4bfc450a36f30d237c16d66",
           "existingId": "station llll",
           "title": "Station llll",
@@ -481661,61 +480321,6 @@
       ],
       "similarResults": [
         {
-          "recommendationId": "rec-narkobetjenten-og-den-kriminelle-underverden-saeson-1-281d1fc87079733572fcd973b7db9264",
-          "existingId": "narkobetjenten og den kriminelle underverden sæson 1",
-          "title": "Narkobetjenten og den kriminelle underverden (Sæson 1)",
-          "publisher": "Podimo",
-          "authoritativeMainSeries": "",
-          "primaryGenre": "True Crime",
-          "secondaryGenre": "Samfund",
-          "topicsCanonical": [
-            "Narkokriminalitet",
-            "Undercoverarbejde",
-            "politiarbejde",
-            "kriminelle miljøer"
-          ],
-          "editorialScore": 8,
-          "image": "https://renedahlandersen.dk/wp-content/uploads/2023/02/Cover_Artwork-Narkobetjenten-2022-scaled.jpg",
-          "link": "https://podimo.com/dk/shows/narkobetjenten",
-          "contentSimilarityScore": 72.7955,
-          "topicSimilarityScore": 57.7955,
-          "genreSimilarityScore": 15,
-          "sharedTopics": [
-            "Narkokriminalitet",
-            "politiarbejde",
-            "kriminelle miljøer"
-          ],
-          "similarityReason": "Fælles emner: Narkokriminalitet, politiarbejde m.fl.",
-          "candidateType": "content_similarity"
-        },
-        {
-          "recommendationId": "rec-narkobetjenten-og-den-kriminelle-underverden-saeson-2-b6c6df54f3f277b8e5e088c43ed5764f",
-          "existingId": "narkobetjenten og den kriminelle underverden sæson 2",
-          "title": "Narkobetjenten & den kriminelle underverden (Sæson 2)",
-          "publisher": "Podimo",
-          "authoritativeMainSeries": "",
-          "primaryGenre": "True Crime",
-          "secondaryGenre": "Samfund",
-          "topicsCanonical": [
-            "Narkokriminalitet",
-            "politiarbejde",
-            "fængselsliv",
-            "exit fra kriminalitet"
-          ],
-          "editorialScore": 8.2,
-          "image": "https://renedahlandersen.dk/wp-content/uploads/2023/02/Cover_Artwork-Narkobetjenten-2022-scaled.jpg",
-          "link": "https://podimo.com/dk/shows/2eecebe9-bbbc-4eae-84f9-43a0f80f23a2",
-          "contentSimilarityScore": 70.2434,
-          "topicSimilarityScore": 55.2434,
-          "genreSimilarityScore": 15,
-          "sharedTopics": [
-            "Narkokriminalitet",
-            "politiarbejde"
-          ],
-          "similarityReason": "Fælles emner: Narkokriminalitet og politiarbejde",
-          "candidateType": "content_similarity"
-        },
-        {
           "recommendationId": "rec-station-llll-4acd80bbf4bfc450a36f30d237c16d66",
           "existingId": "station llll",
           "title": "Station llll",
@@ -481872,10 +480477,10 @@
         }
       ],
       "sameSeriesResults": [],
-      "automaticSimilarResultCount": 8,
+      "automaticSimilarResultCount": 6,
       "manualSupplementaryResultCount": 0,
-      "combinedSimilarResultCount": 8,
-      "similarResultCount": 8,
+      "combinedSimilarResultCount": 6,
+      "similarResultCount": 6,
       "sameSeriesResultCount": 0,
       "showSimilarSection": true,
       "showSameSeriesSection": false,
@@ -481890,61 +480495,6 @@
       "supplementarySimilaritiesRaw": "narkobetjenten sæson 14; narkobetjenten sæson 13; narkobetjenten sæson 12; narkobetjenten sæson 11",
       "automaticSimilarResults": [
         {
-          "recommendationId": "rec-narkobetjenten-og-den-kriminelle-underverden-saeson-6-dd38d8938fcb1579a759561812c2bc84",
-          "existingId": "narkobetjenten og den kriminelle underverden sæson 6",
-          "title": "Narkobetjenten og den kriminelle underverden (Sæson 6)",
-          "publisher": "Podimo",
-          "authoritativeMainSeries": "",
-          "primaryGenre": "True Crime",
-          "secondaryGenre": "Samfund",
-          "topicsCanonical": [
-            "Narkokriminalitet",
-            "politiarbejde",
-            "informanter",
-            "Undercoverarbejde"
-          ],
-          "editorialScore": 7.8,
-          "image": "https://renedahlandersen.dk/wp-content/uploads/2023/02/Cover_Artwork-Narkobetjenten-2022-scaled.jpg",
-          "link": "https://podimo.com/dk/shows/2eecebe9-bbbc-4eae-84f9-43a0f80f23a2",
-          "contentSimilarityScore": 74.7569,
-          "topicSimilarityScore": 59.7569,
-          "genreSimilarityScore": 15,
-          "sharedTopics": [
-            "Narkokriminalitet",
-            "politiarbejde",
-            "informanter"
-          ],
-          "similarityReason": "Fælles emner: Narkokriminalitet, politiarbejde m.fl.",
-          "candidateType": "content_similarity"
-        },
-        {
-          "recommendationId": "rec-narkobetjenten-saeson-7-877f11b4c56426fd908491778e9ba924",
-          "existingId": "narkobetjenten sæson 7",
-          "title": "Narkobetjenten (Sæson 7)",
-          "publisher": "Podimo",
-          "authoritativeMainSeries": "",
-          "primaryGenre": "True Crime",
-          "secondaryGenre": "Samfund",
-          "topicsCanonical": [
-            "Narkokriminalitet",
-            "politiarbejde",
-            "informanter"
-          ],
-          "editorialScore": 7.5,
-          "image": "https://renedahlandersen.dk/wp-content/uploads/2023/02/Cover_Artwork-Narkobetjenten-2022-scaled.jpg",
-          "link": "https://podimo.com/dk/shows/2eecebe9-bbbc-4eae-84f9-43a0f80f23a2",
-          "contentSimilarityScore": 74.7569,
-          "topicSimilarityScore": 59.7569,
-          "genreSimilarityScore": 15,
-          "sharedTopics": [
-            "Narkokriminalitet",
-            "politiarbejde",
-            "informanter"
-          ],
-          "similarityReason": "Fælles emner: Narkokriminalitet, politiarbejde m.fl.",
-          "candidateType": "content_similarity"
-        },
-        {
           "recommendationId": "rec-vi-ejer-byen-e6091a7bceb4b157aa585d498cbe8dd4",
           "existingId": "vi ejer byen",
           "title": "Vi ejer byen",
@@ -482052,61 +480602,6 @@
       "manualSupplementaryResults": [],
       "combinedSimilarResults": [
         {
-          "recommendationId": "rec-narkobetjenten-og-den-kriminelle-underverden-saeson-6-dd38d8938fcb1579a759561812c2bc84",
-          "existingId": "narkobetjenten og den kriminelle underverden sæson 6",
-          "title": "Narkobetjenten og den kriminelle underverden (Sæson 6)",
-          "publisher": "Podimo",
-          "authoritativeMainSeries": "",
-          "primaryGenre": "True Crime",
-          "secondaryGenre": "Samfund",
-          "topicsCanonical": [
-            "Narkokriminalitet",
-            "politiarbejde",
-            "informanter",
-            "Undercoverarbejde"
-          ],
-          "editorialScore": 7.8,
-          "image": "https://renedahlandersen.dk/wp-content/uploads/2023/02/Cover_Artwork-Narkobetjenten-2022-scaled.jpg",
-          "link": "https://podimo.com/dk/shows/2eecebe9-bbbc-4eae-84f9-43a0f80f23a2",
-          "contentSimilarityScore": 74.7569,
-          "topicSimilarityScore": 59.7569,
-          "genreSimilarityScore": 15,
-          "sharedTopics": [
-            "Narkokriminalitet",
-            "politiarbejde",
-            "informanter"
-          ],
-          "similarityReason": "Fælles emner: Narkokriminalitet, politiarbejde m.fl.",
-          "candidateType": "content_similarity"
-        },
-        {
-          "recommendationId": "rec-narkobetjenten-saeson-7-877f11b4c56426fd908491778e9ba924",
-          "existingId": "narkobetjenten sæson 7",
-          "title": "Narkobetjenten (Sæson 7)",
-          "publisher": "Podimo",
-          "authoritativeMainSeries": "",
-          "primaryGenre": "True Crime",
-          "secondaryGenre": "Samfund",
-          "topicsCanonical": [
-            "Narkokriminalitet",
-            "politiarbejde",
-            "informanter"
-          ],
-          "editorialScore": 7.5,
-          "image": "https://renedahlandersen.dk/wp-content/uploads/2023/02/Cover_Artwork-Narkobetjenten-2022-scaled.jpg",
-          "link": "https://podimo.com/dk/shows/2eecebe9-bbbc-4eae-84f9-43a0f80f23a2",
-          "contentSimilarityScore": 74.7569,
-          "topicSimilarityScore": 59.7569,
-          "genreSimilarityScore": 15,
-          "sharedTopics": [
-            "Narkokriminalitet",
-            "politiarbejde",
-            "informanter"
-          ],
-          "similarityReason": "Fælles emner: Narkokriminalitet, politiarbejde m.fl.",
-          "candidateType": "content_similarity"
-        },
-        {
           "recommendationId": "rec-vi-ejer-byen-e6091a7bceb4b157aa585d498cbe8dd4",
           "existingId": "vi ejer byen",
           "title": "Vi ejer byen",
@@ -482213,61 +480708,6 @@
       ],
       "similarResults": [
         {
-          "recommendationId": "rec-narkobetjenten-og-den-kriminelle-underverden-saeson-6-dd38d8938fcb1579a759561812c2bc84",
-          "existingId": "narkobetjenten og den kriminelle underverden sæson 6",
-          "title": "Narkobetjenten og den kriminelle underverden (Sæson 6)",
-          "publisher": "Podimo",
-          "authoritativeMainSeries": "",
-          "primaryGenre": "True Crime",
-          "secondaryGenre": "Samfund",
-          "topicsCanonical": [
-            "Narkokriminalitet",
-            "politiarbejde",
-            "informanter",
-            "Undercoverarbejde"
-          ],
-          "editorialScore": 7.8,
-          "image": "https://renedahlandersen.dk/wp-content/uploads/2023/02/Cover_Artwork-Narkobetjenten-2022-scaled.jpg",
-          "link": "https://podimo.com/dk/shows/2eecebe9-bbbc-4eae-84f9-43a0f80f23a2",
-          "contentSimilarityScore": 74.7569,
-          "topicSimilarityScore": 59.7569,
-          "genreSimilarityScore": 15,
-          "sharedTopics": [
-            "Narkokriminalitet",
-            "politiarbejde",
-            "informanter"
-          ],
-          "similarityReason": "Fælles emner: Narkokriminalitet, politiarbejde m.fl.",
-          "candidateType": "content_similarity"
-        },
-        {
-          "recommendationId": "rec-narkobetjenten-saeson-7-877f11b4c56426fd908491778e9ba924",
-          "existingId": "narkobetjenten sæson 7",
-          "title": "Narkobetjenten (Sæson 7)",
-          "publisher": "Podimo",
-          "authoritativeMainSeries": "",
-          "primaryGenre": "True Crime",
-          "secondaryGenre": "Samfund",
-          "topicsCanonical": [
-            "Narkokriminalitet",
-            "politiarbejde",
-            "informanter"
-          ],
-          "editorialScore": 7.5,
-          "image": "https://renedahlandersen.dk/wp-content/uploads/2023/02/Cover_Artwork-Narkobetjenten-2022-scaled.jpg",
-          "link": "https://podimo.com/dk/shows/2eecebe9-bbbc-4eae-84f9-43a0f80f23a2",
-          "contentSimilarityScore": 74.7569,
-          "topicSimilarityScore": 59.7569,
-          "genreSimilarityScore": 15,
-          "sharedTopics": [
-            "Narkokriminalitet",
-            "politiarbejde",
-            "informanter"
-          ],
-          "similarityReason": "Fælles emner: Narkokriminalitet, politiarbejde m.fl.",
-          "candidateType": "content_similarity"
-        },
-        {
           "recommendationId": "rec-vi-ejer-byen-e6091a7bceb4b157aa585d498cbe8dd4",
           "existingId": "vi ejer byen",
           "title": "Vi ejer byen",
@@ -482373,10 +480813,10 @@
         }
       ],
       "sameSeriesResults": [],
-      "automaticSimilarResultCount": 6,
+      "automaticSimilarResultCount": 4,
       "manualSupplementaryResultCount": 0,
-      "combinedSimilarResultCount": 6,
-      "similarResultCount": 6,
+      "combinedSimilarResultCount": 4,
+      "similarResultCount": 4,
       "sameSeriesResultCount": 0,
       "showSimilarSection": true,
       "showSameSeriesSection": false,
@@ -482391,62 +480831,6 @@
       "supplementarySimilaritiesRaw": "narkobetjenten og den kriminelle underverden sæson 1; narkobetjenten og den kriminelle underverden sæson 2; narkobetjenten og den kriminelle underverden sæson 3; narkobetjenten sæson 11",
       "automaticSimilarResults": [
         {
-          "recommendationId": "rec-narkobetjenten-og-den-kriminelle-underverden-saeson-6-dd38d8938fcb1579a759561812c2bc84",
-          "existingId": "narkobetjenten og den kriminelle underverden sæson 6",
-          "title": "Narkobetjenten og den kriminelle underverden (Sæson 6)",
-          "publisher": "Podimo",
-          "authoritativeMainSeries": "",
-          "primaryGenre": "True Crime",
-          "secondaryGenre": "Samfund",
-          "topicsCanonical": [
-            "Narkokriminalitet",
-            "politiarbejde",
-            "informanter",
-            "Undercoverarbejde"
-          ],
-          "editorialScore": 7.8,
-          "image": "https://renedahlandersen.dk/wp-content/uploads/2023/02/Cover_Artwork-Narkobetjenten-2022-scaled.jpg",
-          "link": "https://podimo.com/dk/shows/2eecebe9-bbbc-4eae-84f9-43a0f80f23a2",
-          "contentSimilarityScore": 74.7569,
-          "topicSimilarityScore": 59.7569,
-          "genreSimilarityScore": 15,
-          "sharedTopics": [
-            "Narkokriminalitet",
-            "politiarbejde",
-            "informanter"
-          ],
-          "similarityReason": "Fælles emner: Narkokriminalitet, politiarbejde m.fl.",
-          "candidateType": "content_similarity"
-        },
-        {
-          "recommendationId": "rec-narkobetjenten-saeson-15-4fad196849feb275bd0271256bd5ac14",
-          "existingId": "narkobetjenten sæson 15",
-          "title": "Narkobetjenten (sæson 15)",
-          "publisher": "Podimo",
-          "authoritativeMainSeries": "",
-          "primaryGenre": "True Crime",
-          "secondaryGenre": "Samfund",
-          "topicsCanonical": [
-            "Narkokriminalitet",
-            "politiarbejde",
-            "informanter",
-            "etiske dilemmaer"
-          ],
-          "editorialScore": 7.7,
-          "image": "https://renedahlandersen.dk/wp-content/uploads/2023/02/Cover_Artwork-Narkobetjenten-2022-scaled.jpg",
-          "link": "https://podimo.com/dk/shows/narkobetjenten",
-          "contentSimilarityScore": 74.7569,
-          "topicSimilarityScore": 59.7569,
-          "genreSimilarityScore": 15,
-          "sharedTopics": [
-            "Narkokriminalitet",
-            "politiarbejde",
-            "informanter"
-          ],
-          "similarityReason": "Fælles emner: Narkokriminalitet, politiarbejde m.fl.",
-          "candidateType": "content_similarity"
-        },
-        {
           "recommendationId": "rec-vi-ejer-byen-e6091a7bceb4b157aa585d498cbe8dd4",
           "existingId": "vi ejer byen",
           "title": "Vi ejer byen",
@@ -482554,62 +480938,6 @@
       "manualSupplementaryResults": [],
       "combinedSimilarResults": [
         {
-          "recommendationId": "rec-narkobetjenten-og-den-kriminelle-underverden-saeson-6-dd38d8938fcb1579a759561812c2bc84",
-          "existingId": "narkobetjenten og den kriminelle underverden sæson 6",
-          "title": "Narkobetjenten og den kriminelle underverden (Sæson 6)",
-          "publisher": "Podimo",
-          "authoritativeMainSeries": "",
-          "primaryGenre": "True Crime",
-          "secondaryGenre": "Samfund",
-          "topicsCanonical": [
-            "Narkokriminalitet",
-            "politiarbejde",
-            "informanter",
-            "Undercoverarbejde"
-          ],
-          "editorialScore": 7.8,
-          "image": "https://renedahlandersen.dk/wp-content/uploads/2023/02/Cover_Artwork-Narkobetjenten-2022-scaled.jpg",
-          "link": "https://podimo.com/dk/shows/2eecebe9-bbbc-4eae-84f9-43a0f80f23a2",
-          "contentSimilarityScore": 74.7569,
-          "topicSimilarityScore": 59.7569,
-          "genreSimilarityScore": 15,
-          "sharedTopics": [
-            "Narkokriminalitet",
-            "politiarbejde",
-            "informanter"
-          ],
-          "similarityReason": "Fælles emner: Narkokriminalitet, politiarbejde m.fl.",
-          "candidateType": "content_similarity"
-        },
-        {
-          "recommendationId": "rec-narkobetjenten-saeson-15-4fad196849feb275bd0271256bd5ac14",
-          "existingId": "narkobetjenten sæson 15",
-          "title": "Narkobetjenten (sæson 15)",
-          "publisher": "Podimo",
-          "authoritativeMainSeries": "",
-          "primaryGenre": "True Crime",
-          "secondaryGenre": "Samfund",
-          "topicsCanonical": [
-            "Narkokriminalitet",
-            "politiarbejde",
-            "informanter",
-            "etiske dilemmaer"
-          ],
-          "editorialScore": 7.7,
-          "image": "https://renedahlandersen.dk/wp-content/uploads/2023/02/Cover_Artwork-Narkobetjenten-2022-scaled.jpg",
-          "link": "https://podimo.com/dk/shows/narkobetjenten",
-          "contentSimilarityScore": 74.7569,
-          "topicSimilarityScore": 59.7569,
-          "genreSimilarityScore": 15,
-          "sharedTopics": [
-            "Narkokriminalitet",
-            "politiarbejde",
-            "informanter"
-          ],
-          "similarityReason": "Fælles emner: Narkokriminalitet, politiarbejde m.fl.",
-          "candidateType": "content_similarity"
-        },
-        {
           "recommendationId": "rec-vi-ejer-byen-e6091a7bceb4b157aa585d498cbe8dd4",
           "existingId": "vi ejer byen",
           "title": "Vi ejer byen",
@@ -482716,62 +481044,6 @@
       ],
       "similarResults": [
         {
-          "recommendationId": "rec-narkobetjenten-og-den-kriminelle-underverden-saeson-6-dd38d8938fcb1579a759561812c2bc84",
-          "existingId": "narkobetjenten og den kriminelle underverden sæson 6",
-          "title": "Narkobetjenten og den kriminelle underverden (Sæson 6)",
-          "publisher": "Podimo",
-          "authoritativeMainSeries": "",
-          "primaryGenre": "True Crime",
-          "secondaryGenre": "Samfund",
-          "topicsCanonical": [
-            "Narkokriminalitet",
-            "politiarbejde",
-            "informanter",
-            "Undercoverarbejde"
-          ],
-          "editorialScore": 7.8,
-          "image": "https://renedahlandersen.dk/wp-content/uploads/2023/02/Cover_Artwork-Narkobetjenten-2022-scaled.jpg",
-          "link": "https://podimo.com/dk/shows/2eecebe9-bbbc-4eae-84f9-43a0f80f23a2",
-          "contentSimilarityScore": 74.7569,
-          "topicSimilarityScore": 59.7569,
-          "genreSimilarityScore": 15,
-          "sharedTopics": [
-            "Narkokriminalitet",
-            "politiarbejde",
-            "informanter"
-          ],
-          "similarityReason": "Fælles emner: Narkokriminalitet, politiarbejde m.fl.",
-          "candidateType": "content_similarity"
-        },
-        {
-          "recommendationId": "rec-narkobetjenten-saeson-15-4fad196849feb275bd0271256bd5ac14",
-          "existingId": "narkobetjenten sæson 15",
-          "title": "Narkobetjenten (sæson 15)",
-          "publisher": "Podimo",
-          "authoritativeMainSeries": "",
-          "primaryGenre": "True Crime",
-          "secondaryGenre": "Samfund",
-          "topicsCanonical": [
-            "Narkokriminalitet",
-            "politiarbejde",
-            "informanter",
-            "etiske dilemmaer"
-          ],
-          "editorialScore": 7.7,
-          "image": "https://renedahlandersen.dk/wp-content/uploads/2023/02/Cover_Artwork-Narkobetjenten-2022-scaled.jpg",
-          "link": "https://podimo.com/dk/shows/narkobetjenten",
-          "contentSimilarityScore": 74.7569,
-          "topicSimilarityScore": 59.7569,
-          "genreSimilarityScore": 15,
-          "sharedTopics": [
-            "Narkokriminalitet",
-            "politiarbejde",
-            "informanter"
-          ],
-          "similarityReason": "Fælles emner: Narkokriminalitet, politiarbejde m.fl.",
-          "candidateType": "content_similarity"
-        },
-        {
           "recommendationId": "rec-vi-ejer-byen-e6091a7bceb4b157aa585d498cbe8dd4",
           "existingId": "vi ejer byen",
           "title": "Vi ejer byen",
@@ -482877,10 +481149,10 @@
         }
       ],
       "sameSeriesResults": [],
-      "automaticSimilarResultCount": 6,
+      "automaticSimilarResultCount": 4,
       "manualSupplementaryResultCount": 0,
-      "combinedSimilarResultCount": 6,
-      "similarResultCount": 6,
+      "combinedSimilarResultCount": 4,
+      "similarResultCount": 4,
       "sameSeriesResultCount": 0,
       "showSimilarSection": true,
       "showSameSeriesSection": false,
@@ -482895,61 +481167,6 @@
       "supplementarySimilaritiesRaw": "narkobetjenten sæson 10; narkobetjenten sæson 11; narkobetjenten sæson 12; narkobetjenten sæson 13",
       "automaticSimilarResults": [
         {
-          "recommendationId": "rec-narkobetjenten-og-den-kriminelle-underverden-saeson-6-dd38d8938fcb1579a759561812c2bc84",
-          "existingId": "narkobetjenten og den kriminelle underverden sæson 6",
-          "title": "Narkobetjenten og den kriminelle underverden (Sæson 6)",
-          "publisher": "Podimo",
-          "authoritativeMainSeries": "",
-          "primaryGenre": "True Crime",
-          "secondaryGenre": "Samfund",
-          "topicsCanonical": [
-            "Narkokriminalitet",
-            "politiarbejde",
-            "informanter",
-            "Undercoverarbejde"
-          ],
-          "editorialScore": 7.8,
-          "image": "https://renedahlandersen.dk/wp-content/uploads/2023/02/Cover_Artwork-Narkobetjenten-2022-scaled.jpg",
-          "link": "https://podimo.com/dk/shows/2eecebe9-bbbc-4eae-84f9-43a0f80f23a2",
-          "contentSimilarityScore": 74.7569,
-          "topicSimilarityScore": 59.7569,
-          "genreSimilarityScore": 15,
-          "sharedTopics": [
-            "Narkokriminalitet",
-            "politiarbejde",
-            "informanter"
-          ],
-          "similarityReason": "Fælles emner: Narkokriminalitet, politiarbejde m.fl.",
-          "candidateType": "content_similarity"
-        },
-        {
-          "recommendationId": "rec-narkobetjenten-saeson-7-877f11b4c56426fd908491778e9ba924",
-          "existingId": "narkobetjenten sæson 7",
-          "title": "Narkobetjenten (Sæson 7)",
-          "publisher": "Podimo",
-          "authoritativeMainSeries": "",
-          "primaryGenre": "True Crime",
-          "secondaryGenre": "Samfund",
-          "topicsCanonical": [
-            "Narkokriminalitet",
-            "politiarbejde",
-            "informanter"
-          ],
-          "editorialScore": 7.5,
-          "image": "https://renedahlandersen.dk/wp-content/uploads/2023/02/Cover_Artwork-Narkobetjenten-2022-scaled.jpg",
-          "link": "https://podimo.com/dk/shows/2eecebe9-bbbc-4eae-84f9-43a0f80f23a2",
-          "contentSimilarityScore": 74.7569,
-          "topicSimilarityScore": 59.7569,
-          "genreSimilarityScore": 15,
-          "sharedTopics": [
-            "Narkokriminalitet",
-            "politiarbejde",
-            "informanter"
-          ],
-          "similarityReason": "Fælles emner: Narkokriminalitet, politiarbejde m.fl.",
-          "candidateType": "content_similarity"
-        },
-        {
           "recommendationId": "rec-vi-ejer-byen-e6091a7bceb4b157aa585d498cbe8dd4",
           "existingId": "vi ejer byen",
           "title": "Vi ejer byen",
@@ -483057,61 +481274,6 @@
       "manualSupplementaryResults": [],
       "combinedSimilarResults": [
         {
-          "recommendationId": "rec-narkobetjenten-og-den-kriminelle-underverden-saeson-6-dd38d8938fcb1579a759561812c2bc84",
-          "existingId": "narkobetjenten og den kriminelle underverden sæson 6",
-          "title": "Narkobetjenten og den kriminelle underverden (Sæson 6)",
-          "publisher": "Podimo",
-          "authoritativeMainSeries": "",
-          "primaryGenre": "True Crime",
-          "secondaryGenre": "Samfund",
-          "topicsCanonical": [
-            "Narkokriminalitet",
-            "politiarbejde",
-            "informanter",
-            "Undercoverarbejde"
-          ],
-          "editorialScore": 7.8,
-          "image": "https://renedahlandersen.dk/wp-content/uploads/2023/02/Cover_Artwork-Narkobetjenten-2022-scaled.jpg",
-          "link": "https://podimo.com/dk/shows/2eecebe9-bbbc-4eae-84f9-43a0f80f23a2",
-          "contentSimilarityScore": 74.7569,
-          "topicSimilarityScore": 59.7569,
-          "genreSimilarityScore": 15,
-          "sharedTopics": [
-            "Narkokriminalitet",
-            "politiarbejde",
-            "informanter"
-          ],
-          "similarityReason": "Fælles emner: Narkokriminalitet, politiarbejde m.fl.",
-          "candidateType": "content_similarity"
-        },
-        {
-          "recommendationId": "rec-narkobetjenten-saeson-7-877f11b4c56426fd908491778e9ba924",
-          "existingId": "narkobetjenten sæson 7",
-          "title": "Narkobetjenten (Sæson 7)",
-          "publisher": "Podimo",
-          "authoritativeMainSeries": "",
-          "primaryGenre": "True Crime",
-          "secondaryGenre": "Samfund",
-          "topicsCanonical": [
-            "Narkokriminalitet",
-            "politiarbejde",
-            "informanter"
-          ],
-          "editorialScore": 7.5,
-          "image": "https://renedahlandersen.dk/wp-content/uploads/2023/02/Cover_Artwork-Narkobetjenten-2022-scaled.jpg",
-          "link": "https://podimo.com/dk/shows/2eecebe9-bbbc-4eae-84f9-43a0f80f23a2",
-          "contentSimilarityScore": 74.7569,
-          "topicSimilarityScore": 59.7569,
-          "genreSimilarityScore": 15,
-          "sharedTopics": [
-            "Narkokriminalitet",
-            "politiarbejde",
-            "informanter"
-          ],
-          "similarityReason": "Fælles emner: Narkokriminalitet, politiarbejde m.fl.",
-          "candidateType": "content_similarity"
-        },
-        {
           "recommendationId": "rec-vi-ejer-byen-e6091a7bceb4b157aa585d498cbe8dd4",
           "existingId": "vi ejer byen",
           "title": "Vi ejer byen",
@@ -483218,61 +481380,6 @@
       ],
       "similarResults": [
         {
-          "recommendationId": "rec-narkobetjenten-og-den-kriminelle-underverden-saeson-6-dd38d8938fcb1579a759561812c2bc84",
-          "existingId": "narkobetjenten og den kriminelle underverden sæson 6",
-          "title": "Narkobetjenten og den kriminelle underverden (Sæson 6)",
-          "publisher": "Podimo",
-          "authoritativeMainSeries": "",
-          "primaryGenre": "True Crime",
-          "secondaryGenre": "Samfund",
-          "topicsCanonical": [
-            "Narkokriminalitet",
-            "politiarbejde",
-            "informanter",
-            "Undercoverarbejde"
-          ],
-          "editorialScore": 7.8,
-          "image": "https://renedahlandersen.dk/wp-content/uploads/2023/02/Cover_Artwork-Narkobetjenten-2022-scaled.jpg",
-          "link": "https://podimo.com/dk/shows/2eecebe9-bbbc-4eae-84f9-43a0f80f23a2",
-          "contentSimilarityScore": 74.7569,
-          "topicSimilarityScore": 59.7569,
-          "genreSimilarityScore": 15,
-          "sharedTopics": [
-            "Narkokriminalitet",
-            "politiarbejde",
-            "informanter"
-          ],
-          "similarityReason": "Fælles emner: Narkokriminalitet, politiarbejde m.fl.",
-          "candidateType": "content_similarity"
-        },
-        {
-          "recommendationId": "rec-narkobetjenten-saeson-7-877f11b4c56426fd908491778e9ba924",
-          "existingId": "narkobetjenten sæson 7",
-          "title": "Narkobetjenten (Sæson 7)",
-          "publisher": "Podimo",
-          "authoritativeMainSeries": "",
-          "primaryGenre": "True Crime",
-          "secondaryGenre": "Samfund",
-          "topicsCanonical": [
-            "Narkokriminalitet",
-            "politiarbejde",
-            "informanter"
-          ],
-          "editorialScore": 7.5,
-          "image": "https://renedahlandersen.dk/wp-content/uploads/2023/02/Cover_Artwork-Narkobetjenten-2022-scaled.jpg",
-          "link": "https://podimo.com/dk/shows/2eecebe9-bbbc-4eae-84f9-43a0f80f23a2",
-          "contentSimilarityScore": 74.7569,
-          "topicSimilarityScore": 59.7569,
-          "genreSimilarityScore": 15,
-          "sharedTopics": [
-            "Narkokriminalitet",
-            "politiarbejde",
-            "informanter"
-          ],
-          "similarityReason": "Fælles emner: Narkokriminalitet, politiarbejde m.fl.",
-          "candidateType": "content_similarity"
-        },
-        {
           "recommendationId": "rec-vi-ejer-byen-e6091a7bceb4b157aa585d498cbe8dd4",
           "existingId": "vi ejer byen",
           "title": "Vi ejer byen",
@@ -483378,10 +481485,10 @@
         }
       ],
       "sameSeriesResults": [],
-      "automaticSimilarResultCount": 6,
+      "automaticSimilarResultCount": 4,
       "manualSupplementaryResultCount": 0,
-      "combinedSimilarResultCount": 6,
-      "similarResultCount": 6,
+      "combinedSimilarResultCount": 4,
+      "similarResultCount": 4,
       "sameSeriesResultCount": 0,
       "showSimilarSection": true,
       "showSameSeriesSection": false,

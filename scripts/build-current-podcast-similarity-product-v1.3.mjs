@@ -26,9 +26,12 @@ function buildCurrentProduct(rootDir = PROJECT_ROOT) {
   const productConfig = validateProductConfig(
     readJson(path.join(rootDir, "config", "podcast-similarity-product-v1.3.json"))
   );
+  const displayGroupConfig = readJson(path.join(rootDir, "data", "podcast-display-groups.json"));
   const catalog = buildSimilarityCatalog(metadata, podcasts);
   const v11Output = buildSimilarityResultsForCatalog(catalog, v11Config);
-  return buildProductOutput(podcasts, metadata, v11Output, v11Config, productConfig);
+  return buildProductOutput(podcasts, metadata, v11Output, v11Config, productConfig, {
+    displayGroups: displayGroupConfig.groups || []
+  });
 }
 
 function runBuild({ rootDir = PROJECT_ROOT, outputPath, stdout = false } = {}) {

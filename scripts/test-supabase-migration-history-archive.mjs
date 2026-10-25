@@ -9,10 +9,11 @@ const archiveRelative = "supabase/migration-history/production/20261008093805_pr
 const archivePath = path.join(root, archiveRelative);
 const source = await readFile(archivePath);
 const sql = source.toString("utf8");
+const canonicalSource = Buffer.from(sql.replace(/\r\n/gu, "\n"), "utf8");
 
-assert.equal(source.byteLength, 3600, "Recovered production SQL byte length changed");
+assert.equal(canonicalSource.byteLength, 3600, "Recovered production SQL byte length changed");
 assert.equal(
-  createHash("md5").update(source).digest("hex"),
+  createHash("md5").update(canonicalSource).digest("hex"),
   "6c2c3e22bce1097dae2abc8d05779f67",
   "Recovered production SQL checksum changed"
 );

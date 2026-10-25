@@ -11,6 +11,10 @@ const committedProduct = JSON.parse(
 );
 const rebuiltProduct = buildCurrentProduct();
 const catalogIds = new Set(podcastPayload.rows.map((podcast) => podcast["Podcast-ID"]));
+const narkobetjentenGroup = JSON.parse(
+  fs.readFileSync("data/podcast-display-groups.json", "utf8")
+).groups.find((group) => group.id === "narkobetjenten");
+const narkobetjentenIds = new Set(narkobetjentenGroup.memberLegacyKeys);
 
 function compareManualAuditRows(left, right) {
   if (left.sourceRecommendationId < right.sourceRecommendationId) return -1;
@@ -23,6 +27,25 @@ assert.equal(Object.keys(rebuiltProduct.results).length, catalogIds.size);
 assert.ok(
   Object.values(rebuiltProduct.results).some((row) => row.existingId === "fjernsynsklubben"),
   "fjernsynsklubben must be present in the generated product"
+);
+assert.ok(catalogIds.has("narkobetjenten pa gaden sæson 1"));
+const mainSeriesResults = Object.values(rebuiltProduct.results).filter((result) =>
+  narkobetjentenIds.has(result.existingId)
+);
+assert.ok(mainSeriesResults.length > 0, "the Narkobetjenten seasons remain in the catalogue");
+for (const result of mainSeriesResults) {
+  for (const section of ["manualSupplementaryResults", "automaticSimilarResults", "sameSeriesResults"]) {
+    assert.ok(
+      !(result[section] || []).some((candidate) => narkobetjentenIds.has(candidate.existingId)),
+      `${result.existingId} cannot recommend an individual main-series season in ${section}`
+    );
+  }
+}
+assert.ok(
+  Object.values(rebuiltProduct.results).some(
+    (result) => result.existingId === "narkobetjenten pa gaden sæson 1"
+  ),
+  "Narkobetjenten på gaden keeps its distinct catalogue identity"
 );
 // The audit is a set of source/position records. localeCompare can order ASCII IDs
 // differently across ICU versions, so canonicalize only this unordered outer list.
