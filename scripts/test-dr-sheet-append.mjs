@@ -72,6 +72,12 @@ for (const forbidden of ["Vuring (1-10)", "Afgivet vurdering", "Årstal afspille
 }
 assert.equal(preserveCatalogueIdsByPodcastId(autoRows, [{ "Podcast-ID": ids[1], catalogue_id: "catalogue-v1-existing" }])[0].catalogue_id, "catalogue-v1-existing");
 assert.throws(() => preserveCatalogueIdsByPodcastId(autoRows, [{ "Podcast-ID": ids[1] }, { "Podcast-ID": ids[1] }]), /duplicate Podcast-ID/);
+const legacyEditorialRow = { Titel: "Dræberurten", "Podcast-ID": "dræberurten", Hovedserie: "Djævlen i detaljen", "Kort beskrivelse": "Existing editorial row" };
+assert.deepEqual(
+  preserveCatalogueIdsByPodcastId([{ ...legacyEditorialRow, needs_editorial_review: true }], [legacyEditorialRow])[0],
+  legacyEditorialRow,
+  "Unreviewed metadata must not erase an already-published catalogue row"
+);
 
 const brokenHeader = [...REQUIRED_HEADERS];
 brokenHeader[19] = "Manual similarity";
