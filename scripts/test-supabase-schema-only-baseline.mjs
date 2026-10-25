@@ -50,7 +50,8 @@ assert.equal(
 assert.match(baseline, /CREATE TRIGGER podcast_episodes_protect_identity/i);
 assert.match(baseline, /ALTER TABLE public\.episode_ratings ENABLE ROW LEVEL SECURITY/i);
 assert.doesNotMatch(baseline, /ALTER TABLE public\.episode_identity_history ENABLE ROW LEVEL SECURITY/i);
-assert.equal((baseline.match(/ALTER DEFAULT PRIVILEGES FOR ROLE supabase_admin/g) || []).length, 6);
+assert.match(baseline, /SET ROLE supabase_admin;[\s\S]*ALTER DEFAULT PRIVILEGES IN SCHEMA public[\s\S]*RESET ROLE;/i);
+assert.doesNotMatch(baseline, /ALTER DEFAULT PRIVILEGES FOR ROLE supabase_admin/i);
 assert.doesNotMatch(baseline, /https?:\/\/|sb_(?:secret|publishable)_[A-Za-z0-9]+/i, "baseline must not contain endpoints or API credentials");
 
 const testRoleSetup = await readFile(path.join(root, "scripts/sql/schema-only-baseline-local-roles.sql"), "utf8");
