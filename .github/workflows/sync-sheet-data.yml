@@ -298,3 +298,50 @@ jobs:
             if (existing) await github.rest.issues.update({ ...context.repo, issue_number: existing.number, body, assignees: [context.repo.owner] });
             else await github.rest.issues.create({ ...context.repo, title, body, assignees: [context.repo.owner] });
             core.setFailed("Automatic merge was blocked; deduplicated issue created or updated.");
+
+  append-verified-dr-series:
+    name: Append verified DR series to Ark1
+    needs: sync-sheet-data
+    if: github.ref == 'refs/heads/main' && needs.sync-sheet-data.result == 'success'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    concurrency:
+      group: append-verified-dr-series-ark1
+      cancel-in-progress: false
+    steps:
+      - name: Checkout protected main
+        uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+
+      - name: Authenticate with short-lived Google credentials
+        if: vars.GOOGLE_WORKLOAD_IDENTITY_PROVIDER != '' && vars.GOOGLE_SHEETS_SERVICE_ACCOUNT != ''
+        id: auth
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ vars.GOOGLE_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ vars.GOOGLE_SHEETS_SERVICE_ACCOUNT }}
+          token_format: access_token
+          access_token_scopes: https://www.googleapis.com/auth/spreadsheets
+
+      - name: Append only when owner gates and backup verification are enabled
+        env:
+          GOOGLE_ACCESS_TOKEN: ${{ steps.auth.outputs.access_token }}
+          GOOGLE_SHEETS_SPREADSHEET_ID: ${{ secrets.GOOGLE_SHEETS_SPREADSHEET_ID }}
+          GOOGLE_SHEETS_WRITE_ENABLED: ${{ secrets.GOOGLE_SHEETS_WRITE_ENABLED }}
+          GOOGLE_SHEETS_BACKUP_VERIFIED: ${{ secrets.GOOGLE_SHEETS_BACKUP_VERIFIED }}
+        shell: bash
+        run: |
+          if [[ "$GOOGLE_SHEETS_WRITE_ENABLED" == "true" && "$GOOGLE_SHEETS_BACKUP_VERIFIED" == "true" && "$GOOGLE_SHEETS_SPREADSHEET_ID" == "1V21y9uMx_fGethrT47hILWczgK_ZSNRfksSKWuR69ss" ]]; then
+            node scripts/append-dr-series-to-sheet.mjs --write
+          else
+            echo "Sheets append gate is closed; no production write attempted."
+            node scripts/append-dr-series-to-sheet.mjs
+          fi
