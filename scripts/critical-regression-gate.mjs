@@ -47,6 +47,7 @@ const checks = [
   ["full ranking retains sequential positions and verified movement markers", ["scripts/test-ranking-full-list.mjs"]],
   ["desktop ranking rank grid geometry in Chromium", ["scripts/test-desktop-ranking-column.mjs"]],
   ["community ranking load safety", ["scripts/test-community-ranking-load-safety.mjs"]],
+  ["ranking episode-derived own-rating lock", ["scripts/test-ranking-episode-rating-lock.mjs"]],
   ["mobile home search stays open during data refresh", ["scripts/test-mobile-home-search-overlay-lifecycle.mjs"]],
   ["episode archive/source", ["scripts/test-podcast-episode-archive-source-regression.mjs"]],
   ["Tipsbladet Transferguru identity and routing", ["--experimental-strip-types", "scripts/test-tipsbladet-transferguru-routing.mjs"]],

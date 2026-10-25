@@ -1000,6 +1000,7 @@ const state = {
   savedPodcastKeys: new Set(),
   savedPodcastMetaByKey: {},
   activeRatingKey: null,
+  activeRatingRequestToken: 0,
   openReviewKeys: new Set(),
   featuredIndex: 0,
   featuredTimer: null,
@@ -1058,6 +1059,8 @@ const state = {
   podcastDetailRankingIndex: -1,
   episodeParentRatingSyncSignatures: {},
   episodeParentRatingSyncPendingKeys: new Set(),
+  episodeParentRatingEditPendingKeys: new Set(),
+  ratingLockObserver: null,
   localEpisodeDataPromise: null,
   // Keyed by immutable manual_episode_key so a reviewed legacy canonical row
   // can retain its pre-existing Supabase UUID while the catalogue keeps its
@@ -1094,6 +1097,8 @@ const state = {
     parentEpisodesById: {},
     parentUserRatingsResolvedFor: "",
     parentUserRatingsLoading: false,
+    parentUserRatingsPromise: null,
+    parentUserRatingsErrorFor: "",
     statsLoadingIds: new Set(),
     userRatingLoadingIds: new Set()
     }
@@ -6027,6 +6032,16 @@ function setAuthBusy(isBusy) {
       button.disabled = isBusy;
     }
   });
+  if (!isBusy && state.ratingDialogMode !== "episode" && state.activeRatingKey) {
+    const podcast = resolvePodcastByStoredKey(state.activeRatingKey);
+    if (podcast && podcastSupportsEpisodes(podcast)) {
+      const ratingState = getPodcastRatingEditState(podcast);
+      const shouldStayLocked = !ratingState.resolved || ratingState.count > 0;
+      [elements.ratingInput, elements.ratingSaveButton, elements.ratingDeleteButton].forEach((control) => {
+        if (control) control.disabled = shouldStayLocked;
+      });
+    }
+  }
 }
 
 function updateAuthPasswordToggle() {
@@ -7046,8 +7061,10 @@ function createDesktopRankingTopCardElement(podcast, displayRank = null) {
     </div>
   `;
 
+  applyPodcastRatingControlState(article.querySelector(".desktop-ranking-own-score"), podcast);
   setDesktopRankingCover(article, podcast);
   renderFavoriteButton(article.querySelector(".favorite-button"), key);
+  observePodcastRatingControl(podcast, article);
   return article;
 }
 
@@ -7144,8 +7161,10 @@ function createDesktopRankingTableRowElement(podcast, displayRank = null) {
     </span>
   `;
 
+  applyPodcastRatingControlState(article.querySelector(".desktop-ranking-row__own"), podcast);
   setDesktopRankingCover(article, podcast);
   renderFavoriteButton(article.querySelector(".favorite-button"), key);
+  observePodcastRatingControl(podcast, article);
   return article;
 }
 
@@ -7632,10 +7651,23 @@ function renderRateButton(button, podcastKey) {
   if (!button) return;
 
   const hasUserRating = getUserRating(podcastKey) !== null;
+  const podcast = resolvePodcastByStoredKey(podcastKey);
+  const ratingState = podcast ? getPodcastRatingEditState(podcast) : { resolved: true, count: 0 };
+  const isLocked = Boolean(
+    state.authUser && podcast && podcastSupportsEpisodes(podcast) &&
+    (!ratingState.resolved || ratingState.count > 0)
+  );
   button.classList.toggle("has-user-rating", hasUserRating);
+  button.classList.toggle("is-episode-rating-locked", isLocked);
+  button.setAttribute("aria-disabled", String(isLocked));
+  if (podcast) {
+    button.title = getPodcastRatingControlDescription(podcast, ratingState);
+  }
   button.setAttribute(
     "aria-label",
-    hasUserRating ? "Rediger din vurdering" : "Vurder podcast"
+    isLocked && podcast
+      ? getPodcastRatingControlDescription(podcast, ratingState)
+      : hasUserRating ? "Rediger din vurdering" : "Vurder podcast"
   );
 }
 
@@ -8219,7 +8251,7 @@ async function handleLogout() {
   }
 }
 
-function openRatingDialog(podcast) {
+async function openRatingDialog(podcast) {
   resetRatingDialogMode();
   if (!isLoggedIn()) {
     state.pendingAuthAction = {
@@ -8234,18 +8266,27 @@ function openRatingDialog(podcast) {
   if (!elements.ratingDialog || !elements.ratingInput) return;
 
   const key = getPodcastKey(podcast);
-  const existingRating = getUserRating(key);
+  const userId = state.authUser?.id;
+  const request = getUserScopedRequestContext();
+  const requestToken = (state.activeRatingRequestToken || 0) + 1;
+  state.activeRatingRequestToken = requestToken;
+  const initialRatingState = getPodcastRatingEditState(podcast);
+  const initialRating = !initialRatingState.resolved
+    ? null
+    : initialRatingState.count > 0
+      ? initialRatingState.average
+      : getUserRating(key);
 
   state.activeRatingKey = key;
   elements.ratingDialogTitle.textContent = podcast.title;
   elements.ratingDialogMeta.textContent = podcast.host || podcast.publisher || "";
   elements.ratingInput.value =
-    existingRating === null || existingRating === undefined
+    initialRating === null || initialRating === undefined
       ? ""
-      : formatRatingInputValue(existingRating);
+      : formatRatingInputValue(initialRating);
   if (elements.ratingSaveButton) {
     elements.ratingSaveButton.textContent =
-      existingRating === null || existingRating === undefined
+      initialRating === null || initialRating === undefined
         ? "Gem vurdering"
         : "Opdater vurdering";
     elements.ratingSaveButton.disabled = false;
@@ -8255,17 +8296,77 @@ function openRatingDialog(podcast) {
   }
   elements.ratingDeleteButton?.classList.toggle(
     "is-hidden",
-    existingRating === null || existingRating === undefined
+    initialRating === null || initialRating === undefined
   );
 
-  updateRatingDialogMessage("");
+  const shouldVerify = state.authUser && podcastSupportsEpisodes(podcast);
+  const needsVerification = Boolean(shouldVerify);
+  const isDerived = shouldVerify && initialRatingState.resolved && initialRatingState.count > 0;
+  elements.ratingDeleteButton?.classList.toggle(
+    "is-hidden",
+    needsVerification || isDerived || initialRating === null || initialRating === undefined
+  );
+  [elements.ratingInput, elements.ratingSaveButton, elements.ratingDeleteButton].forEach((control) => {
+    if (control) control.disabled = Boolean(needsVerification || isDerived);
+  });
+  if (needsVerification) {
+    updateRatingDialogMessage("Kontrollerer episodevurderinger. Direkte redigering er låst, indtil kontrollen er færdig.", "info");
+  } else if (isDerived) {
+    updateRatingDialogMessage(getPodcastRatingControlDescription(podcast, initialRatingState), "info");
+  } else {
+    updateRatingDialogMessage("");
+  }
   elements.ratingDialog.classList.remove("is-hidden");
   elements.ratingDialog.setAttribute("aria-hidden", "false");
   document.body.classList.add("has-dialog-open");
   window.setTimeout(() => {
-    elements.ratingInput?.focus();
-    elements.ratingInput?.select();
+    if (elements.ratingInput?.disabled) {
+      elements.ratingDialog.querySelector(".rating-dialog__close:not(.is-hidden)")?.focus();
+    } else {
+      elements.ratingInput?.focus();
+      elements.ratingInput?.select();
+    }
   }, 40);
+
+  if (!shouldVerify) return;
+  const ratingState = await ensurePodcastRatingEditState(podcast, { retry: true, force: true });
+  if (
+    !isCurrentUserScopedRequest(request) || userId !== state.authUser?.id ||
+    state.activeRatingRequestToken !== requestToken || state.activeRatingKey !== key
+  ) return;
+
+  if (ratingState.resolved && ratingState.count > 0) {
+    elements.ratingInput.value = formatRatingInputValue(ratingState.average);
+    updateRatingDialogMessage(getPodcastRatingControlDescription(podcast, ratingState), "info");
+    void reconcileExistingEpisodeDerivedParentRating(key);
+    updatePodcastRatingControls(podcast);
+    return;
+  }
+  if (!ratingState.resolved) {
+    updateRatingDialogMessage(
+      `${ratingState.error || "Episodevurderingerne kunne ikke hentes lige nu."} Din samlede vurdering forbliver låst. Luk dialogen, og prøv igen.`,
+      "error"
+    );
+    updatePodcastRatingControls(podcast);
+    return;
+  }
+
+  const existingRating = getUserRating(key);
+  elements.ratingInput.value = existingRating === null || existingRating === undefined
+    ? ""
+    : formatRatingInputValue(existingRating);
+  if (elements.ratingInput) elements.ratingInput.disabled = false;
+  if (elements.ratingSaveButton) elements.ratingSaveButton.disabled = false;
+  if (elements.ratingDeleteButton) elements.ratingDeleteButton.disabled = false;
+  elements.ratingDeleteButton?.classList.toggle(
+    "is-hidden",
+    existingRating === null || existingRating === undefined
+  );
+  elements.ratingSaveButton.textContent = existingRating === null || existingRating === undefined
+    ? "Gem vurdering"
+    : "Opdater vurdering";
+  updateRatingDialogMessage("");
+  updatePodcastRatingControls(podcast);
 }
 
 function openEpisodeRatingDialog(episode, suppliedContext = null) {
@@ -8335,6 +8436,7 @@ function openEpisodeRatingDialog(episode, suppliedContext = null) {
 function closeRatingDialog() {
   if (!elements.ratingDialog) return;
 
+  state.activeRatingRequestToken = (state.activeRatingRequestToken || 0) + 1;
   state.activeRatingKey = null;
   state.activeEpisodeRatingId = null;
   state.activeEpisodeRatingContext = null;
@@ -8475,6 +8577,8 @@ async function finalizeSavedEpisodeRating({
 
 async function saveActiveEpisodeRating() {
   if (!state.authUser || !state.activeEpisodeRatingId || !elements.ratingInput) return;
+  const userId = state.authUser.id;
+  const userRequest = getUserScopedRequestContext();
 
   normalizeRatingInputField({ force: true });
   const numericValue = parseRatingInputValue(elements.ratingInput.value);
@@ -8503,6 +8607,11 @@ async function saveActiveEpisodeRating() {
   const previousEpisodeSummary = getPodcastEpisodeUserRatingSummary(podcastKey);
   const parentRatingKey = getEpisodeParentRatingKey(podcastKey);
   const previousEffectiveParentRating = state.userRatingsByKey[parentRatingKey] ?? null;
+  if (state.episodeParentRatingEditPendingKeys.has(parentRatingKey)) {
+    updateRatingDialogMessage("En vurdering af denne podcast behandles allerede. Prøv igen om et øjeblik.", "warning");
+    return;
+  }
+  state.episodeParentRatingEditPendingKeys.add(parentRatingKey);
   const originalSaveLabel = elements.ratingSaveButton?.textContent || "Gem vurdering";
 
   setAuthBusy(true);
@@ -8512,6 +8621,9 @@ async function saveActiveEpisodeRating() {
   try {
     if (episode?.dataSource === "manual" && !manualMappingResolved) {
       throw new Error("Episodevurderingen kunne ikke bekræftes. Prøv igen om et øjeblik.");
+    }
+    if (!isCurrentUserScopedRequest(userRequest) || state.activeEpisodeRatingId !== requestedEpisodeId) {
+      throw new Error("Din konto eller episode ændrede sig. Luk dialogen, og prøv igen.");
     }
 
     if (previousEpisodeSummary.count === 0 && !getEpisodeParentRatingBackup(podcastKey, { local: isLocalEpisodeRating })) {
@@ -8544,7 +8656,7 @@ async function saveActiveEpisodeRating() {
     }
     const { error } = await state.supabase.from("episode_ratings").upsert(
       {
-        user_id: state.authUser.id,
+        user_id: userId,
         episode_id: episodeId,
         rating: numericValue
       },
@@ -8554,7 +8666,7 @@ async function saveActiveEpisodeRating() {
     if (error) throw error;
 
     episodeState.userRatingsById[episodeId] = numericValue;
-    if (episodeState.parentUserRatingsResolvedFor === state.authUser.id) {
+    if (episodeState.parentUserRatingsResolvedFor === userId) {
       episodeState.parentUserRatingsById[episodeId] = numericValue;
     }
     closeRatingDialog();
@@ -8583,6 +8695,7 @@ async function saveActiveEpisodeRating() {
     if (elements.ratingSaveButton) elements.ratingSaveButton.textContent = originalSaveLabel;
     updateRatingDialogMessage(error.message || "Kunne ikke gemme episodevurderingen.", "error");
   } finally {
+    state.episodeParentRatingEditPendingKeys.delete(parentRatingKey);
     setAuthBusy(false);
   }
 }
@@ -8594,6 +8707,15 @@ async function saveActiveRating() {
   }
 
   if (!state.supabase || !state.authUser || !state.activeRatingKey || !elements.ratingInput) return;
+
+  const ratingKey = state.activeRatingKey;
+  const podcast = resolvePodcastByStoredKey(ratingKey);
+  const userId = state.authUser.id;
+  const userRequest = getUserScopedRequestContext();
+  if (state.episodeParentRatingEditPendingKeys.has(ratingKey)) {
+    updateRatingDialogMessage("En vurdering af denne podcast behandles allerede. Prøv igen om et øjeblik.", "warning");
+    return;
+  }
 
   normalizeRatingInputField({ force: true });
 
@@ -8612,15 +8734,37 @@ async function saveActiveRating() {
     return;
   }
 
+  state.episodeParentRatingEditPendingKeys.add(ratingKey);
   setAuthBusy(true);
   updateRatingDialogMessage("");
 
   try {
-    const ratingKey = state.activeRatingKey;
+    const ratingState = await ensurePodcastRatingEditState(podcast, { retry: true, force: true });
+    if (!isCurrentUserScopedRequest(userRequest) || state.activeRatingKey !== ratingKey) {
+      throw new Error("Din konto eller podcast ændrede sig. Luk dialogen, og prøv igen.");
+    }
+    if (!ratingState.resolved || ratingState.count > 0) {
+      if (ratingState.resolved && ratingState.count > 0) {
+        elements.ratingInput.value = formatRatingInputValue(ratingState.average);
+        void reconcileExistingEpisodeDerivedParentRating(ratingKey);
+      }
+      [elements.ratingInput, elements.ratingSaveButton, elements.ratingDeleteButton].forEach((control) => {
+        if (control) control.disabled = true;
+      });
+      updateRatingDialogMessage(
+        ratingState.resolved
+          ? getPodcastRatingControlDescription(podcast, ratingState)
+          : `${ratingState.error || "Episodevurderingerne kunne ikke hentes lige nu."} Din samlede vurdering forbliver låst.`,
+        ratingState.resolved ? "info" : "error"
+      );
+      updatePodcastRatingControls(podcast);
+      return;
+    }
+
     const persistedKey = getPersistedUserRatingKey(ratingKey);
     const { error } = await state.supabase.from("user_ratings").upsert(
       {
-        user_id: state.authUser.id,
+        user_id: userId,
         podcast_key: persistedKey,
         rating: numericValue
       },
@@ -8628,6 +8772,8 @@ async function saveActiveRating() {
     );
 
     if (error) throw error;
+
+    if (!isCurrentUserScopedRequest(userRequest)) return;
 
     const previousRating = state.userRatingsByKey[ratingKey] ?? null;
     state.userRatingsByKey[ratingKey] = numericValue;
@@ -8649,6 +8795,7 @@ async function saveActiveRating() {
     console.error(error);
     updateRatingDialogMessage(error.message || "Kunne ikke gemme vurderingen.", "error");
   } finally {
+    state.episodeParentRatingEditPendingKeys.delete(ratingKey);
     setAuthBusy(false);
   }
 }
@@ -8668,6 +8815,8 @@ function updateProfileEpisodeRatingAfterDelete(episodeId) {
 
 async function deleteActiveEpisodeRating() {
   if (!state.authUser || !state.activeEpisodeRatingId) return;
+  const userId = state.authUser.id;
+  const userRequest = getUserScopedRequestContext();
 
   const requestedEpisodeId = state.activeEpisodeRatingId;
   const episodeRatingContext = state.activeEpisodeRatingContext || getEpisodeRatingContext(getGenstartEpisodeById(requestedEpisodeId));
@@ -8686,6 +8835,11 @@ async function deleteActiveEpisodeRating() {
   const previousUserRating = episodeState.userRatingsById[episodeId];
   const parentRatingKey = getEpisodeParentRatingKey(podcastKey);
   const previousEffectiveParentRating = state.userRatingsByKey[parentRatingKey] ?? null;
+  if (state.episodeParentRatingEditPendingKeys.has(parentRatingKey)) {
+    updateRatingDialogMessage("En vurdering af denne podcast behandles allerede. Prøv igen om et øjeblik.", "warning");
+    return;
+  }
+  state.episodeParentRatingEditPendingKeys.add(parentRatingKey);
 
   setAuthBusy(true);
   updateRatingDialogMessage("");
@@ -8693,6 +8847,9 @@ async function deleteActiveEpisodeRating() {
   try {
     if (episode?.dataSource === "manual" && !manualMappingResolved) {
       throw new Error("Episodevurderingen kunne ikke bekræftes. Prøv igen om et øjeblik.");
+    }
+    if (!isCurrentUserScopedRequest(userRequest) || state.activeEpisodeRatingId !== requestedEpisodeId) {
+      throw new Error("Din konto eller episode ændrede sig. Luk dialogen, og prøv igen.");
     }
 
     if (config?.persistence === "local") {
@@ -8719,13 +8876,13 @@ async function deleteActiveEpisodeRating() {
     const { error } = await state.supabase
       .from("episode_ratings")
       .delete()
-      .eq("user_id", state.authUser.id)
+      .eq("user_id", userId)
       .eq("episode_id", episodeId);
 
     if (error) throw error;
 
     episodeState.userRatingsById[episodeId] = null;
-    if (episodeState.parentUserRatingsResolvedFor === state.authUser.id) {
+    if (episodeState.parentUserRatingsResolvedFor === userId) {
       delete episodeState.parentUserRatingsById[episodeId];
     }
     updateProfileEpisodeRatingAfterDelete(episodeId);
@@ -8775,6 +8932,7 @@ async function deleteActiveEpisodeRating() {
     console.error(error);
     updateRatingDialogMessage(error.message || "Kunne ikke fjerne episodevurderingen.", "error");
   } finally {
+    state.episodeParentRatingEditPendingKeys.delete(parentRatingKey);
     setAuthBusy(false);
   }
 }
@@ -8788,19 +8946,51 @@ async function deleteActiveRating() {
   if (!state.supabase || !state.authUser || !state.activeRatingKey) return;
 
   const deletedKey = state.activeRatingKey;
+  const podcast = resolvePodcastByStoredKey(deletedKey);
+  const userId = state.authUser.id;
+  const userRequest = getUserScopedRequestContext();
+  if (state.episodeParentRatingEditPendingKeys.has(deletedKey)) {
+    updateRatingDialogMessage("En vurdering af denne podcast behandles allerede. Prøv igen om et øjeblik.", "warning");
+    return;
+  }
   const persistedKey = getPersistedUserRatingKey(deletedKey);
 
+  state.episodeParentRatingEditPendingKeys.add(deletedKey);
   setAuthBusy(true);
   updateRatingDialogMessage("");
 
   try {
+    const ratingState = await ensurePodcastRatingEditState(podcast, { retry: true, force: true });
+    if (!isCurrentUserScopedRequest(userRequest) || state.activeRatingKey !== deletedKey) {
+      throw new Error("Din konto eller podcast ændrede sig. Luk dialogen, og prøv igen.");
+    }
+    if (!ratingState.resolved || ratingState.count > 0) {
+      if (ratingState.resolved && ratingState.count > 0) {
+        elements.ratingInput.value = formatRatingInputValue(ratingState.average);
+        void reconcileExistingEpisodeDerivedParentRating(deletedKey);
+      }
+      [elements.ratingInput, elements.ratingSaveButton, elements.ratingDeleteButton].forEach((control) => {
+        if (control) control.disabled = true;
+      });
+      updateRatingDialogMessage(
+        ratingState.resolved
+          ? getPodcastRatingControlDescription(podcast, ratingState)
+          : `${ratingState.error || "Episodevurderingerne kunne ikke hentes lige nu."} Din samlede vurdering forbliver låst.`,
+        ratingState.resolved ? "info" : "error"
+      );
+      updatePodcastRatingControls(podcast);
+      return;
+    }
+
     const { error } = await state.supabase
       .from("user_ratings")
       .delete()
-      .eq("user_id", state.authUser.id)
+      .eq("user_id", userId)
       .eq("podcast_key", persistedKey);
 
     if (error) throw error;
+
+    if (!isCurrentUserScopedRequest(userRequest)) return;
 
     const previousRating = state.userRatingsByKey[deletedKey] ?? null;
     delete state.userRatingsByKey[deletedKey];
@@ -8828,6 +9018,7 @@ async function deleteActiveRating() {
     console.error(error);
     updateRatingDialogMessage(error.message || "Kunne ikke fjerne vurderingen.", "error");
   } finally {
+    state.episodeParentRatingEditPendingKeys.delete(deletedKey);
     setAuthBusy(false);
   }
 }
@@ -11041,6 +11232,8 @@ function createEmptyPodcastEpisodeState() {
     parentEpisodesById: {},
     parentUserRatingsResolvedFor: "",
     parentUserRatingsLoading: false,
+    parentUserRatingsPromise: null,
+    parentUserRatingsErrorFor: "",
     parentUserRatingsError: "",
     statsLoadingIds: new Set(),
     userRatingLoadingIds: new Set()
@@ -11212,19 +11405,25 @@ function getPodcastEpisodeUserRatingSummary(podcastOrKey) {
   };
 }
 
-async function fetchPodcastEpisodeParentRatings(podcastOrKey) {
+async function fetchPodcastEpisodeParentRatings(podcastOrKey, { retry = false, force = false } = {}) {
   const config = getEpisodePodcastConfig(podcastOrKey);
   const episodeState = getPodcastEpisodeState(podcastOrKey);
   const request = getUserScopedRequestContext();
   if (!config || config.persistence !== "supabase" || config.dataSource === "local" || !request.userId) return;
   if (!state.supabase) {
     episodeState.parentUserRatingsError = "Episodevurderingerne kunne ikke hentes lige nu.";
+    episodeState.parentUserRatingsErrorFor = request.userId;
     return;
   }
-  if (episodeState.parentUserRatingsLoading || episodeState.parentUserRatingsResolvedFor === request.userId) return;
+  if (episodeState.parentUserRatingsLoading) return episodeState.parentUserRatingsPromise;
+  if (episodeState.parentUserRatingsResolvedFor === request.userId && !force) return;
+  if (!retry && episodeState.parentUserRatingsErrorFor === request.userId) return;
 
   episodeState.parentUserRatingsLoading = true;
+  episodeState.parentUserRatingsErrorFor = "";
   episodeState.parentUserRatingsError = "";
+  if (force) episodeState.parentUserRatingsResolvedFor = "";
+  const loadPromise = (async () => {
   try {
     // Query from the user's rows and join the parent episode. This is deliberately
     // independent of the visible episode page, so older ratings still count.
@@ -11254,13 +11453,29 @@ async function fetchPodcastEpisodeParentRatings(podcastOrKey) {
     episodeState.parentUserRatingsById = ratingsById;
     episodeState.parentEpisodesById = parentEpisodesById;
     episodeState.parentUserRatingsResolvedFor = request.userId;
+    episodeState.parentUserRatingsErrorFor = "";
   } catch (error) {
     if (isCurrentUserScopedRequest(request)) {
-      episodeState.parentUserRatingsError = "Episodevurderingerne kunne ikke hentes lige nu.";
+      if (config.persistence === "supabase" && config.dataSource !== "local") {
+        episodeState.parentUserRatingsError = "Episodevurderingerne kunne ikke hentes lige nu.";
+        episodeState.parentUserRatingsErrorFor = request.userId;
+      } else {
+        episodeState.userRatingError = "Episodevurderingerne kunne ikke hentes lige nu.";
+        episodeState.error = "Episodevurderingerne kunne ikke hentes lige nu.";
+      }
       console.error(error);
     }
   } finally {
     if (isCurrentUserScopedRequest(request)) episodeState.parentUserRatingsLoading = false;
+  }
+  })();
+  episodeState.parentUserRatingsPromise = loadPromise;
+  try {
+    await loadPromise;
+  } finally {
+    if (episodeState.parentUserRatingsPromise === loadPromise) {
+      episodeState.parentUserRatingsPromise = null;
+    }
   }
 }
 
@@ -11453,7 +11668,7 @@ async function fetchManualCanonicalEpisodeMappings(episodes) {
   );
 }
 
-async function refreshManualEpisodeRatingData(podcastKey, episodes) {
+async function refreshManualEpisodeRatingData(podcastKey, episodes, { force = false } = {}) {
   if (state.authUser && !state.supabase) {
     throw new Error("Episodevurderingerne kunne ikke hentes lige nu.");
   }
@@ -11465,7 +11680,7 @@ async function refreshManualEpisodeRatingData(podcastKey, episodes) {
     !state.manualCanonicalEpisodeMappings.has(normalizeText(episode.manual_episode_key))
   );
   if (unresolved.length) hydrateLocalEpisodeRatingState(podcastKey, unresolved);
-  if (canonical.length) await fetchEpisodeRatingMetaForEpisodes(canonical, { update: false });
+  if (canonical.length) await fetchEpisodeRatingMetaForEpisodes(canonical, { force, update: false });
 }
 
 async function fetchEpisodeStatsForIds(ids, { force = false, podcastKey = "" } = {}) {
@@ -13454,6 +13669,150 @@ function getPodcastDetailEpisodeRatingState(podcast) {
   return { resolved, error, ...summary };
 }
 
+function getPodcastRatingEditState(podcast) {
+  return getPodcastDetailEpisodeRatingState(podcast);
+}
+
+async function ensurePodcastRatingEditState(podcast, { retry = false, force = false } = {}) {
+  if (!podcastSupportsEpisodes(podcast)) {
+    return { resolved: true, count: 0, average: null };
+  }
+
+  const request = getUserScopedRequestContext();
+  if (!request.userId) return { resolved: true, count: 0, average: null };
+  const config = getEpisodePodcastConfig(podcast);
+  const episodeState = getPodcastEpisodeState(podcast);
+
+  try {
+    if (config?.persistence === "supabase" && config.dataSource !== "local") {
+      await fetchPodcastEpisodeParentRatings(podcast, { retry, force });
+    } else if (config?.dataSource === "local") {
+      if (force || !episodeState.eligibilityResolved || episodeState.error) {
+        const payload = await loadLocalEpisodeData();
+        if (!isCurrentUserScopedRequest(request)) return { resolved: false, count: 0, average: null };
+        const rows = payload?.podcasts?.[config.podcastKey]?.episodes || [];
+        const episodes = getRateablePodcastEpisodes(
+          rows.map((episode) => resolveManualCatalogueEpisodeFromLocalRow(config.podcastKey, episode))
+        );
+        episodeState.items = mergeEpisodes([], episodes);
+        episodeState.hasMore = false;
+        episodeState.totalCount = episodeState.items.length;
+        await refreshManualEpisodeRatingData(config.podcastKey, episodeState.items, { force });
+        if (!isCurrentUserScopedRequest(request)) return { resolved: false, count: 0, average: null };
+        episodeState.eligibilityResolved = true;
+        episodeState.error = "";
+      }
+    } else {
+      const episodes = ensureManualPodcastEpisodeState(podcast);
+      if (episodes.length && (force || !episodeState.eligibilityResolved || episodeState.userRatingError)) {
+        await refreshManualEpisodeRatingData(getLocalEpisodePodcastKey(podcast), episodes, { force });
+      } else if (episodes.length) {
+        hydrateLocalEpisodeRatingState(getLocalEpisodePodcastKey(podcast), episodes);
+      }
+      if (!isCurrentUserScopedRequest(request)) return { resolved: false, count: 0, average: null };
+      episodeState.eligibilityResolved = true;
+      episodeState.userRatingError = "";
+    }
+  } catch (error) {
+    console.error(error);
+    if (isCurrentUserScopedRequest(request)) {
+      episodeState.parentUserRatingsError = "Episodevurderingerne kunne ikke hentes lige nu.";
+    }
+  }
+
+  if (!isCurrentUserScopedRequest(request)) return { resolved: false, count: 0, average: null };
+  return getPodcastRatingEditState(podcast);
+}
+
+function getPodcastRatingControlDescription(podcast, ratingState = getPodcastRatingEditState(podcast)) {
+  if (!state.authUser) {
+    return getUserRating(getPodcastKey(podcast)) === null
+      ? "Log ind for at vurdere podcasten"
+      : "Log ind for at redigere din vurdering";
+  }
+  if (ratingState.resolved && ratingState.count > 0) {
+    return `Din vurdering af ${podcast.title} er ${formatCompactRating(ratingState.average)} af 10 og beregnes fra ${ratingState.count} episodevurdering${ratingState.count === 1 ? "" : "er"}. Redigér episodevurderinger for at ændre den. Åbn for forklaring.`;
+  }
+  if (!ratingState.resolved) {
+    return `Kontrollerer episodevurderinger for ${podcast.title}. Direkte redigering er låst, indtil kontrollen er færdig. Åbn for status.`;
+  }
+  return getUserRating(getPodcastKey(podcast)) === null
+    ? `Vurdér ${podcast.title}`
+    : `Redigér din vurdering af ${podcast.title}`;
+}
+
+function observePodcastRatingControl(podcast, card) {
+  if (!state.authUser || !podcastSupportsEpisodes(podcast) || !card) return;
+  const ratingState = getPodcastRatingEditState(podcast);
+  if (ratingState.resolved) {
+    if (ratingState.count > 0) {
+      window.queueMicrotask(() => reconcileExistingEpisodeDerivedParentRating(getPodcastKey(podcast)));
+    }
+    return;
+  }
+
+  if (typeof IntersectionObserver !== "function") return;
+  if (!state.ratingLockObserver) {
+    state.ratingLockObserver = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (!entry.isIntersecting) return;
+        state.ratingLockObserver.unobserve(entry.target);
+        const key = entry.target.closest("[data-key]")?.dataset.key;
+        const target = resolvePodcastByStoredKey(key);
+        if (!target) return;
+        const userId = state.authUser?.id;
+        ensurePodcastRatingEditState(target).then((nextState) => {
+          if (!userId || userId !== state.authUser?.id) return;
+          if (nextState.resolved && nextState.count > 0) {
+            void reconcileExistingEpisodeDerivedParentRating(getPodcastKey(target));
+          }
+          updatePodcastRatingControls(target);
+        });
+      });
+    }, { rootMargin: "160px 0px" });
+  }
+  state.ratingLockObserver.observe(card);
+}
+
+function updatePodcastRatingControls(podcast) {
+  const key = getPodcastKey(podcast);
+  document.querySelectorAll(".podcast-card[data-key]").forEach((card) => {
+    if (card.dataset.key !== key) return;
+    const ownButtons = card.querySelectorAll(
+      ".desktop-ranking-row__own, .desktop-ranking-own-score, .rate-button"
+    );
+    ownButtons.forEach((button) => applyPodcastRatingControlState(button, podcast));
+  });
+}
+
+function applyPodcastRatingControlState(button, podcast) {
+  if (!button || !podcast) return;
+  const ratingState = getPodcastRatingEditState(podcast);
+  const rating = !ratingState.resolved
+    ? null
+    : ratingState.count > 0
+      ? Math.round(Number(ratingState.average) * 10) / 10
+      : getUserRating(getPodcastKey(podcast));
+  const locked = Boolean(
+    state.authUser && podcastSupportsEpisodes(podcast) &&
+    (!ratingState.resolved || ratingState.count > 0)
+  );
+  const description = getPodcastRatingControlDescription(podcast, ratingState);
+  button.classList.toggle("is-episode-rating-locked", locked);
+  button.setAttribute("aria-disabled", String(locked));
+  button.setAttribute("aria-label", description);
+  button.title = description;
+  if (button.matches(".desktop-ranking-row__own")) {
+    const value = button.querySelector("strong");
+    if (value) value.textContent = rating === null || rating === undefined ? "—" : formatCompactRating(rating);
+  } else if (button.matches(".desktop-ranking-own-score")) {
+    const value = button.querySelector("strong");
+    if (value) value.textContent = rating === null || rating === undefined ? "—" : `${formatCompactRating(rating)} / 10`;
+  } else if (button.matches(".rate-button")) {
+    button.classList.toggle("has-user-rating", rating !== null && rating !== undefined);
+  }
+}
+
 function canEditPodcastDetailInlineRating(podcast) {
   const episodeRatings = getPodcastDetailEpisodeRatingState(podcast);
   return episodeRatings.resolved && episodeRatings.count === 0;
@@ -13553,7 +13912,7 @@ function bindPodcastDetailInlineRatingEvents(dialog, podcast) {
     const episodeState = getPodcastEpisodeState(podcast);
     try {
       if (config?.persistence === "supabase" && config.dataSource !== "local") {
-        await fetchPodcastEpisodeParentRatings(podcast);
+        await fetchPodcastEpisodeParentRatings(podcast, { retry: true });
       } else {
         episodeState.userRatingError = "";
         episodeState.error = "";
@@ -13653,6 +14012,15 @@ async function savePodcastDetailInlineRating(dialog, podcast, input, message) {
   const podcastKey = getPodcastKey(podcast);
   const persistedKey = getPersistedUserRatingKey(podcastKey);
   if (!state.supabase || !state.authUser || !podcastKey || !persistedKey) return;
+  const userId = state.authUser.id;
+  const userRequest = getUserScopedRequestContext();
+  if (state.episodeParentRatingEditPendingKeys.has(podcastKey)) {
+    if (message) {
+      message.textContent = "En vurdering af denne podcast behandles allerede. Prøv igen om et øjeblik.";
+      message.dataset.tone = "warning";
+    }
+    return;
+  }
 
   const rawValue = normalizeText(input?.value);
   const isClearingRating = !rawValue;
@@ -13680,24 +14048,48 @@ async function savePodcastDetailInlineRating(dialog, podcast, input, message) {
     message.dataset.tone = "neutral";
   }
 
+  state.episodeParentRatingEditPendingKeys.add(podcastKey);
   try {
+    const ratingState = await ensurePodcastRatingEditState(podcast, { retry: true, force: true });
+    if (!isCurrentUserScopedRequest(userRequest) || state.activePodcastDetailKey !== podcastKey) {
+      throw new Error("Din konto eller podcast ændrede sig. Prøv igen.");
+    }
+    if (!ratingState.resolved || ratingState.count > 0) {
+      updatePodcastDetailOwnRatingCell(dialog, podcast);
+      if (ratingState.resolved && ratingState.count > 0) {
+        void reconcileExistingEpisodeDerivedParentRating(podcastKey);
+      }
+      if (message) {
+        message.textContent = ratingState.resolved
+          ? getPodcastRatingControlDescription(podcast, ratingState)
+          : `${ratingState.error || "Episodevurderingerne kunne ikke hentes lige nu."} Din samlede vurdering forbliver låst.`;
+        message.dataset.tone = ratingState.resolved ? "info" : "error";
+      }
+      return;
+    }
+
+    updatePodcastRatingControls(podcast);
+
     if (isClearingRating) {
       const { error } = await state.supabase
         .from("user_ratings")
         .delete()
-        .eq("user_id", state.authUser.id)
+        .eq("user_id", userId)
         .eq("podcast_key", persistedKey);
       if (error) throw error;
+      if (!isCurrentUserScopedRequest(userRequest)) return;
 
       delete state.userRatingsByKey[podcastKey];
       delete state.userRatingPersistedKeyByCanonical[podcastKey];
       updateLocalCommunityStatForRating(podcastKey, null, previousRating);
     } else {
       const { error } = await state.supabase.from("user_ratings").upsert(
-        { user_id: state.authUser.id, podcast_key: persistedKey, rating: numericValue },
+        { user_id: userId, podcast_key: persistedKey, rating: numericValue },
         { onConflict: "user_id,podcast_key" }
       );
       if (error) throw error;
+
+      if (!isCurrentUserScopedRequest(userRequest)) return;
 
       state.userRatingsByKey[podcastKey] = numericValue;
       state.userRatingPersistedKeyByCanonical[podcastKey] = persistedKey;
@@ -13720,6 +14112,8 @@ async function savePodcastDetailInlineRating(dialog, podcast, input, message) {
         (isClearingRating ? "Kunne ikke fjerne vurderingen." : "Kunne ikke gemme vurderingen.");
       message.dataset.tone = "error";
     }
+  } finally {
+    state.episodeParentRatingEditPendingKeys.delete(podcastKey);
   }
 }
 function renderPodcastDetailSheetContent(
@@ -14081,6 +14475,7 @@ function handlePodcastDetailEpisodeLoadCompletion(dialog, podcast) {
   // Update only the own-rating cell, and only while this podcast is still open.
   if (state.podcastDetailView === "detail") {
     updatePodcastDetailOwnRatingCell(dialog, podcast);
+    updatePodcastRatingControls(podcast);
   }
   if (state.podcastDetailView === "episodes") {
     updatePodcastEpisodeOverview(dialog);
@@ -16195,8 +16590,10 @@ function createPodcastCardElement(podcast, displayRank = null) {
   } else {
     rateButton.dataset.action = "open-rating";
     renderRateButton(rateButton, key);
+    applyPodcastRatingControlState(rateButton, podcast);
   }
   renderFavoriteButton(favoriteButton, key);
+  observePodcastRatingControl(podcast, article);
 
   populateCardSummaries(article, podcast);
 
@@ -16780,11 +17177,16 @@ function clearUserScopedState({ clearUi = false } = {}) {
     episodeState.parentEpisodesById = {};
     episodeState.parentUserRatingsResolvedFor = "";
     episodeState.parentUserRatingsLoading = false;
+    episodeState.parentUserRatingsPromise = null;
+    episodeState.parentUserRatingsErrorFor = "";
     episodeState.parentUserRatingsError = "";
     episodeState.userRatingLoadingIds = new Set();
   });
   state.episodeParentRatingSyncSignatures = {};
   state.episodeParentRatingSyncPendingKeys = new Set();
+  state.episodeParentRatingEditPendingKeys = new Set();
+  state.ratingLockObserver?.disconnect();
+  state.ratingLockObserver = null;
   resetProfileEpisodeRatingsState();
   state.profileSuggestions = [];
   state.profileSuggestionsLoadedFor = null;

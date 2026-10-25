@@ -29703,3 +29703,10 @@ html body [data-suggestion-id].is-notification-target {
     height: 44px !important;
   }
 }
+.rate-button.is-episode-rating-locked,
+.desktop-ranking-row__own.is-episode-rating-locked,
+.desktop-ranking-own-score.is-episode-rating-locked {
+  filter: grayscale(1);
+  opacity: .62;
+  cursor: help;
+}

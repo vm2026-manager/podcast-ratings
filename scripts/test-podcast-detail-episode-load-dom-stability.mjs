@@ -36,6 +36,7 @@ const createCompletionHandler = new Function(
   "getPodcastKey",
   "updatePodcastEpisodeOverview",
   "updatePodcastDetailOwnRatingCell",
+  "updatePodcastRatingControls",
   `${completionHandler}; return handlePodcastDetailEpisodeLoadCompletion;`
 );
 
@@ -59,7 +60,8 @@ for (const podcast of [
     { activePodcastDetailKey: podcast.key, podcastDetailView: "detail" },
     (value) => value.key,
     (...args) => updates.push(args),
-    (...args) => ownUpdates.push(args)
+    (...args) => ownUpdates.push(args),
+    () => {}
   );
 
   const beforeMainCover = dialog.stableDom.mainCover;
@@ -83,7 +85,8 @@ for (const podcast of [
     { activePodcastDetailKey: "shop21 dk bitcoin samfund frihed", podcastDetailView: "episodes" },
     (podcast) => podcast.key,
     (...args) => updates.push(args),
-    () => assert.fail("episode workspace must not replace the own-rating cell")
+    () => assert.fail("episode workspace must not replace the own-rating cell"),
+    () => {}
   );
   handler(dialog, { key: "shop21 dk bitcoin samfund frihed" });
   assert.deepEqual(updates, [[dialog]], "the open episode workspace receives its narrow row update");
