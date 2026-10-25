@@ -62,13 +62,37 @@ const callBody = (name) => {
   const open = app.indexOf(") {", start) + 2;
   let depth = 0;
   let inString = "";
+  let inLineComment = false;
+  let inBlockComment = false;
   let escaped = false;
   for (let index = open; index < app.length; index += 1) {
     const character = app[index];
+    const nextCharacter = app[index + 1];
+    if (inLineComment) {
+      if (character === "\n") inLineComment = false;
+      continue;
+    }
+    if (inBlockComment) {
+      if (character === "*" && nextCharacter === "/") {
+        inBlockComment = false;
+        index += 1;
+      }
+      continue;
+    }
     if (inString) {
       if (escaped) escaped = false;
       else if (character === "\\") escaped = true;
       else if (character === inString) inString = "";
+      continue;
+    }
+    if (character === "/" && nextCharacter === "/") {
+      inLineComment = true;
+      index += 1;
+      continue;
+    }
+    if (character === "/" && nextCharacter === "*") {
+      inBlockComment = true;
+      index += 1;
       continue;
     }
     if (character === "\"" || character === "'" || character === "`") {
@@ -102,6 +126,7 @@ const state = {
   profileEpisodeRatings: { episodeMetaById: {} },
   episodeParentRatingSyncSignatures: {},
   episodeParentRatingSyncPendingKeys: new Set(),
+  episodeParentRatingEditPendingKeys: new Set(),
   activePodcastDetailKey: "",
   activeEpisodeRatingId: null,
   activeEpisodeRatingContext: null,
@@ -220,6 +245,8 @@ const runtime = {
   document: { getElementById: () => null },
   window: { setTimeout: (callback) => callback() },
   console,
+  getUserScopedRequestContext: () => ({ userId: "rating-test-user", generation: 0 }),
+  isCurrentUserScopedRequest: (request) => request.userId === runtime.state.authUser.id && request.generation === 0,
   normalizeText,
   parseRatingInputValue: (value) => Number(String(value).replace(",", ".")),
   normalizeRatingInputField() {}, updateRatingDialogMessage() {}, setAuthBusy() {}, setAuthMessage() {},

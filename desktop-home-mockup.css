@@ -1099,6 +1099,15 @@
   }
 }
 
+@media (min-width: 769px) {
+  html body.page-ranglister .desktop-ranking-row__own.is-episode-rating-locked,
+  html body.page-ranglister .desktop-ranking-own-score.is-episode-rating-locked {
+    filter: grayscale(1) !important;
+    opacity: .62 !important;
+    cursor: help !important;
+  }
+}
+
 /* Mobile homepage search keeps the existing fixed-top interaction without reserving
    the rest of the viewport when no result content is present. */
 @media (max-width: 768px) {
