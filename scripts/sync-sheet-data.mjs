@@ -823,7 +823,9 @@ function preserveCatalogueIdsByPodcastId(rows, previousRows) {
   }
   return rows.map((row) => {
     const previous = previousById.get(normalizeText(row?.["Podcast-ID"]));
-    return previous?.catalogue_id ? { ...row, catalogue_id: previous.catalogue_id } : row;
+    if (!previous) return row;
+    if (row.needs_editorial_review === true) return previous;
+    return previous.catalogue_id ? { ...row, catalogue_id: previous.catalogue_id } : row;
   });
 }
 
