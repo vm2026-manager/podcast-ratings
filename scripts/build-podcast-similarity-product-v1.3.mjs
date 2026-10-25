@@ -114,7 +114,7 @@ function getAuthoritativeMainSeries(sourceRow, config) {
   return { value: "", normalized: "" };
 }
 
-function buildProductCatalog(metadataPayload, podcastPayload, config) {
+function buildProductCatalog(metadataPayload, podcastPayload, config, displayGroups = []) {
   validateProductConfig(config);
   const metadataRows = rowsFrom(metadataPayload, "Recommendation metadata");
   const podcastRows = rowsFrom(podcastPayload, "Podcast data");
@@ -124,6 +124,17 @@ function buildProductCatalog(metadataPayload, podcastPayload, config) {
     );
   }
   const catalog = buildStructuralCatalog(metadataPayload, podcastPayload);
+  const displayGroupByPodcastId = new Map();
+  for (const group of displayGroups) {
+    const groupId = text(group?.id);
+    if (!groupId) continue;
+    for (const podcastId of group.memberLegacyKeys || []) {
+      const key = normalizeStructuralIdentity(podcastId);
+      if (key && !displayGroupByPodcastId.has(key)) {
+        displayGroupByPodcastId.set(key, groupId);
+      }
+    }
+  }
   const recommendationIds = new Set();
   const podcastIds = new Set();
   for (const item of catalog) {
@@ -153,6 +164,9 @@ function buildProductCatalog(metadataPayload, podcastPayload, config) {
     }
     podcastIds.add(podcastId);
     item.existingId = podcastId;
+    item.displayGroupId = displayGroupByPodcastId.get(
+      normalizeStructuralIdentity(podcastId)
+    ) || "";
     const mainSeries = getAuthoritativeMainSeries(sourceRow, config);
     item.authoritativeMainSeries = mainSeries.value;
     item.normalizedAuthoritativeMainSeries = mainSeries.normalized;
@@ -172,6 +186,10 @@ function isSafePair(source, candidate) {
   return Boolean(
     candidate &&
       source.recommendationId !== candidate.recommendationId &&
+      !(
+        source.displayGroupId === "narkobetjenten" &&
+        candidate.displayGroupId === "narkobetjenten"
+      ) &&
       !(
         source.identityDuplicateGroup &&
         source.identityDuplicateGroup === candidate.identityDuplicateGroup
@@ -325,9 +343,23 @@ function buildProductResultForSource(
     );
   }
 
-  const manualSupplementaryResults = manualResolution.resolved.map(({ candidate }) =>
-    packageProductCandidate(candidate, "", "manual_supplementary")
-  );
+  const manualSupplementaryResults = manualResolution.resolved
+    .filter(({ candidate, audit }) => {
+      const sameNarkobetjentenGroup =
+        source.displayGroupId === "narkobetjenten" &&
+        candidate.displayGroupId === "narkobetjenten";
+      if (sameNarkobetjentenGroup) {
+        audit.status = "blocked_same_display_group";
+        audit.resolvedRecommendationId = "";
+        audit.resolvedTitle = "";
+        audit.resolvedHost = "";
+        audit.resolutionMethod = "";
+        audit.rejectionReason = "same_narkobetjenten_main_series_group";
+        return false;
+      }
+      return true;
+    })
+    .map(({ candidate }) => packageProductCandidate(candidate, "", "manual_supplementary"));
   const automaticIds = new Set(
     [...automaticSimilarResults, ...sameSeriesResults].map(
       (candidate) => candidate.recommendationId
@@ -409,11 +441,11 @@ function buildProductOutput(
   v11Output,
   v11Config,
   productConfig,
-  { reverseCatalog = false } = {}
+  { reverseCatalog = false, displayGroups = [] } = {}
 ) {
   validateSimilarityConfig(v11Config);
   validateProductConfig(productConfig);
-  const catalog = buildProductCatalog(metadataPayload, podcastPayload, productConfig);
+  const catalog = buildProductCatalog(metadataPayload, podcastPayload, productConfig, displayGroups);
   const orderedCatalog = reverseCatalog ? [...catalog].reverse() : catalog;
   const catalogById = new Map(catalog.map((row) => [row.recommendationId, row]));
   const specificityIndex = buildTopicSpecificityIndex(catalog, v11Config);

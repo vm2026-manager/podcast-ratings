@@ -46,6 +46,11 @@ const publicItems = displayRuntime();
 assert.equal(publicItems.filter((item) => item.isDisplayGroup).length, 1);
 assert.ok(publicItems.some((item) => item.title === "Narkobetjenten på gaden (sæson 1)"));
 assert.ok(!publicItems.some((item) => item.title === "Narkobetjenten sæson 15"));
+assert.equal(
+  publicItems.filter((item) => item.isDisplayGroup && item.key === "display-group:narkobetjenten").length,
+  1,
+  "the main-series seasons resolve to one public recommendation identity"
+);
 
 const sharedPoolFunctions = [
   "getHomeLatestEditorialReviews", "getHomeRecentPodcasts",
@@ -128,5 +133,45 @@ assert.equal(communityRuntime.getHomeCommunityCandidateLevel(6, 2), "secondary")
 assert.equal(communityRuntime.getHomeCommunityCandidateLevel(6, 3), "primary");
 assert.equal(communityRuntime.getHomeCommunityCandidateLevel(5.99, 9), null);
 assert.equal(communityRuntime.getHomeCommunityCandidateLevel(8, 0), null);
+
+const recommendationState = {
+  podcastDetailCanonicalGroupKeyByPodcastKey: {},
+  podcastDetailDisplayGroupByPodcastKey: {
+    "narko-season-1": { id: "narkobetjenten" },
+    "narko-season-15": { id: "narkobetjenten" },
+    "narko-gade": null
+  }
+};
+const recommendationRuntime = new Function("state", `
+  const getPodcastKey = (podcast) => podcast?.key || "";
+  const normalizeComparable = (value) => String(value || "").trim().toLocaleLowerCase("da-DK");
+  const normalizeMatchKey = normalizeComparable;
+  const normalizeText = (value) => String(value || "");
+  ${extractFunction("getPodcastDetailCanonicalGroupKey")}
+  ${extractFunction("isNarkobetjentenMainSeasonPodcast")}
+  ${extractFunction("getRecommendationDiversityKey")}
+  ${extractFunction("selectPodcastDetailRecommendations")}
+  return { selectPodcastDetailRecommendations, isNarkobetjentenMainSeasonPodcast };
+`)(recommendationState);
+const narkobetjentenSource = { key: "narko-season-1" };
+const narkobetjentenCandidates = [
+  { item: { podcast: { key: "narko-season-15" } }, source: "manual" },
+  { item: { podcast: { key: "narko-gade" } }, source: "separate-release" },
+  { item: { podcast: { key: "ordinary" } }, source: "external" }
+];
+const safeNarkobetjentenRecommendations =
+  recommendationRuntime.selectPodcastDetailRecommendations(narkobetjentenCandidates, 4, {
+    sourcePodcast: narkobetjentenSource
+  });
+assert.deepEqual(
+  safeNarkobetjentenRecommendations.map((item) => item.item.podcast.key),
+  ["narko-gade", "ordinary"],
+  "manual and automatic recommendations cannot cross-link main-series seasons, while the separate Narkobetjenten på gaden release remains eligible"
+);
+assert.equal(
+  recommendationRuntime.isNarkobetjentenMainSeasonPodcast({ key: "narko-gade" }),
+  false,
+  "Narkobetjenten på gaden is not assigned to the main-series display group"
+);
 
 console.log("Narkobetjenten public display regressions passed.");

@@ -9690,6 +9690,10 @@ function getPodcastDetailCanonicalGroupKey(podcast) {
   return podcastKey ? `podcast:${podcastKey}` : "";
 }
 
+function isNarkobetjentenMainSeasonPodcast(podcast) {
+  return getPodcastDetailCanonicalGroupKey(podcast) === "display-group:narkobetjenten";
+}
+
 function getRecommendationDiversityKey(candidate) {
   const candidatePodcast = candidate?.item?.podcast || candidate?.podcast || {};
   const recommendation = candidate?.item?.candidate || candidate?.candidate || {};
@@ -9718,6 +9722,12 @@ function selectPodcastDetailRecommendations(
 
     candidates.forEach((candidate) => {
       const candidatePodcast = candidate?.item?.podcast || candidate?.podcast;
+      if (
+        isNarkobetjentenMainSeasonPodcast(sourcePodcast) &&
+        isNarkobetjentenMainSeasonPodcast(candidatePodcast)
+      ) {
+        return;
+      }
       if (
         sourceGroupKey &&
         getPodcastDetailCanonicalGroupKey(candidatePodcast) === sourceGroupKey

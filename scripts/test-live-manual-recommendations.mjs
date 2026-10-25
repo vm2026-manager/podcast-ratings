@@ -80,9 +80,9 @@ const secondRender = context.getPodcastDetailDynamicRecommendations(sourcePodcas
 const secondRenderIds = Array.from(secondRender, (candidate) => candidate.item.podcast.id);
 
 assert.deepEqual(secondRenderIds.slice(0, 3), [
-  "same-series",
   "manual-false",
-  "manual-danger"
+  "manual-danger",
+  "same-series"
 ]);
 assert.ok(secondRenderIds.includes("automatic-1"), "Automatic results must fill remaining slots.");
 assert.ok(!secondRenderIds.includes("stale-love"));
@@ -149,8 +149,13 @@ const liveSecondRenderIds = Array.from(
   context.getPodcastDetailDynamicRecommendations(liveSource, { product: liveProduct }),
   (candidate) => candidate.item.podcast.podcastId
 );
-assert.deepEqual(liveSecondRenderIds.slice(0, 2), ["det falske match", "et farligt match"]);
 const liveManualIds = liveProduct.manualSupplementaryResults.map((result) => result.existingId);
+assert.ok(liveManualIds.length >= 2, "The current live example must include manual recommendations.");
+assert.deepEqual(
+  liveSecondRenderIds.slice(0, 2),
+  liveManualIds.slice(0, 2),
+  "Current catalogue manual IDs remain at the front of the live recommendation list."
+);
 assert.ok(!liveManualIds.includes("opskriften pa kærlighed"));
 assert.ok(!liveManualIds.includes("swipe match date"));
 

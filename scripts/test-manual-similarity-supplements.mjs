@@ -103,4 +103,39 @@ assert.deepEqual(
   ["title-target", "per"]
 );
 
+const approvedIdentityPairs = [
+  ["candace", "the ben shapiro show"],
+  ["menneskedyret", "dagmar overby"],
+  ["øverste hylde", "dkpol"],
+  ["charles manson det glemte mord", "manson familien"],
+  ["ny afslørende virginia giuffre bog", "efter epstein filerne"],
+  ["den charmerende bedrager", "svindlerne"],
+  ["smat brændbart", "ugens krise"],
+  ["kvinden med den tunge kuffert det sidste kapitel", "victor lustig"],
+  ["charles manson", "manson familien"],
+  ["dkpol", "borgen unplugged 2 0"],
+  ["under gulvtæppet", "dkpol"],
+  ["marathonmanden", "man kan aldrig vide"],
+  ["espn laliga espn dk", "mediano la liga"],
+  ["man kan aldrig vide", "victor lustig"],
+  ["borgen unplugged 2 0", "øverste hylde"],
+  ["fra fodboldstjerne til narkohaj", "pusheren fra provinsen"],
+  ["p1 morgen", "24syv morgen"]
+];
+const approvedCatalog = [...new Set(approvedIdentityPairs.flat())].map((podcastId) =>
+  row(`catalog:${podcastId}`, podcastId, podcastId)
+);
+assert.equal(approvedIdentityPairs.length, 17);
+for (const [sourceId, targetId] of approvedIdentityPairs) {
+  const approvedSource = approvedCatalog.find((item) => item.podcastId === sourceId);
+  const { resolved, audit } = resolve(targetId, approvedSource, approvedCatalog);
+  assert.equal(resolved.length, 1, `${sourceId} resolves the approved target ID ${targetId}`);
+  assert.equal(resolved[0].candidate.podcastId, targetId);
+  assert.equal(audit[0].status, "resolved_podcast_id");
+}
+
+const invalidReference = resolve("not-a-canonical-id");
+assert.equal(invalidReference.resolved.length, 0, "invalid targets are safely skipped");
+assert.equal(invalidReference.audit[0].status, "unresolved_title");
+
 console.log("Manual supplementary similarity tests passed.");
