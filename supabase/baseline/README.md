@@ -9,8 +9,9 @@ cannot apply it.
 The snapshot contains the application schemas' current tables, constraints,
 indexes, functions, views, RLS flags and policies, triggers, object ACLs, and
 the `public` schema's default object privileges. Supabase-managed roles and the
-`auth.users` table are supplied by the Supabase local stack; no auth data is
-copied. Cron jobs and other operational records are excluded.
+`auth.users` table are supplied by the Supabase Postgres image; the test does
+not start the Auth service and no auth data is copied. Cron jobs and other
+operational records are excluded.
 
 ## Historical source and later effects
 
@@ -48,7 +49,7 @@ and draft. No production database, migration history, or user data was changed
 to produce or test this baseline.
 
 The GitHub Actions workflow creates a temporary Supabase project on an
-ephemeral runner, starts only the local services needed for Postgres and Auth,
+ephemeral runner, starts only the local Postgres service,
 copies this file into that temporary project's migration directory, and runs
 `supabase db reset --local --no-seed` twice. The source file itself never enters
 the repository's active migration directory.

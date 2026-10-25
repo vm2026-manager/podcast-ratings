@@ -47,6 +47,11 @@ BEGIN
   ) THEN
     RAISE EXCEPTION 'Manual map must retain the unique episode UUID constraint';
   END IF;
+  IF (SELECT count(*) FROM pg_default_acl d JOIN pg_roles r ON r.oid = d.defaclrole
+      JOIN pg_namespace n ON n.oid = d.defaclnamespace
+      WHERE r.rolname = 'supabase_admin' AND n.nspname = 'public') <> 3 THEN
+    RAISE EXCEPTION 'Expected all three production default ACL categories for supabase_admin';
+  END IF;
 
   IF (SELECT count(*) FROM pg_trigger t JOIN pg_class c ON c.oid=t.tgrelid
       JOIN pg_namespace n ON n.oid=c.relnamespace
