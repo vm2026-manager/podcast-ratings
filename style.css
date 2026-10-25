@@ -7457,6 +7457,47 @@ button.podcast-chip:hover {
   font-weight: 600;
 }
 
+.rating-dialog__episode-summary {
+  margin: 8px 0 0;
+  padding: 18px;
+  border: 1px solid rgba(115, 91, 72, 0.18);
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.64);
+}
+
+.rating-dialog__episode-score-label {
+  margin: 0 0 5px;
+  color: #746a62;
+  font-size: 0.8rem;
+  font-weight: 800;
+}
+
+.rating-dialog__episode-score {
+  margin: 0;
+  color: #4e4138;
+  font-size: 2rem;
+  line-height: 1.05;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+.rating-dialog__episode-explanation {
+  margin: 10px 0 0;
+  color: #655b53;
+  font-size: 0.9rem;
+  line-height: 1.45;
+  font-weight: 600;
+}
+
+.rating-dialog--episode-derived .rating-dialog__actions {
+  margin-top: 18px;
+}
+
+.rating-dialog--episode-derived .rating-dialog__actions #ratingCancelButton {
+  min-width: 104px;
+  min-height: 44px;
+}
+
 .rating-dialog__field {
   display: grid;
   gap: 8px;

@@ -3,6 +3,7 @@ import { readFile } from "node:fs/promises";
 import { chromium } from "playwright";
 
 const app = await readFile(new URL("../app.js", import.meta.url), "utf8");
+const html = await readFile(new URL("../index.html", import.meta.url), "utf8");
 const desktopCss = await readFile(new URL("../desktop-home-mockup.css", import.meta.url), "utf8");
 const siteCss = await readFile(new URL("../style.css", import.meta.url), "utf8");
 
@@ -31,6 +32,12 @@ assert.match(extractFunction("deleteActiveEpisodeRating"), /episodeParentRatingE
 assert.match(extractFunction("savePodcastDetailInlineRating"), /await ensurePodcastRatingEditState\(podcast, \{ retry: true, force: true \}\)/u);
 assert.match(extractFunction("updatePodcastRatingControls"), /\.desktop-ranking-row__own, \.desktop-ranking-own-score, \.rate-button/u);
 assert.match(extractFunction("applyPodcastRatingControlState"), /aria-label/u);
+assert.match(extractFunction("applyPodcastRatingControlState"), /removeAttribute\("aria-disabled"\)/u);
+assert.match(extractFunction("setEpisodeDerivedRatingDialog"), /ratingSaveButton/u);
+assert.match(extractFunction("setEpisodeDerivedRatingDialog"), /episodevurderinger/u);
+assert.match(extractFunction("resetRatingDialogMode"), /rating-dialog--episode-derived/u);
+assert.match(app, /event\.key === "Tab"[\s\S]*rating-dialog--episode-derived/u);
+assert.match(html, /id="ratingDialogEpisodeSummary"[\s\S]*id="ratingDialogEpisodeScore"[\s\S]*id="ratingDialogEpisodeExplanation"/u);
 assert.match(desktopCss, /page-ranglister \.desktop-ranking-row__own\.is-episode-rating-locked/u);
 assert.match(siteCss, /\.rate-button\.is-episode-rating-locked/u);
 
@@ -77,6 +84,7 @@ function createHarness({ ratingState, input = "8.3", userId = "user-a", onVerify
   const podcast = { id: "podcast-a", title: "Podcast A", key: "podcast-a" };
   const request = { userId, generation: 0 };
   const messages = [];
+  const derivedViews = [];
   const harness = new Function(
     "state", "elements", "podcast", "writes", "messages", "ratingState", "onVerify",
     "getPodcastRatingEditState", "resolvePodcastByStoredKey", "getPodcastKey", "podcastSupportsEpisodes",
@@ -128,9 +136,14 @@ function createHarness({ ratingState, input = "8.3", userId = "user-a", onVerify
 async function openRatingHarness({ initialState, finalState, userId = "user-a", onVerify } = {}) {
   const state = { authUser: { id: userId }, activeRatingKey: null, activeRatingRequestToken: 0 };
   const classes = new Set(["is-hidden"]);
+  const derivedViews = [];
   const elements = {
     ratingDialog: {
-      classList: { remove: (value) => classes.delete(value) },
+      classList: {
+        add: (value) => classes.add(value),
+        remove: (value) => classes.delete(value),
+        contains: (value) => classes.has(value)
+      },
       setAttribute() {},
       querySelector: () => ({ focus() {} })
     },
@@ -138,7 +151,13 @@ async function openRatingHarness({ initialState, finalState, userId = "user-a", 
     ratingDialogMeta: {},
     ratingInput: { value: "", disabled: false, focus() {}, select() {} },
     ratingSaveButton: { textContent: "", disabled: false },
-    ratingDeleteButton: { disabled: false, classList: { toggle() {} } }
+    ratingDeleteButton: { disabled: false, classList: { toggle() {} } },
+    ratingCancelButton: { textContent: "", focus() {} },
+    ratingCloseButton: { focus() {}, classList: { add() {}, remove() {} } },
+    ratingDialogEpisodeSummary: { classList: { add() {}, remove() {} } },
+    ratingDialogEpisodeScore: { textContent: "" },
+    ratingDialogEpisodeExplanation: { textContent: "" },
+    ratingDialogMessage: { classList: { add() {}, remove() {} } }
   };
   const messages = [];
   const request = { userId, generation: 0 };
@@ -148,7 +167,7 @@ async function openRatingHarness({ initialState, finalState, userId = "user-a", 
     "getUserScopedRequestContext", "getPodcastRatingEditState", "getUserRating", "formatRatingInputValue",
     "podcastSupportsEpisodes", "updateRatingDialogMessage", "document", "window",
     "ensurePodcastRatingEditState", "isCurrentUserScopedRequest", "getPodcastRatingControlDescription",
-    "reconcileExistingEpisodeDerivedParentRating", "updatePodcastRatingControls",
+    "reconcileExistingEpisodeDerivedParentRating", "updatePodcastRatingControls", "setEpisodeDerivedRatingDialog",
     `${openSource}; return openRatingDialog;`
   )(
     state, elements, messages, request, initialState, finalState, onVerify,
@@ -172,10 +191,11 @@ async function openRatingHarness({ initialState, finalState, userId = "user-a", 
     (candidate) => candidate.userId === state.authUser?.id && candidate.generation === 0,
     (_podcast, ratingState) => `Beregnet fra ${ratingState.count} episodevurderinger.`,
     () => Promise.resolve(),
-    () => {}
+    () => {},
+    (_podcast, ratingState, status) => derivedViews.push({ ratingState, status })
   );
   await run({ id: "podcast-a", title: "Podcast A" });
-  return { state, elements, messages };
+  return { state, elements, messages, derivedViews };
 }
 
 // The rating returned by the episode summary remains authoritative even when
@@ -199,7 +219,9 @@ async function openRatingHarness({ initialState, finalState, userId = "user-a", 
   assert.equal(locked.elements.ratingInput.value, "8,2");
   assert.equal(locked.elements.ratingInput.disabled, true);
   assert.equal(locked.elements.ratingSaveButton.disabled, true);
-  assert.match(locked.messages.at(-1).message, /Beregnet fra 2 episodevurderinger/u);
+  assert.deepEqual(locked.derivedViews.map((view) => view.status), ["loading", "ready"]);
+  assert.equal(locked.derivedViews.at(-1).ratingState.average, 8.2,
+    "the verified score shown in the read-only view is the episode-derived 8.2");
 
   const editable = await openRatingHarness({
     initialState: { resolved: false, count: 0, average: null },
@@ -215,7 +237,8 @@ async function openRatingHarness({ initialState, finalState, userId = "user-a", 
   });
   assert.equal(failed.elements.ratingInput.disabled, true);
   assert.equal(failed.elements.ratingSaveButton.disabled, true);
-  assert.match(failed.messages.at(-1).message, /Databasefejl/u);
+  assert.match(failed.derivedViews.at(-1).ratingState.error, /Databasefejl/u);
+  assert.deepEqual(failed.derivedViews.map((view) => view.status), ["loading", "error"]);
 
   const switched = await openRatingHarness({
     initialState: { resolved: false, count: 0, average: null },
@@ -327,13 +350,38 @@ try {
     <body class="page-ranglister"><main class="ranking-shell">
       <article class="desktop-ranking-row"><span>#1</span><span>Podcast A</span><span>9,1</span>
         <button id="locked" class="desktop-ranking-row__own is-episode-rating-locked" type="button"
-          aria-disabled="true" aria-label="Din vurdering af Podcast A er 8,2 af 10 og beregnes fra 2 episodevurderinger. Redigér episodevurderinger for at ændre den. Åbn for forklaring."
+          aria-label="Din vurdering af Podcast A er 8,2 af 10 og beregnes fra 2 episodevurderinger. Redigér episodevurderinger for at ændre den. Åbn for forklaring."
           title="Din vurdering er beregnet fra episodevurderinger"><strong>8,2</strong></button></article>
       <p id="help" role="status" hidden></p>
+      <div id="ratingDialog" class="rating-dialog rating-dialog--episode-derived is-hidden" aria-hidden="true">
+        <div class="rating-dialog__backdrop"></div>
+        <section class="rating-dialog__panel" role="dialog" aria-modal="true" aria-labelledby="ratingDialogTitle">
+          <h2 id="ratingDialogTitle">Hva så?!</h2><p class="rating-dialog__meta">Podcast</p>
+          <section class="rating-dialog__episode-summary" aria-labelledby="ratingDialogEpisodeScoreLabel">
+            <p id="ratingDialogEpisodeScoreLabel">Din beregnede vurdering</p>
+            <p class="rating-dialog__episode-score">8,2 / 10</p>
+            <p class="rating-dialog__episode-explanation" role="status" aria-live="polite">Beregnet fra 2 episodevurderinger. Vurderingen kan kun ændres ved at redigere dine episodevurderinger.</p>
+          </section>
+          <label class="rating-dialog__field is-hidden"><span>Vælg score</span><input id="ratingInput"></label>
+          <p class="rating-dialog__hint is-hidden">Standardtekst</p>
+          <p id="ratingDialogMessage" class="rating-dialog__message is-hidden"></p>
+          <div class="rating-dialog__actions">
+            <button id="ratingDeleteButton" class="is-hidden">Fjern vurdering</button>
+            <button id="ratingCancelButton">Luk</button>
+            <button id="ratingSaveButton" class="is-hidden">Opdater vurdering</button>
+          </div>
+        </section>
+      </div>
     </main><script>
       document.querySelector('#locked').addEventListener('click', () => {
         const help = document.querySelector('#help'); help.hidden = false;
         help.textContent = 'Din vurdering beregnes fra episodevurderinger. Redigér episodevurderinger for at ændre den.';
+      });
+      document.addEventListener('keydown', event => {
+        const dialog = document.querySelector('#ratingDialog');
+        if (event.key === 'Tab' && !dialog.classList.contains('is-hidden') && dialog.classList.contains('rating-dialog--episode-derived')) {
+          event.preventDefault(); document.querySelector('#ratingCancelButton').focus();
+        }
       });
     </script></body></html>`);
   await page.addStyleTag({ content: siteCss });
@@ -357,13 +405,26 @@ try {
     assert.ok(before?.width > 0, `locked rating remains visible at ${width}px`);
     assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true,
       `ranking lock creates no horizontal overflow at ${width}px`);
-    assert.equal(await page.locator("#locked").getAttribute("aria-disabled"), "true");
+    assert.equal(await page.locator("#locked").getAttribute("aria-disabled"), null,
+      "an actionable control that opens an explanation is not marked aria-disabled");
     assert.match(await page.locator("#locked").getAttribute("aria-label"), /8,2 af 10[\s\S]*episodevurderinger[\s\S]*Åbn for forklaring/u);
     await page.locator("#locked").focus();
     assert.equal(await page.locator("#locked").evaluate((node) => node === document.activeElement), true,
       `locked rating remains keyboard-focusable at ${width}px`);
     await page.keyboard.press("Enter");
     assert.match(await page.locator("#help").textContent(), /beregnes fra episodevurderinger/u);
+    await page.locator("#ratingDialog").evaluate((node) => node.classList.remove("is-hidden"));
+    const visibleDialogButtons = page.locator("#ratingDialog button:visible");
+    assert.equal(await visibleDialogButtons.count(), 1, "the information view exposes only the close action");
+    assert.equal(await visibleDialogButtons.first().textContent(), "Luk");
+    assert.equal(await page.locator("#ratingDialog input:visible").count(), 0);
+    assert.equal(await page.locator("#ratingDialog .rating-dialog__hint:visible").count(), 0);
+    assert.match(await page.locator(".rating-dialog__episode-explanation").textContent(), /2 episodevurderinger[\s\S]*redigere dine episodevurderinger/u);
+    await page.locator("#ratingCancelButton").focus();
+    await page.keyboard.press("Tab");
+    assert.equal(await page.evaluate(() => document.activeElement.id), "ratingCancelButton",
+      `keyboard focus stays on the only close action at ${width}px`);
+    await page.locator("#ratingDialog").evaluate((node) => node.classList.add("is-hidden"));
     const after = await page.locator("#locked").boundingBox();
     assert.equal(after?.width, before?.width, `locked styling does not alter control width at ${width}px`);
     assert.equal(after?.height, before?.height, `locked styling does not alter control height at ${width}px`);
