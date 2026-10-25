@@ -1,0 +1,38 @@
+name: Supabase schema-only baseline
+
+on:
+  pull_request:
+    paths:
+      - ".github/workflows/supabase-schema-only-baseline.yml"
+      - "supabase/baseline/**"
+      - "supabase/migration-history/production/20260719203000_statement_*.sql"
+      - "scripts/test-supabase-schema-only-baseline.mjs"
+      - "scripts/sql/schema-only-baseline-assertions.sql"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  empty-supabase-replay:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: supabase/setup-cli@v1
+        with:
+          version: 2.110.0
+      - name: Create an isolated temporary Supabase project
+        run: |
+          mkdir -p "$RUNNER_TEMP/podcast-ratings-baseline/supabase/migrations"
+          cd "$RUNNER_TEMP/podcast-ratings-baseline"
+          supabase init --yes
+          cp "$GITHUB_WORKSPACE/supabase/baseline/schema_only.sql" supabase/migrations/20261025000000_schema_only_baseline.sql
+      - name: Replay the schema baseline twice on an empty local database
+        working-directory: ${{ runner.temp }}/podcast-ratings-baseline
+        run: |
+          supabase start --exclude realtime,storage-api,imgproxy,kong,mailpit,postgrest,postgres-meta,studio,edge-runtime,logflare,vector,supavisor
+          supabase db reset --local --no-seed
+          supabase db reset --local --no-seed
+          supabase db query --local --file "$GITHUB_WORKSPACE/scripts/sql/schema-only-baseline-assertions.sql"
+      - name: Verify archived foundations and baseline contract
+        run: node scripts/test-supabase-schema-only-baseline.mjs

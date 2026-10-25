@@ -70,6 +70,7 @@ const checks = [
   ["manual catalogue episode identity", ["scripts/validate-manual-catalogue-episode-migration.mjs"]],
   ["manual episode rating protection", ["--experimental-strip-types", "scripts/test-manual-episode-identity-protection.mjs"]],
   ["archived Supabase migration history provenance", ["scripts/test-supabase-migration-history-archive.mjs"]],
+  ["schema-only Supabase baseline provenance and data safety", ["scripts/test-supabase-schema-only-baseline.mjs"]],
   ["local episode-rating migration data safety", ["scripts/test-local-episode-rating-migration-safety.mjs"]],
   ["Mediano legacy catalogue resolution", ["scripts/test-mediano-legacy-catalogue-resolution.mjs"]],
   ["Mediano historical editorial episode ratings", ["scripts/test-mediano-historical-editorial-episode-ratings.mjs"]],
