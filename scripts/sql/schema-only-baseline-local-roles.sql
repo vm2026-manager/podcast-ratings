@@ -4,9 +4,7 @@
 DO $baseline_test_role$
 BEGIN
   IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'supabase_admin') THEN
-    EXECUTE 'CREATE ROLE supabase_admin NOLOGIN';
+    EXECUTE 'CREATE ROLE supabase_admin NOLOGIN ROLE postgres';
   END IF;
 END
 $baseline_test_role$;
-
-GRANT supabase_admin TO postgres;

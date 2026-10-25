@@ -56,8 +56,8 @@ assert.doesNotMatch(baseline, /https?:\/\/|sb_(?:secret|publishable)_[A-Za-z0-9]
 
 const testRoleSetup = await readFile(path.join(root, "scripts/sql/schema-only-baseline-local-roles.sql"), "utf8");
 const replayWorkflow = await readFile(path.join(root, ".github/workflows/supabase-schema-only-baseline.yml"), "utf8");
-assert.match(testRoleSetup, /CREATE ROLE supabase_admin NOLOGIN/i);
-assert.match(testRoleSetup, /GRANT supabase_admin TO postgres/i);
+assert.match(testRoleSetup, /CREATE ROLE supabase_admin NOLOGIN ROLE postgres/i);
+assert.doesNotMatch(testRoleSetup, /GRANT\s+supabase_admin\s+TO\s+postgres/i);
 assert.doesNotMatch(testRoleSetup, /PASSWORD|SUPERUSER/i, "local test role must not receive credentials or superuser rights");
 assert.match(replayWorkflow, /schema-only-baseline-local-roles\.sql/);
 
