@@ -11260,24 +11260,37 @@ function getEpisodeIdsForQuery(episodes) {
   );
 }
 
-function removeMigratedLocalEpisodeRatingAliases(episode, canonicalEpisodeId) {
-  if (!state.authUser) return true;
+function removeMigratedLocalEpisodeRatingAliases(episode, canonicalEpisodeId, migratedRating, userId) {
+  const targetUserId = normalizeText(userId);
+  if (!targetUserId) return true;
 
   const store = readLocalEpisodeRatingStore();
-  const userRatings = store[state.authUser.id] || {};
+  const userRatings = store[targetUserId] || {};
+  const podcastKey = normalizeText(episode?.podcast_key) || getEpisodePodcastKey(state.activePodcastDetailKey);
+  const localPodcastKey = getLocalEpisodePodcastKey(podcastKey);
+  if (!localPodcastKey) return false;
   const ids = new Set([
     normalizeText(canonicalEpisodeId),
     normalizeText(episode?.id),
     normalizeText(episode?.legacy_manual_episode_id)
   ].filter(Boolean));
 
-  ids.forEach((id) => delete userRatings[id]);
-  store[state.authUser.id] = userRatings;
+  ids.forEach((id) => {
+    const localRating = userRatings[id];
+    if (!localRating) return;
+    if (getLocalEpisodePodcastKey(localRating.podcastKey) !== localPodcastKey) return;
+    if (parseNumber(localRating.rating) !== migratedRating) return;
+    delete userRatings[id];
+  });
+  store[targetUserId] = userRatings;
   return writeLocalEpisodeRatingStore(store);
 }
 
 async function migrateLocalManualEpisodeRatingToSupabase(episode) {
   if (!state.supabase || !state.authUser || episode?.dataSource !== "manual") return true;
+  const request = getUserScopedRequestContext();
+  if (!request.userId) return true;
+  const userId = request.userId;
 
   const manualEpisodeKey = normalizeText(episode.manual_episode_key);
   const mapping = state.manualCanonicalEpisodeMappings.get(manualEpisodeKey);
@@ -11285,7 +11298,7 @@ async function migrateLocalManualEpisodeRatingToSupabase(episode) {
   if (!canonicalEpisodeId) return false;
 
   const store = readLocalEpisodeRatingStore();
-  const userRatings = store[state.authUser.id] || {};
+  const userRatings = store[userId] || {};
   const podcastKey = normalizeText(episode.podcast_key) || getEpisodePodcastKey(state.activePodcastDetailKey);
   const localPodcastKey = getLocalEpisodePodcastKey(podcastKey);
   const candidateIds = [
@@ -11307,9 +11320,10 @@ async function migrateLocalManualEpisodeRatingToSupabase(episode) {
   const { data: existingRatings, error: existingRatingError } = await state.supabase
     .from("episode_ratings")
     .select("rating")
-    .eq("user_id", state.authUser.id)
+    .eq("user_id", userId)
     .eq("episode_id", canonicalEpisodeId)
     .limit(1);
+  if (!isCurrentUserScopedRequest(request)) return true;
   if (existingRatingError) throw existingRatingError;
 
   const existingRating = parseNumber(existingRatings?.[0]?.rating);
@@ -11323,17 +11337,18 @@ async function migrateLocalManualEpisodeRatingToSupabase(episode) {
   }
 
   const { error } = await state.supabase.from("episode_ratings").insert({
-    user_id: state.authUser.id,
+    user_id: userId,
     episode_id: canonicalEpisodeId,
     rating: localRating
   });
+  if (!isCurrentUserScopedRequest(request)) return true;
   if (error) {
     // A concurrent canonical write wins. Never overwrite it with a legacy local value.
     if (error.code === "23505") return true;
     throw error;
   }
 
-  if (!removeMigratedLocalEpisodeRatingAliases(episode, canonicalEpisodeId)) {
+  if (!removeMigratedLocalEpisodeRatingAliases(episode, canonicalEpisodeId, localRating, userId)) {
     console.warn("Episodevurderingen blev migreret til Supabase, men den lokale kopi kunne ikke ryddes.");
   }
 
