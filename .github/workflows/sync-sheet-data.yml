@@ -299,8 +299,8 @@ jobs:
             else await github.rest.issues.create({ ...context.repo, title, body, assignees: [context.repo.owner] });
             core.setFailed("Automatic merge was blocked; deduplicated issue created or updated.");
 
-  append-verified-dr-series:
-    name: Append verified DR series to Ark1
+  stage-verified-dr-series:
+    name: Stage DR series for owner review
     needs: sync-sheet-data
     if: github.ref == 'refs/heads/main' && needs.sync-sheet-data.result == 'success'
     runs-on: ubuntu-latest
@@ -308,7 +308,7 @@ jobs:
       contents: read
       id-token: write
     concurrency:
-      group: append-verified-dr-series-ark1
+      group: stage-verified-dr-series-only
       cancel-in-progress: false
     steps:
       - name: Checkout protected main
@@ -322,26 +322,25 @@ jobs:
           node-version: "24"
 
       - name: Authenticate with short-lived Google credentials
-        if: vars.GOOGLE_WORKLOAD_IDENTITY_PROVIDER != '' && vars.GOOGLE_SHEETS_SERVICE_ACCOUNT != ''
+        if: vars.GOOGLE_WORKLOAD_IDENTITY_PROVIDER != '' && vars.GOOGLE_DR_STAGING_SERVICE_ACCOUNT != '' && vars.GOOGLE_DR_STAGING_SHEET_ID != ''
         id: auth
         uses: google-github-actions/auth@v2
         with:
           workload_identity_provider: ${{ vars.GOOGLE_WORKLOAD_IDENTITY_PROVIDER }}
-          service_account: ${{ vars.GOOGLE_SHEETS_SERVICE_ACCOUNT }}
+          service_account: ${{ vars.GOOGLE_DR_STAGING_SERVICE_ACCOUNT }}
           token_format: access_token
           access_token_scopes: https://www.googleapis.com/auth/spreadsheets
 
-      - name: Append only when owner gates and backup verification are enabled
+      - name: Append source proposals only to the separate staging sheet
         env:
           GOOGLE_ACCESS_TOKEN: ${{ steps.auth.outputs.access_token }}
-          GOOGLE_SHEETS_SPREADSHEET_ID: ${{ secrets.GOOGLE_SHEETS_SPREADSHEET_ID }}
-          GOOGLE_SHEETS_WRITE_ENABLED: ${{ secrets.GOOGLE_SHEETS_WRITE_ENABLED }}
-          GOOGLE_SHEETS_BACKUP_VERIFIED: ${{ secrets.GOOGLE_SHEETS_BACKUP_VERIFIED }}
+          GOOGLE_DR_STAGING_SHEET_ID: ${{ vars.GOOGLE_DR_STAGING_SHEET_ID }}
+          GOOGLE_DR_STAGING_WRITE_ENABLED: ${{ vars.GOOGLE_DR_STAGING_WRITE_ENABLED }}
         shell: bash
         run: |
-          if [[ "$GOOGLE_SHEETS_WRITE_ENABLED" == "true" && "$GOOGLE_SHEETS_BACKUP_VERIFIED" == "true" && "$GOOGLE_SHEETS_SPREADSHEET_ID" == "1V21y9uMx_fGethrT47hILWczgK_ZSNRfksSKWuR69ss" ]]; then
-            node scripts/append-dr-series-to-sheet.mjs --write
+          if [[ "$GOOGLE_DR_STAGING_WRITE_ENABLED" == "true" ]]; then
+            node scripts/append-dr-series-to-staging.mjs --write
           else
-            echo "Sheets append gate is closed; no production write attempted."
-            node scripts/append-dr-series-to-sheet.mjs
+            echo "DR staging writes are disabled; no Google write attempted."
+            node scripts/append-dr-series-to-staging.mjs
           fi
