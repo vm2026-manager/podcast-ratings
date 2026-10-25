@@ -1249,6 +1249,9 @@ const elements = {
   ratingDialog: document.getElementById("ratingDialog"),
   ratingDialogTitle: document.getElementById("ratingDialogTitle"),
   ratingDialogMeta: document.getElementById("ratingDialogMeta"),
+  ratingDialogEpisodeSummary: document.getElementById("ratingDialogEpisodeSummary"),
+  ratingDialogEpisodeScore: document.getElementById("ratingDialogEpisodeScore"),
+  ratingDialogEpisodeExplanation: document.getElementById("ratingDialogEpisodeExplanation"),
   ratingInput: document.getElementById("ratingInput"),
   ratingDialogMessage: document.getElementById("ratingDialogMessage"),
   ratingSaveButton: document.getElementById("ratingSaveButton"),
@@ -6318,11 +6321,56 @@ function resetRatingDialogMode() {
   state.ratingDialogMode = "podcast";
   state.activeEpisodeRatingId = null;
   elements.ratingDialog?.classList.remove("rating-dialog--episode");
+  elements.ratingDialog?.classList.remove("rating-dialog--episode-derived");
+  elements.ratingDialogEpisodeSummary?.classList.add("is-hidden");
+  if (elements.ratingDialogEpisodeScore) elements.ratingDialogEpisodeScore.textContent = "";
+  if (elements.ratingDialogEpisodeExplanation) elements.ratingDialogEpisodeExplanation.textContent = "";
+  elements.ratingDialog?.querySelector(".rating-dialog__field")?.classList.remove("is-hidden");
+  elements.ratingDialog?.querySelector(".rating-dialog__hint")?.classList.remove("is-hidden");
+  elements.ratingCloseButton?.classList.remove("is-hidden");
+  elements.ratingCancelButton?.classList.remove("is-hidden");
+  if (elements.ratingCancelButton) elements.ratingCancelButton.textContent = "Annuller";
+  elements.ratingSaveButton?.classList.remove("is-hidden");
+  elements.ratingDeleteButton?.classList.remove("is-hidden");
   const eyebrow = elements.ratingDialog?.querySelector(".rating-dialog__eyebrow");
   if (eyebrow) eyebrow.textContent = "Din vurdering";
   const hint = elements.ratingDialog?.querySelector(".rating-dialog__hint");
   if (hint) {
     hint.textContent = "Du kan altid \u00e6ndre eller fjerne din vurdering senere.";
+  }
+}
+
+function setEpisodeDerivedRatingDialog(podcast, ratingState, status = "ready") {
+  elements.ratingDialog?.classList.add("rating-dialog--episode-derived");
+  elements.ratingDialog?.querySelector(".rating-dialog__field")?.classList.add("is-hidden");
+  elements.ratingDialog?.querySelector(".rating-dialog__hint")?.classList.add("is-hidden");
+  elements.ratingCloseButton?.classList.add("is-hidden");
+  elements.ratingSaveButton?.classList.add("is-hidden");
+  elements.ratingDeleteButton?.classList.add("is-hidden");
+  elements.ratingCancelButton?.classList.remove("is-hidden");
+  if (elements.ratingCancelButton) elements.ratingCancelButton.textContent = "Luk";
+  elements.ratingDialogEpisodeSummary?.classList.remove("is-hidden");
+  elements.ratingDialogMessage?.classList.add("is-hidden");
+
+  if (status === "ready" && ratingState?.resolved && ratingState.count > 0) {
+    if (elements.ratingDialogEpisodeScore) {
+      elements.ratingDialogEpisodeScore.textContent = `${formatRatingInputValue(ratingState.average)} / 10`;
+    }
+    if (elements.ratingDialogEpisodeExplanation) {
+      const noun = ratingState.count === 1 ? "episodevurdering" : "episodevurderinger";
+      elements.ratingDialogEpisodeExplanation.textContent =
+        `Beregnet fra ${ratingState.count} ${noun}. Vurderingen kan kun ændres ved at redigere dine episodevurderinger.`;
+    }
+    return;
+  }
+
+  if (elements.ratingDialogEpisodeScore) {
+    elements.ratingDialogEpisodeScore.textContent = status === "error" ? "Ikke tilgængelig" : "Indlæser …";
+  }
+  if (elements.ratingDialogEpisodeExplanation) {
+    elements.ratingDialogEpisodeExplanation.textContent = status === "error"
+      ? `${ratingState?.error || "Episodevurderingerne kunne ikke hentes lige nu."} Direkte redigering forbliver låst. Luk dialogen, og prøv igen.`
+      : "Kontrollerer dine episodevurderinger. Direkte redigering forbliver låst, indtil kontrollen er færdig.";
   }
 }
 
@@ -7659,7 +7707,7 @@ function renderRateButton(button, podcastKey) {
   );
   button.classList.toggle("has-user-rating", hasUserRating);
   button.classList.toggle("is-episode-rating-locked", isLocked);
-  button.setAttribute("aria-disabled", String(isLocked));
+  button.removeAttribute("aria-disabled");
   if (podcast) {
     button.title = getPodcastRatingControlDescription(podcast, ratingState);
   }
@@ -8309,10 +8357,8 @@ async function openRatingDialog(podcast) {
   [elements.ratingInput, elements.ratingSaveButton, elements.ratingDeleteButton].forEach((control) => {
     if (control) control.disabled = Boolean(needsVerification || isDerived);
   });
-  if (needsVerification) {
-    updateRatingDialogMessage("Kontrollerer episodevurderinger. Direkte redigering er låst, indtil kontrollen er færdig.", "info");
-  } else if (isDerived) {
-    updateRatingDialogMessage(getPodcastRatingControlDescription(podcast, initialRatingState), "info");
+  if (needsVerification || isDerived) {
+    setEpisodeDerivedRatingDialog(podcast, initialRatingState, isDerived ? "ready" : "loading");
   } else {
     updateRatingDialogMessage("");
   }
@@ -8320,7 +8366,9 @@ async function openRatingDialog(podcast) {
   elements.ratingDialog.setAttribute("aria-hidden", "false");
   document.body.classList.add("has-dialog-open");
   window.setTimeout(() => {
-    if (elements.ratingInput?.disabled) {
+    if (elements.ratingDialog?.classList.contains("rating-dialog--episode-derived")) {
+      elements.ratingCancelButton?.focus();
+    } else if (elements.ratingInput?.disabled) {
       elements.ratingDialog.querySelector(".rating-dialog__close:not(.is-hidden)")?.focus();
     } else {
       elements.ratingInput?.focus();
@@ -8337,20 +8385,18 @@ async function openRatingDialog(podcast) {
 
   if (ratingState.resolved && ratingState.count > 0) {
     elements.ratingInput.value = formatRatingInputValue(ratingState.average);
-    updateRatingDialogMessage(getPodcastRatingControlDescription(podcast, ratingState), "info");
+    setEpisodeDerivedRatingDialog(podcast, ratingState, "ready");
     void reconcileExistingEpisodeDerivedParentRating(key);
     updatePodcastRatingControls(podcast);
     return;
   }
   if (!ratingState.resolved) {
-    updateRatingDialogMessage(
-      `${ratingState.error || "Episodevurderingerne kunne ikke hentes lige nu."} Din samlede vurdering forbliver låst. Luk dialogen, og prøv igen.`,
-      "error"
-    );
+    setEpisodeDerivedRatingDialog(podcast, ratingState, "error");
     updatePodcastRatingControls(podcast);
     return;
   }
 
+  resetRatingDialogMode();
   const existingRating = getUserRating(key);
   elements.ratingInput.value = existingRating === null || existingRating === undefined
     ? ""
@@ -8373,6 +8419,7 @@ function openEpisodeRatingDialog(episode, suppliedContext = null) {
   const episodeId = getEpisodeKey(episode);
   const episodeRatingContext = suppliedContext || getEpisodeRatingContext(episode);
   if (!episodeRatingContext || episodeRatingContext.episodeId !== episodeId) return;
+  resetRatingDialogMode();
 
   if (!isLoggedIn()) {
     state.pendingAuthAction = {
@@ -13799,7 +13846,7 @@ function applyPodcastRatingControlState(button, podcast) {
   );
   const description = getPodcastRatingControlDescription(podcast, ratingState);
   button.classList.toggle("is-episode-rating-locked", locked);
-  button.setAttribute("aria-disabled", String(locked));
+  button.removeAttribute("aria-disabled");
   button.setAttribute("aria-label", description);
   button.title = description;
   if (button.matches(".desktop-ranking-row__own")) {
@@ -25031,6 +25078,16 @@ function setupEvents() {
     const podcastDetailSheet = document.getElementById("podcastDetailSheet");
     const podcastDetailOpen = podcastDetailSheet && !podcastDetailSheet.classList.contains("is-hidden");
     const editableTarget = event.target?.closest?.("input, textarea, select, [contenteditable='true']");
+
+    if (
+      event.key === "Tab" &&
+      elements.ratingDialog?.classList.contains("rating-dialog--episode-derived") &&
+      !elements.ratingDialog.classList.contains("is-hidden")
+    ) {
+      event.preventDefault();
+      elements.ratingCancelButton?.focus();
+      return;
+    }
 
     if (
       podcastDetailOpen &&
