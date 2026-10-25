@@ -63,7 +63,8 @@ const result = discoverVerifiedFullStandalone({
 assert.equal(result.report.created.length, 2);
 assert.equal(result.report.created.find(x => x.title === "En ny sag").podcast_id.startsWith("djaevlen-auto-v1-"), true);
 assert.equal(result.report.created.find(x => x.title === "En ny sag").hovedserie, "Djævlen i detaljen");
-assert.match(result.report.created.find(x => x.title === "En ny sag").description, /DR-podcasten/);
+assert.equal(result.report.created.find(x => x.title === "En ny sag").needs_editorial_review, true);
+assert.ok(result.report.created.find(x => x.title === "En ny sag").source_url.startsWith("https://www.dr.dk/lyd/special-radio/"));
 assert.equal(result.report.collisions.length, 1);
 assert.equal(result.report.collisions[0].title, "Anden identitet");
 assert.equal(result.report.unsafe.some(x => x.title === "Ny miniserie"), true, "Malformed numbered titles are not treated as singleton series");
@@ -93,8 +94,9 @@ const published = discoverVerifiedFullStandalone({
 assert.equal(published.report.created.length, 0, "Published child must not create duplicate routes");
 const drChild = mergedDr.find(x => x.Titel === "Kvinden i Isdalen");
 assert.equal(drChild["Vuring (1-10)"], undefined, "Never fabricate editorial score");
-assert.equal(drChild["Kort beskrivelse"], result.registry.records[0].description);
+assert.ok(drChild["Kort beskrivelse"].includes("Isdalen ved Bergen"));
 assert.equal(drChild.Genre, "True Crime");
+assert.equal(drChild.needs_editorial_review, false);
 const fullConfig = mergeSheetFeedConfigs({ rows: mergedDr }).configs.djaevlen_lyd_full;
 const mapped = mapDrLydEpisodes(parseDrLydEpisodes(source), fullConfig, now);
 const routed = routeEpisodes(mapped.episodes, fullConfig);
@@ -121,7 +123,7 @@ assert.equal(back.registry.records.find(x => x.discovery_key === "den spanske bo
 assert.equal(back.report.already_registered.some(x => x.title === "Den spanske borgerkrig"), true, "Bakspejl 2:4 reuses one canonical child route");
 const mergedBack = mergeAutoDiscoveredBakspejlRows(catalogueRows, back.registry);
 const borgerkrigRow = mergedBack.find(x => x["Podcast-ID"] === "bakspejl-auto-v1-4962cdc5");
-assert.equal(borgerkrigRow["Kort beskrivelse"], back.registry.records.find(x => x.discovery_key === "den spanske borgerkrig").description);
+assert.ok(borgerkrigRow["Kort beskrivelse"].includes("Harald, Aage og Kai"));
 assert.equal(borgerkrigRow["Vuring (1-10)"], undefined);
 assert.equal(mergeSheetFeedConfigs({rows:mergedBack}).configs.bakspejl_lyd_full.routes.some(r =>
   r.podcast_key === borgerkrigRow["Podcast-ID"]), true);
