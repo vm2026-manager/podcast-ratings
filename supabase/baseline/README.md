@@ -49,8 +49,9 @@ and draft. No production database, migration history, or user data was changed
 to produce or test this baseline.
 
 The GitHub Actions workflow creates a temporary Supabase project on an
-ephemeral runner, starts only the local Postgres service, copies a
-test-only role setup migration followed by this baseline into that temporary
-project's migration directory, and runs
+ephemeral runner, starts only the local Postgres service, supplies a
+test-only `roles.sql` bootstrap to grant the local migration role membership
+in `supabase_admin`, copies this baseline into the temporary migration
+directory, and runs
 `supabase db reset --local --no-seed` twice. The source file itself never enters
 the repository's active migration directory.

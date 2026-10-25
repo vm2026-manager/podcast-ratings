@@ -62,10 +62,9 @@ BEGIN
     RAISE EXCEPTION 'Expected all 17 production application policies';
   END IF;
 
-  IF (SELECT count(*) FROM supabase_migrations.schema_migrations) <> 2
-     OR NOT EXISTS (SELECT 1 FROM supabase_migrations.schema_migrations WHERE version = '20261024000000')
+  IF (SELECT count(*) FROM supabase_migrations.schema_migrations) <> 1
      OR NOT EXISTS (SELECT 1 FROM supabase_migrations.schema_migrations WHERE version = '20261025000000') THEN
-    RAISE EXCEPTION 'Expected only the local test-role setup and schema-only bootstrap migrations';
+    RAISE EXCEPTION 'Expected only the isolated schema-only bootstrap migration in the local ledger';
   END IF;
 
   IF (SELECT relrowsecurity FROM pg_class WHERE oid='public.episode_identity_history'::regclass) THEN

@@ -50,16 +50,15 @@ assert.equal(
 assert.match(baseline, /CREATE TRIGGER podcast_episodes_protect_identity/i);
 assert.match(baseline, /ALTER TABLE public\.episode_ratings ENABLE ROW LEVEL SECURITY/i);
 assert.doesNotMatch(baseline, /ALTER TABLE public\.episode_identity_history ENABLE ROW LEVEL SECURITY/i);
-assert.match(baseline, /SET ROLE supabase_admin;[\s\S]*ALTER DEFAULT PRIVILEGES IN SCHEMA public[\s\S]*RESET ROLE;/i);
-assert.doesNotMatch(baseline, /ALTER DEFAULT PRIVILEGES FOR ROLE supabase_admin/i);
+assert.equal((baseline.match(/ALTER DEFAULT PRIVILEGES FOR ROLE supabase_admin/g) || []).length, 6);
 assert.doesNotMatch(baseline, /https?:\/\/|sb_(?:secret|publishable)_[A-Za-z0-9]+/i, "baseline must not contain endpoints or API credentials");
 
 const testRoleSetup = await readFile(path.join(root, "scripts/sql/schema-only-baseline-local-roles.sql"), "utf8");
 const replayWorkflow = await readFile(path.join(root, ".github/workflows/supabase-schema-only-baseline.yml"), "utf8");
-assert.match(testRoleSetup, /CREATE ROLE supabase_admin NOLOGIN ROLE postgres/i);
-assert.doesNotMatch(testRoleSetup, /GRANT\s+supabase_admin\s+TO\s+postgres/i);
+assert.match(testRoleSetup, /CREATE ROLE supabase_admin NOLOGIN/i);
+assert.match(testRoleSetup, /GRANT supabase_admin TO postgres/i);
 assert.doesNotMatch(testRoleSetup, /PASSWORD|SUPERUSER/i, "local test role must not receive credentials or superuser rights");
-assert.match(replayWorkflow, /schema-only-baseline-local-roles\.sql/);
+assert.match(replayWorkflow, /schema-only-baseline-local-roles\.sql.*supabase\/roles\.sql/);
 
 const withoutFunctionBodies = baseline.replace(/(\$[A-Za-z0-9_]*\$)[\s\S]*?\1/g, "");
 assert.doesNotMatch(withoutFunctionBodies, /\b(?:INSERT\s+INTO|COPY\s+.*FROM\s+stdin|UPDATE\s+[\w.]+\s+SET|DELETE\s+FROM)\b/i, "no historical table-data operation may run in the baseline");
