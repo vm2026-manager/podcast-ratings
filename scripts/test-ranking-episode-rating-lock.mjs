@@ -141,10 +141,22 @@ function createHarness({ ratingState, input = "8.3", userId = "user-a", onVerify
   return { state, elements, writes, messages, request, ratingState, ...harness };
 }
 
-async function openRatingHarness({ initialState, finalState, userId = "user-a", onVerify } = {}) {
+async function openRatingHarness({
+  initialState, finalState, userId = "user-a", onVerify, deferVerification = false,
+  podcastId = "podcast-a", getUserRating = () => 8.3, supportsEpisodes = true
+} = {}) {
   const state = { authUser: { id: userId }, activeRatingKey: null, activeRatingRequestToken: 0 };
   const classes = new Set(["is-hidden"]);
   const derivedViews = [];
+  const timers = [];
+  const focusCalls = [];
+  const selectCalls = [];
+  let activeElement = null;
+  let resolveVerification;
+  const documentProxy = {
+    get activeElement() { return activeElement; },
+    body: { classList: { add() {} } }
+  };
   const elements = {
     ratingDialog: {
       classList: {
@@ -157,7 +169,11 @@ async function openRatingHarness({ initialState, finalState, userId = "user-a", 
     },
     ratingDialogTitle: {},
     ratingDialogMeta: {},
-    ratingInput: { value: "", disabled: false, focus() {}, select() {} },
+    ratingInput: {
+      value: "", disabled: false,
+      focus(options) { focusCalls.push(options); activeElement = this; },
+      select() { selectCalls.push(this.value); }
+    },
     ratingSaveButton: { textContent: "", disabled: false },
     ratingDeleteButton: { disabled: false, classList: { toggle() {} } },
     ratingCancelButton: { textContent: "", focus() {} },
@@ -186,13 +202,16 @@ async function openRatingHarness({ initialState, finalState, userId = "user-a", 
     () => {},
     () => request,
     () => initialState,
-    () => 8.3,
+    getUserRating,
     (value) => String(value).replace(".", ","),
-    () => true,
+    () => supportsEpisodes,
     (message, tone) => messages.push({ message, tone }),
-    { body: { classList: { add() {} } } },
-    { setTimeout: (callback) => callback() },
+    documentProxy,
+    { setTimeout: (callback) => timers.push(callback) },
     async () => {
+      if (deferVerification) {
+        await new Promise((resolve) => { resolveVerification = resolve; });
+      }
       await onVerify?.(state);
       return finalState;
     },
@@ -202,8 +221,14 @@ async function openRatingHarness({ initialState, finalState, userId = "user-a", 
     () => {},
     (_podcast, ratingState, status) => derivedViews.push({ ratingState, status })
   );
-  await run({ id: "podcast-a", title: "Podcast A" });
-  return { state, elements, messages, derivedViews };
+  const runPromise = run({ id: podcastId, title: `Podcast ${podcastId}` });
+  if (!deferVerification) await runPromise;
+  return {
+    state, elements, messages, derivedViews, timers, focusCalls, selectCalls,
+    get activeElement() { return activeElement; },
+    runPromise,
+    releaseVerification: () => resolveVerification?.()
+  };
 }
 
 // The rating returned by the episode summary remains authoritative even when
@@ -238,6 +263,76 @@ async function openRatingHarness({ initialState, finalState, userId = "user-a", 
   assert.equal(editable.elements.ratingInput.value, "8,3");
   assert.equal(editable.elements.ratingInput.disabled, false);
   assert.equal(editable.elements.ratingSaveButton.disabled, false);
+  assert.equal(editable.focusCalls.length, 1, "the verified direct editor receives focus immediately");
+  assert.equal(editable.activeElement, editable.elements.ratingInput, "focus lands on the rating input after verification");
+  assert.deepEqual(editable.selectCalls, ["8,3"], "the existing score is selected for replacement");
+  editable.timers[0]();
+  assert.equal(editable.elements.ratingInput.value, "8,3", "the delayed opening timer preserves the current score");
+  assert.deepEqual(editable.selectCalls, ["8,3"], "the timer does not select the score a second time");
+
+  const emptyEditable = await openRatingHarness({
+    initialState: { resolved: false, count: 0, average: null },
+    finalState: { resolved: true, count: 0, average: null },
+    getUserRating: () => null
+  });
+  assert.equal(emptyEditable.elements.ratingInput.value, "");
+  assert.equal(emptyEditable.focusCalls.length, 1, "an empty editor is ready for immediate typing");
+  assert.equal(emptyEditable.activeElement, emptyEditable.elements.ratingInput);
+  assert.equal(emptyEditable.selectCalls.length, 0, "an empty field is not selected");
+
+  const editableWithoutEpisodes = await openRatingHarness({
+    initialState: { resolved: true, count: 0, average: null },
+    finalState: { resolved: true, count: 0, average: null },
+    supportsEpisodes: false
+  });
+  editableWithoutEpisodes.timers[0]();
+  assert.equal(editableWithoutEpisodes.focusCalls.length, 1, "a normal editable dialog focuses after opening");
+  assert.deepEqual(editableWithoutEpisodes.selectCalls, ["8,3"]);
+
+  const delayedOpeningTimer = await openRatingHarness({
+    initialState: { resolved: true, count: 0, average: null },
+    finalState: { resolved: true, count: 0, average: null },
+    supportsEpisodes: false
+  });
+  delayedOpeningTimer.elements.ratingInput.value = "7,4";
+  delayedOpeningTimer.timers[0]();
+  assert.equal(delayedOpeningTimer.elements.ratingInput.value, "7,4", "the delayed timer preserves an in-progress score");
+  assert.equal(delayedOpeningTimer.focusCalls.length, 0, "the delayed timer leaves the user's active editing state alone");
+
+  const typedDuringVerification = await openRatingHarness({
+    initialState: { resolved: false, count: 0, average: null },
+    finalState: { resolved: true, count: 0, average: null },
+    deferVerification: true
+  });
+  typedDuringVerification.elements.ratingInput.value = "7,9";
+  typedDuringVerification.elements.ratingInput.focus();
+  typedDuringVerification.releaseVerification();
+  await typedDuringVerification.runPromise;
+  assert.equal(typedDuringVerification.elements.ratingInput.value, "7,9", "verification preserves text entered while pending");
+  assert.deepEqual(typedDuringVerification.selectCalls, [], "verification never selects text the user has started entering");
+
+  const closedDuringVerification = await openRatingHarness({
+    initialState: { resolved: false, count: 0, average: null },
+    finalState: { resolved: true, count: 0, average: null },
+    deferVerification: true
+  });
+  closedDuringVerification.elements.ratingDialog.classList.add("is-hidden");
+  closedDuringVerification.state.activeRatingRequestToken += 1;
+  closedDuringVerification.state.activeRatingKey = null;
+  closedDuringVerification.releaseVerification();
+  await closedDuringVerification.runPromise;
+  assert.equal(closedDuringVerification.focusCalls.length, 0, "late verification cannot focus a closed dialog");
+
+  const switchedPodcastDuringVerification = await openRatingHarness({
+    initialState: { resolved: false, count: 0, average: null },
+    finalState: { resolved: true, count: 0, average: null },
+    deferVerification: true
+  });
+  switchedPodcastDuringVerification.state.activeRatingRequestToken += 1;
+  switchedPodcastDuringVerification.state.activeRatingKey = "podcast-b";
+  switchedPodcastDuringVerification.releaseVerification();
+  await switchedPodcastDuringVerification.runPromise;
+  assert.equal(switchedPodcastDuringVerification.focusCalls.length, 0, "late verification cannot focus another podcast's dialog");
 
   const failed = await openRatingHarness({
     initialState: { resolved: false, count: 0, average: null },
@@ -254,6 +349,7 @@ async function openRatingHarness({ initialState, finalState, userId = "user-a", 
     onVerify: (state) => { state.authUser = { id: "user-b" }; }
   });
   assert.equal(switched.elements.ratingInput.disabled, true, "a late response cannot unlock after a user switch");
+  assert.equal(switched.focusCalls.length, 0, "a late response after a user switch cannot move focus");
 }
 
 // Without episode ratings direct create/update/delete remains available.
@@ -271,6 +367,16 @@ async function openRatingHarness({ initialState, finalState, userId = "user-a", 
   assert.equal(d.writes.length, 1);
   assert.equal(d.writes[0].operation, "delete");
   assert.equal(d.writes[0].userId, "user-a");
+}
+
+// Enter keeps using the shared save path; its synchronous pending-key gate
+// accepts one write even if the same input produces duplicate key events.
+{
+  assert.match(app, /elements\.ratingInput\?\.addEventListener\("keydown", \(event\) => \{[\s\S]{0,180}event\.preventDefault\(\);\s*saveActiveRating\(\);/u);
+  const h = createHarness({ ratingState: { resolved: true, count: 0, average: null } });
+  await Promise.all([h.saveActiveRating(), h.saveActiveRating()]);
+  assert.equal(h.writes.filter((write) => write.operation === "upsert").length, 1,
+    "duplicate Enter submissions cannot create duplicate rating writes");
 }
 
 // A final episode deletion returns the cached summary to zero and restores the
