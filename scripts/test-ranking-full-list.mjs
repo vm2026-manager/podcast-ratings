@@ -47,8 +47,8 @@ state.rankingMovementByKey = new Map([["podcast-172", 18], ["podcast-173", -1], 
 assert.equal(presentation(podcasts), podcasts, "presentation always returns the complete normal list");
 assert.deepEqual(podcasts.map((podcast, index) => displayRank(index, podcast)), Array.from({ length: 190 }, (_, index) => index + 1), "full ranking positions are unique and sequential");
 assert.match(markup(podcasts[171]), /ranking-movement--up/);
-assert.match(markup(podcasts[171]), />▲18</, "real up arrow stays beside the #172 row");
-assert.match(markup(podcasts[172]), />▼1</, "real down arrow stays beside the #173 row");
+assert.match(markup(podcasts[171]), />▲\s18</, "real up arrow and spaced delta stay beside the #172 row");
+assert.match(markup(podcasts[172]), />▼\s1</, "real down arrow and spaced delta stay beside the #173 row");
 assert.match(markup(podcasts[173]), /ranking-movement--steady/);
 assert.match(markup(podcasts[173]), />–</, "verified unchanged positions display an en dash");
 assert.match(markup(podcasts[173]), /aria-label="Uændret placering siden 20\. oktober"/);
@@ -70,6 +70,11 @@ assert.match(app, /getRankingMovementMarkup\(podcast\)/, "normal rows retain aut
 assert.match(app, /getRankingPresentationPodcasts\(\);\s*const isMobileTail/, "mobile batches and tail use the complete presentation list");
 assert.match(app, /getRankingDisplayRank\(index, podcast\)/, "desktop row/card renderers keep absolute sequence ranks");
 assert.match(movementCss, /\.ranking-movement--steady\s*\{\s*color:\s*#[0-9a-f]{6};/i, "neutral marker has a muted desktop color");
-assert.match(movementCss, /\.podcast-card__placement \.ranking-movement[\s\S]*?color:\s*#fff/, "mobile badge markers retain readable white contrast");
+assert.match(movementCss, /\.podcast-card__placement \.ranking-movement\s*\{[\s\S]*?background:\s*#f3eee7/,
+  "mobile movement markers have their own neutral background");
+assert.match(movementCss, /\.podcast-card__placement:has\(\.ranking-movement\)[\s\S]*?background:\s*transparent\s*!important/,
+  "mobile movement leaves the orange background on the rank badge only");
+assert.match(movementCss, /\.placement-value--with-movement[\s\S]*?background:\s*linear-gradient/,
+  "rank text keeps its own orange badge background");
 
 console.log("Full ranking and verified movement marker regression checks passed.");

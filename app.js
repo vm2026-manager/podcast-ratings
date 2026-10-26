@@ -4626,7 +4626,7 @@ function getRankingMovementMarkup(podcast) {
   const gain = delta > 0;
   const count = Math.abs(delta);
   const label = `${gain ? "Steget" : "Faldet"} ${count} ${count === 1 ? "placering" : "placeringer"} ${periodLabel}`;
-  return `<span id="${id}" class="ranking-movement ${gain ? "ranking-movement--up" : "ranking-movement--down"}" aria-label="${escapeHtml(label)}" title="${escapeHtml(label)}">${gain ? "▲" : "▼"}${count}</span>`;
+  return `<span id="${id}" class="ranking-movement ${gain ? "ranking-movement--up" : "ranking-movement--down"}" aria-label="${escapeHtml(label)}" title="${escapeHtml(label)}">${gain ? "▲" : "▼"} ${count}</span>`;
 }
 
 function getRankingMovementId(podcast) {

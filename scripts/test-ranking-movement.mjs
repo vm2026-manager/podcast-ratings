@@ -149,7 +149,7 @@ const desktopCss = fs.readFileSync(new URL("../desktop-home-mockup.css", import.
 assert.match(desktopCss, /grid-template-columns:\s*80px minmax\(220px/);
 assert.match(desktopCss, /grid-template-columns:\s*80px minmax\(190px/);
 assert.match(movementCss, /font-size:\s*0\.78rem/);
-assert.match(movementCss, /@media \(max-width: 700px\)[\s\S]*height: 36px !important/);
+assert.match(movementCss, /@media \(max-width: 768px\)[\s\S]*height: 38px !important/);
 function extractFunction(name) {
   const start = app.indexOf(`function ${name}(`);
   assert.ok(start >= 0, `${name} must exist`);
