@@ -33,6 +33,14 @@ assert.match(extractFunction("savePodcastDetailInlineRating"), /await ensurePodc
 assert.match(extractFunction("updatePodcastRatingControls"), /\.desktop-ranking-row__own, \.desktop-ranking-own-score, \.rate-button/u);
 assert.match(extractFunction("applyPodcastRatingControlState"), /aria-label/u);
 assert.match(extractFunction("applyPodcastRatingControlState"), /removeAttribute\("aria-disabled"\)/u);
+assert.match(extractFunction("applyPodcastRatingControlState"), /is-rating-checking/u);
+assert.match(extractFunction("applyPodcastRatingControlState"), /is-rating-check-error/u);
+assert.match(extractFunction("applyPodcastRatingControlState"), /ratingState\.resolved && ratingState\.count > 0/u,
+  "only a resolved episode-derived rating may apply the ranking lock");
+assert.match(extractFunction("applyPodcastRatingControlState"), /Tjekker…/u,
+  "unresolved checks must be visibly temporary instead of showing an empty locked score");
+assert.match(extractFunction("getPodcastRatingControlDescription"), /mislykkedes[\s\S]*prøve igen/u,
+  "a failed check must explain how to retry from the control");
 assert.match(extractFunction("setEpisodeDerivedRatingDialog"), /ratingSaveButton/u);
 assert.match(extractFunction("setEpisodeDerivedRatingDialog"), /episodevurderinger/u);
 assert.match(extractFunction("resetRatingDialogMode"), /rating-dialog--episode-derived/u);
