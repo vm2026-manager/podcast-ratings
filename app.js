@@ -8332,6 +8332,7 @@ async function openRatingDialog(podcast) {
     initialRating === null || initialRating === undefined
       ? ""
       : formatRatingInputValue(initialRating);
+  const initialInputValue = elements.ratingInput.value;
   if (elements.ratingSaveButton) {
     elements.ratingSaveButton.textContent =
       initialRating === null || initialRating === undefined
@@ -8365,14 +8366,31 @@ async function openRatingDialog(podcast) {
   elements.ratingDialog.classList.remove("is-hidden");
   elements.ratingDialog.setAttribute("aria-hidden", "false");
   document.body.classList.add("has-dialog-open");
+  const focusEditableRatingInput = (expectedValue, { selectExisting = true } = {}) => {
+    if (
+      state.activeRatingRequestToken !== requestToken || state.activeRatingKey !== key ||
+      userId !== state.authUser?.id || !isCurrentUserScopedRequest(request) ||
+      elements.ratingDialog?.classList.contains("is-hidden") || elements.ratingInput?.disabled ||
+      elements.ratingInput?.value !== expectedValue
+    ) return;
+
+    const wasFocused = document.activeElement === elements.ratingInput;
+    elements.ratingInput.focus({ preventScroll: true });
+    if (selectExisting && !wasFocused && elements.ratingInput.value) elements.ratingInput.select();
+  };
   window.setTimeout(() => {
+    if (
+      state.activeRatingRequestToken !== requestToken || state.activeRatingKey !== key ||
+      userId !== state.authUser?.id || !isCurrentUserScopedRequest(request) ||
+      elements.ratingDialog?.classList.contains("is-hidden")
+    ) return;
+
     if (elements.ratingDialog?.classList.contains("rating-dialog--episode-derived")) {
       elements.ratingCancelButton?.focus();
     } else if (elements.ratingInput?.disabled) {
       elements.ratingDialog.querySelector(".rating-dialog__close:not(.is-hidden)")?.focus();
     } else {
-      elements.ratingInput?.focus();
-      elements.ratingInput?.select();
+      focusEditableRatingInput(initialInputValue);
     }
   }, 40);
 
@@ -8398,9 +8416,12 @@ async function openRatingDialog(podcast) {
 
   resetRatingDialogMode();
   const existingRating = getUserRating(key);
-  elements.ratingInput.value = existingRating === null || existingRating === undefined
-    ? ""
-    : formatRatingInputValue(existingRating);
+  const inputWasEditedWhileVerifying = elements.ratingInput.value !== initialInputValue;
+  if (!inputWasEditedWhileVerifying) {
+    elements.ratingInput.value = existingRating === null || existingRating === undefined
+      ? ""
+      : formatRatingInputValue(existingRating);
+  }
   if (elements.ratingInput) elements.ratingInput.disabled = false;
   if (elements.ratingSaveButton) elements.ratingSaveButton.disabled = false;
   if (elements.ratingDeleteButton) elements.ratingDeleteButton.disabled = false;
@@ -8413,6 +8434,7 @@ async function openRatingDialog(podcast) {
     : "Opdater vurdering";
   updateRatingDialogMessage("");
   updatePodcastRatingControls(podcast);
+  focusEditableRatingInput(elements.ratingInput.value, { selectExisting: !inputWasEditedWhileVerifying });
 }
 
 function openEpisodeRatingDialog(episode, suppliedContext = null) {
