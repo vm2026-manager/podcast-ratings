@@ -13781,7 +13781,9 @@ function getPodcastRatingControlDescription(podcast, ratingState = getPodcastRat
     return `Din vurdering af ${podcast.title} er ${formatCompactRating(ratingState.average)} af 10 og beregnes fra ${ratingState.count} episodevurdering${ratingState.count === 1 ? "" : "er"}. Redigér episodevurderinger for at ændre den. Åbn for forklaring.`;
   }
   if (!ratingState.resolved) {
-    return `Kontrollerer episodevurderinger for ${podcast.title}. Direkte redigering er låst, indtil kontrollen er færdig. Åbn for status.`;
+    return ratingState.error
+      ? `Kontrollen af episodevurderinger for ${podcast.title} mislykkedes. Tryk for at prøve igen.`
+      : `Kontrollerer episodevurderinger for ${podcast.title}. Tryk for status.`;
   }
   return getUserRating(getPodcastKey(podcast)) === null
     ? `Vurdér ${podcast.title}`
@@ -13840,21 +13842,26 @@ function applyPodcastRatingControlState(button, podcast) {
     : ratingState.count > 0
       ? Math.round(Number(ratingState.average) * 10) / 10
       : getUserRating(getPodcastKey(podcast));
-  const locked = Boolean(
-    state.authUser && podcastSupportsEpisodes(podcast) &&
-    (!ratingState.resolved || ratingState.count > 0)
-  );
+  const checking = Boolean(state.authUser && podcastSupportsEpisodes(podcast) && !ratingState.resolved && !ratingState.error);
+  const checkFailed = Boolean(state.authUser && podcastSupportsEpisodes(podcast) && !ratingState.resolved && ratingState.error);
+  const locked = Boolean(state.authUser && podcastSupportsEpisodes(podcast) && ratingState.resolved && ratingState.count > 0);
   const description = getPodcastRatingControlDescription(podcast, ratingState);
   button.classList.toggle("is-episode-rating-locked", locked);
+  button.classList.toggle("is-rating-checking", checking);
+  button.classList.toggle("is-rating-check-error", checkFailed);
   button.removeAttribute("aria-disabled");
   button.setAttribute("aria-label", description);
   button.title = description;
   if (button.matches(".desktop-ranking-row__own")) {
     const value = button.querySelector("strong");
-    if (value) value.textContent = rating === null || rating === undefined ? "—" : formatCompactRating(rating);
+    if (value) {
+      value.textContent = checking ? "Tjekker…" : checkFailed ? "Prøv igen" : rating === null || rating === undefined ? "—" : formatCompactRating(rating);
+    }
   } else if (button.matches(".desktop-ranking-own-score")) {
     const value = button.querySelector("strong");
-    if (value) value.textContent = rating === null || rating === undefined ? "—" : `${formatCompactRating(rating)} / 10`;
+    if (value) {
+      value.textContent = checking ? "Tjekker…" : checkFailed ? "Prøv igen" : rating === null || rating === undefined ? "— /10" : `${formatCompactRating(rating)} / 10`;
+    }
   } else if (button.matches(".rate-button")) {
     button.classList.toggle("has-user-rating", rating !== null && rating !== undefined);
   }
