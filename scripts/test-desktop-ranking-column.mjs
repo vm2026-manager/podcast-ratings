@@ -43,7 +43,7 @@ assert.match(appJs, /desktop-ranking-row__number[\s\S]{0,260}getRankingMovementM
   "desktop row keeps the separate number span and existing movement markup together");
 assert.match(appJs, /rankDigits\s*>=\s*4/,
   "four-digit ranks receive controlled full-width number layout");
-assert.match(indexHtml, /ranking-movement\.css\?v=20261024-ranking-rank-grid-v1/);
+assert.match(indexHtml, /ranking-movement\.css\?v=20261026-mobile-movement-badge-v1/);
 assert.match(desktopCss, /\.desktop-ranking-row__podcast\s*\{[^}]*grid-template-columns:\s*58px minmax\(0, 1fr\)/);
 
 const browser = await chromium.launch({ headless: true });

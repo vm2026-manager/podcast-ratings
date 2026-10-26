@@ -119,27 +119,51 @@ html body.page-ranglister .desktop-ranking-row__rank .ranking-movement--steady {
     line-height: 1.35;
   }
 
+}
+
+@media (max-width: 768px) {
   html body.page-ranglister .podcast-card__placement:has(.ranking-movement) {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    gap: 0;
-    height: 36px !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 2px !important;
+    height: 38px !important;
+    padding: 0 !important;
     box-sizing: border-box !important;
+    color: inherit !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    overflow: visible !important;
   }
 
   html body.page-ranglister .placement-value--with-movement {
-    display: block !important;
-    width: 100% !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: max-content !important;
+    max-width: 100% !important;
     height: 22px !important;
-    line-height: 22px !important;
+    padding: 0 5px !important;
+    border-radius: 8px !important;
+    box-sizing: border-box !important;
+    color: #fff !important;
+    background: linear-gradient(180deg, var(--accent), var(--accent-deep)) !important;
+    box-shadow: 0 3px 8px rgba(223, 84, 16, 0.2) !important;
+    font-size: 0.8rem !important;
+    line-height: 1 !important;
+    white-space: nowrap !important;
   }
 
   html body.page-ranglister .podcast-card__placement .ranking-movement {
+    display: inline-block;
+    max-width: 100%;
     margin: 0;
-    color: #fff;
-    font-size: 0.55rem;
-    line-height: 10px !important;
+    padding: 1px 4px;
+    border-radius: 999px;
+    background: #f3eee7;
+    font-size: 0.68rem;
+    line-height: 12px !important;
     letter-spacing: 0;
   }
 }

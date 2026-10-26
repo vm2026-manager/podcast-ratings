@@ -29451,12 +29451,10 @@ html body.page-udforsk .explore-section-header__link:focus-visible {
   }
 }
 
-/* Keep Ranglister's floating scroll controls above the fixed mobile nav. */
+/* Keep Ranglister's bottom shortcut just above the fixed mobile nav. */
 @media (max-width: 768px) {
-  html body.page-ranglister .ranking-scroll-bottom-button,
-  html body.page-ranglister .ranking-scroll-bottom-button--top {
-    top: auto;
-    bottom: calc(var(--mobile-nav-height) + 12px + env(safe-area-inset-bottom, 0px));
+  html body.page-ranglister .ranking-scroll-bottom-button:not(.ranking-scroll-bottom-button--top) {
+    bottom: calc(var(--mobile-nav-height) + 5px);
   }
 }
 /* Homepage: latest editorial reviews, deliberately distinct from the community carousel. */
