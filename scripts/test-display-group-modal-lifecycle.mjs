@@ -54,6 +54,8 @@ const runtime = new Function("state", "ownRatings", `
   ${extract("createRankingDisplayGroup")}
   ${extract("resolvePublicPodcastDisplayItem")}
   ${extract("getDisplayGroupOwnRatingStats")}
+  ${extract("getPodcastDisplayGroupOwnRatingMarkup")}
+  ${extract("bindPodcastDisplayGroupRatingLock")}
   ${extract("renderPodcastDisplayGroupContent")}
   return { createRankingDisplayGroup, resolvePublicPodcastDisplayItem, getDisplayGroupOwnRatingStats, renderPodcastDisplayGroupContent };
 `)(state, ownRatings);
