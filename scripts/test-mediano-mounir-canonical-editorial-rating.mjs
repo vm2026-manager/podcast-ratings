@@ -60,8 +60,10 @@ const buildHistoricalMedianoEpisodeEntries = new Function(
 const getManualEpisodeCanonicalId = new Function(
   "normalizeText",
   "normalizeMatchKey",
+  "EPISODE_PODCAST_CONFIG",
+  "getPodcastId",
   `${sourceFunction("getManualEpisodeCanonicalId", "parseManualEpisodeTitles")}\nreturn getManualEpisodeCanonicalId;`
-)(normalizeText, normalizeMatchKey);
+)(normalizeText, normalizeMatchKey, {}, (podcast) => podcast?.["Podcast-ID"] || "");
 
 const historicalMounir = buildHistoricalMedianoEpisodeEntries(
   [mounirRow],
