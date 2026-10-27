@@ -2,7 +2,7 @@
   "version": 1,
   "source": {
     "path": "data/podcasts.json",
-    "generatedAt": "2026-10-26T20:44:20.973Z",
+    "generatedAt": "2026-10-27T15:24:02.536Z",
     "count": 1340,
     "topicAliases": "config/recommendation-topic-aliases.json",
     "topicAliasVersion": 1,
