@@ -37,8 +37,10 @@ assert.match(extractFunction("applyPodcastRatingControlState"), /is-rating-check
 assert.match(extractFunction("applyPodcastRatingControlState"), /is-rating-check-error/u);
 assert.match(extractFunction("applyPodcastRatingControlState"), /ratingState\.resolved && ratingState\.count > 0/u,
   "only a resolved episode-derived rating may apply the ranking lock");
-assert.match(extractFunction("applyPodcastRatingControlState"), /Tjekker…/u,
-  "unresolved checks must be visibly temporary instead of showing an empty locked score");
+assert.match(extractFunction("applyPodcastRatingControlState"), /checking \? "—"/u,
+  "the ranking row uses a short dash while episode ratings load");
+assert.match(extractFunction("applyPodcastRatingControlState"), /checking \? "— \/ 10"/u,
+  "the featured ranking score keeps its / 10 suffix while episode ratings load");
 assert.match(extractFunction("getPodcastRatingControlDescription"), /mislykkedes[\s\S]*prøve igen/u,
   "a failed check must explain how to retry from the control");
 assert.match(extractFunction("setEpisodeDerivedRatingDialog"), /ratingSaveButton/u);
@@ -48,6 +50,70 @@ assert.match(app, /event\.key === "Tab"[\s\S]*rating-dialog--episode-derived/u);
 assert.match(html, /id="ratingDialogEpisodeSummary"[\s\S]*id="ratingDialogEpisodeScore"[\s\S]*id="ratingDialogEpisodeExplanation"/u);
 assert.match(desktopCss, /page-ranglister \.desktop-ranking-row__own\.is-episode-rating-locked/u);
 assert.match(siteCss, /\.rate-button\.is-episode-rating-locked/u);
+
+function createRatingControlHarness(selector, initialState) {
+  let ratingState = initialState;
+  const value = { textContent: "" };
+  const suffix = { textContent: "/ 10" };
+  const attributes = {};
+  const classes = new Set();
+  const button = {
+    classList: {
+      toggle(name, enabled) { if (enabled) classes.add(name); else classes.delete(name); }
+    },
+    matches: (candidate) => candidate === selector,
+    querySelector: (candidate) => candidate === "strong" ? value : candidate === "small" ? suffix : null,
+    removeAttribute(name) { delete attributes[name]; },
+    setAttribute(name, content) { attributes[name] = content; },
+    title: ""
+  };
+  const apply = new Function(
+    "state", "getPodcastRatingEditState", "podcastSupportsEpisodes", "getPodcastRatingControlDescription",
+    "getPodcastKey", "getUserRating", "formatCompactRating",
+    `${extractFunction("applyPodcastRatingControlState")}; return applyPodcastRatingControlState;`
+  )(
+    { authUser: { id: "user-a" } },
+    () => ratingState,
+    () => true,
+    (_podcast, current) => current.resolved ? "Din vurdering beregnes fra episodevurderinger." : "Kontrollerer episodevurderinger.",
+    (podcast) => podcast.key,
+    () => 7.4,
+    (rating) => String(rating).replace(".", ",")
+  );
+  return {
+    button, value, suffix, attributes, classes,
+    update(nextState) { ratingState = nextState; apply(button, { key: "podcast-a" }); }
+  };
+}
+
+// The loading placeholder is short, keeps both desktop suffix treatments, and
+// changes to the verified current-user rating when the asynchronous check ends.
+{
+  const pending = { resolved: false, count: 0, average: null };
+  const resolved = { resolved: true, count: 2, average: 8.2 };
+  const row = createRatingControlHarness(".desktop-ranking-row__own", pending);
+  row.update(pending);
+  assert.equal(row.value.textContent, "—");
+  assert.equal(row.suffix.textContent, "/ 10", "the ranking-row / 10 suffix remains separate and unchanged");
+  assert.ok(row.classes.has("is-rating-checking"));
+  assert.equal(row.attributes["aria-label"], "Kontrollerer episodevurderinger.");
+  row.update(resolved);
+  assert.equal(row.value.textContent, "8,2", "the row updates to the verified episode-derived rating");
+  assert.equal(row.attributes["aria-label"], "Din vurdering beregnes fra episodevurderinger.");
+
+  const featured = createRatingControlHarness(".desktop-ranking-own-score", pending);
+  featured.update(pending);
+  assert.equal(featured.value.textContent, "— / 10");
+  assert.ok(featured.classes.has("is-rating-checking"));
+  featured.update(resolved);
+  assert.equal(featured.value.textContent, "8,2 / 10", "the featured score updates after the check finishes");
+
+  const failed = createRatingControlHarness(".desktop-ranking-row__own", {
+    resolved: false, count: 0, average: null, error: "Databasefejl"
+  });
+  failed.update({ resolved: false, count: 0, average: null, error: "Databasefejl" });
+  assert.equal(failed.value.textContent, "Prøv igen", "the existing retry action remains visible after a failed check");
+}
 
 function createHarness({ ratingState, input = "8.3", userId = "user-a", onVerify } = {}) {
   const writes = [];
@@ -465,7 +531,7 @@ try {
       <article class="desktop-ranking-row"><span>#1</span><span>Podcast A</span><span>9,1</span>
         <button id="locked" class="desktop-ranking-row__own is-episode-rating-locked" type="button"
           aria-label="Din vurdering af Podcast A er 8,2 af 10 og beregnes fra 2 episodevurderinger. Redigér episodevurderinger for at ændre den. Åbn for forklaring."
-          title="Din vurdering er beregnet fra episodevurderinger"><strong>8,2</strong></button></article>
+          title="Din vurdering er beregnet fra episodevurderinger"><span class="desktop-ranking-row__own-star" aria-hidden="true">★</span><strong>8,2</strong><small>/ 10</small></button></article>
       <p id="help" role="status" hidden></p>
       <div id="ratingDialog" class="rating-dialog rating-dialog--episode-derived is-hidden" aria-hidden="true">
         <div class="rating-dialog__backdrop"></div>
@@ -519,6 +585,8 @@ try {
     assert.ok(before?.width > 0, `locked rating remains visible at ${width}px`);
     assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true,
       `ranking lock creates no horizontal overflow at ${width}px`);
+    assert.equal(await page.locator("#locked small").textContent(), "/ 10",
+      `ranking-row suffix remains visible in the DOM at ${width}px`);
     assert.equal(await page.locator("#locked").getAttribute("aria-disabled"), null,
       "an actionable control that opens an explanation is not marked aria-disabled");
     assert.match(await page.locator("#locked").getAttribute("aria-label"), /8,2 af 10[\s\S]*episodevurderinger[\s\S]*Åbn for forklaring/u);
