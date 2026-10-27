@@ -13877,12 +13877,12 @@ function applyPodcastRatingControlState(button, podcast) {
   if (button.matches(".desktop-ranking-row__own")) {
     const value = button.querySelector("strong");
     if (value) {
-      value.textContent = checking ? "Tjekker…" : checkFailed ? "Prøv igen" : rating === null || rating === undefined ? "—" : formatCompactRating(rating);
+      value.textContent = checking ? "—" : checkFailed ? "Prøv igen" : rating === null || rating === undefined ? "—" : formatCompactRating(rating);
     }
   } else if (button.matches(".desktop-ranking-own-score")) {
     const value = button.querySelector("strong");
     if (value) {
-      value.textContent = checking ? "Tjekker…" : checkFailed ? "Prøv igen" : rating === null || rating === undefined ? "— /10" : `${formatCompactRating(rating)} / 10`;
+      value.textContent = checking ? "— / 10" : checkFailed ? "Prøv igen" : rating === null || rating === undefined ? "— / 10" : `${formatCompactRating(rating)} / 10`;
     }
   } else if (button.matches(".rate-button")) {
     button.classList.toggle("has-user-rating", rating !== null && rating !== undefined);
