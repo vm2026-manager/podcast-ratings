@@ -60,6 +60,7 @@ const checks = [
   ["Mediano episode workspace", ["scripts/test-mediano-episode-workspace-config.mjs"]],
   ["Støt Mediano category routing", ["--experimental-strip-types", "scripts/test-stot-mediano-category-routing.mjs"]],
   ["episode detail DOM stability", ["scripts/test-podcast-detail-episode-load-dom-stability.mjs"]],
+  ["podcast detail rating DOM stability", ["scripts/test-podcast-detail-rating-dom-stability.mjs"]],
   ["episode own-rating lock", ["scripts/test-podcast-detail-own-rating-lock-behavior.mjs"]],
   ["mobile podcast-detail rating alignment", ["scripts/test-mobile-podcast-detail-regressions.mjs"]],
   ["mobile episode workspace layout", ["scripts/test-mobile-episode-workspace-layout.mjs"]],
