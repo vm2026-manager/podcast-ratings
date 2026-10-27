@@ -71,6 +71,7 @@ const checks = [
   ["display-group modal lifecycle", ["scripts/test-display-group-modal-lifecycle.mjs"]],
   ["legacy local episode identity", ["scripts/validate-local-episode-identity.mjs"]],
   ["manual catalogue episode identity", ["scripts/validate-manual-catalogue-episode-migration.mjs"]],
+  ["Bernstein episode identity and local rating safety", ["scripts/test-bernstein-episode-config.mjs"]],
   ["manual episode rating protection", ["--experimental-strip-types", "scripts/test-manual-episode-identity-protection.mjs"]],
   ["archived Supabase migration history provenance", ["scripts/test-supabase-migration-history-archive.mjs"]],
   ["local episode-rating migration data safety", ["scripts/test-local-episode-rating-migration-safety.mjs"]],

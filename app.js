@@ -273,6 +273,20 @@ const MEDIANO_EPISODE_PODCAST_CONFIG = Object.freeze(
 
 const EPISODE_PODCAST_CONFIG = {
   ...MEDIANO_EPISODE_PODCAST_CONFIG,
+  "bernstein cigaretetui": {
+    podcastKey: "bernstein cigaretetui",
+    databasePodcastKey: "bernstein cigaretetui",
+    enabled: true,
+    displayName: "Bernstein cigaretetui",
+    searchPlaceholder: "Søg i Bernstein cigaretetui-episoder",
+    episodeSources: ["sheet_bernstein_cigaretetui_rss"],
+    persistence: "supabase",
+    includeManualEpisodes: true,
+    manualEpisodeCanonicalIds: {
+      "1 cigaret": "9349a75d-d92b-456e-b600-fc76fa5f9d99"
+    },
+    manualEpisodeRatingPersistence: "local"
+  },
   "krop til salg": {
     podcastKey: "krop til salg",
     databasePodcastKey: "krop til salg",
@@ -8665,8 +8679,10 @@ async function saveActiveEpisodeRating() {
     updateRatingDialogMessage("Sæsonen for denne episode kunne ikke bekræftes. Vurderingen blev ikke gemt.", "error");
     return;
   }
+  const episodeConfig = getEpisodePodcastConfig(podcastKey);
   const manualMappingResolved =
     episode?.dataSource !== "manual" ||
+    episodeConfig?.manualEpisodeRatingPersistence === "local" ||
     (await ensureManualCatalogueEpisodeMapping(episode));
   const episodeId = getEpisodeKey(episode) || requestedEpisodeId;
   const config = getEpisodeRatingPersistenceConfig(podcastKey, episode);
@@ -10820,8 +10836,11 @@ function getManualEpisodeEditorialRating(podcast, title) {
 }
 
 function getManualEpisodeCanonicalId(podcast, title) {
+  const podcastId = getPodcastId(podcast);
+  const configuredCanonicalId = EPISODE_PODCAST_CONFIG[podcastId]
+    ?.manualEpisodeCanonicalIds?.[normalizeMatchKey(title)];
   return normalizeText(
-    podcast?.manualEpisodeCanonicalIds?.[normalizeMatchKey(title)]
+    podcast?.manualEpisodeCanonicalIds?.[normalizeMatchKey(title)] || configuredCanonicalId
   );
 }
 
@@ -11042,9 +11061,12 @@ function getEpisodeRatingPersistenceConfig(podcastOrKey, episode) {
   // row has been read. This prevents a partially applied catalogue migration
   // from breaking an otherwise usable legacy catalogue.
   if (episode?.dataSource === "manual") {
+    const config = getEpisodePodcastConfig(podcastOrKey);
     return {
       podcastKey: normalizeText(episode.podcast_key) || getEpisodePodcastKey(podcastOrKey),
-      persistence: state.manualCanonicalEpisodeMappings.has(normalizeText(episode.manual_episode_key))
+      persistence: config?.manualEpisodeRatingPersistence === "local"
+        ? "local"
+        : state.manualCanonicalEpisodeMappings.has(normalizeText(episode.manual_episode_key))
         ? "supabase"
         : "local"
     };
@@ -11439,16 +11461,25 @@ function getEpisodeUserRating(episodeId) {
 function getPodcastEpisodeUserRatingSummary(podcastOrKey) {
   const episodeState = getPodcastEpisodeState(podcastOrKey);
   const config = getEpisodePodcastConfig(podcastOrKey);
-  const ratingsById =
-    state.authUser && episodeState.parentUserRatingsResolvedFor === state.authUser.id
-      ? episodeState.parentUserRatingsById
-      : episodeState.userRatingsById;
   const episodesById = new Map([
     ...(episodeState.items || []),
     ...(episodeState.searchResults || []),
     ...Object.values(state.profileEpisodeRatings?.episodeMetaById || {}),
     ...Object.values(episodeState.parentEpisodesById || {})
   ].map((episode) => [getEpisodeKey(episode), episode]));
+  const parentRatingsResolved = Boolean(
+    state.authUser && episodeState.parentUserRatingsResolvedFor === state.authUser.id
+  );
+  const localManualRatingsById = config?.manualEpisodeRatingPersistence === "local"
+    ? Object.fromEntries(Object.entries(episodeState.userRatingsById).filter(([id]) => {
+        const episode = episodesById.get(id);
+        return episode?.dataSource === "manual" &&
+          !state.manualCanonicalEpisodeMappings.has(normalizeText(episode.manual_episode_key));
+      }))
+    : {};
+  const ratingsById = parentRatingsResolved
+    ? { ...localManualRatingsById, ...episodeState.parentUserRatingsById }
+    : episodeState.userRatingsById;
   const ratings = Object.entries(ratingsById)
     .filter(([id]) => {
       const episode = episodesById.get(id);
@@ -12311,7 +12342,17 @@ async function fetchGenstartEpisodes({ append = false } = {}) {
       ? { ...episode, _displayGroupEpisodeStateKey: config.stateKey }
       : episode);
     const manualEpisodes = getConfiguredManualEpisodes(config);
-    if (manualEpisodes.length) await refreshManualEpisodeRatingData(config.podcastKey, manualEpisodes);
+    if (manualEpisodes.length) {
+      if (config.manualEpisodeRatingPersistence === "local") {
+        const canonicalIds = new Set(Object.values(config.manualEpisodeCanonicalIds || {}).map(normalizeText));
+        hydrateLocalEpisodeRatingState(
+          config.podcastKey,
+          manualEpisodes.filter((episode) => !canonicalIds.has(normalizeText(episode.id)))
+        );
+      } else {
+        await refreshManualEpisodeRatingData(config.podcastKey, manualEpisodes);
+      }
+    }
     const mergedItems = append
       ? mergeEpisodes(episodeState.items, rows)
       : mergeEpisodes(rows, manualEpisodes);
