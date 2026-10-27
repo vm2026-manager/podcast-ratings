@@ -23,7 +23,10 @@ const fetchUserState = extractFunction("fetchUserState");
 const refreshSupabaseState = extractFunction("refreshSupabaseState");
 const preservingRefresh = extractFunction("refreshSupabaseStatePreservingCurrentUserState");
 const inlineSave = extractFunction("savePodcastDetailInlineRating");
+const activeSave = extractFunction("saveActiveRating");
+const activeDelete = extractFunction("deleteActiveRating");
 const detailRenderer = extractFunction("renderPodcastDetailSheetContent");
+const detailRefresh = extractFunction("refreshOpenPodcastDetailSheet");
 
 assert.match(fetchUserState, /async function fetchUserState\(options = \{\}\)/u);
 assert.match(fetchUserState, /const preserveCurrentState = Boolean\(options\.preserveCurrentState\);/u);
@@ -31,6 +34,12 @@ assert.match(fetchUserState, /if \(!preserveCurrentState\) \{\s*clearUserScopedS
 assert.match(refreshSupabaseState, /fetchUserState\(\)/u);
 assert.match(preservingRefresh, /fetchUserState\(\{ preserveCurrentState: true \}\)/u);
 assert.match(inlineSave, /refreshSupabaseStatePreservingCurrentUserState\(\)\s*\.then\(refreshOpenPodcastDetailSheet\)/u);
+assert.match(activeSave, /refreshSupabaseState\(\)\s*\.then\(refreshOpenPodcastDetailSheet\)/u);
+assert.match(activeDelete, /refreshSupabaseState\(\)\.catch/u);
+assert.match(detailRefresh, /updatePodcastDetailRatingSummary\(dialog, podcast\)/u);
+assert.doesNotMatch(detailRefresh, /renderPodcastDetailSheetContent\(dialog, podcast\)/u, "rating refresh never rebuilds standard detail content");
+assert.doesNotMatch(detailRefresh, /renderPodcastDisplayGroupContent\(dialog, podcast\)/u, "rating refresh never rebuilds a display group");
+assert.doesNotMatch(detailRefresh, /renderPodcastDisplayGroupSeasonWorkspace\(dialog, podcast\)/u, "rating refresh never rebuilds the season list");
 assert.doesNotMatch(inlineSave, /Indlæser episodevurderinger/u, "podcast saves never own episode-loading copy");
 assert.match(detailRenderer, /rating\.userCount\s*\?\s*formatUserRatingCount\(rating\.userCount\)\s*:\s*state\.communityStatsStatus === "loading" && !state\.communityStatsHasSuccessfulLoad\s*\?\s*"Indlæser brugervurderinger …"\s*:\s*"Ingen vurderinger endnu"/u);
 

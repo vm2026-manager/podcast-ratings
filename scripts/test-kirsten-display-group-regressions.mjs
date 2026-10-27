@@ -69,13 +69,13 @@ assert.ok(recommendationSources.every((member) => !member.isDisplayGroupSeason))
 
 const sharedMetadata = metadataRuntime;
 const render = new Function(
-  "state", "getDisplayGroupSeasonNumber", "parseNumber", "getDisplayGroupOwnRatingStats", "getDisplayGroupSharedMetadata", "getDisplayGroupSimilarityMarkup", "escapeHtml", "getPodcastAccessIndicatorMarkup", "isValidPodcastLink", "setPodcastDetailPlacementControl", "getPodcastKey", "setImage", "getPodcastImageSources", "hydratePodcastSimilarityProduct", "bindPodcastDetailFilterButtons", "renderFavoriteButton", "handleFavoriteToggle", "isMobileViewport", "formatCompactRating", "formatUserRatingCount", "getUserRating", "getCommunityStat", "hasCommunityRating",
+  "state", "getDisplayGroupSeasonNumber", "parseNumber", "getDisplayGroupOwnRatingStats", "getDisplayGroupSharedMetadata", "getDisplayGroupSimilarityMarkup", "escapeHtml", "getPodcastAccessIndicatorMarkup", "isValidPodcastLink", "setPodcastDetailPlacementControl", "getPodcastKey", "setImage", "getPodcastImageSources", "hydratePodcastSimilarityProduct", "bindPodcastDetailFilterButtons", "renderFavoriteButton", "handleFavoriteToggle", "isMobileViewport", "formatCompactRating", "formatUserRatingCount", "getUserRating", "getCommunityStat", "hasCommunityRating", "getPodcastDisplayGroupOwnRatingMarkup", "bindPodcastDisplayGroupRatingLock",
   `${extract("renderPodcastDisplayGroupContent")}; return renderPodcastDisplayGroupContent;`
 )({ podcastDetailView: "", activePodcastDetailKey: "", podcastDetailRecommendationCache: new Map() }, () => 4, () => null,
   () => ({ average: null, count: 0 }), sharedMetadata, () => "", String,
   (podcast, options) => podcast.accessType === "paid" && options.detail ? "<span class=\"podcast-access-detail\">Kræver abonnement</span>" : "", (url) => url.startsWith("https://"),
   () => {}, (podcast) => podcast.key, () => {}, () => "", () => {}, () => {}, () => {}, () => {}, () => false,
-  String, String, () => null, () => null, () => false);
+  String, String, () => null, () => null, () => false, (own) => own.count ? `<strong>${own.average}</strong>` : "<strong>—</strong>", () => {});
 let markup = "";
 const content = { classList: { add() {}, remove() {} }, querySelector: () => null, querySelectorAll: () => [], set innerHTML(value) { markup = value; } };
 const dialog = { querySelector: (selector) => selector === "[data-podcast-detail-content]" ? content : { replaceChildren() {} }, classList: { remove() {} } };
