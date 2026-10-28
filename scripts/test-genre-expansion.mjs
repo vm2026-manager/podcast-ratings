@@ -77,6 +77,24 @@ updateUrl("");
 assert.equal(new URL(urlContext.window.history.url).searchParams.has("s"), false);
 assert.equal(new URL(urlContext.window.history.url).searchParams.get("existing"), "1");
 
+let pageShowState = { restored: true, clearCalls: 0, routeCalls: 0, renderCalls: 0 };
+const pageShowContext = {
+  restoreRankingSearchFromUrl: () => pageShowState.restored,
+  renderRoute: () => { pageShowState.routeCalls += 1; },
+  render: () => { pageShowState.renderCalls += 1; },
+  clearSearchInput: () => { pageShowState.clearCalls += 1; }
+};
+const handlePageShow = evaluate("restoreOrClearRankingSearchOnPageShow", pageShowContext);
+assert.equal(handlePageShow(), true);
+assert.equal(pageShowState.clearCalls, 0);
+assert.equal(pageShowState.routeCalls, 1);
+assert.equal(pageShowState.renderCalls, 1);
+pageShowState = { restored: false, clearCalls: 0, routeCalls: 0, renderCalls: 0 };
+assert.equal(handlePageShow(), false);
+assert.equal(pageShowState.clearCalls, 1);
+assert.equal(pageShowState.routeCalls, 0);
+assert.equal(pageShowState.renderCalls, 0);
+
 const oldSheetRow = await slimPodcastRows([{ Titel: "Ældre ark", Genre: "Krig", "2. genre": "Politik" }]);
 assert.equal(oldSheetRow[0].secondaryGenre, "Politik");
 assert.equal(Object.hasOwn(oldSheetRow[0], "tertiaryGenre"), false);
