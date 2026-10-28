@@ -17,7 +17,7 @@ function extract(name) {
 const seasonRatings = [8, 8.2, 8.2, 6.9, 6.9, 6.5];
 const members = Array.from({ length: 12 }, (_, index) => ({
   key: `narko-${index + 1}`, legacyKey: `narko-${index + 1}`,
-  title: `Narkobetjenten sæson ${index + 1}`, ratingValue: 7.4, image: index === 0 ? "cover" : ""
+  title: `Narkobetjenten sæson ${index + 1}`, ratingValue: 7.4, image: index === 0 ? "cover" : "", genre: "True Crime"
 }));
 const group = { id: "narkobetjenten", title: "Narkobetjenten", rankingEnabled: true,
   representativeMemberLegacyKey: "narko-1", memberLegacyKeys: members.map((member) => member.legacyKey) };
@@ -26,6 +26,8 @@ const ownRatings = Object.fromEntries(members.slice(0, 6).map((member, index) =>
 
 const runtime = new Function("state", "ownRatings", `
   const normalizeText = (value) => String(value ?? "").trim().toLowerCase();
+  const normalizeComparable = (value) => String(value ?? "").toLowerCase().normalize('NFD').replace(/[\\u0300-\\u036f]/gu, '').replace(/\\s+/gu, ' ').trim();
+  const CANONICAL_GENRES = ["True Crime", "Historie", "Krig", "Politik", "Finans", "Samfund", "Sport", "Dokumentar", "Viden", "Underholdning"];
   const normalizeMatchKey = normalizeText;
   const parseNumber = (value) => value === null || value === undefined || value === '' ? null : (Number.isFinite(Number(value)) ? Number(value) : null);
   const getLegacyPodcastKey = (podcast) => podcast.legacyKey;
@@ -39,6 +41,9 @@ const runtime = new Function("state", "ownRatings", `
   const isValidPodcastLink = (value) => typeof value === 'string' && value.startsWith('https://');
   const getDisplayGroupSeasonNumber = (podcast) => Number(podcast.key.split('-').at(-1));
   const getDisplayGroupSharedMetadata = () => ({});
+  ${extract("getPodcastDetailGenres")}
+  ${extract("getSharedDisplayGroupGenres")}
+  ${extract("renderPodcastGenreTags")}
   const getDisplayGroupSimilarityMarkup = () => '<div data-related>related</div>';
   const getPodcastAccessIndicatorMarkup = () => '';
   const setPodcastDetailPlacementControl = () => {};
@@ -91,6 +96,8 @@ assert.match(markup, /podcast-detail-sheet__episode-rating-lock-help[\s\S]*bereg
 assert.match(markup, /podcast-detail-sheet__episode-rating-mobile-help[\s\S]*data-podcast-detail-season-rating-mobile-help[\s\S]*beregnes automatisk ud fra dine sæsonvurderinger/u);
 assert.doesNotMatch(markup, /data-podcast-detail-inline-rating-save/u);
 assert.match(markup, /Vurder sæsoner/u);
+assert.equal([...markup.matchAll(/class="podcast-detail-sheet__genre"/gu)].length, 1);
+assert.match(markup, /data-value="True Crime"/u);
 
 function classList() {
   const values = new Set();

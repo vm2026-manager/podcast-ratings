@@ -47,12 +47,14 @@ const GENRES = [
   "Alle",
   "True Crime",
   "Historie",
+  "Krig",
+  "Politik",
+  "Finans",
   "Samfund",
   "Sport",
   "Dokumentar",
   "Viden",
-  "Underholdning",
-  "Sladder"
+  "Underholdning"
 ];
 const CANONICAL_GENRES = Object.freeze([
   "True Crime",
@@ -66,7 +68,11 @@ const CANONICAL_GENRES = Object.freeze([
   "Viden",
   "Underholdning"
 ]);
-const HOME_GENRES = GENRES.filter((genre) => genre !== "Alle");
+// Keep the established home-page genre sections stable. The ranking and Explore
+// filters use the canonical list above; Sladder remains discoverable via search.
+const HOME_GENRES = [
+  "True Crime", "Historie", "Samfund", "Sport", "Dokumentar", "Viden", "Underholdning", "Sladder"
+];
 
 const FEATURED_ROTATION_MS = 8000;
 const INITIAL_VISIBLE_COUNT = 24;
@@ -2376,6 +2382,38 @@ function normalizeGenre(value) {
   }
 
   return "Dokumentar";
+}
+
+function getPodcastDetailGenres(podcast) {
+  const genres = [];
+  const seen = new Set();
+  [podcast?.genre, podcast?.secondaryGenre, podcast?.tertiaryGenre].forEach((value) => {
+    const raw = normalizeComparable(value);
+    const genre = CANONICAL_GENRES.find((candidate) => normalizeComparable(candidate) === raw) || "";
+    const key = normalizeComparable(genre);
+    if (!genre || !CANONICAL_GENRES.includes(genre) || seen.has(key)) return;
+    seen.add(key);
+    genres.push(genre);
+  });
+  return genres;
+}
+
+function getSharedDisplayGroupGenres(members) {
+  const catalogueMembers = (members || []).filter((member) => !member?.isDisplayGroupSeason);
+  const metadataMembers = catalogueMembers.length ? catalogueMembers : (members || []);
+  if (!metadataMembers.length) return [];
+  const memberGenres = metadataMembers.map((member) => new Set(getPodcastDetailGenres(member).map(normalizeComparable)));
+  return getPodcastDetailGenres(metadataMembers[0]).filter((genre) =>
+    memberGenres.every((genres) => genres.has(normalizeComparable(genre)))
+  );
+}
+
+function renderPodcastGenreTags(genres) {
+  return (genres || []).map((genre) => `<button class="podcast-detail-sheet__genre" type="button" data-podcast-detail-filter="genre" data-genre="${escapeHtml(
+    genre
+  )}" data-value="${escapeHtml(genre)}" aria-label="Filtrér Ranglister efter genren ${escapeHtml(genre)}">${escapeHtml(
+    genre
+  )}</button>`).join("");
 }
 
 function podcastHasGenre(podcast, genre) {
@@ -13890,6 +13928,7 @@ function renderPodcastDisplayGroupContent(dialog, displayGroup) {
   content.classList.remove("podcast-detail-sheet__content--episodes", "podcast-detail-sheet__content--episode-overview");
   content.classList.add("podcast-detail-sheet__content--display-group");
   const members = [...(displayGroup.displayGroupMembers || [])].sort((a, b) => getDisplayGroupSeasonNumber(a) - getDisplayGroupSeasonNumber(b));
+  const sharedGenreMarkup = renderPodcastGenreTags(getSharedDisplayGroupGenres(members));
   const editorialCount = members.filter((podcast) => parseNumber(podcast.ratingValue) !== null).length;
   const userCount = Number(displayGroup.userRatingCount || 0);
   const own = getDisplayGroupOwnRatingStats(members);
@@ -13906,7 +13945,7 @@ function renderPodcastDisplayGroupContent(dialog, displayGroup) {
   content.innerHTML = `
     <header class="podcast-detail-sheet__header">
       <div class="podcast-detail-sheet__cover"><img class="podcast-detail-sheet__image" alt="" loading="lazy" /></div>
-      <div class="podcast-detail-sheet__intro"><div class="podcast-detail-sheet__intro-actions"><span class="podcast-detail-sheet__header-action-icons"><button class="favorite-button podcast-detail-sheet__header-favorite" type="button" data-podcast-detail-favorite aria-label="Gem til senere" title="Gem til senere" data-tooltip="Gem til senere"><span aria-hidden="true"></span></button>${externalLinkMarkup}</span></div><h2 id="podcastDetailTitle">${escapeHtml(displayGroup.title)}</h2>${getPodcastAccessIndicatorMarkup(displayGroup, { detail: true })}<p class="podcast-detail-sheet__meta">${escapeHtml(metadata.host || metadata.publisher || `${members.length} sæsoner`)}</p><div class="podcast-detail-sheet__chips"><span class="podcast-detail-sheet__episode-entry"><button class="podcast-detail-sheet__episode-entry-button" type="button" data-podcast-seasons-open aria-describedby="podcastSeasonEntryTooltip"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="3" width="14" height="18" rx="2"></rect><path d="M9 8h6M9 12h6M9 16h4"></path></svg><span>Vurder sæsoner</span></button><span class="podcast-detail-sheet__episode-entry-tooltip" id="podcastSeasonEntryTooltip" role="tooltip">Se alle sæsoner og bedøm dem én for én.</span></span>${metadata.genre ? `<button class="podcast-detail-sheet__genre" type="button" data-podcast-detail-filter="genre" data-value="${escapeHtml(metadata.genre)}">${escapeHtml(metadata.genre)}</button>` : ""}${metadata.publisher ? `<button class="podcast-detail-sheet__chip podcast-detail-sheet__publisher" type="button" data-podcast-detail-filter="publisher" data-value="${escapeHtml(metadata.publisher)}">${escapeHtml(metadata.publisher)}</button>` : ""}</div><section class="podcast-detail-sheet__description podcast-detail-sheet__description--desktop"><h3>Om podcasten</h3><p>${escapeHtml(description)}</p></section></div>
+      <div class="podcast-detail-sheet__intro"><div class="podcast-detail-sheet__intro-actions"><span class="podcast-detail-sheet__header-action-icons"><button class="favorite-button podcast-detail-sheet__header-favorite" type="button" data-podcast-detail-favorite aria-label="Gem til senere" title="Gem til senere" data-tooltip="Gem til senere"><span aria-hidden="true"></span></button>${externalLinkMarkup}</span></div><h2 id="podcastDetailTitle">${escapeHtml(displayGroup.title)}</h2>${getPodcastAccessIndicatorMarkup(displayGroup, { detail: true })}<p class="podcast-detail-sheet__meta">${escapeHtml(metadata.host || metadata.publisher || `${members.length} sæsoner`)}</p><div class="podcast-detail-sheet__chips"><span class="podcast-detail-sheet__episode-entry"><button class="podcast-detail-sheet__episode-entry-button" type="button" data-podcast-seasons-open aria-describedby="podcastSeasonEntryTooltip"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="3" width="14" height="18" rx="2"></rect><path d="M9 8h6M9 12h6M9 16h4"></path></svg><span>Vurder sæsoner</span></button><span class="podcast-detail-sheet__episode-entry-tooltip" id="podcastSeasonEntryTooltip" role="tooltip">Se alle sæsoner og bedøm dem én for én.</span></span>${sharedGenreMarkup}${metadata.publisher ? `<button class="podcast-detail-sheet__chip podcast-detail-sheet__publisher" type="button" data-podcast-detail-filter="publisher" data-value="${escapeHtml(metadata.publisher)}">${escapeHtml(metadata.publisher)}</button>` : ""}</div><section class="podcast-detail-sheet__description podcast-detail-sheet__description--desktop"><h3>Om podcasten</h3><p>${escapeHtml(description)}</p></section></div>
       <section class="podcast-detail-sheet__description podcast-detail-sheet__description--mobile"><h3>Om podcasten</h3><p data-podcast-detail-description>${escapeHtml(description)}</p><button class="podcast-detail-sheet__description-toggle" type="button" data-podcast-detail-description-toggle aria-expanded="false">Læs mere</button></section>
     </header>
     <section class="podcast-detail-sheet__ratings" aria-label="Vurderinger">
@@ -14480,18 +14519,9 @@ function renderPodcastDetailSheetContent(
     detailChipValues.add(key);
     return true;
   };
-  const genreMarkup =
-    podcast.genre && shouldShowDetailChip(podcast.genre)
-      ? `<button class="podcast-detail-sheet__genre" type="button" data-podcast-detail-filter="genre" data-genre="${escapeHtml(
-          podcast.genre
-        )}" data-value="${escapeHtml(podcast.genre)}">${escapeHtml(podcast.genre)}</button>`
-      : "";
-  const mainSeriesMarkup =
-    podcast.mainSeries && shouldShowDetailChip(podcast.mainSeries)
-      ? `<button class="podcast-detail-sheet__chip" type="button" data-podcast-detail-filter="mainSeries" data-value="${escapeHtml(
-          podcast.mainSeries
-        )}" aria-label="Filtrér Ranglister efter hovedserien ${escapeHtml(podcast.mainSeries)}">${escapeHtml(podcast.mainSeries)}</button>`
-      : "";
+  const genreMarkup = renderPodcastGenreTags(
+    getPodcastDetailGenres(podcast).filter((genre) => shouldShowDetailChip(genre))
+  );
   const publisherMarkup =
     publisherLabel && shouldShowDetailChip(publisherLabel)
       ? `<button class="podcast-detail-sheet__chip podcast-detail-sheet__publisher" type="button" data-podcast-detail-filter="publisher" data-value="${escapeHtml(
@@ -14499,6 +14529,12 @@ function renderPodcastDetailSheetContent(
         )}" aria-label="Vis podcasts fra ${escapeHtml(publisherLabel)}">${escapeHtml(
           publisherLabel
         )}</button>`
+      : "";
+  const mainSeriesMarkup =
+    podcast.mainSeries && shouldShowDetailChip(podcast.mainSeries)
+      ? `<button class="podcast-detail-sheet__chip" type="button" data-podcast-detail-filter="mainSeries" data-value="${escapeHtml(
+          podcast.mainSeries
+        )}" aria-label="Filtrér Ranglister efter hovedserien ${escapeHtml(podcast.mainSeries)}">${escapeHtml(podcast.mainSeries)}</button>`
       : "";
   const userCountText = rating.userCount
     ? formatUserRatingCount(rating.userCount)

@@ -48,6 +48,7 @@ const checks = [
   ["full ranking retains sequential positions and verified movement markers", ["scripts/test-ranking-full-list.mjs"]],
   ["mobile ranking movement badge geometry and scroll shortcut", ["scripts/test-mobile-ranking-movement-ux.mjs"]],
   ["desktop ranking rank grid geometry in Chromium", ["scripts/test-desktop-ranking-column.mjs"]],
+  ["genre phase 2 UI, detail tags, topic search and responsive layouts", ["scripts/test-genre-phase2.mjs"]],
   ["community ranking load safety", ["scripts/test-community-ranking-load-safety.mjs"]],
   ["ranking episode-derived own-rating lock", ["scripts/test-ranking-episode-rating-lock.mjs"]],
   ["mobile home search stays open during data refresh", ["scripts/test-mobile-home-search-overlay-lifecycle.mjs"]],
