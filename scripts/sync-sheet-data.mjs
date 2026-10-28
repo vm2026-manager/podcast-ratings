@@ -82,6 +82,15 @@ const TERTIARY_GENRE_FIELDS = ["3. genre"];
 const TOPIC_FIELDS = ["Emner"];
 const MANUAL_EPISODES_FIELDS = ["Episoder", "Manual episodes", "ManualEpisodes"];
 const MANUAL_EPISODE_KEYS_FIELDS = ["Manual episode keys", "ManualEpisodeKeys"];
+const MISROUTED_JOACHIM_PODCAST_ID = "superzoom";
+const JOACHIM_PODCAST_ID = "joachim b olsen";
+const MISROUTED_JOACHIM_EPISODES = Object.freeze([
+  "Kapitel 1: Fodret som en foie gras-gås - Joachim B. Olsen",
+  "Kapitel 2: Smidt hjem fra OL - Joachim B. Olsen",
+  "Kapitel 3: Er du ikke ham Joachim Boldsen? - Joachim B. Olsen",
+  "Kapitel 4: En grinagtig spidskandidat - Joachim B. Olsen",
+  "Kapitel 5: Hovedet oppe i egen røv - Joachim B. Olsen"
+]);
 const ENGLISH_FIELDS = ["Engelsk"];
 const SUPPLEMENTARY_SIMILARITIES_HEADER = "Supplerende ligheder";
 const SUPPLEMENTARY_SIMILARITIES_COLUMN_INDEX = 19;
@@ -656,6 +665,67 @@ function filterFeaturedRows(rows) {
   );
 }
 
+function repairMisroutedJoachimEpisodes(podcasts) {
+  const episodeOrder = new Map(MISROUTED_JOACHIM_EPISODES.map((title, index) => [title, index]));
+  const sourceRows = podcasts.filter((podcast) =>
+    normalizeText(podcast["Podcast-ID"]) === MISROUTED_JOACHIM_PODCAST_ID
+  );
+  if (sourceRows.length !== 1) return;
+
+  const source = sourceRows[0];
+  const sourceEpisodes = Array.isArray(source.manualEpisodes) ? source.manualEpisodes : [];
+  const misplacedEpisodes = sourceEpisodes.filter((entry) =>
+    episodeOrder.has(normalizeText(typeof entry === "object" ? entry?.title : entry))
+  );
+
+  // This fallback exists only while Ark1 still has the known misplacement.
+  // Once the Sheet is corrected, it is a no-op and never overrides that source.
+  if (!misplacedEpisodes.length) return;
+
+  const destinationRows = podcasts.filter((podcast) =>
+    normalizeText(podcast["Podcast-ID"]) === JOACHIM_PODCAST_ID
+  );
+  if (destinationRows.length !== 1) {
+    throw new Error("Joachim B. Olsen episode correction requires exactly one destination Podcast-ID.");
+  }
+
+  const destination = destinationRows[0];
+  const destinationEpisodes = Array.isArray(destination.manualEpisodes) ? destination.manualEpisodes : [];
+  const chosenEntries = new Map();
+  for (const entry of destinationEpisodes) {
+    const title = normalizeText(typeof entry === "object" ? entry?.title : entry);
+    if (episodeOrder.has(title) && !chosenEntries.has(title)) chosenEntries.set(title, entry);
+  }
+  for (const entry of misplacedEpisodes) {
+    const title = normalizeText(typeof entry === "object" ? entry?.title : entry);
+    if (!chosenEntries.has(title)) chosenEntries.set(title, entry);
+  }
+
+  const firstExistingIndex = destinationEpisodes.findIndex((entry) =>
+    episodeOrder.has(normalizeText(typeof entry === "object" ? entry?.title : entry))
+  );
+  const unrelatedEpisodes = destinationEpisodes.filter((entry) =>
+    !episodeOrder.has(normalizeText(typeof entry === "object" ? entry?.title : entry))
+  );
+  const insertionIndex = firstExistingIndex < 0
+    ? unrelatedEpisodes.length
+    : destinationEpisodes.slice(0, firstExistingIndex).filter((entry) =>
+        !episodeOrder.has(normalizeText(typeof entry === "object" ? entry?.title : entry))
+      ).length;
+  const orderedEpisodes = MISROUTED_JOACHIM_EPISODES.map((title) => chosenEntries.get(title) || title);
+  destination.manualEpisodes = [
+    ...unrelatedEpisodes.slice(0, insertionIndex),
+    ...orderedEpisodes,
+    ...unrelatedEpisodes.slice(insertionIndex)
+  ];
+
+  const remainingSourceEpisodes = sourceEpisodes.filter((entry) =>
+    !episodeOrder.has(normalizeText(typeof entry === "object" ? entry?.title : entry))
+  );
+  if (remainingSourceEpisodes.length) source.manualEpisodes = remainingSourceEpisodes;
+  else delete source.manualEpisodes;
+}
+
 async function slimPodcastRows(rows, outputDirectory = "") {
   const slimRows = [];
 
@@ -699,6 +769,8 @@ async function slimPodcastRows(rows, outputDirectory = "") {
     }
     slimRows.push(podcast);
   }
+
+  repairMisroutedJoachimEpisodes(slimRows);
 
   return slimRows;
 }
