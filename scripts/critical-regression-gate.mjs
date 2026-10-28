@@ -23,6 +23,7 @@ const checks = [
   ["DR staging workflow trust boundary", ["scripts/test-dr-sheet-workflow.mjs"]],
   ["DR detail recommendation content priority", ["scripts/test-issue-251-recommendations.mjs"]],
   ["catalogue sheet fixture and staged asset isolation", ["scripts/test-catalogue-sync-fixtures.mjs"]],
+  ["Joachim B. Olsen manual episode routing and Sheet-source idempotency", ["scripts/test-joachim-manual-episode-routing.mjs"]],
   ["Google Sheet source drift watcher", ["scripts/test-sheet-source-drift.mjs"]],
   ["catalogue pipeline freshness and stuck PR checks", ["scripts/test-catalogue-pipeline-watch.mjs"]],
   ["production catalogue health", ["scripts/test-production-catalogue-health.mjs"]],

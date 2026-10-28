@@ -163,6 +163,50 @@ function makeRepository(existingRows) {
   assert.equal(repository.metadataUpdates[0].current.id, placeholder.id);
 }
 
+{
+  const inactiveManualEpisodes = [
+    ["fc01e07d-2670-5250-a21d-413f796dcc1a", "Kapitel 1: Fodret som en foie gras-gås - Joachim B. Olsen"],
+    ["7c8b56f4-40e5-5431-9627-51265affa40b", "Kapitel 2: Smidt hjem fra OL - Joachim B. Olsen"],
+    ["68afd680-4df2-5301-94a0-e8e21c60406b", "Kapitel 3: Er du ikke ham Joachim Boldsen? - Joachim B. Olsen"],
+    ["0bd4de7f-3f97-59dc-8076-6f59e7287dae", "Kapitel 4: En grinagtig spidskandidat - Joachim B. Olsen"],
+    ["fa071632-b914-51cb-8365-a79424a904dd", "Kapitel 5: Hovedet oppe i egen røv - Joachim B. Olsen"]
+  ].map(([id, title]) => ({
+    id,
+    podcast_key: "superzoom",
+    source: "manual_catalogue_v1",
+    external_guid: `manual_catalogue_v1:${id}`,
+    external_episode_id: `manual-catalogue-v1:${id}`,
+    title,
+    is_active: false,
+    metadata: { manual_catalogue: true, manual_catalogue_identity: true, rateable: false }
+  }));
+  const feedXml = `<?xml version="1.0" encoding="UTF-8"?><rss><channel>${inactiveManualEpisodes.map((episode, index) => `
+    <item><guid>joachim-feed-${index + 1}</guid><title>${episode.title}</title><description>Episode description</description>
+    <pubDate>Wed, 16 Sep 2026 05:00:00 +0200</pubDate><enclosure url="https://example.test/joachim-${index + 1}.mp3" type="audio/mpeg"/></item>`).join("")}
+  </channel></rss>`;
+  const repository = makeRepository(inactiveManualEpisodes);
+  const summary = await runEpisodeImport({
+    feedKey: "inactive_joachim_test",
+    feedConfigs: {
+      inactive_joachim_test: {
+        podcast_key: "superzoom",
+        source: "sheet_test_rss",
+        feed_url: "https://example.test/joachim.xml"
+      }
+    },
+    repository,
+    fetchText: async () => feedXml,
+    now: () => "2026-10-28T09:00:00.000Z"
+  });
+
+  assert.equal(summary.status, "success");
+  assert.equal(repository.metadataUpdates.length, 0, "inactive manual UUIDs must never be enriched/reactivated");
+  for (const episode of inactiveManualEpisodes) {
+    assert.equal(episode.is_active, false, `${episode.id} must remain inactive`);
+    assert.ok(repository.writes.every((row) => row.id !== episode.id), `${episode.id} must not be rewritten`);
+  }
+}
+
 const migration = await readFile("supabase/migrations/20261008112000_protect_manual_episode_identities.sql", "utf8");
 assert.match(migration, /ensure_manual_catalogue_episode/);
 assert.match(migration, /podcast_episodes_protect_identity/);
