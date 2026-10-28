@@ -19347,3 +19347,9 @@ html body:has(#profileListDialog.profile-list-dialog--ratings) #ratingDialog:not
     max-width: 1680px;
   }
 }
+
+@media (min-width: 1101px) {
+  html body.page-forside #pageIntroPanel .home-featured__indicators .home-featured__indicator {
+    pointer-events: auto;
+  }
+}
