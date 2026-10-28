@@ -54,6 +54,18 @@ const GENRES = [
   "Underholdning",
   "Sladder"
 ];
+const CANONICAL_GENRES = Object.freeze([
+  "True Crime",
+  "Historie",
+  "Krig",
+  "Politik",
+  "Finans",
+  "Samfund",
+  "Sport",
+  "Dokumentar",
+  "Viden",
+  "Underholdning"
+]);
 const HOME_GENRES = GENRES.filter((genre) => genre !== "Alle");
 
 const FEATURED_ROTATION_MS = 8000;
@@ -2292,7 +2304,15 @@ function formatFeaturedDate(value) {
 function normalizeGenre(value) {
   const raw = normalizeComparable(value);
 
-  if (!raw) return "Dokumentar";
+  if (!raw) return "";
+
+  const canonical = CANONICAL_GENRES.find((genre) => normalizeComparable(genre) === raw);
+  if (canonical) return canonical;
+
+  // Keep the retired label available for old catalogue data and search.
+  if (raw === "sladder" || raw === "gossip") return "Sladder";
+  // Legacy labels remain unresolved until their individual review is approved.
+  if (["økonomi", "oekonomi", "aktier"].includes(raw)) return "";
 
   if (
     raw.includes("true") ||
@@ -2305,7 +2325,7 @@ function normalizeGenre(value) {
     return "True Crime";
   }
 
-  if (raw.includes("historie") || raw.includes("historisk") || raw.includes("krig")) {
+  if (raw.includes("historie") || raw.includes("historisk")) {
     return "Historie";
   }
 
@@ -2328,13 +2348,8 @@ function normalizeGenre(value) {
     return "Viden";
   }
 
-  if (raw.includes("sladder") || raw.includes("gossip")) {
-    return "Sladder";
-  }
-
   if (
     raw.includes("samfund") ||
-    raw.includes("politik") ||
     raw.includes("nyhed") ||
     raw.includes("debat") ||
     raw.includes("aktualitet") ||
@@ -2361,6 +2376,36 @@ function normalizeGenre(value) {
   }
 
   return "Dokumentar";
+}
+
+function podcastHasGenre(podcast, genre) {
+  const target = normalizeComparable(genre);
+  const genres = [
+    podcast?.genre,
+    podcast?.secondaryGenre,
+    podcast?.tertiaryGenre,
+    ...(podcast?.searchGenres || [])
+  ];
+  return Boolean(target) && genres.some((candidate) => normalizeComparable(candidate) === target);
+}
+
+function matchesPodcastTopicSearch(podcast, searchTerm) {
+  const queryParts = normalizeComparable(searchTerm).split(" ").filter(Boolean);
+  return queryParts.length > 0 &&
+    podcast?.searchTopics?.some((topic) => {
+      const topicWords = normalizeComparable(topic).split(" ").filter(Boolean);
+      return queryParts.every((part) => topicWords.includes(part));
+    });
+}
+
+function deduplicatePodcastResults(podcasts) {
+  const seen = new Set();
+  return podcasts.filter((podcast) => {
+    const key = getPodcastKey(podcast);
+    if (!key || seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
 }
 
 function normalizePublisher(value) {
@@ -3025,7 +3070,8 @@ function mapPodcast(row, index) {
     "Score"
   ]);
   const rawGenre = getField(row, ["Genre"]);
-  const rawSecondaryGenre = getField(row, ["secondaryGenre", "Secondary genre", "Sekundærgenre"]);
+  const rawSecondaryGenre = getField(row, ["secondaryGenre", "2. genre", "Secondary genre", "Sekundærgenre"]);
+  const rawTertiaryGenre = getField(row, ["tertiaryGenre", "3. genre", "Tertiary genre"]);
   const rawPublisher = getField(row, ["Udgiver", "Publisher"]);
   const isEnglish = normalizeEnglishFlag(
     row?.isEnglish ?? getField(row, ["Engelsk"])
@@ -3130,6 +3176,7 @@ function mapPodcast(row, index) {
 
   const genre = normalizeGenre(rawGenre);
   const secondaryGenre = normalizeGenre(rawSecondaryGenre);
+  const tertiaryGenre = normalizeGenre(rawTertiaryGenre);
   const publisher = normalizePublisher(rawPublisher);
   const catalogueId =
     normalizeText(getField(row, ["catalogue_id", "Catalogue ID"])) ||
@@ -3147,7 +3194,10 @@ function mapPodcast(row, index) {
     ratingLabel: formatRating(rawRating),
     rawGenre,
     genre,
+    rawSecondaryGenre,
     secondaryGenre,
+    rawTertiaryGenre,
+    tertiaryGenre,
     topics,
     rawPublisher,
     publisher,
@@ -3197,6 +3247,10 @@ function mapPodcast(row, index) {
       host,
       rawGenre,
       genre,
+      rawSecondaryGenre,
+      secondaryGenre,
+      rawTertiaryGenre,
+      tertiaryGenre,
       rawPublisher,
       publisher,
       mainSeries,
@@ -3209,7 +3263,8 @@ function mapPodcast(row, index) {
       shortDescription,
       longDescription,
       rawUnderratedPearl
-    ])
+    ]),
+    searchTopics: topics
   };
 }
 
@@ -3624,10 +3679,11 @@ function scheduleAutoExpandPodcastGrid(filteredCount, visibleCount) {
   cancelAutoExpandPodcastGrid();
 }
 
-function clearSearchInput({ rerender = false } = {}) {
+function clearSearchInput({ rerender = false, updateUrl = true } = {}) {
   if (!elements.searchInput) return;
 
   elements.searchInput.value = "";
+  if (updateUrl) updateRankingSearchUrl("");
   updateSearchClearButton();
 
   if (state.searchTerm) {
@@ -3638,6 +3694,34 @@ function clearSearchInput({ rerender = false } = {}) {
       render();
     }
   }
+}
+
+function updateRankingSearchUrl(value) {
+  const url = new URL(window.location.href);
+  const searchTerm = normalizeText(value);
+  const routeChanged = Boolean(searchTerm) && getRouteInfoFromHash().route !== "ranglister";
+  if (searchTerm) {
+    url.searchParams.set("s", searchTerm);
+    if (routeChanged) url.hash = "#ranglister";
+  } else {
+    url.searchParams.delete("s");
+  }
+  window.history.replaceState(window.history.state, "", url);
+  return routeChanged;
+}
+
+function restoreRankingSearchFromUrl() {
+  const searchTerm = new URLSearchParams(window.location.search).get("s")?.trim();
+  if (!searchTerm || !elements.searchInput) return false;
+  state.searchTerm = searchTerm;
+  elements.searchInput.value = searchTerm;
+  updateSearchClearButton();
+  if (getRouteInfoFromHash().route !== "ranglister") {
+    const url = new URL(window.location.href);
+    url.hash = "#ranglister";
+    window.history.replaceState(window.history.state, "", url);
+  }
+  return true;
 }
 
 function enableSearchInput() {
@@ -4374,6 +4458,14 @@ function createRankingDisplayGroup(group) {
     ratingValue: averageNumbers(editorialRatings),
     userAverageRating: userStats.averageRating,
     userRatingCount: userStats.ratingCount,
+    searchGenres: [
+      ...new Set(
+        members
+          .flatMap((podcast) => [podcast.genre, podcast.secondaryGenre, podcast.tertiaryGenre])
+          .filter(Boolean)
+      )
+    ],
+    searchTopics: [...new Set(members.flatMap((podcast) => podcast.searchTopics || []))],
     searchText: buildSearchText([group.title, ...members.map((podcast) => podcast.title)])
   };
 }
@@ -4419,7 +4511,7 @@ function getFilteredPodcasts() {
   const cached = state.rankingListCache.get(cacheKey);
   if (cached) return cached;
 
-  const filtered = getRankingCandidates()
+  const filtered = deduplicatePodcastResults(getRankingCandidates()
     .filter((podcast) => {
       if (
         state.activePublisherFilter &&
@@ -4444,7 +4536,7 @@ function getFilteredPodcasts() {
 
       if (
         state.activeFilter?.type === "genre" &&
-        normalizeComparable(podcast.genre) !== normalizeComparable(state.activeFilter.value)
+        !podcastHasGenre(podcast, state.activeFilter.value)
       ) {
         return false;
       }
@@ -4490,8 +4582,12 @@ function getFilteredPodcasts() {
         .map((part) => part.trim())
         .filter(Boolean);
 
-      return queryParts.every((part) => podcast.searchText.includes(part));
-    })
+      const matchesExistingFields = queryParts.every((part) =>
+        podcast.searchText.includes(part)
+      );
+      const matchesOneTopic = matchesPodcastTopicSearch(podcast, state.searchTerm);
+      return matchesExistingFields || matchesOneTopic;
+    }))
     .sort((a, b) => {
       const usesDesktopUserRankingSort = hasDesktopUserRankingSort();
       const usesDesktopOwnRatingSort = hasDesktopOwnRatingSort();
@@ -20447,11 +20543,13 @@ function matchesExploreFilters(podcast, searchParts = [], genre = "Alle") {
     return false;
   }
 
-  if (genre !== "Alle" && podcast.genre !== genre) {
+  if (genre !== "Alle" && !podcastHasGenre(podcast, genre)) {
     return false;
   }
 
-  return searchParts.every((part) => podcast.searchText.includes(part));
+  const matchesExistingFields = searchParts.every((part) => podcast.searchText.includes(part));
+  const matchesOneTopic = matchesPodcastTopicSearch(podcast, searchParts.join(" "));
+  return matchesExistingFields || matchesOneTopic;
 }
 
 function getExploreSeedPodcasts() {
@@ -20551,6 +20649,14 @@ function getExplorePreferenceProfile() {
     addExploreSignal(profile.mainSeriesSignals, seed.podcast.mainSeries, weight * 1.25);
     addExploreSignal(profile.publisherSignals, seed.podcast.publisher, weight * 0.95);
     addExploreSignal(profile.genreSignals, seed.podcast.genre, weight * 0.85);
+    [seed.podcast.secondaryGenre, seed.podcast.tertiaryGenre]
+      .filter(
+        (genre, index, genres) =>
+          genre &&
+          normalizeComparable(genre) !== normalizeComparable(seed.podcast.genre) &&
+          genres.findIndex((item) => normalizeComparable(item) === normalizeComparable(genre)) === index
+      )
+      .forEach((genre) => addExploreSignal(profile.genreSignals, genre, weight * 0.425));
   });
 
   savedSeeds.forEach((seed) => {
@@ -20559,6 +20665,14 @@ function getExplorePreferenceProfile() {
     addExploreSignal(profile.mainSeriesSignals, seed.podcast.mainSeries, weight);
     addExploreSignal(profile.publisherSignals, seed.podcast.publisher, weight * 0.8);
     addExploreSignal(profile.genreSignals, seed.podcast.genre, weight * 0.7);
+    [seed.podcast.secondaryGenre, seed.podcast.tertiaryGenre]
+      .filter(
+        (genre, index, genres) =>
+          genre &&
+          normalizeComparable(genre) !== normalizeComparable(seed.podcast.genre) &&
+          genres.findIndex((item) => normalizeComparable(item) === normalizeComparable(genre)) === index
+      )
+      .forEach((genre) => addExploreSignal(profile.genreSignals, genre, weight * 0.35));
   });
 
   profile.hostSignals.sort((a, b) => b.weight - a.weight);
@@ -20688,7 +20802,17 @@ function getExploreCandidateFit(candidate, profile) {
   const mainSeriesWeight = getExploreSignalWeight(profile.mainSeriesSignals, candidate.mainSeries);
   const hostWeight = getExploreHostSignalWeight(profile.hostSignals, candidate.host);
   const publisherWeight = getExploreSignalWeight(profile.publisherSignals, candidate.publisher);
-  const genreWeight = getExploreSignalWeight(profile.genreSignals, candidate.genre);
+  const secondaryGenreWeight = Math.max(
+    getExploreSignalWeight(profile.genreSignals, candidate.secondaryGenre),
+    getExploreSignalWeight(profile.genreSignals, candidate.tertiaryGenre)
+  );
+  const primaryGenreWeight = getExploreSignalWeight(profile.genreSignals, candidate.genre);
+  const genreWeight = Math.max(primaryGenreWeight, secondaryGenreWeight);
+  const matchedGenre = primaryGenreWeight >= secondaryGenreWeight
+    ? candidate.genre
+    : [candidate.secondaryGenre, candidate.tertiaryGenre].find(
+        (genre) => genre && getExploreSignalWeight(profile.genreSignals, genre) === secondaryGenreWeight
+      );
   const tasteScore =
     mainSeriesWeight * 4.8 +
     hostWeight * 4 +
@@ -20706,8 +20830,8 @@ function getExploreCandidateFit(candidate, profile) {
     reason = `Mere med ${candidate.host}`;
   } else if (publisherWeight && candidate.publisher) {
     reason = `Mere fra ${candidate.publisher}`;
-  } else if (genreWeight && candidate.genre) {
-    reason = `Mere ${candidate.genre}`;
+  } else if (genreWeight && matchedGenre) {
+    reason = `Mere ${matchedGenre}`;
   }
 
   return {
@@ -24873,7 +24997,8 @@ function setupEvents() {
   });
 
   if (elements.searchInput) {
-    clearSearchInput();
+    clearSearchInput({ updateUrl: false });
+    restoreRankingSearchFromUrl();
 
     elements.searchInput.addEventListener("pointerdown", enableSearchInput, { once: true });
 
@@ -24887,6 +25012,8 @@ function setupEvents() {
 
     elements.searchInput.addEventListener("input", (event) => {
       state.searchTerm = event.target.value.trim();
+      const routeChanged = updateRankingSearchUrl(state.searchTerm);
+      if (routeChanged) renderRoute();
       updateSearchClearButton();
       resetVisibleCount();
       render();
@@ -25986,7 +26113,11 @@ window.addEventListener("pageshow", (event) => {
   if (!event.persisted) stabilizeFreshForsideScroll();
 });
 window.setTimeout(() => {
-  clearSearchInput({ rerender: true });
+  clearSearchInput({ rerender: true, updateUrl: false });
+  if (restoreRankingSearchFromUrl()) {
+    renderRoute();
+    render();
+  }
 }, 120);
 initialPodcastStartup = loadPodcasts();
 initialRatingHydrationStartup = startInitialRatingHydration();
