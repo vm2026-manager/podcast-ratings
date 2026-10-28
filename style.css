@@ -29749,3 +29749,35 @@ html body [data-suggestion-id].is-notification-target {
   opacity: .62;
   cursor: help;
 }
+/* Phase 2 genre filters: keep the current visual treatment while reserving a
+   clear two-column desktop layout for the expanded canonical list. */
+@media (min-width: 769px) {
+  html body.page-ranglister .ranking-sidebar-column .genre-chips {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    align-items: stretch !important;
+    width: 100% !important;
+  }
+
+  html body.page-ranglister .ranking-sidebar-column .genre-chip {
+    box-sizing: border-box !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    justify-content: center !important;
+    white-space: normal !important;
+    text-align: center !important;
+  }
+
+  html body.page-ranglister .ranking-sidebar-column .genre-chip[data-genre="Underholdning"] {
+    grid-column: 1 / -1 !important;
+  }
+}
+
+@media (max-width: 768px) {
+  html body.page-ranglister .genre-chip {
+    min-width: 0 !important;
+    max-width: 100% !important;
+    white-space: normal !important;
+    overflow-wrap: anywhere !important;
+  }
+}

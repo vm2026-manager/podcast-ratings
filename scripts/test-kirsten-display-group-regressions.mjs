@@ -31,9 +31,13 @@ assert.deepEqual(kirstenSource.supplementarySimilarities.map(({ title }) => titl
 ]);
 assert.equal(kirsten.memberLegacyKeys.length + kirsten.seasonIdentities.length, 6);
 
-const metadataRuntime = new Function("normalizeComparable", `${extract("getDisplayGroupSharedMetadata")}; return getDisplayGroupSharedMetadata;`)(
-  (value) => String(value ?? "").trim().toLocaleLowerCase("da")
-);
+const normalizeComparable = (value) => String(value ?? "").trim().toLocaleLowerCase("da");
+const canonicalGenres = ["True Crime", "Historie", "Krig", "Politik", "Finans", "Samfund", "Sport", "Dokumentar", "Viden", "Underholdning"];
+const detailGenresRuntime = new Function("normalizeComparable", "CANONICAL_GENRES", `${extract("getPodcastDetailGenres")}; return getPodcastDetailGenres;`)(normalizeComparable, canonicalGenres);
+const sharedGenresRuntime = new Function("getPodcastDetailGenres", "normalizeComparable", `${extract("getSharedDisplayGroupGenres")}; return getSharedDisplayGroupGenres;`)(detailGenresRuntime, normalizeComparable);
+const escapeHtmlTest = (value) => String(value ?? "").replace(/&/gu, "&amp;").replace(/</gu, "&lt;").replace(/>/gu, "&gt;").replace(/"/gu, "&quot;").replace(/'/gu, "&#39;");
+const genreMarkupRuntime = new Function("escapeHtml", `${extract("renderPodcastGenreTags")}; return renderPodcastGenreTags;`)(escapeHtmlTest);
+const metadataRuntime = new Function("normalizeComparable", `${extract("getDisplayGroupSharedMetadata")}; return getDisplayGroupSharedMetadata;`)(normalizeComparable);
 const realMember = {
   genre: "Underholdning", publisher: "r8Dio", host: "Kirsten Birgit & Rasmus Bruun", accessType: "paid", link: kirstenSource.Link
 };
@@ -69,10 +73,10 @@ assert.ok(recommendationSources.every((member) => !member.isDisplayGroupSeason))
 
 const sharedMetadata = metadataRuntime;
 const render = new Function(
-  "state", "getDisplayGroupSeasonNumber", "parseNumber", "getDisplayGroupOwnRatingStats", "getDisplayGroupSharedMetadata", "getDisplayGroupSimilarityMarkup", "escapeHtml", "getPodcastAccessIndicatorMarkup", "isValidPodcastLink", "setPodcastDetailPlacementControl", "getPodcastKey", "setImage", "getPodcastImageSources", "hydratePodcastSimilarityProduct", "bindPodcastDetailFilterButtons", "renderFavoriteButton", "handleFavoriteToggle", "isMobileViewport", "formatCompactRating", "formatUserRatingCount", "getUserRating", "getCommunityStat", "hasCommunityRating", "getPodcastDisplayGroupOwnRatingMarkup", "bindPodcastDisplayGroupRatingLock",
+  "state", "getDisplayGroupSeasonNumber", "parseNumber", "getDisplayGroupOwnRatingStats", "getDisplayGroupSharedMetadata", "getSharedDisplayGroupGenres", "renderPodcastGenreTags", "getDisplayGroupSimilarityMarkup", "escapeHtml", "getPodcastAccessIndicatorMarkup", "isValidPodcastLink", "setPodcastDetailPlacementControl", "getPodcastKey", "setImage", "getPodcastImageSources", "hydratePodcastSimilarityProduct", "bindPodcastDetailFilterButtons", "renderFavoriteButton", "handleFavoriteToggle", "isMobileViewport", "formatCompactRating", "formatUserRatingCount", "getUserRating", "getCommunityStat", "hasCommunityRating", "getPodcastDisplayGroupOwnRatingMarkup", "bindPodcastDisplayGroupRatingLock",
   `${extract("renderPodcastDisplayGroupContent")}; return renderPodcastDisplayGroupContent;`
 )({ podcastDetailView: "", activePodcastDetailKey: "", podcastDetailRecommendationCache: new Map() }, () => 4, () => null,
-  () => ({ average: null, count: 0 }), sharedMetadata, () => "", String,
+  () => ({ average: null, count: 0 }), sharedMetadata, sharedGenresRuntime, genreMarkupRuntime, () => "", String,
   (podcast, options) => podcast.accessType === "paid" && options.detail ? "<span class=\"podcast-access-detail\">Kræver abonnement</span>" : "", (url) => url.startsWith("https://"),
   () => {}, (podcast) => podcast.key, () => {}, () => "", () => {}, () => {}, () => {}, () => {}, () => false,
   String, String, () => null, () => null, () => false, (own) => own.count ? `<strong>${own.average}</strong>` : "<strong>—</strong>", () => {});
@@ -85,6 +89,8 @@ render(dialog, {
   displayGroupMembers: [realMember, ...syntheticSeasons]
 });
 assert.match(markup, /Underholdning/u);
+assert.match(markup, /data-value="Underholdning"/u);
+assert.doesNotMatch(markup, /data-value="Dokumentar"/u, "display-group tags ignore synthetic season-only genres");
 assert.match(markup, /r8Dio/u);
 assert.match(markup, /Kirsten Birgit & Rasmus Bruun/u);
 assert.match(markup, /Kræver abonnement/u);
