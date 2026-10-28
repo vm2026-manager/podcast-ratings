@@ -58,6 +58,9 @@ const DEFAULT_TOPIC_COLLISION_REPORT_PATH = path.join(
 const ALLOWED_GENRES = Object.freeze([
   "True Crime",
   "Historie",
+  "Krig",
+  "Politik",
+  "Finans",
   "Samfund",
   "Sport",
   "Dokumentar",
@@ -949,9 +952,18 @@ function buildRecommendationData(
       primaryGenreNeedsReview,
       primaryGenreReviewReason
     } = mappedGenre;
-    const secondaryGenre = normalizeText(sourceRow?.secondaryGenre);
+    const secondaryGenreRaw = normalizeText(sourceRow?.secondaryGenre);
+    const secondaryGenre =
+      ALLOWED_GENRES.find((genre) => aliasKey(genre) === aliasKey(secondaryGenreRaw)) ||
+      secondaryGenreRaw;
     const secondaryGenreValid =
       !secondaryGenre || ALLOWED_GENRES.includes(secondaryGenre);
+    const tertiaryGenreRaw = normalizeText(sourceRow?.tertiaryGenre);
+    const tertiaryGenre =
+      ALLOWED_GENRES.find((genre) => aliasKey(genre) === aliasKey(tertiaryGenreRaw)) ||
+      tertiaryGenreRaw;
+    const tertiaryGenreValid =
+      !tertiaryGenre || ALLOWED_GENRES.includes(tertiaryGenre);
     let mainSeries = normalizeText(
       sourceRow?.Hovedserie ??
         sourceRow?.["Hoved serie"] ??
@@ -988,12 +1000,21 @@ function buildRecommendationData(
     if (!id) metadataIssues.push("missing_stable_id");
     if (!primaryGenreValid) metadataIssues.push("invalid_primary_genre");
     if (!secondaryGenreValid) metadataIssues.push("invalid_secondary_genre");
+    if (!tertiaryGenreValid) metadataIssues.push("invalid_tertiary_genre");
     if (
       primaryGenreRaw &&
       secondaryGenre &&
       aliasKey(primaryGenreRaw) === aliasKey(secondaryGenre)
     ) {
       metadataIssues.push("same_primary_secondary_genre");
+    }
+    if (
+      tertiaryGenre &&
+      [primaryGenreRaw, secondaryGenre].some(
+        (genre) => genre && aliasKey(genre) === aliasKey(tertiaryGenre)
+      )
+    ) {
+      metadataIssues.push("duplicate_tertiary_genre");
     }
     if (!topicsCanonical.length) metadataIssues.push("missing_topics");
     if (normalizedTopics.aliasApplied) metadataIssues.push("topic_alias_applied");
@@ -1020,6 +1041,7 @@ function buildRecommendationData(
       primaryGenreReviewReason,
       secondaryGenre,
       secondaryGenreValid,
+      ...(tertiaryGenre ? { tertiaryGenre, tertiaryGenreValid } : {}),
       topicsRaw: normalizedTopics.topicsRaw,
       topicsCanonical,
       topicKeys,
@@ -1066,6 +1088,7 @@ function buildRecommendationData(
     needs_review: row.primaryGenreNeedsReview,
     review_reason: row.primaryGenreReviewReason,
     secondary_genre: row.secondaryGenre,
+    tertiary_genre: row.tertiaryGenre,
     topic_count: row.topicsCanonical.length,
     genre_eligible: row.genreEligible,
     recommendation_metadata_eligible: row.recommendationMetadataEligible,
@@ -1139,6 +1162,7 @@ function buildRecommendationData(
     uniqueUnmappedPrimaryGenres: unmappedGenres.length,
     conditionalGenreReviews: mappingCounts.conditional_default,
     withSecondaryGenre: rows.filter((row) => Boolean(row.secondaryGenre)).length,
+    withTertiaryGenre: rows.filter((row) => Boolean(row.tertiaryGenre)).length,
     withRawTopics: rows.filter((row) => row.topicsRaw.length > 0).length,
     withCanonicalTopics: rows.filter((row) => row.topicsCanonical.length > 0).length,
     topicEligible: rows.filter((row) => row.topicEligible).length,
@@ -1249,6 +1273,7 @@ function renderGenreMigrationCsv(rows) {
     "needs_review",
     "review_reason",
     "secondary_genre",
+    "tertiary_genre",
     "topic_count",
     "genre_eligible",
     "recommendation_metadata_eligible",

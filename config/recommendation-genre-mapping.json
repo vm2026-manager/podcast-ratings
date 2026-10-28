@@ -1,8 +1,11 @@
 {
-  "version": 1,
+  "version": 2,
   "allowedGenres": [
     "True Crime",
     "Historie",
+    "Krig",
+    "Politik",
+    "Finans",
     "Samfund",
     "Sport",
     "Dokumentar",
@@ -22,7 +25,7 @@
   "directMappings": [
     {
       "source": "Politik",
-      "target": "Samfund",
+      "target": "Politik",
       "type": "direct",
       "status": "approved",
       "note": "Fast godkendt konvertering."
@@ -43,10 +46,10 @@
     },
     {
       "source": "Økonomi",
-      "target": "Samfund",
+      "target": "Finans",
       "type": "direct",
-      "status": "approved",
-      "note": "Fast godkendt konvertering."
+      "status": "review",
+      "note": "Kandidat til Finans; bekræft podcastens faktiske emner før godkendelse."
     },
     {
       "source": "Erhverv & økonomi",
@@ -57,17 +60,17 @@
     },
     {
       "source": "Finans",
-      "target": "Samfund",
+      "target": "Finans",
       "type": "direct",
       "status": "approved",
       "note": "Fast godkendt konvertering."
     },
     {
       "source": "Aktier",
-      "target": "Samfund",
+      "target": "Finans",
       "type": "direct",
-      "status": "approved",
-      "note": "Fast godkendt konvertering."
+      "status": "review",
+      "note": "Kandidat til Finans; bekræft podcastens faktiske emner før godkendelse."
     },
     {
       "source": "Business",
@@ -141,14 +144,14 @@
     },
     {
       "source": "Krig",
-      "target": "Historie",
+      "target": "Krig",
       "type": "direct",
       "status": "approved",
       "note": "Fast godkendt konvertering."
     },
     {
       "source": "Militærhistorie",
-      "target": "Historie",
+      "target": "Krig",
       "type": "direct",
       "status": "approved",
       "note": "Fast godkendt konvertering."

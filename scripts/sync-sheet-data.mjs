@@ -77,6 +77,8 @@ const PODCAST_FIELDS = [
 ];
 
 const SECONDARY_GENRE_FIELDS = ["2. genre"];
+// Optional until the source sheet adds the third genre column.
+const TERTIARY_GENRE_FIELDS = ["3. genre"];
 const TOPIC_FIELDS = ["Emner"];
 const MANUAL_EPISODES_FIELDS = ["Episoder", "Manual episodes", "ManualEpisodes"];
 const MANUAL_EPISODE_KEYS_FIELDS = ["Manual episode keys", "ManualEpisodeKeys"];
@@ -671,6 +673,8 @@ async function slimPodcastRows(rows, outputDirectory = "") {
       feed: getField(row, ["Feed", "RSS", "RSS feed", "Episode feed"])
     });
     podcast.secondaryGenre = getField(row, SECONDARY_GENRE_FIELDS);
+    const tertiaryGenre = getField(row, TERTIARY_GENRE_FIELDS);
+    if (tertiaryGenre) podcast.tertiaryGenre = tertiaryGenre;
     podcast.topics = parseTopics(getField(row, TOPIC_FIELDS));
     podcast.isEnglish = parseEnglishFlag(getField(row, ENGLISH_FIELDS), title);
     applyEditorialAccessMetadata(podcast, row, title);
