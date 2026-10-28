@@ -113,9 +113,18 @@ for (const mapping of genreConfig.directMappings.filter(
 )) {
   const mapped = mapPrimaryGenre(` ${mapping.source.toLocaleLowerCase("da-DK")} `, approvedGenreLookup);
   assert.equal(mapped.primaryGenre, mapping.target, mapping.source);
-  assert.equal(mapped.primaryGenreMappingType, "direct", mapping.source);
+  const expectedType = genreConfig.allowedGenres.includes(mapping.source)
+    ? "capitalization"
+    : "direct";
+  assert.equal(mapped.primaryGenreMappingType, expectedType, mapping.source);
   assert.equal(mapped.primaryGenreNeedsReview, false, mapping.source);
 }
+for (const [source, target] of [["Krig", "Krig"], ["Politik", "Politik"], ["Finans", "Finans"]]) {
+  assert.equal(mapPrimaryGenre(source, approvedGenreLookup).primaryGenre, target);
+}
+assert.equal(mapPrimaryGenre("Økonomi", approvedGenreLookup).primaryGenreValid, false);
+assert.equal(mapPrimaryGenre("Aktier", approvedGenreLookup).primaryGenreValid, false);
+assert.equal(mapPrimaryGenre("Sladder", approvedGenreLookup).primaryGenre, "Sladder");
 for (const mapping of genreConfig.conditionalMappings.filter(
   (entry) => entry.status === "approved"
 )) {
@@ -155,7 +164,7 @@ assert.throws(
       directMappings: [
         ...genreConfig.directMappings,
         {
-          source: "Politik",
+          source: "Erhverv",
           target: "Viden",
           type: "direct",
           status: "approved",
@@ -247,6 +256,7 @@ const samplePayload = {
       Titel: "Ugyldig",
       Genre: "Fodbold",
       secondaryGenre: "Sport",
+      tertiaryGenre: "finans",
       topics: ["Økonomi"]
     },
     {
@@ -287,7 +297,10 @@ assert.ok(built.payload.rows.every((row) => row.recommendationId));
 assert.equal(new Set(built.payload.rows.map((row) => row.recommendationId)).size, 4);
 assert.equal(built.payload.rows[0].mainSeries, "Third Ear");
 assert.equal(built.payload.rows[0].secondaryGenreValid, true);
+assert.equal(Object.hasOwn(built.payload.rows[0], "tertiaryGenre"), false);
 assert.equal(built.payload.rows[1].secondaryGenre, samplePayload.rows[1].secondaryGenre);
+assert.equal(built.payload.rows[1].tertiaryGenre, "Finans");
+assert.equal(built.payload.rows[1].tertiaryGenreValid, true);
 assert.equal(built.payload.rows[0].topicEligible, true);
 assert.equal(built.payload.rows[0].recommendationMetadataEligible, true);
 assert.deepEqual(built.payload.rows[0].topicsCanonical, ["Dansk fodbold"]);

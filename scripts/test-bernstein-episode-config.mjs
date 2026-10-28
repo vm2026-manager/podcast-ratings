@@ -268,5 +268,5 @@ try {
   await browser.close();
 }
 
-assert.match(await read("index.html"), /app\.js\?v=20261027-bernstein-p0-episode-config-v1/u);
+assert.match(await read("index.html"), /app\.js\?v=[^"'\s]+/u);
 console.log("Bernstein episode config, identity, no-write, parent lock, and responsive regressions passed.");

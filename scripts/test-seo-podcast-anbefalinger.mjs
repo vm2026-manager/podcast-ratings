@@ -86,12 +86,18 @@ function appFunction(name) {
   assert(start >= 0 && end > start, `app function exists: ${name}`);
   return app.slice(start, end);
 }
-const normalizer = new Function(`${appFunction("normalizeText")}\n${appFunction("normalizeComparable")}\n${appFunction("normalizeGenre")}\nreturn normalizeGenre;`)();
+const canonicalGenresDeclaration = app.match(/const CANONICAL_GENRES = Object\.freeze\((\[[\s\S]*?\])\);/);
+assert(canonicalGenresDeclaration, "read canonical genre values from the app");
+const normalizer = new Function(`const CANONICAL_GENRES = ${canonicalGenresDeclaration[1]};\n${appFunction("normalizeText")}\n${appFunction("normalizeComparable")}\n${appFunction("normalizeGenre")}\nreturn normalizeGenre;`)();
+const genreMatcher = new Function(`${appFunction("normalizeText")}\n${appFunction("normalizeComparable")}\n${appFunction("podcastHasGenre")}\nreturn podcastHasGenre;`)();
 const genresDeclaration = app.match(/const GENRES = (\[[\s\S]*?\]);/);
 assert(genresDeclaration, "read selectable genres from the app");
 const selectableGenres = new Set(JSON.parse(genresDeclaration[1]));
 assert.match(app, /const genre = normalizeGenre\(rawGenre\)/, "catalogue genres are normalized before ranking");
-assert.match(appFunction("getFilteredPodcasts"), /normalizeComparable\(podcast.genre\) !== normalizeComparable\(state.activeFilter.value\)/, "ranking compares normalized genres");
+assert.match(appFunction("getFilteredPodcasts"), /podcastHasGenre\(podcast, state.activeFilter.value\)/, "ranking uses normalized primary and secondary genre matching");
+assert.equal(genreMatcher({ genre: "Samfund", secondaryGenre: "Politik" }, "politik"), true);
+assert.equal(genreMatcher({ genre: "Historie", tertiaryGenre: "Finans" }, "finans"), true);
+assert.equal(genreMatcher({ genre: "Sport", secondaryGenre: "" }, "Historie"), false);
 function validateGenreNavigation(content) {
   const sections = [...content.matchAll(/<section class="genre-section"[\s\S]*?<\/section>/g)];
   assert.equal(sections.length, 8);
