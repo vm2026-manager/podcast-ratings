@@ -35,6 +35,8 @@ assert.match(extractFunction("applyPodcastRatingControlState"), /aria-label/u);
 assert.match(extractFunction("applyPodcastRatingControlState"), /removeAttribute\("aria-disabled"\)/u);
 assert.match(extractFunction("applyPodcastRatingControlState"), /is-rating-checking/u);
 assert.match(extractFunction("applyPodcastRatingControlState"), /is-rating-check-error/u);
+assert.match(extractFunction("applyPodcastRatingControlState"), /aria-live/u,
+  "loading and failed verification statuses are announced by the existing control");
 assert.match(extractFunction("applyPodcastRatingControlState"), /ratingState\.resolved && ratingState\.count > 0/u,
   "only a resolved episode-derived rating may apply the ranking lock");
 assert.match(extractFunction("applyPodcastRatingControlState"), /checking \? "—"/u,
@@ -50,6 +52,8 @@ assert.match(app, /event\.key === "Tab"[\s\S]*rating-dialog--episode-derived/u);
 assert.match(html, /id="ratingDialogEpisodeSummary"[\s\S]*id="ratingDialogEpisodeScore"[\s\S]*id="ratingDialogEpisodeExplanation"/u);
 assert.match(desktopCss, /page-ranglister \.desktop-ranking-row__own\.is-episode-rating-locked/u);
 assert.match(siteCss, /\.rate-button\.is-episode-rating-locked/u);
+assert.match(siteCss, /\.rate-button\.is-rating-check-error::after[\s\S]*Prøv igen/u,
+  "mobile rating controls show a visible retry action after a failed check");
 
 function createRatingControlHarness(selector, initialState) {
   let ratingState = initialState;
@@ -75,7 +79,9 @@ function createRatingControlHarness(selector, initialState) {
     { authUser: { id: "user-a" } },
     () => ratingState,
     () => true,
-    (_podcast, current) => current.resolved ? "Din vurdering beregnes fra episodevurderinger." : "Kontrollerer episodevurderinger.",
+    (_podcast, current) => current.resolved
+      ? "Din vurdering beregnes fra episodevurderinger."
+      : current.error ? "Kontrollen af episodevurderinger mislykkedes. Tryk for at prøve igen." : "Kontrollerer episodevurderinger.",
     (podcast) => podcast.key,
     () => 7.4,
     (rating) => String(rating).replace(".", ",")
@@ -113,6 +119,13 @@ function createRatingControlHarness(selector, initialState) {
   });
   failed.update({ resolved: false, count: 0, average: null, error: "Databasefejl" });
   assert.equal(failed.value.textContent, "Prøv igen", "the existing retry action remains visible after a failed check");
+
+  const failedMobile = createRatingControlHarness(".rate-button", {
+    resolved: false, count: 0, average: null, error: "Databasefejl"
+  });
+  failedMobile.update({ resolved: false, count: 0, average: null, error: "Databasefejl" });
+  assert.equal(failedMobile.attributes["aria-live"], "polite", "the mobile retry status is announced accessibly");
+  assert.match(failedMobile.attributes["aria-label"], /prøve igen/u, "the mobile control's accessible name gives a retry action");
 }
 
 function createHarness({ ratingState, input = "8.3", userId = "user-a", onVerify } = {}) {
@@ -218,10 +231,12 @@ async function openRatingHarness({
   const focusCalls = [];
   const selectCalls = [];
   let activeElement = null;
-  let resolveVerification;
+  const verificationResolvers = [];
+  let controlUpdateCount = 0;
   const documentProxy = {
     get activeElement() { return activeElement; },
-    body: { classList: { add() {} } }
+    querySelector: () => null,
+    body: { classList: { add() {}, remove() {} } }
   };
   const elements = {
     ratingDialog: {
@@ -251,14 +266,14 @@ async function openRatingHarness({
   };
   const messages = [];
   const request = { userId, generation: 0 };
-  const run = new Function(
+  const runDialog = new Function(
     "state", "elements", "messages", "request", "initialState", "finalState", "onVerify",
     "resetRatingDialogMode", "isLoggedIn", "getPodcastKey", "showAuthPrompt", "setAuthMessage",
     "getUserScopedRequestContext", "getPodcastRatingEditState", "getUserRating", "formatRatingInputValue",
     "podcastSupportsEpisodes", "updateRatingDialogMessage", "document", "window",
     "ensurePodcastRatingEditState", "isCurrentUserScopedRequest", "getPodcastRatingControlDescription",
     "reconcileExistingEpisodeDerivedParentRating", "updatePodcastRatingControls", "setEpisodeDerivedRatingDialog",
-    `${openSource}; return openRatingDialog;`
+    `${openSource}\n${extractFunction("closeRatingDialog")}; return { openRatingDialog, closeRatingDialog };`
   )(
     state, elements, messages, request, initialState, finalState, onVerify,
     () => {},
@@ -276,7 +291,7 @@ async function openRatingHarness({
     { setTimeout: (callback) => timers.push(callback) },
     async () => {
       if (deferVerification) {
-        await new Promise((resolve) => { resolveVerification = resolve; });
+        await new Promise((resolve) => { verificationResolvers.push(resolve); });
       }
       await onVerify?.(state);
       return finalState;
@@ -284,16 +299,21 @@ async function openRatingHarness({
     (candidate) => candidate.userId === state.authUser?.id && candidate.generation === 0,
     (_podcast, ratingState) => `Beregnet fra ${ratingState.count} episodevurderinger.`,
     () => Promise.resolve(),
-    () => {},
+    () => { controlUpdateCount += 1; },
     (_podcast, ratingState, status) => derivedViews.push({ ratingState, status })
   );
-  const runPromise = run({ id: podcastId, title: `Podcast ${podcastId}` });
+  const podcast = (id = podcastId) => ({ id, title: `Podcast ${id}` });
+  const { openRatingDialog: run, closeRatingDialog } = runDialog;
+  const runPromise = run(podcast());
   if (!deferVerification) await runPromise;
   return {
     state, elements, messages, derivedViews, timers, focusCalls, selectCalls,
+    run, closeRatingDialog, podcast,
+    setFinalState: (value) => { finalState = value; },
+    get controlUpdateCount() { return controlUpdateCount; },
     get activeElement() { return activeElement; },
     runPromise,
-    releaseVerification: () => resolveVerification?.()
+    releaseVerification: (index = 0) => verificationResolvers[index]?.()
   };
 }
 
@@ -308,17 +328,17 @@ async function openRatingHarness({
   assert.match(h.messages.at(-1).message, /beregnes fra 2 episodevurderinger/iu);
 }
 
-// Opening the shared dialog starts locked. Only the current, successful check
-// decides whether it becomes a read-only episode average or a direct editor.
+// The dialog stays closed until the current user's episode-rating check succeeds.
 {
   const locked = await openRatingHarness({
     initialState: { resolved: false, count: 0, average: null },
     finalState: { resolved: true, count: 2, average: 8.2 }
   });
+  assert.equal(locked.elements.ratingDialog.classList.contains("is-hidden"), false);
   assert.equal(locked.elements.ratingInput.value, "8,2");
   assert.equal(locked.elements.ratingInput.disabled, true);
   assert.equal(locked.elements.ratingSaveButton.disabled, true);
-  assert.deepEqual(locked.derivedViews.map((view) => view.status), ["loading", "ready"]);
+  assert.deepEqual(locked.derivedViews.map((view) => view.status), ["ready"]);
   assert.equal(locked.derivedViews.at(-1).ratingState.average, 8.2,
     "the verified score shown in the read-only view is the episode-derived 8.2");
 
@@ -365,26 +385,25 @@ async function openRatingHarness({
   assert.equal(delayedOpeningTimer.elements.ratingInput.value, "7,4", "the delayed timer preserves an in-progress score");
   assert.equal(delayedOpeningTimer.focusCalls.length, 0, "the delayed timer leaves the user's active editing state alone");
 
-  const typedDuringVerification = await openRatingHarness({
+  const slowVerification = await openRatingHarness({
     initialState: { resolved: false, count: 0, average: null },
     finalState: { resolved: true, count: 0, average: null },
     deferVerification: true
   });
-  typedDuringVerification.elements.ratingInput.value = "7,9";
-  typedDuringVerification.elements.ratingInput.focus();
-  typedDuringVerification.releaseVerification();
-  await typedDuringVerification.runPromise;
-  assert.equal(typedDuringVerification.elements.ratingInput.value, "7,9", "verification preserves text entered while pending");
-  assert.deepEqual(typedDuringVerification.selectCalls, [], "verification never selects text the user has started entering");
+  assert.equal(slowVerification.elements.ratingDialog.classList.contains("is-hidden"), true,
+    "a slow verification never opens either dialog mode");
+  assert.deepEqual(slowVerification.derivedViews, [], "no calculated modal is shown while the check is pending");
+  slowVerification.releaseVerification();
+  await slowVerification.runPromise;
+  assert.equal(slowVerification.elements.ratingDialog.classList.contains("is-hidden"), false,
+    "the zero-rating editor opens after the slow check succeeds");
 
   const closedDuringVerification = await openRatingHarness({
     initialState: { resolved: false, count: 0, average: null },
     finalState: { resolved: true, count: 0, average: null },
     deferVerification: true
   });
-  closedDuringVerification.elements.ratingDialog.classList.add("is-hidden");
-  closedDuringVerification.state.activeRatingRequestToken += 1;
-  closedDuringVerification.state.activeRatingKey = null;
+  closedDuringVerification.closeRatingDialog();
   closedDuringVerification.releaseVerification();
   await closedDuringVerification.runPromise;
   assert.equal(closedDuringVerification.focusCalls.length, 0, "late verification cannot focus a closed dialog");
@@ -404,18 +423,87 @@ async function openRatingHarness({
     initialState: { resolved: false, count: 0, average: null },
     finalState: { resolved: false, count: 0, average: null, error: "Databasefejl" }
   });
-  assert.equal(failed.elements.ratingInput.disabled, true);
-  assert.equal(failed.elements.ratingSaveButton.disabled, true);
-  assert.match(failed.derivedViews.at(-1).ratingState.error, /Databasefejl/u);
-  assert.deepEqual(failed.derivedViews.map((view) => view.status), ["loading", "error"]);
+  assert.equal(failed.elements.ratingDialog.classList.contains("is-hidden"), true,
+    "a failed query does not open the calculated-rating modal");
+  assert.deepEqual(failed.derivedViews, [], "a failure cannot be presented as an unavailable derived rating");
+  assert.ok(failed.controlUpdateCount >= 2, "the existing control updates to expose retry after failure");
 
   const switched = await openRatingHarness({
     initialState: { resolved: false, count: 0, average: null },
     finalState: { resolved: true, count: 0, average: null },
     onVerify: (state) => { state.authUser = { id: "user-b" }; }
   });
-  assert.equal(switched.elements.ratingInput.disabled, true, "a late response cannot unlock after a user switch");
+  assert.equal(switched.elements.ratingDialog.classList.contains("is-hidden"), true,
+    "a response for the previous account cannot open or unlock a modal");
   assert.equal(switched.focusCalls.length, 0, "a late response after a user switch cannot move focus");
+}
+
+// Failed checks can be retried, concurrent clicks honor the newest token, and
+// closing or changing accounts/podcasts invalidates every pending completion.
+{
+  const retry = await openRatingHarness({
+    initialState: { resolved: false, count: 0, average: null },
+    finalState: { resolved: false, count: 0, average: null, error: "Databasefejl" }
+  });
+  retry.setFinalState({ resolved: true, count: 0, average: null });
+  await retry.run(retry.podcast());
+  assert.equal(retry.elements.ratingDialog.classList.contains("is-hidden"), false,
+    "retry after a server error opens the normal editor after a verified zero count");
+  assert.equal(retry.derivedViews.length, 0, "retry does not open the calculated modal for zero ratings");
+
+  const simultaneous = await openRatingHarness({
+    initialState: { resolved: false, count: 0, average: null },
+    finalState: { resolved: true, count: 2, average: 8.2 },
+    deferVerification: true
+  });
+  const secondClick = simultaneous.run(simultaneous.podcast());
+  assert.equal(simultaneous.elements.ratingDialog.classList.contains("is-hidden"), true);
+  simultaneous.releaseVerification(0);
+  await new Promise((resolve) => setTimeout(resolve, 0));
+  assert.equal(simultaneous.elements.ratingDialog.classList.contains("is-hidden"), true,
+    "the first click cannot open a modal after the second click supersedes it");
+  simultaneous.releaseVerification(1);
+  await Promise.all([simultaneous.runPromise, secondClick]);
+  assert.deepEqual(simultaneous.derivedViews.map((view) => view.status), ["ready"],
+    "only the latest concurrent click opens the verified derived view");
+
+  const switchedPodcast = await openRatingHarness({
+    initialState: { resolved: false, count: 0, average: null },
+    finalState: { resolved: true, count: 2, average: 8.2 },
+    deferVerification: true
+  });
+  const podcastBClick = switchedPodcast.run(switchedPodcast.podcast("podcast-b"));
+  switchedPodcast.releaseVerification(1);
+  await podcastBClick;
+  assert.equal(switchedPodcast.elements.ratingDialogTitle.textContent, "Podcast podcast-b",
+    "the current podcast owns the visible dialog");
+  switchedPodcast.releaseVerification(0);
+  await Promise.all([switchedPodcast.runPromise, podcastBClick]);
+  assert.equal(switchedPodcast.elements.ratingDialogTitle.textContent, "Podcast podcast-b",
+    "a late response cannot replace another podcast's dialog");
+
+  const switchedAccount = await openRatingHarness({
+    initialState: { resolved: false, count: 0, average: null },
+    finalState: { resolved: true, count: 2, average: 8.2 },
+    deferVerification: true
+  });
+  switchedAccount.state.authUser = { id: "user-b" };
+  switchedAccount.releaseVerification();
+  await switchedAccount.runPromise;
+  assert.equal(switchedAccount.elements.ratingDialog.classList.contains("is-hidden"), true,
+    "a completed response cannot open a dialog after an account switch");
+
+  const loggedOut = await openRatingHarness({
+    initialState: { resolved: false, count: 0, average: null },
+    finalState: { resolved: true, count: 2, average: 8.2 },
+    deferVerification: true
+  });
+  loggedOut.state.authUser = null;
+  loggedOut.closeRatingDialog();
+  loggedOut.releaseVerification();
+  await loggedOut.runPromise;
+  assert.equal(loggedOut.elements.ratingDialog.classList.contains("is-hidden"), true,
+    "logout closes the pending action and prevents a late result from opening or unlocking the editor");
 }
 
 // Without episode ratings direct create/update/delete remains available.
@@ -532,6 +620,8 @@ try {
         <button id="locked" class="desktop-ranking-row__own is-episode-rating-locked" type="button"
           aria-label="Din vurdering af Podcast A er 8,2 af 10 og beregnes fra 2 episodevurderinger. Redigér episodevurderinger for at ændre den. Åbn for forklaring."
           title="Din vurdering er beregnet fra episodevurderinger"><span class="desktop-ranking-row__own-star" aria-hidden="true">★</span><strong>8,2</strong><small>/ 10</small></button></article>
+      <button id="mobileRate" class="rate-button is-rating-check-error" type="button" aria-live="polite"
+        aria-label="Kontrollen af episodevurderinger mislykkedes. Tryk for at prøve igen.">Vurder</button>
       <p id="help" role="status" hidden></p>
       <div id="ratingDialog" class="rating-dialog rating-dialog--episode-derived is-hidden" aria-hidden="true">
         <div class="rating-dialog__backdrop"></div>
@@ -590,6 +680,10 @@ try {
     assert.equal(await page.locator("#locked").getAttribute("aria-disabled"), null,
       "an actionable control that opens an explanation is not marked aria-disabled");
     assert.match(await page.locator("#locked").getAttribute("aria-label"), /8,2 af 10[\s\S]*episodevurderinger[\s\S]*Åbn for forklaring/u);
+    assert.equal(await page.locator("#mobileRate").getAttribute("aria-live"), "polite");
+    assert.match(await page.locator("#mobileRate").getAttribute("aria-label"), /prøve igen/u);
+    assert.match(await page.locator("#mobileRate").evaluate((node) => getComputedStyle(node, "::after").content), /Prøv igen/u,
+      `mobile rate button has a visible retry message at ${width}px`);
     await page.locator("#locked").focus();
     assert.equal(await page.locator("#locked").evaluate((node) => node === document.activeElement), true,
       `locked rating remains keyboard-focusable at ${width}px`);
