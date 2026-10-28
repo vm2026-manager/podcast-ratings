@@ -19321,3 +19321,29 @@ html body:has(#profileListDialog.profile-list-dialog--ratings) #ratingDialog:not
     overflow-wrap: break-word !important;
   }
 }
+
+/* Wide desktop: let the weekly recommendation fill the viewport at reduced zoom. */
+@media (min-width: 1900px) {
+  html body.page-forside #pageIntroPanel .home-featured__surface {
+    grid-template-columns: 410px minmax(0, 1fr) !important;
+    column-gap: clamp(34px, 2vw, 48px) !important;
+    padding-right: clamp(64px, 4vw, 112px) !important;
+    padding-left: clamp(64px, 4vw, 112px) !important;
+  }
+
+  html body.page-forside #pageIntroPanel .home-featured__cover-column {
+    max-width: 410px;
+  }
+
+  html body.page-forside #pageIntroPanel .home-featured__cover-column .home-featured__cover {
+    width: min(100%, 390px) !important;
+    height: 390px !important;
+    flex-basis: 390px;
+    align-self: center;
+  }
+
+  html body.page-forside #pageIntroPanel .home-featured__copy {
+    min-width: 0;
+    max-width: 1680px;
+  }
+}
