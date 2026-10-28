@@ -8472,19 +8472,35 @@ async function openRatingDialog(podcast) {
 
   if (!elements.ratingDialog || !elements.ratingInput) return;
 
+  if (!elements.ratingDialog.classList.contains("is-hidden")) closeRatingDialog();
+
   const key = getPodcastKey(podcast);
   const userId = state.authUser?.id;
   const request = getUserScopedRequestContext();
   const requestToken = (state.activeRatingRequestToken || 0) + 1;
   state.activeRatingRequestToken = requestToken;
-  const initialRatingState = getPodcastRatingEditState(podcast);
-  const initialRating = !initialRatingState.resolved
-    ? null
-    : initialRatingState.count > 0
-      ? initialRatingState.average
-      : getUserRating(key);
-
   state.activeRatingKey = key;
+
+  const shouldVerify = Boolean(state.authUser && podcastSupportsEpisodes(podcast));
+  let verifiedRatingState = getPodcastRatingEditState(podcast);
+  if (shouldVerify) {
+    // Keep the clicked control responsive and visibly pending, but do not show
+    // an editor or the episode-derived dialog until this user's check succeeds.
+    updatePodcastRatingControls(podcast);
+    verifiedRatingState = await ensurePodcastRatingEditState(podcast, { retry: true, force: true });
+    if (
+      !isCurrentUserScopedRequest(request) || userId !== state.authUser?.id ||
+      state.activeRatingRequestToken !== requestToken || state.activeRatingKey !== key
+    ) return;
+    if (!verifiedRatingState?.resolved) {
+      updatePodcastRatingControls(podcast);
+      return;
+    }
+  }
+
+  const initialRating = verifiedRatingState?.count > 0
+    ? verifiedRatingState.average
+    : getUserRating(key);
   elements.ratingDialogTitle.textContent = podcast.title;
   elements.ratingDialogMeta.textContent = podcast.host || podcast.publisher || "";
   elements.ratingInput.value =
@@ -8507,18 +8523,16 @@ async function openRatingDialog(podcast) {
     initialRating === null || initialRating === undefined
   );
 
-  const shouldVerify = state.authUser && podcastSupportsEpisodes(podcast);
-  const needsVerification = Boolean(shouldVerify);
-  const isDerived = shouldVerify && initialRatingState.resolved && initialRatingState.count > 0;
+  const isDerived = Boolean(shouldVerify && verifiedRatingState?.resolved && verifiedRatingState.count > 0);
   elements.ratingDeleteButton?.classList.toggle(
     "is-hidden",
-    needsVerification || isDerived || initialRating === null || initialRating === undefined
+    isDerived || initialRating === null || initialRating === undefined
   );
   [elements.ratingInput, elements.ratingSaveButton, elements.ratingDeleteButton].forEach((control) => {
-    if (control) control.disabled = Boolean(needsVerification || isDerived);
+    if (control) control.disabled = isDerived;
   });
-  if (needsVerification || isDerived) {
-    setEpisodeDerivedRatingDialog(podcast, initialRatingState, isDerived ? "ready" : "loading");
+  if (isDerived) {
+    setEpisodeDerivedRatingDialog(podcast, verifiedRatingState, "ready");
   } else {
     updateRatingDialogMessage("");
   }
@@ -8553,47 +8567,15 @@ async function openRatingDialog(podcast) {
     }
   }, 40);
 
-  if (!shouldVerify) return;
-  const ratingState = await ensurePodcastRatingEditState(podcast, { retry: true, force: true });
-  if (
-    !isCurrentUserScopedRequest(request) || userId !== state.authUser?.id ||
-    state.activeRatingRequestToken !== requestToken || state.activeRatingKey !== key
-  ) return;
-
-  if (ratingState.resolved && ratingState.count > 0) {
-    elements.ratingInput.value = formatRatingInputValue(ratingState.average);
-    setEpisodeDerivedRatingDialog(podcast, ratingState, "ready");
+  if (isDerived) {
     void reconcileExistingEpisodeDerivedParentRating(key);
     updatePodcastRatingControls(podcast);
     return;
   }
-  if (!ratingState.resolved) {
-    setEpisodeDerivedRatingDialog(podcast, ratingState, "error");
+  if (shouldVerify) {
     updatePodcastRatingControls(podcast);
-    return;
+    focusEditableRatingInput(elements.ratingInput.value);
   }
-
-  resetRatingDialogMode();
-  const existingRating = getUserRating(key);
-  const inputWasEditedWhileVerifying = elements.ratingInput.value !== initialInputValue;
-  if (!inputWasEditedWhileVerifying) {
-    elements.ratingInput.value = existingRating === null || existingRating === undefined
-      ? ""
-      : formatRatingInputValue(existingRating);
-  }
-  if (elements.ratingInput) elements.ratingInput.disabled = false;
-  if (elements.ratingSaveButton) elements.ratingSaveButton.disabled = false;
-  if (elements.ratingDeleteButton) elements.ratingDeleteButton.disabled = false;
-  elements.ratingDeleteButton?.classList.toggle(
-    "is-hidden",
-    existingRating === null || existingRating === undefined
-  );
-  elements.ratingSaveButton.textContent = existingRating === null || existingRating === undefined
-    ? "Gem vurdering"
-    : "Opdater vurdering";
-  updateRatingDialogMessage("");
-  updatePodcastRatingControls(podcast);
-  focusEditableRatingInput(elements.ratingInput.value, { selectExisting: !inputWasEditedWhileVerifying });
 }
 
 function openEpisodeRatingDialog(episode, suppliedContext = null) {
@@ -14049,7 +14031,14 @@ async function ensurePodcastRatingEditState(podcast, { retry = false, force = fa
   } catch (error) {
     console.error(error);
     if (isCurrentUserScopedRequest(request)) {
-      episodeState.parentUserRatingsError = "Episodevurderingerne kunne ikke hentes lige nu.";
+      const message = "Episodevurderingerne kunne ikke hentes lige nu.";
+      if (config?.persistence === "supabase" && config.dataSource !== "local") {
+        episodeState.parentUserRatingsError = message;
+        episodeState.parentUserRatingsErrorFor = request.userId;
+      } else {
+        episodeState.userRatingError = message;
+        episodeState.error = message;
+      }
     }
   }
 
@@ -14136,6 +14125,8 @@ function applyPodcastRatingControlState(button, podcast) {
   button.classList.toggle("is-rating-checking", checking);
   button.classList.toggle("is-rating-check-error", checkFailed);
   button.removeAttribute("aria-disabled");
+  if (checking || checkFailed) button.setAttribute("aria-live", "polite");
+  else button.removeAttribute("aria-live");
   button.setAttribute("aria-label", description);
   button.title = description;
   if (button.matches(".desktop-ranking-row__own")) {

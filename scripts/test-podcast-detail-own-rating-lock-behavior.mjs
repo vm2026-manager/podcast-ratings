@@ -104,7 +104,7 @@ class FakeMobileLockHelp extends FakeElement {
   }
 }
 
-function createHarness({ eligible = false, ratings = {}, manualRating = null, activeKey = "podcast-a" } = {}) {
+function createHarness({ eligible = false, ratings = {}, manualRating = null, activeKey = "podcast-a", config = null, onRetry } = {}) {
   const episodeState = {
     items: [{ id: "episode-1" }, { id: "episode-2" }],
     eligibilityResolved: eligible,
@@ -113,16 +113,19 @@ function createHarness({ eligible = false, ratings = {}, manualRating = null, ac
   };
   const state = { authUser: { id: "user-1" }, activePodcastDetailKey: activeKey, podcastDetailView: "detail" };
   const saveCalls = [];
+  const retryCalls = [];
   const helpers = new Function(
     "state", "podcastSupportsEpisodes", "getPodcastEpisodeState", "getEpisodePodcastConfig", "getEpisodeIdsForQuery",
     "getPodcastEpisodeUserRatingSummary", "getPodcastKey", "getUserRating", "formatCompactRating", "escapeHtml",
-    "savePodcastDetailInlineRating",
+    "savePodcastDetailInlineRating", "fetchPodcastEpisodeParentRatings", "fetchGenstartEpisodes",
+    "ensureManualPodcastEpisodeState", "getLocalEpisodePodcastKey", "refreshManualEpisodeRatingData",
+    "updatePodcastDetailOwnRatingCell",
     `${runtimeSource}; return { getPodcastDetailEpisodeRatingState, canEditPodcastDetailInlineRating, getPodcastDetailOwnRatingMarkup, updatePodcastDetailOwnRatingCell };`
   )(
     state,
     () => true,
     () => episodeState,
-    () => null,
+    () => config,
     (items) => items.map((item) => item.id),
     () => {
       const values = Object.values(episodeState.userRatingsById).filter((value) => value !== null && value !== undefined);
@@ -132,7 +135,13 @@ function createHarness({ eligible = false, ratings = {}, manualRating = null, ac
     () => manualRating,
     (value) => Number(value).toFixed(1).replace(".", ","),
     (value) => String(value),
-    async () => { saveCalls.push("save"); }
+    async () => { saveCalls.push("save"); },
+    async (_podcast, options) => { retryCalls.push(options); await onRetry?.(episodeState); },
+    async () => {},
+    () => [],
+    () => "podcast-a",
+    async () => {},
+    (targetDialog, targetPodcast) => helpers.updatePodcastDetailOwnRatingCell(targetDialog, targetPodcast)
   );
   const ratingCell = new FakeRatingCell();
   const mobileLockHelp = new FakeMobileLockHelp();
@@ -147,7 +156,7 @@ function createHarness({ eligible = false, ratings = {}, manualRating = null, ac
     cover: { id: "cover-node" },
     recommendations: { id: "recommendation-node" }
   };
-  return { state, episodeState, helpers, dialog, ratingCell, mobileLockHelp, saveCalls, podcast: { key: "podcast-a" } };
+  return { state, episodeState, helpers, dialog, ratingCell, mobileLockHelp, saveCalls, retryCalls, podcast: { key: "podcast-a" } };
 }
 
 // Query errors are visible and retain the lock until an explicit retry succeeds.
@@ -158,6 +167,33 @@ function createHarness({ eligible = false, ratings = {}, manualRating = null, ac
   assert.match(h.ratingCell.innerHTML, /Episodevurderingerne kunne ikke hentes lige nu/u);
   assert.ok(h.ratingCell.querySelector("[data-podcast-detail-episode-rating-retry]"), "a safe retry button replaces the permanent loading state");
   assert.equal(h.ratingCell.querySelector("[data-podcast-detail-inline-rating-save]"), null, "a failed query cannot expose direct podcast rating");
+}
+
+// A failed user scoped parent query keeps the direct editor unavailable. The
+// existing detail-cell retry control can resolve zero ratings and then reveal
+// the normal editor without writing anything as part of the retry.
+{
+  const h = createHarness({
+    config: { persistence: "supabase", dataSource: "feed" },
+    onRetry: async (episodeState) => {
+      episodeState.parentUserRatingsError = "";
+      episodeState.parentUserRatingsErrorFor = "";
+      episodeState.parentUserRatingsResolvedFor = h.state.authUser.id;
+      episodeState.parentUserRatingsById = {};
+    }
+  });
+  h.episodeState.parentUserRatingsError = "Episodevurderingerne kunne ikke hentes lige nu.";
+  h.episodeState.parentUserRatingsErrorFor = h.state.authUser.id;
+  h.helpers.updatePodcastDetailOwnRatingCell(h.dialog, h.podcast);
+  const retry = h.ratingCell.querySelector("[data-podcast-detail-episode-rating-retry]");
+  assert.ok(retry, "the detail own-rating control exposes a retry action after a server error");
+  assert.equal(h.ratingCell.querySelector("[data-podcast-detail-inline-rating-save]"), null,
+    "a failed query does not expose direct writes");
+  await retry.emit("click");
+  assert.deepEqual(h.retryCalls, [{ retry: true }], "the button retries the current user's verification");
+  assert.ok(h.ratingCell.querySelector("[data-podcast-detail-inline-rating-save]"),
+    "a successful retry confirming zero episode ratings unlocks the existing direct editor");
+  assert.deepEqual(h.saveCalls, [], "checking and retrying never writes a podcast rating");
 }
 
 // An unrated manual podcast uses the same reveal control, but presents it as a
