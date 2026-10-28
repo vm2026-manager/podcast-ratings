@@ -3724,6 +3724,17 @@ function restoreRankingSearchFromUrl() {
   return true;
 }
 
+function restoreOrClearRankingSearchOnPageShow() {
+  if (restoreRankingSearchFromUrl()) {
+    renderRoute();
+    render();
+    return true;
+  }
+
+  clearSearchInput({ rerender: true });
+  return false;
+}
+
 function enableSearchInput() {
   if (!elements.searchInput) return;
   elements.searchInput.removeAttribute("readonly");
@@ -25442,7 +25453,7 @@ function setupEvents() {
 
   window.addEventListener("pageshow", () => {
     window.setTimeout(() => {
-      clearSearchInput({ rerender: true });
+      restoreOrClearRankingSearchOnPageShow();
       maybeCatchUpPodcastDataRefresh();
     }, 0);
   });
