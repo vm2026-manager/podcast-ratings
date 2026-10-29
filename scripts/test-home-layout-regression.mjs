@@ -86,7 +86,6 @@ try {
         cards: cards.map((element) => ({ label: element.querySelector(".home-genres-card__genre")?.textContent.trim(), labelWidth: element.querySelector(".home-genres-card__genre")?.clientWidth, labelScrollWidth: element.querySelector(".home-genres-card__genre")?.scrollWidth, labelHeight: element.querySelector(".home-genres-card__genre")?.clientHeight, labelScrollHeight: element.querySelector(".home-genres-card__genre")?.scrollHeight, genre: element.dataset.genre, ...rect(element), clippedBy: clipping(element) }))
       };
     });
-    if (width === 1101) await page.screenshot({ path: path.join(root, "genre-layout-check.png") });
     assert.ok(layout.pageWidth <= width, `Home page has horizontal overflow at ${width}px: ${JSON.stringify(layout)}`);
     assert.equal(layout.cards.length, 5, `The home shows exactly five genres at ${width}px`);
     assert.deepEqual(layout.canonicalGenres, expectedGenres, "The full canonical set remains available in rankings");
