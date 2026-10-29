@@ -14,7 +14,7 @@ const appSource = await readFile(path.join(root, "app.js"), "utf8");
 const indexSource = await readFile(path.join(root, "index.html"), "utf8");
 const styleSource = await readFile(path.join(root, "style.css"), "utf8");
 assert.equal(catalogue.rows.length, catalogue.count, "The catalogue wrapper count matches its source rows");
-assert.match(indexSource, /app\.js\?v=20261029-issue-382-v1/u);
+assert.match(indexSource, /app\.js\?v=20261029-issue-382-v2/u);
 assert.match(appSource, /const CANONICAL_GENRES = Object\.freeze\(\[/u);
 assert.match(appSource, /const GENRES = Object\.freeze\(\["Alle", ...CANONICAL_GENRES\]\);/u);
 assert.doesNotMatch(appSource, /const HOME_GENRES/u);
@@ -181,6 +181,35 @@ try {
   assert.ok(secondaryFilter.count > 0);
   assert.equal(secondaryFilter.unique, true);
   assert.equal(secondaryFilter.allMatch, true);
+
+  await page.goto(`http://127.0.0.1:${address.port}/?genre=Finans#ranglister`, { waitUntil: "domcontentloaded" });
+  await page.waitForFunction(() => state.activeFilter?.type === "genre" && state.activeFilter.value === "Finans" && getFilteredPodcasts().length > 0);
+  await page.evaluate(() => {
+    const podcast = getFilteredPodcasts().find((candidate) => getPodcastId(candidate) === "børsen brænder");
+    if (!podcast) throw new Error("The approved Finance catalogue entry is missing from its shared filter URL");
+    openPodcastDetailSheet(podcast, null, { allowDesktop: true });
+  });
+  const sharedFinanceDetail = page.locator("#podcastDetailSheet:not(.is-hidden)");
+  await sharedFinanceDetail.waitFor({ state: "visible" });
+  await sharedFinanceDetail.locator("[data-podcast-detail-filter='genre'][data-value='Viden']").click();
+  await page.waitForFunction(() => state.activeFilter?.type === "genre" && state.activeFilter.value === "Viden");
+  const secondaryFilterFromSharedUrl = await page.evaluate(() => {
+    const results = getFilteredPodcasts();
+    const ids = results.map(getPodcastId);
+    return {
+      genreUrl: new URLSearchParams(window.location.search).get("genre"),
+      count: results.length,
+      includesTaggedPodcast: ids.includes("børsen brænder"),
+      unique: new Set(results.map(getPodcastKey)).size === results.length,
+      allMatch: results.every((podcast) => podcastHasGenre(podcast, "Viden"))
+    };
+  });
+  assert.equal(secondaryFilterFromSharedUrl.genreUrl, "Viden", "The shareable genre parameter follows a secondary-tag selection");
+  assert.ok(secondaryFilterFromSharedUrl.count > 0);
+  assert.equal(secondaryFilterFromSharedUrl.includesTaggedPodcast, true);
+  assert.equal(secondaryFilterFromSharedUrl.unique, true);
+  assert.equal(secondaryFilterFromSharedUrl.allMatch, true);
+
   const primaryFilter = await page.evaluate(() => {
     setActiveFilter("genre", "True Crime");
     const results = getFilteredPodcasts();

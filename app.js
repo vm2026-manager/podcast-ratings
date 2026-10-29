@@ -4066,9 +4066,24 @@ function setActiveFilter(type, value, { render: shouldRender = true } = {}) {
   } else {
     state.activeFilter = type && value ? { type, value } : null;
   }
+  syncRankingGenreUrlWithSelection(type === "genre" ? value : type ? null : "");
   resetVisibleCount();
   createGenreChips();
   if (shouldRender) render();
+}
+
+function syncRankingGenreUrlWithSelection(value) {
+  const url = new URL(window.location.href);
+  if (!url.searchParams.has("genre")) return;
+
+  const genre = normalizeText(value);
+  if (genre && normalizeComparable(genre) !== normalizeComparable("Alle")) {
+    url.searchParams.set("genre", genre);
+  } else {
+    url.searchParams.delete("genre");
+  }
+
+  window.history.replaceState(window.history.state, "", url);
 }
 
 function consumePendingRankingGenre() {
