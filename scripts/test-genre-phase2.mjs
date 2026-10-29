@@ -345,10 +345,11 @@ try {
       const nav = document.querySelector(".genre-nav");
       const links = [...nav.querySelectorAll("a")];
       const bounds = nav.getBoundingClientRect();
-      return { labels: links.map((link) => link.textContent.trim()), pageWidth: document.documentElement.scrollWidth, navRight: bounds.right, viewport: innerWidth };
+      const overflowers = [...document.body.querySelectorAll("*")].map((element) => ({ tag: element.tagName, className: typeof element.className === "string" ? element.className : "", text: element.textContent.trim().slice(0, 80), right: Math.round(element.getBoundingClientRect().right), width: Math.round(element.getBoundingClientRect().width) })).filter((element) => element.right > innerWidth + 1).sort((left, right) => right.right - left.right).slice(0, 8);
+      return { labels: links.map((link) => link.textContent.trim()), pageWidth: document.documentElement.scrollWidth, navRight: bounds.right, viewport: innerWidth, overflowers };
     });
     assert.deepEqual(staticNav.labels, expectedGenres.slice(1), "static recommendation nav uses all canonical genres");
-    assert.ok(staticNav.pageWidth <= width, "static recommendation page overflows at " + width + "px");
+    assert.ok(staticNav.pageWidth <= width, "static recommendation page overflows at " + width + "px: " + JSON.stringify(staticNav));
     assert.ok(staticNav.navRight <= width + 1, "static genre navigation is clipped at " + width + "px");
     for (let index = 0; index < layout.rects.length; index += 1) {
       for (let other = index + 1; other < layout.rects.length; other += 1) {
