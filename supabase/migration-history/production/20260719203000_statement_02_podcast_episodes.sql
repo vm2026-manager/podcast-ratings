@@ -1,0 +1,20 @@
+create table if not exists public.podcast_episodes (
+  id uuid primary key default gen_random_uuid(),
+  podcast_key text not null check (btrim(podcast_key) <> ''),
+  source text not null check (btrim(source) <> ''),
+  external_guid text not null check (btrim(external_guid) <> ''),
+  external_episode_id text,
+  title text not null check (btrim(title) <> ''),
+  description text,
+  published_at timestamptz,
+  duration_seconds integer check (duration_seconds is null or duration_seconds >= 0),
+  episode_url text,
+  audio_url text,
+  image_url text,
+  is_active boolean not null default true,
+  metadata jsonb not null default '{}'::jsonb,
+  imported_at timestamptz not null default now(),
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  constraint podcast_episodes_source_external_guid_key unique (source, external_guid)
+)
