@@ -43,19 +43,6 @@ const TYRAN_OFFICIAL_SQUARE_IMAGE_IDS = Object.freeze({
 });
 const EXPLORE_CLUSTERS_URL = "data/explore-clusters.json";
 
-const GENRES = [
-  "Alle",
-  "True Crime",
-  "Historie",
-  "Krig",
-  "Politik",
-  "Finans",
-  "Samfund",
-  "Sport",
-  "Dokumentar",
-  "Viden",
-  "Underholdning"
-];
 const CANONICAL_GENRES = Object.freeze([
   "True Crime",
   "Historie",
@@ -68,11 +55,7 @@ const CANONICAL_GENRES = Object.freeze([
   "Viden",
   "Underholdning"
 ]);
-// Keep the established home-page genre sections stable. The ranking and Explore
-// filters use the canonical list above; Sladder remains discoverable via search.
-const HOME_GENRES = [
-  "True Crime", "Historie", "Samfund", "Sport", "Dokumentar", "Viden", "Underholdning", "Sladder"
-];
+const GENRES = Object.freeze(["Alle", ...CANONICAL_GENRES]);
 
 const FEATURED_ROTATION_MS = 8000;
 const INITIAL_VISIBLE_COUNT = 24;
@@ -16322,7 +16305,7 @@ function renderHomeGenres(container) {
   const fragment = document.createDocumentFragment();
   let renderedCount = 0;
 
-  HOME_GENRES.forEach((genre) => {
+  CANONICAL_GENRES.forEach((genre) => {
     let topPodcast = null;
     state.podcasts.forEach((podcast) => {
       const hasMadsRating =
@@ -18584,12 +18567,14 @@ function getGenreIconMarkup(genre) {
   const icons = {
     "True Crime": '<svg viewBox="0 0 24 24" focusable="false"><circle cx="12" cy="12" r="8"></circle><circle cx="12" cy="12" r="3"></circle><path d="M12 2v3M12 19v3M2 12h3M19 12h3"></path></svg>',
     Historie: '<svg viewBox="0 0 24 24" focusable="false"><path d="M4 10h16M5 20h14M6 10v9M10 10v9M14 10v9M18 10v9M3 8l9-5 9 5"></path></svg>',
+    Krig: '<svg viewBox="0 0 24 24" focusable="false"><path d="m5 4 15 15M19 4 4 19M4 4l3 1 1 3-3 1-2-2 1-3ZM20 20l-3-1-1-3 3-1 2 2-1 3Z"></path></svg>',
+    Politik: '<svg viewBox="0 0 24 24" focusable="false"><path d="m3 8 9-5 9 5H3ZM5 10h14M6 10v9M10 10v9M14 10v9M18 10v9M4 21h16"></path></svg>',
+    Finans: '<svg viewBox="0 0 24 24" focusable="false"><circle cx="12" cy="12" r="9"></circle><path d="M15 8.5c-.7-.7-1.7-1-3-1-1.7 0-3 .9-3 2.2 0 3.5 6 1.2 6 4.6 0 1.4-1.3 2.3-3.2 2.3-1.4 0-2.5-.4-3.4-1.2M12 5.5v13"></path></svg>',
     Samfund: '<svg viewBox="0 0 24 24" focusable="false"><circle cx="8" cy="8" r="3"></circle><circle cx="16" cy="8" r="3"></circle><path d="M4 20v-2a4 4 0 0 1 8 0v2M12 20v-2a4 4 0 0 1 8 0v2"></path></svg>',
     Sport: '<svg viewBox="0 0 24 24" focusable="false"><circle cx="12" cy="12" r="9"></circle><path d="M7 5c3 3 7 7 12 9M5 16c5-1 9-5 10-11M9 21c0-4 4-8 10-9"></path></svg>',
     Dokumentar: '<svg viewBox="0 0 24 24" focusable="false"><rect x="3" y="7" width="12" height="10" rx="2"></rect><path d="m15 11 6-3v8l-6-3zM7 4l2 3M13 4l-2 3"></path></svg>',
     Viden: '<svg viewBox="0 0 24 24" focusable="false"><path d="M9 18h6M10 22h4M8 14a6 6 0 1 1 8 0c-1 1-1 2-1 4H9c0-2 0-3-1-4Z"></path></svg>',
-    Underholdning: '<svg viewBox="0 0 24 24" focusable="false"><circle cx="12" cy="12" r="9"></circle><path d="M8 10h.01M16 10h.01M8 15c2 2 6 2 8 0"></path></svg>',
-    Sladder: '<svg viewBox="0 0 24 24" focusable="false"><path d="M3 12c3-4 6-5 9-2 3-3 6-2 9 2-3 4-6 5-9 2-3 3-6 2-9-2Z"></path><path d="M6 12h12"></path></svg>'
+    Underholdning: '<svg viewBox="0 0 24 24" focusable="false"><circle cx="12" cy="12" r="9"></circle><path d="M8 10h.01M16 10h.01M8 15c2 2 6 2 8 0"></path></svg>'
   };
   return icons[normalizeText(genre)] || getProfileStatIconMarkup("genre");
 }

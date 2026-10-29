@@ -16771,10 +16771,6 @@ body.page-forside .home-hero__signup {
     --home-genre-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cg fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='9'/%3E%3Cpath d='M8 10h.01M16 10h.01M8 15c2 2 6 2 8 0'/%3E%3C/g%3E%3C/svg%3E");
   }
 
-  html body.page-forside.page-forside #pageIntroPanel .home-genres-card[data-genre="Sladder"] {
-    --home-genre-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cg fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3 12c3-4 6-5 9-2 3-3 6-2 9 2-3 4-6 5-9 2-3 3-6 2-9-2Z'/%3E%3Cpath d='M6 12h12'/%3E%3C/g%3E%3C/svg%3E");
-  }
-
   html body.page-forside.page-forside #pageIntroPanel .home-recent-card {
     padding: 10px !important;
   }
@@ -26695,7 +26691,7 @@ body.page-ranglister #searchInput::-webkit-search-cancel-button {
     line-height: 1.42 !important;
   }
 
-  html body.page-forside #pageIntroPanel .home-genres__grid {
+  html body.page-forside.page-forside #pageIntroPanel .home-genres__grid {
     display: grid !important;
     grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
     gap: 12px !important;
@@ -26757,8 +26753,8 @@ body.page-ranglister #searchInput::-webkit-search-cancel-button {
 }
 
 @media (min-width: 1440px) {
-  html body.page-forside #pageIntroPanel .home-genres__grid {
-    grid-template-columns: repeat(8, minmax(0, 1fr)) !important;
+  html body.page-forside.page-forside #pageIntroPanel .home-genres__grid {
+    grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
   }
 }
 
@@ -29789,4 +29785,50 @@ html body [data-suggestion-id].is-notification-target {
   font-size: .72em;
   font-weight: 800;
   white-space: nowrap;
+}
+
+/* The home genre cards share the canonical ten and stay readable at every width. */
+@media (min-width: 769px) {
+  html body.page-forside.page-forside #pageIntroPanel .home-genres__grid {
+    grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
+    height: auto !important;
+    overflow: visible !important;
+  }
+}
+
+@media (max-width: 768px) {
+  html body.page-forside.page-forside #pageIntroPanel .home-genres__grid {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    height: auto !important;
+    overflow: visible !important;
+  }
+
+  html body.page-forside.page-forside #pageIntroPanel .home-genres-card {
+    min-width: 0 !important;
+    width: 100% !important;
+  }
+
+  html body.page-forside.page-forside #pageIntroPanel .home-genres-card__genre {
+    max-width: 100% !important;
+    white-space: normal !important;
+    overflow-wrap: anywhere !important;
+  }
+}
+
+html body.page-forside.page-forside #pageIntroPanel .home-genres-card[data-genre="Krig"] {
+  --home-genre-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cg fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m5 4 15 15M19 4 4 19M4 4l3 1 1 3-3 1-2-2 1-3ZM20 20l-3-1-1-3 3-1 2 2-1 3Z'/%3E%3C/g%3E%3C/svg%3E");
+}
+
+html body.page-forside.page-forside #pageIntroPanel .home-genres-card[data-genre="Politik"] {
+  --home-genre-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cg fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m3 8 9-5 9 5H3ZM5 10h14M6 10v9M10 10v9M14 10v9M18 10v9M4 21h16'/%3E%3C/g%3E%3C/svg%3E");
+}
+
+html body.page-forside.page-forside #pageIntroPanel .home-genres-card[data-genre="Finans"] {
+  --home-genre-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cg fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='9'/%3E%3Cpath d='M15 8.5c-.7-.7-1.7-1-3-1-1.7 0-3 .9-3 2.2 0 3.5 6 1.2 6 4.6 0 1.4-1.3 2.3-3.2 2.3-1.4 0-2.5-.4-3.4-1.2M12 5.5v13'/%3E%3C/g%3E%3C/svg%3E");
+}
+
+html body.page-forside.page-forside #pageIntroPanel .home-genres-card:focus-visible {
+  outline: 3px solid #a8461b !important;
+  outline-offset: 3px !important;
 }

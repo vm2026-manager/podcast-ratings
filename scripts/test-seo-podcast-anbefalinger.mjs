@@ -64,6 +64,10 @@ assert.doesNotMatch(html, /<time\b|Opdateret den|dateModified|AggregateRating|ra
 assert.match(html, /class="primary-link" href="\/#udforsk">Udforsk alle podcasts på Podcastlisten/);
 assert.match(html, /aria-current="page">Podcastforslag/);
 assert.match(html, /class="listening-choices"/);
+const officialGenreNavigation = html.match(/<nav class="genre-nav"[^>]*>([\s\S]*?)<\/nav>/u)?.[1] || "";
+const officialGenreLabels = [...officialGenreNavigation.matchAll(/<a\b[^>]*>([^<]+)<\/a>/gu)].map((match) => match[1].trim());
+assert.deepEqual(officialGenreLabels, ["True Crime", "Historie", "Krig", "Politik", "Finans", "Samfund", "Sport", "Dokumentar", "Viden", "Underholdning"]);
+assert.doesNotMatch(officialGenreNavigation, /Sladder|Nyheder|Samtaler|Fodbold|Forskning/u, "official genre navigation excludes retired and editorial topic labels");
 assert.equal([...html.matchAll(/<details class="genre-details">/g)].length, 8, "native sections let visitors choose without JS");
 assert.equal([...html.matchAll(/<summary>Se [12] podcastforslag<\/summary>/g)].length, 8);
 assert.equal([...html.matchAll(/class="more-in-genre"/g)].length, 8);
@@ -90,9 +94,8 @@ const canonicalGenresDeclaration = app.match(/const CANONICAL_GENRES = Object\.f
 assert(canonicalGenresDeclaration, "read canonical genre values from the app");
 const normalizer = new Function(`const CANONICAL_GENRES = ${canonicalGenresDeclaration[1]};\n${appFunction("normalizeText")}\n${appFunction("normalizeComparable")}\n${appFunction("normalizeGenre")}\nreturn normalizeGenre;`)();
 const genreMatcher = new Function(`${appFunction("normalizeText")}\n${appFunction("normalizeComparable")}\n${appFunction("podcastHasGenre")}\nreturn podcastHasGenre;`)();
-const genresDeclaration = app.match(/const GENRES = (\[[\s\S]*?\]);/);
-assert(genresDeclaration, "read selectable genres from the app");
-const selectableGenres = new Set(JSON.parse(genresDeclaration[1]));
+assert.match(app, /const GENRES = Object\.freeze\(\["Alle", \.\.\.CANONICAL_GENRES\]\)/u, "filters derive their selectable values from the canonical genre list");
+const selectableGenres = new Set(["Alle", ...JSON.parse(canonicalGenresDeclaration[1])]);
 assert.match(app, /const genre = normalizeGenre\(rawGenre\)/, "catalogue genres are normalized before ranking");
 assert.match(appFunction("getFilteredPodcasts"), /podcastHasGenre\(podcast, state.activeFilter.value\)/, "ranking uses normalized primary and secondary genre matching");
 assert.equal(genreMatcher({ genre: "Samfund", secondaryGenre: "Politik" }, "politik"), true);
