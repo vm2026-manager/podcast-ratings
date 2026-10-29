@@ -75,6 +75,8 @@ const checks = [
   ["manual catalogue episode identity", ["scripts/validate-manual-catalogue-episode-migration.mjs"]],
   ["Bernstein episode identity and local rating safety", ["scripts/test-bernstein-episode-config.mjs"]],
   ["manual episode rating protection", ["--experimental-strip-types", "scripts/test-manual-episode-identity-protection.mjs"]],
+  ["episode identity history RLS migration contract", ["scripts/test-episode-identity-history-rls-migration.mjs"]],
+  ["episode identity history isolated PostgreSQL test contract", ["scripts/test-episode-identity-history-rls-test-contract.mjs"]],
   ["archived Supabase migration history provenance", ["scripts/test-supabase-migration-history-archive.mjs"]],
   ["local episode-rating migration data safety", ["scripts/test-local-episode-rating-migration-safety.mjs"]],
   ["Mediano legacy catalogue resolution", ["scripts/test-mediano-legacy-catalogue-resolution.mjs"]],

@@ -1,0 +1,38 @@
+name: Episode identity history RLS
+
+on:
+  pull_request:
+    paths:
+      - ".github/workflows/episode-identity-history-rls.yml"
+      - "scripts/sql/episode-identity-history-rls-test.sql"
+      - "supabase/migrations/*enable_rls_episode_identity_history.sql"
+  workflow_dispatch:
+
+jobs:
+  isolated-postgres-rls:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_PASSWORD: test-only-password
+          POSTGRES_DB: episode_identity_history_rls_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d episode_identity_history_rls_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install the PostgreSQL client
+        run: sudo apt-get update && sudo apt-get install --yes postgresql-client
+      - name: Apply the RLS migration and assert access/data/trigger contracts
+        env:
+          PGHOST: 127.0.0.1
+          PGPORT: 5432
+          PGUSER: postgres
+          PGPASSWORD: test-only-password
+          PGDATABASE: episode_identity_history_rls_test
+        run: psql -v ON_ERROR_STOP=1 -f scripts/sql/episode-identity-history-rls-test.sql
