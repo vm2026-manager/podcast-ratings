@@ -19,6 +19,8 @@ const checks = [
   ["Flashback parent identity preservation", ["scripts/test-flashback-parent-preservation.mjs"]],
   ["catalogue identity alerts", ["scripts/test-catalogue-identity-alert.mjs"]],
   ["catalogue sync PR/token safety contract", ["scripts/test-catalogue-sync-workflow-contract.mjs"]],
+  ["incomplete catalogue intake and conservative metadata rules", ["scripts/test-catalogue-intake-quality.mjs"]],
+  ["full read-only catalogue quality report and protected baselines", ["scripts/test-catalogue-quality-report.mjs"]],
   ["DR staging, idempotency, owner append gate and editorial metadata", ["scripts/test-dr-sheet-staging.mjs"]],
   ["DR staging workflow trust boundary", ["scripts/test-dr-sheet-workflow.mjs"]],
   ["DR detail recommendation content priority", ["scripts/test-issue-251-recommendations.mjs"]],

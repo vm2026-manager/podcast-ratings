@@ -4,6 +4,7 @@ import { fileURLToPath } from "node:url";
 import { parseSupplementarySimilarities } from "./manual-similarity-supplements.mjs";
 import { mergeAutoDiscoveredDjaevlenRows } from "./djaevlen-auto-discovery.mjs";
 import { mergeAutoDiscoveredBakspejlRows } from "./bakspejl-auto-discovery.mjs";
+import { partitionSheetPodcastRows } from "./catalogue-intake.mjs";
 
 const SPREADSHEET_BASE_URL =
   "https://docs.google.com/spreadsheets/d/e/2PACX-1vQRBWQdj-WDNN3l9yxIMCCu_O2dYfP7modSODcYgJRoQDG3GYsu83W_wIFyijPx6v8l-W011zrFyOdq/pub";
@@ -263,12 +264,13 @@ function rowsToObjects(rows) {
 
   return rows
     .slice(1)
-    .map((row) => {
+    .map((row, sourceIndex) => {
       const item = {};
 
       headers.forEach((header, index) => {
         item[header] = normalizeText(row[index] || "");
       });
+      Object.defineProperty(item, "__sourceRowNumber", { value: sourceIndex + 2, enumerable: false });
 
       return item;
     })
@@ -909,6 +911,8 @@ async function main() {
   const outputDirectoryIndex = process.argv.indexOf("--output-dir");
   const outputDirectory = outputDirectoryIndex === -1 ? "" : process.argv[outputDirectoryIndex + 1];
   if (outputDirectoryIndex !== -1 && !outputDirectory) throw new Error("--output-dir kræver en mappe.");
+  const intakeOnly = process.argv.includes("--intake-only");
+  if (intakeOnly && !outputDirectory) throw new Error("--intake-only kræver --output-dir for at holde rapporten isoleret.");
   const outputSheets = outputDirectory
     ? SHEETS.map((sheet) => ({ ...sheet, outputPath: path.join(outputDirectory, sheet.outputPath) }))
     : SHEETS;
@@ -916,8 +920,21 @@ async function main() {
     outputSheets.map(async (sheet) => [sheet, await loadSheet(sheet)])
   );
   const podcastsSheet = loadedSheets.find(([sheet]) => sheet.sheetName === "Ark1");
-  const sheetCatalogueRows = await slimPodcastRows(filterPodcastRows(podcastsSheet[1].objects), outputDirectory);
   const previousCatalogue = JSON.parse(await readFile(path.join(repoRoot, "data", "podcasts.json"), "utf8"));
+  const intake = partitionSheetPodcastRows(filterPodcastRows(podcastsSheet[1].objects), previousCatalogue.rows);
+  if (intakeOnly) {
+    await writeJsonFile(path.join(outputDirectory, "catalogue-intake-candidates.json"), {
+      generatedAt: new Date().toISOString(),
+      source: buildSheetUrl(podcastsSheet[1].gid),
+      candidates: intake.intakeRows
+    });
+    console.log("Read-only intake audit: " + intake.intakeRows.length + " candidate(s); catalogue generation skipped.");
+    return;
+  }
+  if (intake.intakeRows.length && !outputDirectory) {
+    throw new Error(`Ark1 has ${intake.intakeRows.length} incomplete intake candidate(s). Use --output-dir to stage a review report; no catalogue files were written.`);
+  }
+  const sheetCatalogueRows = await slimPodcastRows(intake.publishableRows, outputDirectory);
   const identitySafeSheetRows = preserveFlashbackParentIdentity(sheetCatalogueRows, previousCatalogue.rows);
   // This registry is committed separately from the Sheet export. Sheet rows win
   // editorially, while a previously allocated auto identity is never discarded.
@@ -930,6 +947,13 @@ async function main() {
   });
   for (const [sheet, loadedSheet] of loadedSheets) {
     if (sheet.sheetName === "Ark1") {
+      if (outputDirectory) {
+        await writeJsonFile(path.join(outputDirectory, "catalogue-intake-candidates.json"), {
+          generatedAt: new Date().toISOString(),
+          source: buildSheetUrl(loadedSheet.gid),
+          candidates: intake.intakeRows
+        });
+      }
       await writeJsonFile(
         sheet.outputPath,
         buildPodcastPayload(catalogueRows, buildSheetUrl(loadedSheet.gid))
@@ -962,6 +986,7 @@ export {
   parseCsv,
   parseClusterPodcastIds,
   parseSupplementarySimilarities,
+  partitionSheetPodcastRows,
   parseManualEpisodes,
   parseManualEpisodeKeys,
   parseTopics,

@@ -43,18 +43,10 @@ const TYRAN_OFFICIAL_SQUARE_IMAGE_IDS = Object.freeze({
 });
 const EXPLORE_CLUSTERS_URL = "data/explore-clusters.json";
 
-const CANONICAL_GENRES = Object.freeze([
-  "True Crime",
-  "Historie",
-  "Krig",
-  "Politik",
-  "Finans",
-  "Samfund",
-  "Sport",
-  "Dokumentar",
-  "Viden",
-  "Underholdning"
-]);
+const CANONICAL_GENRES = window.PODCAST_CANONICAL_GENRES;
+if (!Array.isArray(CANONICAL_GENRES) || CANONICAL_GENRES.length !== 10) {
+  throw new Error("The shared canonical genre definition was not loaded before app.js.");
+}
 const GENRES = Object.freeze(["Alle", ...CANONICAL_GENRES]);
 
 const FEATURED_ROTATION_MS = 8000;
