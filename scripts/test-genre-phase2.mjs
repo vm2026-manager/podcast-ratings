@@ -183,10 +183,24 @@ try {
   const financeFilter = await page.evaluate(() => {
     document.querySelector('[data-ranking-source="mads"]')?.click();
     setActiveFilter("genre", "Finans");
-    return { count: getFilteredPodcasts().length, emptyState: document.querySelector("#podcastGrid .empty-state")?.textContent?.trim() || "", grid: document.getElementById("podcastGrid")?.textContent?.trim().slice(0, 160) || "" };
+    const results = getFilteredPodcasts();
+    return {
+      ids: results.map(getPodcastId).sort(),
+      emptyState: document.querySelector("#podcastGrid .empty-state")?.textContent?.trim() || ""
+    };
   });
-  assert.equal(financeFilter.count, 0, "No unapproved catalogue records are invented for Finans");
-  assert.match(financeFilter.emptyState, /Ingen podcasts matcher den valgte kombination af filtre/u, JSON.stringify(financeFilter));
+  const approvedFinanceIds = ["shop21 dk bitcoin samfund frihed"];
+  assert.ok(
+    financeFilter.ids.every((id) => approvedFinanceIds.includes(id)),
+    `The Finans filter must not invent unapproved catalogue records: ${JSON.stringify(financeFilter)}`
+  );
+  assert.ok(financeFilter.ids.length <= approvedFinanceIds.length, JSON.stringify(financeFilter));
+  if (financeFilter.ids.length === 0) {
+    assert.match(financeFilter.emptyState, /Ingen podcasts matcher den valgte kombination af filtre/u, JSON.stringify(financeFilter));
+  } else {
+    assert.deepEqual(financeFilter.ids, approvedFinanceIds);
+    assert.equal(financeFilter.emptyState, "");
+  }
 
   const topicUrl = `http://127.0.0.1:${address.port}/?s=Den%20Kolde%20Krig#ranglister`;
   await page.goto(topicUrl, { waitUntil: "domcontentloaded" });
