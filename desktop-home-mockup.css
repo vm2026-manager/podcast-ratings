@@ -19325,26 +19325,26 @@ html body:has(#profileListDialog.profile-list-dialog--ratings) #ratingDialog:not
 /* Wide desktop: let the weekly recommendation fill the viewport at reduced zoom. */
 @media (min-width: 1900px) {
   html body.page-forside #pageIntroPanel .home-featured__surface {
-    grid-template-columns: 410px minmax(0, 1fr) !important;
-    column-gap: clamp(34px, 2vw, 48px) !important;
-    padding-right: clamp(64px, 4vw, 112px) !important;
-    padding-left: clamp(64px, 4vw, 112px) !important;
+    --home-featured-wide-cover-size: clamp(340px, calc(340px + (100vw - 1900px) * 0.052), 390px);
+    --home-featured-wide-copy-size: clamp(700px, calc(700px + (100vw - 1900px) * 0.155), 850px);
+    grid-template-columns: var(--home-featured-wide-cover-size) minmax(0, var(--home-featured-wide-copy-size)) !important;
+    column-gap: clamp(42px, calc(42px + (100vw - 1900px) * 0.006), 48px) !important;
   }
 
   html body.page-forside #pageIntroPanel .home-featured__cover-column {
-    max-width: 410px;
+    max-width: var(--home-featured-wide-cover-size);
   }
 
   html body.page-forside #pageIntroPanel .home-featured__cover-column .home-featured__cover {
-    width: min(100%, 390px) !important;
-    height: 390px !important;
-    flex-basis: 390px;
+    width: 100% !important;
+    height: var(--home-featured-wide-cover-size) !important;
+    flex-basis: var(--home-featured-wide-cover-size);
     align-self: center;
   }
 
   html body.page-forside #pageIntroPanel .home-featured__copy {
     min-width: 0;
-    max-width: 1680px;
+    max-width: var(--home-featured-wide-copy-size);
   }
 }
 
