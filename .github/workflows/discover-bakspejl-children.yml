@@ -16,8 +16,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11.25.0
       - uses: actions/setup-node@v4
-        with: { node-version: "24" }
+        with:
+          node-version: 24
+          cache: pnpm
       - name: Discover only verified new children
         id: discover
         run: node scripts/run-bakspejl-auto-discovery.mjs
@@ -25,6 +30,12 @@ jobs:
         id: changed
         run: |
           if git diff --quiet -- data/auto-discovered-bakspejl.json; then echo "value=false" >> "$GITHUB_OUTPUT"; else echo "value=true" >> "$GITHUB_OUTPUT"; fi
+      - name: Install regression-gate dependencies
+        if: steps.changed.outputs.value == 'true'
+        run: pnpm install --frozen-lockfile
+      - name: Install Chromium for Playwright regression tests
+        if: steps.changed.outputs.value == 'true'
+        run: pnpm exec playwright install --with-deps chromium
       - name: Regenerate staged catalogue and validate
         if: steps.changed.outputs.value == 'true'
         run: |
