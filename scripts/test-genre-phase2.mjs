@@ -215,18 +215,17 @@ try {
       emptyState: document.querySelector("#podcastGrid .empty-state")?.textContent?.trim() || ""
     };
   });
-  const approvedFinanceIds = ["shop21 dk bitcoin samfund frihed"];
-  assert.ok(
-    financeFilter.ids.every((id) => approvedFinanceIds.includes(id)),
-    `The Finans filter must not invent unapproved catalogue records: ${JSON.stringify(financeFilter)}`
-  );
-  assert.ok(financeFilter.ids.length <= approvedFinanceIds.length, JSON.stringify(financeFilter));
-  if (financeFilter.ids.length === 0) {
-    assert.match(financeFilter.emptyState, /Ingen podcasts matcher den valgte kombination af filtre/u, JSON.stringify(financeFilter));
-  } else {
-    assert.deepEqual(financeFilter.ids, approvedFinanceIds);
-    assert.equal(financeFilter.emptyState, "");
-  }
+  const approvedFinanceIds = [
+    "aktieuniverset", "big picture", "bliv rigere", "boraghi og pengedoktoren",
+    "børsen brænder", "børsen investor", "børsen morgenbriefing", "børssnak",
+    "den lyse side", "det der tæller", "finansministeriet forklarer", "lyn analyse",
+    "makropuls howden", "millionærklubben", "morgennyheder", "shop21 dk bitcoin samfund frihed",
+    "sorte tal", "store penge"
+  ].sort();
+  assert.deepEqual(financeFilter.ids, approvedFinanceIds, "Finans primary results match the 17 approved changes plus SHOP21.DK exactly");
+  assert.equal(new Set(financeFilter.ids).size, 18, "Finans primary results contain no duplicate podcasts");
+  assert.equal(financeFilter.emptyState, "");
+  assert.equal(catalogue.rows.filter((row) => row.Genre === "Finans").length, 18, "catalogue has exactly 18 primary Finans podcasts");
 
   const topicUrl = `http://127.0.0.1:${address.port}/?s=Den%20Kolde%20Krig#ranglister`;
   await page.goto(topicUrl, { waitUntil: "domcontentloaded" });
@@ -243,6 +242,18 @@ try {
   assert.ok(topicResults.resultCount > 0, JSON.stringify(topicResults));
   assert.equal(topicResults.topicMatch, true);
   assert.equal(topicResults.url, "?s=Den%20Kolde%20Krig#ranglister");
+
+  await page.goto("http://127.0.0.1:" + address.port + "/?genre=Finans#ranglister", { waitUntil: "domcontentloaded" });
+  await page.waitForFunction(() => state.activeFilter?.type === "genre" && state.activeFilter.value === "Finans");
+  const sharedFinanceResults = await page.evaluate(() => {
+    const results = getFilteredPodcasts();
+    const keys = results.map(getPodcastKey);
+    return { url: location.search + location.hash, ids: results.map(getPodcastId).sort(), unique: new Set(keys).size === keys.length, allMatch: results.every((podcast) => podcast.genre === "Finans") };
+  });
+  assert.equal(sharedFinanceResults.url, "?genre=Finans#ranglister");
+  assert.deepEqual(sharedFinanceResults.ids, approvedFinanceIds);
+  assert.equal(sharedFinanceResults.unique, true);
+  assert.equal(sharedFinanceResults.allMatch, true);
 
   await page.goto("http://127.0.0.1:" + address.port + "/?genre=Krig#ranglister", { waitUntil: "domcontentloaded" });
   await page.waitForFunction(() => state.activeFilter?.type === "genre" && state.activeFilter.value === "Krig");
