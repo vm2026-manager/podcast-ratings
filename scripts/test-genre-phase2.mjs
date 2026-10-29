@@ -13,10 +13,11 @@ const expectedGenres = [
 const appSource = await readFile(path.join(root, "app.js"), "utf8");
 const indexSource = await readFile(path.join(root, "index.html"), "utf8");
 assert.equal(catalogue.rows.length, catalogue.count, "The catalogue wrapper count matches its source rows");
-assert.match(indexSource, /app\.js\?v=20261028-genre-phase2-v1/u);
-assert.match(appSource, /const GENRES = \[\s*"Alle",\s*"True Crime",\s*"Historie",\s*"Krig",\s*"Politik",\s*"Finans",\s*"Samfund",\s*"Sport",\s*"Dokumentar",\s*"Viden",\s*"Underholdning"\s*\]/u);
-assert.doesNotMatch(appSource.match(/const GENRES = \[[\s\S]*?\];/u)?.[0] || "", /Sladder/u);
-assert.match(appSource, /const HOME_GENRES = \[\s*"True Crime", "Historie", "Samfund", "Sport", "Dokumentar", "Viden", "Underholdning", "Sladder"\s*\]/u);
+assert.match(indexSource, /app\.js\?v=20261029-issue-382-v1/u);
+assert.match(appSource, /const CANONICAL_GENRES = Object\.freeze\(\[/u);
+assert.match(appSource, /const GENRES = Object\.freeze\(\["Alle", ...CANONICAL_GENRES\]\);/u);
+assert.doesNotMatch(appSource, /const HOME_GENRES/u);
+assert.doesNotMatch(appSource.match(/const GENRES = [^;]+;/u)?.[0] || "", /Sladder/u);
 assert.match(appSource, /function getPodcastDetailGenres\(/u);
 assert.match(appSource, /function getSharedDisplayGroupGenres\(/u);
 assert.match(appSource, /function renderPodcastGenreTags\(/u);
@@ -78,6 +79,28 @@ try {
     }
   }
 
+  await page.setViewportSize({ width: 1440, height: 900 });
+  const wideDesktop = await page.evaluate(() => {
+    const container = document.querySelector(".ranking-sidebar-column .genre-chips");
+    const buttons = [...container.querySelectorAll(".genre-chip")];
+    return {
+      labels: buttons.map((button) => button.textContent.trim()),
+      columns: getComputedStyle(container).gridTemplateColumns.split(" ").length,
+      rects: buttons.map((button) => {
+        const rect = button.getBoundingClientRect();
+        return { left: rect.left, right: rect.right, top: rect.top, bottom: rect.bottom };
+      })
+    };
+  });
+  assert.deepEqual(wideDesktop.labels, expectedGenres);
+  assert.equal(wideDesktop.columns, 2, "desktop ranking filters retain two columns at 1440px");
+  for (let index = 0; index < wideDesktop.rects.length; index += 1) {
+    for (let other = index + 1; other < wideDesktop.rects.length; other += 1) {
+      const left = wideDesktop.rects[index], right = wideDesktop.rects[other];
+      assert.ok(left.bottom <= right.top || right.bottom <= left.top || left.right <= right.left || right.right <= left.left, "Wide desktop genre buttons overlap");
+    }
+  }
+
   const helperResults = await page.evaluate(() => ({
     genres: GENRES,
     detail: getPodcastDetailGenres({ genre: "True Crime", secondaryGenre: "Dokumentar", tertiaryGenre: "True Crime" }),
@@ -95,6 +118,7 @@ try {
     irrelevantTopic: matchesPodcastTopicSearch({ searchTopics: ["Dansk politik", "Europæisk historie"] }, "dansk historie"),
     tertiaryMatch: podcastHasGenre({ genre: "Historie", secondaryGenre: "Krig", tertiaryGenre: "Finans" }, "Finans"),
     canonical: getRankingCandidates().some((podcast) => podcast.title === "Kvinden med den tunge kuffert" && podcast.genre === "True Crime" && podcast.secondaryGenre === "Dokumentar"),
+    genreIconsUseFallback: CANONICAL_GENRES.map((genre) => getGenreIconMarkup(genre) === getProfileStatIconMarkup("genre")),
     displayedPodcastCount: state.podcasts.length
   }));
   assert.deepEqual(helperResults.genres, expectedGenres);
@@ -107,6 +131,7 @@ try {
   assert.equal(helperResults.irrelevantTopic, false);
   assert.equal(helperResults.tertiaryMatch, true);
   assert.equal(helperResults.canonical, true);
+  assert.ok(helperResults.genreIconsUseFallback.every((fallback) => !fallback), "all canonical genres have dedicated icons");
   assert.ok(helperResults.displayedPodcastCount > 0);
 
   const hasDisplayGroup = await page.evaluate(() => {
@@ -218,6 +243,18 @@ try {
   assert.equal(topicResults.topicMatch, true);
   assert.equal(topicResults.url, "?s=Den%20Kolde%20Krig#ranglister");
 
+  await page.goto("http://127.0.0.1:" + address.port + "/?genre=Krig#ranglister", { waitUntil: "domcontentloaded" });
+  await page.waitForFunction(() => state.activeFilter?.type === "genre" && state.activeFilter.value === "Krig");
+  const sharedGenreResults = await page.evaluate(() => {
+    const results = getFilteredPodcasts();
+    const keys = results.map(getPodcastKey);
+    return { url: location.search + location.hash, count: results.length, unique: new Set(keys).size === keys.length, allMatch: results.every((podcast) => podcastHasGenre(podcast, "Krig")) };
+  });
+  assert.equal(sharedGenreResults.url, "?genre=Krig#ranglister");
+  assert.ok(sharedGenreResults.count > 0);
+  assert.equal(sharedGenreResults.unique, true);
+  assert.equal(sharedGenreResults.allMatch, true);
+
   await page.goto(`http://127.0.0.1:${address.port}/?s=Sladder#ranglister`, { waitUntil: "domcontentloaded" });
   await page.waitForFunction(() => state.searchTerm === "Sladder" && state.podcasts?.length > 0);
   const legacySearch = await page.evaluate(() => ({
@@ -274,6 +311,69 @@ try {
       }
     }
   }
+
+  for (const width of [320, 375, 390, 430, 768, 1280, 1440]) {
+    await page.setViewportSize({ width: width, height: 900 });
+    await page.goto("http://127.0.0.1:" + address.port + "/#forside", { waitUntil: "domcontentloaded" });
+    const home = page.locator("#pageIntroPanel .home-genres__grid");
+    await home.waitFor({ state: "visible" });
+    await page.waitForFunction(() => document.querySelectorAll("#pageIntroPanel .home-genres__grid .home-genres-card").length === 10);
+    const layout = await page.evaluate(() => {
+      const grid = document.querySelector("#pageIntroPanel .home-genres__grid");
+      const cards = [...grid.querySelectorAll(".home-genres-card")];
+      return {
+        viewport: innerWidth,
+        pageWidth: document.documentElement.scrollWidth,
+        labels: cards.map((card) => card.querySelector(".home-genres-card__genre")?.textContent.trim()),
+        rects: cards.map((card) => {
+          const rect = card.getBoundingClientRect();
+          const label = card.querySelector(".home-genres-card__genre");
+          return { left: rect.left, right: rect.right, top: rect.top, bottom: rect.bottom, labelWidth: label?.clientWidth || 0, labelScrollWidth: label?.scrollWidth || 0, genre: card.dataset.genre };
+        }),
+        columns: getComputedStyle(grid).gridTemplateColumns.split(" ").length
+      };
+    });
+    assert.ok(layout.pageWidth <= width, "Homepage overflows at " + width + "px: " + JSON.stringify(layout));
+    assert.deepEqual(layout.labels, expectedGenres.slice(1), "homepage uses the canonical 10 genres at " + width + "px");
+    assert.equal(layout.columns, width <= 430 ? 3 : width < 769 ? 4 : 5, "home genre grid adapts to 10 genres at " + width + "px");
+    assert.ok(layout.rects.every((card) => card.right <= width + 1 && card.labelWidth > 0), "genre card or label is clipped at " + width + "px");
+    assert.ok(layout.rects.every((card) => card.labelScrollWidth <= card.labelWidth + 2), "genre label overflows at " + width + ": " + JSON.stringify(layout.rects.filter((card) => card.labelScrollWidth > card.labelWidth + 2)) + "px");
+    assert.ok(layout.rects.every((card) => card.genre), "genre cards have semantic data attributes");
+    await page.goto("http://127.0.0.1:" + address.port + "/podcast-anbefalinger/index.html", { waitUntil: "domcontentloaded" });
+    const staticNav = await page.evaluate(() => {
+      const nav = document.querySelector(".genre-nav");
+      const links = [...nav.querySelectorAll("a")];
+      const bounds = nav.getBoundingClientRect();
+      return { labels: links.map((link) => link.textContent.trim()), pageWidth: document.documentElement.scrollWidth, navRight: bounds.right, viewport: innerWidth };
+    });
+    assert.deepEqual(staticNav.labels, expectedGenres.slice(1), "static recommendation nav uses all canonical genres");
+    assert.ok(staticNav.pageWidth <= width, "static recommendation page overflows at " + width + "px");
+    assert.ok(staticNav.navRight <= width + 1, "static genre navigation is clipped at " + width + "px");
+    for (let index = 0; index < layout.rects.length; index += 1) {
+      for (let other = index + 1; other < layout.rects.length; other += 1) {
+        const left = layout.rects[index], right = layout.rects[other];
+        assert.ok(left.bottom <= right.top || right.bottom <= left.top || left.right <= right.left || right.right <= left.left, "Homepage genre cards overlap at " + width + "px");
+      }
+    }
+  }
+
+  await page.goto("http://127.0.0.1:" + address.port + "/#forside", { waitUntil: "domcontentloaded" });
+  const financeCard = page.locator('#pageIntroPanel .home-genres-card[data-genre="Finans"]');
+  await financeCard.waitFor({ state: "visible" });
+  assert.equal(await financeCard.getAttribute("role"), "link");
+  assert.equal(await financeCard.getAttribute("tabindex"), "0", "homepage genre card is keyboard focusable");
+  await financeCard.focus();
+  assert.equal(await financeCard.evaluate((card) => document.activeElement === card), true, "homepage genre card accepts keyboard focus");
+  await page.keyboard.press("Enter");
+  await page.waitForFunction(() => state.activeFilter?.type === "genre" && state.activeFilter.value === "Finans");
+  const financeResults = await page.evaluate(() => {
+    const results = getFilteredPodcasts();
+    const keys = results.map(getPodcastKey);
+    return { count: results.length, unique: new Set(keys).size === keys.length, allMatch: results.every((podcast) => podcastHasGenre(podcast, "Finans")) };
+  });
+  assert.ok(financeResults.count > 0);
+  assert.equal(financeResults.unique, true);
+  assert.equal(financeResults.allMatch, true);
   console.log("Genre phase 2 regression tests passed.");
 } finally {
   await browser.close();

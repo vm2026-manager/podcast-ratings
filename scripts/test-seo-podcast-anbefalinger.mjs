@@ -90,9 +90,18 @@ const canonicalGenresDeclaration = app.match(/const CANONICAL_GENRES = Object\.f
 assert(canonicalGenresDeclaration, "read canonical genre values from the app");
 const normalizer = new Function(`const CANONICAL_GENRES = ${canonicalGenresDeclaration[1]};\n${appFunction("normalizeText")}\n${appFunction("normalizeComparable")}\n${appFunction("normalizeGenre")}\nreturn normalizeGenre;`)();
 const genreMatcher = new Function(`${appFunction("normalizeText")}\n${appFunction("normalizeComparable")}\n${appFunction("podcastHasGenre")}\nreturn podcastHasGenre;`)();
-const genresDeclaration = app.match(/const GENRES = (\[[\s\S]*?\]);/);
-assert(genresDeclaration, "read selectable genres from the app");
-const selectableGenres = new Set(JSON.parse(genresDeclaration[1]));
+const selectableGenres = new Set(["Alle", ...JSON.parse(canonicalGenresDeclaration[1])]);
+const nav = html.match(/<nav class="genre-nav" aria-label="Officielle genrer">([\s\S]*?)<\/nav>/);
+assert(nav, "static recommendation page links to the official genre filters");
+const navItems = [...nav[1].matchAll(/<a href="([^"]+)">([^<]+)<\/a>/g)].map((match) => ({ href: decode(match[1]), label: decode(match[2]) }));
+assert.deepEqual(navItems.map((item) => item.label), [...selectableGenres].slice(1));
+for (const item of navItems) {
+  const link = new URL(item.href, canonical);
+  assert.equal(link.pathname, "/");
+  assert.equal(link.hash, "#ranglister");
+  assert.equal(link.searchParams.get("genre"), item.label);
+  assert.equal([...link.searchParams.keys()].length, 1);
+}
 assert.match(app, /const genre = normalizeGenre\(rawGenre\)/, "catalogue genres are normalized before ranking");
 assert.match(appFunction("getFilteredPodcasts"), /podcastHasGenre\(podcast, state.activeFilter.value\)/, "ranking uses normalized primary and secondary genre matching");
 assert.equal(genreMatcher({ genre: "Samfund", secondaryGenre: "Politik" }, "politik"), true);
@@ -161,7 +170,11 @@ for (const [, encodedHref] of html.matchAll(/href="([^"]+)"/g)) {
   assert.equal(url.origin, "https://podcastlisten.dk", "links stay within Podcastlisten");
   if (url.pathname === "/" && url.hash) {
     assert(["#forside", "#ranglister", "#udforsk"].includes(url.hash), `only verified app hash routes: ${href}`);
-    assert.equal(url.search, "", "do not invent genre query routing");
+    if (url.searchParams.has("genre")) {
+      assert.equal(url.hash, "#ranglister");
+      assert(selectableGenres.has(url.searchParams.get("genre")) && url.searchParams.get("genre") !== "Alle");
+      assert.equal([...url.searchParams.keys()].length, 1);
+    } else assert.equal(url.search, "", "do not invent unrelated query routing");
   }
   if (url.searchParams.has("podcast")) assert(seen.has(url.searchParams.get("podcast")), `detail route uses a verified permanent ID: ${href}`);
   if (href.startsWith("#")) assert(ids.includes(url.hash.slice(1)), `in-page link target must exist: ${href}`);
