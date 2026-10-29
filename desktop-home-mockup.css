@@ -19343,3 +19343,16 @@ html body.page-forside.page-forside #pageIntroPanel .home-genres-card[data-genre
     gap: 10px !important;
   }
 }
+
+/* The ten home genres need two complete desktop rows at five columns. */
+@media (min-width: 769px) {
+  html body.page-forside #pageIntroPanel .home-genres {
+    height: auto !important;
+    min-height: 132px !important;
+    overflow: visible !important;
+  }
+
+  html body.page-forside #pageIntroPanel .home-genres__grid {
+    height: auto !important;
+  }
+}
