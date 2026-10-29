@@ -65,6 +65,9 @@ jobs:
         run: |
           node -e "const fs=require('fs'); for (const path of ['.sync-stage/data/podcasts.json', '.sync-stage/data/featured-reviews.json', '.sync-stage/data/explore-clusters.json']) JSON.parse(fs.readFileSync(path,'utf8')); console.log('Staged catalogue JSON files are valid')"
 
+      - name: Validate incomplete catalogue intake
+        run: node scripts/validate-catalogue-intake.mjs --before data/podcasts.json --candidate .sync-stage/data/podcasts.json --intake .sync-stage/catalogue-intake-candidates.json
+
       - name: Hard podcast identity integrity gate
         id: identity-gate
         env:

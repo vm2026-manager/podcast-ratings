@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { createRequire } from "node:module";
 import { cp, mkdir, mkdtemp, readFile, rm, stat } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
@@ -7,6 +8,8 @@ import { generateSeoPodcastPages, renderSitemap } from "./generate-seo-podcast-p
 import { validateSitemap } from "./seo-podcast-safety.mjs";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
+const require = createRequire(import.meta.url);
+const canonicalGenres = require("../canonical-genres.js");
 const canonical = "https://podcastlisten.dk/podcast-anbefalinger/";
 const landingRelative = "podcast-anbefalinger/index.html";
 const html = await readFile(path.join(root, landingRelative), "utf8");
@@ -86,11 +89,10 @@ function appFunction(name) {
   assert(start >= 0 && end > start, `app function exists: ${name}`);
   return app.slice(start, end);
 }
-const canonicalGenresDeclaration = app.match(/const CANONICAL_GENRES = Object\.freeze\((\[[\s\S]*?\])\);/);
-assert(canonicalGenresDeclaration, "read canonical genre values from the app");
-const normalizer = new Function(`const CANONICAL_GENRES = ${canonicalGenresDeclaration[1]};\n${appFunction("normalizeText")}\n${appFunction("normalizeComparable")}\n${appFunction("normalizeGenre")}\nreturn normalizeGenre;`)();
-const genreMatcher = new Function(`${appFunction("normalizeText")}\n${appFunction("normalizeComparable")}\n${appFunction("podcastHasGenre")}\nreturn podcastHasGenre;`)();
-const selectableGenres = new Set(["Alle", ...JSON.parse(canonicalGenresDeclaration[1])]);
+assert.match(app, /const CANONICAL_GENRES = window\.PODCAST_CANONICAL_GENRES;/u, "the app consumes the shared canonical genre definition");
+const normalizer = new Function("const CANONICAL_GENRES = " + JSON.stringify(canonicalGenres) + ";\n" + appFunction("normalizeText") + "\n" + appFunction("normalizeComparable") + "\n" + appFunction("normalizeGenre") + "\nreturn normalizeGenre;")();
+const genreMatcher = new Function(appFunction("normalizeText") + "\n" + appFunction("normalizeComparable") + "\n" + appFunction("podcastHasGenre") + "\nreturn podcastHasGenre;")();
+const selectableGenres = new Set(["Alle", ...canonicalGenres]);
 const nav = html.match(/<nav class="genre-nav" aria-label="Officielle genrer">([\s\S]*?)<\/nav>/);
 assert(nav, "static recommendation page links to the official genre filters");
 const navItems = [...nav[1].matchAll(/<a href="([^"]+)">([^<]+)<\/a>/g)].map((match) => ({ href: decode(match[1]), label: decode(match[2]) }));

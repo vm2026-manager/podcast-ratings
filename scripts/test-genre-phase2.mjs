@@ -1,21 +1,26 @@
 import assert from "node:assert/strict";
 import { createServer } from "node:http";
+import { createRequire } from "node:module";
 import { readFile, stat } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { chromium } from "playwright";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
+const require = createRequire(import.meta.url);
+const sharedCanonicalGenres = require("../canonical-genres.js");
 const catalogue = JSON.parse(await readFile(path.join(root, "data/podcasts.json"), "utf8"));
-const expectedGenres = [
-  "Alle", "True Crime", "Historie", "Krig", "Politik", "Finans", "Samfund", "Sport", "Dokumentar", "Viden", "Underholdning"
-];
+const expectedCanonicalGenres = ["True Crime", "Historie", "Krig", "Politik", "Finans", "Samfund", "Sport", "Dokumentar", "Viden", "Underholdning"];
+assert.deepEqual(sharedCanonicalGenres, expectedCanonicalGenres, "shared canonical definition is the approved set of ten genres");
+const expectedGenres = ["Alle", ...sharedCanonicalGenres];
 const appSource = await readFile(path.join(root, "app.js"), "utf8");
 const indexSource = await readFile(path.join(root, "index.html"), "utf8");
 const styleSource = await readFile(path.join(root, "style.css"), "utf8");
 assert.equal(catalogue.rows.length, catalogue.count, "The catalogue wrapper count matches its source rows");
-assert.match(indexSource, /app\.js\?v=20261029-home-genres-compact-v1/u);
-assert.match(appSource, /const CANONICAL_GENRES = Object\.freeze\(\[/u);
+assert.match(indexSource, /app\.js\?v=20261029-canonical-genre-source-v1/u);
+assert.match(appSource, /const CANONICAL_GENRES = window\.PODCAST_CANONICAL_GENRES;/u);
+assert.match(indexSource, /canonical-genres\.js\?v=/u);
+assert.ok(indexSource.indexOf("canonical-genres.js") < indexSource.indexOf("app.js"), "shared genre definition loads before the app");
 assert.match(appSource, /const GENRES = Object\.freeze\(\["Alle", ...CANONICAL_GENRES\]\);/u);
 assert.doesNotMatch(appSource, /const HOME_GENRES/u);
 assert.doesNotMatch(appSource.match(/const GENRES = [^;]+;/u)?.[0] || "", /Sladder/u);
