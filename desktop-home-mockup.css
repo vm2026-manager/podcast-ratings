@@ -19344,15 +19344,9 @@ html body.page-forside.page-forside #pageIntroPanel .home-genres-card[data-genre
   }
 }
 
-/* The ten home genres need two complete desktop rows at five columns. */
+/* Keep the original compact panel height; let its card hit areas remain visible. */
 @media (min-width: 769px) {
-  html body.page-forside #pageIntroPanel .home-genres {
-    height: auto !important;
-    min-height: 132px !important;
+  html body.page-forside.page-forside #pageIntroPanel .home-genres {
     overflow: visible !important;
-  }
-
-  html body.page-forside #pageIntroPanel .home-genres__grid {
-    height: auto !important;
   }
 }
