@@ -64,9 +64,9 @@ assert.doesNotMatch(html, /<time\b|Opdateret den|dateModified|AggregateRating|ra
 assert.match(html, /class="primary-link" href="\/#udforsk">Udforsk alle podcasts på Podcastlisten/);
 assert.match(html, /aria-current="page">Podcastforslag/);
 assert.match(html, /class="listening-choices"/);
-assert.equal([...html.matchAll(/<details class="genre-details">/g)].length, 8, "native sections let visitors choose without JS");
-assert.equal([...html.matchAll(/<summary>Se [12] podcastforslag<\/summary>/g)].length, 8);
-assert.equal([...html.matchAll(/class="more-in-genre"/g)].length, 8);
+assert.equal([...html.matchAll(/<details class="genre-details">/g)].length, 9, "native sections let visitors choose without JS");
+assert.equal([...html.matchAll(/<summary>Se [12] podcastforslag<\/summary>/g)].length, 9);
+assert.equal([...html.matchAll(/class="more-in-genre"/g)].length, 9);
 assert.match(html, /De er ikke brugernes gennemsnitsvurderinger/);
 const routeStart = app.indexOf("function getRouteInfoFromHash(");
 const routeEnd = app.indexOf("\nfunction ", routeStart + 1);
@@ -109,7 +109,7 @@ assert.equal(genreMatcher({ genre: "Historie", tertiaryGenre: "Finans" }, "finan
 assert.equal(genreMatcher({ genre: "Sport", secondaryGenre: "" }, "Historie"), false);
 function validateGenreNavigation(content) {
   const sections = [...content.matchAll(/<section class="genre-section"[\s\S]*?<\/section>/g)];
-  assert.equal(sections.length, 8);
+  assert.equal(sections.length, 9);
   for (const [section] of sections) {
     const helper = section.match(/<p class="more-in-genre"><a href="([^\"]+)">[^<]+<\/a><span>Vælg ([^<]+) i ranglistens genrefilter\.<\/span><\/p>/);
     assert(helper, "each section has a concrete, validated next step");
@@ -133,7 +133,7 @@ assert.throws(() => validateGenreNavigation(html.replace("Vælg Sport i", "Vælg
 
 const cards = [...html.matchAll(/<article class="podcast-card" data-podcast-id="([^"]+)">([\s\S]*?)<\/article>/g)];
 assert.equal(cards.length, 15, "reviewed selection must render all 15 verified podcasts");
-assert.equal([...html.matchAll(/<section class="genre-section"/g)].length, 8);
+assert.equal([...html.matchAll(/<section class="genre-section"/g)].length, 9);
 const seen = new Set(), genres = new Set();
 for (const [, encodedId, card] of cards) {
   const id = decode(encodedId);
@@ -209,4 +209,4 @@ try {
   await generateSeoPodcastPages({ root: fixture, write: true });
   assert.deepEqual(await snapshots(fixture, files), original, "phase 1 publication must preserve the landing page and all sitemap URLs");
 } finally { await rm(fixture, { recursive: true, force: true }); }
-console.log(`Podcast recommendation landing SEO checks passed: ${seen.size} verified Danish podcasts, 8 sections, ${urls.size} preserved sitemap URLs, zero repository writes.`);
+console.log(`Podcast recommendation landing SEO checks passed: ${seen.size} verified Danish podcasts, 9 sections, ${urls.size} preserved sitemap URLs, zero repository writes.`);
