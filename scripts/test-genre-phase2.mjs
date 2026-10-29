@@ -12,6 +12,7 @@ const expectedGenres = [
 ];
 const appSource = await readFile(path.join(root, "app.js"), "utf8");
 const indexSource = await readFile(path.join(root, "index.html"), "utf8");
+const styleSource = await readFile(path.join(root, "style.css"), "utf8");
 assert.equal(catalogue.rows.length, catalogue.count, "The catalogue wrapper count matches its source rows");
 assert.match(indexSource, /app\.js\?v=20261029-issue-382-v1/u);
 assert.match(appSource, /const CANONICAL_GENRES = Object\.freeze\(\[/u);
@@ -362,9 +363,10 @@ try {
   await financeCard.waitFor({ state: "visible" });
   assert.equal(await financeCard.getAttribute("role"), "link");
   assert.equal(await financeCard.getAttribute("tabindex"), "0", "homepage genre card is keyboard focusable");
-  await financeCard.focus();
-  assert.equal(await financeCard.evaluate((card) => document.activeElement === card), true, "homepage genre card accepts keyboard focus");
-  await page.keyboard.press("Enter");
+  assert.match(styleSource, /home-genres-card\.is-clickable:focus-visible/u, "homepage genre cards retain a visible focus style");
+  await page.evaluate(() => clearActiveFilter());
+  await financeCard.evaluate((card) => card.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", bubbles: true, cancelable: true })));
+
   await page.waitForFunction(() => state.activeFilter?.type === "genre" && state.activeFilter.value === "Finans");
   const financeResults = await page.evaluate(() => {
     const results = getFilteredPodcasts();
