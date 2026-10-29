@@ -1,24 +1,26 @@
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
 import { spawnSync } from "node:child_process";
-import { readFile } from "node:fs/promises";
+import { mkdtemp, readFile, rm } from "node:fs/promises";
+import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { CANONICAL_GENRES } from "./catalogue-intake.mjs";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
+const outputDirectory = await mkdtemp(path.join(os.tmpdir(), "catalogue-quality-report-"));
 const protectedPaths = ["data/podcasts.json", "data/podcast-episodes.json", "data/auto-discovered-bakspejl.json", "data/auto-discovered-djaevlen.json"];
 const beforeHashes = new Map(await Promise.all(protectedPaths.map(async (relative) => {
   const bytes = await readFile(path.join(root, relative));
   return [relative, createHash("sha256").update(bytes).digest("hex")];
 })));
-const run = spawnSync(process.execPath, ["scripts/catalogue-quality-audit.mjs"], { cwd: root, encoding: "utf8" });
+const run = spawnSync(process.execPath, ["scripts/catalogue-quality-audit.mjs", outputDirectory], { cwd: root, encoding: "utf8" });
 assert.equal(run.status, 0, run.stderr || run.stdout);
 for (const [relative, expectedHash] of beforeHashes) {
   const bytes = await readFile(path.join(root, relative));
   assert.equal(createHash("sha256").update(bytes).digest("hex"), expectedHash, relative + " is read-only during report generation");
 }
-const report = JSON.parse(await readFile(path.join(root, "audit-catalogue-quality/catalogue-quality-report.json"), "utf8"));
+const report = JSON.parse(await readFile(path.join(outputDirectory, "catalogue-quality-report.json"), "utf8"));
 const summary = report.summary;
 const catalogue = JSON.parse(await readFile(path.join(root, "data/podcasts.json"), "utf8"));
 const autoSources = [
@@ -49,7 +51,8 @@ for (const row of report.records) {
   assert.equal(Object.hasOwn(row, "bookmarks"), false);
   assert.equal(Object.hasOwn(row, "episodeIds"), false);
 }
-const csv = await readFile(path.join(root, "audit-catalogue-quality/full-catalogue.csv"), "utf8");
+const csv = await readFile(path.join(outputDirectory, "full-catalogue.csv"), "utf8");
 assert.equal((csv.match(/\r\n/gu) || []).length, summary.rows + 1);
-assert.match(await readFile(path.join(root, "audit-catalogue-quality/catalogue-quality-report.md"), "utf8"), /Ark1 række 1339, Krig/u);
+assert.match(await readFile(path.join(outputDirectory, "catalogue-quality-report.md"), "utf8"), /Ark1 række 1339, Krig/u);
+await rm(outputDirectory, { recursive: true, force: true });
 console.log("Full read-only catalogue quality report passed identity, coverage, source-class, privacy, and intake assertions.");

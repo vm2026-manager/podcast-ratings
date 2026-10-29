@@ -7,7 +7,9 @@ import { CANONICAL_GENRES } from "./catalogue-intake.mjs";
 import { suggestGenres, suggestSearchTopics } from "./catalogue-quality-rules.mjs";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
-const outputDirectory = path.join(root, "audit-catalogue-quality");
+const outputDirectory = process.argv[2]
+  ? path.resolve(process.argv[2])
+  : path.join(root, "audit-catalogue-quality");
 const normalize = (input) => String(input ?? "").trim().replace(/\s+/gu, " ");
 const key = (input) => normalize(input).normalize("NFKC").toLocaleLowerCase("da-DK");
 const canonicalByKey = new Map(CANONICAL_GENRES.map((genre) => [key(genre), genre]));
