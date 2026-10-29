@@ -7,6 +7,8 @@ import { chromium } from "playwright";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const expectedGenres = ["True Crime", "Historie", "Krig", "Politik", "Finans", "Samfund", "Sport", "Dokumentar", "Viden", "Underholdning"];
+const indexSource = await readFile(path.join(root, "index.html"), "utf8");
+assert.match(indexSource, /desktop-home-mockup\.css\?v=20261029-home-genre-clipping-v1/u, "The homepage stylesheet cache version matches the layout fix");
 const server = createServer(async (request, response) => {
   try {
     const urlPath = decodeURIComponent(new URL(request.url, "http://localhost").pathname);
