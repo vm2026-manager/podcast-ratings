@@ -14,7 +14,7 @@ const appSource = await readFile(path.join(root, "app.js"), "utf8");
 const indexSource = await readFile(path.join(root, "index.html"), "utf8");
 const styleSource = await readFile(path.join(root, "style.css"), "utf8");
 assert.equal(catalogue.rows.length, catalogue.count, "The catalogue wrapper count matches its source rows");
-assert.match(indexSource, /app\.js\?v=20261029-issue-382-v2/u);
+assert.match(indexSource, /app\.js\?v=20261029-home-genres-compact-v1/u);
 assert.match(appSource, /const CANONICAL_GENRES = Object\.freeze\(\[/u);
 assert.match(appSource, /const GENRES = Object\.freeze\(\["Alle", ...CANONICAL_GENRES\]\);/u);
 assert.doesNotMatch(appSource, /const HOME_GENRES/u);
@@ -358,14 +358,30 @@ try {
     await page.goto("http://127.0.0.1:" + address.port + "/#forside", { waitUntil: "domcontentloaded" });
     const home = page.locator("#pageIntroPanel .home-genres__grid");
     await home.waitFor({ state: "visible" });
-    await page.waitForFunction(() => document.querySelectorAll("#pageIntroPanel .home-genres__grid .home-genres-card").length === 10);
+    await page.waitForFunction(() => state.podcasts.length > 0 && document.querySelectorAll("#pageIntroPanel .home-genres__grid .home-genres-card").length === 5);
     const layout = await page.evaluate(() => {
       const grid = document.querySelector("#pageIntroPanel .home-genres__grid");
       const cards = [...grid.querySelectorAll(".home-genres-card")];
+      const popularityScores = new Map(CANONICAL_GENRES.map((genre) => [genre, 0]));
+      const ratedPodcastIds = new Set();
+      state.podcasts.forEach((podcast) => {
+        const podcastId = getPodcastId(podcast);
+        if (!podcastId || ratedPodcastIds.has(podcastId) || parseNumber(podcast.ratingValue) === null) return;
+        ratedPodcastIds.add(podcastId);
+        CANONICAL_GENRES.forEach((genre) => {
+          if (podcastHasGenre(podcast, genre)) popularityScores.set(genre, popularityScores.get(genre) + 1);
+        });
+      });
+      const rankedHomeGenres = CANONICAL_GENRES
+        .map((genre, canonicalOrder) => ({ genre, score: popularityScores.get(genre), canonicalOrder }))
+        .sort((left, right) => right.score - left.score || left.canonicalOrder - right.canonicalOrder)
+        .slice(0, 5);
       return {
         viewport: innerWidth,
         pageWidth: document.documentElement.scrollWidth,
         labels: cards.map((card) => card.querySelector(".home-genres-card__genre")?.textContent.trim()),
+        canonicalGenres: [...CANONICAL_GENRES],
+        rankedHomeGenres,
         rects: cards.map((card) => {
           const rect = card.getBoundingClientRect();
           const label = card.querySelector(".home-genres-card__genre");
@@ -375,8 +391,11 @@ try {
       };
     });
     assert.ok(layout.pageWidth <= width, "Homepage overflows at " + width + "px: " + JSON.stringify(layout));
-    assert.deepEqual(layout.labels, expectedGenres.slice(1), "homepage uses the canonical 10 genres at " + width + "px");
-    assert.equal(layout.columns, width <= 430 ? 3 : width < 769 ? 4 : 5, "home genre grid adapts to 10 genres at " + width + "px");
+    assert.equal(layout.labels.length, 5, "homepage shows exactly five genres at " + width + "px");
+    assert.deepEqual(layout.canonicalGenres, expectedGenres.slice(1), "all canonical genres remain available at " + width + "px");
+    assert.deepEqual(layout.labels, layout.rankedHomeGenres.map(({ genre }) => genre), "homepage selects genres from catalogue popularity at " + width + "px");
+    assert.notDeepEqual(layout.labels, expectedGenres.slice(1, 6), "homepage does not simply take the first five canonical genres");
+    assert.equal(layout.columns, width <= 430 ? 3 : width < 769 ? 4 : 5, "home genre grid adapts to five genres at " + width + "px");
     assert.ok(layout.rects.every((card) => card.right <= width + 1 && card.labelWidth > 0), "genre card or label is clipped at " + width + "px");
     assert.ok(layout.rects.every((card) => card.labelScrollWidth <= card.labelWidth + 2), "genre label overflows at " + width + ": " + JSON.stringify(layout.rects.filter((card) => card.labelScrollWidth > card.labelWidth + 2)) + "px");
     assert.ok(layout.rects.every((card) => card.genre), "genre cards have semantic data attributes");
@@ -400,24 +419,27 @@ try {
   }
 
   await page.goto("http://127.0.0.1:" + address.port + "/#forside", { waitUntil: "domcontentloaded" });
-  const financeCard = page.locator('#pageIntroPanel .home-genres-card[data-genre="Finans"]');
-  await financeCard.waitFor({ state: "visible" });
-  assert.equal(await financeCard.getAttribute("role"), "link");
-  assert.equal(await financeCard.getAttribute("tabindex"), "0", "homepage genre card is keyboard focusable");
+  await page.waitForFunction(() => state.podcasts.length > 0 && document.querySelectorAll("#pageIntroPanel .home-genres-card").length === 5);
+  const keyboardCard = page.locator("#pageIntroPanel .home-genres-card").nth(1);
+  await keyboardCard.waitFor({ state: "visible" });
+  const keyboardGenre = await keyboardCard.getAttribute("data-genre");
+  assert.equal(await keyboardCard.getAttribute("role"), "link");
+  assert.equal(await keyboardCard.getAttribute("tabindex"), "0", "homepage genre card is keyboard focusable");
   assert.match(styleSource, /home-genres-card\.is-clickable:focus-visible/u, "homepage genre cards retain a visible focus style");
   await page.evaluate(() => clearActiveFilter());
-  await financeCard.evaluate((card) => card.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", bubbles: true, cancelable: true })));
+  await keyboardCard.focus();
+  await page.keyboard.press("Enter");
 
-  await page.waitForFunction(() => state.activeFilter?.type === "genre" && state.activeFilter.value === "Finans");
-  const financeResults = await page.evaluate(() => {
+  await page.waitForFunction((genre) => state.activeFilter?.type === "genre" && state.activeFilter.value === genre, keyboardGenre);
+  const genreResults = await page.evaluate((genre) => {
     const results = getFilteredPodcasts();
     const keys = results.map(getPodcastKey);
-    return { count: results.length, unique: new Set(keys).size === keys.length, allMatch: results.every((podcast) => podcastHasGenre(podcast, "Finans")) };
-  });
-  assert.ok(financeResults.count > 0);
-  assert.equal(financeResults.unique, true);
-  assert.equal(financeResults.allMatch, true);
-  console.log("Genre phase 2 regression tests passed.");
+    return { count: results.length, unique: new Set(keys).size === keys.length, allMatch: results.every((podcast) => podcastHasGenre(podcast, genre)) };
+  }, keyboardGenre);
+  assert.ok(genreResults.count > 0);
+  assert.equal(genreResults.unique, true);
+  assert.equal(genreResults.allMatch, true);
+  console.log("Genre phase 2 regression tests passed: five catalogue-ranked home genres, ten canonical genres, keyboard filtering, and navigation.");
 } finally {
   await browser.close();
   await new Promise((resolve) => server.close(resolve));

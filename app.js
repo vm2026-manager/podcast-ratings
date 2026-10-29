@@ -16315,6 +16315,30 @@ function createHomeGenreCardElement(podcast, genre) {
   return card;
 }
 
+function getTopHomeGenres(limit = 5) {
+  // Public user-rating counts load only during an authenticated Supabase
+  // refresh, so they are not a reliable signal for the initial home render.
+  // Use the stable catalogue proxy: unique podcasts with an editorial rating
+  // in each genre. CANONICAL_GENRES order breaks equal-count ties.
+  const ratedPodcastIds = new Set();
+  const scores = new Map(CANONICAL_GENRES.map((genre) => [genre, 0]));
+
+  state.podcasts.forEach((podcast) => {
+    const podcastId = getPodcastId(podcast);
+    if (!podcastId || ratedPodcastIds.has(podcastId) || parseNumber(podcast.ratingValue) === null) return;
+    ratedPodcastIds.add(podcastId);
+    CANONICAL_GENRES.forEach((genre) => {
+      if (podcastHasGenre(podcast, genre)) scores.set(genre, scores.get(genre) + 1);
+    });
+  });
+
+  return CANONICAL_GENRES
+    .map((genre, canonicalOrder) => ({ genre, score: scores.get(genre), canonicalOrder }))
+    .sort((left, right) => right.score - left.score || left.canonicalOrder - right.canonicalOrder)
+    .slice(0, Math.max(0, Math.floor(Number(limit) || 0)))
+    .map(({ genre }) => genre);
+}
+
 function renderHomeGenres(container) {
   if (!container) return;
 
@@ -16322,7 +16346,7 @@ function renderHomeGenres(container) {
   const fragment = document.createDocumentFragment();
   let renderedCount = 0;
 
-  CANONICAL_GENRES.forEach((genre) => {
+  getTopHomeGenres().forEach((genre) => {
     let topPodcast = null;
     state.podcasts.forEach((podcast) => {
       const hasMadsRating =
