@@ -3,11 +3,18 @@ import { readFile } from "node:fs/promises";
 import { createRequire } from "node:module";
 import { parseCsv, rowsToObjects } from "./sync-sheet-data.mjs";
 import { partitionSheetPodcastRows, validateCatalogueIntake } from "./catalogue-intake.mjs";
-import { suggestGenres, suggestSearchTopics } from "./catalogue-quality-rules.mjs";
+import { dedupeProposedGenres, suggestGenres, suggestSearchTopics } from "./catalogue-quality-rules.mjs";
 
 const require = createRequire(import.meta.url);
 const canonical = require("../canonical-genres.js");
 assert.deepEqual(canonical, ["True Crime", "Historie", "Krig", "Politik", "Finans", "Samfund", "Sport", "Dokumentar", "Viden", "Underholdning"]);
+assert.deepEqual(dedupeProposedGenres(["Viden", "viden"]), ["Viden"], "proposed genre slots dedupe case-insensitively after canonicalization");
+assert.deepEqual(dedupeProposedGenres(["", "Viden", ""]), ["Viden"], "empty genre slots do not become repeated values");
+assert.deepEqual(dedupeProposedGenres(["Krig", "", "Dokumentar"]), ["Krig", "Dokumentar"], "a blank second slot preserves a distinct third genre without a hole");
+assert.deepEqual(dedupeProposedGenres(["Krig", "Dokumentar", "Viden"]), ["Krig", "Dokumentar", "Viden"], "three distinct genres are retained");
+assert.deepEqual(dedupeProposedGenres(["Krig", "Dokumentar", "dOKUMENTAR"]), ["Krig", "Dokumentar"], "duplicate tertiary genres are removed case-insensitively");
+assert.deepEqual(dedupeProposedGenres(["", "", ""]), [], "all-empty genre slots remain empty");
+assert.deepEqual(dedupeProposedGenres(["Krig", "Historie", "Historie"]), ["Krig", "Historie"], "replacing an empty/noncanonical primary preserves a distinct existing secondary and removes a repeated third");
 
 const source = [
   ["Titel", "Podcast-ID", "Genre", "2. genre", "3. genre", "Udgiver", "Link", "Feed", "Billedlink", "Kort beskrivelse", "Lang beskrivelse", "Undervurderet perle", "Emner", "Vuring (1-10)"],
