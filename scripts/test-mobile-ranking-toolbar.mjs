@@ -66,6 +66,9 @@ try {
     await page.evaluate(() => window.scrollTo(0, 0));
     await page.locator("#resultsText").evaluate((element) => {
       element.textContent = "Viser 20 af 2.400 podcasts · 7 med placeringsændringer";
+      const button = document.getElementById("mobileSortToggle");
+      button.textContent = "⇅ Lavest";
+      button.setAttribute("aria-label", "Sorter efter laveste placering først");
     });
     const metrics = await page.evaluate(() => {
       const toolbar = document.querySelector(".ranking-toolbar");
@@ -131,6 +134,11 @@ try {
       `sort button stays on the same left edge for both labels and result lengths at ${width}px`);
 
     await page.locator("#mobileSortToggle").focus();
+    assert.equal(await page.evaluate(() => document.activeElement?.id), "mobileSortToggle",
+      `sort control remains keyboard focusable at ${width}px`);
+    await page.keyboard.press("Space");
+    assert.equal(await page.getByRole("button", { name: "Sorter efter højeste placering først" }).count(), 1,
+      `keyboard activation toggles sort at ${width}px`);
     await page.keyboard.press("Shift+Tab");
     assert.equal(await page.evaluate(() => document.activeElement?.getAttribute("href")), "#podcastGrid",
       `navigation remains keyboard reachable at ${width}px`);
