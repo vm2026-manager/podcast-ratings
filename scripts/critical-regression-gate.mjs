@@ -51,6 +51,7 @@ const checks = [
   ["ranking movement hydration lifecycle", ["scripts/test-ranking-movement-load-lifecycle.mjs"]],
   ["full ranking retains sequential positions and verified movement markers", ["scripts/test-ranking-full-list.mjs"]],
   ["mobile ranking movement badge geometry and scroll shortcut", ["scripts/test-mobile-ranking-movement-ux.mjs"]],
+  ["mobile ranking toolbar alignment, visibility, accessibility and navigation", ["scripts/test-mobile-ranking-toolbar.mjs"]],
   ["desktop ranking rank grid geometry in Chromium", ["scripts/test-desktop-ranking-column.mjs"]],
   ["genre phase 2 UI, detail tags, topic search and responsive layouts", ["scripts/test-genre-phase2.mjs"]],
   ["homepage layout clipping, alignment, genre access and responsive bounds", ["scripts/test-home-layout-regression.mjs"]],
