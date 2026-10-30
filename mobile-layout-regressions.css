@@ -334,6 +334,27 @@ html body .mobile-home-search-overlay { display: none; }
     font-size: 0.78rem !important;
   }
 
+  body.page-ranglister:not(.force-desktop-view) .ranking-list-panel .ranking-toolbar {
+    grid-template-columns: minmax(0, 1fr) !important;
+    grid-template-rows: auto !important;
+    grid-template-areas: "sort" !important;
+    gap: 0 !important;
+  }
+
+  body.page-ranglister:not(.force-desktop-view) .ranking-toolbar .mobile-sort-toggle {
+    grid-area: sort !important;
+    grid-column: 1 !important;
+    justify-self: start !important;
+  }
+
+  body.page-ranglister:not(.force-desktop-view) .ranking-toolbar__results {
+    position: absolute !important;
+    width: 1px !important;
+    height: 1px !important;
+    overflow: hidden !important;
+    clip-path: inset(50%) !important;
+  }
+
   body.page-ranglister .ranking-filter-panel .genre-nav {
     display: block !important;
     order: 2 !important;

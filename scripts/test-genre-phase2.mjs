@@ -313,13 +313,35 @@ try {
   assert.equal(legacySearch.genreButtons.includes("Sladder"), false);
 
   await page.setViewportSize({ width: 390, height: 844 });
-  await page.goto(`http://127.0.0.1:${address.port}/#udforsk`, { waitUntil: "domcontentloaded" });
+  await page.goto(`http://127.0.0.1:${address.port}/#udforsk`, { waitUntil: "load" });
+  await page.evaluate(() => document.fonts.ready);
   await page.waitForFunction(() => document.querySelectorAll(".explore-genre-chip").length === 11, null, { timeout: 30000 });
   const exploreGenres = await page.locator(".explore-genre-chip").allTextContents();
   assert.deepEqual(exploreGenres.map((genre) => genre.trim()), expectedGenres);
-  await page.evaluate(() => document.querySelector('[data-explore-genre="Politik"]')?.dispatchEvent(new MouseEvent("click", { bubbles: true })));
-  await page.waitForFunction(() => document.querySelector('[data-explore-genre="Politik"]')?.getAttribute("aria-pressed") === "true");
-
+  for (const width of [320, 375, 390, 430, 768, 1101, 1280, 1440]) {
+    await page.setViewportSize({ width, height: width <= 768 ? 844 : 900 });
+    const exploreLayout = await page.evaluate(() => {
+      const container = document.querySelector(".page-udforsk .explore-genres");
+      const chips = [...document.querySelectorAll(".page-udforsk .explore-genre-chip")];
+      const rect = (element) => {
+        const box = element.getBoundingClientRect();
+        return { left: box.left, right: box.right, top: box.top, bottom: box.bottom, width: box.width, height: box.height };
+      };
+      const style = getComputedStyle(container);
+      return {
+        viewport: innerWidth,
+        pageWidth: document.documentElement.scrollWidth,
+        container: rect(container),
+        display: style.display,
+        flexWrap: style.flexWrap,
+        chips: chips.map((chip) => ({ ...rect(chip), label: chip.textContent.trim(),
+          scrollWidth: chip.scrollWidth, clientWidth: chip.clientWidth, pressed: chip.getAttribute("aria-pressed") }))
+      };
+    });
+    assert.equal(exploreLayout.pageWidth, width, `Explore page horizontal overflow at ${width}px: ${JSON.stringify(exploreLayout)}`);
+    assert.equal(exploreLayout.chips.length, expectedGenres.length, `Explore keeps all genre controls at ${width}px`);
+    assert.equal(exploreLayout.display, "none", `Explore preserves the existing logged-out genre-control state at ${width}px`);
+  }
   await page.goto(`http://127.0.0.1:${address.port}/#ranglister`, { waitUntil: "domcontentloaded" });
   await page.waitForFunction(() => document.querySelectorAll(".genre-chip").length === 11);
 
@@ -358,7 +380,38 @@ try {
     }
   }
 
-  for (const width of [320, 375, 390, 430, 768, 1280, 1440]) {
+  for (const width of [1101, 1280, 1440]) {
+    await page.setViewportSize({ width, height: 900 });
+    const rankingDesktop = await page.evaluate(() => ({
+      viewport: innerWidth,
+      pageWidth: document.documentElement.scrollWidth,
+      toolbar: document.querySelector(".ranking-toolbar")?.getBoundingClientRect().toJSON(),
+      results: document.querySelector(".ranking-toolbar__results")?.getBoundingClientRect().toJSON(),
+      resultPosition: getComputedStyle(document.querySelector(".ranking-toolbar__results")).position,
+      filter: document.querySelector(".ranking-sidebar-column .genre-chips")?.getBoundingClientRect().toJSON()
+    }));
+    assert.equal(rankingDesktop.pageWidth, width, `Ranking page overflow at ${width}px: ${JSON.stringify(rankingDesktop)}`);
+    assert.ok(rankingDesktop.results?.width > 1 && rankingDesktop.resultPosition !== "absolute",
+      `Desktop ranking results remain visible at ${width}px: ${JSON.stringify(rankingDesktop)}`);
+    assert.ok(rankingDesktop.filter?.width > 0, `Desktop ranking filters remain visible at ${width}px`);
+  }
+
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.evaluate(() => {
+    document.documentElement.classList.add("force-desktop-view");
+    document.body.classList.add("force-desktop-view");
+  });
+  const forcedDesktop = await page.evaluate(() => ({
+    results: document.querySelector(".ranking-toolbar__results").getBoundingClientRect().toJSON(),
+    position: getComputedStyle(document.querySelector(".ranking-toolbar__results")).position,
+    gridWidth: document.querySelector("#podcastGrid").getBoundingClientRect().width,
+    sortToggleDisplay: getComputedStyle(document.querySelector("#mobileSortToggle")).display
+  }));
+  assert.ok(forcedDesktop.results.width > 1 && forcedDesktop.position !== "absolute",
+    `force-desktop-view retains visible ranking summary: ${JSON.stringify(forcedDesktop)}`);
+  assert.ok(forcedDesktop.gridWidth >= 800, `force-desktop-view keeps desktop ranking canvas: ${JSON.stringify(forcedDesktop)}`);
+
+  for (const width of [320, 375, 390, 430, 768, 1101, 1280, 1440]) {
     await page.setViewportSize({ width: width, height: 900 });
     await page.goto("http://127.0.0.1:" + address.port + "/#forside", { waitUntil: "domcontentloaded" });
     const home = page.locator("#pageIntroPanel .home-genres__grid");
@@ -404,17 +457,43 @@ try {
     assert.ok(layout.rects.every((card) => card.right <= width + 1 && card.labelWidth > 0), "genre card or label is clipped at " + width + "px");
     assert.ok(layout.rects.every((card) => card.labelScrollWidth <= card.labelWidth + 2), "genre label overflows at " + width + ": " + JSON.stringify(layout.rects.filter((card) => card.labelScrollWidth > card.labelWidth + 2)) + "px");
     assert.ok(layout.rects.every((card) => card.genre), "genre cards have semantic data attributes");
-    await page.goto("http://127.0.0.1:" + address.port + "/podcast-anbefalinger/index.html", { waitUntil: "domcontentloaded" });
+    await page.goto("http://127.0.0.1:" + address.port + "/podcast-anbefalinger/index.html", { waitUntil: "load" });
+    await page.evaluate(() => document.fonts.ready);
     const staticNav = await page.evaluate(() => {
       const nav = document.querySelector(".genre-nav");
       const links = [...nav.querySelectorAll("a")];
       const bounds = nav.getBoundingClientRect();
-      const overflowers = [...document.body.querySelectorAll("*")].map((element) => ({ tag: element.tagName, className: typeof element.className === "string" ? element.className : "", text: element.textContent.trim().slice(0, 80), right: Math.round(element.getBoundingClientRect().right), width: Math.round(element.getBoundingClientRect().width) })).filter((element) => element.right > innerWidth + 1).sort((left, right) => right.right - left.right).slice(0, 8);
-      return { labels: links.map((link) => link.textContent.trim()), pageWidth: document.documentElement.scrollWidth, navRight: bounds.right, viewport: innerWidth, overflowers };
+      const stylesheet = [...document.querySelectorAll('link[rel="stylesheet"]')]
+        .find((link) => new URL(link.href).pathname === "/podcast-anbefalinger/style.css");
+      const style = getComputedStyle(nav);
+      const rect = (element) => {
+        const box = element.getBoundingClientRect();
+        return { left: box.left, right: box.right, top: box.top, bottom: box.bottom, width: box.width, height: box.height };
+      };
+      const overflowers = [...document.body.querySelectorAll("*")]
+        .map((element) => ({ tag: element.tagName, className: typeof element.className === "string" ? element.className : "", text: element.textContent.trim().slice(0, 80), ...rect(element) }))
+        .filter((element) => element.right > innerWidth + 1)
+        .sort((left, right) => right.right - left.right)
+        .slice(0, 8);
+      return {
+        readyState: document.readyState,
+        stylesheet: { href: stylesheet?.href || null, loaded: Boolean(stylesheet?.sheet), disabled: stylesheet?.disabled ?? null,
+          rules: (() => { try { return stylesheet?.sheet?.cssRules.length ?? null; } catch { return "inaccessible"; } })() },
+        display: style.display, flexWrap: style.flexWrap, nav: rect(nav),
+        links: links.map((link) => ({ label: link.textContent.trim(), ...rect(link) })),
+        labels: links.map((link) => link.textContent.trim()), pageWidth: document.documentElement.scrollWidth,
+        navRight: bounds.right, viewport: innerWidth, overflowers
+      };
     });
     assert.deepEqual(staticNav.labels, expectedGenres.slice(1), "static recommendation nav uses all canonical genres");
+    assert.equal(staticNav.readyState, "complete", `static recommendation page finished loading at ${width}px: ${JSON.stringify(staticNav)}`);
+    assert.equal(staticNav.stylesheet.loaded, true, `static recommendation stylesheet loaded at ${width}px: ${JSON.stringify(staticNav)}`);
+    assert.ok(staticNav.stylesheet.rules > 0, `static recommendation stylesheet has applied rules at ${width}px: ${JSON.stringify(staticNav)}`);
+    assert.equal(staticNav.display, "flex", `static genre navigation uses its flex layout at ${width}px: ${JSON.stringify(staticNav)}`);
+    assert.equal(staticNav.flexWrap, "wrap", `static genre navigation wraps at ${width}px: ${JSON.stringify(staticNav)}`);
     assert.ok(staticNav.pageWidth <= width, "static recommendation page overflows at " + width + "px: " + JSON.stringify(staticNav));
-    assert.ok(staticNav.navRight <= width + 1, "static genre navigation is clipped at " + width + "px");
+    assert.ok(staticNav.navRight <= width + 1, "static genre navigation is clipped at " + width + "px: " + JSON.stringify(staticNav));
+    assert.ok(staticNav.links.every((link) => link.right <= staticNav.navRight + 1), `static genre link exceeds its navigation bounds at ${width}px: ${JSON.stringify(staticNav)}`);
     for (let index = 0; index < layout.rects.length; index += 1) {
       for (let other = index + 1; other < layout.rects.length; other += 1) {
         const left = layout.rects[index], right = layout.rects[other];
