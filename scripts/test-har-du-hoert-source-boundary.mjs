@@ -142,6 +142,9 @@ assert.equal(stored.filter(e => e.source === source).length, 1);
 assert.equal(JSON.stringify({ legacy, ratings }), original);
 const drift = mergeSheetFeedConfigs([{ "Podcast-ID": key, Feed: "https://example.test/future.rss" }]);
 assert.equal(drift.configs.har_du_hoert.source, source);
-assert.equal(drift.configs.har_du_hoert.sheet_feed_change.minimum_guid_overlap, 3,
-  "ordinary RSS relocations keep the historical source and require GUID overlap before importing");
+assert.notEqual(drift.configs.har_du_hoert.feed_url, "https://example.test/future.rss");
+assert.equal(drift.configs.har_du_hoert.enabled, undefined,
+  "the existing code-owned feed remains active by default");
+assert.equal(drift.audit.feed_warnings[0].reason, "feed_change_requires_code_approval",
+  "new metadata cannot replace the active feed before a code-owned identity review");
 console.log("Har du hørt: source isolation, pagination/search, ratings and legacy UUID preservation PASS");

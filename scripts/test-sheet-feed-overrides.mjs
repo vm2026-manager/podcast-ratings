@@ -1,7 +1,8 @@
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import { mergeSheetFeedConfigs, loadRuntimeFeedConfigs } from "../supabase/functions/import-podcast-episodes/runtime-feed-config.ts";
-import { runEpisodeImport } from "../supabase/functions/import-podcast-episodes/core.ts";
+import { selectNormalFeedKeys, runEpisodeImport } from "../supabase/functions/import-podcast-episodes/core.ts";
+import { APPROVED_SHEET_FEED_BASELINE } from "../supabase/functions/import-podcast-episodes/sheet-feed-approval-baseline.ts";
 
 const oldUrl = "https://example.test/old.rss";
 const newUrl = "https://example.test/new.rss";
@@ -18,10 +19,9 @@ assert.equal(overridden.audit.feed_resolutions[0].differs_from_sheet, false);
 assert.deepEqual(merge([row(oldUrl)]).configs.legacy_key, reviewed);
 assert.equal(merge([row(oldUrl)]).audit.feed_warnings.length, 0);
 const automaticCandidate = merge([row(newUrl)], config);
-assert.equal(automaticCandidate.configs.legacy_key.sheet_feed_change.minimum_guid_overlap, 3);
-assert.equal(automaticCandidate.configs.legacy_key.source, config.source);
-assert.equal(automaticCandidate.audit.feed_warnings.length, 0,
-  "ordinary RSS changes are validated against historical GUIDs by the existing import run");
+assert.equal(automaticCandidate.configs.legacy_key.feed_url, oldUrl);
+assert.equal(automaticCandidate.configs.legacy_key.sheet_feed_change, undefined);
+assert.equal(automaticCandidate.audit.feed_warnings[0].reason, "feed_change_requires_code_approval");
 for (const value of ["not a URL", "javascript:alert(1)", "https://open.podimo.com/podcast/show", "https://open.spotify.com/show/test"]) {
   const result = merge([row(value)]);
   assert.equal(result.configs.legacy_key.feed_url, oldUrl);
@@ -66,6 +66,72 @@ assert.equal(unknownPodimo.audit.feed_warnings[0].reason, "podimo_adapter_review
 const newApple = mergeSheetFeedConfigs([row("apple:1851213764", "new")], {});
 assert.equal(newApple.configs.apple_1851213764.format, "apple_podcasts_html");
 assert.equal(newApple.configs.apple_1851213764.enabled, false);
+
+// Existing active ordinary Sheet feeds retain their exact source, URL and enabled state.
+const published = JSON.parse(await readFile(new URL("../data/podcasts.json", import.meta.url), "utf8"));
+const publishedRuntime = mergeSheetFeedConfigs(published);
+const publishedApproved = publishedRuntime.audit.active_feeds
+  .filter(feed => feed.origin === "sheet" && feed.enabled && feed.source.startsWith("sheet_"))
+  .map(({ feed_key, podcast_key, source, feed_url }) => ({ feed_key, podcast_key, source, feed_url }))
+  .sort((a, b) => a.podcast_key.localeCompare(b.podcast_key, "da-DK"));
+assert.equal(APPROVED_SHEET_FEED_BASELINE.length, 204);
+assert.deepEqual(publishedApproved.map(feed => [feed.podcast_key, feed.feed_url]),
+  [...APPROVED_SHEET_FEED_BASELINE].sort((a, b) => a[0].localeCompare(b[0], "da-DK")));
+
+// Feed metadata for a new or changed podcast remains review-only; row fields
+// cannot grant import permission. Existing feed owners block duplicate URLs.
+const spreakerFeed = "https://www.spreaker.com/show/5278832/episodes/feed";
+const stagedCatalogue = structuredClone(published);
+const stagedPaSporet = stagedCatalogue.rows.find(item => item["Podcast-ID"] === "pa sporet");
+assert.equal(stagedPaSporet.catalogue_id, "catalogue-v1-374b47c3");
+stagedPaSporet.Link = "https://open.spotify.com/show/3FIqz5R0sIBB41uN2OEGK0";
+stagedPaSporet.Feed = spreakerFeed;
+const stagedPaSporetRuntime = mergeSheetFeedConfigs(stagedCatalogue);
+assert.equal(stagedPaSporetRuntime.configs.pa_sporet.enabled, false);
+assert.equal(selectNormalFeedKeys(stagedPaSporetRuntime.configs).includes("pa_sporet"), false);
+assert.equal(stagedPaSporetRuntime.audit.feed_warnings.find(entry => entry.podcast_key === "pa sporet").reason,
+  "explicit_activation_required");
+assert.equal(published.rows.find(item => item["Podcast-ID"] === "pa sporet").Feed, undefined,
+  "the staged regression stays in memory and never changes the published catalogue fixture");
+const newFeed = mergeSheetFeedConfigs([{ ...row(spreakerFeed, "pa sporet"), enabled: true }], {});
+assert.equal(newFeed.configs.pa_sporet.enabled, false);
+assert.equal(selectNormalFeedKeys(newFeed.configs).includes("pa_sporet"), false);
+assert.equal(newFeed.audit.feed_warnings[0].reason, "explicit_activation_required");
+const missingId = mergeSheetFeedConfigs([{ Feed: newUrl, "Podcast-ID": "" }], {});
+assert.equal(Object.keys(missingId.configs).length, 0);
+assert.equal(missingId.audit.feed_warnings[0].reason, "missing_podcast_id");
+const [baselineOwnerId, baselineOwnerUrl] = APPROVED_SHEET_FEED_BASELINE[0];
+const baselineOwner = publishedApproved.find(feed => feed.podcast_key === baselineOwnerId);
+const duplicateOwner = mergeSheetFeedConfigs([row(baselineOwnerUrl, "new podcast identity")]);
+assert.equal(duplicateOwner.configs.new_podcast_identity, undefined);
+assert.equal(duplicateOwner.audit.feed_warnings[0].reason, "feed_owned_by_other_podcast");
+const changedExisting = mergeSheetFeedConfigs([row(newUrl, baselineOwner.podcast_key)]);
+assert.equal(changedExisting.configs[baselineOwner.feed_key].feed_url, baselineOwner.feed_url,
+  "a metadata change cannot displace an existing approved feed");
+assert.equal(selectNormalFeedKeys(changedExisting.configs).includes(baselineOwner.feed_key), true);
+assert.equal(changedExisting.audit.feed_warnings[0].reason, "feed_change_requires_code_approval");
+const missingExistingFeed = mergeSheetFeedConfigs([{ "Podcast-ID": baselineOwner.podcast_key, Feed: "" }]);
+assert.equal(missingExistingFeed.configs[baselineOwner.feed_key].feed_url, baselineOwner.feed_url,
+  "a blank metadata field cannot deactivate an existing approved feed");
+assert.equal(selectNormalFeedKeys(missingExistingFeed.configs).includes(baselineOwner.feed_key), true);
+
+const runtimeWithChangedFeed = await loadRuntimeFeedConfigs({ podcastsJsonUrl: "https://example.test/catalogue.json",
+  fetchPayload: async () => ({ rows: [row(newUrl, baselineOwner.podcast_key)] }) });
+assert.equal(runtimeWithChangedFeed.configs[baselineOwner.feed_key].feed_url, baselineOwner.feed_url,
+  "the production loader retains the baseline feed on Sheet drift");
+assert.equal(selectNormalFeedKeys(runtimeWithChangedFeed.configs).includes(baselineOwner.feed_key), true);
+assert.equal(runtimeWithChangedFeed.audit.feed_warnings[0].reason, "feed_change_requires_code_approval");
+
+// A new feed is activated only through an explicit code-owned configuration.
+const explicitKey = "explicit_activation";
+const explicitUrl = "https://example.test/explicit.rss";
+const explicitlyActivated = mergeSheetFeedConfigs([row(explicitUrl, "explicit activation")], {
+  [explicitKey]: { podcast_key: "explicit activation", source: "approved_explicit_source",
+    feed_url: explicitUrl, format: "rss", enabled: true }
+});
+assert.equal(explicitlyActivated.configs[explicitKey].enabled, true);
+assert.equal(selectNormalFeedKeys(explicitlyActivated.configs).includes(explicitKey), true);
+assert.equal(explicitlyActivated.audit.feed_warnings.length, 0);
 for (const url of ["https://open.podimo.com/podcast/61f4484d-f2d7-4fa3-b7c7-892d78fc5bff",
   "https://feeds.transistor.fm/har-du-hort-med-nikita-klaestrup"]) {
   const incident = mergeSheetFeedConfigs([row(url, "har du hørt")]);
@@ -81,8 +147,10 @@ assert.equal(merge([row(newUrl)], { ...reviewed, enabled: false }).configs.legac
 const umbrella = { ...reviewed, podcast_key: "umbrella", routes: [{ key: "child", podcast_key: "canonical id" }] };
 assert.deepEqual(merge([row(newUrl)], umbrella).configs, { legacy_key: umbrella });
 assert.equal(merge([row(newUrl)], umbrella).audit.feed_warnings[0].reason, "special_or_ambiguous_owner");
-assert.equal(merge([row(newUrl)], { ...reviewed, feed_url: "https://example.test/different.rss" }).configs.legacy_key.sheet_feed_change.from_url,
-  "https://example.test/different.rss");
+const staleReview = merge([row(newUrl)], { ...reviewed, feed_url: "https://example.test/different.rss" });
+assert.equal(staleReview.configs.legacy_key.feed_url, "https://example.test/different.rss");
+assert.equal(staleReview.configs.legacy_key.sheet_feed_change, undefined);
+assert.equal(staleReview.audit.feed_warnings[0].reason, "feed_change_requires_code_approval");
 
 // A reviewed relocation uses the existing GUID/source and UUID, with no insert.
 const existing = { id: "562b97ef-d267-4062-b65e-ef4aa904631e", podcast_key: config.podcast_key,
@@ -125,7 +193,9 @@ assert.equal(dr.configs.dr_new.feed_url, "https://api.dr.dk/podcasts/v1/feeds/ex
 const fallback = await loadRuntimeFeedConfigs({ podcastsJsonUrl: "https://example.test/catalogue.json", staticConfigs: { legacy_key: config }, fetchPayload: async () => { throw Error("offline"); } });
 assert.equal(fallback.audit.dynamic_feed_load_error, "offline");
 assert.equal(fallback.audit.active_feeds[0].feed_url, oldUrl);
-const changedFeedConfig = automaticCandidate.configs.legacy_key;
+const changedFeedConfig = { ...config, feed_url: newUrl,
+  sheet_feed_change: { from_url: oldUrl, to_url: newUrl, minimum_guid_overlap: 3 } };
+const explicitRelocation = { legacy_key: changedFeedConfig };
 const rejectedWrites = [];
 const lowOverlapRepository = {
   async createImportRun() { return { id: "review-run" }; },
@@ -134,7 +204,7 @@ const lowOverlapRepository = {
   async updateEpisodeMetadata() {},
   async updateImportRun() {}
 };
-const lowOverlap = await runEpisodeImport({ feedKey: "legacy_key", feedConfigs: automaticCandidate.configs,
+const lowOverlap = await runEpisodeImport({ feedKey: "legacy_key", feedConfigs: explicitRelocation,
   repository: lowOverlapRepository,
   fetchText: async () => '<rss><channel><item><guid>stable-guid</guid><title>Existing</title></item>' +
     '<item><guid>new-a</guid><title>New A</title></item><item><guid>new-b</guid><title>New B</title></item></channel></rss>' });
@@ -154,7 +224,7 @@ const verifiedRepository = {
   async updateEpisodeMetadata() {},
   async updateImportRun() {}
 };
-const safeRelocation = await runEpisodeImport({ feedKey: "legacy_key", feedConfigs: automaticCandidate.configs,
+const safeRelocation = await runEpisodeImport({ feedKey: "legacy_key", feedConfigs: explicitRelocation,
   repository: verifiedRepository,
   fetchText: async () => '<rss><channel>' + ["stable-guid", "stable-guid-2", "stable-guid-3", "new-guid"]
     .map((guid, index) => `<item><guid>${guid}</guid><title>Episode ${index + 1}</title></item>`).join("") +

@@ -1,4 +1,5 @@
 import { FEED_CONFIGS, DJAEVLEN_LYD_FULL_FEED_KEY, BAKSPEJL_LYD_FULL_FEED_KEY, type FeedConfig, type FeedConfigMap } from "./feed-config.ts";
+import { APPROVED_SHEET_FEED_BASELINE } from "./sheet-feed-approval-baseline.ts";
 import { appleShowUrl, parseAppleFeed, parseHttpFeed, parsePodimoShowFeed } from "./feed-syntax.mjs";
 import { applySheetFeedPolicy, type FeedResolution } from "./sheet-feed-policy.ts";
 import { buildDjaevlenRoutes, DJAEVLEN_FEED_KEY } from "./djaevlen-routing.mjs";
@@ -41,6 +42,10 @@ function normalizePodcastKey(value: unknown): string {
 function toFeedKey(podcastId: unknown): string {
   return normalizePodcastKey(podcastId).replace(/\s+/g, "_");
 }
+
+const approvedSheetFeeds = APPROVED_SHEET_FEED_BASELINE.map(([podcast_key, feed_url]) => ({
+  podcast_key, feed_url, feed_key: toFeedKey(podcast_key), source: `sheet_${toFeedKey(podcast_key)}_rss`
+}));
 
 function getPodcastId(row: Record<string, unknown>): string {
   return String(row["Podcast-ID"] ?? row["Podcast ID"] ?? row.PodcastID ?? "").trim();
@@ -98,6 +103,11 @@ export function mergeSheetFeedConfigs(
   sheetPayload: unknown,
   staticConfigs: FeedConfigMap = FEED_CONFIGS
 ): { configs: FeedConfigMap; audit: Omit<FeedConfigAudit, "podcasts_json_url_configured" | "dynamic_feed_load_error"> } {
+  const approvedFeeds = staticConfigs === FEED_CONFIGS ? approvedSheetFeeds : [];
+  const approvedFeedsByPodcast = new Map(approvedFeeds.map(entry => [entry.podcast_key, entry]));
+  const approvedFeedsByUrl = new Map(approvedFeeds.map(entry => [entry.feed_url.toLowerCase(), entry]));
+  const approvedFeedKeys = new Set(approvedFeeds.map(entry =>
+    `${entry.podcast_key}\u0000${entry.feed_key}\u0000${entry.source}\u0000${entry.feed_url}`));
   const manualStaticConfigs = getManualStaticConfigs(staticConfigs);
   const rows = getPodcastRows(sheetPayload);
   const djaevlen = buildDjaevlenRoutes(rows);
@@ -122,6 +132,22 @@ export function mergeSheetFeedConfigs(
     ...(djaevlenFullOwner ? { [DJAEVLEN_LYD_FULL_FEED_KEY]: { ...djaevlenFullOwner, routes: djaevlen.routes, enabled: djaevlen.routes.length > 0 } } : {}),
     ...(bakspejlFullOwner ? { [BAKSPEJL_LYD_FULL_FEED_KEY]: { ...bakspejlFullOwner, routes: bakspejl.routes, enabled: bakspejl.routes.length > 1 } } : {})
   };
+  // Keep every previously approved ordinary Sheet feed active even if its
+  // editable metadata is temporarily changed, blank, or absent. A replacement
+  // URL is reviewed below and cannot displace this code-owned source.
+  for (const approved of approvedFeeds) {
+    if (configs[approved.feed_key]) {
+      throw new Error(`Approved Sheet feed key conflicts with static config: ${approved.feed_key}`);
+    }
+    configs[approved.feed_key] = {
+      podcast_key: approved.podcast_key,
+      source: approved.source,
+      feed_url: approved.feed_url,
+      format: "rss",
+      enabled: true,
+      generated_from_sheet: true
+    };
+  }
   // Støt Mediano is a category-only destination. Activate only this route,
   // and only from one exact canonical identity in the fetched catalogue.
   if (hasVerifiedStotMedianoIdentity(rows)) {
@@ -162,16 +188,19 @@ export function mergeSheetFeedConfigs(
   const policy = applySheetFeedPolicy(rows, configs, getPodcastId, normalizePodcastKey);
   const staticKeys = new Set(Object.keys(manualStaticConfigs));
   const staticPodcastKeys = getStaticPodcastKeys(manualStaticConfigs);
-  const seenSources = new Set(Object.values(manualStaticConfigs).map((config) => config.source));
+  const seenSources = new Set(Object.values(configs).map((config) => config.source));
   const seenFeedUrls = new Set(
     Object.values(configs)
       .map((config) => parseHttpFeed(config.feed_url)?.toLowerCase())
       .filter(Boolean)
   );
   const seenAppleShowIds = new Set(Object.values(manualStaticConfigs).filter((config) => config.format === "apple_podcasts_html").map((config) => config.apple_show_id).filter(Boolean));
-  const seenPodcastKeys = new Set(staticPodcastKeys);
+  const seenPodcastKeys = new Set([
+    ...staticPodcastKeys,
+    ...approvedFeeds.map(entry => entry.podcast_key)
+  ]);
   const duplicateFeedUrlsSkipped: Array<{ feed_url: string; skipped_feed_key: string }> = [];
-  let dynamicSheetFeedCount = 0;
+  let dynamicSheetFeedCount = approvedFeeds.length;
   let duplicatesSkipped = 0;
   let invalidFeedUrlsSkipped = 0;
   let missingPodcastIdsSkipped = 0;
@@ -203,6 +232,41 @@ export function mergeSheetFeedConfigs(
       if (!apple && normalizedFeedUrl && seenFeedUrls.has(normalizedFeedUrl)) {
         duplicateFeedUrlsSkipped.push({ feed_url: normalizedFeedUrl, skipped_feed_key: feedKey });
       }
+      continue;
+    }
+
+    if (!apple && feedUrl) {
+      const approvedOwner = approvedFeedsByUrl.get(feedUrl.toLowerCase());
+      if (approvedOwner && approvedOwner.podcast_key !== podcastKey) {
+        duplicatesSkipped += 1;
+        duplicateFeedUrlsSkipped.push({ feed_url: normalizedFeedUrl!, skipped_feed_key: feedKey });
+        policy.resolutions.push({ podcast_key: podcastKey, sheet_feed: String(rawFeed).trim(),
+          active_feed_urls: [approvedOwner.feed_url], origin: "review_required", differs_from_sheet: true,
+          reason: "feed_owned_by_other_podcast" });
+        continue;
+      }
+    }
+
+    const approvedSheetFeed = !apple && feedUrl &&
+      approvedFeedKeys.has(`${podcastKey}\u0000${feedKey}\u0000${source}\u0000${feedUrl}`);
+    if (!apple && feedUrl && !approvedSheetFeed) {
+      const previous = approvedFeedsByPodcast.get(podcastKey);
+      // The previous URL stays configured and active from the code-owned
+      // baseline. The candidate is recorded for review, never as an importer.
+      if (!previous) {
+        configs[feedKey] = {
+          podcast_key: podcastKey,
+          source,
+          feed_url: feedUrl,
+          format: "rss",
+          enabled: false
+        };
+      }
+      policy.resolutions.push({ podcast_key: podcastKey, sheet_feed: String(rawFeed).trim(),
+        active_feed_urls: previous ? [previous.feed_url] : [], origin: "review_required",
+        differs_from_sheet: true,
+        reason: previous ? "feed_change_requires_code_approval" : "explicit_activation_required" });
+      dynamicSheetFeedCount += 1;
       continue;
     }
 
@@ -266,7 +330,8 @@ export async function loadRuntimeFeedConfigs(options: {
   fetchPayload?: (url: string) => Promise<unknown>;
   staticConfigs?: FeedConfigMap;
 } = {}): Promise<{ configs: FeedConfigMap; audit: FeedConfigAudit }> {
-  const staticConfigs = getManualStaticConfigs(options.staticConfigs || FEED_CONFIGS);
+  const sourceStaticConfigs = options.staticConfigs || FEED_CONFIGS;
+  const staticConfigs = getManualStaticConfigs(sourceStaticConfigs);
   const podcastsJsonUrl = parseHttpFeed(options.podcastsJsonUrl || Deno.env.get("PODCASTS_JSON_URL"));
   const baseAudit = {
     feed_resolutions: [],
@@ -293,7 +358,7 @@ export async function loadRuntimeFeedConfigs(options: {
 
   try {
     const payload = await (options.fetchPayload || fetchSheetPayload)(podcastsJsonUrl);
-    const merged = mergeSheetFeedConfigs(payload, staticConfigs);
+    const merged = mergeSheetFeedConfigs(payload, sourceStaticConfigs);
     return {
       configs: merged.configs,
       audit: { ...merged.audit, podcasts_json_url_configured: true }
