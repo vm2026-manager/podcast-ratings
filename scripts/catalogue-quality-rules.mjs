@@ -1,6 +1,25 @@
 import { CANONICAL_GENRES } from "./catalogue-intake.mjs";
 
 const normalize = (input) => String(input ?? "").trim().replace(/\s+/gu, " ");
+const genreKey = (input) => normalize(input).normalize("NFKC").toLocaleLowerCase("da-DK");
+const canonicalGenreByKey = new Map(CANONICAL_GENRES.map((genre) => [genreKey(genre), genre]));
+
+export function dedupeProposedGenres(values) {
+  const seen = new Set();
+  const result = [];
+  for (const rawValue of Array.isArray(values) ? values : []) {
+    const value = normalize(rawValue);
+    if (!value) continue;
+    const canonicalKey = genreKey(canonicalGenreByKey.get(genreKey(value)) || value);
+    const key = canonicalKey;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    result.push(value);
+    if (result.length === 3) break;
+  }
+  return result;
+}
+
 const rules = [
   ["True Crime", [["genre phrase", /\btrue crime\b|\bsand kriminalsag|\bdokumentarisk kriminal/iu], ["investigation", /\bkriminalefterforsk|\bpolitiefterforsk|\bkriminalsag|\bkriminalhistor/iu], ["serious offense", /\bdrabssag|\bmordgåde|\bseriemorder|\buopklaret drab|\bforbrydelse og straf/iu]]],
   ["Historie", [["period", /\bmiddelalder|\bvikingetid|\bromerrige|\brenæssance|\b1900.tallet|\b1800.tallet/iu], ["source", /\bhistorisk arkiv|\barkivoptagelse|\bdanmarkshistor|\bfortidens|\bfortællinger fra arkivet/iu], ["documented past", /\bverdenskrig|\bborgerkrig|\bbesættelsestid|\bhistoriske begivenheder|\bhistorisk dokumentar/iu]]],

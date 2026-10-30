@@ -46,6 +46,44 @@ assert.equal(report.records.filter((row) => row.currentPrimary === "Krig").lengt
 assert.ok(report.records.some((row) => row.legacySearchPreservation.toLocaleLowerCase("da-DK") === "sladder"));
 assert.ok(report.records.every((row) => [row.currentPrimary, row.currentSecondary, row.currentTertiary].filter(Boolean).length <= 3 || row.genreIssues.includes("more-than-three-genres")));
 for (const row of report.records) {
+  const proposedGenres = [row.proposedPrimary, row.proposedSecondary, row.proposedTertiary].filter(Boolean);
+  assert.equal(new Set(proposedGenres.map((genre) => genre.normalize("NFKC").toLocaleLowerCase("da-DK"))).size, proposedGenres.length, row.podcastId + " proposed genre slots never repeat after case-insensitive canonicalization");
+}
+const reportById = new Map(report.records.map((row) => [row.podcastId, row]));
+const approvedFinanceIds = ["bliv rigere", "børsen investor", "aktieuniverset", "millionærklubben", "store penge", "børssnak", "børsen brænder", "børsen morgenbriefing", "det der tæller", "finansministeriet forklarer", "makropuls howden", "boraghi og pengedoktoren", "morgennyheder", "lyn analyse", "den lyse side", "big picture", "sorte tal"];
+assert.deepEqual([reportById.get("genialos").proposedPrimary, reportById.get("genialos").proposedSecondary, reportById.get("genialos").proposedTertiary].filter(Boolean), ["Viden"], "Genialos replaces Snakke with one Viden position and does not duplicate its existing secondary genre");
+assert.ok(reportById.get("genialos").proposedTopics.includes("Snakke"), "Genialos keeps its replaced historical label searchable as a topic");
+assert.equal(reportById.get("se og hor lige her").status, "Ingen ændring foreslået", "prior review holds the historical Sladder label");
+assert.equal(reportById.get("se og hor lige her").proposedPrimary, "Sladder");
+assert.ok(reportById.get("se og hor lige her").currentTopics.some((topic) => topic.toLocaleLowerCase("da-DK") === "sladder"));
+for (const id of ["i selskab med q", "shop21 dk bitcoin samfund frihed", "darligt nyt fra østfronten"]) {
+  assert.notEqual(reportById.get(id).status, "Afventer redaktionel godkendelse", id + " is already completed and is not proposed again");
+  assert.match(reportById.get(id).priorAuditDisposition, /Previously approved and completed/u);
+}
+for (const id of approvedFinanceIds) {
+  const row = reportById.get(id);
+  assert.ok(row, id + " is present in the current catalogue");
+  assert.notEqual(row.status, "Afventer redaktionel godkendelse", id + " was approved and published in the separate Finance batch");
+  assert.equal(row.currentPrimary, "Finans", id + " keeps the published primary genre");
+  assert.match(row.priorDecisionSource, /issue #383 and merged PR #388/u);
+}
+assert.equal(summary.historicalAuditReconciliation.earlierAuditProposalCount, 136);
+assert.equal(summary.historicalAuditReconciliation.pendingEarlierAuditAfterThreeCompleted, 133);
+assert.equal(summary.historicalAuditReconciliation.completedDecisionsNamedInIssue376.length, 3);
+assert.deepEqual(summary.historicalAuditReconciliation.separateApprovedFinanceBatchIssue383Pr388.sort(), approvedFinanceIds.slice().sort());
+assert.match(summary.historicalAuditReconciliation.overlapBetweenFinanceBatchAnd136RowList, /Unresolved/u);
+assert.equal(summary.historicalAuditReconciliation.currentMachineProposalCountBeforeHistoricalHold, 27);
+assert.equal(summary.historicalAuditReconciliation.currentMachineProposalCountAfterHistoricalHold, summary.proposals.total);
+assert.ok(summary.historicalAuditReconciliation.limitation.includes("not versioned"));
+assert.ok(report.reconciliationRows.some((row) => row["Podcast-ID"] === "se og hor lige her" && row.Kategori.includes("historisk label")));
+assert.equal(summary.reviewCategories.wellSupportedChanges, 0, "without reverified publisher evidence, no automated change is labeled well-supported");
+assert.equal(summary.reviewCategories.uncertainChanges, summary.proposals.total);
+assert.equal(summary.blockedReviewGroups.reduce((sum, group) => sum + group.count, 0), summary.proposals.blocked);
+assert.ok(summary.blockedReviewGroups.every((group) => group.assessment.includes("not proof of misclassification")));
+assert.equal(Object.values(summary.priorManualReviewCategoryCounts).reduce((sum, count) => sum + count, 0), 9);
+assert.equal(summary.priorManualReviewCategoryCounts["Muligt genremismatch — kildeverifikation kræves"] + summary.priorManualReviewCategoryCounts["Muligt genremismatch — satire/underholdning skal afstemmes"] + summary.priorManualReviewCategoryCounts["Muligt genremismatch — True Crime-outlier skal verificeres"], 5);
+assert.equal(summary.blockedReviewGroups.reduce((sum, group) => sum + group.priorManualReviewCount, 0), 1, "historical manual flags are separated from the 158 evidence-blocked records");
+for (const row of report.records) {
   assert.equal(Object.hasOwn(row, "Vuring (1-10)"), false);
   assert.equal(Object.hasOwn(row, "userRatings"), false);
   assert.equal(Object.hasOwn(row, "bookmarks"), false);
@@ -54,5 +92,9 @@ for (const row of report.records) {
 const csv = await readFile(path.join(outputDirectory, "full-catalogue.csv"), "utf8");
 assert.equal((csv.match(/\r\n/gu) || []).length, summary.rows + 1);
 assert.match(await readFile(path.join(outputDirectory, "catalogue-quality-report.md"), "utf8"), /Ark1 række 1339, Krig/u);
+assert.match(await readFile(path.join(outputDirectory, "catalogue-quality-report.md"), "utf8"), /Afstemning mod issue #376/u);
+assert.ok((await readFile(path.join(outputDirectory, "historical-audit-reconciliation.csv"), "utf8")).includes("darligt nyt fra østfronten"));
+assert.ok((await readFile(path.join(outputDirectory, "blocked-review-groups.csv"), "utf8")).includes("Insufficient evidence"));
+assert.ok((await readFile(path.join(outputDirectory, "technical-metadata-review.csv"), "utf8")).includes("Podcast-ID"));
 await rm(outputDirectory, { recursive: true, force: true });
 console.log("Full read-only catalogue quality report passed identity, coverage, source-class, privacy, and intake assertions.");
