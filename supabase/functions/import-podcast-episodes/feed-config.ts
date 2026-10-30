@@ -43,8 +43,8 @@ export type FeedConfig = {
   source: string;
   feed_url: string;
   format?: FeedFormat;
-  // New feeds are scheduled by default. Set this to false only when a feed
-  // should remain configured but must be excluded from the shared importer.
+  // Only code-owned configs and the frozen approved Sheet-feed baseline are
+  // scheduled. A metadata-only new/changed feed is kept disabled until reviewed.
   enabled?: boolean;
   // Generated sheet entries are replaced from PODCASTS_JSON_URL at runtime.
   generated_from_sheet?: boolean;
@@ -61,9 +61,8 @@ export type FeedConfig = {
   // Version-controlled evidence for an exact same-show RSS relocation. Never
   // populate from Sheet input; changed GUIDs require a separate identity plan.
   reviewed_sheet_feeds?: Array<{ from_url: string; to_url: string; same_show_and_guids: true; evidence: string }>;
-  // A Google Sheets RSS relocation is provisional until the existing source
-  // returns at least three exact GUID matches from this new URL. The importer
-  // validates this against its normal existing-episode lookup before any write.
+  // Optional code-owned guard for a deliberately staged RSS relocation. Sheet
+  // metadata cannot set this or use it to activate a new feed.
   sheet_feed_change?: { from_url: string; to_url: string; minimum_guid_overlap: number };
   // Historically mapped Podimo sources are enabled from the Sheet only after
   // the ordinary same-source episode lookup proves GUID continuity.

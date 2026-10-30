@@ -1,4 +1,5 @@
 import { FEED_CONFIGS, DJAEVLEN_LYD_FULL_FEED_KEY, BAKSPEJL_LYD_FULL_FEED_KEY, type FeedConfig, type FeedConfigMap } from "./feed-config.ts";
+import { APPROVED_SHEET_FEED_BASELINE, type ApprovedSheetFeed } from "./sheet-feed-approval-baseline.ts";
 import { appleShowUrl, parseAppleFeed, parseHttpFeed, parsePodimoShowFeed } from "./feed-syntax.mjs";
 import { applySheetFeedPolicy, type FeedResolution } from "./sheet-feed-policy.ts";
 import { buildDjaevlenRoutes, DJAEVLEN_FEED_KEY } from "./djaevlen-routing.mjs";
@@ -42,6 +43,14 @@ function toFeedKey(podcastId: unknown): string {
   return normalizePodcastKey(podcastId).replace(/\s+/g, "_");
 }
 
+const approvedSheetFeeds = APPROVED_SHEET_FEED_BASELINE.map(([podcast_key, feed_url]) => ({
+  podcast_key, feed_url, feed_key: toFeedKey(podcast_key), source: `sheet_${toFeedKey(podcast_key)}_rss`
+}));
+const approvedSheetFeedsByPodcast = new Map(approvedSheetFeeds.map(entry => [entry.podcast_key, entry]));
+const approvedSheetFeedsByUrl = new Map(approvedSheetFeeds.map(entry => [entry.feed_url.toLowerCase(), entry]));
+const approvedSheetFeedKeys = new Set(approvedSheetFeeds.map(entry =>
+  `${entry.podcast_key}\u0000${entry.feed_key}\u0000${entry.source}\u0000${entry.feed_url}`));
+
 function getPodcastId(row: Record<string, unknown>): string {
   return String(row["Podcast-ID"] ?? row["Podcast ID"] ?? row.PodcastID ?? "").trim();
 }
@@ -80,6 +89,18 @@ function getManualStaticConfigs(configs: FeedConfigMap): FeedConfigMap {
   return Object.fromEntries(
     Object.entries(configs).filter(([, config]) => config.generated_from_sheet !== true)
   );
+}
+
+function isApprovedSheetFeed(podcastId: string, feedKey: string, source: string, feedUrl: string): boolean {
+  return approvedSheetFeedKeys.has(`${podcastId}\u0000${feedKey}\u0000${source}\u0000${feedUrl}`);
+}
+
+function getApprovedSheetFeedForPodcast(podcastId: string): ApprovedSheetFeed | undefined {
+  return approvedSheetFeedsByPodcast.get(podcastId);
+}
+
+function getApprovedSheetFeedOwner(feedUrl: string): ApprovedSheetFeed | undefined {
+  return approvedSheetFeedsByUrl.get(feedUrl.toLowerCase());
 }
 
 function findDuplicateFeedUrls(configs: FeedConfigMap): Array<{ feed_url: string; feed_keys: string[] }> {
@@ -203,6 +224,37 @@ export function mergeSheetFeedConfigs(
       if (!apple && normalizedFeedUrl && seenFeedUrls.has(normalizedFeedUrl)) {
         duplicateFeedUrlsSkipped.push({ feed_url: normalizedFeedUrl, skipped_feed_key: feedKey });
       }
+      continue;
+    }
+
+    if (!apple && feedUrl) {
+      const approvedOwner = getApprovedSheetFeedOwner(feedUrl);
+      if (approvedOwner && approvedOwner.podcast_key !== podcastKey) {
+        duplicatesSkipped += 1;
+        duplicateFeedUrlsSkipped.push({ feed_url: normalizedFeedUrl!, skipped_feed_key: feedKey });
+        policy.resolutions.push({ podcast_key: podcastKey, sheet_feed: String(rawFeed).trim(),
+          active_feed_urls: [approvedOwner.feed_url], origin: "review_required", differs_from_sheet: true,
+          reason: "feed_owned_by_other_podcast" });
+        continue;
+      }
+    }
+
+    const approvedSheetFeed = !apple && feedUrl &&
+      isApprovedSheetFeed(podcastKey, feedKey, source, feedUrl);
+    if (!apple && feedUrl && !approvedSheetFeed) {
+      const previous = getApprovedSheetFeedForPodcast(podcastKey);
+      configs[feedKey] = {
+        podcast_key: podcastKey,
+        source,
+        feed_url: feedUrl,
+        format: "rss",
+        enabled: false
+      };
+      policy.resolutions.push({ podcast_key: podcastKey, sheet_feed: String(rawFeed).trim(),
+        active_feed_urls: previous ? [previous.feed_url] : [], origin: "review_required",
+        differs_from_sheet: true,
+        reason: previous ? "feed_change_requires_code_approval" : "explicit_activation_required" });
+      dynamicSheetFeedCount += 1;
       continue;
     }
 
