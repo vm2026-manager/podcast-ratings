@@ -116,13 +116,14 @@ requires operational monitoring; this patch cannot prove future feed identity.
 
 ## Feed activation boundary (2026-10-30)
 
-`PODCASTS_JSON_URL` remains metadata input, not import permission. A new or changed
+`PODCASTS_JSON_URL` remains metadata input, not import permission. A new
 ordinary RSS URL in the Sheet is now included in `feed_config_audit` with
 `enabled: false` and a review warning; it is excluded by `selectNormalFeedKeys`.
-The same applies to a Sheet URL change on an existing static RSS owner unless an
-exact code-owned `reviewed_sheet_feeds` record binds the old URL, new URL,
-same-show/GUID evidence and nonempty rationale. The importer still applies the
-existing identity/GUID protections to code-authorized imports.
+For changed URLs, the previously approved URL stays active and the new Sheet URL
+is review-only. A static RSS owner can move only when an exact code-owned
+`reviewed_sheet_feeds` record binds the old URL, new URL, same-show/GUID evidence
+and nonempty rationale. The importer still applies the existing
+identity/GUID protections to code-authorized imports.
 
 To preserve the pre-existing runtime set, the versioned
 `sheet-feed-approval-baseline.ts` records the 204 exact Podcast-ID/feed-URL pairs
@@ -131,7 +132,9 @@ catalogue sync workflow does not regenerate this file. Manual static configs and
 the separately verified DR, Podimo, Apple and umbrella adapters keep their
 existing code-owned rules. An explicit new activation therefore requires a
 reviewed static config in code; a Sheet field, including a field named `enabled`,
-cannot grant it. Duplicate feed owners and missing Podcast-IDs stay fail-closed.
+cannot grant it. Blank or absent Sheet feed metadata does not deactivate an
+existing baseline feed. Duplicate feed owners and missing Podcast-IDs stay
+fail-closed.
 
 The `pa sporet` row remains outside the published catalogue. Its proposed Spotify
 link and Spreaker feed are not written by this change, and no episode import was

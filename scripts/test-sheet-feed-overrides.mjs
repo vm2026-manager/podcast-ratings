@@ -102,13 +102,25 @@ assert.equal(Object.keys(missingId.configs).length, 0);
 assert.equal(missingId.audit.feed_warnings[0].reason, "missing_podcast_id");
 const [baselineOwnerId, baselineOwnerUrl] = APPROVED_SHEET_FEED_BASELINE[0];
 const baselineOwner = publishedApproved.find(feed => feed.podcast_key === baselineOwnerId);
-const duplicateOwner = mergeSheetFeedConfigs([row(baselineOwnerUrl, "new podcast identity")], {});
+const duplicateOwner = mergeSheetFeedConfigs([row(baselineOwnerUrl, "new podcast identity")]);
 assert.equal(duplicateOwner.configs.new_podcast_identity, undefined);
 assert.equal(duplicateOwner.audit.feed_warnings[0].reason, "feed_owned_by_other_podcast");
-const changedExisting = mergeSheetFeedConfigs([row(newUrl, baselineOwner.podcast_key)], {});
-assert.equal(changedExisting.configs[baselineOwner.feed_key].enabled, false);
-assert.equal(selectNormalFeedKeys(changedExisting.configs).includes(baselineOwner.feed_key), false);
+const changedExisting = mergeSheetFeedConfigs([row(newUrl, baselineOwner.podcast_key)]);
+assert.equal(changedExisting.configs[baselineOwner.feed_key].feed_url, baselineOwner.feed_url,
+  "a metadata change cannot displace an existing approved feed");
+assert.equal(selectNormalFeedKeys(changedExisting.configs).includes(baselineOwner.feed_key), true);
 assert.equal(changedExisting.audit.feed_warnings[0].reason, "feed_change_requires_code_approval");
+const missingExistingFeed = mergeSheetFeedConfigs([{ "Podcast-ID": baselineOwner.podcast_key, Feed: "" }]);
+assert.equal(missingExistingFeed.configs[baselineOwner.feed_key].feed_url, baselineOwner.feed_url,
+  "a blank metadata field cannot deactivate an existing approved feed");
+assert.equal(selectNormalFeedKeys(missingExistingFeed.configs).includes(baselineOwner.feed_key), true);
+
+const runtimeWithChangedFeed = await loadRuntimeFeedConfigs({ podcastsJsonUrl: "https://example.test/catalogue.json",
+  fetchPayload: async () => ({ rows: [row(newUrl, baselineOwner.podcast_key)] }) });
+assert.equal(runtimeWithChangedFeed.configs[baselineOwner.feed_key].feed_url, baselineOwner.feed_url,
+  "the production loader retains the baseline feed on Sheet drift");
+assert.equal(selectNormalFeedKeys(runtimeWithChangedFeed.configs).includes(baselineOwner.feed_key), true);
+assert.equal(runtimeWithChangedFeed.audit.feed_warnings[0].reason, "feed_change_requires_code_approval");
 
 // A new feed is activated only through an explicit code-owned configuration.
 const explicitKey = "explicit_activation";

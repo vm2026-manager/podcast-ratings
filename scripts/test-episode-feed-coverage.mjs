@@ -29,7 +29,7 @@ assert.equal(check.findings.find(x => x.podcast_key === "ordinary rss")?.cause, 
   "new RSS metadata remains inactive until code explicitly approves it");
 assert.ok(!check.findings.some(x => x.podcast_key === "smat brændbart"), "matching Podimo show is covered");
 const [approvedId, approvedFeed] = APPROVED_SHEET_FEED_BASELINE[0];
-const approvedCoverage = checkEpisodeFeedCoverage({ rows: [row(approvedId, approvedFeed)] }, {});
+const approvedCoverage = checkEpisodeFeedCoverage({ rows: [row(approvedId, approvedFeed)] });
 assert.equal(approvedCoverage.findings.length, 0, "an existing approved feed remains covered");
 const mismatch = checkEpisodeFeedCoverage({ rows: [row("smat brændbart", 
   "https://open.podimo.com/podcast/ffffffff-ffff-ffff-ffff-ffffffffffff")] },
