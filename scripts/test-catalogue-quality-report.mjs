@@ -6,6 +6,7 @@ import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { CANONICAL_GENRES } from "./catalogue-intake.mjs";
+import { classifyFeedReference } from "./catalogue-feed-quality.mjs";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const outputDirectory = await mkdtemp(path.join(os.tmpdir(), "catalogue-quality-report-"));
@@ -36,6 +37,13 @@ assert.equal(summary.uniqueCatalogueIds, catalogue.rows.length);
 assert.equal(summary.missingCatalogueIds, 0);
 assert.equal(summary.duplicateCatalogueIds, 0);
 assert.equal(summary.crossFieldIdentityConflicts, 0);
+const expectedFeedStatusCounts = Object.groupBy(catalogue.rows, (row) => classifyFeedReference(row.Feed).status);
+for (const [status, rows] of Object.entries(expectedFeedStatusCounts)) {
+  assert.equal(summary.quality.feedStatusCounts[status], rows.length, "feed status count matches the row-level classifier: " + status);
+}
+assert.equal(summary.quality.supportedAppleReferenceRows, 40, "all 40 case-insensitive Apple references are supported references, not invalid feeds");
+assert.equal(summary.quality.invalidFeedRows, 0, "no invalid feed syntax is reported in the current catalogue");
+assert.ok(summary.quality.feedSourceVerificationRows > 0, "well-formed sources without recognized feed endpoints are separated for verification");
 assert.deepEqual(summary.canonicalGenres, CANONICAL_GENRES);
 assert.equal(report.records.length, summary.rows, "the report contains one row per catalogue record");
 assert.equal(new Set(report.records.map((row) => row.podcastId)).size, summary.rows, "the report uses unique Podcast-ID values");
@@ -91,6 +99,11 @@ for (const row of report.records) {
 }
 const csv = await readFile(path.join(outputDirectory, "full-catalogue.csv"), "utf8");
 assert.equal((csv.match(/\r\n/gu) || []).length, summary.rows + 1);
+assert.match(csv, /Apple show ID/u);
+assert.match(csv, /supported-apple-reference/u);
+const reportMarkdown = await readFile(path.join(outputDirectory, "catalogue-quality-report.md"), "utf8");
+assert.match(reportMarkdown, /understøttede Apple-ID-syntakser 40/u);
+assert.match(reportMarkdown, /aktiverer ikke automatisk import/u);
 assert.match(await readFile(path.join(outputDirectory, "catalogue-quality-report.md"), "utf8"), /Ark1 række 1339, Krig/u);
 assert.match(await readFile(path.join(outputDirectory, "catalogue-quality-report.md"), "utf8"), /Afstemning mod issue #376/u);
 assert.ok((await readFile(path.join(outputDirectory, "historical-audit-reconciliation.csv"), "utf8")).includes("darligt nyt fra østfronten"));

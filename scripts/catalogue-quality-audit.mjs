@@ -5,6 +5,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { CANONICAL_GENRES } from "./catalogue-intake.mjs";
 import { dedupeProposedGenres, suggestGenres, suggestSearchTopics } from "./catalogue-quality-rules.mjs";
+import { classifyFeedReference } from "./catalogue-feed-quality.mjs";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const outputDirectory = process.argv[2]
@@ -116,7 +117,8 @@ function inspect(row, archive, sourceInfo) {
   const topicKeys = topics.map(key);
   const topicIssues = topics.some((topic, index) => topicKeys.indexOf(key(topic)) !== index) ? ["duplicate-topics-case-insensitive"] : [];
   const linkStatus = inspectUrl(row?.Link);
-  const feedStatus = inspectUrl(row?.Feed);
+  const feedClassification = classifyFeedReference(row?.Feed);
+  const feedStatus = feedClassification.status;
   const coverStatus = inspectUrl(row?.Billedlink);
   const metadataIssues = [];
   if (!id) metadataIssues.push("missing-podcast-id");
@@ -125,7 +127,7 @@ function inspect(row, archive, sourceInfo) {
   if (!normalize(row?.Udgiver)) metadataIssues.push("missing-publisher");
   if (linkStatus === "missing" && feedStatus === "missing") metadataIssues.push("missing-source-link-and-feed");
   if (linkStatus === "invalid") metadataIssues.push("invalid-link");
-  if (feedStatus === "invalid") metadataIssues.push("invalid-feed");
+  if (feedStatus === "invalid-syntax") metadataIssues.push("invalid-feed-syntax");
   if (coverStatus === "missing") metadataIssues.push("missing-cover");
   if (coverStatus === "invalid") metadataIssues.push("invalid-cover-reference");
   if (coverStatus === "local-path" && !existsSync(path.join(root, normalize(row?.Billedlink)))) metadataIssues.push("missing-local-cover-file");
@@ -235,7 +237,12 @@ function inspect(row, archive, sourceInfo) {
     legacySearchPreservation: /^(sladder|snak|snakke)$/iu.test(currentGenre) ? currentGenre : "",
     genreIssues, metadataIssues, topicIssues, linkStatus, feedStatus, coverStatus, declaredEpisodeCount: declared,
     manualEpisodeCount: manual, structuredArchiveEpisodeCount: archived, rssLiveEpisodeCount: null,
-    rssLiveCountStatus: feedStatus === "valid" ? "Ikke hentet read-only" : "Intet gyldigt feed angivet",
+    feedAppleShowId: feedClassification.appleShowId || "",
+    feedVerificationReason: feedClassification.reason || "",
+    rssLiveCountStatus: feedStatus === "valid-http-feed" ? "HTTP(S)-feedformat; live-indhold ikke hentet read-only"
+      : feedStatus === "supported-apple-reference" ? "Understøttet Apple-reference; RSS-feed ikke hentet"
+        : feedStatus === "requires-source-verification" ? "Kilden skal verificeres; ingen importer aktiveres"
+          : feedStatus === "missing" ? "Feed mangler" : "Ugyldig feedsyntaks",
     manualVsDeclared: declared === null ? "Ukendt" : manual + " manuelle / " + declared + " oplyste",
     archiveVsDeclared: declared === null ? "Ukendt" : archived + " arkiv / " + declared + " oplyste"
   };
@@ -394,12 +401,16 @@ const summary = {
     topicIssueRows: reportRows.filter((row) => row.topicIssues.length).length,
     missingTopicRows: reportRows.filter((row) => row.metadataIssues.includes("missing-topics")).length,
     invalidLinkRows: reportRows.filter((row) => row.linkStatus === "invalid").length,
-    invalidFeedRows: reportRows.filter((row) => row.feedStatus === "invalid").length,
+    invalidFeedRows: reportRows.filter((row) => row.feedStatus === "invalid-syntax").length,
+    feedStatusCounts: Object.fromEntries(countBy(reportRows, (row) => row.feedStatus)),
+    supportedAppleReferenceRows: reportRows.filter((row) => row.feedStatus === "supported-apple-reference").length,
+    feedSourceVerificationRows: reportRows.filter((row) => row.feedStatus === "requires-source-verification").length,
+    missingFeedRows: reportRows.filter((row) => row.feedStatus === "missing").length,
     missingCoverRows: reportRows.filter((row) => row.coverStatus === "missing").length,
     invalidCoverReferenceRows: reportRows.filter((row) => row.coverStatus === "invalid" || row.metadataIssues.includes("missing-local-cover-file")).length,
     misplacedDescriptionUrlRows: reportRows.filter((row) => row.metadataIssues.some((issue) => issue.startsWith("url-in-description"))).length,
     episodeListInDescriptionRows: reportRows.filter((row) => row.metadataIssues.some((issue) => issue.startsWith("episode-list-suspected"))).length,
-    feedRows: reportRows.filter((row) => row.feedStatus === "valid").length,
+    feedRows: reportRows.filter((row) => row.feedStatus === "valid-http-feed").length,
     manualEpisodeRows: reportRows.filter((row) => row.manualEpisodeCount > 0).length,
     archivedEpisodeRows: reportRows.filter((row) => row.structuredArchiveEpisodeCount > 0).length,
     liveRssCountsFetched: 0
@@ -422,7 +433,8 @@ const flatRows = reportRows.map((row) => ({
   Begrundelse: row.reason,
   Evidens: row.evidence, Sikkerhed: row.confidence, Status: row.status, "Søgbart historisk label": row.legacySearchPreservation,
   "Genreproblemer": row.genreIssues.join("; "), "Metadata-problemer": row.metadataIssues.join("; "), "Emneproblemer": row.topicIssues.join("; "),
-  "Link status": row.linkStatus, "Feed status": row.feedStatus, "Cover status": row.coverStatus, "Oplyste episoder": row.declaredEpisodeCount ?? "",
+  "Link status": row.linkStatus, "Feed status": row.feedStatus, "Apple show ID": row.feedAppleShowId, "Feed-verificeringsnote": row.feedVerificationReason,
+  "Cover status": row.coverStatus, "Oplyste episoder": row.declaredEpisodeCount ?? "",
   "Manuelle episoder": row.manualEpisodeCount, "Struktureret episodearkiv": row.structuredArchiveEpisodeCount, "RSS-episoder live": row.rssLiveCountStatus,
   "Manuel / oplyst": row.manualVsDeclared, "Arkiv / oplyst": row.archiveVsDeclared
 }));
@@ -516,10 +528,10 @@ const markdown = [
   "## Tekniske metadatafund", "", "| Fundtype | Forekomster |", "|---|---:|", ...technicalLines, "",
   "Se technical-metadata-review.csv for præcise Podcast-ID'er og tekniske metadatafund pr. post; ikke-kanoniske genrelabels er adskilt i blokkeringsgrupperne og er ikke talt som tekniske fejl.", "",
   "## Metadata og episoder", "",
-  "Rækker med genrelabel-/slotproblemer " + summary.quality.genreIssueRows + "; tekniske metadatafund " + summary.reviewCategories.technicalMetadataFindings + " (metadata-problemer " + summary.quality.metadataIssueRows + "; emneproblemer " + summary.quality.topicIssueRows + "). Manglende emner " + summary.quality.missingTopicRows + "; ugyldige URL-formater " + summary.quality.invalidLinkRows + "; ugyldige feed-URL-formater " + summary.quality.invalidFeedRows + "; manglende covers " + summary.quality.missingCoverRows + "; fejlformaterede coverreferencer " + summary.quality.invalidCoverReferenceRows + ". Ikke-kanoniske/historiske labels er ikke automatisk fejl.",
+  "Rækker med genrelabel-/slotproblemer " + summary.quality.genreIssueRows + "; tekniske metadatafund " + summary.reviewCategories.technicalMetadataFindings + " (metadata-problemer " + summary.quality.metadataIssueRows + "; emneproblemer " + summary.quality.topicIssueRows + "). Manglende emner " + summary.quality.missingTopicRows + "; ugyldige URL-formater " + summary.quality.invalidLinkRows + "; ugyldig feedsyntaks " + summary.quality.invalidFeedRows + "; manglende covers " + summary.quality.missingCoverRows + "; fejlformaterede coverreferencer " + summary.quality.invalidCoverReferenceRows + ". Ikke-kanoniske/historiske labels er ikke automatisk fejl.",
   "Muligt link i beskrivelse " + summary.quality.misplacedDescriptionUrlRows + "; mulig episodeliste i beskrivelsesfelter " + summary.quality.episodeListInDescriptionRows + ".",
-  "Rækker med gyldigt feed " + summary.quality.feedRows + "; manualEpisodes " + summary.quality.manualEpisodeRows + "; struktureret episodearkiv " + summary.quality.archivedEpisodeRows + ".",
-  "Feed, oplyst episodeantal, manualEpisodes og lokalt struktureret episodearkiv vises særskilt. Live RSS-tal blev ikke hentet.", "",
+  "Feedkvalitet (format-/referenceklassifikation): HTTP(S)-feedendpoints " + summary.quality.feedRows + "; understøttede Apple-ID-syntakser " + summary.quality.supportedAppleReferenceRows + "; manglende feeds " + summary.quality.missingFeedRows + "; ugyldig syntaks " + summary.quality.invalidFeedRows + "; yderligere kildeverifikation kræves " + summary.quality.feedSourceVerificationRows + ". Apple-ID-syntaks er ikke bekræftelse af listing/feed og aktiverer ikke automatisk import.",
+  "HTTP(S)-feedstatus bygger på URL-syntaks og kendte feed-endpointmønstre; feedindhold blev ikke hentet. Andre gyldige URL'er og ikke-understøttede schemes kræver kildeverifikation. Feed, oplyst episodeantal, manualEpisodes og lokalt struktureret episodearkiv vises særskilt. Live RSS-tal blev ikke hentet. ManualEpisodes " + summary.quality.manualEpisodeRows + "; struktureret episodearkiv " + summary.quality.archivedEpisodeRows + ".", "",
   "## Intake-regression", "",
   "Ark1 række 1339, Krig, skal blive en separat Sheet-intake-kandidat. Den mangler Podcast-ID, har en feed-URL i Kort beskrivelse og en episodeoversigt i Undervurderet perle. Systemet må ikke slette rækken, oprette Podcast-ID krig, tildele catalogue_id eller flytte episoder automatisk.", "",
   "Ingen Sheet-, katalog-, genre-, emne-, episode-, rating-, bruger- eller produktionsdata blev ændret.", ""
