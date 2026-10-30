@@ -569,4 +569,10 @@
     min-height: 48px !important;
     height: 48px !important;
   }
+
+  html body.page-profil .profile-stat-card--average .profile-stat-card__label,
+  html body.page-profil .profile-stat-card--average strong {
+    justify-self: stretch !important;
+    text-align: center !important;
+  }
 }

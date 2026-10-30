@@ -4,6 +4,7 @@ import { fileURLToPath } from "node:url";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const checks = [
+  ["mobile profile average stat alignment and unchanged genre card", ["tests/profile-average-stat-alignment.test.mjs"]],
   ["Har du hørt source identity and episode visibility", ["--experimental-strip-types", "scripts/test-har-du-hoert-source-boundary.mjs"]],
   ["Sheet feed override safety and audit", ["--experimental-strip-types", "scripts/test-sheet-feed-overrides.mjs"]],
   ["homepage community momentum", ["scripts/test-homepage-community-momentum.mjs"]],
