@@ -404,7 +404,22 @@ try {
     assert.ok(layout.rects.every((card) => card.right <= width + 1 && card.labelWidth > 0), "genre card or label is clipped at " + width + "px");
     assert.ok(layout.rects.every((card) => card.labelScrollWidth <= card.labelWidth + 2), "genre label overflows at " + width + ": " + JSON.stringify(layout.rects.filter((card) => card.labelScrollWidth > card.labelWidth + 2)) + "px");
     assert.ok(layout.rects.every((card) => card.genre), "genre cards have semantic data attributes");
-    await page.goto("http://127.0.0.1:" + address.port + "/podcast-anbefalinger/index.html", { waitUntil: "domcontentloaded" });
+    await page.goto("http://127.0.0.1:" + address.port + "/podcast-anbefalinger/index.html", { waitUntil: "load" });
+    const staticStyles = await page.evaluate(() => {
+      const stylesheet = [...document.querySelectorAll('link[rel="stylesheet"]')]
+        .find((link) => new URL(link.href).pathname === "/podcast-anbefalinger/style.css");
+      const genreNav = document.querySelector(".genre-nav");
+      return {
+        stylesheetLoaded: Boolean(stylesheet?.sheet),
+        bodyMargin: getComputedStyle(document.body).margin,
+        genreNavDisplay: getComputedStyle(genreNav).display,
+        genreNavFlexWrap: getComputedStyle(genreNav).flexWrap
+      };
+    });
+    assert.equal(staticStyles.stylesheetLoaded, true, "static recommendation stylesheet is loaded before layout measurement");
+    assert.equal(staticStyles.bodyMargin, "0px", "static recommendation stylesheet resets the browser body margin");
+    assert.equal(staticStyles.genreNavDisplay, "flex", "static genre navigation uses its stylesheet flex layout");
+    assert.equal(staticStyles.genreNavFlexWrap, "wrap", "static genre navigation wraps before layout measurement");
     const staticNav = await page.evaluate(() => {
       const nav = document.querySelector(".genre-nav");
       const links = [...nav.querySelectorAll("a")];
