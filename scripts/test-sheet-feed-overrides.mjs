@@ -1,12 +1,12 @@
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import { mergeSheetFeedConfigs, loadRuntimeFeedConfigs } from "../supabase/functions/import-podcast-episodes/runtime-feed-config.ts";
-import { selectNormalFeedKeys, runEpisodeImport } from "../supabase/functions/import-podcast-episodes/core.ts";
+import { selectNormalFeedKeys, selectNormalFeedShard, runEpisodeImport } from "../supabase/functions/import-podcast-episodes/core.ts";
 import { APPROVED_SHEET_FEED_BASELINE } from "../supabase/functions/import-podcast-episodes/sheet-feed-approval-baseline.ts";
 
 const oldUrl = "https://example.test/old.rss";
 const newUrl = "https://example.test/new.rss";
-const config = { podcast_key: "canonical id", source: "historical_source", feed_url: oldUrl };
+const config = { podcast_key: "canonical id", source: "historical_source", feed_url: oldUrl, enabled: true };
 const reviewed = { ...config, reviewed_sheet_feeds: [{ from_url: oldUrl, to_url: newUrl,
   same_show_and_guids: true, evidence: "Verified publisher relocation and unchanged episode GUIDs in fixture" }] };
 const row = (Feed, id = "canonical id") => ({ "Podcast-ID": id, Titel: "Display title is not identity", Feed });
@@ -95,6 +95,10 @@ assert.equal(stagedPaSporet.Feed, spreakerFeed, "the cloned fixture contains the
 const stagedPaSporetRuntime = mergeSheetFeedConfigs(stagedCatalogue);
 assert.equal(stagedPaSporetRuntime.configs.pa_sporet.enabled, false);
 assert.equal(selectNormalFeedKeys(stagedPaSporetRuntime.configs).includes("pa_sporet"), false);
+for (let shardIndex = 0; shardIndex < 6; shardIndex++) {
+  assert.equal(selectNormalFeedShard(stagedPaSporetRuntime.configs, shardIndex, 6).includes("pa_sporet"), false,
+    `all-feed shard ${shardIndex} excludes unapproved pa sporet`);
+}
 assert.equal(stagedPaSporetRuntime.audit.feed_warnings.find(entry => entry.podcast_key === "pa sporet").reason,
   "explicit_activation_required");
 assert.deepEqual(stagedCatalogue, stagedCatalogueSnapshot,
@@ -105,6 +109,22 @@ const newFeed = mergeSheetFeedConfigs([{ ...row(spreakerFeed, "pa sporet"), enab
 assert.equal(newFeed.configs.pa_sporet.enabled, false);
 assert.equal(selectNormalFeedKeys(newFeed.configs).includes("pa_sporet"), false);
 assert.equal(newFeed.audit.feed_warnings[0].reason, "explicit_activation_required");
+let disabledFeedCreates = 0;
+let disabledFeedFetches = 0;
+const disabledFeedRepository = {
+  async createImportRun() { disabledFeedCreates++; return { id: "must-not-create" }; },
+  async loadExistingEpisodes() { throw new Error("disabled feed must not load episodes"); },
+  async upsertEpisodes() { throw new Error("disabled feed must not write episodes"); },
+  async updateImportRun() { throw new Error("disabled feed must not update import history"); }
+};
+await assert.rejects(() => runEpisodeImport({
+  feedKey: "pa_sporet",
+  feedConfigs: newFeed.configs,
+  repository: disabledFeedRepository,
+  fetchText: async () => { disabledFeedFetches++; return "<rss/>"; }
+}), error => error.status === 403 && error.message === "Feed import is disabled");
+assert.equal(disabledFeedCreates, 0, "a direct unapproved feed request creates no import-run history");
+assert.equal(disabledFeedFetches, 0, "a direct unapproved feed request does not fetch the feed");
 const missingId = mergeSheetFeedConfigs([{ Feed: newUrl, "Podcast-ID": "" }], {});
 assert.equal(Object.keys(missingId.configs).length, 0);
 assert.equal(missingId.audit.feed_warnings[0].reason, "missing_podcast_id");
