@@ -266,6 +266,16 @@ const MEDIANO_EPISODE_PODCAST_CONFIG = Object.freeze(
 
 const EPISODE_PODCAST_CONFIG = {
   ...MEDIANO_EPISODE_PODCAST_CONFIG,
+  "stot mediano": {
+    podcastKey: "stot mediano",
+    databasePodcastKey: "stot mediano",
+    enabled: true,
+    displayName: "Støt Mediano",
+    searchPlaceholder: "Søg i Støt Mediano-episoder",
+    source: "mediano_site_rss",
+    episodeSources: ["mediano_site_rss"],
+    persistence: "supabase"
+  },
   "bernstein cigaretetui": {
     podcastKey: "bernstein cigaretetui",
     databasePodcastKey: "bernstein cigaretetui",
