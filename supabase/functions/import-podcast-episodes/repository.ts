@@ -83,7 +83,7 @@ export function createSupabaseImportRepository(client: any): ImportRepository {
             .in("podcast_key", keyBatch)
             .eq("is_active", true);
           if (mappingError) throw new Error("Manual catalogue mapping select failed");
-          (mappings || []).forEach((mapping) => {
+          (mappings || []).forEach((mapping: { episode_id?: string | null } | null) => {
             if (mapping?.episode_id) mappedEpisodeIds.add(mapping.episode_id);
           });
         }
@@ -95,7 +95,7 @@ export function createSupabaseImportRepository(client: any): ImportRepository {
             .in("id", idBatch)
             .eq("is_active", true);
           if (error) throw new Error("Manual catalogue episode select failed");
-          rows.push(...(data || []).map((row) => ({
+          rows.push(...(data || []).map((row: PodcastEpisodeRow) => ({
             ...row,
             metadata: {
               ...(row.metadata || {}),

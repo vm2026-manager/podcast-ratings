@@ -201,6 +201,15 @@ export function routeEpisodes(episodes: PodcastEpisodeRow[], config: FeedConfig)
   return { episodes: routed, report };
 }
 
+export type ImportRoutingDetails = Record<string, unknown> & {
+  cross_source_url_duplicate_count: number;
+  cross_source_identity_duplicate_count: number;
+};
+
+export type ImportSummaryDetails = Record<string, unknown> & {
+  routing?: ImportRoutingDetails;
+};
+
 export type ImportSummary = {
   status: "success" | "partial" | "failed";
   source: string;
@@ -212,7 +221,7 @@ export type ImportSummary = {
   error_count: number;
   runtime_ms: number;
   error?: string;
-  details?: Record<string, unknown>;
+  details?: ImportSummaryDetails;
 };
 
 export type AllFeedsImportSummary = {
@@ -973,21 +982,30 @@ export async function runEpisodeImport(options: {
   });
 
   try {
-    const content = config.format === "podimo_graphql" ? null : await (options.fetchText || fetchFeedText)(config.feed_url);
-    const mapped = config.format === "podimo_graphql"
-      ? mapPodimoEpisodes(parsePodimoEpisodes(await (options.fetchPodimo || fetchPodimoEpisodes)(config)), config, now())
-      : config.format === "apple_podcasts_html"
-      ? await mapApplePodcastHtmlEpisodes({
+    let mapped: ReturnType<typeof mapPodimoEpisodes>;
+    if (config.format === "podimo_graphql") {
+      mapped = mapPodimoEpisodes(
+        parsePodimoEpisodes(await (options.fetchPodimo || fetchPodimoEpisodes)(config)),
+        config,
+        now()
+      );
+    } else {
+      const content = await (options.fetchText || fetchFeedText)(config.feed_url);
+      if (config.format === "apple_podcasts_html") {
+        mapped = await mapApplePodcastHtmlEpisodes({
           showHtml: content,
           config,
           fetchText: options.fetchText || fetchFeedText,
           now: now()
-        })
-      : config.format === "radio4_json"
-      ? mapRadio4Episodes(parseRadio4Episodes(content), config, now())
-      : config.format === "dr_lyd_next_data"
-        ? mapDrLydEpisodes(parseDrLydEpisodes(content), config, now())
-        : mapEpisodes(parseFeed(content), config, now());
+        });
+      } else if (config.format === "radio4_json") {
+        mapped = mapRadio4Episodes(parseRadio4Episodes(content), config, now());
+      } else if (config.format === "dr_lyd_next_data") {
+        mapped = mapDrLydEpisodes(parseDrLydEpisodes(content), config, now());
+      } else {
+        mapped = mapEpisodes(parseFeed(content), config, now());
+      }
+    }
     if (config.manual_identity_links) {
       const reconciled = await syncManualPodimoEpisodes(mapped.episodes, config, options.repository);
       const error_count = reconciled.error_count + mapped.errors.length;
@@ -1338,6 +1356,7 @@ export async function runEpisodeImports(options: {
   repository: ImportRepository;
   feedConfigs?: FeedConfigMap;
   fetchText?: (url: string) => Promise<string>;
+  fetchPodimo?: (config: FeedConfig) => Promise<unknown>;
   now?: () => string;
   concurrency?: number;
 }): Promise<AllFeedsImportSummary> {

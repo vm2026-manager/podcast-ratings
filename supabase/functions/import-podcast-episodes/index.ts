@@ -11,7 +11,7 @@ function env(name: string): string {
 }
 
 Deno.serve(async (request) => {
-  const validation = await validateImportRequest(request, Deno.env.get("EPISODE_IMPORT_SECRET"));
+  const validation = await validateImportRequest(request, Deno.env.get("EPISODE_IMPORT_SECRET") ?? null);
   if (!validation.ok) return jsonResponse(validation.body, validation.status);
 
   try {
