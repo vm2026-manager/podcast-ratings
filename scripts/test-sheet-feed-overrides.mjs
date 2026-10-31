@@ -86,13 +86,14 @@ const stagedPaSporet = stagedCatalogue.rows.find(item => item["Podcast-ID"] === 
 assert.equal(stagedPaSporet.catalogue_id, "catalogue-v1-374b47c3");
 stagedPaSporet.Link = "https://open.spotify.com/show/3FIqz5R0sIBB41uN2OEGK0";
 stagedPaSporet.Feed = spreakerFeed;
+const stagedCatalogueSnapshot = structuredClone(stagedCatalogue);
 const stagedPaSporetRuntime = mergeSheetFeedConfigs(stagedCatalogue);
 assert.equal(stagedPaSporetRuntime.configs.pa_sporet.enabled, false);
 assert.equal(selectNormalFeedKeys(stagedPaSporetRuntime.configs).includes("pa_sporet"), false);
 assert.equal(stagedPaSporetRuntime.audit.feed_warnings.find(entry => entry.podcast_key === "pa sporet").reason,
   "explicit_activation_required");
-assert.equal(published.rows.find(item => item["Podcast-ID"] === "pa sporet").Feed, undefined,
-  "the staged regression stays in memory and never changes the published catalogue fixture");
+assert.deepEqual(stagedCatalogue, stagedCatalogueSnapshot,
+  "mergeSheetFeedConfigs does not mutate its catalogue input");
 const newFeed = mergeSheetFeedConfigs([{ ...row(spreakerFeed, "pa sporet"), enabled: true }], {});
 assert.equal(newFeed.configs.pa_sporet.enabled, false);
 assert.equal(selectNormalFeedKeys(newFeed.configs).includes("pa_sporet"), false);
