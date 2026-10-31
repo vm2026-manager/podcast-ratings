@@ -103,6 +103,18 @@ const noCategory = { ...candidate, metadata: { ...candidate.metadata, rss_catego
 assert.equal(routeEpisodes([noCategory], activeConfig).episodes.length, 0);
 assert.equal(routeEpisodes([candidate], { ...activeConfig, source: "mediano_public_rss" }).episodes.length, 0);
 assert.equal(routeEpisodes([candidate], { ...activeConfig, feed_url: "https://mirror.example/rss" }).episodes.length, 0);
+for (const [title, categories] of [
+  ["El Clásico Special: FC Barcelona", ["Fodbold Internationalt", "Podcast"]],
+  ["El Clásico Special: Real Madrid", ["Fodbold Internationalt", "Podcast"]],
+  ["Vi leder efter partnere til 2027 - er det din virksomhed?", ["Om Mediano", "Podcast"]]
+]) {
+  const excluded = {
+    ...candidate,
+    title,
+    metadata: { ...candidate.metadata, rss_categories: categories }
+  };
+  assert.equal(routeEpisodes([excluded], activeConfig).episodes.length, 0, `${title} is not a Støt Mediano episode`);
+}
 
 const ambiguousConfig = {
   ...activeConfig,
@@ -146,5 +158,63 @@ assert.equal(first.inserted_count, 1);
 assert.equal(second.inserted_count, 0);
 assert.equal(second.updated_count, 0);
 assert.equal(second.skipped_count, 1);
+
+const overlappingSiteXml = `<rss><channel><title>Mediano</title>
+  <item><guid>573c1b7d01dbae9b52cd0936:573d6bdc37013bcc611eefd5:6ad9d39087900d3efae02ecd</guid>
+    <title>Max Mediano: El Clasico, Carricks sidste chance og Paz' store gennembrud</title>
+    <pubDate>Thu, 22 Oct 2026 09:58:19 +0000</pubDate>
+    <link>https://www.mediano.nu/oversigt/max-mediano-9d4xb-bng9k</link>
+    <category>Podcast</category><category>Støt Mediano</category><category>Fodbold Internationalt</category>
+    <enclosure url="https://private.example/member-audio.mp3" />
+  </item></channel></rss>`;
+const publicEpisode = {
+  ...candidate,
+  id: "f821de51-41e9-4a0c-b86c-f2f3fdd62d4a",
+  source: "mediano_public_rss",
+  external_guid: "https://api.spreaker.com/episode/75919084",
+  podcast_key: "max mediano",
+  title: "MAX MEDIANO: El Clasico, Carricks sidste chance og Paz' store gennembrud",
+  published_at: "2026-10-22T09:56:31.000Z",
+  episode_url: "https://www.spreaker.com/episode/max-mediano-el-clasico-carricks-sidste-chance-og-paz-store-gennembrud--75919084"
+};
+const crossSourceWrites = [];
+const crossSourceRepository = {
+  createImportRun: async () => ({ id: "cross-source-duplicate" }),
+  loadExistingEpisodes: async () => [publicEpisode],
+  upsertEpisodes: async (rows) => crossSourceWrites.push(...rows),
+  updateImportRun: async () => undefined
+};
+const crossSourceResult = await runEpisodeImport({
+  feedKey: "mediano_site",
+  feedConfigs: { mediano_site: activeConfig },
+  repository: crossSourceRepository,
+  fetchText: async () => overlappingSiteXml,
+  now: () => "2026-10-23T00:00:00.000Z"
+});
+assert.deepEqual(crossSourceWrites, [], "the public-feed UUID and source are preserved when the site RSS repeats the episode");
+assert.equal(crossSourceResult.inserted_count, 0);
+assert.equal(crossSourceResult.details.routing.cross_source_identity_duplicate_count, 1);
+assert.equal(publicEpisode.id, "f821de51-41e9-4a0c-b86c-f2f3fdd62d4a");
+assert.equal(publicEpisode.source, "mediano_public_rss");
+
+const differentEpisode = {
+  ...publicEpisode,
+  title: `${publicEpisode.title} - bonusanalyse`
+};
+const distinctEpisodeWrites = [];
+const distinctEpisodeResult = await runEpisodeImport({
+  feedKey: "mediano_site",
+  feedConfigs: { mediano_site: activeConfig },
+  repository: {
+    ...crossSourceRepository,
+    createImportRun: async () => ({ id: "distinct-cross-source-episode" }),
+    loadExistingEpisodes: async () => [differentEpisode],
+    upsertEpisodes: async (rows) => distinctEpisodeWrites.push(...rows)
+  },
+  fetchText: async () => overlappingSiteXml,
+  now: () => "2026-10-23T00:00:00.000Z"
+});
+assert.equal(distinctEpisodeWrites.length, 1, "a similar title is not an identity match without an exact normalized match");
+assert.equal(distinctEpisodeResult.inserted_count, 1);
 
 console.log("Støt Mediano category routing tests passed");
