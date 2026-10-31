@@ -961,6 +961,9 @@ export async function runEpisodeImport(options: {
   const feedConfigs = options.feedConfigs || FEED_CONFIGS;
   const config = feedConfigs[options.feedKey];
   if (!config) throw Object.assign(new Error("Unknown feed config"), { status: 400 });
+  if (config.enabled === false) {
+    throw Object.assign(new Error("Feed import is disabled"), { status: 403 });
+  }
 
   const importRun = await options.repository.createImportRun({
     source: config.source,

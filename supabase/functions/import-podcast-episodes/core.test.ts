@@ -29,31 +29,40 @@ Deno.test("normal all-feed shards are sorted, complete, disjoint, and exclude Ap
   assertEquals(selectAppleFeedKeys(feedConfigs), ["apple_disabled", "apple_accidentally_enabled"]);
 });
 
-Deno.test("a staged disabled feed stays out of all-feed selection while direct import remains available", async () => {
+Deno.test("a staged disabled feed stays out of all-feed selection and direct import is rejected", async () => {
   const feedConfigs: FeedConfigMap = {
     ordinary: { podcast_key: "ordinary", source: "ordinary_rss", feed_url: "https://example.test/ordinary" },
     mediano_public: { podcast_key: "mediano superliga", source: "mediano_public_rss", feed_url: "https://example.test/mediano", enabled: false }
   };
   const created: string[] = [];
+  let fetchCount = 0;
+  let writeCount = 0;
   const repository: ImportRepository = {
     createImportRun: async () => ({ id: `run-${created.push("run")}` }),
     loadExistingEpisodes: async (): Promise<PodcastEpisodeRow[]> => [],
-    upsertEpisodes: async () => undefined,
+    upsertEpisodes: async (episodes) => { writeCount += episodes.length; },
     updateImportRun: async () => undefined
   };
 
   assertEquals(selectNormalFeedKeys(feedConfigs), ["ordinary"]);
   assertEquals(selectNormalFeedShard(feedConfigs, 0, 1), ["ordinary"]);
 
-  const result = await runEpisodeImport({
-    feedKey: "mediano_public",
-    feedConfigs,
-    repository,
-    fetchText: async () => RSS,
-    now: () => "2026-09-18T00:00:00.000Z"
-  });
-  assertEquals(result.source, "mediano_public_rss");
-  assertEquals(created.length, 1);
+  let directStatus: number | undefined;
+  try {
+    await runEpisodeImport({
+      feedKey: "mediano_public",
+      feedConfigs,
+      repository,
+      fetchText: async () => { fetchCount++; return RSS; },
+      now: () => "2026-09-18T00:00:00.000Z"
+    });
+  } catch (error) {
+    directStatus = (error as { status?: number }).status;
+  }
+  assertEquals(directStatus, 403);
+  assertEquals(created.length, 0);
+  assertEquals(fetchCount, 0);
+  assertEquals(writeCount, 0);
 });
 
 Deno.test("enabled Mediano public appears exactly once in normal all-feed shards", () => {
