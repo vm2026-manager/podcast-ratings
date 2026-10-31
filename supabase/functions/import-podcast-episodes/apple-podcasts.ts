@@ -42,7 +42,7 @@ function jsonLdEpisode(html: string): Record<string, unknown> | null {
 }
 
 function findMatchedMetadata(value: unknown, episodeId: string): Record<string, unknown> | null {
-  let best: { record: Record<string, unknown>; score: number } | null = null;
+  const best: { candidate?: { record: Record<string, unknown>; score: number } } = {};
 
   const visit = (entry: unknown) => {
     if (!entry || typeof entry !== "object") return;
@@ -58,13 +58,13 @@ function findMatchedMetadata(value: unknown, episodeId: string): Record<string, 
         (durationSeconds(record.duration) ? 3 : 0) +
         (record.episodeArtwork ? 2 : 0) +
         (text(record.contentId || record.adamId) === episodeId ? 1 : 0);
-      if (!best || score > best.score) best = { record, score };
+      if (!best.candidate || score > best.candidate.score) best.candidate = { record, score };
     }
     Object.values(record).forEach(visit);
   };
 
   visit(value);
-  return best?.record || null;
+  return best.candidate?.record ?? null;
 }
 
 function serializedMetadata(html: string, episodeId: string): Record<string, unknown> | null {

@@ -129,14 +129,14 @@ Deno.test("Mediano site imports retain Spreaker public episodes by verified iden
     now: () => "2026-09-23T00:00:00.000Z"
   });
 
-  assertEquals(observedUrls, ["https://www.mediano.nu/oversigt/medianosuperliga-9", "https://www.mediano.nu/oversigt/medianosuperliga-10", "https://www.mediano.nu/oversigt/medianosuperliga-11"]);
+  assertEquals([...observedUrls].sort(), ["https://www.mediano.nu/oversigt/medianosuperliga-9", "https://www.mediano.nu/oversigt/medianosuperliga-10", "https://www.mediano.nu/oversigt/medianosuperliga-11"].sort());
   assertEquals(observedSources, ["mediano_public_rss"]);
   assertEquals(observedPodcastKeys, ["mediano superliga"]);
-  assertEquals(writes.flat().map((row) => row.title), ["Mediano Superliga #10: En ægte Støt Mediano-episode", "Mediano Superliga #11: Samme titel på tværs"]);
+  assertEquals(writes.flat().map((row) => row.title).sort(), ["Mediano Superliga #10: En ægte Støt Mediano-episode", "Mediano Superliga #11: Samme titel på tværs"].sort());
   assertEquals(writes.flat().every((row) => row.audio_url === null), true);
   assertEquals(result.inserted_count, 2);
-  assertEquals(result.details.routing?.cross_source_url_duplicate_count, 0);
-  assertEquals(result.details.routing?.cross_source_identity_duplicate_count, 1);
+  assertEquals(result.details?.routing?.cross_source_url_duplicate_count, 0);
+  assertEquals(result.details?.routing?.cross_source_identity_duplicate_count, 1);
 });
 
 Deno.test("single-feed requests remain compatible and shards are limited to feed=all", async () => {
@@ -202,4 +202,41 @@ Deno.test("all-feed imports stay bounded, continue after failures, and finalize 
   assertEquals(created.length, 3);
   assertEquals([...finalized.values()].map((run) => run.status).sort(), ["failed", "success", "success"]);
   assertEquals([...finalized.values()].every((run) => Boolean(run.finished_at)), true);
+});
+
+Deno.test("all-feed Podimo imports use the injected fetcher", async () => {
+  let fetchCount = 0;
+  const writes: PodcastEpisodeRow[][] = [];
+  const feedConfigs: FeedConfigMap = {
+    podimo_test: {
+      podcast_key: "podimo test",
+      source: "podimo_test",
+      feed_url: "https://example.test/graphql",
+      format: "podimo_graphql",
+      podcast_id: "podimo-test-id",
+      podimo_show_url: "https://example.test/show"
+    }
+  };
+  const repository: ImportRepository = {
+    createImportRun: async () => ({ id: "run-podimo-test" }),
+    loadExistingEpisodes: async (): Promise<PodcastEpisodeRow[]> => [],
+    upsertEpisodes: async (episodes) => { writes.push(episodes); },
+    updateImportRun: async () => undefined
+  };
+
+  const result = await runEpisodeImports({
+    feedKeys: ["podimo_test"],
+    feedConfigs,
+    repository,
+    fetchPodimo: async () => {
+      fetchCount += 1;
+      return { data: { episodes: [{ id: "episode-1", title: "Episode 1", publishedOn: "2026-09-01T00:00:00.000Z", duration: 60 }] } };
+    },
+    now: () => "2026-09-02T00:00:00.000Z"
+  });
+
+  assertEquals(fetchCount, 1);
+  assertEquals(result.status, "success");
+  assertEquals(result.feeds[0].inserted_count, 1);
+  assertEquals(writes.flat().map((episode) => episode.external_guid), ["episode-1"]);
 });

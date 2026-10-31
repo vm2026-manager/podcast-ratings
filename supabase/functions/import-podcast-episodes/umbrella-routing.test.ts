@@ -172,7 +172,7 @@ Deno.test("ambiguous umbrella routing reports partial without persistence", asyn
 
 Deno.test("an umbrella routing conflict is reported and never upserted", async () => {
   const { result, writes, logs } = await runUmbrellaStatus({
-    title: "Transfer Talk", existing: [episode("guid-1", "Transfer Talk", "")],
+    title: "Transfer Talk", existing: [{ ...episode("guid-1", "Transfer Talk", ""), source: "umbrella_rss" }],
     routes: [{ key: "target", podcast_key: "correct target", title: { aliases: ["Transfer Talk"] } }]
   });
   assertEquals(writes, []);

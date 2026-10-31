@@ -12,10 +12,13 @@ const payload = (episodes: unknown[], page_count?: number) => ({ data: { episode
 
 Deno.test("Apple dry run remains read-only and returns its established diagnostics", async () => {
   const config: FeedConfig = { podcast_key: "apple", source: "apple", feed_url: "https://example.test/show", format: "apple_podcasts_html", apple_show_id: "1" };
-  const result = await runAppleDryRun(config, async () => `<!doctype html><meta name="description" content="Apple">`);
+  const showHtml = `<!doctype html><meta name="description" content="Apple"><a href="/dk/podcast/show/id1?i=123">Episode</a>`;
+  const episodeUrl = "https://podcasts.apple.com/dk/podcast/show/id1?i=123";
+  const episodeHtml = `<link rel="canonical" href="${episodeUrl}"><script type="application/ld+json">{"@type":"PodcastEpisode","name":"Episode 123","url":"${episodeUrl}"}</script>`;
+  const result = await runAppleDryRun(config, async (url) => url === config.feed_url ? showHtml : episodeHtml);
   assertEquals(result.status, "success");
-  assertEquals(result.fetched_count, 0);
-  assertEquals(result.valid_count, 0);
+  assertEquals(result.fetched_count, 1);
+  assertEquals(result.valid_count, 1);
 });
 
 Deno.test("dry runs remain single-feed and retain bearer authentication", async () => {

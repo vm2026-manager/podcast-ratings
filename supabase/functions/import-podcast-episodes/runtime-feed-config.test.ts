@@ -2,7 +2,7 @@ import { assertEquals } from "https://deno.land/std@0.224.0/assert/mod.ts";
 import { mergeSheetFeedConfigs } from "./runtime-feed-config.ts";
 import { selectAppleFeedKeys } from "./core.ts";
 
-Deno.test("runtime Feed parser matches static Apple semantics and rejects collisions", () => {
+Deno.test("runtime Feed parser rejects ambiguous Apple show identities", () => {
   const staticConfigs = {
     genstart: { podcast_key: "genstart", source: "dr_genstart", feed_url: "https://example.test/genstart" }
   };
@@ -12,16 +12,27 @@ Deno.test("runtime Feed parser matches static Apple semantics and rejects collis
     { Titel: "Duplicate", "Podcast-ID": "other permanent", Feed: "apple:1843557403" },
     { Titel: "Invalid", "Podcast-ID": "bad", Feed: "apple:https://example.test" }
   ] }, staticConfigs);
+  assertEquals(result.configs.apple_1843557403, undefined);
+  assertEquals(result.audit.dynamic_sheet_feed_count, 1);
+  assertEquals(result.audit.feed_resolutions.filter(({ reason }) => reason === "conflicting_sheet_identity").map(({ podcast_key }) => podcast_key), ["apple permanent", "other permanent"]);
+  assertEquals(result.audit.invalid_feed_urls_skipped, 1);
+  assertEquals(selectAppleFeedKeys(result.configs), []);
+  assertEquals(Object.entries(result.configs).filter(([, config]) => config.enabled !== false).map(([key]) => key), ["genstart"]);
+});
+
+Deno.test("a unique Apple show is retained as a disabled HTML feed", () => {
+  const result = mergeSheetFeedConfigs({ rows: [
+    { Titel: "Apple", "Podcast-ID": "apple permanent", Feed: " APPLE:1843557403 " }
+  ] }, {
+    genstart: { podcast_key: "genstart", source: "dr_genstart", feed_url: "https://example.test/genstart" }
+  });
   assertEquals(result.configs.apple_1843557403, {
     podcast_key: "apple permanent", source: "apple_podcasts_1843557403",
     feed_url: "https://podcasts.apple.com/dk/podcast/id1843557403",
     format: "apple_podcasts_html", apple_show_id: "1843557403", enabled: false
   });
-  assertEquals(result.audit.dynamic_sheet_feed_count, 2);
-  assertEquals(result.audit.duplicates_skipped, 1);
-  assertEquals(result.audit.invalid_feed_urls_skipped, 1);
   assertEquals(selectAppleFeedKeys(result.configs), ["apple_1843557403"]);
-  assertEquals(Object.entries(result.configs).filter(([, config]) => config.enabled !== false).map(([key]) => key), ["genstart", "rss_permanent"]);
+  assertEquals(Object.entries(result.configs).filter(([, config]) => config.enabled !== false).map(([key]) => key), ["genstart"]);
 });
 
 Deno.test("runtime feed audit reports duplicate feed URLs without silently treating them as routes", () => {
@@ -46,13 +57,11 @@ Deno.test("a sheet feed cannot shadow an explicit static owner of the same URL",
     }
   });
   assertEquals(result.configs.adfærd, undefined);
-  assertEquals(result.audit.duplicate_feed_urls_skipped, [{
-    feed_url: "https://feeds.soundcloud.com/users/soundcloud:users:154832827/sounds.rss",
-    skipped_feed_key: "adfærd"
-  }]);
+  assertEquals(result.audit.feed_resolutions.map(({ podcast_key, reason }) => [podcast_key, reason]), [["adfærd", "feed_owned_by_other_podcast"]]);
+  assertEquals(result.audit.duplicate_feed_urls_skipped, []);
 });
 
-Deno.test("the runtime catalogue enables Valley Heat while keeping static adapters and Apple HTML feeds out of normal all", () => {
+Deno.test("unapproved Valley Heat stays disabled while static adapters and Apple HTML feeds stay out of normal all", () => {
   const staticConfigs = {
     genstart: {
       podcast_key: "genstart",
@@ -83,8 +92,8 @@ Deno.test("the runtime catalogue enables Valley Heat while keeping static adapte
     source: "sheet_valley_heat_rss",
     feed_url: "https://feeds.simplecast.com/kKMR_wuB",
     format: "rss",
-    enabled: true
+    enabled: false
   });
   assertEquals(result.configs.apple_1530344328?.enabled, false);
-  assertEquals(normalAllFeedKeys, ["genstart", "valley_heat"]);
+  assertEquals(normalAllFeedKeys, ["genstart"]);
 });
