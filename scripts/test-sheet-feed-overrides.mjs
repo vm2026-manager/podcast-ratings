@@ -81,12 +81,17 @@ assert.deepEqual(publishedApproved.map(feed => [feed.podcast_key, feed.feed_url]
 // Feed metadata for a new or changed podcast remains review-only; row fields
 // cannot grant import permission. Existing feed owners block duplicate URLs.
 const spreakerFeed = "https://www.spreaker.com/show/5278832/episodes/feed";
+const publishedPaSporet = published.rows.find(item => item["Podcast-ID"] === "pa sporet");
+assert.ok(publishedPaSporet, "the published catalogue contains the canonical pa sporet row");
+const publishedPaSporetSnapshot = structuredClone(publishedPaSporet);
 const stagedCatalogue = structuredClone(published);
 const stagedPaSporet = stagedCatalogue.rows.find(item => item["Podcast-ID"] === "pa sporet");
+assert.notEqual(stagedPaSporet, publishedPaSporet, "staged changes use a cloned row");
 assert.equal(stagedPaSporet.catalogue_id, "catalogue-v1-374b47c3");
 stagedPaSporet.Link = "https://open.spotify.com/show/3FIqz5R0sIBB41uN2OEGK0";
 stagedPaSporet.Feed = spreakerFeed;
 const stagedCatalogueSnapshot = structuredClone(stagedCatalogue);
+assert.equal(stagedPaSporet.Feed, spreakerFeed, "the cloned fixture contains the proposed feed");
 const stagedPaSporetRuntime = mergeSheetFeedConfigs(stagedCatalogue);
 assert.equal(stagedPaSporetRuntime.configs.pa_sporet.enabled, false);
 assert.equal(selectNormalFeedKeys(stagedPaSporetRuntime.configs).includes("pa_sporet"), false);
@@ -94,6 +99,8 @@ assert.equal(stagedPaSporetRuntime.audit.feed_warnings.find(entry => entry.podca
   "explicit_activation_required");
 assert.deepEqual(stagedCatalogue, stagedCatalogueSnapshot,
   "mergeSheetFeedConfigs does not mutate its catalogue input");
+assert.deepEqual(publishedPaSporet, publishedPaSporetSnapshot,
+  "staging and resolving a feed never changes the published catalogue row, whether or not it already has Feed");
 const newFeed = mergeSheetFeedConfigs([{ ...row(spreakerFeed, "pa sporet"), enabled: true }], {});
 assert.equal(newFeed.configs.pa_sporet.enabled, false);
 assert.equal(selectNormalFeedKeys(newFeed.configs).includes("pa_sporet"), false);
