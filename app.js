@@ -11123,9 +11123,7 @@ function getEpisodePodcastConfig(podcastOrKey) {
       return config.persistence === "supabase"
         ? {
             ...config,
-            includeManualEpisodes: Boolean(
-              config.includeManualEpisodes || hasManualEpisodes
-            )
+            includeManualEpisodes: config.includeManualEpisodes ?? hasManualEpisodes
           }
         : config;
     }
@@ -11145,6 +11143,26 @@ function getEpisodePodcastConfig(podcastOrKey) {
   if (!podcastId) return null;
 
   const mainSeries = normalizeText(podcast?.mainSeries || podcast?.Hovedserie);
+  const isDjaevlenMainSeries =
+    normalizeMatchKey(mainSeries) === normalizeMatchKey("Djævlen i detaljen");
+  const isDjaevlenAutoDiscoveredId = /^djaevlen-auto-v1-[a-f0-9]{8}$/i.test(podcastId);
+  const isEstablishedDjaevlenEpisodeId = podcastId === "dræberurten";
+  if (
+    isDjaevlenMainSeries &&
+    (isDjaevlenAutoDiscoveredId || isEstablishedDjaevlenEpisodeId)
+  ) {
+    return {
+      podcastKey: podcastId,
+      databasePodcastKey: podcastId,
+      displayName: podcast?.title || podcastId,
+      searchPlaceholder: `Søg i ${podcast?.title || podcastId}-episoder`,
+      episodeSources: ["dr_lyd_djaevlen_full"],
+      enabled: true,
+      persistence: "supabase",
+      includeManualEpisodes: false
+    };
+  }
+
   if (normalizeMatchKey(mainSeries) === normalizeMatchKey("Bakspejl")) return { podcastKey: podcastId, databasePodcastKey: podcastId, displayName: podcast?.title || podcastId, searchPlaceholder: `Søg i ${podcast?.title || podcastId}-episoder`, enabled: true, persistence: "supabase", includeManualEpisodes: true };
 
   const rawFeed = normalizeText(podcast?.rawFeed || podcast?.Feed);
