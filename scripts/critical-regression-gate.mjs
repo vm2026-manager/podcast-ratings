@@ -61,6 +61,7 @@ const checks = [
   ["episode archive/source", ["scripts/test-podcast-episode-archive-source-regression.mjs"]],
   ["Tipsbladet Transferguru identity and routing", ["--experimental-strip-types", "scripts/test-tipsbladet-transferguru-routing.mjs"]],
   ["Djævlen umbrella routing", ["--experimental-strip-types", "scripts/test-djaevlen-umbrella-routing.mjs"]],
+  ["Djævlen verified child episode visibility and responsive interactions", ["scripts/test-djaevlen-episode-visibility.mjs"]],
   ["Bakspejl umbrella routing", ["--experimental-strip-types", "scripts/test-bakspejl-umbrella-routing.mjs"]],
   ["New DR umbrella series monitor", ["--experimental-strip-types", "scripts/test-monitor-dr-umbrella-series.mjs"]],
   ["DR Lyd supplemental full episodes and RSS identity preservation", ["--experimental-strip-types", "scripts/test-dr-lyd-supplemental-umbrella.mjs"]],
