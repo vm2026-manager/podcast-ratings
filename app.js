@@ -2421,6 +2421,156 @@ function matchesPodcastTopicSearch(podcast, searchTerm) {
     });
 }
 
+// Keep these as editorially reviewed equivalence groups. Related concepts that
+// are not interchangeable (for example economy/finance or crime/war) stay out.
+const RANKING_SEARCH_SYNONYM_GROUPS = Object.freeze([
+  {
+    id: "world-war-one",
+    aliases: [
+      "1 verdenskrig", "første verdenskrig", "forste verdenskrig",
+      "ww1", "wwi", "world war 1", "world war i", "first world war"
+    ]
+  },
+  {
+    id: "world-war-two",
+    aliases: [
+      "2 verdenskrig", "anden verdenskrig", "andre verdenskrig",
+      "ww2", "wwii", "world war 2", "world war ii", "second world war"
+    ]
+  },
+  { id: "gross-domestic-product", aliases: ["bruttonationalprodukt", "bnp", "gross domestic product", "gdp"] },
+  { id: "parliamentary-election", aliases: ["folketingsvalg", "parlamentsvalg", "parliamentary election"] },
+  { id: "football", aliases: ["fodbold", "football", "soccer"] },
+  { id: "handball", aliases: ["håndbold", "handball"] },
+  { id: "mental-health", aliases: ["mental sundhed", "psykisk sundhed", "mental health"] },
+  { id: "artificial-intelligence", aliases: ["kunstig intelligens", "artificial intelligence", "ai"] },
+  { id: "climate-change", aliases: ["klimaforandringer", "klimaændringer", "climate change"] },
+  { id: "research", aliases: ["forskning", "research"] },
+  { id: "serial-killer", aliases: ["seriemorder", "serial killer"] }
+]);
+
+const rankingSearchSynonymAliases = RANKING_SEARCH_SYNONYM_GROUPS
+  .flatMap((group) => group.aliases.map((alias) => ({
+    group: group.id,
+    alias: normalizeSearchValue(alias),
+    token: `rankingsynonym${group.id.replace(/-/g, "")}`
+  })))
+  .sort((left, right) => right.alias.length - left.alias.length);
+const rankingSearchSynonymPattern = new RegExp(
+  `(^| )(${rankingSearchSynonymAliases.map(({ alias }) => alias.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).join("|")})(?= |$)`,
+  "gu"
+);
+const rankingSearchStopWords = new Set([
+  "a", "af", "at", "da", "de", "den", "det", "en", "et", "for", "fra",
+  "i", "med", "og", "om", "på", "til", "the", "and", "of", "in", "to"
+]);
+const rankingSearchFieldCache = new WeakMap();
+const rankingSearchQueryCache = new Map();
+
+function normalizeRankingSearchValue(value) {
+  return normalizeSearchValue(String(value || "").normalize("NFC"));
+}
+
+function canonicalizeRankingSearchText(value) {
+  const normalized = normalizeRankingSearchValue(value);
+  return normalized.replace(rankingSearchSynonymPattern, (_match, prefix, alias) => {
+    const synonym = rankingSearchSynonymAliases.find((entry) => entry.alias === alias);
+    return `${prefix}${synonym?.token || alias}`;
+  });
+}
+
+function getRankingSearchQuery(searchTerm) {
+  const normalized = normalizeRankingSearchValue(searchTerm);
+  if (!normalized) return null;
+  if (rankingSearchQueryCache.has(normalized)) return rankingSearchQueryCache.get(normalized);
+
+  const canonical = canonicalizeRankingSearchText(normalized);
+  const query = {
+    normalized,
+    canonicalTokens: canonical.split(" ").filter(Boolean),
+    rawTokens: normalized.split(" ").filter(Boolean),
+    shortNumericQuery: /^(?:\d+|[ivxlcdm]+)$/u.test(normalized) && normalized.length <= 3
+  };
+  if (rankingSearchQueryCache.size >= 128) rankingSearchQueryCache.delete(rankingSearchQueryCache.keys().next().value);
+  rankingSearchQueryCache.set(normalized, query);
+  return query;
+}
+
+function getRankingSearchFields(podcast) {
+  const cached = rankingSearchFieldCache.get(podcast);
+  if (cached) return cached;
+
+  const fields = [podcast?.title, ...(Array.isArray(podcast?.searchTopics) ? podcast.searchTopics : [])]
+    .map((value) => normalizeRankingSearchValue(value))
+    .filter(Boolean)
+    .map((normalized) => ({
+      normalized,
+      canonicalTokens: canonicalizeRankingSearchText(normalized).split(" ").filter(Boolean),
+      rawTokens: normalized.split(" ").filter(Boolean)
+    }));
+  rankingSearchFieldCache.set(podcast, fields);
+  return fields;
+}
+
+function isOneEditApart(left, right) {
+  if (Math.abs(left.length - right.length) > 1 || left === right) return false;
+  if (left.length < right.length) [left, right] = [right, left];
+
+  let longIndex = 0;
+  let shortIndex = 0;
+  let edits = 0;
+  while (longIndex < left.length && shortIndex < right.length) {
+    if (left[longIndex] === right[shortIndex]) {
+      longIndex += 1;
+      shortIndex += 1;
+      continue;
+    }
+
+    edits += 1;
+    if (edits > 1) return false;
+    if (left.length === right.length && left[longIndex + 1] === right[shortIndex] && left[longIndex] === right[shortIndex + 1]) {
+      longIndex += 2;
+      shortIndex += 2;
+    } else {
+      longIndex += 1;
+      if (left.length === right.length) shortIndex += 1;
+    }
+  }
+  return edits + (longIndex < left.length ? 1 : 0) <= 1;
+}
+
+function rankingSearchFieldMatches(query, field) {
+  if (!query?.canonicalTokens.length || !field?.canonicalTokens.length) return false;
+  if (query.shortNumericQuery) return field.normalized === query.normalized;
+
+  const exactTokens = new Set(field.canonicalTokens);
+  if (query.canonicalTokens.every((token) => exactTokens.has(token))) return true;
+
+  // Fuzzy matching is limited to a single one-character edit across the whole
+  // query. It only examines title/topic tokens and excludes short/stop words.
+  let fuzzyTokenUsed = false;
+  return query.rawTokens.every((queryToken) => {
+    if (exactTokens.has(queryToken)) return true;
+    if (queryToken.length < 7 || rankingSearchStopWords.has(queryToken) || fuzzyTokenUsed) return false;
+    const match = field.rawTokens.find((fieldToken) =>
+      fieldToken.length >= 7 && isOneEditApart(queryToken, fieldToken)
+    );
+    if (!match) return false;
+    fuzzyTokenUsed = true;
+    return true;
+  });
+}
+
+function matchesRankingEnhancedSearch(podcast, searchTerm) {
+  const query = getRankingSearchQuery(searchTerm);
+  if (!query) return false;
+  const fields = getRankingSearchFields(podcast);
+  if (query.shortNumericQuery) {
+    return fields.some((field) => field.normalized === query.normalized);
+  }
+  return fields.some((field) => rankingSearchFieldMatches(query, field));
+}
+
 function deduplicatePodcastResults(podcasts) {
   const seen = new Set();
   return podcasts.filter((podcast) => {
@@ -4633,11 +4783,18 @@ function getFilteredPodcasts() {
         .map((part) => part.trim())
         .filter(Boolean);
 
+      const enhancedQuery = getRankingSearchQuery(state.searchTerm);
+      // A short number/Roman numeral is too ambiguous to search as a token
+      // across the full catalogue; retain only an exact title match.
+      if (enhancedQuery?.shortNumericQuery) {
+        return matchesRankingEnhancedSearch(podcast, state.searchTerm);
+      }
+
       const matchesExistingFields = queryParts.every((part) =>
         podcast.searchText.includes(part)
       );
       const matchesOneTopic = matchesPodcastTopicSearch(podcast, state.searchTerm);
-      return matchesExistingFields || matchesOneTopic;
+      return matchesExistingFields || matchesOneTopic || matchesRankingEnhancedSearch(podcast, state.searchTerm);
     }))
     .sort((a, b) => {
       const usesDesktopUserRankingSort = hasDesktopUserRankingSort();
