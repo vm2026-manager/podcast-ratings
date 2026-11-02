@@ -45,16 +45,21 @@ export function buildStagingRow(record, checkedDate = new Date().toISOString().s
   if (!id || !title || !["Bakspejl", "Djævlen i detaljen"].includes(mainSeries)) {
     throw new Error("DR staging candidate identity is incomplete or outside the approved umbrella series");
   }
+  if (curated && (curated.title !== title || curated.mainSeries !== mainSeries)) {
+    throw new Error(`Verified DR metadata identity/source mismatch for ${id}`);
+  }
   const expectedPath = mainSeries === "Bakspejl" ? "/lyd/special-radio/bakspejl/" : "/lyd/special-radio/djaevlen-i-detaljen/";
   const expectedPrefix = mainSeries === "Bakspejl" ? "bakspejl-auto-v1-" : "djaevlen-auto-v1-";
+  const isGeneratedId = id.startsWith(expectedPrefix) && /^[a-f0-9]{8}$/u.test(id.slice(expectedPrefix.length));
+  const isVerifiedLegacyId = Boolean(curated && curated.title === title && curated.mainSeries === mainSeries);
   if (!sourceUrl.startsWith(`https://www.dr.dk${expectedPath}`) || /[?#]/u.test(sourceUrl) ||
-      !id.startsWith(expectedPrefix) || !/^[a-f0-9]{8}$/u.test(id.slice(expectedPrefix.length)) ||
+      (!isGeneratedId && !isVerifiedLegacyId) ||
       !/^\d{6,}$/u.test(episodeGuid) || !sourceUrl.endsWith(episodeGuid)) {
     throw new Error("DR staging candidate lacks a verifiable official full-episode source");
   }
 
-  if (curated && (curated.title !== title || curated.mainSeries !== mainSeries ||
-      curated.sourceEpisodeGuid !== episodeGuid || curated.sourceUrl !== sourceUrl)) {
+  if (curated && (curated.sourceEpisodeGuid !== episodeGuid || curated.sourceUrl !== sourceUrl ||
+      (curated.sourceDescription && record?.source_description && normal(curated.sourceDescription) !== normal(record.source_description)))) {
     throw new Error(`Verified DR metadata identity/source mismatch for ${id}`);
   }
   const values = Array(STAGING_HEADERS.length).fill("");

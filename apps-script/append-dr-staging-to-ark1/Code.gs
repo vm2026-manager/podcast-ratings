@@ -17,6 +17,12 @@ var HEADERS_ = [
 var STAGING_HEADERS_ = HEADERS_.concat([
   "DR source GUID", "DR source URL", "DR source description", "Review status"
 ]);
+var VERIFIED_LEGACY_DR_IDENTITIES_ = {
+  "dræberurten": {
+    title: "Dræberurten", series: "Djævlen i detaljen", sourceGuid: "16122692641",
+    sourceUrl: "https://www.dr.dk/lyd/special-radio/djaevlen-i-detaljen/djaevlen-i-detaljen-2026/draeberurten-16122692641"
+  }
+};
 
 function onOpen() {
   SpreadsheetApp.getUi().createMenu("DR staging")
@@ -143,8 +149,12 @@ function validateStagingCandidate_(row, formulas) {
   if (!id || !title || !["Bakspejl", "Djævlen i detaljen"].includes(series)) throw new Error("DR staging-identitet mangler eller er ukendt.");
   var expectedPath = series === "Bakspejl" ? "/lyd/special-radio/bakspejl/" : "/lyd/special-radio/djaevlen-i-detaljen/";
   var expectedPrefix = series === "Bakspejl" ? "bakspejl-auto-v1-" : "djaevlen-auto-v1-";
+  var legacyIdentity = VERIFIED_LEGACY_DR_IDENTITIES_[id];
+  var generatedId = id.indexOf(expectedPrefix) === 0 && /^[a-f0-9]{8}$/u.test(id.slice(expectedPrefix.length));
+  var verifiedLegacyId = legacyIdentity && legacyIdentity.title === title && legacyIdentity.series === series &&
+    legacyIdentity.sourceGuid === sourceGuid && legacyIdentity.sourceUrl === sourceUrl;
   if (!sourceUrl.startsWith("https://www.dr.dk" + expectedPath) || /[?#]/u.test(sourceUrl) ||
-      !id.startsWith(expectedPrefix) || !/^[a-f0-9]{8}$/u.test(id.slice(expectedPrefix.length)) ||
+      (!generatedId && !verifiedLegacyId) ||
       !/^\d{6,}$/u.test(sourceGuid) || !sourceUrl.endsWith(sourceGuid) || !sourceDescription) {
     throw new Error("Officiel DR full-episode-proveniens kunne ikke verificeres.");
   }

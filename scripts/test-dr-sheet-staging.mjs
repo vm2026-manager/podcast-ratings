@@ -3,7 +3,7 @@ import { readFile } from "node:fs/promises";
 import vm from "node:vm";
 import {
   appendDrCandidatesToStaging, assertStagingWriteGate, buildStagingPlan,
-  CATALOGUE_HEADERS, ORIGINAL_SHEET_ID, STAGING_HEADERS, StagingSheetsApiClient
+  buildStagingRow, CATALOGUE_HEADERS, ORIGINAL_SHEET_ID, STAGING_HEADERS, StagingSheetsApiClient
 } from "./google-sheets-staging.mjs";
 import { VERIFIED_DR_SERIES_METADATA } from "./verified-dr-series-metadata.mjs";
 import { mergeAutoDiscoveredBakspejlRows } from "./bakspejl-auto-discovery.mjs";
@@ -16,7 +16,7 @@ function recordFor(id) {
   return {
     title: metadata.title, podcast_id: id, hovedserie: metadata.mainSeries,
     source_episode_guid: metadata.sourceEpisodeGuid, source_url: metadata.sourceUrl,
-    source_description: metadata.longDescription, cover: "https://api.dr.dk/covers/test.jpg"
+    source_description: metadata.sourceDescription || metadata.longDescription, cover: "https://api.dr.dk/covers/test.jpg"
   };
 }
 const candidates = Object.keys(VERIFIED_DR_SERIES_METADATA).map(recordFor);
@@ -38,14 +38,25 @@ class MockStaging {
 const staging = new MockStaging();
 assert.deepEqual(await appendDrCandidatesToStaging({ client: staging, candidates, dryRun: true }), { dryRun: true, appended: 0, alreadyPresent: 0 });
 assert.equal(staging.appendCalls, 0);
-assert.deepEqual(await appendDrCandidatesToStaging({ client: staging, candidates, dryRun: false }), { dryRun: false, appended: 2, alreadyPresent: 0 });
+assert.deepEqual(await appendDrCandidatesToStaging({ client: staging, candidates, dryRun: false }), { dryRun: false, appended: candidates.length, alreadyPresent: 0 });
 assert.equal(staging.appendCalls, 1);
 const manuallyEditedStaging = structuredClone(staging.rows[0]);
 manuallyEditedStaging[STAGING_HEADERS.indexOf("Kort beskrivelse")] = "Redaktørens rettelse";
 staging.rows[0] = manuallyEditedStaging;
-assert.deepEqual(await appendDrCandidatesToStaging({ client: staging, candidates, dryRun: false }), { dryRun: false, appended: 0, alreadyPresent: 2 });
+assert.deepEqual(await appendDrCandidatesToStaging({ client: staging, candidates, dryRun: false }), { dryRun: false, appended: 0, alreadyPresent: candidates.length });
 assert.equal(staging.rows[0][STAGING_HEADERS.indexOf("Kort beskrivelse")], "Redaktørens rettelse");
 assert.equal(staging.appendCalls, 1);
+const draeberurten = candidates.find((candidate) => candidate.podcast_id === "dræberurten");
+const draeberurtenRow = buildStagingRow(draeberurten);
+assert.equal(draeberurtenRow[CATALOGUE_HEADERS.indexOf("Podcast-ID")], "dræberurten", "the existing legacy identity is preserved");
+assert.equal(draeberurtenRow[STAGING_HEADERS.indexOf("DR source GUID")], "16122692641");
+assert.match(draeberurtenRow[STAGING_HEADERS.indexOf("DR source URL")], /dr.dk\/lyd\/special-radio\/djaevlen-i-detaljen\/.*16122692641/u);
+assert.equal(draeberurtenRow[STAGING_HEADERS.indexOf("Review status")], "SOURCE_VERIFIED_REQUIRES_OWNER_APPROVAL");
+for (const header of ["Vært", "Vuring (1-10)", "Antal afsnit", "Årstal afspillet", "Afgivet vurdering", "Episoder", "Feed", "Undervurderet perle"]) {
+  assert.equal(draeberurtenRow[CATALOGUE_HEADERS.indexOf(header)], "", `Dræberurten ${header} remains blank without source evidence`);
+}
+assert.throws(() => buildStagingRow({ ...draeberurten, title: "A different series" }), /identity\/source mismatch/u);
+assert.throws(() => buildStagingRow({ ...draeberurten, source_description: "Conflicting source text" }), /identity\/source mismatch/u);
 const identityConflict = structuredClone(staging.rows[0]);
 identityConflict[STAGING_HEADERS.indexOf("Titel")] = "A different identity";
 await assert.rejects(() => appendDrCandidatesToStaging({
@@ -272,6 +283,18 @@ const futureApproved = makeAppsScriptHarness({ stagingRows: [STAGING_HEADERS, fu
 futureApproved.context.reviewAndAppendDrStagingRows();
 assert.equal(futureApproved.originalData.length, 2, "a future DR series can be reviewed without a hardcoded catalogue entry");
 
+const legacyApproved = makeAppsScriptHarness({ stagingRows: [STAGING_HEADERS, draeberurtenRow], promptText: "APPEND dræberurten" });
+legacyApproved.context.reviewAndAppendDrStagingRows();
+assert.equal(legacyApproved.originalData.length, 2, "the documented legacy identity can pass the same owner review gate");
+assert.equal(legacyApproved.originalData[1][idIndex], "dræberurten");
+assert.equal(legacyApproved.originalData[1][CATALOGUE_HEADERS.indexOf("Vuring (1-10)")], "");
+assert.equal(legacyApproved.originalData[1][CATALOGUE_HEADERS.indexOf("Afgivet vurdering")], "");
+const legacyCollisionRow = [...draeberurtenRow];
+legacyCollisionRow[CATALOGUE_HEADERS.indexOf("Titel")] = "Another title";
+const legacyCollision = makeAppsScriptHarness({ stagingRows: [STAGING_HEADERS, legacyCollisionRow], promptText: "APPEND dræberurten" });
+assert.throws(() => legacyCollision.context.reviewAndAppendDrStagingRows(), /full-episode-proveniens/u);
+assert.equal(legacyCollision.originalData.length, 1, "legacy ID collisions fail closed");
+
 // Existing editorial Sheet rows and immutable identities continue to win catalogue sync.
 const editorialSourceRow = { Titel: "Kvinden i Isdalen", "Podcast-ID": Object.keys(VERIFIED_DR_SERIES_METADATA)[0], Hovedserie: "Djævlen i detaljen", "Kort beskrivelse": "Redaktørens rettelse" };
 assert.equal(mergeAutoDiscoveredDjaevlenRows([editorialSourceRow], { records: [{
@@ -284,19 +307,36 @@ const autoRows = mergeAutoDiscoveredBakspejlRows([], { records: [{
 assert.equal(autoRows[0]["Podcast-ID"], "bakspejl-auto-v1-4962cdc5");
 assert.ok(autoRows[0]["Kort beskrivelse"].includes("Harald, Aage og Kai"));
 assert.equal(preserveCatalogueIdsByPodcastId(autoRows, [{ "Podcast-ID": "bakspejl-auto-v1-4962cdc5", catalogue_id: "catalogue-v1-existing" }])[0].catalogue_id, "catalogue-v1-existing");
-
+const drRegistry = JSON.parse(await readFile(new URL("../data/auto-discovered-djaevlen.json", import.meta.url), "utf8"));
+const drRecord = drRegistry.records.find((record) => record.podcast_id === "dræberurten");
+assert.equal(drRecord?.source_episode_guid, "16122692641");
+assert.equal(drRecord?.source_url, VERIFIED_DR_SERIES_METADATA["dræberurten"].sourceUrl);
+assert.equal(drRecord?.needs_editorial_review, true);
+const drCatalogueRow = mergeAutoDiscoveredDjaevlenRows([], { records: [drRecord] })[0];
+assert.equal(drCatalogueRow["Podcast-ID"], "dræberurten");
+assert.equal(drCatalogueRow.Genre, "True Crime");
+assert.ok(drCatalogueRow.Emner.includes("Victor Licata"));
+assert.equal(drCatalogueRow["Kort beskrivelse"], VERIFIED_DR_SERIES_METADATA["dræberurten"].shortDescription);
+const drSheetRow = Object.fromEntries(CATALOGUE_HEADERS.map((header, index) => [header, legacyApproved.originalData[1][index]]));
+drSheetRow["Kort beskrivelse"] = "Ejerens redigerede beskrivelse";
+drSheetRow["Vuring (1-10)"] = "8,7";
+const resyncedDrRows = mergeAutoDiscoveredDjaevlenRows([drSheetRow], { records: [drRecord] });
+assert.equal(resyncedDrRows.length, 1, "the next Sheet catalogue sync does not add a second Dræberurten identity");
+assert.equal(resyncedDrRows[0]["Podcast-ID"], "dræberurten");
+assert.equal(resyncedDrRows[0]["Kort beskrivelse"], "Ejerens redigerede beskrivelse");
+assert.equal(resyncedDrRows[0]["Vuring (1-10)"], "8,7", "manual editorial data wins the next catalogue sync");
 const files = ["../data/podcasts.json", "../data/auto-discovered-djaevlen.json", "../data/auto-discovered-bakspejl.json", "../config/recommendation-topic-aliases.json", "../config/recommendation-genre-mapping.json", "../data/recommendation-metadata.json"];
 const [catalogue, , , aliases, genres, previousMetadata] = await Promise.all(files.map((path) => readFile(new URL(path, import.meta.url), "utf8").then(JSON.parse)));
 const ids = new Set(Object.keys(VERIFIED_DR_SERIES_METADATA));
 let recommendationRows = catalogue.rows.filter((row) => !ids.has(row["Podcast-ID"]));
-recommendationRows = mergeAutoDiscoveredDjaevlenRows(recommendationRows, { records: [recordFor([...ids][0])] });
+recommendationRows = mergeAutoDiscoveredDjaevlenRows(recommendationRows, { records: [recordFor("djaevlen-auto-v1-1139735b"), drRecord] });
 recommendationRows = mergeAutoDiscoveredBakspejlRows(recommendationRows, { records: [recordFor([...ids][1])] });
 recommendationRows = recommendationRows.map((row) => ({
   ...row, secondaryGenre: row.secondaryGenre || row["2. genre"] || "",
   topics: Array.isArray(row.topics) ? row.topics : String(row.Emner || "").split(";").map((topic) => topic.trim()).filter(Boolean)
 }));
 const built = buildRecommendationData({ rows: recommendationRows }, aliases, genres, { repoRoot: process.cwd(), existingMetadata: previousMetadata });
-for (const title of ["Kvinden i Isdalen", "Den spanske borgerkrig"]) {
+for (const title of ["Kvinden i Isdalen", "Den spanske borgerkrig", "Dræberurten"]) {
   const metadata = built.payload.rows.find((row) => row.title === title);
   assert.equal(metadata?.recommendationMetadataEligible, true, `${title} must remain recommendation-eligible`);
   assert.ok(metadata.topicsCanonical.length > 0);
