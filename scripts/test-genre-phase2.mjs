@@ -17,7 +17,7 @@ const appSource = await readFile(path.join(root, "app.js"), "utf8");
 const indexSource = await readFile(path.join(root, "index.html"), "utf8");
 const styleSource = await readFile(path.join(root, "style.css"), "utf8");
 assert.equal(catalogue.rows.length, catalogue.count, "The catalogue wrapper count matches its source rows");
-assert.match(indexSource, /app\.js\?v=20261029-canonical-genre-source-v1/u);
+assert.match(indexSource, /app\.js\?v=20261102-ranking-search-synonyms-v1/u);
 assert.match(appSource, /const CANONICAL_GENRES = window\.PODCAST_CANONICAL_GENRES;/u);
 assert.match(indexSource, /canonical-genres\.js\?v=/u);
 assert.ok(indexSource.indexOf("canonical-genres.js") < indexSource.indexOf("app.js"), "shared genre definition loads before the app");
@@ -139,6 +139,86 @@ try {
   assert.equal(helperResults.canonical, true);
   assert.ok(helperResults.genreIconsUseFallback.every((fallback) => !fallback), "all canonical genres have dedicated icons");
   assert.ok(helperResults.displayedPodcastCount > 0);
+
+  const enhancedSearchCases = await page.evaluate(() => {
+    const fixture = (title, topics) => ({ title, searchTopics: topics });
+    const secondWar = fixture("Krigen på isen", ["Anden Verdenskrig", "Grønland"]);
+    const synonyms = [
+      ["2. verdenskrig", secondWar], ["2 verdenskrig", secondWar],
+      ["anden verdenskrig", secondWar], ["WW2", secondWar], ["WWII", secondWar],
+      ["world war 2", secondWar], ["world war ii", secondWar],
+      ["1. verdenskrig", fixture("Den store krig", ["Første Verdenskrig"])],
+      ["WWI", fixture("Den store krig", ["Første Verdenskrig"])],
+      ["WW1", fixture("Den store krig", ["Første Verdenskrig"])],
+      ["BNP", fixture("Økonomipodcast", ["bruttonationalprodukt"])],
+      ["GDP", fixture("Economy", ["gross domestic product"])],
+      ["parlamentsvalg", fixture("Valg", ["folketingsvalg"])],
+      ["soccer", fixture("Fodbold", ["fodbold"])],
+      ["handball", fixture("Håndbold", ["håndbold"])],
+      ["mental health", fixture("Sundhed", ["psykisk sundhed"])],
+      ["AI", fixture("Teknologi", ["kunstig intelligens"])],
+      ["climate change", fixture("Klima", ["klimaændringer"])],
+      ["research", fixture("Videnskab", ["forskning"])],
+      ["serial killer", fixture("Krimi", ["seriemorder"])],
+      ["verdenskrg", secondWar]
+    ].map(([query, podcast]) => ({ query, match: matchesRankingEnhancedSearch(podcast, query) }));
+    return {
+      synonyms,
+      firstVsSecond: {
+        firstMatchesSecond: matchesRankingEnhancedSearch(secondWar, "første verdenskrig"),
+        secondMatchesFirst: matchesRankingEnhancedSearch(fixture("Den store krig", ["Første Verdenskrig"]), "WWII")
+      },
+      typoSafety: {
+        multipleErrors: matchesRankingEnhancedSearch(secondWar, "verdensxrg"),
+        shortCollision: matchesRankingEnhancedSearch(fixture("Verdenskrig", ["Verdenskrig"]), "krig"),
+        romanCollision: matchesRankingEnhancedSearch(secondWar, "II"),
+        separatedTopics: matchesRankingEnhancedSearch(fixture("Politik og historie", ["dansk politik", "europæisk historie"]), "dansk historie"),
+        punctuationAndDanish: matchesRankingEnhancedSearch(fixture("ÆØÅ og verdenskrig", ["2. verdenskrig"]), "2. VERDENSKRIG!"),
+        decomposedDanish: matchesRankingEnhancedSearch(fixture("Råd", ["råd"]), "råd"),
+        hostOnly: matchesRankingEnhancedSearch({ title: "Podcast", searchTopics: [], host: "Verdenskrig" }, "verdenskrg"),
+        tooManyTypos: matchesRankingEnhancedSearch(secondWar, "verdenskrgg verdenskrigg")
+      },
+      oneEditVariants: ["verdenskrg", "verdenskrigg", "verdensxrig", "verdenskrgi"].map((query) => matchesRankingEnhancedSearch(secondWar, query)),
+      exploreStaysExact: {
+        topic: matchesPodcastTopicSearch(secondWar, "WWII"),
+        parts: getExploreSearchParts("WWII")
+      },
+      oneLetterInsert: isOneEditApart("verdenskrg", "verdenskrig"),
+      twoEdits: isOneEditApart("verdensxrg", "verdenskrig")
+    };
+  });
+  assert.ok(enhancedSearchCases.synonyms.every(({ match }) => match), JSON.stringify(enhancedSearchCases));
+  assert.deepEqual(enhancedSearchCases.firstVsSecond, { firstMatchesSecond: false, secondMatchesFirst: false });
+  assert.deepEqual(enhancedSearchCases.typoSafety, {
+    multipleErrors: false,
+    shortCollision: false,
+    romanCollision: false,
+    separatedTopics: false,
+    punctuationAndDanish: true,
+    decomposedDanish: true,
+    hostOnly: false,
+    tooManyTypos: false
+  });
+  assert.deepEqual(enhancedSearchCases.oneEditVariants, [true, true, true, true]);
+  assert.deepEqual(enhancedSearchCases.exploreStaysExact, { topic: false, parts: ["wwii"] });
+  assert.equal(enhancedSearchCases.oneLetterInsert, true);
+  assert.equal(enhancedSearchCases.twoEdits, false);
+
+  const rankingSearchTimings = [];
+  for (const width of [320, 375, 390, 1280, 1440]) {
+    await page.setViewportSize({ width, height: width <= 430 ? 844 : 900 });
+    const timing = await page.evaluate(() => {
+      const podcasts = getRankingCandidates();
+      const start = performance.now();
+      const matches = podcasts.filter((podcast) => matchesRankingEnhancedSearch(podcast, "verdenskrg"));
+      return { viewport: innerWidth, elapsedMs: performance.now() - start, podcastCount: podcasts.length, matches: matches.length };
+    });
+    assert.ok(timing.podcastCount >= 1000, JSON.stringify(timing));
+    assert.ok(timing.matches > 0, JSON.stringify(timing));
+    assert.ok(timing.elapsedMs < 300, `ranking fuzzy search exceeds 300ms for ${timing.podcastCount} catalogue entries: ${JSON.stringify(timing)}`);
+    rankingSearchTimings.push(timing);
+  }
+  console.log(`[ranking-search-performance] ${JSON.stringify(rankingSearchTimings)}`);
 
   const hasDisplayGroup = await page.evaluate(() => {
     const group = getRankingCandidates().find((candidate) => candidate.title === "Narkobetjenten" && candidate.isDisplayGroup);
@@ -276,6 +356,57 @@ try {
   assert.ok(topicResults.resultCount > 0, JSON.stringify(topicResults));
   assert.equal(topicResults.topicMatch, true);
   assert.equal(topicResults.url, "?s=Den%20Kolde%20Krig#ranglister");
+
+  for (const query of ["WW2", "WWII", "2. verdenskrig", "2 verdenskrig", "anden verdenskrig", "verdenskrg"]) {
+    await page.goto(`http://127.0.0.1:${address.port}/?s=${encodeURIComponent(query)}#ranglister`, { waitUntil: "domcontentloaded" });
+    await page.waitForFunction((value) => state.searchTerm === value && state.podcasts?.length > 0, query);
+    const worldWarResults = await page.evaluate(() => {
+      const results = getFilteredPodcasts();
+      const keys = results.map(getPodcastKey);
+      return {
+        input: document.getElementById("searchInput")?.value,
+        count: results.length,
+        unique: new Set(keys).size === keys.length,
+        hasSecondWarTopic: results.some((podcast) => (podcast.searchTopics || []).some((topic) => normalizeSearchValue(topic).includes("verdenskrig"))),
+        url: `${location.search}${location.hash}`
+      };
+    });
+    assert.ok(worldWarResults.count > 0, `${query}: ${JSON.stringify(worldWarResults)}`);
+    assert.equal(worldWarResults.input, query);
+    assert.equal(worldWarResults.unique, true);
+    assert.equal(worldWarResults.hasSecondWarTopic, true, `${query} finds the same second-world-war topics`);
+    assert.equal(worldWarResults.url, `?s=${encodeURIComponent(query)}#ranglister`);
+  }
+
+  await page.goto(`http://127.0.0.1:${address.port}/?s=1#ranglister`, { waitUntil: "domcontentloaded" });
+  await page.waitForFunction(() => state.searchTerm === "1" && state.podcasts?.length > 0);
+  const shortNumberResults = await page.evaluate(() => getFilteredPodcasts().map((podcast) => normalizeSearchValue(podcast.title)));
+  assert.ok(shortNumberResults.every((title) => title === "1"), `A short numeric query only matches an exact title: ${JSON.stringify(shortNumberResults)}`);
+
+  await page.setViewportSize({ width: 320, height: 844 });
+  await page.goto(`http://127.0.0.1:${address.port}/#ranglister`, { waitUntil: "domcontentloaded" });
+  await page.waitForFunction(() => state.podcasts?.length > 0);
+  const mobileSearch = page.locator("#searchInput");
+  await mobileSearch.click();
+  await mobileSearch.fill("verdenskrg");
+  await page.waitForFunction(() => state.searchTerm === "verdenskrg" && getFilteredPodcasts().length > 0);
+  assert.equal(await mobileSearch.evaluate((input) => input === document.activeElement), true, "ranking search stays focused while matching during input");
+  await mobileSearch.press("Enter");
+  const mobileSearchState = await page.evaluate(() => ({
+    url: `${location.search}${location.hash}`,
+    width: innerWidth,
+    pageWidth: document.documentElement.scrollWidth,
+    count: getFilteredPodcasts().length,
+    clearVisible: getComputedStyle(document.getElementById("searchClearButton")).display !== "none"
+  }));
+  assert.equal(mobileSearchState.url, "?s=verdenskrg#ranglister");
+  assert.equal(mobileSearchState.width, 320);
+  assert.equal(mobileSearchState.pageWidth, 320);
+  assert.ok(mobileSearchState.count > 0);
+  assert.equal(mobileSearchState.clearVisible, true);
+  await page.locator("#searchClearButton").click();
+  await page.waitForFunction(() => state.searchTerm === "" && !new URLSearchParams(location.search).has("s"));
+  assert.equal(await mobileSearch.inputValue(), "", "mobile clear button resets the visible search");
 
   await page.goto("http://127.0.0.1:" + address.port + "/?genre=Finans#ranglister", { waitUntil: "domcontentloaded" });
   await page.waitForFunction(() => state.activeFilter?.type === "genre" && state.activeFilter.value === "Finans");
@@ -523,7 +654,7 @@ try {
   assert.ok(genreResults.count > 0);
   assert.equal(genreResults.unique, true);
   assert.equal(genreResults.allMatch, true);
-  console.log("Genre phase 2 regression tests passed: five catalogue-ranked home genres, ten canonical genres, keyboard filtering, and navigation.");
+  console.log("Genre phase 2 and ranking search regressions passed: synonyms, typo safety, shareable search, filters, and responsive layouts.");
 } finally {
   await browser.close();
   await new Promise((resolve) => server.close(resolve));
