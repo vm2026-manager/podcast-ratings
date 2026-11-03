@@ -54,8 +54,12 @@ assert.equal(validateRadioIIIISeason({ ...seasons[2], episodePages: seasons[2].e
 assert.equal(validateRadioIIIISeason({ ...seasons[2], episodePages: seasons[2].episodePages.map((ep, i) => i === 2 ? { ...ep, title: "Kapitel 2: Opgør (2:4) - En anden gæst" } : ep) }).safe, false, "conflicting explicit guest is withheld");
 
 const catalogue = JSON.parse(await readFile("data/podcasts.json", "utf8"));
-const existingGuests = catalogue.rows.filter((row) => row.Hovedserie === RADIO_IIII_MAIN_SERIES);
-assert.equal(existingGuests.length, 60, "the 60 existing guest catalog rows are the protected baseline");
+const currentGuests = catalogue.rows.filter((row) => row.Hovedserie === RADIO_IIII_MAIN_SERIES);
+const catalogueCandidates = currentGuests.filter((row) => candidateNames.includes(row.Titel));
+assert.ok(catalogueCandidates.length === 0 || catalogueCandidates.length === candidateNames.length, "catalogue sync adds all four verified candidates together");
+assert.equal(catalogueCandidates.every((row) => row["Podcast-ID"].startsWith("radio-iiii-auto-v1-")), true, "verified candidate rows retain their generated stable IDs");
+const existingGuests = currentGuests.filter((row) => !candidateNames.includes(row.Titel));
+assert.equal(existingGuests.length, 60, "the 60 original guest catalog rows remain the protected baseline after candidates arrive");
 const baseline = structuredClone(existingGuests);
 const discovered = discoverRadioIIIIChildren({ seasons, catalogueRows: existingGuests, registry: { version: 1, records: [] }, knownGuests: candidateNames });
 assert.equal(discovered.report.created.length, 4);
