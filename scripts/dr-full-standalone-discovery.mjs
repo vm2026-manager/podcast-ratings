@@ -3,6 +3,7 @@ import { parseDrLydEpisodes, mapDrLydEpisodes, routeEpisodes } from "../supabase
 import { mergeSheetFeedConfigs } from "../supabase/functions/import-podcast-episodes/runtime-feed-config.ts";
 import { normalizeDjaevlenIdentity, DJAEVLEN_COVER } from "./djaevlen-auto-discovery.mjs";
 import { normalizeBakspejlIdentity, BAKSPEJL_COVER } from "./bakspejl-auto-discovery.mjs";
+import { extractExplicitDrHostCredit } from "./dr-host-credit.mjs";
 
 export const FULL_STANDALONE_DISCOVERY_BASELINE = "2026-10-15T00:00:00.000Z";
 
@@ -162,12 +163,14 @@ export function discoverVerifiedFullStandalone({
       report.collisions.push({ title: episode.title, guid: episode.external_guid, reason: "permanent Podcast-ID collision" });
       continue;
     }
+    const hostCredit = extractExplicitDrHostCredit(episode.description || "");
     const record = {
       discovery_key: key, podcast_id: podcastId, title: childTitle,
       hovedserie: show.parent, publisher: "DR", cover: show.cover,
       source_episode_guid: episode.external_guid,
       source_url: episode.episode_url,
       source_description: episode.description || "",
+      ...(hostCredit.host ? { host: hostCredit.host, source_host_credit: hostCredit.credit } : {}),
       needs_editorial_review: true
     };
     next.records.push(record);

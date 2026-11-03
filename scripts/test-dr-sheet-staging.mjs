@@ -22,7 +22,7 @@ function recordFor(id) {
 const candidates = Object.keys(VERIFIED_DR_SERIES_METADATA).map(recordFor);
 
 class MockStaging {
-  constructor(rows = []) { this.rows = structuredClone(rows); this.appendCalls = 0; this.failAfterAppend = false; this.failBeforeAppend = false; this.mutateOldRow = false; this.mutateAppend = false; }
+  constructor(rows = []) { this.rows = structuredClone(rows); this.appendCalls = 0; this.updateCalls = 0; this.failAfterAppend = false; this.failBeforeAppend = false; this.mutateOldRow = false; this.mutateAppend = false; }
   async readSheet() { return { headers: [...STAGING_HEADERS], rows: structuredClone(this.rows) }; }
   async appendRows(values) {
     this.appendCalls += 1;
@@ -31,6 +31,14 @@ class MockStaging {
     if (this.mutateOldRow && this.rows.length > 1) this.rows[0][CATALOGUE_HEADERS.indexOf("Titel")] = "tampered";
     if (this.mutateAppend) this.rows[this.rows.length - 1][CATALOGUE_HEADERS.indexOf("Titel")] = "tampered append";
     if (this.failAfterAppend) { this.failAfterAppend = false; throw new Error("simulated timeout after commit"); }
+  }
+  async updateHostCells(updates) {
+    this.updateCalls += 1;
+    for (const update of updates) {
+      const row = this.rows[update.rowNumber - 2];
+      assert.equal(row[STAGING_HEADERS.indexOf("Vært")], "", "host-only staging updates are planned only for blank cells");
+      row[STAGING_HEADERS.indexOf("Vært")] = update.host;
+    }
   }
 }
 
@@ -42,17 +50,33 @@ assert.deepEqual(await appendDrCandidatesToStaging({ client: staging, candidates
 assert.equal(staging.appendCalls, 1);
 const manuallyEditedStaging = structuredClone(staging.rows[0]);
 manuallyEditedStaging[STAGING_HEADERS.indexOf("Kort beskrivelse")] = "Redaktørens rettelse";
+manuallyEditedStaging[STAGING_HEADERS.indexOf("Vært")] = "Redaktørens værtsrettelse";
 staging.rows[0] = manuallyEditedStaging;
 assert.deepEqual(await appendDrCandidatesToStaging({ client: staging, candidates, dryRun: false }), { dryRun: false, appended: 0, alreadyPresent: candidates.length });
 assert.equal(staging.rows[0][STAGING_HEADERS.indexOf("Kort beskrivelse")], "Redaktørens rettelse");
+assert.equal(staging.rows[0][STAGING_HEADERS.indexOf("Vært")], "Redaktørens værtsrettelse", "an existing editorial host edit is preserved");
 assert.equal(staging.appendCalls, 1);
+assert.equal(staging.updateCalls, 0, "a populated editorial host cell is never overwritten");
+const blankHostExisting = structuredClone(staging.rows[0]);
+blankHostExisting[STAGING_HEADERS.indexOf("Vært")] = "";
+const hostFillClient = new MockStaging([blankHostExisting]);
+const hostFillBefore = structuredClone(hostFillClient.rows[0]);
+assert.deepEqual(await appendDrCandidatesToStaging({ client: hostFillClient, candidates: candidates.slice(0, 1), dryRun: false }), {
+  dryRun: false, appended: 0, alreadyPresent: 1, hostFilled: 1
+});
+assert.equal(hostFillClient.rows.length, 1, "filling a blank host cell does not add a duplicate row");
+assert.equal(hostFillClient.rows[0][STAGING_HEADERS.indexOf("Vært")], "Per Lysholt");
+for (let index = 0; index < STAGING_HEADERS.length; index += 1) {
+  if (index !== STAGING_HEADERS.indexOf("Vært")) assert.equal(hostFillClient.rows[0][index], hostFillBefore[index], `host-only update preserves staging cell ${index + 1}`);
+}
 const draeberurten = candidates.find((candidate) => candidate.podcast_id === "dræberurten");
 const draeberurtenRow = buildStagingRow(draeberurten);
 assert.equal(draeberurtenRow[CATALOGUE_HEADERS.indexOf("Podcast-ID")], "dræberurten", "the existing legacy identity is preserved");
 assert.equal(draeberurtenRow[STAGING_HEADERS.indexOf("DR source GUID")], "16122692641");
 assert.match(draeberurtenRow[STAGING_HEADERS.indexOf("DR source URL")], /dr.dk\/lyd\/special-radio\/djaevlen-i-detaljen\/.*16122692641/u);
 assert.equal(draeberurtenRow[STAGING_HEADERS.indexOf("Review status")], "SOURCE_VERIFIED_REQUIRES_OWNER_APPROVAL");
-for (const header of ["Vært", "Vuring (1-10)", "Antal afsnit", "Årstal afspillet", "Afgivet vurdering", "Episoder", "Feed", "Undervurderet perle"]) {
+assert.equal(draeberurtenRow[STAGING_HEADERS.indexOf("Vært")], "Per Lysholt");
+for (const header of ["Vuring (1-10)", "Antal afsnit", "Årstal afspillet", "Afgivet vurdering", "Episoder", "Feed", "Undervurderet perle"]) {
   assert.equal(draeberurtenRow[CATALOGUE_HEADERS.indexOf(header)], "", `Dræberurten ${header} remains blank without source evidence`);
 }
 assert.throws(() => buildStagingRow({ ...draeberurten, title: "A different series" }), /identity\/source mismatch/u);
@@ -92,6 +116,24 @@ assert.equal(genericPlan.append[0][CATALOGUE_HEADERS.indexOf("Kort beskrivelse")
 for (const forbidden of ["Vært", "Vuring (1-10)", "Antal afsnit", "Årstal afspillet", "Afgivet vurdering", "Episoder", "Feed", "Undervurderet perle"]) {
   assert.equal(genericPlan.append[0][CATALOGUE_HEADERS.indexOf(forbidden)], "");
 }
+const celineChild = buildStagingRow({ ...future, source_description: "Medvirkende: Charlie Krautwald. Tilrettelæggelse, vært og lyddesign: Celine Klint Redaktion: Anne Jeppesen." });
+const martinChild = buildStagingRow({ ...future, podcast_id: "bakspejl-auto-v1-1234abce", title: "En anden Bakspejl-serie", source_episode_guid: "999999999998", source_url: "https://www.dr.dk/lyd/special-radio/bakspejl/bakspejl-2026/en-anden-serie-999999999998", source_description: "Vært: Martin Grønne. Producer: Niels Hansen." });
+assert.equal(celineChild[STAGING_HEADERS.indexOf("Vært")], "Celine Klint", "combined role credits identify the explicitly credited Bakspejl host");
+assert.equal(martinChild[STAGING_HEADERS.indexOf("Vært")], "Martin Grønne", "a separate Bakspejl series uses its own exact episode credit");
+const guestOnly = buildStagingRow({ ...future, source_description: "Medvirkende: Celine Klint. Producer: Martin Grønne." });
+assert.equal(guestOnly[STAGING_HEADERS.indexOf("Vært")], "");
+assert.equal(guestOnly[STAGING_HEADERS.indexOf("Review status")], "NEEDS_EDITORIAL_REVIEW");
+const uncertainHost = buildStagingRow({ ...future, source_description: "Vært: Celine Klint. Vært: Martin Grønne." });
+assert.equal(uncertainHost[STAGING_HEADERS.indexOf("Vært")], "", "conflicting host credits fail closed");
+assert.equal(uncertainHost[STAGING_HEADERS.indexOf("Review status")], "NEEDS_EDITORIAL_REVIEW");
+const isdalenRow = buildStagingRow(recordFor("djaevlen-auto-v1-1139735b"));
+const bakspejlRow = buildStagingRow(recordFor("bakspejl-auto-v1-4962cdc5"));
+assert.equal(isdalenRow[STAGING_HEADERS.indexOf("Vært")], "Per Lysholt");
+assert.equal(isdalenRow[STAGING_HEADERS.indexOf("DR source GUID")], "16122692642");
+assert.equal(isdalenRow[STAGING_HEADERS.indexOf("DR source URL")], VERIFIED_DR_SERIES_METADATA["djaevlen-auto-v1-1139735b"].sourceUrl);
+assert.equal(bakspejlRow[STAGING_HEADERS.indexOf("Vært")], "Celine Klint");
+assert.equal(bakspejlRow[STAGING_HEADERS.indexOf("DR source GUID")], "11162611015");
+assert.equal(bakspejlRow[STAGING_HEADERS.indexOf("DR source URL")], VERIFIED_DR_SERIES_METADATA["bakspejl-auto-v1-4962cdc5"].sourceUrl);
 assert.throws(() => buildStagingPlan({ headers: [...STAGING_HEADERS].reverse(), existingRows: [], candidates: [] }), /header schema drift/);
 const duplicate = candidates.concat(candidates[0]);
 assert.throws(() => buildStagingPlan({ headers: STAGING_HEADERS, existingRows: [], candidates: duplicate }), /Duplicate DR staging candidate/);
@@ -122,6 +164,11 @@ assert.match(requests[2].url, /staging-sheet-test/u);
 assert.doesNotMatch(requests[2].url, new RegExp(ORIGINAL_SHEET_ID, "u"));
 assert.match(requests[2].url, /valueInputOption=RAW/u);
 assert.equal(requests[2].method, "POST", "ambiguous appends are never blindly retried");
+await apiClient.updateHostCells([{ rowNumber: 4, podcastId: "bakspejl-auto-v1-1234abcd", host: "Celine Klint" }]);
+assert.match(requests[3].url, /values:batchUpdate/u);
+assert.match(requests[3].body, /DR staging.*C4/u);
+assert.match(requests[3].body, /"valueInputOption":"RAW"/u);
+assert.doesNotMatch(requests[3].url, new RegExp(ORIGINAL_SHEET_ID, "u"));
 
 // Run the owner Apps Script against isolated mocks; no Google auth/network.
 const script = await readFile(new URL("../apps-script/append-dr-staging-to-ark1/Code.gs", import.meta.url), "utf8");
@@ -214,6 +261,7 @@ const accepted = makeAppsScriptHarness({ targetRows: [existingEditorial], stagin
 accepted.context.reviewAndAppendDrStagingRows();
 assert.equal(accepted.originalData.length, 3, "one manually approved new series appends once");
 assert.equal(accepted.originalData[1][idIndex], "existing-id");
+assert.equal(accepted.originalData[2][CATALOGUE_HEADERS.indexOf("Vært")], "Per Lysholt", "Apps Script carries the explicitly credited host into Ark1 after owner approval");
 assert.equal(accepted.originalData[1][CATALOGUE_HEADERS.indexOf("Vuring (1-10)")], "9,1");
 assert.equal(accepted.originalData[1][CATALOGUE_HEADERS.indexOf("Afgivet vurdering")], "2024-02-03");
 assert.deepEqual(accepted.originalData[1], existingEditorial, "rating, episode fields, history, and every other old cell remain byte-for-byte unchanged");
@@ -221,6 +269,11 @@ const again = makeAppsScriptHarness({ targetRows: [existingEditorial, accepted.o
 again.context.reviewAndAppendDrStagingRows();
 assert.equal(again.originalData.length, 3, "rerun recognizes exact ID and never appends a duplicate");
 assert.equal(again.targetLockAcquires, 0, "already-present ID never enters a write lock");
+const bakspejlId = "bakspejl-auto-v1-4962cdc5";
+const bakspejlApproved = makeAppsScriptHarness({ stagingRows: stageRows, promptText: `APPEND ${bakspejlId}` });
+bakspejlApproved.context.reviewAndAppendDrStagingRows();
+assert.equal(bakspejlApproved.originalData.length, 2);
+assert.equal(bakspejlApproved.originalData[1][CATALOGUE_HEADERS.indexOf("Vært")], "Celine Klint", "the owner gate accepts the combined host credit after manual approval");
 
 for (const options of [
   { originalId: "wrong-sheet" }, { targetGid: 5 }, { badHeader: true },
@@ -287,6 +340,7 @@ const legacyApproved = makeAppsScriptHarness({ stagingRows: [STAGING_HEADERS, dr
 legacyApproved.context.reviewAndAppendDrStagingRows();
 assert.equal(legacyApproved.originalData.length, 2, "the documented legacy identity can pass the same owner review gate");
 assert.equal(legacyApproved.originalData[1][idIndex], "dræberurten");
+assert.equal(legacyApproved.originalData[1][CATALOGUE_HEADERS.indexOf("Vært")], "Per Lysholt");
 assert.equal(legacyApproved.originalData[1][CATALOGUE_HEADERS.indexOf("Vuring (1-10)")], "");
 assert.equal(legacyApproved.originalData[1][CATALOGUE_HEADERS.indexOf("Afgivet vurdering")], "");
 const legacyCollisionRow = [...draeberurtenRow];
@@ -294,6 +348,12 @@ legacyCollisionRow[CATALOGUE_HEADERS.indexOf("Titel")] = "Another title";
 const legacyCollision = makeAppsScriptHarness({ stagingRows: [STAGING_HEADERS, legacyCollisionRow], promptText: "APPEND dræberurten" });
 assert.throws(() => legacyCollision.context.reviewAndAppendDrStagingRows(), /full-episode-proveniens/u);
 assert.equal(legacyCollision.originalData.length, 1, "legacy ID collisions fail closed");
+
+const fabricatedHostRow = [...futureRow];
+fabricatedHostRow[CATALOGUE_HEADERS.indexOf("Vært")] = "Celine Klint";
+const fabricatedHost = makeAppsScriptHarness({ stagingRows: [STAGING_HEADERS, fabricatedHostRow], promptText: "APPEND bakspejl-auto-v1-1234abcd" });
+assert.throws(() => fabricatedHost.context.reviewAndAppendDrStagingRows(), /matchende DR-værtskreditering/u);
+assert.equal(fabricatedHost.originalData.length, 1, "the owner gate rejects a host without exact source credit");
 
 // Existing editorial Sheet rows and immutable identities continue to win catalogue sync.
 const editorialSourceRow = { Titel: "Kvinden i Isdalen", "Podcast-ID": Object.keys(VERIFIED_DR_SERIES_METADATA)[0], Hovedserie: "Djævlen i detaljen", "Kort beskrivelse": "Redaktørens rettelse" };
