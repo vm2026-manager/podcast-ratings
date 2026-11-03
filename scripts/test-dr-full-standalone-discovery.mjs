@@ -14,10 +14,10 @@ assert.equal(djaevlenRegistry.records.find(x => x.discovery_key === "draeberurte
 const drUrl = "https://www.dr.dk/lyd/special-radio/djaevlen-i-detaljen/djaevlen-i-detaljen-2026/";
 const backUrl = "https://www.dr.dk/lyd/special-radio/bakspejl/bakspejl-2026/";
 const now = "2026-10-22T06:00:00Z";
-function item(n, title, date, urlBase, duration = 2100000) {
+function item(n, title, date, urlBase, duration = 2100000, description = "") {
   return {
     productionNumber: String(n), title, startTime: date,
-    durationMilliseconds: duration, presentationUrl: urlBase + "afsnit-" + n
+    durationMilliseconds: duration, presentationUrl: urlBase + "afsnit-" + n, description
   };
 }
 function html(items) {
@@ -33,7 +33,7 @@ const catalogueRows = [
 ];
 const registry = { version: 1, baseline_published_at: "2026-09-23T14:25:00.000Z", processed_guids: ["16122692741", "16122692742"], records: [] };
 const items = [
-  item(16122693001, "En ny sag", "2026-10-21T03:00:00Z", drUrl),
+  item(16122693001, "En ny sag", "2026-10-21T03:00:00Z", drUrl, 2100000, "Medvirkende: Celine Klint. Producer: Martin Grønne."),
   item(16122692641, "Dræberurten", "2026-10-14T03:00:00Z", drUrl),
   item(16122693002, "Teaser: Udgivelsen", "2026-10-21T03:00:00Z", drUrl, 138000),
   item(16122693003, "Ny miniserie 1:2", "2026-10-21T03:00:00Z", drUrl),
@@ -110,16 +110,21 @@ const backReg = { version: 1, records: [], processed_guids: [] };
 const back = discoverVerifiedFullStandalone({
   showKey: "bakspejl",
   html: html([
-    item(11162612001, "Nye perspektiver", "2026-10-21T03:00:00Z", backUrl),
+    item(11162612001, "Nye perspektiver", "2026-10-21T03:00:00Z", backUrl, 2100000, "Medvirkende: Charlie Krautwald. Tilrettelæggelse, vært og lyddesign: Celine Klint Redaktion: Anne Jeppesen."),
+    item(11162612005, "Historien fra havnen", "2026-10-21T03:00:00Z", backUrl, 2100000, "Vært: Martin Grønne. Producer: Celine Klint."),
     item(11162612002, "LA Riots 4:4", "2026-10-12T03:00:00Z", backUrl),
-    item(11162612003, "Den spanske borgerkrig 1:4 - Første afsnit", "2026-10-21T03:00:00Z", backUrl),
+    item(11162612003, "Den spanske borgerkrig 1:4 - Første afsnit", "2026-10-21T03:00:00Z", backUrl, 2100000, "Medvirkende: Charlie Krautwald. Tilrettelæggelse, vært og lyddesign: Celine Klint Redaktion: Anne Jeppesen."),
     item(11162612004, "Den spanske borgerkrig 2:4 - Næste afsnit", "2026-10-22T03:00:00Z", backUrl)
   ]),
   catalogueRows, registry: backReg, now
 });
-assert.equal(back.report.created.length, 2);
+assert.equal(back.report.created.length, 3);
 assert.equal(back.registry.records.find(x => x.discovery_key === "nye perspektiver").title, "Nye perspektiver");
+assert.equal(back.registry.records.find(x => x.discovery_key === "nye perspektiver").host, "Celine Klint", "combined role credit identifies the episode-specific Bakspejl host");
+assert.equal(back.registry.records.find(x => x.discovery_key === "nye perspektiver").source_host_credit, "Tilrettelæggelse, vært og lyddesign: Celine Klint");
+assert.equal(back.registry.records.find(x => x.discovery_key === "historien fra havnen").host, "Martin Grønne", "a different Bakspejl child retains its own episode-specific host");
 assert.equal(back.registry.records.find(x => x.discovery_key === "den spanske borgerkrig").podcast_id, "bakspejl-auto-v1-4962cdc5");
+assert.equal(back.registry.records.find(x => x.discovery_key === "den spanske borgerkrig").host, undefined, "an absent episode host credit is not inherited from the Bakspejl umbrella");
 assert.equal(back.report.already_registered.some(x => x.title === "Den spanske borgerkrig"), true, "Bakspejl 2:4 reuses one canonical child route");
 const mergedBack = mergeAutoDiscoveredBakspejlRows(catalogueRows, back.registry);
 const borgerkrigRow = mergedBack.find(x => x["Podcast-ID"] === "bakspejl-auto-v1-4962cdc5");
@@ -127,6 +132,7 @@ assert.ok(borgerkrigRow["Kort beskrivelse"].includes("Harald, Aage og Kai"));
 assert.equal(borgerkrigRow["Vuring (1-10)"], undefined);
 assert.equal(mergeSheetFeedConfigs({rows:mergedBack}).configs.bakspejl_lyd_full.routes.some(r =>
   r.podcast_key === borgerkrigRow["Podcast-ID"]), true);
+assert.equal(result.report.created.find(x => x.title === "En ny sag").host, undefined, "a guest and producer credit cannot populate host");
 
 assert.throws(() => discoverVerifiedFullStandalone({
   showKey: "djaevlen", html: "<html></html>", catalogueRows, registry, now

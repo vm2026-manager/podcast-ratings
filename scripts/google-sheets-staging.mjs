@@ -1,6 +1,7 @@
 // This client can write only to the separate DR staging spreadsheet.
 // Production Ark1 is intentionally inaccessible from GitHub Actions.
 import { VERIFIED_DR_SERIES_METADATA } from "./verified-dr-series-metadata.mjs";
+import { extractExplicitDrHostCredit } from "./dr-host-credit.mjs";
 
 export const STAGING_TAB = "DR staging";
 export const ORIGINAL_SHEET_ID = "1V21y9uMx_fGethrT47hILWczgK_ZSNRfksSKWuR69ss";
@@ -39,7 +40,15 @@ export function buildStagingRow(record, checkedDate = new Date().toISOString().s
   const title = normal(record?.title ?? record?.Titel);
   const mainSeries = normal(record?.hovedserie ?? record?.Hovedserie);
   const curated = VERIFIED_DR_SERIES_METADATA[id];
-  const description = plainSourceText(record?.source_description || curated?.longDescription);
+  const description = plainSourceText(record?.source_description || curated?.sourceDescription || curated?.longDescription);
+  const parsedHost = extractExplicitDrHostCredit(record?.source_description || "");
+  const curatedCredit = extractExplicitDrHostCredit(curated?.sourceHostCredit || "");
+  const hostConflict = parsedHost.conflict || Boolean(parsedHost.host && curated?.host && parsedHost.host !== curated.host) ||
+    Boolean(curated?.host && curatedCredit.host && curatedCredit.host !== curated.host);
+  const host = hostConflict ? "" : parsedHost.host || (curated?.sourceHostCredit ? curatedCredit.host : "");
+  const sourceDescription = [description, curated?.sourceHostCredit]
+    .filter((value, index, all) => value && (index === 0 || !all[0].includes(value)))
+    .join(" ");
   const episodeGuid = normal(record?.source_episode_guid || curated?.sourceEpisodeGuid);
   const sourceUrl = normal(record?.source_url || curated?.sourceUrl);
   if (!id || !title || !["Bakspejl", "Djævlen i detaljen"].includes(mainSeries)) {
@@ -68,6 +77,7 @@ export function buildStagingRow(record, checkedDate = new Date().toISOString().s
   const generatedLong = description.slice(0, 1800);
   for (const [header, value] of Object.entries({
     Titel: title,
+    "Vært": host,
     Genre: curated?.genre || "",
     Udgiver: "DR",
     Hovedserie: mainSeries,
@@ -82,10 +92,12 @@ export function buildStagingRow(record, checkedDate = new Date().toISOString().s
     "Tjekket dato": checkedDate,
     "DR source GUID": episodeGuid,
     "DR source URL": sourceUrl,
-    "DR source description": description,
-    "Review status": curated ? "SOURCE_VERIFIED_REQUIRES_OWNER_APPROVAL" : "NEEDS_EDITORIAL_REVIEW"
+    "DR source description": sourceDescription,
+    "Review status": hostConflict || (!host && /\bvært\b/iu.test(record?.source_description || ""))
+      ? "NEEDS_EDITORIAL_REVIEW"
+      : curated ? "SOURCE_VERIFIED_REQUIRES_OWNER_APPROVAL" : "NEEDS_EDITORIAL_REVIEW"
   })) set(header, value);
-  // Rating, host, episode, listening history and year-played columns remain blank.
+  // Only an explicit host-role credit may populate Vært; ratings and history remain blank.
   return values;
 }
 
@@ -107,6 +119,7 @@ export function buildStagingPlan({ headers, existingRows, candidates }) {
   }
   const seen = new Set();
   const append = [];
+  const hostUpdates = [];
   for (const record of candidates || []) {
     const row = buildStagingRow(record);
     const id = normal(row[idIndex]);
@@ -120,11 +133,16 @@ export function buildStagingPlan({ headers, existingRows, candidates }) {
           normal(stored[STAGING_HEADERS.indexOf("DR source URL")]) !== normal(row[STAGING_HEADERS.indexOf("DR source URL")])) {
         throw new Error(`Existing DR staging identity/source conflict for ${id}`);
       }
+      const hostIndex = STAGING_HEADERS.indexOf("Vært");
+      const candidateHost = normal(row[hostIndex]);
+      if (!normal(stored[hostIndex]) && candidateHost) {
+        hostUpdates.push({ rowNumber: existingRows.indexOf(stored) + 2, podcastId: id, host: candidateHost });
+      }
       continue;
     }
     append.push(row);
   }
-  return { append, alreadyPresent: seen.size - append.length };
+  return { append, hostUpdates, alreadyPresent: seen.size - append.length };
 }
 
 export class StagingSheetsApiClient {
@@ -167,7 +185,7 @@ export class StagingSheetsApiClient {
 
   async readSheet() {
     const range = encodeURIComponent(`${STAGING_TAB}!A1:AI`);
-    const response = await this.request(`https://sheets.googleapis.com/v4/spreadsheets/${this.spreadsheetId}/values/${range}`);
+    const response = await this.request(`https://sheets.googleapis.com/v4/spreadsheets/${this.spreadsheetId}/values/${range}?valueRenderOption=FORMULA`);
     const payload = await response.json();
     if (!Array.isArray(payload.values) || !payload.values.length) throw new Error("DR staging tab is empty or unreadable");
     const [headers, ...rows] = payload.values;
@@ -182,6 +200,18 @@ export class StagingSheetsApiClient {
       body: JSON.stringify({ majorDimension: "ROWS", values: rows })
     });
   }
+
+  async updateHostCells(updates) {
+    if (!Array.isArray(updates) || updates.some(({ rowNumber, host }) => !Number.isInteger(rowNumber) || rowNumber < 2 || !normal(host))) {
+      throw new Error("Invalid DR staging host-cell update plan");
+    }
+    const data = updates.map(({ rowNumber, host }) => ({ range: `'${STAGING_TAB}'!C${rowNumber}`, values: [[host]] }));
+    const url = `https://sheets.googleapis.com/v4/spreadsheets/${this.spreadsheetId}/values:batchUpdate`;
+    return this.request(url, {
+      method: "POST", headers: { "content-type": "application/json" },
+      body: JSON.stringify({ valueInputOption: "RAW", data })
+    });
+  }
 }
 
 export function assertStagingWriteGate(env = process.env) {
@@ -194,9 +224,32 @@ export function assertStagingWriteGate(env = process.env) {
 
 export async function appendDrCandidatesToStaging({ client, candidates, dryRun = true }) {
   if (!client) throw new Error("DR staging client is required");
-  const initial = await client.readSheet();
-  const plan = buildStagingPlan({ headers: initial.headers, existingRows: initial.rows, candidates });
-  if (dryRun || !plan.append.length) return { dryRun, appended: 0, alreadyPresent: plan.alreadyPresent };
+  let initial = await client.readSheet();
+  let plan = buildStagingPlan({ headers: initial.headers, existingRows: initial.rows, candidates });
+  if (dryRun) return { dryRun, appended: 0, alreadyPresent: plan.alreadyPresent, ...(plan.hostUpdates.length ? { hostUpdates: plan.hostUpdates.length } : {}) };
+  let hostFilled = 0;
+  if (plan.hostUpdates.length) {
+    // Refresh the exact row and source identity immediately before the narrow host-only update.
+    initial = await client.readSheet();
+    plan = buildStagingPlan({ headers: initial.headers, existingRows: initial.rows, candidates });
+    if (plan.hostUpdates.length) {
+      try {
+        await client.updateHostCells(plan.hostUpdates);
+      } catch (updateError) {
+        const reread = await client.readSheet();
+        const expectedRows = rowsAfterHostUpdates(initial.rows, plan.hostUpdates);
+        assertRowsMatch(expectedRows, reread.rows, "Existing DR staging rows changed during host-only update; stop and inspect before retry");
+        hostFilled = plan.hostUpdates.length;
+      }
+      const readback = await client.readSheet();
+      const expectedRows = rowsAfterHostUpdates(initial.rows, plan.hostUpdates);
+      assertRowsMatch(expectedRows, readback.rows, "DR staging host-cell update read-back mismatch");
+      hostFilled = plan.hostUpdates.length;
+      initial = readback;
+      plan = buildStagingPlan({ headers: readback.headers, existingRows: readback.rows, candidates });
+    }
+  }
+  if (!plan.append.length) return { dryRun: false, appended: 0, alreadyPresent: plan.alreadyPresent, ...(hostFilled ? { hostFilled } : {}) };
   try {
     await client.appendRows(plan.append);
   } catch (appendError) {
@@ -204,13 +257,33 @@ export async function appendDrCandidatesToStaging({ client, candidates, dryRun =
     buildStagingPlan({ headers: reread.headers, existingRows: reread.rows, candidates: [] });
     assertExistingRowsUnchanged(initial.rows, reread.rows);
     assertStagingAppendRowsMatch(plan.append, reread.rows);
-    return { dryRun: false, appended: plan.append.length, alreadyPresent: plan.alreadyPresent, recoveredAfterAmbiguousFailure: true };
+    return { dryRun: false, appended: plan.append.length, alreadyPresent: plan.alreadyPresent, ...(hostFilled ? { hostFilled } : {}), recoveredAfterAmbiguousFailure: true };
   }
   const readback = await client.readSheet();
   buildStagingPlan({ headers: readback.headers, existingRows: readback.rows, candidates: [] });
   assertExistingRowsUnchanged(initial.rows, readback.rows);
   assertStagingAppendRowsMatch(plan.append, readback.rows);
-  return { dryRun: false, appended: plan.append.length, alreadyPresent: plan.alreadyPresent };
+  return { dryRun: false, appended: plan.append.length, alreadyPresent: plan.alreadyPresent, ...(hostFilled ? { hostFilled } : {}) };
+}
+
+function rowsAfterHostUpdates(rows, updates) {
+  const result = structuredClone(rows || []);
+  const hostIndex = STAGING_HEADERS.indexOf("Vært");
+  for (const update of updates) {
+    const row = result[update.rowNumber - 2];
+    if (!row || normal(row[STAGING_HEADERS.indexOf("Podcast-ID")]) !== update.podcastId || normal(row[hostIndex])) {
+      throw new Error(`DR staging host cell is no longer blank for ${update.podcastId}`);
+    }
+    row[hostIndex] = update.host;
+  }
+  return result;
+}
+
+function assertRowsMatch(expectedRows, actualRows, message) {
+  const normalizeRow = (row) => Array.from({ length: STAGING_HEADERS.length }, (_, index) => normal(row?.[index]));
+  if (JSON.stringify((expectedRows || []).map(normalizeRow)) !== JSON.stringify((actualRows || []).map(normalizeRow))) {
+    throw new Error(message);
+  }
 }
 
 function assertExistingRowsUnchanged(beforeRows, afterRows) {

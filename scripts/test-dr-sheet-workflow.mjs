@@ -19,12 +19,17 @@ assert.doesNotMatch(cli, /ORIGINAL_SHEET_ID|GOOGLE_SHEETS_SPREADSHEET_ID/u);
 assert.doesNotMatch(writer, /spreadsheets\/values\/.+ORIGINAL/u);
 assert.match(writer, /original-sheet writes are forbidden/u);
 assert.match(writer, /valueInputOption=RAW/u);
+assert.match(writer, /updateHostCells\(updates\)/u);
+assert.match(writer, /\$\{STAGING_TAB\}'!C\$\{rowNumber\}/u);
+assert.match(writer, /values:batchUpdate/u);
 assert.match(ownerGate, /LockService\.getDocumentLock\(\)/u);
 assert.match(ownerGate, /getSheetId\(\) !== TARGET_TAB_ID_/u);
 assert.match(ownerGate, /BACKUP_RESTORE_TEST_VERIFIED/u);
 assert.match(ownerGate, /APPEND_ENABLED/u);
 assert.match(ownerGate, /assertOldCellsUnchanged_/u);
 assert.match(ownerGate, /prompt\(/u);
+assert.match(ownerGate, /Vært mangler eksplicit, matchende DR-værtskreditering/u);
+assert.match(ownerGate, /extractDrHostCredit_/u);
 assert.doesNotMatch(ownerGate, /deleteRow|clearContents/u);
 
 console.log("DR staging trust boundary and owner-gate tests passed");

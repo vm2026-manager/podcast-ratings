@@ -62,6 +62,7 @@ function reviewAndAppendDrStagingRows() {
     var prompt = ui.prompt(
       "Gennemgå DR-kilde før append",
       "Podcast-ID: " + c.id + "\nTitel: " + c.title + "\nHovedserie: " + c.series +
+        "\nVært: " + (c.host || "Ikke verificeret") +
         "\nGenre: " + c.genre + "\n2. genre: " + c.secondaryGenre + "\nEmner: " + c.topics +
         "\nSupplerende ligheder: " + c.similarities + "\nKilde: " + c.sourceUrl +
         "\n\nKort beskrivelse:\n" + c.shortDescription + "\n\nLang beskrivelse:\n" + c.longDescription +
@@ -146,6 +147,8 @@ function validateStagingCandidate_(row, formulas) {
   var secondaryGenre = get("2. genre");
   var topics = get("Emner");
   var similarities = get("Supplerende ligheder");
+  var host = get("Vært");
+  var sourceHost = extractDrHostCredit_(sourceDescription);
   if (!id || !title || !["Bakspejl", "Djævlen i detaljen"].includes(series)) throw new Error("DR staging-identitet mangler eller er ukendt.");
   var expectedPath = series === "Bakspejl" ? "/lyd/special-radio/bakspejl/" : "/lyd/special-radio/djaevlen-i-detaljen/";
   var expectedPrefix = series === "Bakspejl" ? "bakspejl-auto-v1-" : "djaevlen-auto-v1-";
@@ -162,8 +165,9 @@ function validateStagingCandidate_(row, formulas) {
   if (!shortDescription || !longDescription || !genre || !topics) {
     throw new Error("Kort/lang beskrivelse, verificeret genre og emner skal være udfyldt før ejerens godkendelse.");
   }
-  if (["Vært", "Vuring (1-10)", "Antal afsnit", "Årstal afspillet", "Afgivet vurdering", "Episoder", "Feed", "Undervurderet perle"]
-    .some(function (header) { return get(header) !== ""; })) throw new Error("Staging må ikke autoudfylde vært, episoder, vurdering eller historik.");
+  if (host && (!sourceHost || sourceHost !== host)) throw new Error("Vært mangler eksplicit, matchende DR-værtskreditering.");
+  if (["Vuring (1-10)", "Antal afsnit", "Årstal afspillet", "Afgivet vurdering", "Episoder", "Feed", "Undervurderet perle"]
+    .some(function (header) { return get(header) !== ""; })) throw new Error("Staging må ikke autoudfylde episoder, vurdering eller historik.");
   row.slice(0, HEADERS_.length).concat([sourceDescription]).forEach(function (value) {
     if (/^[\s]*[=+\-@]/u.test(String(value || ""))) throw new Error("Formel-lignende staging-indhold er ikke tilladt.");
   });
@@ -171,8 +175,27 @@ function validateStagingCandidate_(row, formulas) {
     id: id, title: title, series: series, sourceUrl: sourceUrl,
     sourceDescription: sourceDescription, shortDescription: shortDescription,
     longDescription: longDescription, genre: genre, secondaryGenre: secondaryGenre,
-    topics: topics, similarities: similarities
+    topics: topics, similarities: similarities, host: host
   };
+}
+
+function extractDrHostCredit_(value) {
+  var text = String(value || "").replace(/\s+/g, " ").trim();
+  var label = /\b[^:;.!?]{0,100}\bvært\b[^:;.!?]{0,60}:\s*/giu;
+  var matches = [];
+  var match;
+  while ((match = label.exec(text)) !== null) {
+    var tail = text.slice(label.lastIndex);
+    var next = /\s+(?:Medvirkende|Tilrettelæggelse|Tilrettelægger|Redaktion|Redaktør|DR redaktør|Producer|Producent|Vært)\s*:/iu.exec(tail);
+    var boundary = next ? next.index : tail.length;
+    var punctuation = tail.slice(0, boundary).search(/[.;!?]/u);
+    var end = punctuation >= 0 ? punctuation : boundary;
+    var host = tail.slice(0, end).trim().replace(/[,\s]+$/u, "");
+    if (host) matches.push(host);
+  }
+  var unique = [];
+  matches.forEach(function (host) { if (unique.indexOf(host) < 0) unique.push(host); });
+  return unique.length === 1 ? unique[0] : "";
 }
 
 function appendOneReviewedRow_(context, stagedItem) {
