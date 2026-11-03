@@ -298,6 +298,7 @@ const MEDIANO_EPISODE_PODCAST_CONFIG = Object.freeze(
         // The source Sheet has no immutable-key column. Pin Peter's existing
         // UUID so earlier dated episodes cannot change its legacy ID or its
         // manual-catalogue mapping and 7.3 editorial score.
+        manualEpisodeMappingPolicy: "require_existing",
         manualEpisodeCanonicalIds: Object.freeze({
           "der var engang et mal af peter møller mod farum": "283fbea9-a29c-5104-803a-f39f2bb8b312"
         })
@@ -8777,6 +8778,10 @@ function openEpisodeRatingDialog(episode, suppliedContext = null) {
   const episodeId = getEpisodeKey(episode);
   const episodeRatingContext = suppliedContext || getEpisodeRatingContext(episode);
   if (!episodeRatingContext || episodeRatingContext.episodeId !== episodeId) return;
+  if (episode?.dataSource === "manual" && !isManualEpisodeRatingAvailable(episode)) {
+    setAuthMessage("Vurdering bliver tilgængelig, når episodeidentiteten er godkendt og importeret.", "warning");
+    return;
+  }
   resetRatingDialogMode();
 
   if (!isLoggedIn()) {
@@ -9005,7 +9010,7 @@ async function saveActiveEpisodeRating() {
   const manualMappingResolved =
     episode?.dataSource !== "manual" ||
     episodeConfig?.manualEpisodeRatingPersistence === "local" ||
-    (await ensureManualCatalogueEpisodeMapping(episode));
+    (await resolveManualEpisodeRatingMapping(episode));
   const episodeId = getEpisodeKey(episode) || requestedEpisodeId;
   const config = getEpisodeRatingPersistenceConfig(podcastKey, episode);
   const isLocalEpisodeRating = config?.persistence === "local";
@@ -9235,7 +9240,7 @@ async function deleteActiveEpisodeRating() {
   }
   const manualMappingResolved =
     episode?.dataSource !== "manual" ||
-    (await ensureManualCatalogueEpisodeMapping(episode));
+    (await resolveManualEpisodeRatingMapping(episode));
   const episodeId = getEpisodeKey(episode) || requestedEpisodeId;
   const config = getEpisodeRatingPersistenceConfig(podcastKey, episode);
   const episodeState = getPodcastEpisodeState(podcastKey);
@@ -12077,6 +12082,40 @@ async function ensureManualCatalogueEpisodeMapping(episode) {
   return true;
 }
 
+function requiresExistingManualEpisodeMapping(episode) {
+  if (episode?.dataSource !== "manual") return false;
+  const podcastKey = normalizeText(episode?.podcast_key) || getEpisodePodcastKey(state.activePodcastDetailKey);
+  return getEpisodePodcastConfig(podcastKey)?.manualEpisodeMappingPolicy === "require_existing";
+}
+
+function isManualEpisodeMappingResolved(episode) {
+  if (episode?.dataSource !== "manual") return true;
+  const manualEpisodeKey = normalizeText(episode.manual_episode_key);
+  const mapping = manualEpisodeKey ? state.manualCanonicalEpisodeMappings.get(manualEpisodeKey) : null;
+  if (!mapping?.episodeId) return false;
+  if (!requiresExistingManualEpisodeMapping(episode)) return true;
+
+  const canonicalSource = normalizeText(mapping.canonicalSource);
+  return normalizeText(mapping.episodeId) === normalizeText(episode.id) &&
+    (canonicalSource === MANUAL_CATALOGUE_SOURCE || canonicalSource === REVIEWED_LEGACY_MANUAL_CATALOGUE_SOURCE);
+}
+
+function isManualEpisodeRatingAvailable(episode) {
+  return episode?.dataSource !== "manual" ||
+    !requiresExistingManualEpisodeMapping(episode) ||
+    isManualEpisodeMappingResolved(episode);
+}
+
+async function resolveManualEpisodeRatingMapping(episode) {
+  if (episode?.dataSource !== "manual") return true;
+  if (!requiresExistingManualEpisodeMapping(episode)) return ensureManualCatalogueEpisodeMapping(episode);
+
+  if (!isManualEpisodeMappingResolved(episode)) {
+    await fetchManualCanonicalEpisodeMappings([episode]);
+  }
+  return isManualEpisodeMappingResolved(episode);
+}
+
 async function fetchManualCanonicalEpisodeMappings(episodes) {
   if (!state.supabase) return false;
 
@@ -12109,7 +12148,12 @@ async function fetchManualCanonicalEpisodeMappings(episodes) {
       for (const episode of manualEpisodes) {
         const key = normalizeText(episode.manual_episode_key);
         if (!key) continue;
-        if (!state.manualCanonicalEpisodeMappings.has(key)) {
+        if (requiresExistingManualEpisodeMapping(episode)) {
+          // This reviewed series stays read-only until its episode identities
+          // are imported through the separately approved catalogue workflow.
+          continue;
+        }
+        if (!isManualEpisodeMappingResolved(episode)) {
           await ensureManualCatalogueEpisodeMapping(episode);
         } else {
           await migrateLocalManualEpisodeRatingToSupabase(episode);
@@ -12123,9 +12167,7 @@ async function fetchManualCanonicalEpisodeMappings(episodes) {
     manualEpisodeKeys.forEach((key) => state.manualCanonicalResolutionLoadingKeys.delete(key));
   }
 
-  return manualEpisodes.every((episode) =>
-    state.manualCanonicalEpisodeMappings.has(normalizeText(episode.manual_episode_key))
-  );
+  return manualEpisodes.every(isManualEpisodeMappingResolved);
 }
 
 async function refreshManualEpisodeRatingData(podcastKey, episodes, { force = false } = {}) {
@@ -12133,12 +12175,8 @@ async function refreshManualEpisodeRatingData(podcastKey, episodes, { force = fa
     throw new Error("Episodevurderingerne kunne ikke hentes lige nu.");
   }
   await fetchManualCanonicalEpisodeMappings(episodes);
-  const canonical = (episodes || []).filter((episode) =>
-    state.manualCanonicalEpisodeMappings.has(normalizeText(episode.manual_episode_key))
-  );
-  const unresolved = (episodes || []).filter((episode) =>
-    !state.manualCanonicalEpisodeMappings.has(normalizeText(episode.manual_episode_key))
-  );
+  const canonical = (episodes || []).filter(isManualEpisodeMappingResolved);
+  const unresolved = (episodes || []).filter((episode) => !isManualEpisodeMappingResolved(episode));
   if (unresolved.length) hydrateLocalEpisodeRatingState(podcastKey, unresolved);
   if (canonical.length) await fetchEpisodeRatingMetaForEpisodes(canonical, { force, update: false });
 }
@@ -13127,6 +13165,7 @@ function renderPodcastEpisodeOverviewRows(podcast) {
       const sourceScore = parseNumber(stat?.averageRating);
       const ratingCount = Number(stat?.ratingCount || 0);
       const editorialScore = parseNumber(episode.editorial_rating);
+      const ratingAvailable = isManualEpisodeRatingAvailable(episode);
       const title = episode.title || `Episode ${episodeNumber}`;
       const titleLengthClass = title.length > 115
         ? " episode-title--very-long"
@@ -13160,14 +13199,15 @@ function renderPodcastEpisodeOverviewRows(podcast) {
           </td>
           <td data-label="Din vurdering">
             <button
-              class="podcast-detail-sheet__episode-own-score${userRating === null ? " is-empty" : ""}"
+              class="podcast-detail-sheet__episode-own-score${userRating === null ? " is-empty" : ""}${ratingAvailable ? "" : " is-mapping-pending"}"
               type="button"
               data-episode-overview-rating-id="${escapeHtml(episodeId)}"
+              ${ratingAvailable ? "" : "disabled aria-disabled=\"true\" title=\"Vurdering bliver tilgængelig, når episodeidentiteten er godkendt og importeret.\""}
               aria-label="${userRating === null ? "Vurder" : "Rediger vurderingen af"} ${escapeHtml(
                 episode.title || `episode ${episodeNumber}`
               )}"
             >
-              <strong>${formatEpisodeOverviewOwnScore(userRating)}</strong>
+              <strong>${ratingAvailable ? formatEpisodeOverviewOwnScore(userRating) : "Afventer import"}</strong>
             </button>
           </td>
         </tr>

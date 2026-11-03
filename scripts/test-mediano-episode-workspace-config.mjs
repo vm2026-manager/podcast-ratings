@@ -143,7 +143,7 @@ const renderEpisodeRows = new Function(
   "getPodcastEpisodeState", "getEpisodePodcastConfig", "getEpisodeWorkspaceEpisodes", "getEpisodeKey",
   "getAppleSeasonEpisodeNumber", "formatEpisodeDate", "getEpisodeStat", "getEpisodeUserRating",
   "parseNumber", "escapeHtml", "formatEpisodeOverviewScore", "formatUserRatingCount",
-  "formatCompactRating", "formatEpisodeOverviewOwnScore", "getOfficialMedianoEpisodeSourceUrl",
+  "formatCompactRating", "formatEpisodeOverviewOwnScore", "getOfficialMedianoEpisodeSourceUrl", "isManualEpisodeRatingAvailable",
   `${app.slice(renderStart, renderEnd)}\nreturn renderPodcastEpisodeOverviewRows;`
 )(
   () => episodeState,
@@ -169,7 +169,8 @@ const renderEpisodeRows = new Function(
     } catch {
       return "";
     }
-  }
+  },
+  () => true
 );
 const renderedRows = renderEpisodeRows(stotRows[0]);
 assert.equal((renderedRows.match(/<tr class=/g) || []).length, 4, "all four canonical episodes render");

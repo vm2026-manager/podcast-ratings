@@ -1,8 +1,12 @@
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import vm from "node:vm";
+import { chromium } from "playwright";
 
 const app = await readFile(new URL("../app.js", import.meta.url), "utf8");
+const css = await readFile(new URL("../style.css", import.meta.url), "utf8");
+const desktopCss = await readFile(new URL("../desktop-episode-workspace.css", import.meta.url), "utf8");
+const mobileCss = await readFile(new URL("../mobile-episode-expansion.css", import.meta.url), "utf8");
 const gate = await readFile(new URL("./critical-regression-gate.mjs", import.meta.url), "utf8");
 const startOf = (marker) => app.indexOf(marker);
 const section = (start, end) => {
@@ -169,18 +173,22 @@ const renderPodcastEpisodeOverviewRows = new Function(
   "getPodcastEpisodeState", "getEpisodePodcastConfig", "getEpisodeWorkspaceEpisodes", "getEpisodeKey",
   "getAppleSeasonEpisodeNumber", "formatEpisodeDate", "getEpisodeStat", "getEpisodeUserRating",
   "parseNumber", "escapeHtml", "formatEpisodeOverviewScore", "formatUserRatingCount", "EPISODE_WORKSPACE_PAGE_SIZE",
-  "formatCompactRating", "formatEpisodeOverviewOwnScore", "getOfficialMedianoEpisodeSourceUrl",
+  "formatCompactRating", "formatEpisodeOverviewOwnScore", "getOfficialMedianoEpisodeSourceUrl", "isManualEpisodeRatingAvailable",
   `${rowRenderer}\nreturn renderPodcastEpisodeOverviewRows;`
 )(
   () => ({ items: manualEpisodes }), () => ({ dataSource: "supabase" }), () => manualEpisodes,
   (episode) => episode.id, () => null, (value) => value, () => null, () => null,
   context.parseNumber, context.escapeHtml, context.formatEpisodeOverviewScore,
   context.formatUserRatingCount, 100, context.formatCompactRating, context.formatEpisodeOverviewOwnScore,
-  context.getOfficialMedianoEpisodeSourceUrl
+  context.getOfficialMedianoEpisodeSourceUrl, (episode) => episode.id === "283fbea9-a29c-5104-803a-f39f2bb8b312"
 );
 const rendered = renderPodcastEpisodeOverviewRows({ "Podcast-ID": "der var engang et mal" });
 assert.equal((rendered.match(/data-episode-overview-rating-id=/gu) || []).length, 5,
   "all five episodes have individual rating controls");
+assert.equal((rendered.match(/disabled aria-disabled="true"/gu) || []).length, 4,
+  "the four new episodes visibly disable rating while their canonical mappings are absent");
+assert.equal((rendered.match(/Afventer import/gu) || []).length, 4,
+  "the unavailable rating controls explain that import is pending");
 assert.equal((rendered.match(/class="podcast-detail-sheet__episode-source"/gu) || []).length, 4,
   "official source links appear for the four new episodes only");
 for (const title of expectedTitles) assert.ok(rendered.includes(title), `episode is rendered: ${title}`);
@@ -197,4 +205,44 @@ const matchingIniesta = manualEpisodes.filter((episode) =>
 );
 assert.equal(matchingIniesta.length, 1, "the individual episode title is searchable");
 
-console.log(JSON.stringify({ status: "PASS", verifiedEpisodes: 5, officialSourceLinks: 4, ratingsCreated: 0 }, null, 2));
+const browser = await chromium.launch({ headless: true });
+try {
+  for (const width of [320, 375, 390, 1440]) {
+    const mobile = width < 768;
+    const page = await browser.newPage({ viewport: { width, height: 760 }, isMobile: mobile, hasTouch: mobile });
+    await page.setContent(`<!doctype html><html lang="da"><head><meta name="viewport" content="width=device-width,initial-scale=1"><style>${css}\n${desktopCss}\n${mobileCss}
+      html,body{margin:0;max-width:100%;overflow-x:hidden}.fixture{height:90vh;overflow:auto}.fixture table{width:100%;table-layout:fixed}.fixture td{overflow-wrap:anywhere}
+      </style></head><body><main class="fixture"><table class="podcast-detail-sheet__episode-table podcast-detail-sheet__episode-table--publication-date"><thead><tr><th>Udgivelsesdato</th><th>Episode</th><th>Brugere</th><th>Din vurdering</th></tr></thead><tbody>${rendered}</tbody></table><dialog id="rating"><p>Rating</p></dialog></main><script>
+        let activationCount=0;
+        document.querySelectorAll('[data-episode-overview-rating-id]').forEach(button=>button.addEventListener('click',()=>{activationCount++;document.querySelector('#rating').showModal()}));
+        window.activationCount=()=>activationCount;
+      </script></body></html>`);
+    assert.equal(await page.locator("html").evaluate((node) => node.scrollWidth), width, `${width}px has no horizontal overflow`);
+    assert.equal(await page.locator("[data-episode-overview-rating-id]:disabled").count(), 4, `${width}px disables the four unmapped ratings`);
+    assert.equal(await page.locator("a.podcast-detail-sheet__episode-source").count(), 4, `${width}px retains all verified source links`);
+    assert.ok(await page.locator(".fixture").evaluate((node) => node.scrollHeight >= node.clientHeight), `${width}px episode content can scroll`);
+    const unavailable = page.locator(`[data-episode-overview-rating-id="${manualEpisodes[0].id}"]`);
+    await unavailable.focus();
+    assert.notEqual(await page.evaluate(() => document.activeElement?.dataset?.episodeOverviewRatingId), manualEpisodes[0].id,
+      `${width}px keyboard focus skips disabled rating control`);
+    if (mobile) {
+      await unavailable.scrollIntoViewIfNeeded();
+      const box = await unavailable.boundingBox();
+      await page.touchscreen.tap(box.x + box.width / 2, box.y + box.height / 2);
+    } else await unavailable.click({ force: true });
+    assert.equal(await page.evaluate(() => window.activationCount()), 0, `${width}px click/touch cannot activate a disabled rating`);
+    assert.equal(await page.locator("#rating").evaluate((node) => node.open), false, `${width}px unavailable rating never opens`);
+    const available = page.locator(`[data-episode-overview-rating-id="${manualEpisodes[2].id}"]`);
+    await available.focus();
+    assert.equal(await page.evaluate(() => document.activeElement?.dataset?.episodeOverviewRatingId), manualEpisodes[2].id,
+      `${width}px existing Peter rating remains keyboard accessible`);
+    await page.keyboard.press("Enter");
+    assert.equal(await page.evaluate(() => window.activationCount()), 1, `${width}px keyboard activation works for mapped episode`);
+    assert.equal(await page.locator("#rating").evaluate((node) => node.open), true, `${width}px mapped rating opens normally`);
+    await page.close();
+  }
+} finally {
+  await browser.close();
+}
+
+console.log(JSON.stringify({ status: "PASS", verifiedEpisodes: 5, officialSourceLinks: 4, browserWidths: [320, 375, 390, 1440], ratingsCreated: 0 }, null, 2));

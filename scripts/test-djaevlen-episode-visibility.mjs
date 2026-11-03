@@ -168,12 +168,12 @@ const renderRows = new Function(
   "getPodcastEpisodeState", "getEpisodePodcastConfig", "getEpisodeWorkspaceEpisodes", "getEpisodeKey",
   "getAppleSeasonEpisodeNumber", "formatEpisodeDate", "getEpisodeStat", "getEpisodeUserRating", "parseNumber",
   "escapeHtml", "formatEpisodeOverviewScore", "formatUserRatingCount", "formatCompactRating", "formatEpisodeOverviewOwnScore",
-  "getOfficialMedianoEpisodeSourceUrl",
+  "getOfficialMedianoEpisodeSourceUrl", "isManualEpisodeRatingAvailable",
   `${app.slice(renderRowsStart, renderRowsEnd)}\nreturn renderPodcastEpisodeOverviewRows;`
 )(getPodcastEpisodeState, getConfig, () => episodeState.items, (episode) => episode.id, () => null, () => "",
   () => null, () => null, Number, (value) => String(value ?? "").replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll('"', "&quot;"),
   (value) => `${value ?? "—"} <small>/10</small>`, () => "", String, (value) => value === null ? "Vurder" : `${value} <small>/10</small>`,
-  () => "");
+  () => "", () => true);
 const rows = renderRows(isdalen);
 assert.equal((rows.match(/<tr class=/g) || []).length, 2, "both verified episodes have stable rating rows");
 assert.equal((rows.match(/data-episode-overview-rating-id=/g) || []).length, 2, "both episodes expose rating controls");

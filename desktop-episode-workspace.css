@@ -14,6 +14,11 @@
   border-radius: 2px;
 }
 
+.podcast-detail-sheet__episode-own-score.is-mapping-pending {
+  cursor: not-allowed;
+  opacity: .62;
+}
+
 @media (min-width: 1100px) {
   html body #podcastDetailSheet.is-episode-workspace .podcast-detail-sheet__season-table col.season-column-title { width: 46% !important; }
   html body #podcastDetailSheet.is-episode-workspace .podcast-detail-sheet__season-table col.season-column-editorial { width: 16% !important; }
