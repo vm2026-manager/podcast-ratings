@@ -714,7 +714,7 @@ const AUTH_PERSISTENCE_STORAGE_KEY = "podcast-ratings-auth-persistence";
 const PROFILE_PREFERENCES_STORAGE_KEY = "podcast-ratings-profile-preferences";
 const EXPLORE_PERSONAL_SEED_HISTORY_STORAGE_KEY =
   "podcast-ratings-explore-personal-seed-history-v1";
-const UDFORSK_RECOMMENDATION_VERSION = 7;
+const UDFORSK_RECOMMENDATION_VERSION = 8;
 const EXPLORE_PERSONAL_SNAPSHOT_STORAGE_KEY =
   "podcast-ratings-explore-personal-snapshots-v2";
 const EXPLORE_PERSONAL_MINIMUM_GROUP_SIZE = 3;
@@ -1366,10 +1366,13 @@ function getComparableHostParts(value) {
 
   return Array.from(
     new Set(
-      [comparable]
-        .concat(comparable.split(/\s+(?:og|med)\s+|[,/;|]+/))
+      comparable
+        .split(/\s+(?:og|med)\s+|[,/;|]+/)
         .map((part) => part.trim())
-        .filter((part) => part.length >= 4)
+        .filter((part) => {
+          const nameParts = part.split(/\s+/).filter(Boolean);
+          return nameParts.length >= 2 && nameParts.every((namePart) => namePart.length >= 2);
+        })
     )
   );
 }
@@ -1381,19 +1384,9 @@ function hostsMatchComparable(left, right) {
   if (!leftComparable || !rightComparable) return false;
   if (leftComparable === rightComparable) return true;
 
-  const shortest = leftComparable.length < rightComparable.length ? leftComparable : rightComparable;
-  const longest = leftComparable.length < rightComparable.length ? rightComparable : leftComparable;
-
-  if (shortest.length >= 6 && longest.includes(shortest)) return true;
-
-  return getComparableHostParts(leftComparable).some((leftPart) =>
-    getComparableHostParts(rightComparable).some(
-      (rightPart) =>
-        leftPart === rightPart ||
-        (leftPart.length >= 6 && rightPart.includes(leftPart)) ||
-        (rightPart.length >= 6 && leftPart.includes(rightPart))
-    )
-  );
+  const leftHosts = getComparableHostParts(leftComparable);
+  const rightHosts = new Set(getComparableHostParts(rightComparable));
+  return leftHosts.some((host) => rightHosts.has(host));
 }
 
 function normalizeMatchKey(value) {
