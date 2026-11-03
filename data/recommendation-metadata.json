@@ -53,7 +53,7 @@
     "canonicalTopicsAtLeastThree": 369,
     "canonicalTopicsAtLeastFive": 163,
     "canonicalTopicsAtLeastTen": 52,
-    "possibleStandaloneRows": 340,
+    "possibleStandaloneRows": 341,
     "topicKeyCollisions": 0,
     "uniqueExistingIds": 1336,
     "duplicateStableIdValues": 8,
