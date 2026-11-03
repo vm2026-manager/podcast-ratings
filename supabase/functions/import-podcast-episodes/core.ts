@@ -467,6 +467,21 @@ export function parseFeed(xml: string) {
   };
 }
 
+export function validateExpectedRssIdentity(feed: ReturnType<typeof parseFeed>, config: FeedConfig): void {
+  if (config.expected_rss_channel_title && feed.channel.title !== config.expected_rss_channel_title) {
+    throw new Error(`RSS channel identity mismatch: expected ${config.expected_rss_channel_title}`);
+  }
+  if (config.expected_external_guid_prefix) {
+    const suffixPattern = /^\d+$/;
+    const invalid = feed.items.find((item) => {
+      const guid = normalizeText(item.guid);
+      return !guid.startsWith(config.expected_external_guid_prefix!) ||
+        !suffixPattern.test(guid.slice(config.expected_external_guid_prefix!.length));
+    });
+    if (invalid) throw new Error("RSS external GUID identity mismatch");
+  }
+}
+
 export type Radio4Episode = {
   id?: unknown;
   title?: unknown;
@@ -1003,7 +1018,9 @@ export async function runEpisodeImport(options: {
       } else if (config.format === "dr_lyd_next_data") {
         mapped = mapDrLydEpisodes(parseDrLydEpisodes(content), config, now());
       } else {
-        mapped = mapEpisodes(parseFeed(content), config, now());
+        const feed = parseFeed(content);
+        validateExpectedRssIdentity(feed, config);
+        mapped = mapEpisodes(feed, config, now());
       }
     }
     if (config.manual_identity_links) {

@@ -53,6 +53,11 @@ export type FeedConfig = {
   // Canonical public show URL used to build the episode page URL. This must be
   // configured per show; adapters must not infer a show slug from a title.
   podimo_show_url?: string;
+  // Optional exact identity pins for single-show RSS sources.
+  expected_rss_channel_title?: string;
+  expected_external_guid_prefix?: string;
+  // A reviewed code-owned source can supersede a stale provider locator in the Sheet.
+  supersedes_sheet_feed?: boolean;
   owned_podcast_keys?: string[];
   routes?: FeedRoute[];
   metadata_only?: boolean;
@@ -323,6 +328,17 @@ export const FEED_CONFIGS: FeedConfigMap = {
     podcast_key: "marcus og realitypanelet",
     source: "spreaker_marcus_og_realitypanelet_rss",
     feed_url: "https://www.spreaker.com/show/5669466/episodes/feed"
+  },
+
+  "se_og_hor_lige_her": {
+    podcast_key: "se og hor lige her",
+    source: "spreaker_se_og_hor_lige_her_rss",
+    feed_url: "https://www.spreaker.com/show/7077680/episodes/feed",
+    format: "rss",
+    enabled: true,
+    expected_rss_channel_title: "SE og HØR Lige Her",
+    expected_external_guid_prefix: "https://api.spreaker.com/episode/",
+    supersedes_sheet_feed: true
   },
 
   "borgerlig_tabloid": {

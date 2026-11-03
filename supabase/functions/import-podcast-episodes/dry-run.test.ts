@@ -23,7 +23,7 @@ Deno.test("Apple dry run remains read-only and returns its established diagnosti
 
 Deno.test("dry runs remain single-feed and retain bearer authentication", async () => {
   assertEquals(dryRunConfigError("all", FEED_CONFIGS.podimo_grebet_af_gvfb), "Dry run requires a single feed");
-  assertEquals(dryRunConfigError("missing", undefined), "Dry run is available only for Apple Podcasts HTML and Podimo feeds");
+  assertEquals(dryRunConfigError("missing", undefined), "Dry run is available only for Apple Podcasts HTML, Podimo, and RSS feeds");
   const response = await validateImportRequest(new Request("https://example.test", {
     method: "POST", headers: { authorization: "Bearer test-secret" }, body: JSON.stringify({ feed: "podimo_livet_ifolge_emil_og_thomas", dry_run: true })
   }), "test-secret");

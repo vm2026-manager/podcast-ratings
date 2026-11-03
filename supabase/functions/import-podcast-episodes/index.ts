@@ -1,6 +1,6 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.4";
 import { jsonResponse, runEpisodeImport, runEpisodeImports, safeErrorMessage, selectAppleFeedKeys, selectNormalFeedKeys, selectNormalFeedShard, validateImportRequest } from "./core.ts";
-import { dryRunConfigError, runAppleDryRun, runPodimoDryRun } from "./dry-run.ts";
+import { dryRunConfigError, runAppleDryRun, runPodimoDryRun, runRssDryRun } from "./dry-run.ts";
 import { createSupabaseImportRepository } from "./repository.ts";
 import { loadRuntimeFeedConfigs } from "./runtime-feed-config.ts";
 
@@ -20,7 +20,9 @@ Deno.serve(async (request) => {
       const config = runtimeFeeds.configs[validation.feed];
       const dryRunError = dryRunConfigError(validation.feed, config);
       if (dryRunError || !config) return jsonResponse({ status: "failed", error: dryRunError || "Unknown feed config" }, 400);
-      const result = config.format === "podimo_graphql" ? await runPodimoDryRun({ config }) : await runAppleDryRun(config);
+      const result = config.format === "podimo_graphql"
+        ? await runPodimoDryRun({ config })
+        : config.format === "rss" ? await runRssDryRun(config) : await runAppleDryRun(config);
       return jsonResponse({ ...result, feed_config_audit: runtimeFeeds.audit }, result.status === "partial" ? 207 : 200);
     }
     const client = createClient(env("SUPABASE_URL"), env("SUPABASE_SERVICE_ROLE_KEY"), {
