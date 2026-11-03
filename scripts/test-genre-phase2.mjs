@@ -17,7 +17,7 @@ const appSource = await readFile(path.join(root, "app.js"), "utf8");
 const indexSource = await readFile(path.join(root, "index.html"), "utf8");
 const styleSource = await readFile(path.join(root, "style.css"), "utf8");
 assert.equal(catalogue.rows.length, catalogue.count, "The catalogue wrapper count matches its source rows");
-assert.match(indexSource, /app\.js\?v=20261102-ranking-search-synonyms-v1/u);
+assert.match(indexSource, /app\.js\?v=20261103-explore-host-identity-v1/u);
 assert.match(appSource, /const CANONICAL_GENRES = window\.PODCAST_CANONICAL_GENRES;/u);
 assert.match(indexSource, /canonical-genres\.js\?v=/u);
 assert.ok(indexSource.indexOf("canonical-genres.js") < indexSource.indexOf("app.js"), "shared genre definition loads before the app");
