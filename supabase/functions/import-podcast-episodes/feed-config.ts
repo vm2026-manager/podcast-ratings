@@ -2,6 +2,7 @@ import { MEDIANO_SITE_RSS_URL, PUBLIC_MEDIANO_RSS_URL, buildMedianoPublicFeedRou
 import { DJAEVLEN_FEED_KEY, DJAEVLEN_FEED_URL, DJAEVLEN_IMPORT_LABEL, DJAEVLEN_SOURCE } from "./djaevlen-routing.mjs";
 import { BAKSPEJL_FEED_KEY, BAKSPEJL_FEED_URL, BAKSPEJL_IMPORT_LABEL, BAKSPEJL_SOURCE } from "./bakspejl-routing.mjs";
 import { KROP_MANUAL_LINKS } from "./manual-podimo.ts";
+import { RADIO_IIII_FEED_KEY, RADIO_IIII_FEED_URL } from "./radio-iiii-routing.mjs";
 
 export type FeedFormat = "rss" | "radio4_json" | "dr_lyd_next_data" | "apple_podcasts_html" | "podimo_graphql";
 
@@ -80,6 +81,7 @@ export type FeedConfigMap = Record<string, FeedConfig>;
 // and deduplicate by canonical episode_url rather than changing stored GUIDs.
 export const DJAEVLEN_LYD_FULL_FEED_KEY = "djaevlen_lyd_full";
 export const BAKSPEJL_LYD_FULL_FEED_KEY = "bakspejl_lyd_full";
+export { RADIO_IIII_FEED_KEY };
 
 export const FEED_CONFIGS: FeedConfigMap = {
   "podimo_krop_til_salg": {
@@ -191,6 +193,17 @@ export const FEED_CONFIGS: FeedConfigMap = {
     source: "radio4_det_vi_taler_om_rss",
     format: "radio4_json",
     feed_url: "https://radio4.dk/api/programs/1569c4cf-003d-492d-945b-b39800d86f5d/episodes?orderBy=published&order=desc&limit=25"
+  },
+
+  [RADIO_IIII_FEED_KEY]: {
+    // One official program API supplies every guest season. Runtime routes use
+    // exact GUIDs and are enabled only from the verified RADIO IIII catalogue.
+    podcast_key: "radio iii et kapitel for sig",
+    source: "radio_iiii_et_kapitel_for_sig_api",
+    format: "radio4_json",
+    feed_url: RADIO_IIII_FEED_URL,
+    routes: [],
+    enabled: false
   },
 
   "morkeland": {

@@ -4,6 +4,7 @@ import { fileURLToPath } from "node:url";
 import { parseSupplementarySimilarities } from "./manual-similarity-supplements.mjs";
 import { mergeAutoDiscoveredDjaevlenRows } from "./djaevlen-auto-discovery.mjs";
 import { mergeAutoDiscoveredBakspejlRows } from "./bakspejl-auto-discovery.mjs";
+import { mergeAutoDiscoveredRadioIIIIRows } from "./radio-iiii-auto-discovery.mjs";
 import { partitionSheetPodcastRows } from "./catalogue-intake.mjs";
 
 const SPREADSHEET_BASE_URL =
@@ -750,12 +751,23 @@ async function slimPodcastRows(rows, outputDirectory = "") {
     podcast.topics = parseTopics(getField(row, TOPIC_FIELDS));
     podcast.isEnglish = parseEnglishFlag(getField(row, ENGLISH_FIELDS), title);
     applyEditorialAccessMetadata(podcast, row, title);
-    const manualEpisodes = parseManualEpisodes(
-      getField(row, MANUAL_EPISODES_FIELDS),
-      getField(row, MANUAL_EPISODE_KEYS_FIELDS)
-    );
+    const manualEpisodes = Array.isArray(row.manualEpisodes)
+      ? row.manualEpisodes.map((episode) => typeof episode === "object" ? structuredClone(episode) : normalizeText(episode)).filter(Boolean)
+      : parseManualEpisodes(
+        getField(row, MANUAL_EPISODES_FIELDS),
+        getField(row, MANUAL_EPISODE_KEYS_FIELDS)
+      );
     if (manualEpisodes.length) {
       podcast.manualEpisodes = manualEpisodes;
+    }
+    // Radio IIII umbrella routing needs the exact official episode GUIDs and
+    // season identity at runtime. These fields exist only on generated child
+    // candidates; owner-authored catalogue rows pass through unchanged.
+    if (Array.isArray(row.radioIIIIEpisodes) && row.radioIIIIReviewStatus) {
+      podcast.radioIIIISeason = Number(row.radioIIIISeason);
+      podcast.radioIIIISeasonUrl = normalizeText(row.radioIIIISeasonUrl);
+      podcast.radioIIIIEpisodes = structuredClone(row.radioIIIIEpisodes);
+      podcast.radioIIIIReviewStatus = normalizeText(row.radioIIIIReviewStatus);
     }
     const supplementarySimilaritiesRaw = getField(row, [
       SUPPLEMENTARY_SIMILARITIES_HEADER
@@ -940,7 +952,11 @@ async function main() {
   // editorially, while a previously allocated auto identity is never discarded.
   const registry = JSON.parse(await readFile(path.join(repoRoot, "data", "auto-discovered-djaevlen.json"), "utf8"));
   const bakspejlRegistry = JSON.parse(await readFile(path.join(repoRoot, "data", "auto-discovered-bakspejl.json"), "utf8"));
-  const mergedCatalogueRows = mergeAutoDiscoveredBakspejlRows(mergeAutoDiscoveredDjaevlenRows(identitySafeSheetRows, registry), bakspejlRegistry);
+  const radioIIIIRegistry = JSON.parse(await readFile(path.join(repoRoot, "data", "auto-discovered-radio-iiii.json"), "utf8"));
+  const mergedCatalogueRows = mergeAutoDiscoveredRadioIIIIRows(
+    mergeAutoDiscoveredBakspejlRows(mergeAutoDiscoveredDjaevlenRows(identitySafeSheetRows, registry), bakspejlRegistry),
+    radioIIIIRegistry
+  );
   const catalogueRows = preserveCatalogueIdsByPodcastId(mergedCatalogueRows, previousCatalogue.rows).map((row) => row.catalogue_id ? row : {
     ...row,
     catalogue_id: createCatalogueId({ title: row.Titel, host: row["Vært"], publisher: row.Udgiver, link: row.Link, feed: row.Feed })
