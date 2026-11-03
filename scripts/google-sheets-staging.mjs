@@ -293,6 +293,22 @@ export class StagingSheetsApiClient {
     });
   }
 
+  async writeRowsAt(startRow, rows) {
+    if (!Number.isInteger(startRow) || startRow < 2 || !Array.isArray(rows) || !rows.length ||
+        rows.some((row) => !Array.isArray(row) || row.length !== this.headers.length)) {
+      throw new Error("Invalid explicit staging write range");
+    }
+    const lastRow = startRow + rows.length - 1;
+    const lastColumn = this.headers.length <= 26 ? String.fromCharCode(64 + this.headers.length) :
+      `${String.fromCharCode(64 + Math.floor((this.headers.length - 1) / 26))}${String.fromCharCode(65 + ((this.headers.length - 1) % 26))}`;
+    const range = encodeURIComponent(`'${this.tab.replace(/'/gu, "''")}'!A${startRow}:${lastColumn}${lastRow}`);
+    const url = `https://sheets.googleapis.com/v4/spreadsheets/${this.spreadsheetId}/values/${range}?valueInputOption=RAW`;
+    return this.request(url, {
+      method: "PUT", headers: { "content-type": "application/json" },
+      body: JSON.stringify({ majorDimension: "ROWS", values: rows })
+    });
+  }
+
   async updateHostCells(updates) {
     if (!Array.isArray(updates) || updates.some(({ rowNumber, host }) => !Number.isInteger(rowNumber) || rowNumber < 2 || !normal(host))) {
       throw new Error("Invalid DR staging host-cell update plan");
@@ -365,10 +381,13 @@ export async function appendRadioIIIIToStaging({ client, candidates, dryRun = tr
   const initial = await client.readSheet();
   const plan = buildRadioIIIIStagingPlan({ headers: initial.headers, existingRows: initial.rows, candidates });
   if (dryRun || !plan.append.length) return { dryRun, appended: 0, alreadyPresent: plan.alreadyPresent };
+  if (typeof client.writeRowsAt !== "function") throw new Error("RADIO IIII staging requires explicit-coordinate writes");
+  const lastPopulatedIndex = (initial.rows || []).findLastIndex((row) => (row || []).some((cell) => normal(cell)));
+  const startRow = lastPopulatedIndex + 3;
   const normalizeRows = (rows) => (rows || []).map((row) =>
     Array.from({ length: RADIO_IIII_STAGING_HEADERS.length }, (_, index) => normal(row?.[index])));
   try {
-    await client.appendRows(plan.append);
+    await client.writeRowsAt(startRow, plan.append);
   } catch (appendError) {
     const reread = await client.readSheet();
     buildRadioIIIIStagingPlan({ headers: reread.headers, existingRows: reread.rows, candidates: [] });
