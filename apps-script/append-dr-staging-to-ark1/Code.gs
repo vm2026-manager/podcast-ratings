@@ -23,6 +23,26 @@ var VERIFIED_LEGACY_DR_IDENTITIES_ = {
     sourceUrl: "https://www.dr.dk/lyd/special-radio/djaevlen-i-detaljen/djaevlen-i-detaljen-2026/draeberurten-16122692641"
   }
 };
+var VERIFIED_DR_HOST_CREDITS_ = {
+  "bakspejl-auto-v1-4962cdc5": {
+    sourceGuid: "11162611015",
+    sourceUrl: "https://www.dr.dk/lyd/special-radio/bakspejl/bakspejl-2026/den-spanske-borgerkrig-1-3-11162611015",
+    host: "Celine Klint",
+    credit: "Tilrettelæggelse, vært og lyddesign: Celine Klint"
+  },
+  "dræberurten": {
+    sourceGuid: "16122692641",
+    sourceUrl: "https://www.dr.dk/lyd/special-radio/djaevlen-i-detaljen/djaevlen-i-detaljen-2026/draeberurten-16122692641",
+    host: "Per Lysholt",
+    credit: "Vært: Per Lysholt."
+  },
+  "djaevlen-auto-v1-1139735b": {
+    sourceGuid: "16122692642",
+    sourceUrl: "https://www.dr.dk/lyd/special-radio/djaevlen-i-detaljen/djaevlen-i-detaljen-2026/kvinden-i-isdalen-1-5-et-braendt-lig-16122692642",
+    host: "Per Lysholt",
+    credit: "Vært: Per Lysholt."
+  }
+};
 
 function onOpen() {
   SpreadsheetApp.getUi().createMenu("DR staging")
@@ -63,6 +83,7 @@ function reviewAndAppendDrStagingRows() {
       "Gennemgå DR-kilde før append",
       "Podcast-ID: " + c.id + "\nTitel: " + c.title + "\nHovedserie: " + c.series +
         "\nVært: " + (c.host || "Ikke verificeret") +
+        "\nVærtskreditering: " + (c.hostCredit || "Ingen eksplicit værtskreditering fundet") +
         "\nGenre: " + c.genre + "\n2. genre: " + c.secondaryGenre + "\nEmner: " + c.topics +
         "\nSupplerende ligheder: " + c.similarities + "\nKilde: " + c.sourceUrl +
         "\n\nKort beskrivelse:\n" + c.shortDescription + "\n\nLang beskrivelse:\n" + c.longDescription +
@@ -165,7 +186,13 @@ function validateStagingCandidate_(row, formulas) {
   if (!shortDescription || !longDescription || !genre || !topics) {
     throw new Error("Kort/lang beskrivelse, verificeret genre og emner skal være udfyldt før ejerens godkendelse.");
   }
-  if (host && (!sourceHost || sourceHost !== host)) throw new Error("Vært mangler eksplicit, matchende DR-værtskreditering.");
+  var verifiedHostCredit = VERIFIED_DR_HOST_CREDITS_[id];
+  var exactHostProof = verifiedHostCredit && verifiedHostCredit.sourceGuid === sourceGuid &&
+    verifiedHostCredit.sourceUrl === sourceUrl && verifiedHostCredit.host === host;
+  var hasHostLabel = /\bvært\b[^:;.!?]{0,60}:/iu.test(sourceDescription);
+  if (host && (sourceHost && sourceHost !== host || (!sourceHost && (hasHostLabel || !exactHostProof)))) {
+    throw new Error("Vært mangler eksplicit, matchende DR-værtskreditering.");
+  }
   if (["Vuring (1-10)", "Antal afsnit", "Årstal afspillet", "Afgivet vurdering", "Episoder", "Feed", "Undervurderet perle"]
     .some(function (header) { return get(header) !== ""; })) throw new Error("Staging må ikke autoudfylde episoder, vurdering eller historik.");
   row.slice(0, HEADERS_.length).concat([sourceDescription]).forEach(function (value) {
@@ -175,7 +202,8 @@ function validateStagingCandidate_(row, formulas) {
     id: id, title: title, series: series, sourceUrl: sourceUrl,
     sourceDescription: sourceDescription, shortDescription: shortDescription,
     longDescription: longDescription, genre: genre, secondaryGenre: secondaryGenre,
-    topics: topics, similarities: similarities, host: host
+    topics: topics, similarities: similarities, host: host,
+    hostCredit: sourceHost ? "Vært: " + sourceHost : exactHostProof ? verifiedHostCredit.credit : ""
   };
 }
 

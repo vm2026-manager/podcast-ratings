@@ -249,6 +249,22 @@ function makeAppsScriptHarness({
 }
 
 const stageRows = [STAGING_HEADERS, ...candidates.map((candidate) => buildStagingPlan({ headers: STAGING_HEADERS, existingRows: [], candidates: [candidate] }).append[0])];
+const stagedIsdalenId = "djaevlen-auto-v1-1139735b";
+const existingIsdalenWithoutInlineCredit = [...stageRows[1]];
+existingIsdalenWithoutInlineCredit[STAGING_HEADERS.indexOf("DR source description")] = existingIsdalenWithoutInlineCredit[STAGING_HEADERS.indexOf("DR source description")].replace(" Vært: Per Lysholt.", "");
+const exactSourceGate = makeAppsScriptHarness({
+  stagingRows: [STAGING_HEADERS, existingIsdalenWithoutInlineCredit], promptText: `APPEND ${stagedIsdalenId}`
+});
+exactSourceGate.context.reviewAndAppendDrStagingRows();
+assert.equal(exactSourceGate.originalData.length, 2, "the curated host credit remains verifiable from the exact ID, GUID and URL even when an existing staging source-description cell is unchanged");
+assert.equal(exactSourceGate.originalData[1][CATALOGUE_HEADERS.indexOf("Vært")], "Per Lysholt");
+const conflictingExactSource = [...existingIsdalenWithoutInlineCredit];
+conflictingExactSource[STAGING_HEADERS.indexOf("DR source description")] += " Vært: Martin Grønne.";
+const conflictingExactGate = makeAppsScriptHarness({
+  stagingRows: [STAGING_HEADERS, conflictingExactSource], promptText: `APPEND ${stagedIsdalenId}`
+});
+assert.throws(() => conflictingExactGate.context.reviewAndAppendDrStagingRows(), /matchende DR-værtskreditering/u);
+assert.equal(conflictingExactGate.originalData.length, 1, "an exact-source whitelist does not override conflicting explicit credit text");
 const idIndex = CATALOGUE_HEADERS.indexOf("Podcast-ID");
 const existingEditorial = Array(CATALOGUE_HEADERS.length).fill("");
 existingEditorial[CATALOGUE_HEADERS.indexOf("Titel")] = "Existing podcast";
