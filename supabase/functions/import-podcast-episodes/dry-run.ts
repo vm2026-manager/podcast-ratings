@@ -1,15 +1,50 @@
 import { mapApplePodcastHtmlEpisodes } from "./apple-podcasts.ts";
-import { fetchFeedText, fetchPodimoEpisodes, mapPodimoEpisodes, parsePodimoEpisodes, routeEpisodes } from "./core.ts";
+import { fetchFeedText, fetchPodimoEpisodes, mapEpisodes, mapPodimoEpisodes, parseFeed, parsePodimoEpisodes, routeEpisodes, validateExpectedRssIdentity } from "./core.ts";
 import type { FeedConfig } from "./feed-config.ts";
 
 const SAMPLE_SIZE = 5;
 
 export function dryRunConfigError(feedKey: string, config: FeedConfig | undefined): string | null {
   if (feedKey === "all" || feedKey === "apple_all") return "Dry run requires a single feed";
-  if (!config || (config.format !== "apple_podcasts_html" && config.format !== "podimo_graphql")) {
-    return "Dry run is available only for Apple Podcasts HTML and Podimo feeds";
+  if (!config || (config.format !== "apple_podcasts_html" && config.format !== "podimo_graphql" && config.format !== "rss")) {
+    return "Dry run is available only for Apple Podcasts HTML, Podimo, and RSS feeds";
   }
   return null;
+}
+
+export async function runRssDryRun(
+  config: FeedConfig,
+  fetchText: (url: string) => Promise<string> = fetchFeedText,
+  now = new Date().toISOString()
+) {
+  const feed = parseFeed(await fetchText(config.feed_url));
+  validateExpectedRssIdentity(feed, config);
+  const mapped = mapEpisodes(feed, config, now);
+  const dates = mapped.episodes.map((episode) => episode.published_at).filter((date): date is string => Boolean(date)).sort();
+  const duplicateGuidCount = mapped.errors.filter((error) => (error.errors as string[] | undefined)?.includes("Duplicate GUID in feed")).length;
+  return {
+    status: mapped.errors.length || mapped.warnings.length ? "partial" : "success",
+    source: config.source,
+    podcast_key: config.podcast_key,
+    format: "rss",
+    channel_title: feed.channel.title,
+    fetched_count: mapped.fetched_count,
+    valid_count: mapped.episodes.length,
+    error_count: mapped.errors.length,
+    warning_count: mapped.warnings.length,
+    duplicate_guid_count: duplicateGuidCount,
+    earliest_published_at: dates[0] || null,
+    latest_published_at: dates.at(-1) || null,
+    errors: mapped.errors,
+    warnings: mapped.warnings,
+    episodes: mapped.episodes.map((episode) => ({
+      external_guid: episode.external_guid,
+      title: episode.title,
+      published_at: episode.published_at,
+      episode_url: episode.episode_url,
+      audio_url: episode.audio_url
+    }))
+  };
 }
 
 function sampleEpisodes(episodes: Awaited<ReturnType<typeof mapPodimoEpisodes>>["episodes"]) {

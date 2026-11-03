@@ -37,13 +37,15 @@ export function checkEpisodeFeedCoverage(payload, staticConfigs = FEED_CONFIGS) 
     const enabled = owners.filter(config => config.enabled !== false && config.metadata_only !== true);
     const podimo = parsePodimoShowFeed(feed);
     if (podimo) {
+      const reviewedRssOverride = enabled.some(config => config.supersedes_sheet_feed === true &&
+        config.format === "rss" && config.expected_rss_channel_title && config.expected_external_guid_prefix);
       const showId = podimo.showId;
       const podimoAdapters = enabled.filter(config => config.format === "podimo_graphql");
       if (podimoAdapters.length && !podimoAdapters.some(config => String(config.podcast_id || "").toLowerCase() === showId)) {
         findings.push({ podcast_key: podcastKey, title, cause: "podimo_show_id_mismatch" });
         continue;
       }
-      if (!podimoAdapters.length) {
+      if (!podimoAdapters.length && !reviewedRssOverride) {
         findings.push({ podcast_key: podcastKey, title, cause: "podimo_adapter_review_required" });
         continue;
       }
