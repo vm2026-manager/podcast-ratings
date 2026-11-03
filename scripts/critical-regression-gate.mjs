@@ -29,6 +29,7 @@ const checks = [
   ["catalogue sheet fixture and staged asset isolation", ["scripts/test-catalogue-sync-fixtures.mjs"]],
   ["Joachim B. Olsen manual episode routing and Sheet-source idempotency", ["scripts/test-joachim-manual-episode-routing.mjs"]],
   ["RADIO IIII verified guest discovery and protected catalogue identities", ["scripts/test-radio-iiii-auto-discovery.mjs"]],
+  ["RADIO IIII original Ark1 owner append gate", ["scripts/test-radio-iiii-owner-gate.mjs"]],
   ["RADIO IIII exact episode routing and owner-review staging", ["--experimental-strip-types", "scripts/test-radio-iiii-staging-and-routing.mjs"]],
   ["RADIO IIII WIF staging and workflow isolation", ["scripts/test-radio-iiii-workflow-contract.mjs"]],
   ["Google Sheet source drift watcher", ["scripts/test-sheet-source-drift.mjs"]],

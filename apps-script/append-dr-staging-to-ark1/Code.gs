@@ -17,6 +17,47 @@ var HEADERS_ = [
 var STAGING_HEADERS_ = HEADERS_.concat([
   "DR source GUID", "DR source URL", "DR source description", "Review status"
 ]);
+var RADIO_IIII_TAB_NAME_ = "Radio IIII staging";
+var RADIO_IIII_HEADERS_ = HEADERS_.concat([
+  "Radio IIII source GUIDs", "Radio IIII source URL", "Radio IIII season URL",
+  "Radio IIII source description", "Review status"
+]);
+var RADIO_IIII_HOST_ = "Anne Sofie Kragh";
+var RADIO_IIII_PUBLISHER_ = "RADIO IIII";
+var RADIO_IIII_SERIES_ = "Et kapitel for sig";
+var RADIO_IIII_REVIEW_STATUS_ = "SOURCE_VERIFIED_REQUIRES_OWNER_APPROVAL";
+var RADIO_IIII_PROPOSED_GENRE_ = "Samfund";
+var RADIO_IIII_ACTIVE_GENRES_ = [
+  "True Crime", "Historie", "Krig", "Politik", "Finans", "Samfund",
+  "Sport", "Dokumentar", "Viden", "Underholdning", "Sladder"
+];
+var RADIO_IIII_BACKUP_MAX_AGE_MS_ = 15 * 60 * 1000;
+var RADIO_IIII_IDENTITIES_ = {
+  "radio-iiii-auto-v1-7f0dfeb9": {
+    title: "Mattias Tesfaye", seasonUrl: "https://radio4.dk/podcasts/et-kapitel-for-sig?season=67",
+    sourceUrl: "https://radio4.dk/podcasts/et-kapitel-for-sig/kapitel-1-jeg-har-trukket-nitten-1-4-mattias-tesfaye",
+    guids: ["ee1d7c4e-c4ae-4ee1-ac27-b4f0003df1fe", "80e2a0b9-c7ce-4acd-8c85-b4f0003f4df9", "ab7baa37-d346-409f-bbda-b4f1003defee", "2600844c-f0d1-482a-bd50-b4f2003b14ac", "943609db-6521-4214-895c-b4f3003b13c1"],
+    episodes: ["Prolog - Mattias Tesfaye", "Kapitel 1: “Jeg har trukket nitten” (1:4) – Mattias Tesfaye", "Kapitel 2: Forfalsker mors underskrift (2:4) – Mattias Tesfaye", "Kapitel 3: “Bange for det, der bor inde i mig” (3:4) – Mattias Tesfaye", "Kapitel 4: Klasseforræder? (4:4) - Mattias Tesfaye"]
+  },
+  "radio-iiii-auto-v1-915a06b7": {
+    title: "Birgithe Kosovic", seasonUrl: "https://radio4.dk/podcasts/et-kapitel-for-sig?season=66",
+    sourceUrl: "https://radio4.dk/podcasts/et-kapitel-for-sig/kapitel-1-som-en-tikkende-bombe-1-4-birgithe-kosovic",
+    guids: ["73ecb9b3-670e-4aba-853f-b4e9002ab92c", "32b3d843-1d9c-46b5-82a5-b4e9002c1840", "b65bda3b-b040-4031-bb28-b4ea002ab795", "b5dbcc87-ed84-4b30-ae69-b4eb006bdccb", "10db60d6-010b-43b9-ad77-b4ec002ab8de"],
+    episodes: ["Prolog - Birgithe Kosovic", "Kapitel 1: Som en tikkende bombe (1:4) - Birgithe Kosovic", "Kapitel 2: To ægtemænd i far-roller (2:4) - Birgithe Kosovic", "Kapitel 3: I gæld til den serbiske mafia (3:4) - Birgithe Kosovic", "Kapitel 4: Har jeg slået min far ihjel? (4:4) - Birgithe Kosovic"]
+  },
+  "radio-iiii-auto-v1-ad97bb06": {
+    title: "Ditlev Tamm", seasonUrl: "https://radio4.dk/podcasts/et-kapitel-for-sig?season=65",
+    sourceUrl: "https://radio4.dk/podcasts/et-kapitel-for-sig/kapitel-1-en-opv-kst-med-sn-vre-gr-nser-1-4-ditlev-tamm",
+    guids: ["80fb4638-3faf-4c3f-8cd7-b4db002ab35b", "83ab38ba-e17a-4f05-a1b1-b4db002c17cd", "04d93aa3-367e-4371-86fe-b4dc002ab7ed", "4ea0cf77-e409-44c2-852f-b4dd002ac1ae", "548966cb-1e58-445a-a98d-b4de002ab441"],
+    episodes: ["Prolog: Ditlev Tamm", "Kapitel 1: En opvækst med snævre grænser (1:4) - Ditlev Tamm", "Kapitel 2: Opgør med opgøret (2:4) - Ditlev Tamm", "Kapitel 3: Tomrum, depression og skilsmisse (3:4) - Ditlev Tamm", "Kapitel 4: Når Ditlev Tamm bliver til Patricia (4:4) - Ditlev Tamm"]
+  },
+  "radio-iiii-auto-v1-f143ebcd": {
+    title: "Sara Blædel", seasonUrl: "https://radio4.dk/podcasts/et-kapitel-for-sig?season=63",
+    sourceUrl: "https://radio4.dk/podcasts/et-kapitel-for-sig/kapitel-1-de-f-rste-fire-forhindringer-1-4",
+    guids: ["cdeeead3-767e-4e56-aa56-b4cd002ab8c7", "450bd9ac-b118-46e8-b74a-b4cd002c177c", "08b9caef-ce66-47cc-826f-b4ce002abb77", "db0827b3-a3d6-4ef7-841b-b4cf002abbcf", "5797a7c4-6b7d-4a45-99de-b4d0002ab775"],
+    episodes: ["Prolog: Sara Blædel", "Kapitel 1: De første fire forhindringer - Sara Blædel (1:4)", "Kapitel 2: En affære og en sen gave (2:4)", "Kapitel 3: Reddet af sit eget forlag og en lungebetændelse (3:4)", "Kapitel 4: Mord, der skaber ro i hovedet (4:4)"]
+  }
+};
 var VERIFIED_LEGACY_DR_IDENTITIES_ = {
   "dræberurten": {
     title: "Dræberurten", series: "Djævlen i detaljen", sourceGuid: "16122692641",
@@ -47,6 +88,9 @@ var VERIFIED_DR_HOST_CREDITS_ = {
 function onOpen() {
   SpreadsheetApp.getUi().createMenu("DR staging")
     .addItem("Gennemgå og tilføj verificerede serier", "reviewAndAppendDrStagingRows")
+    .addToUi();
+  SpreadsheetApp.getUi().createMenu(RADIO_IIII_TAB_NAME_)
+    .addItem("Gennemgå og tilføj verificeret gæsteserie", "reviewAndAppendRadioIIIIStagingRow")
     .addToUi();
 }
 
@@ -96,6 +140,262 @@ function reviewAndAppendDrStagingRows() {
     appended += 1;
   });
   ui.alert("Gennemgang afsluttet. Nye rækker tilføjet: " + appended + ". Eksisterende rækker blev ikke redigeret.");
+}
+
+function reviewAndAppendRadioIIIIStagingRow() {
+  var ui = SpreadsheetApp.getUi();
+  var context = assertOwnerConfiguration_();
+  assertRadioIIIIBackupFresh_(context);
+  var data = readRadioIIIIStaging_(context.stagingId);
+  var target = context.original.getSheetByName(TARGET_TAB_NAME_);
+  assertTargetSchema_(target);
+  var targetIndex = readRadioIIIIStillIdentityIndex_(target);
+  var candidates = validateRadioIIIIStagingRows_(data);
+  var appendable = [];
+  candidates.forEach(function (item) {
+    var existing = targetIndex.byId[item.candidate.id];
+    if (existing) {
+      assertRadioIIIIExistingIdentity_(existing, item.candidate);
+      return;
+    }
+    assertNoRadioIIIIIdentityCollision_(targetIndex.rows, item.candidate);
+    appendable.push(item);
+  });
+  if (!appendable.length) {
+    ui.alert("Ingen nye Radio IIII-rækker at gennemgå. Eksisterende Podcast-ID'er og rækker blev ikke ændret.");
+    return;
+  }
+
+  var choices = appendable.map(function (item) { return item.candidate.id + " — " + item.candidate.title; }).join("\n");
+  var selection = ui.prompt(
+    "Vælg én Radio IIII-gæsteserie",
+    "Gennemgå én kandidat ad gangen. Indtast præcist dens Podcast-ID:\n\n" + choices,
+    ui.ButtonSet.OK_CANCEL
+  );
+  if (selection.getSelectedButton() !== ui.Button.OK) return;
+  var selectedId = selection.getResponseText().trim();
+  var selected = appendable.find(function (item) { return item.candidate.id === selectedId; });
+  if (!selected) {
+    ui.alert("Podcast-ID matchede ikke en valideret Radio IIII-kandidat. Intet blev skrevet.");
+    return;
+  }
+
+  var c = selected.candidate;
+  var genreApproval = ui.prompt(
+    "Godkend aktiv genre for denne kandidat",
+    "Staging angiver genren Portræt, som ikke er en aktiv kataloggenre. Portræt ændres ikke i staging.\n" +
+      "Redaktionelt forslag til Ark1: " + RADIO_IIII_PROPOSED_GENRE_ + " (aktiv genre).\n\n" +
+      "Hvis du godkender dette genrevalg for " + c.title + ", skriv præcist GENRE " + RADIO_IIII_PROPOSED_GENRE_ + " " + c.id + ". Ellers vælg Annuller.",
+    ui.ButtonSet.OK_CANCEL
+  );
+  if (genreApproval.getSelectedButton() !== ui.Button.OK ||
+      genreApproval.getResponseText().trim() !== "GENRE " + RADIO_IIII_PROPOSED_GENRE_ + " " + c.id) {
+    ui.alert("Genrevalget blev ikke godkendt. Intet blev skrevet.");
+    return;
+  }
+
+  var approval = ui.prompt(
+    "Bekræft én Radio IIII-række",
+    "Kilde: " + c.sourceUrl + "\nSæson: " + c.seasonUrl + "\nOfficielt verificerede prolog-/kapitel-GUID'er: " + c.guids.join(", ") +
+      "\nProlog og kapitler i rækkefølge: " + c.episodes.join("; ") +
+      "\nVært: " + c.host + "\nUdgiver: " + c.publisher + "\nHovedserie: " + c.series +
+      "\nStaginggenre: Portræt\nGodkendt Ark1-genre: " + RADIO_IIII_PROPOSED_GENRE_ +
+      "\n\nVurderings- og historikfelter tilføjes tomme. Kontrollér kilden. Skriv præcist APPEND " + c.id + " for kun at tilføje denne nye række.",
+    ui.ButtonSet.OK_CANCEL
+  );
+  if (approval.getSelectedButton() !== ui.Button.OK || approval.getResponseText().trim() !== "APPEND " + c.id) {
+    ui.alert("Append blev ikke bekræftet. Intet blev skrevet.");
+    return;
+  }
+  appendOneRadioIIIIReviewedRow_(context, selected);
+  ui.alert("Radio IIII-rækken blev verificeret og tilføjet. Kør menuen igen med en ny, frisk backup før næste gæst.");
+}
+
+function readRadioIIIIStaging_(stagingId) {
+  var staging = SpreadsheetApp.openById(stagingId);
+  var tab = staging.getSheetByName(RADIO_IIII_TAB_NAME_);
+  if (!tab) throw new Error("Radio IIII staging-fanen mangler.");
+  var lastRow = Math.max(1, tab.getLastRow());
+  var range = tab.getRange(1, 1, lastRow, RADIO_IIII_HEADERS_.length);
+  var values = range.getValues();
+  var formulas = range.getFormulas();
+  if (!values.length || !sameArray_(values[0], RADIO_IIII_HEADERS_)) {
+    throw new Error("Radio IIII staging-header afviger i A:AJ; append stoppet.");
+  }
+  return { values: values, formulas: formulas };
+}
+
+function validateRadioIIIIStagingRows_(data) {
+  var idColumn = HEADERS_.indexOf("Podcast-ID");
+  var seenIds = {};
+  var seenGuids = {};
+  var candidates = [];
+  for (var rowIndex = 1; rowIndex < data.values.length; rowIndex += 1) {
+    var row = data.values[rowIndex];
+    var formulas = data.formulas[rowIndex] || [];
+    var id = String(row[idColumn] || "").normalize("NFC").trim();
+    if (!id) {
+      if (row.some(function (cell) { return String(cell || "").trim() !== ""; })) {
+        throw new Error("Radio IIII staging har en udfyldt række uden Podcast-ID.");
+      }
+      continue;
+    }
+    var candidate = validateRadioIIIIStagingCandidate_(row, formulas);
+    if (seenIds[candidate.id]) throw new Error("Radio IIII staging har dubleret Podcast-ID: " + candidate.id);
+    seenIds[candidate.id] = true;
+    candidate.guids.forEach(function (guid) {
+      if (seenGuids[guid] && seenGuids[guid] !== candidate.id) throw new Error("Radio IIII staging har overlappende episode-GUID'er.");
+      seenGuids[guid] = candidate.id;
+    });
+    candidates.push({ sourceRow: rowIndex + 1, row: row.slice(0, HEADERS_.length), candidate: candidate });
+  }
+  return candidates;
+}
+
+function validateRadioIIIIStagingCandidate_(row, formulas) {
+  if (formulas.some(function (formula) { return Boolean(formula); })) throw new Error("Formler i Radio IIII staging-rækken er ikke tilladt.");
+  var get = function (header) { return String(row[RADIO_IIII_HEADERS_.indexOf(header)] || "").normalize("NFC").trim(); };
+  var id = get("Podcast-ID");
+  var expected = RADIO_IIII_IDENTITIES_[id];
+  if (!expected || get("Titel") !== expected.title || get("Hovedserie") !== RADIO_IIII_SERIES_ ||
+      get("Vært") !== RADIO_IIII_HOST_ || get("Udgiver") !== RADIO_IIII_PUBLISHER_) {
+    throw new Error("Radio IIII Podcast-ID, titel, vært, udgiver eller hovedserie afviger fra den verificerede identitet.");
+  }
+  var sourceUrl = get("Radio IIII source URL");
+  var seasonUrl = get("Radio IIII season URL");
+  var sourceGuids = get("Radio IIII source GUIDs").split(";").map(function (guid) { return guid.trim(); }).filter(Boolean);
+  if (sourceUrl !== expected.sourceUrl || seasonUrl !== expected.seasonUrl ||
+      !/^https:\/\/radio4\.dk\/podcasts\/et-kapitel-for-sig\//u.test(sourceUrl) ||
+      !/^https:\/\/radio4\.dk\/podcasts\/et-kapitel-for-sig\?season=\d+$/u.test(seasonUrl) ||
+      sourceGuids.length !== 5 || new Set(sourceGuids).size !== 5 || !sameArray_(sourceGuids, expected.guids) ||
+      sourceGuids.some(function (guid) { return !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/iu.test(guid); }) ||
+      !get("Radio IIII source description") || get("Review status") !== RADIO_IIII_REVIEW_STATUS_) {
+    throw new Error("Radio IIII officielle kilde, sæson, fem unikke episode-GUID'er eller reviewstatus afviger.");
+  }
+  if (get("Link") !== sourceUrl || get("Kilde") !== sourceUrl || get("Genre") !== "Portræt" ||
+      !RADIO_IIII_ACTIVE_GENRES_.includes(RADIO_IIII_PROPOSED_GENRE_)) {
+    throw new Error("Radio IIII kildeidentitet eller foreslået aktiv genre afviger; append stoppet.");
+  }
+  if (get("Antal afsnit") !== "5" || get("Episoder") !== expected.episodes.join("; ") ||
+      !get("Kort beskrivelse") || !get("Lang beskrivelse") || !get("Emner")) {
+    throw new Error("Radio IIII episodeantal, prolog-/kapitelrækkefølge eller verificeret redaktionelt indhold afviger.");
+  }
+  ["Placering", "Vuring (1-10)", "Årstal afspillet", "Afgivet vurdering", "2. genre", "Feed",
+    "Supplerende ligheder", "Uaktuel", "Undervurderet perle", "Adgang", "Engelsk"]
+    .forEach(function (header) {
+      if (get(header) !== "") throw new Error("Radio IIII staging må ikke udfylde rating-, historik- eller uverificerede felter: " + header);
+    });
+  row.slice(0, HEADERS_.length).concat([get("Radio IIII source description")]).forEach(function (value) {
+    if (/^[\s]*[=+\-@]/u.test(String(value || ""))) throw new Error("Formel-lignende Radio IIII-indhold er ikke tilladt.");
+  });
+  return {
+    id: id, title: expected.title, series: RADIO_IIII_SERIES_, host: RADIO_IIII_HOST_,
+    publisher: RADIO_IIII_PUBLISHER_, sourceUrl: sourceUrl, seasonUrl: seasonUrl,
+    sourceDescription: get("Radio IIII source description"), guids: sourceGuids,
+    episodes: expected.episodes, row: row.slice(0, HEADERS_.length)
+  };
+}
+
+function assertRadioIIIIBackupFresh_(context) {
+  if (context.properties.getProperty("BACKUP_RESTORE_TEST_VERIFIED") !== "true") {
+    throw new Error("Radio IIII append kræver en uafhængig backup med verificeret testgendannelse før hver række.");
+  }
+  var verifiedAt = Date.parse(context.properties.getProperty("BACKUP_VERIFIED_AT") || "");
+  if (!Number.isFinite(verifiedAt) || Date.now() - verifiedAt > RADIO_IIII_BACKUP_MAX_AGE_MS_ ||
+      verifiedAt > Date.now() + 60 * 1000) {
+    throw new Error("Radio IIII append kræver en frisk uafhængig backup og verificeret testgendannelse fra de seneste 15 minutter.");
+  }
+}
+
+function readRadioIIIIStillIdentityIndex_(target) {
+  var lastRow = target.getLastRow();
+  var rows = lastRow > 1 ? target.getRange(2, 1, lastRow - 1, HEADERS_.length).getValues() : [];
+  var byId = {};
+  var idColumn = HEADERS_.indexOf("Podcast-ID");
+  rows.forEach(function (row, index) {
+    var id = String(row[idColumn] || "").normalize("NFC").trim();
+    if (!id) {
+      if (row.some(function (cell) { return String(cell || "").trim() !== ""; })) throw new Error("Originalen har udfyldt række uden Podcast-ID.");
+      return;
+    }
+    if (byId[id]) throw new Error("Originalen har dubleret Podcast-ID; Radio IIII append stoppet.");
+    byId[id] = { id: id, rowNumber: index + 2, row: row };
+  });
+  return { rows: rows, byId: byId };
+}
+
+function assertRadioIIIIExistingIdentity_(existing, candidate) {
+  var row = existing.row;
+  var at = function (header) { return String(row[HEADERS_.indexOf(header)] || "").normalize("NFC").trim(); };
+  if (at("Titel") !== candidate.title || at("Vært") !== candidate.host || at("Udgiver") !== candidate.publisher ||
+      at("Hovedserie") !== candidate.series || at("Genre") !== RADIO_IIII_PROPOSED_GENRE_ ||
+      at("Link") !== candidate.sourceUrl || at("Kilde") !== candidate.sourceUrl ||
+      at("Antal afsnit") !== "5" || at("Episoder") !== candidate.episodes.join("; ")) {
+    throw new Error("Eksisterende Radio IIII Podcast-ID har en anden titel, genre, kilde eller episodeidentitet.");
+  }
+}
+
+function assertNoRadioIIIIIdentityCollision_(rows, candidate) {
+  rows.forEach(function (row) {
+    var id = String(row[HEADERS_.indexOf("Podcast-ID")] || "").normalize("NFC").trim();
+    if (id === candidate.id) return;
+    var title = String(row[HEADERS_.indexOf("Titel")] || "").normalize("NFC").trim();
+    if (title === candidate.title) throw new Error("Radio IIII gæstetitel findes allerede under et andet Podcast-ID.");
+    var cells = row.map(function (cell) { return String(cell == null ? "" : cell).toLowerCase(); });
+    if (cells.some(function (cell) { return cell.indexOf(candidate.sourceUrl.toLowerCase()) >= 0 ||
+        cell.indexOf(candidate.seasonUrl.toLowerCase()) >= 0 || candidate.guids.some(function (guid) { return cell.indexOf(guid.toLowerCase()) >= 0; }); })) {
+      throw new Error("Radio IIII kilde- eller episodeidentitet kolliderer med en eksisterende Ark1-række.");
+    }
+  });
+}
+
+function appendOneRadioIIIIReviewedRow_(context, stagedItem) {
+  var lock = LockService.getDocumentLock();
+  if (!lock.tryLock(30000)) throw new Error("Kunne ikke låse Ark1; prøv igen senere.");
+  try {
+    var currentContext = assertOwnerConfiguration_();
+    assertRadioIIIIBackupFresh_(currentContext);
+    var target = currentContext.original.getSheetByName(TARGET_TAB_NAME_);
+    assertTargetSchema_(target);
+    var source = readRadioIIIIStaging_(currentContext.stagingId);
+    var fresh = validateRadioIIIIStagingRows_(source).find(function (item) { return item.candidate.id === stagedItem.candidate.id; });
+    if (!fresh || !sameArray_(fresh.row.map(String), stagedItem.row.map(String))) {
+      throw new Error("Radio IIII staging-rækken ændrede sig under ejergennemgangen; intet blev skrevet.");
+    }
+    var before = snapshotTarget_(target);
+    var targetIndex = readRadioIIIIStillIdentityIndex_(target);
+    var existing = targetIndex.byId[fresh.candidate.id];
+    if (existing) {
+      assertRadioIIIIExistingIdentity_(existing, fresh.candidate);
+      return; // Exact identity exists already: idempotent no-op; never update it.
+    }
+    assertNoRadioIIIIIdentityCollision_(targetIndex.rows, fresh.candidate);
+    var originalCount = target.getLastRow();
+    var output = fresh.row.map(function (value) { return value == null ? "" : String(value); });
+    output[HEADERS_.indexOf("Genre")] = RADIO_IIII_PROPOSED_GENRE_;
+    try {
+      target.getRange(originalCount + 1, 1, 1, HEADERS_.length).setValues([output]);
+    } catch (appendError) {
+      var afterError = target.getSheetId() === TARGET_TAB_ID_ ? snapshotTarget_(target) : null;
+      assertOldCellsUnchanged_(before, afterError);
+      var recovered = readRadioIIIIStillIdentityIndex_(target).byId[fresh.candidate.id];
+      if (recovered) {
+        assertRadioIIIIExistingIdentity_(recovered, fresh.candidate);
+        assertAppendedRowMatches_(target, recovered.rowNumber, output);
+        return;
+      }
+      throw appendError;
+    }
+    var after = snapshotTarget_(target);
+    assertOldCellsUnchanged_(before, after);
+    var verified = readRadioIIIIStillIdentityIndex_(target).byId[fresh.candidate.id];
+    if (!verified || target.getLastRow() !== originalCount + 1) throw new Error("Radio IIII append read-back fejlede; stop og undersøg manuelt.");
+    assertRadioIIIIExistingIdentity_(verified, fresh.candidate);
+    assertAppendedRowMatches_(target, verified.rowNumber, output);
+    Logger.log(JSON.stringify({ event: "RADIO_IIII_STAGING_APPEND", podcastId: fresh.candidate.id, originalRowCount: originalCount, user: currentContext.userEmail, timestamp: new Date().toISOString() }));
+  } finally {
+    lock.releaseLock();
+  }
 }
 
 function assertOwnerConfiguration_() {
