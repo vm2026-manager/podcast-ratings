@@ -208,7 +208,7 @@ const getPodcastEpisodeUserRatingSummary = new Function(
 );
 assert.deepEqual(getPodcastEpisodeUserRatingSummary("bernstein cigaretetui"), { count: 2, average: 7.5 },
   "parent-rating lock includes locally rated manual episodes alongside canonical RSS ratings");
-assert.match(app, /manualEpisodeRatingPersistence === "local"\s*\|\|\s*\(await ensureManualCatalogueEpisodeMapping\(episode\)\)/u,
+assert.match(app, /manualEpisodeRatingPersistence === "local"\s*\|\|\s*\(await resolveManualEpisodeRatingMapping\(episode\)\)/u,
   "manual rating save bypasses automatic Supabase mapping only for the explicit local policy");
 
 // Exercise the actual episode row renderer and responsive styles at required widths.
@@ -219,14 +219,14 @@ const renderEpisodeRows = new Function(
   "getPodcastEpisodeState", "getEpisodePodcastConfig", "getEpisodeWorkspaceEpisodes", "getEpisodeKey",
   "getAppleSeasonEpisodeNumber", "formatEpisodeDate", "getEpisodeStat", "getEpisodeUserRating",
   "parseNumber", "escapeHtml", "formatEpisodeOverviewScore", "formatUserRatingCount",
-  "formatCompactRating", "formatEpisodeOverviewOwnScore",
+  "formatCompactRating", "formatEpisodeOverviewOwnScore", "getOfficialMedianoEpisodeSourceUrl", "isManualEpisodeRatingAvailable",
   `${app.slice(renderStart, renderEnd)}\nreturn renderPodcastEpisodeOverviewRows;`
 )(
   () => episodeState, lookupConfig, () => episodeState.items, getEpisodeKey,
   () => null, () => "", () => null, () => null, parseNumber,
   (value) => String(value ?? "").replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll('"', "&quot;"),
   (value) => `${value ?? "—"} <small>/10</small>`, () => "", (value) => String(value),
-  (value) => value === null ? "Vurder" : `${value} <small>/10</small>`
+  (value) => value === null ? "Vurder" : `${value} <small>/10</small>`, () => "", () => true
 );
 const renderedRows = renderEpisodeRows(podcast);
 assert.equal((renderedRows.match(/<tr class=/g) || []).length, 23, "renderer displays all episodes");

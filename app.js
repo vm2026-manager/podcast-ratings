@@ -156,6 +156,37 @@ const MEDIANO_HISTORICAL_CATALOGUE_CANONICAL_EPISODE_IDS = Object.freeze({
   "landsholdets analytiker mounir akhiat": "59389cfb-aa8c-40a3-94b4-9e2b04e832cc"
 });
 
+const DER_VAR_ENGANG_ET_MAL_MANUAL_EPISODES = Object.freeze([
+  {
+    title: "Der var engang et mål...af Andrés Iniesta på Stamford Bridge",
+    manualEpisodeKey: "andres-iniesta-stamford-bridge-2025-06-29",
+    publishedAt: "2025-06-29",
+    sourceUrl: "https://www.mediano.nu/oversigt/2025/6/27/der-var-engang-et-mlaf-andres-iniesta-p-stamford-bridge"
+  },
+  {
+    title: "Der var engang et mål...af Carlos Alberto i VM-finalen",
+    manualEpisodeKey: "carlos-alberto-vm-finalen-2025-07-06",
+    publishedAt: "2025-07-06",
+    sourceUrl: "https://www.mediano.nu/oversigt/2025/6/16/der-var-engang-et-mlaf-carlos-alberto-i-vm-finalen"
+  },
+  {
+    title: "Der var engang et mål...af Peter Møller mod Farum",
+    publishedAt: "2025-07-13"
+  },
+  {
+    title: "Der var engang et mål...af David Beckham mod Grækenland",
+    manualEpisodeKey: "david-beckham-graekenland-2025-07-20",
+    publishedAt: "2025-07-20",
+    sourceUrl: "https://www.mediano.nu/oversigt/2025/6/30/der-var-engang-et-mlaf-david-beckham-mod-grkenland"
+  },
+  {
+    title: "Der var engang et mål...der afgjorde en tysk mesterskabsgyser",
+    manualEpisodeKey: "tysk-mesterskabsgyser-2025-07-27",
+    publishedAt: "2025-07-27",
+    sourceUrl: "https://www.mediano.nu/oversigt/2025/6/30/der-var-engang-et-mlder-afgjorde-en-tysk-mesterskabsgyser"
+  }
+]);
+
 // Local-only canonical catalogue addition. Its title, publisher, genre, public
 // feed, and Jennings source page are all present in the reviewed Mediano
 // routing/migration material; their editorial descriptions are reviewed
@@ -194,7 +225,7 @@ const LOCAL_CANONICAL_CATALOGUE_ROWS = Object.freeze([{
   "Podcast-ID": "der var engang et mal", Titel: "Der var engang et mål", Genre: "Sport", Udgiver: "Mediano",
   "Kort beskrivelse": "Medianos serie om ikoniske scoringer og historierne omkring dem – med analyse, fodboldhistorie og kontekst.",
   "Lang beskrivelse": "Der var engang et mål tager udgangspunkt i en mindeværdig scoring og bruger den som indgang til en større fodboldhistorie. Værter og eksperter genbesøger kampens og spillerens betydning, den taktiske detalje og den tid, klub eller kultur som målet blev en del af.",
-  manualEpisodes: ["Der var engang et mål...af Peter Møller mod Farum"]
+  manualEpisodes: DER_VAR_ENGANG_ET_MAL_MANUAL_EPISODES
 }]);
 
 // Registry-derived historical episode preservation for a canonical catalogue
@@ -207,6 +238,9 @@ const LOCAL_CANONICAL_CATALOGUE_ROW_PATCHES = Object.freeze({
       title: "Den store talentserie",
       manualEpisodeKey: "den-store-talentserie"
     }])
+  }),
+  "der var engang et mal": Object.freeze({
+    manualEpisodes: DER_VAR_ENGANG_ET_MAL_MANUAL_EPISODES
   })
 });
 
@@ -259,7 +293,16 @@ const MEDIANO_EPISODE_PODCAST_CONFIG = Object.freeze(
       source: "mediano_public_rss",
       // This one destination has a reviewed historical catalogue alongside
       // Mediano public-feed episodes. Keep both on the existing merge path.
-      includeManualEpisodes: ["superliga for voksne", "klub mediano", "magasinet jennings", "troels bech i en samtale", "mediano special", "transfer special", "bruchmann ringer til", "der var engang et mal"].includes(podcastKey)
+      includeManualEpisodes: ["superliga for voksne", "klub mediano", "magasinet jennings", "troels bech i en samtale", "mediano special", "transfer special", "bruchmann ringer til", "der var engang et mal"].includes(podcastKey),
+      ...(podcastKey === "der var engang et mal" ? {
+        // The source Sheet has no immutable-key column. Pin Peter's existing
+        // UUID so earlier dated episodes cannot change its legacy ID or its
+        // manual-catalogue mapping and 7.3 editorial score.
+        manualEpisodeMappingPolicy: "require_existing",
+        manualEpisodeCanonicalIds: Object.freeze({
+          "der var engang et mal af peter møller mod farum": "283fbea9-a29c-5104-803a-f39f2bb8b312"
+        })
+      } : {})
     }
   ]))
 );
@@ -3374,6 +3417,7 @@ function mapPodcast(row, index) {
     mainSeries,
     episodes,
     manualEpisodes,
+    manualEpisodeEntries,
     manualEpisodeEditorialRatings,
     manualEpisodeCanonicalIds,
     supplementarySimilaritiesRaw,
@@ -8734,6 +8778,10 @@ function openEpisodeRatingDialog(episode, suppliedContext = null) {
   const episodeId = getEpisodeKey(episode);
   const episodeRatingContext = suppliedContext || getEpisodeRatingContext(episode);
   if (!episodeRatingContext || episodeRatingContext.episodeId !== episodeId) return;
+  if (episode?.dataSource === "manual" && !isManualEpisodeRatingAvailable(episode)) {
+    setAuthMessage("Vurdering bliver tilgængelig, når episodeidentiteten er godkendt og importeret.", "warning");
+    return;
+  }
   resetRatingDialogMode();
 
   if (!isLoggedIn()) {
@@ -8962,7 +9010,7 @@ async function saveActiveEpisodeRating() {
   const manualMappingResolved =
     episode?.dataSource !== "manual" ||
     episodeConfig?.manualEpisodeRatingPersistence === "local" ||
-    (await ensureManualCatalogueEpisodeMapping(episode));
+    (await resolveManualEpisodeRatingMapping(episode));
   const episodeId = getEpisodeKey(episode) || requestedEpisodeId;
   const config = getEpisodeRatingPersistenceConfig(podcastKey, episode);
   const isLocalEpisodeRating = config?.persistence === "local";
@@ -9192,7 +9240,7 @@ async function deleteActiveEpisodeRating() {
   }
   const manualMappingResolved =
     episode?.dataSource !== "manual" ||
-    (await ensureManualCatalogueEpisodeMapping(episode));
+    (await resolveManualEpisodeRatingMapping(episode));
   const episodeId = getEpisodeKey(episode) || requestedEpisodeId;
   const config = getEpisodeRatingPersistenceConfig(podcastKey, episode);
   const episodeState = getPodcastEpisodeState(podcastKey);
@@ -11075,6 +11123,12 @@ function parseManualEpisodeEntries(value) {
       ),
       canonicalEpisodeId: normalizeText(
         typeof value === "object" ? value?.canonicalEpisodeId : ""
+      ),
+      publishedAt: normalizeText(
+        typeof value === "object" ? value?.publishedAt || value?.published_at : ""
+      ),
+      sourceUrl: normalizeText(
+        typeof value === "object" ? value?.sourceUrl || value?.episode_url : ""
       )
     });
   });
@@ -11129,8 +11183,20 @@ function parseManualEpisodeTitles(value) {
 
 function getPodcastManualEpisodeTitles(podcast) {
   return parseManualEpisodeTitles(
-    podcast?.manualEpisodes || podcast?.manual_episodes || podcast?.["Episoder"] || ""
+    podcast?.manualEpisodeEntries || podcast?.manualEpisodes || podcast?.manual_episodes || podcast?.["Episoder"] || ""
   );
+}
+
+function getOfficialMedianoEpisodeSourceUrl(value) {
+  try {
+    const url = new URL(normalizeText(value));
+    return url.protocol === "https:" && url.hostname === "www.mediano.nu" &&
+      url.pathname.startsWith("/oversigt/")
+      ? url.href
+      : "";
+  } catch {
+    return "";
+  }
 }
 
 function podcastHasManualEpisodeList(podcast) {
@@ -11196,7 +11262,7 @@ function getPodcastManualEpisodes(podcast) {
     getPodcastId(resolvePodcastByStoredKey(legacyPodcastKey)) === podcastKey;
 
   return parseManualEpisodeEntries(
-    podcast?.manualEpisodes || podcast?.manual_episodes || podcast?.["Episoder"] || ""
+    podcast?.manualEpisodeEntries || podcast?.manualEpisodes || podcast?.manual_episodes || podcast?.["Episoder"] || ""
   ).map((entry, index) => {
     const title = entry.title;
     const episodeNumber = index + 1;
@@ -11220,6 +11286,8 @@ function getPodcastManualEpisodes(podcast) {
       podcast_key: podcastKey,
       title,
       editorial_rating: getManualEpisodeEditorialRating(podcast, title),
+      published_at: entry.publishedAt || null,
+      episode_url: entry.sourceUrl || null,
       episode_number: episodeNumber,
       is_active: true,
       source: MANUAL_CATALOGUE_SOURCE,
@@ -11250,7 +11318,7 @@ function getEpisodePodcastConfig(podcastOrKey) {
   const episodeKey = getEpisodePodcastKey(podcastOrKey);
   const rawKey = typeof podcastOrKey === "string" ? normalizeText(podcastOrKey) : "";
   const displayGroupEpisode = getDisplayGroupEpisodeSeason(podcastOrKey);
-  const manualEpisodeSource = podcast?.manualEpisodes || podcast?.manual_episodes || podcast?.["Episoder"] || [];
+  const manualEpisodeSource = podcast?.manualEpisodeEntries || podcast?.manualEpisodes || podcast?.manual_episodes || podcast?.["Episoder"] || [];
   const hasManualEpisodes = (Array.isArray(manualEpisodeSource)
     ? manualEpisodeSource.filter((entry) => normalizeText(typeof entry === "object" ? entry?.title : entry)).length
     : String(manualEpisodeSource).split(";").map(normalizeText).filter(Boolean).length) >= 2;
@@ -12014,6 +12082,40 @@ async function ensureManualCatalogueEpisodeMapping(episode) {
   return true;
 }
 
+function requiresExistingManualEpisodeMapping(episode) {
+  if (episode?.dataSource !== "manual") return false;
+  const podcastKey = normalizeText(episode?.podcast_key) || getEpisodePodcastKey(state.activePodcastDetailKey);
+  return getEpisodePodcastConfig(podcastKey)?.manualEpisodeMappingPolicy === "require_existing";
+}
+
+function isManualEpisodeMappingResolved(episode) {
+  if (episode?.dataSource !== "manual") return true;
+  const manualEpisodeKey = normalizeText(episode.manual_episode_key);
+  const mapping = manualEpisodeKey ? state.manualCanonicalEpisodeMappings.get(manualEpisodeKey) : null;
+  if (!mapping?.episodeId) return false;
+  if (!requiresExistingManualEpisodeMapping(episode)) return true;
+
+  const canonicalSource = normalizeText(mapping.canonicalSource);
+  return normalizeText(mapping.episodeId) === normalizeText(episode.id) &&
+    (canonicalSource === MANUAL_CATALOGUE_SOURCE || canonicalSource === REVIEWED_LEGACY_MANUAL_CATALOGUE_SOURCE);
+}
+
+function isManualEpisodeRatingAvailable(episode) {
+  return episode?.dataSource !== "manual" ||
+    !requiresExistingManualEpisodeMapping(episode) ||
+    isManualEpisodeMappingResolved(episode);
+}
+
+async function resolveManualEpisodeRatingMapping(episode) {
+  if (episode?.dataSource !== "manual") return true;
+  if (!requiresExistingManualEpisodeMapping(episode)) return ensureManualCatalogueEpisodeMapping(episode);
+
+  if (!isManualEpisodeMappingResolved(episode)) {
+    await fetchManualCanonicalEpisodeMappings([episode]);
+  }
+  return isManualEpisodeMappingResolved(episode);
+}
+
 async function fetchManualCanonicalEpisodeMappings(episodes) {
   if (!state.supabase) return false;
 
@@ -12046,7 +12148,12 @@ async function fetchManualCanonicalEpisodeMappings(episodes) {
       for (const episode of manualEpisodes) {
         const key = normalizeText(episode.manual_episode_key);
         if (!key) continue;
-        if (!state.manualCanonicalEpisodeMappings.has(key)) {
+        if (requiresExistingManualEpisodeMapping(episode)) {
+          // This reviewed series stays read-only until its episode identities
+          // are imported through the separately approved catalogue workflow.
+          continue;
+        }
+        if (!isManualEpisodeMappingResolved(episode)) {
           await ensureManualCatalogueEpisodeMapping(episode);
         } else {
           await migrateLocalManualEpisodeRatingToSupabase(episode);
@@ -12060,9 +12167,7 @@ async function fetchManualCanonicalEpisodeMappings(episodes) {
     manualEpisodeKeys.forEach((key) => state.manualCanonicalResolutionLoadingKeys.delete(key));
   }
 
-  return manualEpisodes.every((episode) =>
-    state.manualCanonicalEpisodeMappings.has(normalizeText(episode.manual_episode_key))
-  );
+  return manualEpisodes.every(isManualEpisodeMappingResolved);
 }
 
 async function refreshManualEpisodeRatingData(podcastKey, episodes, { force = false } = {}) {
@@ -12070,12 +12175,8 @@ async function refreshManualEpisodeRatingData(podcastKey, episodes, { force = fa
     throw new Error("Episodevurderingerne kunne ikke hentes lige nu.");
   }
   await fetchManualCanonicalEpisodeMappings(episodes);
-  const canonical = (episodes || []).filter((episode) =>
-    state.manualCanonicalEpisodeMappings.has(normalizeText(episode.manual_episode_key))
-  );
-  const unresolved = (episodes || []).filter((episode) =>
-    !state.manualCanonicalEpisodeMappings.has(normalizeText(episode.manual_episode_key))
-  );
+  const canonical = (episodes || []).filter(isManualEpisodeMappingResolved);
+  const unresolved = (episodes || []).filter((episode) => !isManualEpisodeMappingResolved(episode));
   if (unresolved.length) hydrateLocalEpisodeRatingState(podcastKey, unresolved);
   if (canonical.length) await fetchEpisodeRatingMetaForEpisodes(canonical, { force, update: false });
 }
@@ -13064,6 +13165,7 @@ function renderPodcastEpisodeOverviewRows(podcast) {
       const sourceScore = parseNumber(stat?.averageRating);
       const ratingCount = Number(stat?.ratingCount || 0);
       const editorialScore = parseNumber(episode.editorial_rating);
+      const ratingAvailable = isManualEpisodeRatingAvailable(episode);
       const title = episode.title || `Episode ${episodeNumber}`;
       const titleLengthClass = title.length > 115
         ? " episode-title--very-long"
@@ -13086,6 +13188,7 @@ function renderPodcastEpisodeOverviewRows(podcast) {
           }
           <td data-label="Episode" data-published-date="${escapeHtml(publicationDate)}">
             <strong class="episode-title${titleLengthClass}">${escapeHtml(title)}</strong>
+            ${getOfficialMedianoEpisodeSourceUrl(episode.episode_url) ? `<a class="podcast-detail-sheet__episode-source" href="${escapeHtml(getOfficialMedianoEpisodeSourceUrl(episode.episode_url))}" target="_blank" rel="noopener noreferrer">Officiel kilde</a>` : ""}
             ${editorialScore === null ? "" : `<span class="podcast-detail-sheet__episode-editorial-score">Podcastlistens vurdering: <strong>${escapeHtml(formatCompactRating(editorialScore))}/10</strong></span>`}
           </td>
           <td data-label="Brugere">
@@ -13096,14 +13199,15 @@ function renderPodcastEpisodeOverviewRows(podcast) {
           </td>
           <td data-label="Din vurdering">
             <button
-              class="podcast-detail-sheet__episode-own-score${userRating === null ? " is-empty" : ""}"
+              class="podcast-detail-sheet__episode-own-score${userRating === null ? " is-empty" : ""}${ratingAvailable ? "" : " is-mapping-pending"}"
               type="button"
               data-episode-overview-rating-id="${escapeHtml(episodeId)}"
+              ${ratingAvailable ? "" : "disabled aria-disabled=\"true\" title=\"Vurdering bliver tilgængelig, når episodeidentiteten er godkendt og importeret.\""}
               aria-label="${userRating === null ? "Vurder" : "Rediger vurderingen af"} ${escapeHtml(
                 episode.title || `episode ${episodeNumber}`
               )}"
             >
-              <strong>${formatEpisodeOverviewOwnScore(userRating)}</strong>
+              <strong>${ratingAvailable ? formatEpisodeOverviewOwnScore(userRating) : "Afventer import"}</strong>
             </button>
           </td>
         </tr>
@@ -25966,7 +26070,12 @@ function applyPodcastDataRefresh(podcastRows, featuredRows, coverManifestLookup 
     const patchedRow = patch ? {
       ...row,
       ...patch,
-      manualEpisodes: mergeManualEpisodeEntries(row?.manualEpisodes, patch.manualEpisodes)
+      // This series' five verified entries are kept in source release order.
+      // Peter's ID is pinned in the exact episode config below before the
+      // reordered fallback is built.
+      manualEpisodes: podcastId === "der var engang et mal"
+        ? mergeManualEpisodeEntries(patch.manualEpisodes, row?.manualEpisodes)
+        : mergeManualEpisodeEntries(row?.manualEpisodes, patch.manualEpisodes)
     } : row;
     return withHistoricalMedianoEpisodeEntries(patchedRow, historicalEntriesByCanonicalId);
   });
