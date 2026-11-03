@@ -143,7 +143,7 @@ const renderEpisodeRows = new Function(
   "getPodcastEpisodeState", "getEpisodePodcastConfig", "getEpisodeWorkspaceEpisodes", "getEpisodeKey",
   "getAppleSeasonEpisodeNumber", "formatEpisodeDate", "getEpisodeStat", "getEpisodeUserRating",
   "parseNumber", "escapeHtml", "formatEpisodeOverviewScore", "formatUserRatingCount",
-  "formatCompactRating", "formatEpisodeOverviewOwnScore",
+  "formatCompactRating", "formatEpisodeOverviewOwnScore", "getOfficialMedianoEpisodeSourceUrl",
   `${app.slice(renderStart, renderEnd)}\nreturn renderPodcastEpisodeOverviewRows;`
 )(
   () => episodeState,
@@ -159,7 +159,17 @@ const renderEpisodeRows = new Function(
   (value) => `${value ?? "—"} <small>/10</small>`,
   (count) => `${count} vurderinger`,
   (value) => String(value),
-  (value) => value === null ? "Vurder" : `${value} <small>/10</small>`
+  (value) => value === null ? "Vurder" : `${value} <small>/10</small>`,
+  (value) => {
+    try {
+      const url = new URL(String(value || ""));
+      return url.protocol === "https:" && url.hostname === "www.mediano.nu" && url.pathname.startsWith("/oversigt/")
+        ? url.href
+        : "";
+    } catch {
+      return "";
+    }
+  }
 );
 const renderedRows = renderEpisodeRows(stotRows[0]);
 assert.equal((renderedRows.match(/<tr class=/g) || []).length, 4, "all four canonical episodes render");

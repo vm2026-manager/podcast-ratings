@@ -28,6 +28,12 @@ Unresolved sources remain in the original local inbox and were neither mapped no
 
 The original unresolved verdict above is historical. The supplied identity review now verifies this source against the DR image URL. `amerikas kolde drom dr.png` is explicitly registered to the existing `amerikas kolde drom dr` ID with SHA256 `ee8b2d7766d78a0a41f853de77e24d8af6ba033d815aa63bcec003668a3aee0c`. Only this registration and its derived cover files are added; the other four unresolved files remain untouched. The current verdict is recorded in `manual-cover-identity-audit.json`.
 
+## Der var engang et mål follow-up — 2026-11-03
+
+The five official Mediano releases are verified as episodes of the series, but no identity-specific cover was verified. The existing `Der var engang et mål.png` remains AMBIGUOUS and is byte-identical to generic Mediano branding. The historical Google Sheets episode row `der var engang et mal af peter møller mod farum` uses the sponsor image `sparekassen-kronjylland.jpg`; that image is not series artwork and the row remains unchanged.
+
+The official Andrés Iniesta article exposes this candidate image: `https://images.squarespace-cdn.com/content/v1/573c1b7d01dbae9b52cd0936/147b3387-8786-4f5d-b2dc-459a1ccf2ef0/476352274_1159571366171636_4833220818807679421_n.jpg` (525×350). Visual inspection shows a generic “Støt Mediano 2025” multi-programme promo, with no “Der var engang et mål” title or artwork. It is documented as a rejected candidate, not registered or published. Keep the existing generic fallback until Mediano supplies dedicated artwork or an identity-bearing official source is found.
+
 ## Workflow
 
 Install Python 3 with `Pillow==12.2.0` and Node.js. Run `python scripts/intake_manual_podcast_covers.py` to validate/report without writes. After explicit identity and artwork review, add a registry record containing the exact source path, SHA256, canonical ID, stable asset key, expected title/publisher/image URL, VERIFIED verdict and evidence. Never infer a record from its filename. Local canonical additions and explicit historical suppression are read from app.js without changing them.

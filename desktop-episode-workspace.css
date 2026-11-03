@@ -1,4 +1,19 @@
 /* Readability pass for the existing desktop episode-rating workspace. */
+.podcast-detail-sheet__episode-source {
+  display: inline-block;
+  margin-top: .35rem;
+  color: #c94d17;
+  font: 750 .78rem/1.3 "Manrope", sans-serif;
+  text-decoration: underline;
+  text-underline-offset: .16em;
+}
+
+.podcast-detail-sheet__episode-source:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 3px;
+  border-radius: 2px;
+}
+
 @media (min-width: 1100px) {
   html body #podcastDetailSheet.is-episode-workspace .podcast-detail-sheet__season-table col.season-column-title { width: 46% !important; }
   html body #podcastDetailSheet.is-episode-workspace .podcast-detail-sheet__season-table col.season-column-editorial { width: 16% !important; }

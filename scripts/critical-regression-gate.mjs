@@ -70,6 +70,7 @@ const checks = [
   ["DR Lyd supplemental full episodes and RSS identity preservation", ["--experimental-strip-types", "scripts/test-dr-lyd-supplemental-umbrella.mjs"]],
   ["Future verified DR single-episode discovery", ["--experimental-strip-types", "scripts/test-dr-full-standalone-discovery.mjs"]],
   ["Mediano episode workspace", ["scripts/test-mediano-episode-workspace-config.mjs"]],
+  ["Der var engang et mål episode identity, sources, rating preservation and fallback merging", ["scripts/test-der-var-engang-et-mal-episodes.mjs"]],
   ["Støt Mediano category routing", ["--experimental-strip-types", "scripts/test-stot-mediano-category-routing.mjs"]],
   ["episode detail DOM stability", ["scripts/test-podcast-detail-episode-load-dom-stability.mjs"]],
   ["podcast detail rating DOM stability", ["scripts/test-podcast-detail-rating-dom-stability.mjs"]],

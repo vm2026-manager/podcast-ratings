@@ -219,14 +219,14 @@ const renderEpisodeRows = new Function(
   "getPodcastEpisodeState", "getEpisodePodcastConfig", "getEpisodeWorkspaceEpisodes", "getEpisodeKey",
   "getAppleSeasonEpisodeNumber", "formatEpisodeDate", "getEpisodeStat", "getEpisodeUserRating",
   "parseNumber", "escapeHtml", "formatEpisodeOverviewScore", "formatUserRatingCount",
-  "formatCompactRating", "formatEpisodeOverviewOwnScore",
+  "formatCompactRating", "formatEpisodeOverviewOwnScore", "getOfficialMedianoEpisodeSourceUrl",
   `${app.slice(renderStart, renderEnd)}\nreturn renderPodcastEpisodeOverviewRows;`
 )(
   () => episodeState, lookupConfig, () => episodeState.items, getEpisodeKey,
   () => null, () => "", () => null, () => null, parseNumber,
   (value) => String(value ?? "").replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll('"', "&quot;"),
   (value) => `${value ?? "—"} <small>/10</small>`, () => "", (value) => String(value),
-  (value) => value === null ? "Vurder" : `${value} <small>/10</small>`
+  (value) => value === null ? "Vurder" : `${value} <small>/10</small>`, () => ""
 );
 const renderedRows = renderEpisodeRows(podcast);
 assert.equal((renderedRows.match(/<tr class=/g) || []).length, 23, "renderer displays all episodes");
