@@ -3,6 +3,7 @@ import { readFile } from "node:fs/promises";
 import vm from "node:vm";
 
 const app = await readFile(new URL("../app.js", import.meta.url), "utf8");
+const index = await readFile(new URL("../index.html", import.meta.url), "utf8");
 const catalogue = JSON.parse(await readFile(new URL("../data/podcasts.json", import.meta.url), "utf8")).rows;
 function extractFunction(name) {
   const start = app.indexOf(`function ${name}(`);
@@ -13,6 +14,8 @@ function extractFunction(name) {
 
 const version = Number(app.match(/const UDFORSK_RECOMMENDATION_VERSION = (\d+);/)[1]);
 assert.equal(version, 8, "personalized recommendation snapshots use the corrected matching version");
+assert.match(index, /app\.js\?v=20261103-explore-host-identity-v1/u,
+  "the asset URL changes so clients request the corrected matcher after deployment");
 
 const context = vm.createContext({});
 vm.runInContext([
