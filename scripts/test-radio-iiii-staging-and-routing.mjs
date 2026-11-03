@@ -54,15 +54,19 @@ assert.throws(() => buildRadioIIIIStagingPlan({ headers: RADIO_IIII_STAGING_HEAD
 assert.throws(() => buildRadioIIIIStagingRow({ ...candidates[0], publisher: "DR" }), /identity or official/u);
 
 class MockStaging {
-  constructor() { this.rows = []; this.appendCalls = 0; this.headers = RADIO_IIII_STAGING_HEADERS; this.tab = RADIO_IIII_STAGING_TAB; this.spreadsheetId = "separate-staging-sheet"; }
+  constructor() { this.rows = []; this.writeCalls = []; this.headers = RADIO_IIII_STAGING_HEADERS; this.tab = RADIO_IIII_STAGING_TAB; this.spreadsheetId = "separate-staging-sheet"; }
   async readSheet() { return { headers: [...RADIO_IIII_STAGING_HEADERS], rows: structuredClone(this.rows) }; }
-  async appendRows(values) { this.appendCalls += 1; this.rows.push(...structuredClone(values)); }
+  async writeRowsAt(startRow, values) {
+    this.writeCalls.push(startRow);
+    assert.equal(startRow, this.rows.length + 2, "Radio IIII rows are written directly below the existing table");
+    this.rows.push(...structuredClone(values));
+  }
 }
 const mock = new MockStaging();
 assert.deepEqual(await appendRadioIIIIToStaging({ client: mock, candidates, dryRun: true }), { dryRun: true, appended: 0, alreadyPresent: 0 });
-assert.equal(mock.appendCalls, 0);
+assert.equal(mock.writeCalls.length, 0);
 assert.deepEqual(await appendRadioIIIIToStaging({ client: mock, candidates, dryRun: false }), { dryRun: false, appended: 4, alreadyPresent: 0 });
 assert.deepEqual(await appendRadioIIIIToStaging({ client: mock, candidates, dryRun: false }), { dryRun: false, appended: 0, alreadyPresent: 4 });
-assert.equal(mock.appendCalls, 1, "repeat staging runs do not append duplicates");
+assert.deepEqual(mock.writeCalls, [2], "explicit-coordinate writes stage once and repeat runs do not duplicate candidates");
 
 console.log("RADIO IIII staging and exact-feed routing passed: separate source identities, 20 exact GUID routes, review-safe catalog columns, and idempotent staging.");
