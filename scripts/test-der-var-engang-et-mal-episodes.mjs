@@ -167,7 +167,63 @@ assert.ok(manualEpisodes.every((episode) => !("external_guid" in episode) && !("
 assert.equal(new Set(manualEpisodes.map((episode) => episode.id)).size, 5,
   "the five manual IDs are unique");
 
-context.episodeState = manualEpisodes;
+const remotePeter = {
+  id: "283fbea9-a29c-5104-803a-f39f2bb8b312",
+  external_guid: "manual_catalogue_v1:283fbea9-a29c-5104-803a-f39f2bb8b312",
+  podcast_key: "der var engang et mal",
+  title: expectedTitles[2],
+  published_at: null,
+  episode_url: "https://historic.example/peter-moller",
+  editorial_rating: null,
+  dataSource: "supabase"
+};
+const mergeEpisodes = new Function(
+  "getEpisodeKey", "parseNumber", `${section("function mergeEpisodes(", "function formatEpisodeDate(")}\nreturn mergeEpisodes;`
+)((episode) => episode.id, context.parseNumber);
+const mergedRuntimeEpisodes = mergeEpisodes([remotePeter], manualEpisodes);
+assert.equal(mergedRuntimeEpisodes.length, 5,
+  "one Supabase episode plus five manual catalogue entries, including Peter's duplicate, produce five rows");
+assert.equal(new Set(mergedRuntimeEpisodes.map((episode) => episode.id)).size, 5,
+  "the merged episode identities remain unique");
+const mergedPeter = mergedRuntimeEpisodes.find((episode) => episode.id === remotePeter.id);
+assert.equal(mergedPeter.external_guid, remotePeter.external_guid, "Peter's existing GUID remains unchanged");
+assert.equal(mergedPeter.published_at, null, "the view correction does not mutate Peter's Supabase publication date");
+assert.equal(mergedPeter.editorial_rating, 7.3, "the existing editorial score survives the duplicate merge");
+
+const displayConfig = {
+  podcastKey: "der var engang et mal",
+  manualEpisodeMappingPolicy: "require_existing"
+};
+const getTestEpisodePodcastConfig = (podcast) => podcast?.["Podcast-ID"] === "der var engang et mal"
+  ? displayConfig
+  : { podcastKey: "another podcast", dataSource: "supabase" };
+const getTestConfiguredManualEpisodes = () => manualEpisodes;
+const getTestEpisodeKey = (episode) => episode.id;
+const getTestEpisodeState = () => ({ items: mergedRuntimeEpisodes, searchTerm: "", workspaceVisibleCount: 100 });
+const getTestComparable = (value) => String(value ?? "").normalize("NFD").replace(/[\u0300-\u036f]/gu, "").toLowerCase();
+const overviewStart = startOf("function getDerVarEngangEpisodeOverviewRows(");
+const overviewEnd = startOf("function filterEpisodesToConfigSeason(");
+assert.ok(overviewStart >= 0 && overviewEnd > overviewStart, "the display-only chronology helper is present");
+const overviewFunctions = new Function(
+  "getEpisodePodcastConfig", "getConfiguredManualEpisodes", "getEpisodeKey", "getPodcastEpisodeState",
+  "normalizeText", "getAppleSeasonEpisodeNumber", "normalizeComparable", "getVisibleGenstartEpisodes",
+  "EPISODE_WORKSPACE_PAGE_SIZE",
+  `${app.slice(overviewStart, overviewEnd)}\nreturn { getDerVarEngangEpisodeOverviewRows, getEpisodeWorkspaceEpisodes };`
+)(getTestEpisodePodcastConfig, getTestConfiguredManualEpisodes, getTestEpisodeKey, getTestEpisodeState,
+  context.normalizeText, () => null, getTestComparable, () => mergedRuntimeEpisodes, 100);
+const seriesPodcast = { "Podcast-ID": "der var engang et mal" };
+const displayRows = overviewFunctions.getEpisodeWorkspaceEpisodes(seriesPodcast);
+assert.deepEqual(Array.from(displayRows, (episode) => episode.title), expectedTitles,
+  "the overview sorts the five merged episodes by their verified catalogue dates");
+assert.deepEqual(Array.from(displayRows, (episode) => episode._episodeOverviewPublishedAt || episode.published_at),
+  ["2025-06-29", "2025-07-06", "2025-07-13", "2025-07-20", "2025-07-27"],
+  "display dates use verified manual metadata, including Peter's NULL-dated Supabase row");
+assert.equal(remotePeter.published_at, null, "display metadata never mutates the fetched Supabase object");
+const anotherPodcastRows = [{ id: "second", published_at: "2025-01-01" }, { id: "first", published_at: null }];
+assert.equal(overviewFunctions.getDerVarEngangEpisodeOverviewRows({ "Podcast-ID": "another podcast" }, anotherPodcastRows),
+  anotherPodcastRows, "other podcasts keep their existing order and row objects");
+
+context.episodeState = displayRows;
 const rowRenderer = section("function renderPodcastEpisodeOverviewRows(", "function ensureManualPodcastEpisodeState(");
 const renderPodcastEpisodeOverviewRows = new Function(
   "getPodcastEpisodeState", "getEpisodePodcastConfig", "getEpisodeWorkspaceEpisodes", "getEpisodeKey",
@@ -176,7 +232,7 @@ const renderPodcastEpisodeOverviewRows = new Function(
   "formatCompactRating", "formatEpisodeOverviewOwnScore", "getOfficialMedianoEpisodeSourceUrl", "isManualEpisodeRatingAvailable",
   `${rowRenderer}\nreturn renderPodcastEpisodeOverviewRows;`
 )(
-  () => ({ items: manualEpisodes }), () => ({ dataSource: "supabase" }), () => manualEpisodes,
+  () => ({ items: displayRows }), getTestEpisodePodcastConfig, () => displayRows,
   (episode) => episode.id, () => null, (value) => value, () => null, () => null,
   context.parseNumber, context.escapeHtml, context.formatEpisodeOverviewScore,
   context.formatUserRatingCount, 100, context.formatCompactRating, context.formatEpisodeOverviewOwnScore,
@@ -191,10 +247,16 @@ assert.equal((rendered.match(/Afventer import/gu) || []).length, 4,
   "the unavailable rating controls explain that import is pending");
 assert.equal((rendered.match(/class="podcast-detail-sheet__episode-source"/gu) || []).length, 4,
   "official source links appear for the four new episodes only");
+for (const entry of datedEntries.filter((episode) => episode.sourceUrl)) {
+  assert.ok(rendered.includes(`href="${entry.sourceUrl}"`), `official source URL is rendered: ${entry.sourceUrl}`);
+}
 for (const title of expectedTitles) assert.ok(rendered.includes(title), `episode is rendered: ${title}`);
-for (const date of ["2025-06-29", "2025-07-06", "2025-07-20", "2025-07-27"]) {
+for (const date of ["2025-06-29", "2025-07-06", "2025-07-13", "2025-07-20", "2025-07-27"]) {
   assert.ok(rendered.includes(`data-published-date="${date}"`), `verified date is rendered: ${date}`);
 }
+assert.deepEqual(Array.from(rendered.matchAll(/data-published-date="([^"]+)"/gu), (match) => match[1]),
+  ["2025-06-29", "2025-07-06", "2025-07-13", "2025-07-20", "2025-07-27"],
+  "rendered rows expose every verified release date in chronological order");
 assert.equal((rendered.match(/Podcastlistens vurdering:/gu) || []).length, 1,
   "only Peter's existing editorial score is shown");
 assert.ok(manualEpisodes.slice(0, 2).concat(manualEpisodes.slice(3)).every((episode) => episode.editorial_rating === null),
@@ -245,4 +307,14 @@ try {
   await browser.close();
 }
 
-console.log(JSON.stringify({ status: "PASS", verifiedEpisodes: 5, officialSourceLinks: 4, browserWidths: [320, 375, 390, 1440], ratingsCreated: 0 }, null, 2));
+console.log(JSON.stringify({
+  status: "PASS",
+  verifiedEpisodes: 5,
+  displayedTitles: Array.from(displayRows, (episode) => episode.title),
+  displayedDates: Array.from(displayRows, (episode) => episode._episodeOverviewPublishedAt || episode.published_at),
+  officialSourceLinks: 4,
+  preservedPeterId: mergedPeter.id,
+  preservedPeterGuid: mergedPeter.external_guid,
+  browserWidths: [320, 375, 390, 1440],
+  ratingsCreated: 0
+}, null, 2));

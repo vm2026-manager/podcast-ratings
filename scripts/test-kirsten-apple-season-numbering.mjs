@@ -41,6 +41,7 @@ const base = {
   normalizeText: (value) => String(value ?? "").trim(),
   normalizeComparable: (value) => String(value ?? "").trim().toLowerCase(),
   getEpisodePodcastConfig: (podcast) => ({ seasonNumber: podcast.seasonNumber }),
+  getDerVarEngangEpisodeOverviewRows: (_podcast, episodes) => episodes,
   getAppleSeasonEpisodeNumber,
   getVisibleGenstartEpisodes: () => matches
 };

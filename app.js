@@ -13036,6 +13036,35 @@ function formatEpisodeOverviewOwnScore(value) {
   return value === null ? "Vurder" : formatEpisodeOverviewScore(value);
 }
 
+function getDerVarEngangEpisodeOverviewRows(podcast, episodes) {
+  const config = getEpisodePodcastConfig(podcast);
+  if (config?.podcastKey !== "der var engang et mal") return episodes;
+
+  const manualEpisodes = getConfiguredManualEpisodes(config);
+  if (!manualEpisodes.length) return episodes;
+
+  const manualById = new Map(manualEpisodes.map((episode) => [getEpisodeKey(episode), episode]));
+  return (episodes || [])
+    .map((episode, index) => {
+      const manualEpisode = manualById.get(getEpisodeKey(episode));
+      const publishedAt = manualEpisode?.published_at || episode.published_at || "";
+      return {
+        episode: publishedAt === episode.published_at
+          ? episode
+          : { ...episode, _episodeOverviewPublishedAt: publishedAt },
+        index,
+        publishedAt
+      };
+    })
+    .sort((left, right) => {
+      if (left.publishedAt && right.publishedAt) return left.publishedAt.localeCompare(right.publishedAt) || left.index - right.index;
+      if (left.publishedAt) return -1;
+      if (right.publishedAt) return 1;
+      return left.index - right.index;
+    })
+    .map(({ episode }) => episode);
+}
+
 function getEpisodeWorkspaceEpisodes(podcast) {
   const episodeState = getPodcastEpisodeState(podcast);
   const searchTerm = normalizeText(episodeState.searchTerm);
@@ -13046,13 +13075,16 @@ function getEpisodeWorkspaceEpisodes(podcast) {
     const filtered = season ? episodes.filter((episode) => getAppleSeasonEpisodeNumber(episode)?.season === season) : episodes;
     return season ? filtered.slice().sort((a, b) => getAppleSeasonEpisodeNumber(a).episode - getAppleSeasonEpisodeNumber(b).episode) : filtered;
   };
-  if (!searchTerm) return filterSeason(episodeState.items);
-  if (config?.dataSource !== "local" && config) return filterSeason(getVisibleGenstartEpisodes());
-
-  const comparableSearch = normalizeComparable(searchTerm);
-  return filterSeason(episodeState.items.filter((episode) =>
-    normalizeComparable(episode.title || "").includes(comparableSearch)
-  ));
+  let episodes;
+  if (!searchTerm) episodes = filterSeason(episodeState.items);
+  else if (config?.dataSource !== "local" && config) episodes = filterSeason(getVisibleGenstartEpisodes());
+  else {
+    const comparableSearch = normalizeComparable(searchTerm);
+    episodes = filterSeason(episodeState.items.filter((episode) =>
+      normalizeComparable(episode.title || "").includes(comparableSearch)
+    ));
+  }
+  return getDerVarEngangEpisodeOverviewRows(podcast, episodes);
 }
 
 function getAppleSeasonEpisodeNumber(episode) {
@@ -13157,9 +13189,11 @@ function renderPodcastEpisodeOverviewRows(podcast) {
     .map((episode, index) => {
       const episodeId = getEpisodeKey(episode);
       const episodeNumber = Number(episode.episode_number || getAppleSeasonEpisodeNumber(episode)?.episode || index + 1);
-      // Only surface an upstream publication date when the episode actually has
-      // one. Manual catalogue entries intentionally have no inferred date.
-      const publicationDate = showPublicationDate ? formatEpisodeDate(episode.published_at) : "";
+      // The Der var engang overview may overlay its verified catalogue date;
+      // all other configured episodes use only their upstream publication date.
+      const publicationDate = showPublicationDate
+        ? formatEpisodeDate(episode._episodeOverviewPublishedAt || episode.published_at)
+        : "";
       const stat = getEpisodeStat(episodeId);
       const userRating = getEpisodeUserRating(episodeId);
       const sourceScore = parseNumber(stat?.averageRating);
