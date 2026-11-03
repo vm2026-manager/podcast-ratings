@@ -179,7 +179,7 @@ assert.equal(saved.run().length, 0, "personal rows still require login");
 const stale = fixture();
 stale.run();
 const oldSnapshot = JSON.parse(stale.storage.get("snapshot"));
-oldSnapshot.byUser.user.version = 5;
+oldSnapshot.byUser.user.version = version - 1;
 oldSnapshot.byUser.user.sections[0].title = "Old cluster-first snapshot";
 stale.storage.set("snapshot", JSON.stringify(oldSnapshot));
 assert.equal(stale.run()[0].seedPodcastKey, "seed-a");
