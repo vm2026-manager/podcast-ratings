@@ -2,8 +2,8 @@
   "version": 1,
   "source": {
     "path": "data/podcasts.json",
-    "generatedAt": "2026-11-03T12:34:20.167Z",
-    "count": 1344,
+    "generatedAt": "2026-11-03T16:41:55.724Z",
+    "count": 1348,
     "topicAliases": "config/recommendation-topic-aliases.json",
     "topicAliasVersion": 1,
     "genreMapping": "config/recommendation-genre-mapping.json",
@@ -11,11 +11,11 @@
     "stableIdMethod": "frontend-normalized-title",
     "recommendationIdMethod": "metadata-fingerprint-sha256-128-v1"
   },
-  "count": 1344,
+  "count": 1348,
   "summary": {
-    "podcasts": 1344,
+    "podcasts": 1348,
     "validPrimaryGenres": 1325,
-    "invalidPrimaryGenres": 19,
+    "invalidPrimaryGenres": 23,
     "genreEligibleBeforeMapping": 1094,
     "genreEligibleAfterMapping": 1325,
     "recommendationMetadataEligibleBeforeMapping": 1092,
@@ -25,40 +25,40 @@
     "primaryGenreMappingSpelling": 0,
     "primaryGenreMappingDirect": 130,
     "primaryGenreMappingConditionalDefault": 0,
-    "primaryGenreMappingUnmapped": 19,
+    "primaryGenreMappingUnmapped": 23,
     "uniqueUnmappedPrimaryGenres": 13,
     "conditionalGenreReviews": 0,
     "withSecondaryGenre": 1106,
     "withTertiaryGenre": 0,
-    "withRawTopics": 1342,
-    "withCanonicalTopics": 1342,
-    "topicEligible": 1342,
+    "withRawTopics": 1346,
+    "withCanonicalTopics": 1346,
+    "topicEligible": 1346,
     "genreEligible": 1325,
     "recommendationMetadataEligible": 1323,
     "approvedAliases": 17,
-    "podcastsWithAliasApplied": 99,
-    "rawTopicOccurrences": 4982,
-    "rawUniqueTopicForms": 3049,
-    "canonicalTopicOccurrences": 4982,
-    "canonicalUniqueTopics": 2800,
-    "normalizedTopicIdentities": 2800,
-    "topicVariantGroups": 249,
-    "topicCollisionGroups": 232,
+    "podcastsWithAliasApplied": 100,
+    "rawTopicOccurrences": 5006,
+    "rawUniqueTopicForms": 3060,
+    "canonicalTopicOccurrences": 5006,
+    "canonicalUniqueTopics": 2810,
+    "normalizedTopicIdentities": 2810,
+    "topicVariantGroups": 250,
+    "topicCollisionGroups": 233,
     "approvedAliasTopicGroups": 17,
-    "safeTopicCollisionGroups": 232,
+    "safeTopicCollisionGroups": 233,
     "unsafeTopicCollisionGroups": 0,
     "podcastsAffectedByTopicNormalization": 377,
     "withinPodcastTopicDuplicatesRemoved": 0,
-    "canonicalTopicsUsedOnce": 2055,
-    "canonicalTopicsAtLeastThree": 369,
-    "canonicalTopicsAtLeastFive": 163,
+    "canonicalTopicsUsedOnce": 2064,
+    "canonicalTopicsAtLeastThree": 374,
+    "canonicalTopicsAtLeastFive": 164,
     "canonicalTopicsAtLeastTen": 52,
-    "possibleStandaloneRows": 341,
+    "possibleStandaloneRows": 346,
     "topicKeyCollisions": 0,
-    "uniqueExistingIds": 1336,
+    "uniqueExistingIds": 1340,
     "duplicateStableIdValues": 8,
     "podcastsSharingStableId": 16,
-    "uniqueRecommendationIds": 1344,
+    "uniqueRecommendationIds": 1348,
     "recommendationIdCollisions": 0,
     "exactDuplicateGroups": 1,
     "likelyDuplicateGroups": 2,
@@ -26825,7 +26825,7 @@
         "personlige portrætter"
       ],
       "topicsCanonical": [
-        "Kønsidentitet",
+        "kønsidentitet",
         "livsforandringer",
         "tilhørsforhold",
         "Personlige portrætter"
@@ -27178,7 +27178,7 @@
       "topicsCanonical": [
         "Aldring",
         "mandeliv",
-        "Karriere",
+        "karriere",
         "livsvalg"
       ],
       "topicKeys": [
@@ -27800,7 +27800,7 @@
         "sundhed"
       ],
       "topicsCanonical": [
-        "Sygdom",
+        "sygdom",
         "behandling",
         "patientoplevelser",
         "sundhed"
@@ -31423,7 +31423,7 @@
         "mental sundhed"
       ],
       "topicsCanonical": [
-        "Karriere",
+        "karriere",
         "iværksætteri",
         "personlig udvikling",
         "mental sundhed"
@@ -45738,7 +45738,7 @@
       ],
       "topicsCanonical": [
         "Milo Kinnock",
-        "Kønsidentitet",
+        "kønsidentitet",
         "familie",
         "identitet"
       ],
@@ -45976,7 +45976,7 @@
         "Lone Frank",
         "videnskabsjournalistik",
         "depression",
-        "Sygdom"
+        "sygdom"
       ],
       "topicKeys": [
         "lone-frank",
@@ -51551,6 +51551,195 @@
       "genreEligible": true,
       "recommendationMetadataEligible": true,
       "metadataIssues": []
+    },
+    {
+      "id": "mattias tesfaye",
+      "recommendationId": "rec-mattias-tesfaye-39bc3a84ba0c71b1fb481732c9c83d36",
+      "recommendationIdentityBasis": "title+link",
+      "identityDuplicateGroup": "",
+      "title": "Mattias Tesfaye",
+      "mainSeries": "Et kapitel for sig",
+      "primaryGenreRaw": "Portræt",
+      "primaryGenre": "",
+      "primaryGenreValid": false,
+      "primaryGenreMappingType": "unmapped",
+      "primaryGenreMappingSource": "Portræt",
+      "primaryGenreNeedsReview": true,
+      "primaryGenreReviewReason": "unmapped_primary_genre",
+      "secondaryGenre": "",
+      "secondaryGenreValid": true,
+      "topicsRaw": [
+        "opvækst i Aarhus",
+        "arbejderklasse",
+        "murerfaget",
+        "dansk politik",
+        "ministerliv",
+        "AGF"
+      ],
+      "topicsCanonical": [
+        "opvækst i Aarhus",
+        "arbejderklasse",
+        "murerfaget",
+        "Dansk politik",
+        "Ministerliv",
+        "AGF"
+      ],
+      "topicKeys": [
+        "opvaekst-i-aarhus",
+        "arbejderklasse",
+        "murerfaget",
+        "dansk-politik",
+        "ministerliv",
+        "agf"
+      ],
+      "topicEligible": true,
+      "genreEligible": false,
+      "recommendationMetadataEligible": false,
+      "metadataIssues": [
+        "invalid_primary_genre",
+        "topic_alias_applied"
+      ]
+    },
+    {
+      "id": "birgithe kosovic",
+      "recommendationId": "rec-birgithe-kosovic-87a0f2aed6d6637a14036c84f18e7edd",
+      "recommendationIdentityBasis": "title+link",
+      "identityDuplicateGroup": "",
+      "title": "Birgithe Kosovic",
+      "mainSeries": "Et kapitel for sig",
+      "primaryGenreRaw": "Portræt",
+      "primaryGenre": "",
+      "primaryGenreValid": false,
+      "primaryGenreMappingType": "unmapped",
+      "primaryGenreMappingSource": "Portræt",
+      "primaryGenreNeedsReview": true,
+      "primaryGenreReviewReason": "unmapped_primary_genre",
+      "secondaryGenre": "",
+      "secondaryGenreValid": true,
+      "topicsRaw": [
+        "forfatterskab",
+        "familie",
+        "krig",
+        "opvækst",
+        "ægteskab",
+        "Serbien"
+      ],
+      "topicsCanonical": [
+        "forfatterskab",
+        "familie",
+        "krig",
+        "opvækst",
+        "ægteskab",
+        "Serbien"
+      ],
+      "topicKeys": [
+        "forfatterskab",
+        "familie",
+        "krig",
+        "opvaekst",
+        "aegteskab",
+        "serbien"
+      ],
+      "topicEligible": true,
+      "genreEligible": false,
+      "recommendationMetadataEligible": false,
+      "metadataIssues": [
+        "invalid_primary_genre"
+      ]
+    },
+    {
+      "id": "ditlev tamm",
+      "recommendationId": "rec-ditlev-tamm-a7e5326dad66a4c2c9bf454d673cea06",
+      "recommendationIdentityBasis": "title+link",
+      "identityDuplicateGroup": "",
+      "title": "Ditlev Tamm",
+      "mainSeries": "Et kapitel for sig",
+      "primaryGenreRaw": "Portræt",
+      "primaryGenre": "",
+      "primaryGenreValid": false,
+      "primaryGenreMappingType": "unmapped",
+      "primaryGenreMappingSource": "Portræt",
+      "primaryGenreNeedsReview": true,
+      "primaryGenreReviewReason": "unmapped_primary_genre",
+      "secondaryGenre": "",
+      "secondaryGenreValid": true,
+      "topicsRaw": [
+        "retshistorie",
+        "jura",
+        "familie",
+        "depression",
+        "skilsmisse",
+        "kønsidentitet"
+      ],
+      "topicsCanonical": [
+        "retshistorie",
+        "jura",
+        "familie",
+        "depression",
+        "skilsmisse",
+        "kønsidentitet"
+      ],
+      "topicKeys": [
+        "retshistorie",
+        "jura",
+        "familie",
+        "depression",
+        "skilsmisse",
+        "koensidentitet"
+      ],
+      "topicEligible": true,
+      "genreEligible": false,
+      "recommendationMetadataEligible": false,
+      "metadataIssues": [
+        "invalid_primary_genre"
+      ]
+    },
+    {
+      "id": "sara blædel",
+      "recommendationId": "rec-sara-blaedel-4e31553fc8752b8c2aa2a6e1306af132",
+      "recommendationIdentityBasis": "title+link",
+      "identityDuplicateGroup": "",
+      "title": "Sara Blædel",
+      "mainSeries": "Et kapitel for sig",
+      "primaryGenreRaw": "Portræt",
+      "primaryGenre": "",
+      "primaryGenreValid": false,
+      "primaryGenreMappingType": "unmapped",
+      "primaryGenreMappingSource": "Portræt",
+      "primaryGenreNeedsReview": true,
+      "primaryGenreReviewReason": "unmapped_primary_genre",
+      "secondaryGenre": "",
+      "secondaryGenreValid": true,
+      "topicsRaw": [
+        "forfatterskab",
+        "sygdom",
+        "modgang",
+        "familie",
+        "krimi",
+        "karriere"
+      ],
+      "topicsCanonical": [
+        "forfatterskab",
+        "sygdom",
+        "modgang",
+        "familie",
+        "krimi",
+        "karriere"
+      ],
+      "topicKeys": [
+        "forfatterskab",
+        "sygdom",
+        "modgang",
+        "familie",
+        "krimi",
+        "karriere"
+      ],
+      "topicEligible": true,
+      "genreEligible": false,
+      "recommendationMetadataEligible": false,
+      "metadataIssues": [
+        "invalid_primary_genre"
+      ]
     }
   ]
 }
