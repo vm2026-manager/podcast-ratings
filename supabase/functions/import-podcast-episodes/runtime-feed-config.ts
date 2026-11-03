@@ -4,6 +4,7 @@ import { appleShowUrl, parseAppleFeed, parseHttpFeed, parsePodimoShowFeed } from
 import { applySheetFeedPolicy, type FeedResolution } from "./sheet-feed-policy.ts";
 import { buildDjaevlenRoutes, DJAEVLEN_FEED_KEY } from "./djaevlen-routing.mjs";
 import { buildBakspejlRoutes, BAKSPEJL_FEED_KEY } from "./bakspejl-routing.mjs";
+import { buildRadioIIIIRoutes, RADIO_IIII_FEED_KEY } from "./radio-iiii-routing.mjs";
 import { PODIMO_ONGOING_HISTORICAL_SOURCES } from "./podimo-source-registry.ts";
 
 const PODCASTS_JSON_TIMEOUT_MS = 15000;
@@ -114,6 +115,8 @@ export function mergeSheetFeedConfigs(
   const djaevlenOwner = manualStaticConfigs[DJAEVLEN_FEED_KEY];
   const bakspejl = buildBakspejlRoutes(rows);
   const bakspejlOwner = manualStaticConfigs[BAKSPEJL_FEED_KEY];
+  const radioIIII = buildRadioIIIIRoutes(rows);
+  const radioIIIIOwner = manualStaticConfigs[RADIO_IIII_FEED_KEY];
   const djaevlenFullOwner = manualStaticConfigs[DJAEVLEN_LYD_FULL_FEED_KEY];
   const bakspejlFullOwner = manualStaticConfigs[BAKSPEJL_LYD_FULL_FEED_KEY];
   const configs: FeedConfigMap = {
@@ -127,6 +130,7 @@ export function mergeSheetFeedConfigs(
       }
     } : {}),
     ...(bakspejlOwner ? { [BAKSPEJL_FEED_KEY]: { ...bakspejlOwner, routes: bakspejl.routes, enabled: bakspejl.routes.length > 1 } } : {}),
+    ...(radioIIIIOwner ? { [RADIO_IIII_FEED_KEY]: { ...radioIIIIOwner, routes: radioIIII, enabled: radioIIII.length > 0 } } : {}),
     // Supplemental full-episode adapters use the same exact catalogue routes.
     // Never activate an umbrella without the authoritative sheet mapping.
     ...(djaevlenFullOwner ? { [DJAEVLEN_LYD_FULL_FEED_KEY]: { ...djaevlenFullOwner, routes: djaevlen.routes, enabled: djaevlen.routes.length > 0 } } : {}),

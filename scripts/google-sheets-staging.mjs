@@ -1,9 +1,11 @@
-// This client can write only to the separate DR staging spreadsheet.
+// This client can write only to a separate editorial staging spreadsheet.
 // Production Ark1 is intentionally inaccessible from GitHub Actions.
 import { VERIFIED_DR_SERIES_METADATA } from "./verified-dr-series-metadata.mjs";
 import { extractExplicitDrHostCredit } from "./dr-host-credit.mjs";
+import { RADIO_IIII_MAIN_SERIES, RADIO_IIII_HOST } from "./radio-iiii-auto-discovery.mjs";
 
 export const STAGING_TAB = "DR staging";
+export const RADIO_IIII_STAGING_TAB = "Radio IIII staging";
 export const ORIGINAL_SHEET_ID = "1V21y9uMx_fGethrT47hILWczgK_ZSNRfksSKWuR69ss";
 export const CATALOGUE_HEADERS = Object.freeze([
   "Placering", "Titel", "Vært", "Vuring (1-10)", "Genre", "Udgiver", "Hovedserie",
@@ -15,6 +17,10 @@ export const CATALOGUE_HEADERS = Object.freeze([
 export const STAGING_HEADERS = Object.freeze([
   ...CATALOGUE_HEADERS,
   "DR source GUID", "DR source URL", "DR source description", "Review status"
+]);
+export const RADIO_IIII_STAGING_HEADERS = Object.freeze([
+  ...CATALOGUE_HEADERS, "Radio IIII source GUIDs", "Radio IIII source URL",
+  "Radio IIII season URL", "Radio IIII source description", "Review status"
 ]);
 
 const normal = (value) => String(value ?? "").normalize("NFC").trim();
@@ -145,8 +151,88 @@ export function buildStagingPlan({ headers, existingRows, candidates }) {
   return { append, hostUpdates, alreadyPresent: seen.size - append.length };
 }
 
+export function buildRadioIIIIStagingRow(record, checkedDate = new Date().toISOString().slice(0, 10)) {
+  const id = normal(record?.podcast_id ?? record?.["Podcast-ID"]);
+  const title = normal(record?.title ?? record?.Titel);
+  const mainSeries = normal(record?.hovedserie ?? record?.Hovedserie);
+  const episodes = Array.isArray(record?.episodes) ? record.episodes : [];
+  const sourceDescription = plainSourceText(record?.source_description || "");
+  const sourceUrl = normal(record?.source_url ?? record?.Link);
+  const seasonUrl = normal(record?.season_url);
+  const guids = episodes.map((episode) => normal(episode.guid));
+  const chapterCount = episodes.filter((episode) => episode.role === "chapter").length;
+  if (!id || !title || mainSeries !== RADIO_IIII_MAIN_SERIES || normal(record?.publisher ?? record?.Udgiver) !== "RADIO IIII" ||
+      normal(record?.host ?? record?.["Vært"]) !== RADIO_IIII_HOST || episodes.length < 2 || !chapterCount ||
+      new Set(guids).size !== guids.length || guids.some((guid) => !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/iu.test(guid)) ||
+      !/^https:\/\/radio4\.dk\/podcasts\/et-kapitel-for-sig\//u.test(sourceUrl) ||
+      !/^https:\/\/radio4\.dk\/podcasts\/et-kapitel-for-sig\?season=\d+$/u.test(seasonUrl) || !sourceDescription) {
+    throw new Error("RADIO IIII staging identity or official season/episode source is incomplete");
+  }
+  const values = Array(RADIO_IIII_STAGING_HEADERS.length).fill("");
+  const set = (header, value) => { values[RADIO_IIII_STAGING_HEADERS.indexOf(header)] = String(value ?? ""); };
+  for (const [header, value] of Object.entries({
+    Titel: title, "Vært": RADIO_IIII_HOST, Genre: record?.genre || "", Udgiver: "RADIO IIII",
+    Hovedserie: RADIO_IIII_MAIN_SERIES, "Antal afsnit": episodes.length, Link: sourceUrl,
+    Billedlink: record?.image_url || "", "Kort beskrivelse": record?.short_description || "",
+    "Lang beskrivelse": record?.long_description || sourceDescription.slice(0, 1800),
+    Emner: Array.isArray(record?.topics) ? record.topics.join("; ") : "",
+    Episoder: Array.isArray(record?.manual_episodes) ? record.manual_episodes.join("; ") : "",
+    "Podcast-ID": id, Kilde: sourceUrl, "Tjekket dato": checkedDate,
+    "Radio IIII source GUIDs": guids.join("; "), "Radio IIII source URL": sourceUrl,
+    "Radio IIII season URL": seasonUrl, "Radio IIII source description": sourceDescription,
+    "Review status": record?.review_status || "SOURCE_VERIFIED_REQUIRES_OWNER_APPROVAL"
+  })) set(header, value);
+  return values;
+}
+
+export function buildRadioIIIIStagingPlan({ headers, existingRows, candidates }) {
+  if (!Array.isArray(headers) || headers.length !== RADIO_IIII_STAGING_HEADERS.length ||
+      RADIO_IIII_STAGING_HEADERS.some((header, index) => normal(headers[index]) !== header)) {
+    throw new Error("RADIO IIII staging header schema drift; append refused");
+  }
+  const idIndex = RADIO_IIII_STAGING_HEADERS.indexOf("Podcast-ID");
+  const titleIndex = RADIO_IIII_STAGING_HEADERS.indexOf("Titel");
+  const seriesIndex = RADIO_IIII_STAGING_HEADERS.indexOf("Hovedserie");
+  const guidsIndex = RADIO_IIII_STAGING_HEADERS.indexOf("Radio IIII source GUIDs");
+  const sourceIndex = RADIO_IIII_STAGING_HEADERS.indexOf("Radio IIII source URL");
+  const seasonIndex = RADIO_IIII_STAGING_HEADERS.indexOf("Radio IIII season URL");
+  const existing = new Map();
+  for (const row of existingRows || []) {
+    const id = normal(row?.[idIndex]);
+    if (!id) {
+      if ((row || []).some((cell) => normal(cell))) throw new Error("RADIO IIII staging has a populated row without Podcast-ID");
+      continue;
+    }
+    if (existing.has(id)) throw new Error(`RADIO IIII staging has duplicate Podcast-ID: ${id}`);
+    existing.set(id, row);
+  }
+  const seen = new Set();
+  const append = [];
+  for (const record of candidates || []) {
+    const row = buildRadioIIIIStagingRow(record);
+    const id = normal(row[idIndex]);
+    if (seen.has(id)) throw new Error(`Duplicate RADIO IIII staging candidate Podcast-ID: ${id}`);
+    seen.add(id);
+    if (existing.has(id)) {
+      const old = existing.get(id);
+      if (normal(old[titleIndex]) !== normal(row[titleIndex]) || normal(old[seriesIndex]) !== normal(row[seriesIndex]) ||
+          normal(old[guidsIndex]) !== normal(row[guidsIndex]) || normal(old[sourceIndex]) !== normal(row[sourceIndex]) ||
+          normal(old[seasonIndex]) !== normal(row[seasonIndex])) {
+        throw new Error(`RADIO IIII staging identity/source conflict for ${id}`);
+      }
+      continue;
+    }
+    if ([...existing.values(), ...append].some((old) => normal(old[titleIndex]) === normal(row[titleIndex]) ||
+      (normal(old[guidsIndex]) && normal(old[guidsIndex]) === normal(row[guidsIndex])))) {
+      throw new Error(`RADIO IIII staging title or source GUID collision for ${id}`);
+    }
+    append.push(row);
+  }
+  return { append, alreadyPresent: seen.size - append.length };
+}
+
 export class StagingSheetsApiClient {
-  constructor({ accessToken, spreadsheetId, fetchImpl = fetch, timeoutMs = 15000 }) {
+  constructor({ accessToken, spreadsheetId, fetchImpl = fetch, timeoutMs = 15000, tab = STAGING_TAB, headers = STAGING_HEADERS }) {
     if (!accessToken) throw new Error("Google Sheets staging credentials are missing; fail closed");
     if (!spreadsheetId || spreadsheetId === ORIGINAL_SHEET_ID) {
       throw new Error("A separate DR staging spreadsheet ID is required; original-sheet writes are forbidden");
@@ -155,6 +241,8 @@ export class StagingSheetsApiClient {
     this.spreadsheetId = spreadsheetId;
     this.fetchImpl = fetchImpl;
     this.timeoutMs = timeoutMs;
+    this.tab = tab;
+    this.headers = headers;
   }
 
   async request(url, options = {}) {
@@ -184,7 +272,9 @@ export class StagingSheetsApiClient {
   }
 
   async readSheet() {
-    const range = encodeURIComponent(`${STAGING_TAB}!A1:AI`);
+    const lastColumn = this.headers.length <= 26 ? String.fromCharCode(64 + this.headers.length) :
+      `${String.fromCharCode(64 + Math.floor((this.headers.length - 1) / 26))}${String.fromCharCode(65 + ((this.headers.length - 1) % 26))}`;
+    const range = encodeURIComponent(`${this.tab}!A1:${lastColumn}`);
     const response = await this.request(`https://sheets.googleapis.com/v4/spreadsheets/${this.spreadsheetId}/values/${range}?valueRenderOption=FORMULA`);
     const payload = await response.json();
     if (!Array.isArray(payload.values) || !payload.values.length) throw new Error("DR staging tab is empty or unreadable");
@@ -193,7 +283,9 @@ export class StagingSheetsApiClient {
   }
 
   async appendRows(rows) {
-    const range = encodeURIComponent(`${STAGING_TAB}!A:AI`);
+    const lastColumn = this.headers.length <= 26 ? String.fromCharCode(64 + this.headers.length) :
+      `${String.fromCharCode(64 + Math.floor((this.headers.length - 1) / 26))}${String.fromCharCode(65 + ((this.headers.length - 1) % 26))}`;
+    const range = encodeURIComponent(`${this.tab}!A:${lastColumn}`);
     const url = `https://sheets.googleapis.com/v4/spreadsheets/${this.spreadsheetId}/values/${range}:append?valueInputOption=RAW&insertDataOption=INSERT_ROWS&includeValuesInResponse=true`;
     return this.request(url, {
       method: "POST", headers: { "content-type": "application/json" },
@@ -264,6 +356,51 @@ export async function appendDrCandidatesToStaging({ client, candidates, dryRun =
   assertExistingRowsUnchanged(initial.rows, readback.rows);
   assertStagingAppendRowsMatch(plan.append, readback.rows);
   return { dryRun: false, appended: plan.append.length, alreadyPresent: plan.alreadyPresent, ...(hostFilled ? { hostFilled } : {}) };
+}
+
+export async function appendRadioIIIIToStaging({ client, candidates, dryRun = true }) {
+  if (!client || client.tab !== RADIO_IIII_STAGING_TAB || client.headers !== RADIO_IIII_STAGING_HEADERS) {
+    throw new Error("A dedicated RADIO IIII staging tab/client is required");
+  }
+  const initial = await client.readSheet();
+  const plan = buildRadioIIIIStagingPlan({ headers: initial.headers, existingRows: initial.rows, candidates });
+  if (dryRun || !plan.append.length) return { dryRun, appended: 0, alreadyPresent: plan.alreadyPresent };
+  const normalizeRows = (rows) => (rows || []).map((row) =>
+    Array.from({ length: RADIO_IIII_STAGING_HEADERS.length }, (_, index) => normal(row?.[index])));
+  try {
+    await client.appendRows(plan.append);
+  } catch (appendError) {
+    const reread = await client.readSheet();
+    buildRadioIIIIStagingPlan({ headers: reread.headers, existingRows: reread.rows, candidates: [] });
+    const before = normalizeRows(initial.rows);
+    const after = normalizeRows(reread.rows);
+    if (after.length < before.length || JSON.stringify(before) !== JSON.stringify(after.slice(0, before.length))) {
+      throw new Error("RADIO IIII staging changed during an ambiguous append; stop and inspect before retry", { cause: appendError });
+    }
+    for (const expected of plan.append) {
+      const id = normal(expected[RADIO_IIII_STAGING_HEADERS.indexOf("Podcast-ID")]);
+      const matches = (reread.rows || []).filter((row) => normal(row[RADIO_IIII_STAGING_HEADERS.indexOf("Podcast-ID")]) === id);
+      if (matches.length !== 1 || JSON.stringify(normalizeRows([matches[0]])[0]) !== JSON.stringify(normalizeRows([expected])[0])) {
+        throw new Error("RADIO IIII staging append recovery did not match the verified candidate rows", { cause: appendError });
+      }
+    }
+    return { dryRun: false, appended: plan.append.length, alreadyPresent: plan.alreadyPresent, recoveredAfterAmbiguousFailure: true };
+  }
+  const readback = await client.readSheet();
+  buildRadioIIIIStagingPlan({ headers: readback.headers, existingRows: readback.rows, candidates: [] });
+  const before = normalizeRows(initial.rows);
+  const after = normalizeRows(readback.rows);
+  if (after.length < before.length || JSON.stringify(before) !== JSON.stringify(after.slice(0, before.length))) {
+    throw new Error("Existing RADIO IIII staging rows changed during append; stop and inspect");
+  }
+  for (const expected of plan.append) {
+    const id = normal(expected[RADIO_IIII_STAGING_HEADERS.indexOf("Podcast-ID")]);
+    const matches = (readback.rows || []).filter((row) => normal(row[RADIO_IIII_STAGING_HEADERS.indexOf("Podcast-ID")]) === id);
+    if (matches.length !== 1 || JSON.stringify(normalizeRows([matches[0]])[0]) !== JSON.stringify(normalizeRows([expected])[0])) {
+      throw new Error("RADIO IIII staging append read-back mismatch; stop and inspect");
+    }
+  }
+  return { dryRun: false, appended: plan.append.length, alreadyPresent: plan.alreadyPresent };
 }
 
 function rowsAfterHostUpdates(rows, updates) {

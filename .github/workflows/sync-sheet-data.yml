@@ -347,3 +347,17 @@ jobs:
             echo "DR staging writes are disabled; no Google write attempted."
             node scripts/append-dr-series-to-staging.mjs
           fi
+
+      - name: Append verified RADIO IIII guest candidates to their separate review tab
+        env:
+          GOOGLE_ACCESS_TOKEN: ${{ steps.auth.outputs.access_token }}
+          GOOGLE_DR_STAGING_SHEET_ID: ${{ vars.GOOGLE_DR_STAGING_SHEET_ID }}
+          GOOGLE_DR_STAGING_WRITE_ENABLED: ${{ vars.GOOGLE_DR_STAGING_WRITE_ENABLED }}
+        shell: bash
+        run: |
+          if [[ "$GOOGLE_DR_STAGING_WRITE_ENABLED" == "true" ]]; then
+            node scripts/append-radio-iiii-to-staging.mjs --write
+          else
+            echo "RADIO IIII staging writes are disabled; no Google write attempted."
+            node scripts/append-radio-iiii-to-staging.mjs
+          fi
