@@ -89,6 +89,7 @@ const checks = [
   ["Mounir canonical Mediano editorial rating", ["scripts/test-mediano-mounir-canonical-editorial-rating.mjs"]],
   ["Explore stale-content guard", ["scripts/test-explore-stale-content-guard.mjs"]],
   ["Explore recommendation mix", ["scripts/test-explore-recommendation-mix.mjs"]],
+  ["Explore complete host identity matching", ["scripts/test-explore-host-identity.mjs"]],
   ["Explore startup warmup", ["scripts/test-explore-startup-warmup.mjs"]],
   ["Homepage similarity lazy loading", ["scripts/test-homepage-similarity-lazy-load.mjs"]]
 ];
