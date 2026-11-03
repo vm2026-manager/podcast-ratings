@@ -80,7 +80,8 @@ assert.equal(summary.historicalAuditReconciliation.pendingEarlierAuditAfterThree
 assert.equal(summary.historicalAuditReconciliation.completedDecisionsNamedInIssue376.length, 3);
 assert.deepEqual(summary.historicalAuditReconciliation.separateApprovedFinanceBatchIssue383Pr388.sort(), approvedFinanceIds.slice().sort());
 assert.match(summary.historicalAuditReconciliation.overlapBetweenFinanceBatchAnd136RowList, /Unresolved/u);
-assert.equal(summary.historicalAuditReconciliation.currentMachineProposalCountBeforeHistoricalHold, 27);
+const radioIiiiProposalCount = report.records.filter((row) => row.podcastId.startsWith("radio-iiii-auto-v1-") && row.status === "Afventer redaktionel godkendelse").length;
+assert.equal(summary.historicalAuditReconciliation.currentMachineProposalCountBeforeHistoricalHold, 27 + radioIiiiProposalCount, "verified Radio IIII intake proposals are counted separately from the stable historical audit baseline");
 assert.equal(summary.historicalAuditReconciliation.currentMachineProposalCountAfterHistoricalHold, summary.proposals.total);
 assert.ok(summary.historicalAuditReconciliation.limitation.includes("not versioned"));
 assert.ok(report.reconciliationRows.some((row) => row["Podcast-ID"] === "se og hor lige her" && row.Kategori.includes("historisk label")));
