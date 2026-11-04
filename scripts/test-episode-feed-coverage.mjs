@@ -46,8 +46,9 @@ const alternate = checkEpisodeFeedCoverage({ rows: [row("smat brændbart", podim
 assert.equal(alternate.findings[0].cause, "podimo_adapter_review_required",
   "an unrelated RSS adapter cannot satisfy a Podimo show-link row");
 const exactRssOverride = checkEpisodeFeedCoverage({ rows: [row("se og hor lige her", "https://open.podimo.com/podcast/447e8b97-c168-4016-8e0d-70cfa0bc4e32")] });
-assert.ok(!exactRssOverride.findings.some(x => x.podcast_key === "se og hor lige her"),
-  "the exact reviewed Spreaker source supersedes this stale Podimo feed locator");
+assert.equal(exactRssOverride.findings.find(x => x.podcast_key === "se og hor lige her")?.cause,
+  "podimo_adapter_review_required",
+  "the reviewed Spreaker identity remains explicitly inactive until its independent rollout is approved");
 const unpinnedRssOverride = checkEpisodeFeedCoverage({ rows: [row("unverified", "https://open.podimo.com/podcast/0db490b8-907e-4f35-bd48-60eae9f8805b")] },
   { alternative: { podcast_key: "unverified", source: "rss_alternative", feed_url: "https://example.test/working.rss", format: "rss", supersedes_sheet_feed: true } });
 assert.equal(unpinnedRssOverride.findings[0].cause, "podimo_adapter_review_required",
