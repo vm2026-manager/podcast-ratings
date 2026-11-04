@@ -82,31 +82,34 @@ Proposed interface:
    `public`. Create a dedicated `episode_monitor_rpc_owner NOLOGIN NOBYPASSRLS`
    role; it must not own the table or any schema. Grant it only column-level
    `SELECT (podcast_key, started_at, status)` on `public.episode_import_runs`.
-   Grant only `USAGE` on the `public` schema to that function-owner role.
-   Do not grant `BYPASSRLS`, `service_role`, table ownership, or broad schema
-   access to this role or the Auth user.
+   Grant only the schema `USAGE` and narrowly required function access. Do not
+   grant `BYPASSRLS`, `service_role`, table ownership, or broad schema access to
+   this role or the Auth user.
 3. Keep RLS enabled. Add one SELECT policy for
    `episode_monitor_rpc_owner` whose predicate is
    `auth.uid() = '<approved fixed monitor-user-uuid>'::uuid`; no policy is
-   added for `anon` or general `authenticated` users. Create one narrow,
-   parameterized `SECURITY DEFINER` RPC in exposed `public` (the private schema
-   is not PostgREST-callable without adding API configuration). Its owner is
-   `episode_monitor_rpc_owner`, it has an empty/fixed `search_path`, uses fully
-   qualified relation names, and checks the same fixed `auth.uid()` before
-   querying. It accepts at most 10 exact Podcast-IDs and a short bounded time
-   window; it returns only per-ID aggregate fields:
-   last success timestamp, last failure timestamp, last status, consecutive
-   failure count capped at 2, and whether any import started after activation.
-   It returns no exception text, feed URL, raw log, episode title/GUID, or row.
-   Query with `WHERE podcast_key = ANY(input_ids)` and bounded `started_at`,
-   aggregate internally, and return no exception text, feed URL, raw log,
-   episode title/GUID, or row. Revoke execute on the exact function signature
-   from `public` and `anon`; grant it to `authenticated`. The function's fixed
-   `auth.uid()` check must reject every authenticated identity except the
-   approved monitor user. The function-owner role is not a table owner and has
-   `NOBYPASSRLS`, so the restrictive RLS policy remains in force inside the
-   definer function.
-4. Add negative tests proving anon, ordinary authenticated users, an unrelated
+   added for `anon` or general `authenticated` users. The exposed `public`
+   schema contains only a minimal `SECURITY INVOKER` wrapper with an empty
+   `search_path`, fully qualified names, and an exact fixed `auth.uid()` check.
+   It validates 1–10 distinct, non-empty exact Podcast-IDs and an activation
+   timestamp no older than 14 days. It invokes the implementation in a
+   dedicated non-exposed `episode_monitor_private` schema. That function alone
+   is `SECURITY DEFINER`, owned by `episode_monitor_rpc_owner`, with
+   `SET search_path = ''`, `row_security = on`, fully qualified names, and its
+   own exact fixed `auth.uid()` check. It performs index-driven latest-two-run
+   lookups for consecutive-failure state and returns only aggregate fields:
+   latest status/timestamp, last observed success/failure timestamps, capped
+   consecutive-failure count, run count capped at two, and whether a run
+   followed activation. It returns no exception text, feed URL, raw log, episode
+   title/GUID, or table row. The private schema must not be in Supabase's
+   exposed schemas. Revoke default `PUBLIC` execution on both exact function
+   signatures; grant the wrapper to `authenticated`, and grant only the
+   execution/schema access required for the wrapper to call the private
+   function. The fixed identity check in the private function denies direct
+   invocation by every other Auth identity even if its schema is accidentally
+   exposed. The function role is not a table or schema owner and has
+   `NOBYPASSRLS`, so the row policy remains active.
+4. Add database-level negative tests proving anon, ordinary authenticated users, an unrelated
    Auth identity, malformed IDs, more than 10 IDs, out-of-window runs, direct
    table SELECT by anon/authenticated, other RPCs, and expired/revoked
    credentials are denied. Unknown exact IDs with no import run must return an
@@ -117,9 +120,31 @@ Proposed interface:
    `episode_import_runs_podcast_key_started_at_idx`, no full-table scan, no
    temporary disk, and a fixed low daily query limit before activation.
 
+The migration and credential setup are not production authorization. Apply
+them only to an owner-designated isolated test database until explicit,
+concrete approval is recorded for production role, RLS, Auth identity, and
+GitHub environment changes. Never treat an inactive or unlabelled Supabase
+project as a test environment. The monitor is not considered active until
+positive and negative PostgREST tests, query plans, expiry/revocation tests,
+and alarm/recovery checks pass in that isolated environment and again in
+production following separate owner approval.
+
+An unapplied draft is kept under `supabase/migration-plans/` rather than the
+executable `supabase/migrations/` directory so a routine migration push cannot
+apply it accidentally. Its identity UUID is a test sentinel: use a distinct
+test Auth identity in an isolated environment, and replace it with the
+specifically approved machine Auth UUID only for an approved production
+application. The current workstation has no Docker/Podman
+for local Supabase, and the inactive Supabase project has not been confirmed as
+an isolated test target; therefore no database integration test, actual
+`EXPLAIN (ANALYZE, BUFFERS)`, or query-budget measurement has been performed.
+The accompanying Node test checks source-level security invariants only; it is
+not evidence that PostgreSQL grants, RLS, Auth, or PostgREST behave correctly.
+
 After authorization and security review, Step 2 can alert on two consecutive
 failed imports, no import following adapter activation, no usable active
-episodes, teaser-only/inactive posts, recovery, deployment lag, and identity
-collisions. Deduplication belongs in #256 and adapter-routing review in #288;
+episodes, recovery, and identity collisions. Teaser-only/inactive posts and
+Edge deploy status remain unknown until separate verified signals exist.
+Deduplication belongs in #256 and adapter-routing review in #288;
 the five feed-specific issues remain independent. #256 stays open until that
 protected reader and post-merge recovery have been verified in production.
