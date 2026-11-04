@@ -10686,6 +10686,35 @@ function getPodcastDetailRatingData(podcast) {
   };
 }
 
+function getHistoricalMedianoEditorialEpisodeReview(podcast) {
+  const podcastId = getPodcastId(podcast);
+  if (podcastId !== "der var engang et mal") return null;
+
+  // This legacy catalogue score belongs to Peter Møller's one mapped episode;
+  // keep it outside the series, community, and personal rating fields.
+  const episodeTitle = "Der var engang et mål...af Peter Møller mod Farum";
+  const episodeId = getManualEpisodeCanonicalId(podcast, episodeTitle);
+  const rating = getManualEpisodeEditorialRating(podcast, episodeTitle);
+  if (episodeId !== "283fbea9-a29c-5104-803a-f39f2bb8b312" || rating === null) return null;
+
+  return { episodeTitle, rating };
+}
+
+function getHistoricalMedianoEditorialEpisodeReviewMarkup(podcast) {
+  const review = getHistoricalMedianoEditorialEpisodeReview(podcast);
+  if (!review) return "";
+
+  return `
+    <section class="podcast-detail-sheet__episode-ratings podcast-detail-sheet__historical-editorial-rating" aria-label="Historisk redaktionel episodevurdering" data-historical-editorial-episode-rating>
+      <div>
+        <span>Historisk Podcastlisten-vurdering</span>
+        <strong>${escapeHtml(formatCompactRating(review.rating))}<small>/10</small></strong>
+        <em>Gælder episoden “${escapeHtml(review.episodeTitle)}”</em>
+      </div>
+    </section>
+  `;
+}
+
 function getMainSeriesPodcasts(mainSeries) {
   const seriesKey = normalizeComparable(mainSeries);
   if (!seriesKey) return [];
@@ -14957,6 +14986,7 @@ function renderPodcastDetailSheetContent(
         ${getPodcastDetailOwnRatingMarkup(podcast)}
       </div>
     </section>
+    ${getHistoricalMedianoEditorialEpisodeReviewMarkup(podcast)}
     <section class="podcast-detail-sheet__episode-rating-mobile-help" data-podcast-detail-episode-rating-mobile-help${mobileEpisodeRatingLockHelpMarkup ? "" : " hidden"} aria-live="polite">${mobileEpisodeRatingLockHelpMarkup}</section>
     ${episodesMarkup}
     <div class="podcast-detail-sheet__recommendation-row">
