@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import { mergeSheetFeedConfigs, loadRuntimeFeedConfigs } from "../supabase/functions/import-podcast-episodes/runtime-feed-config.ts";
-import { selectNormalFeedKeys, selectNormalFeedShard, runEpisodeImport } from "../supabase/functions/import-podcast-episodes/core.ts";
+import { selectNormalFeedKeys, selectNormalFeedShard, runEpisodeImport, mapEpisodes, classifyEpisodes, validateExpectedRssIdentity, parseFeed } from "../supabase/functions/import-podcast-episodes/core.ts";
 import { APPROVED_SHEET_FEED_BASELINE } from "../supabase/functions/import-podcast-episodes/sheet-feed-approval-baseline.ts";
 
 const oldUrl = "https://example.test/old.rss";
@@ -74,9 +74,54 @@ const publishedApproved = publishedRuntime.audit.active_feeds
   .filter(feed => feed.origin === "sheet" && feed.enabled && feed.source.startsWith("sheet_"))
   .map(({ feed_key, podcast_key, source, feed_url }) => ({ feed_key, podcast_key, source, feed_url }))
   .sort((a, b) => a.podcast_key.localeCompare(b.podcast_key, "da-DK"));
-assert.equal(APPROVED_SHEET_FEED_BASELINE.length, 204);
+assert.equal(APPROVED_SHEET_FEED_BASELINE.length, 205);
 assert.deepEqual(publishedApproved.map(feed => [feed.podcast_key, feed.feed_url]),
-  [...APPROVED_SHEET_FEED_BASELINE].sort((a, b) => a[0].localeCompare(b[0], "da-DK")));
+  [...APPROVED_SHEET_FEED_BASELINE].map(([podcastKey, feedUrl]) => [podcastKey, feedUrl])
+    .sort((a, b) => a[0].localeCompare(b[0], "da-DK")));
+
+const krigFeedUrl = "https://api.dr.dk/podcasts/v1/feeds/krig-4";
+const krigRow = published.rows.filter(item => item["Podcast-ID"] === "krig");
+assert.equal(krigRow.length, 1, "the published catalogue has one exact Krig identity");
+assert.equal(krigRow[0].Titel, "Krig");
+assert.equal(krigRow[0].Vært, "Martin Tamm Andersen");
+assert.equal(krigRow[0].Feed, krigFeedUrl);
+assert.deepEqual(publishedApproved.filter(feed => feed.podcast_key === "krig").map(({ podcast_key, feed_url }) => [podcast_key, feed_url]),
+  [["krig", krigFeedUrl]], "only the exact podcast ID and verified DR URL activate this Sheet feed");
+const krigRuntime = mergeSheetFeedConfigs(published);
+assert.deepEqual(krigRuntime.configs.krig, {
+  podcast_key: "krig", source: "sheet_krig_rss", feed_url: krigFeedUrl,
+  format: "rss", enabled: true, generated_from_sheet: true, expected_rss_channel_title: "Krig"
+});
+assert.ok(selectNormalFeedKeys(krigRuntime.configs).includes("krig"));
+assert.equal(krigRuntime.audit.duplicate_feed_urls.some(duplicate => duplicate.feed_url === krigFeedUrl), false,
+  "no other configured importer owns the exact Krig feed URL");
+const krigUrlDrift = mergeSheetFeedConfigs([{ ...krigRow[0], Feed: "https://api.dr.dk/podcasts/v1/feeds/other-show" }]);
+assert.equal(krigUrlDrift.configs.krig.feed_url, krigFeedUrl, "Sheet drift cannot replace the exact approved Krig feed");
+assert.equal(krigUrlDrift.audit.feed_warnings[0].reason, "special_adapter_preserved");
+const krigUrlCollision = mergeSheetFeedConfigs([row(krigFeedUrl, "another podcast")]);
+assert.equal(krigUrlCollision.configs.another_podcast, undefined, "a second Sheet ID cannot claim the Krig feed");
+assert.equal(krigUrlCollision.audit.feed_warnings[0].reason, "feed_owned_by_other_podcast");
+
+const krigFixture = parseFeed(`<rss xmlns:atom="http://www.w3.org/2005/Atom"><channel><atom:link href="https://api.dr.dk/podcasts/v1/feeds/krig-4" rel="self" />
+  <title>Krig</title><link>https://www.dr.dk/lyd/special-radio/krig-4109741269000</link>
+  <item><guid isPermaLink="false">16122492420</guid><title>Døden, hævnen og livet efter krigen</title><description>Verified feed description</description><pubDate>Wed, 30 Oct 2024 05:00:00 +0100</pubDate><link>https://www.dr.dk/lyd/special-radio/krig/episode/16122492420</link><enclosure url="https://api.dr.dk/podcasts/v1/assets/episode-16122492420.mp3" type="audio/mpeg" /></item>
+  <item><guid isPermaLink="false">16122492419</guid><title>Sprogofficeren</title><description>Verified feed description</description><pubDate>Wed, 23 Oct 2024 05:00:00 +0200</pubDate><link>https://www.dr.dk/lyd/special-radio/krig/episode/16122492419</link><enclosure url="https://api.dr.dk/podcasts/v1/assets/episode-16122492419.mp3" type="audio/mpeg" /></item>
+</channel></rss>`);
+const krigMappingConfig = { podcast_key: "krig", source: "sheet_krig_rss", feed_url: krigFeedUrl,
+  format: "rss", expected_rss_channel_title: "Krig" };
+validateExpectedRssIdentity(krigFixture, krigMappingConfig);
+assert.equal(krigFixture.channel.link, "https://www.dr.dk/lyd/special-radio/krig-4109741269000",
+  "the namespaced Atom self-link cannot shadow the official DR channel link");
+const mappedKrig = mapEpisodes(krigFixture, krigMappingConfig, "2026-11-04T00:00:00.000Z");
+assert.deepEqual(mappedKrig.episodes.map(episode => [episode.podcast_key, episode.source, episode.external_guid, episode.external_episode_id]), [
+  ["krig", "sheet_krig_rss", "16122492420", "16122492420"],
+  ["krig", "sheet_krig_rss", "16122492419", "16122492419"]
+]);
+assert.ok(mappedKrig.episodes.every(episode => episode.description === "Verified feed description" && episode.episode_url?.startsWith("https://www.dr.dk/")));
+assert.deepEqual(classifyEpisodes(mappedKrig.episodes, mappedKrig.episodes), { inserted: [], updated: [], skipped_count: 2 },
+  "a repeated import of the same GUIDs is idempotent and preserves the existing rows");
+assert.throws(() => validateExpectedRssIdentity(parseFeed("<rss><channel><title>Different show</title><item><guid>16122492420</guid><title>Episode</title></item></channel></rss>"), krigMappingConfig),
+  /RSS channel identity mismatch/u, "a different show cannot be imported through the Krig mapping");
 
 // Feed metadata for a new or changed podcast remains review-only; row fields
 // cannot grant import permission. Existing feed owners block duplicate URLs.

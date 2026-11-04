@@ -4,6 +4,7 @@ import { fileURLToPath } from "node:url";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const checks = [
+  ["Issue #58 qualified historical editorial episode rating and cover guard", ["scripts/test-issue58-editorial-review-visibility.mjs"]],
   ["mobile profile average stat alignment and unchanged genre card", ["tests/profile-average-stat-alignment.test.mjs"]],
   ["Har du hørt source identity and episode visibility", ["--experimental-strip-types", "scripts/test-har-du-hoert-source-boundary.mjs"]],
   ["Sheet feed override safety and audit", ["--experimental-strip-types", "scripts/test-sheet-feed-overrides.mjs"]],
@@ -61,6 +62,7 @@ const checks = [
   ["mobile ranking toolbar alignment, visibility, accessibility and navigation", ["scripts/test-mobile-ranking-toolbar.mjs"]],
   ["desktop ranking rank grid geometry in Chromium", ["scripts/test-desktop-ranking-column.mjs"]],
   ["genre phase 2, ranking topic/synonym/typo search and responsive layouts", ["scripts/test-genre-phase2.mjs"]],
+  ["cross-field podcast search across headers and ranking", ["scripts/test-cross-field-search.mjs"]],
   ["homepage layout clipping, alignment, genre access and responsive bounds", ["scripts/test-home-layout-regression.mjs"]],
   ["community ranking load safety", ["scripts/test-community-ranking-load-safety.mjs"]],
   ["ranking episode-derived own-rating lock", ["scripts/test-ranking-episode-rating-lock.mjs"]],
