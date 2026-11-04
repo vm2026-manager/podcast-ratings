@@ -44,6 +44,17 @@
       "expectedImageUrl": "https://asset.dr.dk/drlyd/images/urn:dr:radio:image:6926eae5f813fbba9054db46",
       "verdict": "VERIFIED",
       "evidence": "Source provenance is now verified against the DR image source, as confirmed by the supplied identity review on 2026-10-04. The exact source SHA256 and canonical catalogue ID/title/publisher/image URL match; this registration is no longer unresolved or ambiguous."
+    },
+    {
+      "sourcePath": "assets/podcast-covers/manual-inbox/der_var_engang_et_mal_editorial.png",
+      "sourceSha256": "9807a7db699e0ba8b1b8b78ef27bd66d89a5d039711a9d3f7a352e387d960177",
+      "podcastId": "der var engang et mal",
+      "stableKey": "der_var_engang_et_mal_user_editorial",
+      "expectedTitle": "Der var engang et mål",
+      "expectedPublisher": "Mediano",
+      "expectedImageUrl": "",
+      "verdict": "VERIFIED",
+      "evidence": "The owner explicitly supplied and approved these exact 1254x1254 image bytes for canonical Podcast-ID der var engang et mal on 2026-11-04. This is owner-approved Podcastlisten editorial artwork, not an official Mediano cover. Original checksum verified; no cropping, generated content, overlays or typography."
     }
   ]
 }

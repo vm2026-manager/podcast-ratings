@@ -34,6 +34,10 @@ The five official Mediano releases are verified as episodes of the series, but n
 
 The official Andrés Iniesta article exposes this candidate image: `https://images.squarespace-cdn.com/content/v1/573c1b7d01dbae9b52cd0936/147b3387-8786-4f5d-b2dc-459a1ccf2ef0/476352274_1159571366171636_4833220818807679421_n.jpg` (525×350). Visual inspection shows a generic “Støt Mediano 2025” multi-programme promo, with no “Der var engang et mål” title or artwork. It is documented as a rejected candidate, not registered or published. Keep the existing generic fallback until Mediano supplies dedicated artwork or an identity-bearing official source is found.
 
+## Owner-approved editorial cover — 2026-11-04
+
+The owner supplied and approved `assets/podcast-covers/manual-inbox/der_var_engang_et_mal_editorial.png` for the exact canonical ID `der var engang et mal`. Its SHA-256 is `9807a7db699e0ba8b1b8b78ef27bd66d89a5d039711a9d3f7a352e387d960177`; it is a 1254×1254 PNG. Register this as Podcastlisten editorial artwork, explicitly not an official Mediano cover. The earlier `Der var engang et mål.png` remains ambiguous and untouched, as does the historic Peter episode's sponsor image and identity. The regular intake produces the same full-image contained 1400×1400 master and manifest variants; no creative alteration is permitted.
+
 ## Workflow
 
 Install Python 3 with `Pillow==12.2.0` and Node.js. Run `python scripts/intake_manual_podcast_covers.py` to validate/report without writes. After explicit identity and artwork review, add a registry record containing the exact source path, SHA256, canonical ID, stable asset key, expected title/publisher/image URL, VERIFIED verdict and evidence. Never infer a record from its filename. Local canonical additions and explicit historical suppression are read from app.js without changing them.
