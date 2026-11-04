@@ -50,8 +50,8 @@ function toFeedKey(podcastId: unknown): string {
   return normalizePodcastKey(podcastId).replace(/\s+/g, "_");
 }
 
-const approvedSheetFeeds = APPROVED_SHEET_FEED_BASELINE.map(([podcast_key, feed_url]) => ({
-  podcast_key, feed_url, feed_key: toFeedKey(podcast_key), source: `sheet_${toFeedKey(podcast_key)}_rss`
+const approvedSheetFeeds = APPROVED_SHEET_FEED_BASELINE.map(([podcast_key, feed_url, identity]) => ({
+  ...identity, podcast_key, feed_url, feed_key: toFeedKey(podcast_key), source: `sheet_${toFeedKey(podcast_key)}_rss`
 }));
 
 function getPodcastId(row: Record<string, unknown>): string {
@@ -161,7 +161,9 @@ export function mergeSheetFeedConfigs(
       feed_url: approved.feed_url,
       format: "rss",
       enabled: true,
-      generated_from_sheet: true
+      generated_from_sheet: true,
+      ...(approved.expected_rss_channel_title ? { expected_rss_channel_title: approved.expected_rss_channel_title } : {}),
+      ...(approved.expected_external_guid_prefix ? { expected_external_guid_prefix: approved.expected_external_guid_prefix } : {})
     };
   }
   // Støt Mediano is a category-only destination. Activate only this route,

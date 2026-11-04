@@ -61,6 +61,7 @@ const checks = [
   ["mobile ranking toolbar alignment, visibility, accessibility and navigation", ["scripts/test-mobile-ranking-toolbar.mjs"]],
   ["desktop ranking rank grid geometry in Chromium", ["scripts/test-desktop-ranking-column.mjs"]],
   ["genre phase 2, ranking topic/synonym/typo search and responsive layouts", ["scripts/test-genre-phase2.mjs"]],
+  ["cross-field podcast search across headers and ranking", ["scripts/test-cross-field-search.mjs"]],
   ["homepage layout clipping, alignment, genre access and responsive bounds", ["scripts/test-home-layout-regression.mjs"]],
   ["community ranking load safety", ["scripts/test-community-ranking-load-safety.mjs"]],
   ["ranking episode-derived own-rating lock", ["scripts/test-ranking-episode-rating-lock.mjs"]],

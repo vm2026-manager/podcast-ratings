@@ -193,7 +193,7 @@ try {
     multipleErrors: false,
     shortCollision: false,
     romanCollision: false,
-    separatedTopics: false,
+    separatedTopics: true,
     punctuationAndDanish: true,
     decomposedDanish: true,
     hostOnly: false,
