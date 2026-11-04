@@ -383,8 +383,9 @@ export function stripHtml(value: string): string {
 }
 
 function xmlTag(block: string, tagName: string): string | null {
-  const pattern = new RegExp(`<(?:[\\w.-]+:)?${tagName}\\b[^>]*>([\\s\\S]*?)<\\/(?:[\\w.-]+:)?${tagName}>`, "i");
-  const match = block.match(pattern);
+  const unprefixedPattern = new RegExp(`<${tagName}\\b[^>]*>([\\s\\S]*?)<\\/${tagName}>`, "i");
+  const namespacedPattern = new RegExp(`<[\\w.-]+:${tagName}\\b[^>]*>([\\s\\S]*?)<\\/[\\w.-]+:${tagName}>`, "i");
+  const match = block.match(unprefixedPattern) || block.match(namespacedPattern);
   return match ? decodeXmlEntities(match[1]).trim() : null;
 }
 

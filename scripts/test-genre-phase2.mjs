@@ -193,7 +193,7 @@ try {
     multipleErrors: false,
     shortCollision: false,
     romanCollision: false,
-    separatedTopics: false,
+    separatedTopics: true,
     punctuationAndDanish: true,
     decomposedDanish: true,
     hostOnly: false,
@@ -203,6 +203,47 @@ try {
   assert.deepEqual(enhancedSearchCases.exploreStaysExact, { topic: false, parts: ["wwii"] });
   assert.equal(enhancedSearchCases.oneLetterInsert, true);
   assert.equal(enhancedSearchCases.twoEdits, false);
+
+  const coldCachePage = await browser.newPage({ viewport: { width: 320, height: 844 } });
+  coldCachePage.on("pageerror", (error) => { throw error; });
+  await coldCachePage.route(/^https?:\/\/(?!127\.0\.0\.1)/u, (route) => route.abort());
+  await coldCachePage.goto(`http://127.0.0.1:${address.port}/#ranglister`, { waitUntil: "domcontentloaded" });
+  await coldCachePage.waitForFunction(() => getRankingCandidates().length >= 1000);
+  const coldAndWarmSearchTimings = await coldCachePage.evaluate(() => {
+    const podcasts = getRankingCandidates();
+    const startCold = performance.now();
+    const coldMatches = podcasts.filter((podcast) => matchesRankingEnhancedSearch(podcast, "verdenskrg"));
+    const coldElapsedMs = performance.now() - startCold;
+    const warmElapsedMs = [];
+    for (let iteration = 0; iteration < 4; iteration += 1) {
+      const startWarm = performance.now();
+      const warmMatches = podcasts.filter((podcast) => matchesRankingEnhancedSearch(podcast, "verdenskrg"));
+      warmElapsedMs.push(performance.now() - startWarm);
+      if (warmMatches.length !== coldMatches.length) throw new Error("warm search changed the match count");
+    }
+    return { viewport: innerWidth, podcastCount: podcasts.length, matchCount: coldMatches.length, coldElapsedMs, warmElapsedMs };
+  });
+  assert.ok(coldAndWarmSearchTimings.podcastCount >= 1000, JSON.stringify(coldAndWarmSearchTimings));
+  assert.ok(coldAndWarmSearchTimings.matchCount > 0, JSON.stringify(coldAndWarmSearchTimings));
+  assert.ok(coldAndWarmSearchTimings.coldElapsedMs < 300, `cold ranking fuzzy search exceeds 300ms: ${JSON.stringify(coldAndWarmSearchTimings)}`);
+  assert.ok(coldAndWarmSearchTimings.warmElapsedMs.every((elapsedMs) => elapsedMs < 300), `warm ranking fuzzy search exceeds 300ms: ${JSON.stringify(coldAndWarmSearchTimings)}`);
+  console.log(`[ranking-search-cold-warm] ${JSON.stringify(coldAndWarmSearchTimings)}`);
+  await coldCachePage.reload({ waitUntil: "domcontentloaded" });
+  await coldCachePage.waitForFunction(() => getRankingCandidates().length >= 1000);
+  const searchIndexProfile = await coldCachePage.evaluate(() => {
+    const podcasts = getRankingCandidates();
+    const startIndex = performance.now();
+    const indexes = podcasts.map((podcast) => getRankingSearchFields(podcast));
+    const indexElapsedMs = performance.now() - startIndex;
+    const startMatch = performance.now();
+    const matches = podcasts.filter((podcast) => matchesRankingEnhancedSearch(podcast, "verdenskrg"));
+    const matchElapsedMs = performance.now() - startMatch;
+    return { viewport: innerWidth, podcastCount: podcasts.length, indexedCount: indexes.length, matchCount: matches.length, indexElapsedMs, coldQueryMatchElapsedMs: matchElapsedMs };
+  });
+  assert.equal(searchIndexProfile.indexedCount, searchIndexProfile.podcastCount, JSON.stringify(searchIndexProfile));
+  assert.ok(searchIndexProfile.matchCount > 0, JSON.stringify(searchIndexProfile));
+  console.log(`[ranking-search-index-profile] ${JSON.stringify(searchIndexProfile)}`);
+  await coldCachePage.close();
 
   const rankingSearchTimings = [];
   for (const width of [320, 375, 390, 1280, 1440]) {

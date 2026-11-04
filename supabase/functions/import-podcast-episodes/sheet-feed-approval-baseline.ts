@@ -1,7 +1,11 @@
 // Snapshot of ordinary Sheet-derived feeds actively scheduled on main de0fe813.
 // This file is code-owned; catalogue sync never updates this approval baseline.
 // New or changed metadata feeds require an explicit reviewed code configuration.
-export type ApprovedSheetFeed = readonly [podcast_key: string, feed_url: string];
+export type ApprovedSheetFeed = readonly [
+  podcast_key: string,
+  feed_url: string,
+  identity?: Readonly<{ expected_rss_channel_title?: string; expected_external_guid_prefix?: string }>
+];
 
 export const APPROVED_SHEET_FEED_BASELINE: readonly ApprovedSheetFeed[] = Object.freeze([
   Object.freeze(["10 20 30","https://drpodcast.nu/10-20-30/feed.xml"] as const),
@@ -112,6 +116,7 @@ export const APPROVED_SHEET_FEED_BASELINE: readonly ApprovedSheetFeed[] = Object
   Object.freeze(["konflikt eksperimentet dr","https://api.dr.dk/podcasts/v1/feeds/konflikteksperimentet.xml?format=podcast"] as const),
   Object.freeze(["kongerækken hos politiken historie","https://www.omnycontent.com/d/playlist/87e48115-d0ce-4e9b-83f0-ae5b01244e0a/da273c02-f19e-4846-9fa3-b17f00c0aff9/ebd1a02b-81d7-4da2-b08f-b17f00c0b286/podcast.rss"] as const),
   Object.freeze(["kriminalsager der ændrede danmark","https://www.spreaker.com/show/4340081/episodes/feed"] as const),
+  Object.freeze(["krig", "https://api.dr.dk/podcasts/v1/feeds/krig-4", Object.freeze({ expected_rss_channel_title: "Krig" })] as const),
   Object.freeze(["kvart i bold","https://feeds.acast.com/public/shows/60360b096386dc3ac1a645a5"] as const),
   Object.freeze(["langefredag","https://drpodcast.nu/langefredag/feed.xml"] as const),
   Object.freeze(["liga","https://drpodcast.nu/liga/feed.xml"] as const),
