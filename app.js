@@ -2163,8 +2163,11 @@ function getPodcastSearchFieldValues(podcast) {
 }
 
 function canonicalizeRadioSearchAliases(value) {
-  return normalizeSearchValue(value)
-    .replace(/\b(?:radio\s*24\s*(?:7|syv)|24\s*(?:7|syv))\b/g, " radio247 ")
+  const normalized = normalizeSearchValue(value);
+  if (!normalized.includes("radio") && !normalized.includes("r4dio") &&
+      !normalized.includes("247") && !normalized.includes("24 7") &&
+      !normalized.includes("24syv") && !normalized.includes("24 syv")) return normalized;
+  return normalized.replace(/\b(?:radio\s*24\s*(?:7|syv)|24\s*(?:7|syv))\b/g, " radio247 ")
     .replace(/\b(?:radio\s*(?:4|fire|iiii|llll)|r4dio)\b/g, " radio4 ")
     .replace(/\s+/g, " ")
     .trim();
