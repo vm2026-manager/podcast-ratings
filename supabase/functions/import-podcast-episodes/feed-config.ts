@@ -57,6 +57,14 @@ export type FeedConfig = {
   // Optional exact identity pins for single-show RSS sources.
   expected_rss_channel_title?: string;
   expected_external_guid_prefix?: string;
+  // A shared RSS feed may contain a previous show's archive. These
+  // code-owned bounds require a verified premiere date, GUID anchors, and an
+  // exact GUID shape before any post-premiere entries can be imported.
+  rss_publication_boundary?: {
+    not_before: string;
+    required_guids: string[];
+    guid_pattern: string;
+  };
   // A reviewed code-owned source can supersede a stale provider locator in the Sheet.
   supersedes_sheet_feed?: boolean;
   owned_podcast_keys?: string[];
@@ -84,6 +92,23 @@ export const BAKSPEJL_LYD_FULL_FEED_KEY = "bakspejl_lyd_full";
 export { RADIO_IIII_FEED_KEY };
 
 export const FEED_CONFIGS: FeedConfigMap = {
+  sig_noget_klogt_omny: {
+    podcast_key: "sig noget klogt",
+    source: "omny_sig_noget_klogt_rss",
+    feed_url: "https://www.omnycontent.com/d/playlist/87e48115-d0ce-4e9b-83f0-ae5b01244e0a/658a58e7-b8a0-4210-b45c-b118008ddee5/714649ec-193a-45d1-9638-b118008ddef3/podcast.rss",
+    format: "rss",
+    expected_rss_channel_title: "Sig noget klogt",
+    rss_publication_boundary: {
+      // Verified first publication date. The source is shared with the
+      // historical "Under gulvtæppet" archive, so earlier items are excluded.
+      not_before: "2026-10-28",
+      required_guids: [
+        "93ac0c93-55eb-4224-a8da-b4f000b887a2",
+        "5dee2725-781b-4109-b0ba-b4f700db5f68"
+      ],
+      guid_pattern: "^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$"
+    }
+  },
   "podimo_krop_til_salg": {
     podcast_key: "krop til salg",
     source: "podimo_krop_til_salg",
