@@ -373,9 +373,7 @@ export const FEED_CONFIGS: FeedConfigMap = {
     source: "spreaker_se_og_hor_lige_her_rss",
     feed_url: "https://www.spreaker.com/show/7077680/episodes/feed",
     format: "rss",
-    // This adapter is merged but must remain inactive until its separate
-    // production rollout is approved.
-    enabled: false,
+    enabled: true,
     expected_rss_channel_title: "SE og HØR Lige Her",
     expected_external_guid_prefix: "https://api.spreaker.com/episode/",
     supersedes_sheet_feed: true

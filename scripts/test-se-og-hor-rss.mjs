@@ -46,6 +46,6 @@ assert.equal(duplicate.duplicate_guid_count, 1);
 assert.equal(duplicate.episodes.length, 1);
 
 assert.equal(config.podcast_key, "se og hor lige her");
-assert.equal(config.enabled, false, "SE og HØR stays inactive pending its separately approved rollout");
+assert.equal(config.enabled, true, "the already deployed SE og HØR importer remains active");
 assert.equal(config.supersedes_sheet_feed, true);
 console.log("SE OG HØR RSS identity, mapping, date, link, duplicate, negative, and repeatability checks passed.");
