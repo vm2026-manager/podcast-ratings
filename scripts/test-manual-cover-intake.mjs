@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import { createHash } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import { execFileSync } from 'node:child_process';
 import vm from 'node:vm';
@@ -7,6 +8,7 @@ import { fileURLToPath } from 'node:url';
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const read = name => readFileSync(path.join(root, name), 'utf8');
 const app = read('app.js');
+const index = read('index.html');
 const manifest = JSON.parse(read('data/podcast-cover-manifest.json'));
 const registrations = JSON.parse(read('data/manual-podcast-cover-registrations.json')).registrations;
 const rows = JSON.parse(execFileSync(process.execPath, ['scripts/manual-cover-catalogue.mjs', root], { cwd: root, maxBuffer: 32 * 1024 * 1024 }));
@@ -65,8 +67,50 @@ assert.equal(amerikas.length, 1, 'Amerikas kolde drøm has one explicit verified
 assert.equal(amerikas[0].sourcePath, 'assets/podcast-covers/manual-inbox/amerikas kolde drom dr.png');
 assert.equal(amerikas[0].sourceSha256, 'ee8b2d7766d78a0a41f853de77e24d8af6ba033d815aa63bcec003668a3aee0c');
 assert.equal(amerikas[0].verdict, 'VERIFIED');
-for (const id of ['mediano special','bruchmann ringer til','der var engang et mal','bandeland sæson 1','bandeland sæson 2']) {
+for (const id of ['mediano special','bruchmann ringer til','bandeland sæson 1','bandeland sæson 2']) {
   assert.ok(!registrations.some(r => r.podcastId === id), `${id} remains unresolved`);
 }
+const derVarRegistrations = registrations.filter(r => r.podcastId === 'der var engang et mal');
+assert.equal(derVarRegistrations.length, 1, 'the owner-approved editorial cover has one exact canonical registration');
+const derVar = derVarRegistrations[0];
+assert.equal(derVar.sourcePath, 'assets/podcast-covers/manual-inbox/der_var_engang_et_mal_editorial.png');
+assert.equal(derVar.sourceSha256, '9807a7db699e0ba8b1b8b78ef27bd66d89a5d039711a9d3f7a352e387d960177');
+assert.equal(derVar.stableKey, 'der_var_engang_et_mal_user_editorial');
+assert.equal(derVar.verdict, 'VERIFIED');
+assert.match(derVar.evidence, /not an official Mediano cover/u);
+const source = readFileSync(path.join(root, derVar.sourcePath));
+assert.equal(createHash('sha256').update(source).digest('hex'), derVar.sourceSha256, 'registered source bytes match the approved checksum');
+assert.equal(source.readUInt32BE(16), 1254, 'the approved source is 1254 pixels wide');
+assert.equal(source.readUInt32BE(20), 1254, 'the approved source is 1254 pixels tall');
+const derVarEntry = manifest.podcasts.filter(e => e.podcastId === derVar.podcastId);
+assert.equal(derVarEntry.length, 1, 'the canonical programme has exactly one manual cover manifest entry');
+assert.equal(derVarEntry[0].stableKey, derVar.stableKey);
+assert.equal(derVarEntry[0].manualIntakeSourcePath, derVar.sourcePath);
+assert.equal(derVarEntry[0].manualIntakeSourceChecksum, derVar.sourceSha256);
+assert.equal(derVarEntry[0].manualOverride, true);
+assert.equal(derVarEntry[0].needsPlaceholder, false);
+assert.equal(derVarEntry[0].variants['1400'].path, 'data/covers/1400/der_var_engang_et_mal_user_editorial.png');
+assert.equal(derVarEntry[0].original.path, 'data/covers/original/der_var_engang_et_mal_user_editorial.png');
+assert.equal(derVarEntry[0].sourceWidth, 1400);
+assert.equal(derVarEntry[0].sourceHeight, 1400);
+for (const [relative, checksum] of [
+  [derVarEntry[0].manualSourcePath, derVarEntry[0].sourceChecksum],
+  [derVarEntry[0].original.path, derVarEntry[0].original.checksum],
+  [derVarEntry[0].variants['1400'].path, derVarEntry[0].variants['1400'].checksum]
+]) {
+  const output = readFileSync(path.join(root, relative));
+  assert.equal(createHash('sha256').update(output).digest('hex'), checksum, `${relative} matches its manifest checksum`);
+  assert.equal(output.toString('latin1', 0, 8), '\x89PNG\r\n\x1a\n', `${relative} remains PNG`);
+  assert.equal(output.readUInt32BE(16), 1400, `${relative} is 1400 pixels wide`);
+  assert.equal(output.readUInt32BE(20), 1400, `${relative} is 1400 pixels tall`);
+}
+assert.match(app, /const DATA_VERSION = "2026-11-04-issue58-editorial-cover";/u, 'the manifest URL version is advanced');
+assert.match(index, /app\.js\?[^"']*issue58-approved-editorial-cover-v1=1/u, 'the browser receives the updated app script');
+const historicalSponsor = manifest.podcasts.find(e => e.appPodcastKey === 'der var engang et mal af peter møller mod farum');
+assert.equal(historicalSponsor?.stableKey, 'der-var-engang-et-mal-af-peter-moeller-mod-farum-882602eb57', 'the historical episode identity stays intact');
+assert.equal(historicalSponsor?.originalImageUrl, 'https://images.squarespace-cdn.com/content/v1/573c1b7d01dbae9b52cd0936/1734814778696-D3YD9G3CPWE799BSEX4V/sparekassen-kronjylland.jpg', 'the historical sponsor record is preserved and never used for the series cover');
+const canonicalPodcast = podcasts.find(p => p.podcastId === derVar.podcastId);
+assert.equal(canonicalPodcast.localCoverVariants[0].path, derVarEntry[0].variants['1400'].path, 'the actual canonical podcast resolves to the approved cover');
+assert.equal(context.getPersistedUserRatingKey(derVar.podcastId), 'stored:der var engang et mal', 'cover assignment does not alter the personal rating key');
 assert.doesNotMatch(read('scripts/publish-manual-podcast-covers.ps1'), /HEAD:main|Invoke-Git|git push/);
 console.log('Manual intake frontend identity, ratings, Jennings separation and no-publication checks passed.');

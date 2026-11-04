@@ -21,10 +21,17 @@ assert.match(gate, /Der var engang et mål.*test-der-var-engang-et-mal-episodes\
 
 const coverRegistrations = JSON.parse(await readFile(new URL("../data/manual-podcast-cover-registrations.json", import.meta.url), "utf8"));
 const coverManifest = JSON.parse(await readFile(new URL("../data/podcast-cover-manifest.json", import.meta.url), "utf8"));
-assert.equal(coverRegistrations.registrations.filter((entry) => entry.podcastId === "der var engang et mal").length, 0,
-  "unverified generic and sponsor artwork is not registered to the series ID");
-assert.equal(coverManifest.podcasts.filter((entry) => entry.appPodcastKey === "der var engang et mal").length, 0,
-  "the canonical series has no falsely identified cover-manifest entry");
+const seriesCoverRegistration = coverRegistrations.registrations.filter((entry) => entry.podcastId === "der var engang et mal");
+assert.equal(seriesCoverRegistration.length, 1, "the exact canonical series has one owner-approved cover registration");
+assert.equal(seriesCoverRegistration[0].sourcePath, "assets/podcast-covers/manual-inbox/der_var_engang_et_mal_editorial.png");
+assert.equal(seriesCoverRegistration[0].sourceSha256, "9807a7db699e0ba8b1b8b78ef27bd66d89a5d039711a9d3f7a352e387d960177");
+assert.match(seriesCoverRegistration[0].evidence, /not an official Mediano cover/u);
+const seriesCoverManifest = coverManifest.podcasts.filter((entry) => entry.podcastId === "der var engang et mal");
+assert.equal(seriesCoverManifest.length, 1, "the canonical series resolves one exact-ID cover manifest entry");
+assert.equal(seriesCoverManifest[0].stableKey, "der_var_engang_et_mal_user_editorial");
+assert.equal(seriesCoverManifest[0].manualIntakeSourcePath, seriesCoverRegistration[0].sourcePath);
+assert.equal(seriesCoverManifest[0].manualIntakeSourceChecksum, seriesCoverRegistration[0].sourceSha256);
+assert.equal(seriesCoverManifest[0].variants["1400"].path, "data/covers/1400/der_var_engang_et_mal_user_editorial.png");
 const historicalPeterCover = coverManifest.podcasts.find((entry) =>
   entry.appPodcastKey === "der var engang et mal af peter møller mod farum"
 );

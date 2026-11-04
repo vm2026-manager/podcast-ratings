@@ -1,5 +1,5 @@
 {
-  "auditedOn": "2026-10-03",
+  "auditedOn": "2026-11-04",
   "baseCommit": "eabc2fc0e0eeb0ca7feb987b75080af680b1260f",
   "scope": "All eight files in original local manual-inbox; catalogue is origin/main data plus app local canonical rows. Audit printed before changes.",
   "files": [
@@ -294,6 +294,31 @@
       ],
       "verdict": "VERIFIED",
       "evidence": "Visible exact title and SHA256 match existing local manifest/cache original for the DR image URL: 0e18aea9bb58d617b764209779b3fa70038e1836937b445f2a7eabd7302379cf."
+    },
+    {
+      "sourceFilename": "der_var_engang_et_mal_editorial.png",
+      "sourceSha256": "9807a7db699e0ba8b1b8b78ef27bd66d89a5d039711a9d3f7a352e387d960177",
+      "candidates": [
+        {
+          "displayTitle": "Der var engang et mål",
+          "podcastId": "der var engang et mal",
+          "publisher": "Mediano",
+          "catalogueId": "der var engang et mal",
+          "slug": null,
+          "aliasesHistoricalIds": [
+            "der var engang et mal af peter møller mod farum"
+          ],
+          "Billedlink": null,
+          "Link": null,
+          "manifestEntries": [],
+          "localManifestEntries": [],
+          "ratingKey": "der var engang et mal",
+          "editorialRating": null,
+          "ratingEvidence": "Cover registration only; existing episode identity and ratings are not changed."
+        }
+      ],
+      "verdict": "VERIFIED",
+      "evidence": "Owner explicitly supplied and approved this exact image for the canonical programme on 2026-11-04. The file is Podcastlisten editorial artwork, not an official Mediano cover. SHA-256 and 1254x1254 PNG dimensions verified. The separate generic Der var engang et mål.png remains ambiguous and untouched."
     }
   ]
 }

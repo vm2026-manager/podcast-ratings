@@ -125,8 +125,21 @@ assert.equal(episodeCover.original.checksum, "5dd6245f1cbbbf29c8b01237142b5c2d48
 const sponsorImageBytes = await readFile(new URL(`../${episodeCover.original.path}`, import.meta.url));
 assert.equal(createHash("sha256").update(sponsorImageBytes).digest("hex"), episodeCover.original.checksum,
   "the local sponsor image bytes match the cover manifest checksum");
-assert.ok(!coverManifest.podcasts.some((entry) => entry.appPodcastKey === exactCanonicalPodcastId),
-  "no cover is registered under the canonical series ID");
+const approvedSeriesCover = coverManifest.podcasts.filter((entry) => entry.podcastId === exactCanonicalPodcastId);
+assert.equal(approvedSeriesCover.length, 1, "the canonical series resolves exactly one approved manual cover");
+assert.equal(approvedSeriesCover[0].stableKey, "der_var_engang_et_mal_user_editorial");
+assert.equal(approvedSeriesCover[0].manualIntakeSourcePath,
+  "assets/podcast-covers/manual-inbox/der_var_engang_et_mal_editorial.png");
+assert.equal(approvedSeriesCover[0].manualIntakeSourceChecksum,
+  "9807a7db699e0ba8b1b8b78ef27bd66d89a5d039711a9d3f7a352e387d960177");
+assert.equal(approvedSeriesCover[0].needsPlaceholder, false);
+assert.equal(approvedSeriesCover[0].variants["1400"].path,
+  "data/covers/1400/der_var_engang_et_mal_user_editorial.png");
+assert.doesNotMatch(approvedSeriesCover[0].originalImageUrl, /sparekassen|stoet|støt/iu,
+  "the owner-approved editorial cover does not resolve to a sponsor or generic promotion");
+const approvedSourceBytes = await readFile(new URL(`../${approvedSeriesCover[0].manualIntakeSourcePath}`, import.meta.url));
+assert.equal(createHash("sha256").update(approvedSourceBytes).digest("hex"), approvedSeriesCover[0].manualIntakeSourceChecksum,
+  "the registered approved artwork matches its exact source checksum");
 assert.ok(!app.includes("issue58-editorial-artwork-proposal.svg"),
   "the unapproved title graphic is not wired into live cover selection");
 
@@ -136,8 +149,11 @@ console.log(JSON.stringify({
   episodeId: exactEpisodeId,
   historicalEditorialRating: "7,3/10",
   ratingTypesKeptSeparate: ["Podcastlisten", "Brugerne", "Din vurdering", "episodehistorik"],
-  coverSource: episodeCover.originalImageUrl,
-  coverSourceDimensions: [episodeCover.sourceWidth, episodeCover.sourceHeight],
-  coverSourceSha256: episodeCover.original.checksum,
+  coverSource: approvedSeriesCover[0].manualIntakeSourcePath,
+  coverArtworkKind: "owner-approved Podcastlisten editorial artwork, not an official Mediano cover",
+  coverSourceDimensions: [approvedSourceBytes.readUInt32BE(16), approvedSourceBytes.readUInt32BE(20)],
+  coverSourceSha256: approvedSeriesCover[0].manualIntakeSourceChecksum,
+  historicalEpisodeSponsorSourceDimensions: [episodeCover.sourceWidth, episodeCover.sourceHeight],
+  historicalEpisodeSponsorSourceSha256: episodeCover.original.checksum,
   accountSpecificRatingRecoveryAttempted: false
 }, null, 2));
