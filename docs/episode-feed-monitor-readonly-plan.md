@@ -71,11 +71,18 @@ Proposed interface:
    environment secret, exchange it for a short-lived access JWT during the
    existing workflow, mask all tokens, and never echo credentials. Restrict the
    environment to this workflow, require reviewers, rotate the password on a
-   fixed schedule, and revoke it immediately after suspected exposure.
+   90-day schedule, and revoke it immediately after suspected exposure. Use
+   separate `PODCAST_EPISODE_MONITOR_EMAIL` and
+   `PODCAST_EPISODE_MONITOR_PASSWORD` environment secrets. For rotation, set a
+   new password in Supabase Auth, update the protected GitHub secret, run one
+   approved workflow smoke check, confirm the old credential no longer works,
+   and revoke outstanding sessions. Never place either value in the repository,
+   workflow inputs, artifacts, or issue comments.
 2. Do not grant `SELECT` on `episode_import_runs` to `anon`, `authenticated`, or
    `public`. Create a dedicated `episode_monitor_rpc_owner NOLOGIN NOBYPASSRLS`
    role; it must not own the table or any schema. Grant it only column-level
    `SELECT (podcast_key, started_at, status)` on `public.episode_import_runs`.
+   Grant only `USAGE` on the `public` schema to that function-owner role.
    Do not grant `BYPASSRLS`, `service_role`, table ownership, or broad schema
    access to this role or the Auth user.
 3. Keep RLS enabled. Add one SELECT policy for
@@ -100,11 +107,13 @@ Proposed interface:
    `NOBYPASSRLS`, so the restrictive RLS policy remains in force inside the
    definer function.
 4. Add negative tests proving anon, ordinary authenticated users, an unrelated
-   Auth identity, unknown Podcast-IDs, more than 10 IDs, out-of-window runs,
-   direct table SELECT, other RPCs, and expired/revoked credentials are denied.
-   Positive tests must confirm only aggregate columns and exact-ID results are
-   returned. Verify `EXPLAIN (ANALYZE, BUFFERS)` under the real reader identity,
-   with two-run-per-ID bounded lookups using the existing
+   Auth identity, malformed IDs, more than 10 IDs, out-of-window runs, direct
+   table SELECT by anon/authenticated, other RPCs, and expired/revoked
+   credentials are denied. Unknown exact IDs with no import run must return an
+   explicit “no run observed” aggregate, not an authorization error; they must
+   never broaden the query. Positive tests must confirm only aggregate columns
+   and exact-ID results are returned. Verify `EXPLAIN (ANALYZE, BUFFERS)` under
+   the real reader identity, with two-run-per-ID bounded lookups using the existing
    `episode_import_runs_podcast_key_started_at_idx`, no full-table scan, no
    temporary disk, and a fixed low daily query limit before activation.
 
