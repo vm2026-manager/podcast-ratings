@@ -5,7 +5,9 @@ import {
   CATALOGUE_HEADERS, RADIO_IIII_STAGING_HEADERS, RADIO_IIII_STAGING_TAB
 } from "./google-sheets-staging.mjs";
 import { buildRadioIIIIRoutes, RADIO_IIII_FEED_KEY, RADIO_IIII_FEED_URL } from "../supabase/functions/import-podcast-episodes/radio-iiii-routing.mjs";
-import { mergeSheetFeedConfigs } from "../supabase/functions/import-podcast-episodes/runtime-feed-config.ts";
+import { mergeSheetFeedConfigs, RADIO_IIII_IMPORT_ACTIVATION_APPROVED } from "../supabase/functions/import-podcast-episodes/runtime-feed-config.ts";
+import { runEpisodeImport, selectNormalFeedKeys } from "../supabase/functions/import-podcast-episodes/core.ts";
+import { FEED_CONFIGS } from "../supabase/functions/import-podcast-episodes/feed-config.ts";
 import { mergeAutoDiscoveredRadioIIIIRows } from "./radio-iiii-auto-discovery.mjs";
 import { slimPodcastRows } from "./sync-sheet-data.mjs";
 
@@ -35,9 +37,35 @@ assert.equal(buildRadioIIIIRoutes([{ ...rows[0], Hovedserie: "En anden serie" }]
 assert.equal(buildRadioIIIIRoutes([{ ...rows[0], radioIIIIEpisodes: rows[0].radioIIIIEpisodes.slice(0, 4) }]).length, 0);
 assert.equal(buildRadioIIIIRoutes([rows[0], { ...rows[1], radioIIIIEpisodes: rows[0].radioIIIIEpisodes }]).length, 5, "overlapping episode GUIDs are withheld from the later child");
 const runtime = mergeSheetFeedConfigs({ rows: slimCandidates }, undefined);
-assert.equal(runtime.configs[RADIO_IIII_FEED_KEY].enabled, true);
+assert.equal(RADIO_IIII_IMPORT_ACTIVATION_APPROVED, false, "Radio IIII production rollout remains explicitly code-gated");
+assert.equal(runtime.configs[RADIO_IIII_FEED_KEY].enabled, false);
 assert.equal(runtime.configs[RADIO_IIII_FEED_KEY].routes.length, 20);
 assert.equal(runtime.configs[RADIO_IIII_FEED_KEY].format, "radio4_json");
+assert.equal(selectNormalFeedKeys(runtime.configs).includes(RADIO_IIII_FEED_KEY), false, "Radio IIII is excluded from the existing scheduled import plan");
+assert.equal(selectNormalFeedKeys(runtime.configs).includes("sig_noget_klogt_omny"), true, "the approved Sig noget klogt adapter remains scheduled");
+assert.equal(FEED_CONFIGS.se_og_hor_lige_her.enabled, false, "SE og HØR remains inactive until its own rollout");
+assert.equal(selectNormalFeedKeys(runtime.configs).includes("se_og_hor_lige_her"), false);
+let radioCalls = 0;
+await assert.rejects(runEpisodeImport({
+  feedKey: RADIO_IIII_FEED_KEY,
+  feedConfigs: runtime.configs,
+  repository: { createImportRun: async () => { radioCalls++; throw new Error("unexpected import run"); } },
+  fetchText: async () => { radioCalls++; throw new Error("unexpected feed fetch"); }
+}), /Feed import is disabled/u, "direct Radio IIII import is blocked before an import run or network fetch");
+await assert.rejects(runEpisodeImport({
+  feedKey: "se_og_hor_lige_her",
+  feedConfigs: runtime.configs,
+  repository: { createImportRun: async () => { radioCalls++; throw new Error("unexpected import run"); } },
+  fetchText: async () => { radioCalls++; throw new Error("unexpected feed fetch"); }
+}), /Feed import is disabled/u, "direct SE og HØR import is blocked before an import run or network fetch");
+assert.equal(radioCalls, 0, "disabled feed gates run before production write or source access");
+const latestCatalogue = JSON.parse(await readFile(new URL("../data/podcasts.json", import.meta.url), "utf8"));
+const latestRuntime = mergeSheetFeedConfigs(latestCatalogue);
+const scheduledKeys = selectNormalFeedKeys(latestRuntime.configs);
+assert.equal(latestRuntime.configs[RADIO_IIII_FEED_KEY].routes.length, 20, "the latest catalogue identities remain intact");
+assert.equal(scheduledKeys.includes(RADIO_IIII_FEED_KEY), false, "the actual latest catalogue cannot schedule Radio IIII");
+assert.equal(scheduledKeys.includes("se_og_hor_lige_her"), false, "the actual latest catalogue cannot schedule SE og HØR");
+assert.equal(scheduledKeys.includes("sig_noget_klogt_omny"), true, "the exact approved Sig noget klogt importer is scheduled");
 
 const staged = candidates.map((candidate) => buildRadioIIIIStagingRow(candidate, "2026-11-03"));
 assert.equal(staged.every((row) => row.length === RADIO_IIII_STAGING_HEADERS.length), true);

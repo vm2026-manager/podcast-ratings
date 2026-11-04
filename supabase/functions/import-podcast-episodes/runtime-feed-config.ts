@@ -9,6 +9,12 @@ import { PODIMO_ONGOING_HISTORICAL_SOURCES } from "./podimo-source-registry.ts";
 
 const PODCASTS_JSON_TIMEOUT_MS = 15000;
 
+// Radio IIII has verified route identities, but its production rollout is
+// separately gated. Keep the routes available for audit and tests while
+// preventing both scheduled and direct importer activation until an approved
+// code change explicitly opens this boundary.
+export const RADIO_IIII_IMPORT_ACTIVATION_APPROVED = false;
+
 export type FeedConfigAudit = {
   feed_resolutions: FeedResolution[];
   feed_warnings: FeedResolution[];
@@ -130,7 +136,13 @@ export function mergeSheetFeedConfigs(
       }
     } : {}),
     ...(bakspejlOwner ? { [BAKSPEJL_FEED_KEY]: { ...bakspejlOwner, routes: bakspejl.routes, enabled: bakspejl.routes.length > 1 } } : {}),
-    ...(radioIIIIOwner ? { [RADIO_IIII_FEED_KEY]: { ...radioIIIIOwner, routes: radioIIII, enabled: radioIIII.length > 0 } } : {}),
+    ...(radioIIIIOwner ? {
+      [RADIO_IIII_FEED_KEY]: {
+        ...radioIIIIOwner,
+        routes: radioIIII,
+        enabled: RADIO_IIII_IMPORT_ACTIVATION_APPROVED && radioIIII.length > 0
+      }
+    } : {}),
     // Supplemental full-episode adapters use the same exact catalogue routes.
     // Never activate an umbrella without the authoritative sheet mapping.
     ...(djaevlenFullOwner ? { [DJAEVLEN_LYD_FULL_FEED_KEY]: { ...djaevlenFullOwner, routes: djaevlen.routes, enabled: djaevlen.routes.length > 0 } } : {}),
