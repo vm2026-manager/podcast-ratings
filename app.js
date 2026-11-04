@@ -2138,25 +2138,28 @@ function compactSearchValue(value) {
   return normalizeSearchValue(value).replace(/\s+/g, "");
 }
 
-function getPodcastSearchFieldValues(podcast) {
-  const own = [
-    podcast?.title, podcast?.host, podcast?.mainSeries, podcast?.publisher,
-    podcast?.genre, podcast?.secondaryGenre, podcast?.tertiaryGenre,
-    ...(Array.isArray(podcast?.searchGenres) ? podcast.searchGenres : []),
-    ...(Array.isArray(podcast?.searchTopics) ? podcast.searchTopics : [])
-  ];
-  const members = podcast?.isDisplayGroup && Array.isArray(podcast.displayGroupMembers)
-    ? podcast.displayGroupMembers.flatMap((member) => getPodcastSearchFieldValues({ ...member, isDisplayGroup: false }))
-    : [];
-  return [...own, ...members].map(normalizeText).filter(Boolean);
+function getPodcastSearchFieldEntries(podcast, includeDisplayGroupMembers = true, entries = []) {
+  const add = (value, fuzzyAllowed) => {
+    const normalizedValue = normalizeText(value);
+    if (normalizedValue) entries.push({ value: normalizedValue, fuzzyAllowed });
+  };
+  add(podcast?.title, true);
+  add(podcast?.host, false);
+  add(podcast?.mainSeries, false);
+  add(podcast?.publisher, false);
+  add(podcast?.genre, false);
+  add(podcast?.secondaryGenre, false);
+  add(podcast?.tertiaryGenre, false);
+  if (Array.isArray(podcast?.searchGenres)) podcast.searchGenres.forEach((value) => add(value, false));
+  if (Array.isArray(podcast?.searchTopics)) podcast.searchTopics.forEach((value) => add(value, true));
+  if (includeDisplayGroupMembers && podcast?.isDisplayGroup && Array.isArray(podcast.displayGroupMembers)) {
+    podcast.displayGroupMembers.forEach((member) => getPodcastSearchFieldEntries(member, false, entries));
+  }
+  return entries;
 }
 
-function getPodcastFuzzySearchFieldValues(podcast) {
-  const own = [podcast?.title, ...(Array.isArray(podcast?.searchTopics) ? podcast.searchTopics : [])];
-  const members = podcast?.isDisplayGroup && Array.isArray(podcast.displayGroupMembers)
-    ? podcast.displayGroupMembers.flatMap((member) => getPodcastFuzzySearchFieldValues({ ...member, isDisplayGroup: false }))
-    : [];
-  return new Set([...own, ...members].map(normalizeSearchValue).filter(Boolean));
+function getPodcastSearchFieldValues(podcast) {
+  return getPodcastSearchFieldEntries(podcast).map((entry) => entry.value);
 }
 
 function canonicalizeRadioSearchAliases(value) {
@@ -2537,10 +2540,15 @@ const rankingSearchSynonymAliases = RANKING_SEARCH_SYNONYM_GROUPS
     token: `rankingsynonym${group.id.replace(/-/g, "")}`
   })))
   .sort((left, right) => right.alias.length - left.alias.length);
-const rankingSearchSynonymPattern = new RegExp(
-  `(^| )(${rankingSearchSynonymAliases.map(({ alias }) => alias.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).join("|")})(?= |$)`,
-  "gu"
-);
+const rankingSearchSynonymsByFirstToken = new Map();
+let rankingSearchSynonymMaxTokenCount = 1;
+for (const synonym of rankingSearchSynonymAliases) {
+  const tokens = synonym.alias.split(" ");
+  rankingSearchSynonymMaxTokenCount = Math.max(rankingSearchSynonymMaxTokenCount, tokens.length);
+  if (!rankingSearchSynonymsByFirstToken.has(tokens[0])) rankingSearchSynonymsByFirstToken.set(tokens[0], new Map());
+  const aliases = rankingSearchSynonymsByFirstToken.get(tokens[0]);
+  if (!aliases.has(synonym.alias)) aliases.set(synonym.alias, synonym.token);
+}
 const rankingSearchStopWords = new Set([
   "a", "af", "at", "da", "de", "den", "det", "en", "et", "for", "fra",
   "i", "med", "og", "om", "på", "til", "the", "and", "of", "in", "to"
@@ -2552,12 +2560,32 @@ function normalizeRankingSearchValue(value) {
   return canonicalizeRadioSearchAliases(String(value || "").normalize("NFC"));
 }
 
+function canonicalizeNormalizedRankingSearchText(normalized) {
+  const tokens = normalized.split(" ").filter(Boolean);
+  const canonicalTokens = [];
+  for (let index = 0; index < tokens.length;) {
+    const aliases = rankingSearchSynonymsByFirstToken.get(tokens[index]);
+    let matchedToken = null;
+    let matchedLength = 0;
+    if (aliases) {
+      const maxLength = Math.min(rankingSearchSynonymMaxTokenCount, tokens.length - index);
+      for (let length = maxLength; length > 0; length -= 1) {
+        const aliasToken = aliases.get(tokens.slice(index, index + length).join(" "));
+        if (aliasToken) {
+          matchedToken = aliasToken;
+          matchedLength = length;
+          break;
+        }
+      }
+    }
+    canonicalTokens.push(matchedToken || tokens[index]);
+    index += matchedLength || 1;
+  }
+  return canonicalTokens.join(" ");
+}
+
 function canonicalizeRankingSearchText(value) {
-  const normalized = normalizeRankingSearchValue(value);
-  return normalized.replace(rankingSearchSynonymPattern, (_match, prefix, alias) => {
-    const synonym = rankingSearchSynonymAliases.find((entry) => entry.alias === alias);
-    return `${prefix}${synonym?.token || alias}`;
-  });
+  return canonicalizeNormalizedRankingSearchText(normalizeRankingSearchValue(value));
 }
 
 function getRankingSearchQuery(searchTerm) {
@@ -2565,11 +2593,12 @@ function getRankingSearchQuery(searchTerm) {
   if (!normalized) return null;
   if (rankingSearchQueryCache.has(normalized)) return rankingSearchQueryCache.get(normalized);
 
-  const canonical = canonicalizeRankingSearchText(normalized);
+  const canonical = canonicalizeNormalizedRankingSearchText(normalized);
   const query = {
     normalized,
     canonicalTokens: canonical.split(" ").filter(Boolean),
     rawTokens: normalized.split(" ").filter(Boolean),
+    rawCanonicalTokens: normalized.split(" ").filter(Boolean).map(canonicalizeNormalizedRankingSearchText),
     shortNumericQuery: /^(?:\d+|[ivxlcdm]+)$/u.test(normalized) && normalized.length <= 3
   };
   if (rankingSearchQueryCache.size >= 128) rankingSearchQueryCache.delete(rankingSearchQueryCache.keys().next().value);
@@ -2581,21 +2610,35 @@ function getRankingSearchFields(podcast) {
   const cached = rankingSearchFieldCache.get(podcast);
   if (cached) return cached;
 
-  const fuzzyValues = getPodcastFuzzySearchFieldValues(podcast);
-  const fields = getPodcastSearchFieldValues(podcast).flatMap((value) => {
+  const fields = [];
+  for (const { value, fuzzyAllowed } of getPodcastSearchFieldEntries(podcast)) {
     const normalized = normalizeRankingSearchValue(value);
-    if (!normalized) return [];
+    if (!normalized) continue;
     const transliterated = normalized.replace(/æ/g, "ae").replace(/ø/g, "oe").replace(/å/g, "aa");
     const simplified = normalized.replace(/[æå]/g, "a").replace(/ø/g, "o");
-    const variants = [...new Set([normalized, transliterated, simplified])];
-    return [{
+    const variants = [normalized];
+    if (transliterated !== normalized) variants.push(transliterated);
+    if (simplified !== normalized && simplified !== transliterated) variants.push(simplified);
+    const canonicalTokens = [];
+    for (const variant of variants) {
+      canonicalTokens.push(...canonicalizeNormalizedRankingSearchText(variant).split(" ").filter(Boolean));
+    }
+    fields.push({
       normalized,
       compact: variants.map((variant) => variant.replace(/\s+/g, "")),
-      canonicalTokens: [...new Set(variants.flatMap((variant) => canonicalizeRankingSearchText(variant).split(" ").filter(Boolean)))],
+      canonicalTokens,
       rawTokens: normalized.split(" ").filter(Boolean),
-      fuzzyAllowed: fuzzyValues.has(normalizeSearchValue(value))
-    }];
-  });
+      fuzzyAllowed
+    });
+  }
+  const canonicalTokenSet = new Set();
+  const fuzzyFields = [];
+  for (const field of fields) {
+    field.canonicalTokens.forEach((token) => canonicalTokenSet.add(token));
+    if (field.fuzzyAllowed) fuzzyFields.push(field);
+  }
+  fields.canonicalTokenSet = canonicalTokenSet;
+  fields.fuzzyFields = fuzzyFields;
   rankingSearchFieldCache.set(podcast, fields);
   return fields;
 }
@@ -2631,8 +2674,7 @@ function rankingSearchFieldMatches(query, field) {
   if (!query?.canonicalTokens.length || !field?.canonicalTokens.length) return false;
   if (query.shortNumericQuery) return field.normalized === query.normalized;
 
-  const exactTokens = new Set(field.canonicalTokens);
-  if (query.canonicalTokens.every((token) => exactTokens.has(token)) ||
+  if (query.canonicalTokens.every((token) => field.canonicalTokens.includes(token)) ||
       query.canonicalTokens.length === 1 && query.canonicalTokens[0].length >= 5 &&
         field.compact.some((compact) => compact.includes(query.canonicalTokens[0]))) return true;
 
@@ -2640,7 +2682,7 @@ function rankingSearchFieldMatches(query, field) {
   // query. It only examines title/topic tokens and excludes short/stop words.
   let fuzzyTokenUsed = false;
   return query.rawTokens.every((queryToken) => {
-    if (exactTokens.has(queryToken)) return true;
+    if (field.canonicalTokens.includes(queryToken)) return true;
     if (queryToken.length < 7 || rankingSearchStopWords.has(queryToken) || fuzzyTokenUsed) return false;
     const match = field.fuzzyAllowed && field.rawTokens.find((fieldToken) =>
       fieldToken.length >= 7 && isOneEditApart(queryToken, fieldToken)
@@ -2658,19 +2700,32 @@ function matchesRankingEnhancedSearch(podcast, searchTerm) {
   if (query.shortNumericQuery) {
     return fields.some((field) => field.normalized === query.normalized);
   }
+  // Single-token queries can use the podcast-wide token index directly; checking
+  // every field first and retrying fuzzy matching across fields repeats the same work.
+  if (query.rawTokens.length === 1 && query.canonicalTokens.length === 1) {
+    const [queryToken] = query.rawTokens;
+    const [canonicalToken] = query.canonicalTokens;
+    if (fields.canonicalTokenSet.has(canonicalToken)) return true;
+    if (canonicalToken.length >= 5 && fields.some((field) =>
+      field.compact.some((compact) => compact.includes(canonicalToken))
+    )) return true;
+    if (queryToken.length < 7 || rankingSearchStopWords.has(queryToken)) return false;
+    return fields.fuzzyFields.some((field) => field.rawTokens.some((fieldToken) =>
+      fieldToken.length >= 7 && isOneEditApart(queryToken, fieldToken)
+    ));
+  }
   if (fields.some((field) => rankingSearchFieldMatches(query, field))) return true;
 
-  const availableTokens = new Set(fields.flatMap((field) => field.canonicalTokens));
-  if (query.canonicalTokens.every((token) => availableTokens.has(token))) return true;
+  if (query.canonicalTokens.length > 1 && query.canonicalTokens.every((token) => fields.canonicalTokenSet.has(token))) return true;
 
   // A query may contain terms from different metadata fields, but only one typo
   // across the complete podcast is tolerated, matching the existing fuzzy rule.
   let fuzzyTokenUsed = false;
-  return query.rawTokens.every((queryToken) => {
-    const canonicalToken = canonicalizeRankingSearchText(queryToken);
-    if (availableTokens.has(canonicalToken)) return true;
+  return query.rawTokens.every((queryToken, index) => {
+    const canonicalToken = query.rawCanonicalTokens[index];
+    if (fields.canonicalTokenSet.has(canonicalToken)) return true;
     if (queryToken.length < 7 || rankingSearchStopWords.has(queryToken) || fuzzyTokenUsed) return false;
-    const match = fields.some((field) => field.fuzzyAllowed && field.rawTokens.some((fieldToken) =>
+    const match = fields.fuzzyFields.some((field) => field.rawTokens.some((fieldToken) =>
       fieldToken.length >= 7 && isOneEditApart(queryToken, fieldToken)
     ));
     if (!match) return false;
