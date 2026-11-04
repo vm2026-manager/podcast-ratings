@@ -480,6 +480,34 @@ export function validateExpectedRssIdentity(feed: ReturnType<typeof parseFeed>, 
     });
     if (invalid) throw new Error("RSS external GUID identity mismatch");
   }
+  if (config.rss_publication_boundary) {
+    const boundary = config.rss_publication_boundary;
+    const parsedBoundary = /^\d{4}-\d{2}-\d{2}$/.test(boundary.not_before)
+      ? Date.parse(`${boundary.not_before}T00:00:00.000Z`)
+      : NaN;
+    if (config.format !== "rss" || !Number.isFinite(parsedBoundary) ||
+        new Date(parsedBoundary).toISOString().slice(0, 10) !== boundary.not_before ||
+        !Array.isArray(boundary.required_guids) || boundary.required_guids.length === 0 ||
+        !boundary.guid_pattern.startsWith("^") || !boundary.guid_pattern.endsWith("$")) {
+      throw new Error("RSS publication boundary configuration is invalid");
+    }
+    let guidPattern: RegExp;
+    try {
+      guidPattern = new RegExp(boundary.guid_pattern, "i");
+    } catch {
+      throw new Error("RSS publication boundary GUID pattern is invalid");
+    }
+    const guidCounts = new Map<string, number>();
+    for (const item of feed.items) {
+      const guid = normalizeText(item.guid);
+      if (guid) guidCounts.set(guid, (guidCounts.get(guid) || 0) + 1);
+    }
+    for (const requiredGuid of boundary.required_guids) {
+      if (!guidPattern.test(requiredGuid) || guidCounts.get(requiredGuid) !== 1) {
+        throw new Error("RSS publication boundary identity anchors are missing or ambiguous");
+      }
+    }
+  }
 }
 
 export type Radio4Episode = {
@@ -550,12 +578,48 @@ export function mapEpisodes(feed: ReturnType<typeof parseFeed>, config: FeedConf
   const episodes: PodcastEpisodeRow[] = [];
   const errors: Array<Record<string, unknown>> = [];
   const warnings: Array<Record<string, unknown>> = [];
+  const boundary = config.rss_publication_boundary;
+  const duplicateGuids = new Set<string>();
+  let boundaryExcludedCount = 0;
+  if (boundary) {
+    const counts = new Map<string, number>();
+    for (const item of feed.items) {
+      const guid = normalizeText(item.guid);
+      if (guid) counts.set(guid, (counts.get(guid) || 0) + 1);
+    }
+    for (const [guid, count] of counts) if (count > 1) duplicateGuids.add(guid);
+  }
 
   feed.items.forEach((item, index) => {
     const guid = normalizeText(item.guid);
     const title = normalizeText(item.title);
     const duration = parseDuration(item.duration);
     const published = parsePublishedAt(item.pubDate);
+    if (boundary) {
+      if (!published.value) {
+        errors.push({ index, guid: guid || null, title: title || null, errors: ["Missing publication date for bounded RSS identity"] });
+        return;
+      }
+      if (Date.parse(published.value) < Date.parse(`${boundary.not_before}T00:00:00.000Z`)) {
+        boundaryExcludedCount += 1;
+        return;
+      }
+      let guidPattern: RegExp;
+      try {
+        guidPattern = new RegExp(boundary.guid_pattern, "i");
+      } catch {
+        errors.push({ index, guid: guid || null, title: title || null, errors: ["Invalid bounded RSS GUID pattern"] });
+        return;
+      }
+      if (!guidPattern.test(guid)) {
+        errors.push({ index, guid: guid || null, title: title || null, errors: [guid ? "Unverified external_guid format" : "Missing external_guid"] });
+        return;
+      }
+      if (duplicateGuids.has(guid)) {
+        errors.push({ index, guid, title: title || null, errors: ["Duplicate GUID in bounded RSS feed"] });
+        return;
+      }
+    }
     if (duration.warning) warnings.push({ index, guid, warning: duration.warning });
     if (published.warning) warnings.push({ index, guid, warning: published.warning });
 
@@ -588,6 +652,7 @@ export function mapEpisodes(feed: ReturnType<typeof parseFeed>, config: FeedConf
       metadata: {
         channel_title: feed.channel.title || null,
         feed_url: config.feed_url,
+        ...(boundary ? { rss_publication_boundary: boundary.not_before } : {}),
         enclosure_type: item.enclosure_type || null,
         original_pub_date: item.pubDate || null,
         ...(config.source === "mediano_site_rss" && config.feed_url === MEDIANO_SITE_RSS_URL && item.categories.length
@@ -603,6 +668,7 @@ export function mapEpisodes(feed: ReturnType<typeof parseFeed>, config: FeedConf
   episodes.sort((a, b) => Date.parse(b.published_at || "1970-01-01") - Date.parse(a.published_at || "1970-01-01"));
   return {
     fetched_count: feed.items.length,
+    boundary_excluded_count: boundaryExcludedCount,
     episodes,
     errors,
     warnings,
@@ -1241,6 +1307,9 @@ export async function runEpisodeImport(options: {
         feed_url: config.feed_url,
         feed_format: config.format || "rss",
         batch_count: batches.length,
+        ...(config.rss_publication_boundary ? {
+          boundary_excluded_count: "boundary_excluded_count" in mapped ? mapped.boundary_excluded_count : 0
+        } : {}),
         warning_count: mapped.warnings.length,
         manual_catalogue_merge_count: manualMergedCount,
         manual_catalogue_merge_error_count: manualMergeErrors,
