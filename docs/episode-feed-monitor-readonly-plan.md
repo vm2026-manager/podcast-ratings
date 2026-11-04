@@ -1,0 +1,116 @@
+# Episode-feed production monitor and deferred read identity
+
+Status: the Step 1 monitor is implemented as a bounded observer. The Step 2
+database reader is a proposal only. No production grant, role, RLS policy,
+GitHub secret, import, backfill, or database write has been applied.
+
+## Current production controls
+
+The existing daily `episode-feed-coverage.yml` job remains the only schedule
+(06:37 UTC). It continues the offline catalogue-to-adapter audit, then compares
+only exact Podcast-IDs whose catalogue Feed was added/changed/removed or whose
+static adapter mapping changed. Runtime routing changes without exact ID scope
+are reported as a review warning and do not trigger a broad query.
+
+The production probe uses the existing project URL and anon key. It sends
+PostgREST `HEAD` requests for one exact `podcast_key` and `is_active=true`, with
+`Prefer: count=exact` and `Range: 0-0`. A second request, only when active
+episodes exist, filters the same Podcast-ID by `imported_at >= observed_at`.
+Responses contain count metadata only. The workflow caps each run at 10 IDs and
+20 API requests; full response bodies, episode rows, and all-feed scans are not
+used. Issue #256 stores the small pending state, deduplicated in one comment.
+Resolved checks are retained for at most 36 hours to avoid schedule-lookback
+re-alerts.
+
+Observed production privileges were checked before implementation:
+
+| Table | anon SELECT grant | anon SELECT RLS policy | Use |
+| --- | --- | --- | --- |
+| `podcast_episodes` | yes | yes, active rows only | exact-ID active count |
+| `episode_import_runs` | no | no | inaccessible; no attempt is made |
+
+An HTTP 200 is accepted only when `Content-Range` contains an exact count.
+`*/0` is a legitimate empty count; missing/malformed count metadata is an API
+error. HTTP 401/403 is authorization denied, absent URL/key is authorization
+missing, and other HTTP/network failures are API errors. A zero active count is
+reported separately from those conditions. Since anon RLS hides inactive rows,
+the monitor explicitly reports inactive/teaser visibility as unknown; it never
+infers “no stored episodes” or “only teasers” from an RLS-filtered zero.
+
+Active rows with `imported_at >= observed_at` show a post-change episode was
+observed, but do not prove the current Edge Function deployment or a successful
+import-run record. Active rows without one are marked as pre-existing with
+import unverified. A changed ID with zero active rows is given a 36-hour import
+grace period, then remains an actionable zero-active-episode status. Feed
+content is not fetched by this monitor, and it cannot classify upstream 404,
+empty RSS, malformed XML, or importer database-select errors. Existing
+adapter tests and issues #450–454 remain responsible for those concrete source
+failures until protected importer status is available.
+
+The episode count uses the existing
+`podcast_episodes_active_published_at_idx (podcast_key, is_active, published_at
+DESC)` index for the exact key and active filter. The timestamp predicate may be
+a residual filter. No migration or index change is proposed. A previous
+production EXPLAIN audit measured the 19-ID aggregate at 17.5 ms / 57 shared
+buffer hits, while the all-326 scan was 351.7 ms / 14,464 hits and the 45-day
+import-run window used temporary disk and 4.16 s. The all-feed and 45-day forms
+are excluded from daily operation. Real HTTP queries return no row body; the
+live check used one ID and verified 200 + exact `Content-Range`, while invalid
+credentials returned 401.
+
+## Deferred Step 2: least-privilege import status
+
+This is a design requiring explicit owner authorization before any production
+role, policy, credential, or GitHub-secret change.
+
+Proposed interface:
+
+1. Create a dedicated Supabase Auth machine identity with a single fixed user
+   UUID, distinct from `anon`, normal application users, and service role. After
+   owner approval, store its password only in a protected GitHub Actions
+   environment secret, exchange it for a short-lived access JWT during the
+   existing workflow, mask all tokens, and never echo credentials. Restrict the
+   environment to this workflow, require reviewers, rotate the password on a
+   fixed schedule, and revoke it immediately after suspected exposure.
+2. Do not grant `SELECT` on `episode_import_runs` to `anon`, `authenticated`, or
+   `public`. Create a dedicated `episode_monitor_rpc_owner NOLOGIN NOBYPASSRLS`
+   role; it must not own the table or any schema. Grant it only column-level
+   `SELECT (podcast_key, started_at, status)` on `public.episode_import_runs`.
+   Do not grant `BYPASSRLS`, `service_role`, table ownership, or broad schema
+   access to this role or the Auth user.
+3. Keep RLS enabled. Add one SELECT policy for
+   `episode_monitor_rpc_owner` whose predicate is
+   `auth.uid() = '<approved fixed monitor-user-uuid>'::uuid`; no policy is
+   added for `anon` or general `authenticated` users. Create one narrow,
+   parameterized `SECURITY DEFINER` RPC in exposed `public` (the private schema
+   is not PostgREST-callable without adding API configuration). Its owner is
+   `episode_monitor_rpc_owner`, it has an empty/fixed `search_path`, uses fully
+   qualified relation names, and checks the same fixed `auth.uid()` before
+   querying. It accepts at most 10 exact Podcast-IDs and a short bounded time
+   window; it returns only per-ID aggregate fields:
+   last success timestamp, last failure timestamp, last status, consecutive
+   failure count capped at 2, and whether any import started after activation.
+   It returns no exception text, feed URL, raw log, episode title/GUID, or row.
+   Query with `WHERE podcast_key = ANY(input_ids)` and bounded `started_at`,
+   aggregate internally, and return no exception text, feed URL, raw log,
+   episode title/GUID, or row. Revoke execute on the exact function signature
+   from `public` and `anon`; grant it to `authenticated`. The function's fixed
+   `auth.uid()` check must reject every authenticated identity except the
+   approved monitor user. The function-owner role is not a table owner and has
+   `NOBYPASSRLS`, so the restrictive RLS policy remains in force inside the
+   definer function.
+4. Add negative tests proving anon, ordinary authenticated users, an unrelated
+   Auth identity, unknown Podcast-IDs, more than 10 IDs, out-of-window runs,
+   direct table SELECT, other RPCs, and expired/revoked credentials are denied.
+   Positive tests must confirm only aggregate columns and exact-ID results are
+   returned. Verify `EXPLAIN (ANALYZE, BUFFERS)` under the real reader identity,
+   with two-run-per-ID bounded lookups using the existing
+   `episode_import_runs_podcast_key_started_at_idx`, no full-table scan, no
+   temporary disk, and a fixed low daily query limit before activation.
+
+After authorization and security review, Step 2 can alert on two consecutive
+failed imports, no import following adapter activation, no usable active
+episodes, teaser-only/inactive posts, recovery, deployment lag, and identity
+collisions. Deduplication belongs in #256 and adapter-routing review in #288;
+the five feed-specific issues remain independent. #256 stays open until that
+protected reader and post-merge recovery have been verified in production.
