@@ -43,8 +43,8 @@ assert.equal(runtime.configs[RADIO_IIII_FEED_KEY].routes.length, 20);
 assert.equal(runtime.configs[RADIO_IIII_FEED_KEY].format, "radio4_json");
 assert.equal(selectNormalFeedKeys(runtime.configs).includes(RADIO_IIII_FEED_KEY), false, "Radio IIII is excluded from the existing scheduled import plan");
 assert.equal(selectNormalFeedKeys(runtime.configs).includes("sig_noget_klogt_omny"), true, "the approved Sig noget klogt adapter remains scheduled");
-assert.equal(FEED_CONFIGS.se_og_hor_lige_her.enabled, false, "SE og HØR remains inactive until its own rollout");
-assert.equal(selectNormalFeedKeys(runtime.configs).includes("se_og_hor_lige_her"), false);
+assert.equal(FEED_CONFIGS.se_og_hor_lige_her.enabled, true, "the already deployed SE og HØR importer remains enabled");
+assert.equal(selectNormalFeedKeys(runtime.configs).includes("se_og_hor_lige_her"), true);
 let radioCalls = 0;
 await assert.rejects(runEpisodeImport({
   feedKey: RADIO_IIII_FEED_KEY,
@@ -52,19 +52,13 @@ await assert.rejects(runEpisodeImport({
   repository: { createImportRun: async () => { radioCalls++; throw new Error("unexpected import run"); } },
   fetchText: async () => { radioCalls++; throw new Error("unexpected feed fetch"); }
 }), /Feed import is disabled/u, "direct Radio IIII import is blocked before an import run or network fetch");
-await assert.rejects(runEpisodeImport({
-  feedKey: "se_og_hor_lige_her",
-  feedConfigs: runtime.configs,
-  repository: { createImportRun: async () => { radioCalls++; throw new Error("unexpected import run"); } },
-  fetchText: async () => { radioCalls++; throw new Error("unexpected feed fetch"); }
-}), /Feed import is disabled/u, "direct SE og HØR import is blocked before an import run or network fetch");
-assert.equal(radioCalls, 0, "disabled feed gates run before production write or source access");
+assert.equal(radioCalls, 0, "disabled Radio IIII gate runs before production write or source access");
 const latestCatalogue = JSON.parse(await readFile(new URL("../data/podcasts.json", import.meta.url), "utf8"));
 const latestRuntime = mergeSheetFeedConfigs(latestCatalogue);
 const scheduledKeys = selectNormalFeedKeys(latestRuntime.configs);
 assert.equal(latestRuntime.configs[RADIO_IIII_FEED_KEY].routes.length, 20, "the latest catalogue identities remain intact");
 assert.equal(scheduledKeys.includes(RADIO_IIII_FEED_KEY), false, "the actual latest catalogue cannot schedule Radio IIII");
-assert.equal(scheduledKeys.includes("se_og_hor_lige_her"), false, "the actual latest catalogue cannot schedule SE og HØR");
+assert.equal(scheduledKeys.includes("se_og_hor_lige_her"), true, "the actual latest catalogue preserves the already deployed SE og HØR importer");
 assert.equal(scheduledKeys.includes("sig_noget_klogt_omny"), true, "the exact approved Sig noget klogt importer is scheduled");
 
 const staged = candidates.map((candidate) => buildRadioIIIIStagingRow(candidate, "2026-11-03"));
