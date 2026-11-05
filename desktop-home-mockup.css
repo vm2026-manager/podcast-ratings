@@ -1130,6 +1130,10 @@
 /* Keep the logged-in welcome affordance on mobile, but do not reserve hero
    space for it in the desktop composition. */
 @media (min-width: 1101px) {
+  html body.page-ranglister .desktop-ranking-table__head > span[role="columnheader"]:first-child {
+    transform: translateX(26px);
+  }
+
   html body.page-forside #pageIntroPanel .home-hero--logged-in .home-hero__welcome {
     display: none !important;
   }
