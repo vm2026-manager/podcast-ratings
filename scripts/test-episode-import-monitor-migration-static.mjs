@@ -49,6 +49,12 @@ assert.match(postgresWorkflow, /postgrest\/postgrest:v12\.2\.3/iu);
 assert.doesNotMatch(postgresWorkflow, /SUPABASE_SERVICE_ROLE|service_role|PRODUCTION_SUPABASE/iu);
 assert.match(dailyWorkflow, /protected-import-status:[\s\S]+?PODCAST_EPISODE_IMPORT_STATUS_MONITOR_ENABLED == 'true'/iu,
   "the protected status step is optional and disabled unless the repository variable is explicitly enabled");
+assert.match(dailyWorkflow, /report\.backlog_warning[\s\S]+?core\.warning/iu,
+  "large durable queues produce a visible warning in the existing daily workflow");
+assert.match(dailyWorkflow, /report\.queue_capacity_exceeded[\s\S]+?core\.setFailed/iu,
+  "capacity pressure is surfaced as an actionable workflow failure after state publication");
+assert.ok((dailyWorkflow.match(/String\(value \|\| ""\)\.trim\(\)/gu) || []).length >= 4,
+  "all workflow state readers trim comment-marker newlines before parsing compressed or legacy JSON");
 assert.match(dailyWorkflow, /needs: coverage[\s\S]+?github\.event_name != 'pull_request'/iu);
 assert.doesNotMatch(dailyWorkflow.split("  protected-import-status:")[1] || "", /schedule\s*:/iu,
   "the optional status checker adds no cron schedule of its own");

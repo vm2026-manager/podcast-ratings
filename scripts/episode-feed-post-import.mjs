@@ -1,17 +1,40 @@
 import { readFile, writeFile } from "node:fs/promises";
 import { execFileSync } from "node:child_process";
 import { pathToFileURL } from "node:url";
+import { deflateRawSync, inflateRawSync } from "node:zlib";
 import { FEED_CONFIGS } from "../supabase/functions/import-podcast-episodes/feed-config.ts";
 import { mergeSheetFeedConfigs } from "../supabase/functions/import-podcast-episodes/runtime-feed-config.ts";
 import { checkEpisodeFeedCoverage } from "./monitor-episode-feed-coverage.mjs";
 
 export const MAX_EPISODES_PER_RUN = 10;
 export const MAX_API_REQUESTS_PER_RUN = MAX_EPISODES_PER_RUN * 2;
+export const PENDING_QUEUE_WARNING_THRESHOLD = 20;
+export const PENDING_QUEUE_CAPACITY = 400;
+export const MAX_STATUS_ROWS_IN_COMMENT = 40;
 export const MIN_RECHECK_AGE_MS = 18 * 60 * 60 * 1000;
+// This is an alarm grace period and a short Step 2 handoff window. It is not
+// the lifetime of an unprocessed queue entry.
 export const ZERO_EPISODE_ALERT_AGE_MS = 36 * 60 * 60 * 1000;
 export const POST_IMPORT_STATE_MARKER = "<!-- episode-feed-post-import-state -->";
 const STATE_BEGIN = "<!-- episode-feed-post-import-state-begin -->";
 const STATE_END = "<!-- episode-feed-post-import-state-end -->";
+const COMPRESSED_STATE_PREFIX = "zlib-base64:";
+const STATE_COMPRESSION_THRESHOLD_BYTES = 12_000;
+
+export function serializePostImportState(state) {
+  const json = JSON.stringify(state);
+  if (Buffer.byteLength(json, "utf8") <= STATE_COMPRESSION_THRESHOLD_BYTES) return json;
+  return COMPRESSED_STATE_PREFIX + deflateRawSync(Buffer.from(json, "utf8")).toString("base64");
+}
+
+export function parsePostImportState(serialized) {
+  const value = String(serialized ?? "").trim();
+  if (value.startsWith(COMPRESSED_STATE_PREFIX)) {
+    const inflated = inflateRawSync(Buffer.from(value.slice(COMPRESSED_STATE_PREFIX.length), "base64")).toString("utf8");
+    return JSON.parse(inflated);
+  }
+  return JSON.parse(value);
+}
 
 const normalizeKey = value => String(value ?? "").trim().toLowerCase()
   .normalize("NFD").replace(/[\u0300-\u036f]/gu, "").replace(/&/gu, " og ")
@@ -254,6 +277,22 @@ function pendingEligible(entry, nowMs) {
     nowMs - checkedAt >= MIN_RECHECK_AGE_MS;
 }
 
+const QUEUE_RETAINED_STATUSES = new Set([
+  "awaiting_existing_import_window", "zero_active_episodes", "active_episodes_preexisting_import_unverified",
+  "authorization_missing", "authorization_denied", "api_error", "deferred_by_daily_budget"
+]);
+
+export function getPendingQueueHealth(pending = []) {
+  const backlogCount = pending.filter(entry => QUEUE_RETAINED_STATUSES.has(entry?.status)).length;
+  return {
+    backlog_count: backlogCount,
+    backlog_warning_threshold: PENDING_QUEUE_WARNING_THRESHOLD,
+    pending_queue_capacity: PENDING_QUEUE_CAPACITY,
+    backlog_warning: backlogCount > PENDING_QUEUE_WARNING_THRESHOLD,
+    queue_capacity_exceeded: backlogCount > PENDING_QUEUE_CAPACITY
+  };
+}
+
 export async function monitorEpisodeFeedDelta({
   candidates = [],
   pending = [],
@@ -285,6 +324,9 @@ export async function monitorEpisodeFeedDelta({
     const prior = priorById.get(entry.podcast_key);
     return !prior || pendingEligible(prior, nowMs);
   }).sort((a, b) => {
+    const priorityA = priorById.get(a.podcast_key)?.status === "deferred_by_daily_budget" ? 0 : 1;
+    const priorityB = priorById.get(b.podcast_key)?.status === "deferred_by_daily_budget" ? 0 : 1;
+    if (priorityA !== priorityB) return priorityA - priorityB;
     const lastA = Date.parse(priorById.get(a.podcast_key)?.last_checked_at || a.observed_at || 0);
     const lastB = Date.parse(priorById.get(b.podcast_key)?.last_checked_at || b.observed_at || 0);
     return lastA - lastB || a.podcast_key.localeCompare(b.podcast_key, "da");
@@ -347,10 +389,10 @@ export async function monitorEpisodeFeedDelta({
     });
   }
 
-  const carry = results.filter(entry => ["awaiting_existing_import_window", "zero_active_episodes",
-    "active_episodes_preexisting_import_unverified", "authorization_missing", "authorization_denied", "api_error",
-    "deferred_by_daily_budget", "post_change_episodes_observed"].includes(entry.status) &&
-    nowMs - Date.parse(entry.last_checked_at || entry.observed_at || 0) <= 36 * 60 * 60 * 1000);
+  const carry = results.filter(entry => QUEUE_RETAINED_STATUSES.has(entry.status) ||
+    (entry.status === "post_change_episodes_observed" &&
+      nowMs - Date.parse(entry.last_checked_at || entry.observed_at || 0) <= ZERO_EPISODE_ALERT_AGE_MS));
+  const queueHealth = getPendingQueueHealth(carry);
   return {
     generated_at: timestamp,
     production_access: baseUrl && anonKey ? "anon_active_episodes_only" : "authorization_missing",
@@ -359,6 +401,7 @@ export async function monitorEpisodeFeedDelta({
     api_request_count: apiRequestCount,
     candidate_count: byId.size,
     scope_limit_exceeded: byId.size > maxPerRun,
+    ...queueHealth,
     candidates: results.sort((a, b) => a.podcast_key.localeCompare(b.podcast_key, "da")),
     pending: carry.map(({ podcast_key, title, feed, change_type, observed_at, previous_feed, config_key,
       status, last_checked_at, api_http_status, api_error, active_episode_count,
@@ -370,7 +413,7 @@ export async function monitorEpisodeFeedDelta({
 
 export function renderProductionMonitorComment(report) {
   const esc = value => String(value ?? "").replace(/@/gu, "＠").replace(/[<>]/gu, "");
-  const rows = report.candidates.map(entry => {
+  const rows = report.candidates.slice(0, MAX_STATUS_ROWS_IN_COMMENT).map(entry => {
     const count = entry.active_episode_count === undefined ? "ukendt" : String(entry.active_episode_count);
     const since = entry.post_change_active_episode_count === null || entry.post_change_active_episode_count === undefined
       ? "ukendt" : String(entry.post_change_active_episode_count);
@@ -379,12 +422,27 @@ export function renderProductionMonitorComment(report) {
     const checked = entry.last_checked_at ? `; kontrolleret=${esc(entry.last_checked_at)}` : "";
     return `- \`${esc(entry.podcast_key)}\` — **${esc(entry.status)}**; katalog=${esc(entry.catalogue_status)}; adapter=${esc(entry.adapter_status)}; aktiv=${count}; aktiv efter ændring=${since}${failure}${error}${checked}; sidste importsucces/-fejl/deploy=ikke tilgængelig via anon API`;
   });
-  const state = JSON.stringify({ pending: report.pending });
+  const state = serializePostImportState({ pending: report.pending });
+  const backlogNotice = report.backlog_warning
+    ? `
+
+⚠️ **Backlog-advarsel:** ${report.backlog_count} Podcast-ID'er venter; advarselsgrænsen er ${report.backlog_warning_threshold}. Køen bevares, og der kontrolleres højst ${report.max_candidates_per_run} ID'er / ${report.max_api_requests_per_run} HEAD-kald pr. dag.`
+    : "";
+  const capacityNotice = report.queue_capacity_exceeded
+    ? `
+
+🚨 **Køkapaciteten er overskredet:** ${report.backlog_count} ventende ID'er overstiger kapaciteten på ${report.pending_queue_capacity}. Ingen ID'er er fjernet fra state; kræver ejerens prioritering.`
+    : "";
+  const omittedRows = report.candidates.length > MAX_STATUS_ROWS_IN_COMMENT
+    ? `\n\n(${report.candidates.length - MAX_STATUS_ROWS_IN_COMMENT} yderligere statusrækker udeladt fra visningen; eksakt kø-state er bevaret nedenfor.)`
+    : "";
   return `${POST_IMPORT_STATE_MARKER}\n\n## Afgrænset post-import kontrol\n\nKontrollerede kun nye/ændrede Podcast-ID'er. ` +
     `API-adgang=${report.production_access}; forespørgsler=${report.api_request_count}; ` +
     `budget=${report.max_candidates_per_run} ID'er og højst ${report.max_api_requests_per_run} tælleforespørgsler pr. dag. \`episode_import_runs\` og Edge Function deploystatus er ikke synlige med anon-adgang.\n\n` +
     (report.scope_warnings?.length ? `Scope kræver ID-review før episodeforespørgsel: ${report.scope_warnings.join(", ")}.\n\n` : "") +
-    (rows.length ? rows.join("\n") : "Ingen ventende eller nye ID'er krævede post-import kontrol.") +
+    `Backlog=${report.backlog_count}; advarselsgrænse=${report.backlog_warning_threshold}; køkapacitet=${report.pending_queue_capacity}.` +
+    backlogNotice + capacityNotice + "\n\n" +
+    (rows.length ? rows.join("\n") : "Ingen ventende eller nye ID'er krævede post-import kontrol.") + omittedRows +
     `\n\n${STATE_BEGIN}\n${state}\n${STATE_END}`;
 }
 

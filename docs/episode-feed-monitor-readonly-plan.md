@@ -19,8 +19,21 @@ episodes exist, filters the same Podcast-ID by `imported_at >= observed_at`.
 Responses contain count metadata only. The workflow caps each run at 10 IDs and
 20 API requests; full response bodies, episode rows, and all-feed scans are not
 used. Issue #256 stores the small pending state, deduplicated in one comment.
-Resolved checks are retained for at most 36 hours to avoid schedule-lookback
-re-alerts.
+Queue retention and alert grace are separate. Unchecked and unresolved queue
+entries (including `deferred_by_daily_budget`, zero-result, authorization, and
+API-error statuses) remain in the deduplicated #256 state until they are
+rechecked and verified or explicitly resolved. This prevents a delayed ID from
+being lost when a backlog takes more than 36 hours to process. The 36-hour
+window applies only to the new-episode alarm grace and the short Step 2
+handoff for a verified post-change observation; it is not queue expiry.
+
+The daily worker still checks at most 10 exact Podcast-IDs and makes at most 20
+HEAD requests. It prioritizes never-checked IDs deferred by the daily budget.
+Backlogs above 20 IDs raise a visible warning. A backlog above 400 IDs raises
+an actionable workflow failure after preserving the exact IDs in #256 state;
+no IDs are truncated. The issue comment shows at most 40 status rows and
+compresses larger state payloads while retaining compatibility with existing
+plain-JSON state.
 
 Observed production privileges were checked before implementation:
 
