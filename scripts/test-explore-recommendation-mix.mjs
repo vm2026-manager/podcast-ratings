@@ -37,7 +37,7 @@ function fixture() {
   };
   const items = (keys) => keys.map((key) => ({ podcast: podcast(key), reason: "fixture", score: 1 }));
   const ratingSeeds = ["seed-a", "seed-b", "seed-c"].map((key, index) => ({
-    key, podcast: podcast(key, index < 2 ? "Shared Host" : "Solo Host", "Universe"),
+    key, podcast: podcast(key, index < 2 ? "Shared Person" : "Solo Person", "Universe"),
     source: "rating", rating: 9
   }));
   const direct = {
@@ -46,9 +46,9 @@ function fixture() {
     "seed-c": items(["d1", "d2", "d3", "d4"])
   };
   ["shared", "c1", "h1", "h2", "h3", "h4"].forEach((key) => {
-    podcast(key).host = "Shared Host";
+    podcast(key).host = "Shared Person";
   });
-  ["solo1", "solo2", "solo3", "solo4"].forEach((key) => podcast(key, "Solo Host"));
+  ["solo1", "solo2", "solo3", "solo4"].forEach((key) => podcast(key, "Solo Person"));
   ["shared", "c1", "h1", "b1", "u1", "u2", "u3", "u4"].forEach((key) => {
     podcast(key).mainSeries = "Universe";
   });
@@ -62,7 +62,7 @@ function fixture() {
     ratingSeeds, savedSeeds: [], ratedKeys: new Set(ratingSeeds.map((seed) => seed.key)),
     savedKeys: new Set(), seedKeys: new Set(ratingSeeds.map((seed) => seed.key)),
     // A singleton with greater weight must lose to repeated positive evidence.
-    hostSignals: [{ value: "Solo Host", weight: 99 }, { value: "Shared Host", weight: 1 }],
+    hostSignals: [{ value: "Solo Person", weight: 99 }, { value: "Shared Person", weight: 1 }],
     mainSeriesSignals: new Map([["universe", 3]])
   };
   const storage = new Map();
@@ -102,7 +102,9 @@ function fixture() {
       .filter((item) => !usedKeys.has(item.podcast.key)).slice(0, limit)
   });
   vm.runInContext([
-    "getComparableHostParts", "hostsMatchComparable", "getExplorePersonalSnapshotUserKey",
+    "normalizeText", "normalizeComparable", "normalizeHostPersonKey", "parseHostPeople",
+    "getHostPeople", "getComparableHostParts", "hostsMatchComparable",
+    "getExplorePersonalSnapshotUserKey",
     "readExplorePersonalSnapshot", "persistExplorePersonalSnapshot", "getExplorePersonalSections"
   ].map(extractFunction).join("\n"), context);
   return { context, profile, clusters, direct, storage, shown: () => shown,
@@ -120,7 +122,7 @@ function validate(rows, maxSections, limit = 4) {
 const mixed = fixture();
 const rows = mixed.run({ maxSections: 5 });
 assert.deepEqual(Array.from(rows, (row) => row.seedPodcastKey || row.clusterId || row.title),
-  ["seed-a", "cluster-1", "Mere med Shared Host", "seed-b", "Mere fra Universe"]);
+  ["seed-a", "cluster-1", "Mere med Shared Person", "seed-b", "Mere fra Universe"]);
 validate(rows, 5);
 assert.deepEqual(Array.from(mixed.shown()), ["seed-a", "seed-b"], "cluster seeds can still explain distinct direct rows");
 const reloaded = mixed.run({ maxSections: 5 });
