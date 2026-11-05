@@ -17,6 +17,7 @@ const context = {
   getPodcastKey: (podcast) => podcast?.id || "",
   getPodcastTopicKeys: (podcast) => new Set((podcast?.topics || []).map((topic) => String(topic).toLocaleLowerCase("da-DK"))),
   getCatalogueManualSupplementaryPodcasts: () => [manual],
+  getExploreMatchedHostName: () => "",
   hostsMatchComparable: () => false
 };
 vm.createContext(context);

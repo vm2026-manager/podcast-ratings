@@ -757,7 +757,7 @@ const AUTH_PERSISTENCE_STORAGE_KEY = "podcast-ratings-auth-persistence";
 const PROFILE_PREFERENCES_STORAGE_KEY = "podcast-ratings-profile-preferences";
 const EXPLORE_PERSONAL_SEED_HISTORY_STORAGE_KEY =
   "podcast-ratings-explore-personal-seed-history-v1";
-const UDFORSK_RECOMMENDATION_VERSION = 8;
+const UDFORSK_RECOMMENDATION_VERSION = 9;
 const EXPLORE_PERSONAL_SNAPSHOT_STORAGE_KEY =
   "podcast-ratings-explore-personal-snapshots-v2";
 const EXPLORE_PERSONAL_MINIMUM_GROUP_SIZE = 3;
@@ -1400,36 +1400,60 @@ function normalizeComparable(value) {
 }
 
 function getComparableHostParts(value) {
-  const comparable = normalizeComparable(value)
-    .replace(/\b(m\.?\s*fl\.?|med flere)\b/g, " ")
-    .replace(/\s+/g, " ")
-    .trim();
+  return Array.from(new Set(getHostPeople(value).map((person) => person.key)));
+}
 
-  if (!comparable) return [];
+function normalizeHostPersonKey(name) {
+  return normalizeComparable(name).split(/\s+/).filter(Boolean).sort((a, b) => a.localeCompare(b, "da")).join(" ");
+}
 
-  return Array.from(
-    new Set(
-      comparable
-        .split(/\s+(?:og|med)\s+|[,/;|]+/)
-        .map((part) => part.trim())
-        .filter((part) => {
-          const nameParts = part.split(/\s+/).filter(Boolean);
-          return nameParts.length >= 2 && nameParts.every((namePart) => namePart.length >= 2);
-        })
-    )
-  );
+function parseHostPeople(value) {
+  const credit = normalizeText(value).replace(/\s+/g, " ").trim();
+  if (!credit) return [];
+
+  const roleOrOrganizationWords = new Set([
+    "vært", "værter", "host", "hosts", "producer", "produceret", "redaktør", "redaktion",
+    "journalist", "tilrettelægger", "fortæller", "speaker", "radio", "podcast", "podcasts",
+    "mediano", "dr", "tv", "ap", "bbc", "mfl", "flere"
+  ]);
+  const parts = credit
+    .split(/\s*(?:&|,|;|\/|\b(?:og|and)\b)\s*/iu)
+    .map((part) => part.trim())
+    .filter(Boolean);
+  const people = [];
+
+  for (const part of parts) {
+    if (/\b(?:m\s*\.?\s*fl\s*\.?|med flere)\b/iu.test(part)) continue;
+    const nameParts = part.split(/\s+/).filter(Boolean);
+    if (nameParts.length < 2) continue;
+    if (!nameParts.every((namePart) => {
+      const letters = namePart.replace(/[’'\-‐‑‒–—]/gu, "");
+      return /^\p{L}[\p{L}\p{M}'’\-‐‑‒–—]*$/u.test(namePart) &&
+        Array.from(letters).length >= 2 &&
+        !roleOrOrganizationWords.has(normalizeComparable(namePart));
+    })) continue;
+
+    const name = part.replace(/\s+/g, " ").trim();
+    const key = normalizeHostPersonKey(name);
+    if (key && !people.some((person) => person.key === key)) people.push({ name, key });
+  }
+
+  return people;
+}
+
+function getHostPeople(value) {
+  if (value && typeof value === "object" && Array.isArray(value.hostPeople)) return value.hostPeople;
+  return parseHostPeople(value && typeof value === "object" ? value.host : value);
 }
 
 function hostsMatchComparable(left, right) {
-  const leftComparable = normalizeComparable(left);
-  const rightComparable = normalizeComparable(right);
+  const rightHosts = new Set(getComparableHostParts(right));
+  return getComparableHostParts(left).some((host) => rightHosts.has(host));
+}
 
-  if (!leftComparable || !rightComparable) return false;
-  if (leftComparable === rightComparable) return true;
-
-  const leftHosts = getComparableHostParts(leftComparable);
-  const rightHosts = new Set(getComparableHostParts(rightComparable));
-  return leftHosts.some((host) => rightHosts.has(host));
+function getExploreMatchedHostName(left, right) {
+  const rightHosts = new Set(getComparableHostParts(right));
+  return getHostPeople(left).find((person) => rightHosts.has(person.key))?.name || "";
 }
 
 function normalizeMatchKey(value) {
@@ -3460,6 +3484,7 @@ function isOutdatedPodcast(podcast) {
 function mapPodcast(row, index) {
   const title = getField(row, ["Titel", "Title"]);
   const host = getField(row, ["V\u00e6rt", "Vaert", "Host", "V\u00e6rter"]);
+  const hostPeople = parseHostPeople(host);
   const rawRating = getField(row, [
     "Vuring",
     "Vuring (1-10)",
@@ -3590,6 +3615,7 @@ function mapPodcast(row, index) {
     legacyKey: normalizeMatchKey(title),
     title,
     host,
+    hostPeople,
     rawRating,
     ratingValue: parseNumber(rawRating),
     ratingLabel: formatRating(rawRating),
@@ -10366,7 +10392,8 @@ function getPodcastDetailDynamicRecommendations(podcast, validated) {
         (currentGenre && currentGenre === normalizeComparable(candidatePodcast.secondaryGenre)) ||
         (currentSecondaryGenre && currentSecondaryGenre === normalizeComparable(candidatePodcast.genre))
       );
-      const sameHost = Boolean(podcast.host && candidatePodcast.host && hostsMatchComparable(podcast.host, candidatePodcast.host));
+      const matchedHost = getExploreMatchedHostName(podcast, candidatePodcast);
+      const sameHost = Boolean(matchedHost);
       const samePublisher = Boolean(currentPublisher && currentPublisher === normalizeComparable(candidatePodcast.publisher));
       const isManual = manualCandidateKeys.has(candidateKey);
       const ratingDistance = Math.abs((Number(podcast.ratingValue) || 0) - (Number(candidatePodcast.ratingValue) || 0));
@@ -10390,7 +10417,7 @@ function getPodcastDetailDynamicRecommendations(podcast, validated) {
             : sameGenre
               ? "Samme genre"
               : sameHost
-                ? "Samme vært"
+                ? `Mere med ${matchedHost}`
                 : samePublisher
                   ? "Samme udgiver"
                   : "Podcastlisten anbefaler";
@@ -21182,17 +21209,22 @@ function addExploreSignal(map, value, weight) {
   map.set(normalized, (map.get(normalized) || 0) + weight);
 }
 
-function addExploreHostSignal(signals, value, weight) {
-  const host = normalizeText(value);
-  if (!host) return;
+function addExploreHostSignal(signals, person, weight, seedKey, positiveRating = false) {
+  if (!person?.key || !person?.name || !Number.isFinite(weight)) return;
 
-  const existing = signals.find((signal) => hostsMatchComparable(signal.value, host));
-  if (existing) {
-    existing.weight += weight;
-    return;
+  let signal = signals.find((item) => item.key === person.key);
+  if (!signal) {
+    signal = { key: person.key, value: person.name, weight: 0, firstSeen: signals.length, positiveSeedKeys: new Set() };
+    signals.push(signal);
   }
 
-  signals.push({ value: host, weight });
+  if (seedKey && signal.seedKeys?.has(seedKey)) return;
+  if (seedKey) {
+    signal.seedKeys ||= new Set();
+    signal.seedKeys.add(seedKey);
+  }
+  signal.weight += weight;
+  if (positiveRating && seedKey) signal.positiveSeedKeys.add(seedKey);
 }
 
 function getExplorePreferenceProfile() {
@@ -21206,6 +21238,9 @@ function getExplorePreferenceProfile() {
       source: "rating"
     }))
     .filter((seed) => seed.podcast && seed.rating >= 7)
+    .filter((seed, index, seeds) =>
+      seeds.findIndex((candidate) => getPodcastKey(candidate.podcast) === getPodcastKey(seed.podcast)) === index
+    )
     .sort((a, b) => b.rating - a.rating);
   const savedSeeds = Array.from(savedKeys)
     .map((key) => ({
@@ -21215,12 +21250,15 @@ function getExplorePreferenceProfile() {
       source: "saved"
     }))
     .filter((seed) => seed.podcast);
+  const uniqueSavedSeeds = savedSeeds.filter((seed, index, seeds) =>
+    seeds.findIndex((candidate) => getPodcastKey(candidate.podcast) === getPodcastKey(seed.podcast)) === index
+  );
   const profile = {
     ratedKeys,
     savedKeys,
-    seedKeys: new Set([...ratingSeeds, ...savedSeeds].map((seed) => seed.key)),
+    seedKeys: new Set([...ratingSeeds, ...uniqueSavedSeeds].map((seed) => seed.key)),
     ratingSeeds,
-    savedSeeds,
+    savedSeeds: uniqueSavedSeeds,
     hostSignals: [],
     mainSeriesSignals: new Map(),
     publisherSignals: new Map(),
@@ -21229,7 +21267,9 @@ function getExplorePreferenceProfile() {
 
   ratingSeeds.forEach((seed) => {
     const weight = Math.max(0.7, seed.rating / 5);
-    addExploreHostSignal(profile.hostSignals, seed.podcast.host, weight);
+    getHostPeople(seed.podcast).forEach((person) =>
+      addExploreHostSignal(profile.hostSignals, person, weight, seed.key, true)
+    );
     addExploreSignal(profile.mainSeriesSignals, seed.podcast.mainSeries, weight * 1.25);
     addExploreSignal(profile.publisherSignals, seed.podcast.publisher, weight * 0.95);
     addExploreSignal(profile.genreSignals, seed.podcast.genre, weight * 0.85);
@@ -21243,9 +21283,14 @@ function getExplorePreferenceProfile() {
       .forEach((genre) => addExploreSignal(profile.genreSignals, genre, weight * 0.425));
   });
 
-  savedSeeds.forEach((seed) => {
+  uniqueSavedSeeds.forEach((seed) => {
+    if (profile.ratingSeeds.some((ratingSeed) =>
+      getPodcastKey(ratingSeed.podcast) === getPodcastKey(seed.podcast)
+    )) return;
     const weight = profile.ratedKeys.has(seed.key) ? 0.35 : 0.75;
-    addExploreHostSignal(profile.hostSignals, seed.podcast.host, weight);
+    getHostPeople(seed.podcast).forEach((person) =>
+      addExploreHostSignal(profile.hostSignals, person, weight, seed.key)
+    );
     addExploreSignal(profile.mainSeriesSignals, seed.podcast.mainSeries, weight);
     addExploreSignal(profile.publisherSignals, seed.podcast.publisher, weight * 0.8);
     addExploreSignal(profile.genreSignals, seed.podcast.genre, weight * 0.7);
@@ -21259,7 +21304,7 @@ function getExplorePreferenceProfile() {
       .forEach((genre) => addExploreSignal(profile.genreSignals, genre, weight * 0.35));
   });
 
-  profile.hostSignals.sort((a, b) => b.weight - a.weight);
+  profile.hostSignals.sort((a, b) => b.weight - a.weight || a.firstSeen - b.firstSeen);
   return profile;
 }
 
@@ -21374,17 +21419,21 @@ function getExploreSignalWeight(map, value) {
 }
 
 function getExploreHostSignalWeight(signals, host) {
-  if (!host) return 0;
-  return signals.reduce(
-    (best, signal) => (hostsMatchComparable(signal.value, host) ? Math.max(best, signal.weight) : best),
-    0
-  );
+  return getExploreMatchingHostSignal(signals, host)?.weight || 0;
+}
+
+function getExploreMatchingHostSignal(signals, host) {
+  const hostKeys = new Set(getComparableHostParts(host));
+  return signals
+    .filter((signal) => hostKeys.has(signal.key || getComparableHostParts(signal.value)[0]))
+    .sort((a, b) => b.weight - a.weight || (a.firstSeen ?? 0) - (b.firstSeen ?? 0))[0] || null;
 }
 
 function getExploreCandidateFit(candidate, profile) {
   const stats = getExplorePodcastStats(candidate);
   const mainSeriesWeight = getExploreSignalWeight(profile.mainSeriesSignals, candidate.mainSeries);
-  const hostWeight = getExploreHostSignalWeight(profile.hostSignals, candidate.host);
+  const hostSignal = getExploreMatchingHostSignal(profile.hostSignals, candidate);
+  const hostWeight = hostSignal?.weight || 0;
   const publisherWeight = getExploreSignalWeight(profile.publisherSignals, candidate.publisher);
   const secondaryGenreWeight = Math.max(
     getExploreSignalWeight(profile.genreSignals, candidate.secondaryGenre),
@@ -21411,7 +21460,7 @@ function getExploreCandidateFit(candidate, profile) {
   if (mainSeriesWeight && candidate.mainSeries) {
     reason = `Mere fra ${candidate.mainSeries}`;
   } else if (hostWeight && candidate.host) {
-    reason = `Mere med ${candidate.host}`;
+    reason = `Mere med ${hostSignal.value}`;
   } else if (publisherWeight && candidate.publisher) {
     reason = `Mere fra ${candidate.publisher}`;
   } else if (genreWeight && matchedGenre) {
@@ -21498,14 +21547,11 @@ function getExploreRecommendationReason(candidate, seeds, stats = getExplorePodc
     return `Mere fra ${mainSeriesSeed.podcast.mainSeries}`;
   }
 
-  const hostSeed = seeds.find(
-    (seed) =>
-      seed.podcast.host &&
-      candidate.host &&
-      hostsMatchComparable(seed.podcast.host, candidate.host)
-  );
-  if (hostSeed?.podcast.host) {
-    return `Mere med ${hostSeed.podcast.host}`;
+  const hostMatch = seeds
+    .map((seed) => getExploreMatchedHostName(seed.podcast, candidate))
+    .find(Boolean);
+  if (hostMatch) {
+    return `Mere med ${hostMatch}`;
   }
 
   const genreSeed = seeds.find((seed) => seed.podcast.genre && seed.podcast.genre === candidate.genre);
@@ -21555,7 +21601,7 @@ function scoreExploreRecommendation(candidate, seeds) {
     (seed) =>
       seed.podcast.host &&
       candidate.host &&
-      hostsMatchComparable(seed.podcast.host, candidate.host)
+      hostsMatchComparable(seed.podcast, candidate)
   );
 
   const score =
@@ -21636,7 +21682,7 @@ function getExploreRelatedItems(seed, { limit = 6, searchParts = [], genre = "Al
           normalizeComparable(seed.podcast.publisher) === normalizeComparable(podcast.publisher)) ||
         (seed.podcast.host &&
           podcast.host &&
-          hostsMatchComparable(seed.podcast.host, podcast.host))
+          hostsMatchComparable(seed.podcast, podcast))
       );
     })
     .map((podcast) => scoreExploreRecommendation(podcast, [seed]))
@@ -21649,10 +21695,8 @@ function getExploreSeedMatch(candidate, seed) {
     seed.podcast.mainSeries &&
     candidate.mainSeries &&
     normalizeComparable(seed.podcast.mainSeries) === normalizeComparable(candidate.mainSeries);
-  const sameHost =
-    seed.podcast.host &&
-    candidate.host &&
-    hostsMatchComparable(seed.podcast.host, candidate.host);
+  const matchedHost = getExploreMatchedHostName(seed.podcast, candidate);
+  const sameHost = Boolean(matchedHost);
   const sameGenre = seed.podcast.genre && seed.podcast.genre === candidate.genre;
   const samePublisher =
     seed.podcast.publisher &&
@@ -21663,7 +21707,7 @@ function getExploreSeedMatch(candidate, seed) {
     return { weight: 4, reason: `Mere fra ${seed.podcast.mainSeries}` };
   }
   if (sameHost) {
-    return { weight: 3, reason: `Mere med ${seed.podcast.host}` };
+    return { weight: 3, reason: `Mere med ${matchedHost}` };
   }
   if (sameGenre) {
     return { weight: 2.5, reason: "Samme genre" };
@@ -22115,14 +22159,20 @@ function getExplorePersonalSections({
   const pushNextCluster = () => clusterSections.some((section) => pushSection(section));
   const hostSignals = profile.hostSignals.map((signal) => ({
     ...signal,
-    positiveSeedCount: profile.ratingSeeds.filter(
-      (seed) => hostsMatchComparable(signal.value, seed.podcast.host)
+    positiveSeedCount: signal.positiveSeedKeys?.size || profile.ratingSeeds.filter(
+      (seed) => getComparableHostParts(seed.podcast).includes(signal.key || getComparableHostParts(signal.value)[0])
     ).length
-  })).sort((a, b) => b.positiveSeedCount - a.positiveSeedCount || b.weight - a.weight);
+  })).sort((a, b) =>
+    // Stable ties retain the first full name in seed order and then credit order.
+    b.positiveSeedCount - a.positiveSeedCount ||
+    b.weight - a.weight ||
+    (a.firstSeen ?? 0) - (b.firstSeen ?? 0) ||
+    (a.key || normalizeHostPersonKey(a.value)).localeCompare(b.key || normalizeHostPersonKey(b.value), "da")
+  );
   const pushNextHost = () => {
     if (sections.length >= maxSections) return false;
     for (const hostSignal of hostSignals) {
-      const hostSeeds = profile.ratingSeeds.filter((seed) => hostsMatchComparable(hostSignal.value, seed.podcast.host));
+      const hostSeeds = profile.ratingSeeds.filter((seed) => hostsMatchComparable(hostSignal.value, seed.podcast));
       const excludeKeys = new Set(hostSeeds.map((seed) => seed.key));
       const items = getPublicDisplayPodcasts()
         .filter((podcast) => {
@@ -22133,7 +22183,7 @@ function getExplorePersonalSections({
             !usedKeys.has(key) &&
             !excludeKeys.has(key) &&
             podcast.host &&
-            hostsMatchComparable(hostSignal.value, podcast.host) &&
+            hostsMatchComparable(hostSignal.value, podcast) &&
             matchesExploreFilters(podcast, searchParts, genre)
           );
         })
