@@ -5,6 +5,7 @@ const migration = await readFile(new URL("../supabase/migration-plans/2026110421
 const documentation = await readFile(new URL("../docs/episode-feed-monitor-readonly-plan.md", import.meta.url), "utf8");
 const postgresWorkflow = await readFile(new URL("../.github/workflows/critical-regression-gate.yml", import.meta.url), "utf8");
 const dailyWorkflow = await readFile(new URL("../.github/workflows/episode-feed-coverage.yml", import.meta.url), "utf8");
+const explainQuery = await readFile(new URL("../supabase/migration-plans/episode-monitor-explain.sql", import.meta.url), "utf8");
 
 assert.match(migration, /CREATE ROLE episode_monitor_rpc_owner\s+NOLOGIN[^;]*NOBYPASSRLS/iu);
 assert.match(migration, /CREATE SCHEMA episode_monitor_private AUTHORIZATION postgres/iu);
@@ -14,11 +15,14 @@ assert.match(migration, /CREATE FUNCTION public\.episode_import_monitor_status[\
 assert.equal((migration.match(/SECURITY DEFINER/giu) || []).length, 1, "only the private implementation may be SECURITY DEFINER");
 assert.equal((migration.match(/auth\.uid\(\) IS DISTINCT FROM '00000000-0000-4000-8000-000000000061'::uuid/giu) || []).length, 2,
   "both public wrapper and private implementation must check the exact identity");
-assert.match(migration, /REVOKE ALL ON FUNCTION public\.episode_import_monitor_status\(text\[\], timestamptz\)\s+FROM PUBLIC, anon/iu);
-assert.match(migration, /GRANT EXECUTE ON FUNCTION public\.episode_import_monitor_status\(text\[\], timestamptz\)\s+TO authenticated/iu);
+assert.match(migration, /REVOKE ALL ON FUNCTION public\.episode_import_monitor_status\(text\[\], timestamptz\[\]\)\s+FROM PUBLIC, anon/iu);
+assert.match(migration, /GRANT EXECUTE ON FUNCTION public\.episode_import_monitor_status\(text\[\], timestamptz\[\]\)\s+TO authenticated/iu);
 assert.match(migration, /GRANT SELECT \(podcast_key, started_at, status\)[\s\S]+?TO episode_monitor_rpc_owner/iu);
 assert.match(migration, /LIMIT 2/iu);
-assert.match(migration, /interval '14 days'/iu);
+assert.match(migration, /greatest\(requested\.activated_after, v_now - interval '14 days'\)/iu,
+  "each exact Podcast-ID gets its own activation cutoff, clamped to the same 14-day maximum");
+assert.match(migration, /cardinality\(p_activated_after\) <> cardinality\(p_podcast_ids\)/iu,
+  "activation timestamps are paired one-to-one with Podcast-IDs");
 assert.match(migration, /cardinality\(p_podcast_ids\) > 10/iu, "queries are bounded to at most 10 exact IDs");
 assert.match(migration, /count\(DISTINCT supplied\.id\)/iu, "duplicate input IDs are rejected");
 assert.match(migration, /REVOKE SELECT ON TABLE public\.episode_import_runs FROM PUBLIC, anon, authenticated/iu,
@@ -29,10 +33,15 @@ assert.match(migration, /latest\.statuses\[1\] = 'failed' AND latest\.statuses\[
   "two consecutive latest failures are exposed as an actionable aggregate");
 assert.match(migration, /r\.podcast_key = requested\.podcast_key[\s\S]+?ORDER BY r\.started_at DESC[\s\S]+?LIMIT 2/iu,
   "latest-two-run lookup is exact-ID and index-order bounded");
+assert.match(explainQuery, /unnest\(ARRAY\[[\s\S]+?\]::text\[\], ARRAY\[[\s\S]+?\]::timestamptz\[\]\) AS supplied\(podcast_key, activated_after\)/iu,
+  "the measured plan uses one bounded batch with different per-ID activation cutoffs");
+assert.match(explainQuery, /greatest\(requested\.activated_after, statement_timestamp\(\) - interval '14 days'\)/iu,
+  "every measured index probe clamps history to the same 14-day maximum");
 assert.doesNotMatch(migration, /error_message|details|service_role|(?<!NO)BYPASSRLS\s*(?:;|,|$)/iu);
 assert.match(documentation, /minimal `SECURITY INVOKER` wrapper/iu);
 assert.match(documentation, /dedicated non-exposed `episode_monitor_private` schema/iu);
 assert.doesNotMatch(documentation, /`SECURITY DEFINER` RPC in exposed `public`/iu);
+assert.match(documentation, /`unknown_outside_window`[\s\S]+?false `missing_first_import`/iu);
 assert.match(postgresWorkflow, /image: postgres:17-alpine/iu);
 assert.match(postgresWorkflow, /EPISODE_MONITOR_TEST_JWT_SECRET/iu);
 assert.match(postgresWorkflow, /node scripts\/test-episode-import-monitor-postgres\.mjs --prepare-only/iu);

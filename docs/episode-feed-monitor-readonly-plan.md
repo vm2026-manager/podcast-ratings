@@ -92,7 +92,9 @@ Proposed interface:
    schema contains only a minimal `SECURITY INVOKER` wrapper with an empty
    `search_path`, fully qualified names, and an exact fixed `auth.uid()` check.
    It validates 1–10 distinct, non-empty exact Podcast-IDs and an activation
-   timestamp no older than 14 days. It invokes the implementation in a
+   timestamp paired with every exact Podcast-ID. It clamps each ID's lower
+   bound to the later of its activation time and the 14-day history boundary.
+   It invokes the implementation in a
    dedicated non-exposed `episode_monitor_private` schema. That function alone
    is `SECURITY DEFINER`, owned by `episode_monitor_rpc_owner`, with
    `SET search_path = ''`, `row_security = on`, fully qualified names, and its
@@ -151,8 +153,15 @@ The daily workflow has an optional protected import-status job, disabled by
 default behind `PODCAST_EPISODE_IMPORT_STATUS_MONITOR_ENABLED`. It runs only
 after the existing coverage job on main, reuses its candidate artifact and
 the single existing schedule, and queries at most 10 exact Podcast-IDs per
-run. It uses one password-grant request, one bounded aggregate RPC and at most
-one active-episode count per ID (maximum 12 API requests), with a 14-day run
+run. Each ID carries its own activation timestamp in the single bounded RPC.
+Runs before activation are excluded from that ID's latest-two, last-success,
+last-failure and consecutive-failure aggregates. If activation is older than
+14 days and no run is visible in the bounded window, status is
+`unknown_outside_window`; it does not trigger a false `missing_first_import`.
+A recent activation with no post-activation run is `no_import_after_activation`
+and becomes actionable after the 36-hour grace period. The monitor uses one
+password-grant request, one aggregate RPC and at most one active-episode count
+per ID (maximum 12 API requests), with a 14-day run
 window and 36-hour new-adapter grace period. Missing credentials, denied
 authorization, API errors and exact zero counts remain distinct. GitHub state
 is deduplicated in #256; identical status is not rewritten each day, and an

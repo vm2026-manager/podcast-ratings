@@ -21,4 +21,11 @@ VALUES
   ('synthetic-ci', 'monitor-partial', now() - interval '1 hour', 'partial', 'SYNTHETIC_PRIVATE_ERROR'),
   ('synthetic-ci', 'monitor-running', now() - interval '1 hour', 'running', 'SYNTHETIC_PRIVATE_ERROR');
 
+INSERT INTO public.episode_import_runs (source, podcast_key, started_at, status, error_message)
+VALUES
+  ('synthetic-ci', 'monitor-newer-activation', now() - interval '3 hours', 'failed', 'SYNTHETIC_PRIVATE_ERROR'),
+  ('synthetic-ci', 'monitor-newer-activation', now() - interval '1 hour', 'success', 'SYNTHETIC_PRIVATE_ERROR'),
+  ('synthetic-ci', 'monitor-import-before-activation', now() - interval '3 days', 'success', 'SYNTHETIC_PRIVATE_ERROR'),
+  ('synthetic-ci', 'monitor-old-activation-no-recent-runs', now() - interval '20 days', 'success', 'SYNTHETIC_PRIVATE_ERROR');
+
 ANALYZE public.episode_import_runs;

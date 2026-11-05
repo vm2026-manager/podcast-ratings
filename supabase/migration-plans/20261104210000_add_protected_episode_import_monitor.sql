@@ -67,7 +67,7 @@ CREATE POLICY episode_monitor_rpc_owner_identity_read
 
 CREATE FUNCTION episode_monitor_private.status_for_podcasts(
   p_podcast_ids text[],
-  p_activated_after timestamptz
+  p_activated_after timestamptz[]
 )
 RETURNS TABLE (
   podcast_key text,
@@ -86,16 +86,15 @@ SET row_security = on
 AS $function$
 DECLARE
   v_now timestamptz := statement_timestamp();
-  v_cutoff timestamptz := greatest(p_activated_after, statement_timestamp() - interval '14 days');
 BEGIN
   IF auth.uid() IS DISTINCT FROM '00000000-0000-4000-8000-000000000061'::uuid THEN
     RAISE EXCEPTION 'episode status unavailable' USING ERRCODE = '42501';
   END IF;
 
   IF p_podcast_ids IS NULL OR cardinality(p_podcast_ids) < 1 OR cardinality(p_podcast_ids) > 10
-    OR p_activated_after IS NULL
-    OR p_activated_after < v_now - interval '14 days'
-    OR p_activated_after > v_now
+    OR p_activated_after IS NULL OR cardinality(p_activated_after) <> cardinality(p_podcast_ids)
+    OR EXISTS (SELECT 1 FROM unnest(p_activated_after) AS supplied(activated_after)
+      WHERE supplied.activated_after IS NULL OR supplied.activated_after > v_now)
     OR EXISTS (SELECT 1 FROM unnest(p_podcast_ids) AS supplied(id)
       WHERE supplied.id IS NULL OR btrim(supplied.id) = '' OR length(supplied.id) > 300)
     OR cardinality(p_podcast_ids) <> (SELECT count(DISTINCT supplied.id)
@@ -105,8 +104,8 @@ BEGIN
 
   RETURN QUERY
   WITH requested AS (
-    SELECT supplied.id AS podcast_key
-    FROM unnest(p_podcast_ids) AS supplied(id)
+    SELECT supplied.podcast_key, supplied.activated_after
+    FROM unnest(p_podcast_ids, p_activated_after) AS supplied(podcast_key, activated_after)
   )
   SELECT requested.podcast_key,
     latest.latest_status,
@@ -130,7 +129,7 @@ BEGIN
       SELECT r.status, r.started_at
       FROM public.episode_import_runs AS r
       WHERE r.podcast_key = requested.podcast_key
-        AND r.started_at >= v_cutoff
+        AND r.started_at >= greatest(requested.activated_after, v_now - interval '14 days')
         AND r.started_at <= v_now
       ORDER BY r.started_at DESC
       LIMIT 2
@@ -140,7 +139,7 @@ BEGIN
     SELECT r.started_at
     FROM public.episode_import_runs AS r
     WHERE r.podcast_key = requested.podcast_key
-      AND r.started_at >= v_cutoff
+      AND r.started_at >= greatest(requested.activated_after, v_now - interval '14 days')
       AND r.started_at <= v_now
       AND r.status = 'success'
     ORDER BY r.started_at DESC
@@ -150,7 +149,7 @@ BEGIN
     SELECT r.started_at
     FROM public.episode_import_runs AS r
     WHERE r.podcast_key = requested.podcast_key
-      AND r.started_at >= v_cutoff
+      AND r.started_at >= greatest(requested.activated_after, v_now - interval '14 days')
       AND r.started_at <= v_now
       AND r.status = 'failed'
     ORDER BY r.started_at DESC
@@ -164,17 +163,17 @@ EXCEPTION
 END;
 $function$;
 
-ALTER FUNCTION episode_monitor_private.status_for_podcasts(text[], timestamptz)
+ALTER FUNCTION episode_monitor_private.status_for_podcasts(text[], timestamptz[])
   OWNER TO episode_monitor_rpc_owner;
 REVOKE CREATE ON SCHEMA episode_monitor_private FROM episode_monitor_rpc_owner;
-REVOKE ALL ON FUNCTION episode_monitor_private.status_for_podcasts(text[], timestamptz)
+REVOKE ALL ON FUNCTION episode_monitor_private.status_for_podcasts(text[], timestamptz[])
   FROM PUBLIC, anon;
-GRANT EXECUTE ON FUNCTION episode_monitor_private.status_for_podcasts(text[], timestamptz)
+GRANT EXECUTE ON FUNCTION episode_monitor_private.status_for_podcasts(text[], timestamptz[])
   TO authenticated;
 
 CREATE FUNCTION public.episode_import_monitor_status(
   p_podcast_ids text[],
-  p_activated_after timestamptz
+  p_activated_after timestamptz[]
 )
 RETURNS TABLE (
   podcast_key text,
@@ -197,9 +196,9 @@ BEGIN
   END IF;
 
   IF p_podcast_ids IS NULL OR cardinality(p_podcast_ids) < 1 OR cardinality(p_podcast_ids) > 10
-    OR p_activated_after IS NULL
-    OR p_activated_after < statement_timestamp() - interval '14 days'
-    OR p_activated_after > statement_timestamp()
+    OR p_activated_after IS NULL OR cardinality(p_activated_after) <> cardinality(p_podcast_ids)
+    OR EXISTS (SELECT 1 FROM unnest(p_activated_after) AS supplied(activated_after)
+      WHERE supplied.activated_after IS NULL OR supplied.activated_after > statement_timestamp())
     OR EXISTS (SELECT 1 FROM unnest(p_podcast_ids) AS supplied(id)
       WHERE supplied.id IS NULL OR btrim(supplied.id) = '' OR length(supplied.id) > 300)
     OR cardinality(p_podcast_ids) <> (SELECT count(DISTINCT supplied.id)
@@ -217,9 +216,9 @@ EXCEPTION
 END;
 $function$;
 
-REVOKE ALL ON FUNCTION public.episode_import_monitor_status(text[], timestamptz)
+REVOKE ALL ON FUNCTION public.episode_import_monitor_status(text[], timestamptz[])
   FROM PUBLIC, anon;
-GRANT EXECUTE ON FUNCTION public.episode_import_monitor_status(text[], timestamptz)
+GRANT EXECUTE ON FUNCTION public.episode_import_monitor_status(text[], timestamptz[])
   TO authenticated;
 
 DO $verification$

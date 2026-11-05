@@ -71,8 +71,9 @@ async function api(pathname, { token, method = "GET", body } = {}) {
 }
 
 function statusQuery(ids, activatedAfter = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString()) {
+  const activationDates = Array.isArray(activatedAfter) ? activatedAfter : ids.map(() => activatedAfter);
   return api("/rpc/episode_import_monitor_status", {
-    token: signedToken(), method: "POST", body: { p_podcast_ids: ids, p_activated_after: activatedAfter }
+    token: signedToken(), method: "POST", body: { p_podcast_ids: ids, p_activated_after: activationDates }
   });
 }
 
@@ -165,7 +166,7 @@ expectSqlDenied(`
   BEGIN;
   SET LOCAL ROLE authenticated;
   SET LOCAL request.jwt.claims='{"sub":"22222222-2222-4222-8222-222222222222","role":"authenticated"}';
-  SELECT * FROM episode_monitor_private.status_for_podcasts(ARRAY['monitor-one-success'], now()-interval '1 day');
+  SELECT * FROM episode_monitor_private.status_for_podcasts(ARRAY['monitor-one-success'], ARRAY[now()-interval '1 day']);
   ROLLBACK;
 `, "direct private function call by an unrelated authenticated identity");
 
@@ -194,24 +195,37 @@ for (const [label, token] of [
   ["ordinary authenticated", signedToken({ role: "authenticated", sub: "22222222-2222-4222-8222-222222222222" })]
 ]) {
   const response = await api("/rpc/episode_import_monitor_status", {
-    token, method: "POST", body: { p_podcast_ids: ["monitor-one-success"], p_activated_after: new Date(Date.now() - 60_000).toISOString() }
+    token, method: "POST", body: { p_podcast_ids: ["monitor-one-success"],
+      p_activated_after: [new Date(Date.now() - 60_000).toISOString()] }
   });
   assert.ok(response.status >= 400, `${label} unexpectedly fetched protected statuses`);
 }
 
 const machineToken = signedToken();
 const directPrivateRpc = await api("/rpc/status_for_podcasts", {
-  token: machineToken, method: "POST", body: { p_podcast_ids: ["monitor-one-success"], p_activated_after: new Date(Date.now() - 60_000).toISOString() }
+  token: machineToken, method: "POST", body: { p_podcast_ids: ["monitor-one-success"],
+    p_activated_after: [new Date(Date.now() - 60_000).toISOString()] }
 });
 assert.equal(directPrivateRpc.status, 404, "private schema is not exposed by PostgREST");
 
 const activated = new Date(Date.now() - 12 * 24 * 60 * 60 * 1000).toISOString();
-const results = await statusQuery([
-  "monitor-never-imported", "monitor-one-success", "monitor-two-failures", "monitor-recovery", "monitor-partial", "monitor-running"
-], activated);
+const nowIso = Date.now();
+const activationById = new Map([
+  ["monitor-never-imported", new Date(nowIso - 12 * 86400000).toISOString()],
+  ["monitor-one-success", new Date(nowIso - 3 * 86400000).toISOString()],
+  ["monitor-two-failures", new Date(nowIso - 6 * 86400000).toISOString()],
+  ["monitor-recovery", new Date(nowIso - 5 * 86400000).toISOString()],
+  ["monitor-partial", new Date(nowIso - 3 * 86400000).toISOString()],
+  ["monitor-running", new Date(nowIso - 3 * 86400000).toISOString()],
+  ["monitor-newer-activation", new Date(nowIso - 2 * 3600000).toISOString()],
+  ["monitor-import-before-activation", new Date(nowIso - 2 * 86400000).toISOString()],
+  ["monitor-old-activation-no-recent-runs", new Date(nowIso - 30 * 86400000).toISOString()]
+]);
+const idsWithDifferentActivations = [...activationById.keys()];
+const results = await statusQuery(idsWithDifferentActivations, [...activationById.values()]);
 assert.equal(results.status, 200, `authorized test machine RPC failed: HTTP ${results.status} ${results.text}`);
 const rows = new Map(results.payload.map(row => [row.podcast_key, row]));
-assert.equal(results.payload.length, 6, "result cardinality matches exact requested IDs");
+assert.equal(results.payload.length, idsWithDifferentActivations.length, "one bounded RPC returns one result per exact ID");
 assert.equal(rows.get("monitor-never-imported").run_count, 0, "no first import is an explicit zero-run row");
 assert.equal(rows.get("monitor-never-imported").latest_run_status, null);
 assert.equal(rows.get("monitor-never-imported").imported_after_activation, false);
@@ -230,6 +244,16 @@ assert.ok(Date.parse(rows.get("monitor-recovery").last_success_at) > Date.parse(
 assert.equal(rows.get("monitor-partial").latest_run_status, "partial");
 assert.equal(rows.get("monitor-partial").consecutive_failure_count, 0, "partial is not silently reclassified as failed");
 assert.equal(rows.get("monitor-running").latest_run_status, "running", "in-progress import remains distinguishable");
+assert.equal(rows.get("monitor-newer-activation").run_count, 1,
+  "the newer ID counts only runs after its own activation, not its earlier failed run");
+assert.equal(rows.get("monitor-newer-activation").latest_run_status, "success");
+assert.equal(rows.get("monitor-newer-activation").last_failure_at, null,
+  "a failure before that ID's activation is excluded from its failure history");
+assert.equal(rows.get("monitor-import-before-activation").run_count, 0,
+  "an import before activation does not count as the first activated import");
+assert.equal(rows.get("monitor-import-before-activation").latest_run_status, null);
+assert.equal(rows.get("monitor-old-activation-no-recent-runs").run_count, 0,
+  "an activation outside the 14-day window never widens the database history scan");
 assert.doesNotMatch(results.text, /SYNTHETIC_PRIVATE_ERROR|error_message|details/iu, "raw error data and JSON details are never returned");
 
 const unknown = await statusQuery(["valid-but-unknown-id"]);
@@ -244,6 +268,10 @@ assert.equal(maxBatch.payload.length, 10);
 const fourteenDayBoundary = await statusQuery(["valid-at-fourteen-day-boundary"],
   new Date(Date.now() - 14 * 24 * 60 * 60 * 1000 + 5_000).toISOString());
 assert.equal(fourteenDayBoundary.status, 200, "an activation timestamp within five seconds of the 14-day boundary is accepted");
+const olderActivationIsBounded = await statusQuery(["valid-old-activation"],
+  new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString());
+assert.equal(olderActivationIsBounded.status, 200,
+  "an older activation is accepted as input while SQL still clamps history to the last 14 days");
 
 for (const [label, ids, date] of [
   ["zero IDs", [], activated],
@@ -251,22 +279,29 @@ for (const [label, ids, date] of [
   ["duplicate IDs", ["monitor-one-success", "monitor-one-success"], activated],
   ["empty ID", [""], activated],
   ["whitespace ID", ["   "], activated],
-  ["oversized ID", ["x".repeat(301)], activated],
-  ["activation older than 14 days", ["monitor-one-success"], new Date(Date.now() - 15 * 24 * 60 * 60 * 1000).toISOString()]
+  ["oversized ID", ["x".repeat(301)], activated]
 ]) {
   const response = await statusQuery(ids, date);
+  assert.ok(response.status >= 400, `${label} unexpectedly returned HTTP ${response.status}`);
+}
+for (const [label, ids, activations] of [
+  ["activation array length mismatch", ["monitor-one-success", "monitor-recovery"], [activated]],
+  ["null activation timestamp", ["monitor-one-success"], [null]],
+  ["future activation timestamp", ["monitor-one-success"], [new Date(Date.now() + 60_000).toISOString()]]
+]) {
+  const response = await statusQuery(ids, activations);
   assert.ok(response.status >= 400, `${label} unexpectedly returned HTTP ${response.status}`);
 }
 
 const expired = await api("/rpc/episode_import_monitor_status", {
   token: signedToken({ exp: Math.floor(Date.now() / 1000) - 60 }), method: "POST",
-  body: { p_podcast_ids: ["monitor-one-success"], p_activated_after: activated }
+  body: { p_podcast_ids: ["monitor-one-success"], p_activated_after: [activated] }
 });
 assert.equal(expired.status, 401, "PostgREST rejects an expired test JWT");
 
 const identityDenied = await api("/rpc/episode_import_monitor_status", {
   token: signedToken({ sub: "22222222-2222-4222-8222-222222222222" }), method: "POST",
-  body: { p_podcast_ids: ["monitor-one-success"], p_activated_after: activated }
+  body: { p_podcast_ids: ["monitor-one-success"], p_activated_after: [activated] }
 });
 assert.ok(identityDenied.status === 401 || identityDenied.status === 403,
   `the wrong authenticated identity must be denied as authorization, got ${identityDenied.status}`);

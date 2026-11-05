@@ -5,11 +5,22 @@ SET LOCAL ROLE episode_monitor_rpc_owner;
 SET LOCAL request.jwt.claims = '{"sub":"00000000-0000-4000-8000-000000000061","role":"authenticated"}';
 EXPLAIN (ANALYZE, BUFFERS, FORMAT JSON)
 WITH requested AS (
-  SELECT supplied.id AS podcast_key
+  SELECT supplied.podcast_key, supplied.activated_after
   FROM unnest(ARRAY[
     'synthetic-1', 'synthetic-2', 'synthetic-3', 'synthetic-4', 'synthetic-5',
     'synthetic-6', 'synthetic-7', 'synthetic-8', 'synthetic-9', 'synthetic-10'
-  ]::text[]) AS supplied(id)
+  ]::text[], ARRAY[
+    statement_timestamp() - interval '14 days',
+    statement_timestamp() - interval '10 days',
+    statement_timestamp() - interval '7 days',
+    statement_timestamp() - interval '3 days',
+    statement_timestamp() - interval '1 day',
+    statement_timestamp() - interval '12 hours',
+    statement_timestamp() - interval '6 hours',
+    statement_timestamp() - interval '3 hours',
+    statement_timestamp() - interval '1 hour',
+    statement_timestamp() - interval '5 minutes'
+  ]::timestamptz[]) AS supplied(podcast_key, activated_after)
 )
 SELECT requested.podcast_key,
   latest.latest_status,
@@ -33,7 +44,7 @@ LEFT JOIN LATERAL (
     SELECT r.status, r.started_at
     FROM public.episode_import_runs AS r
     WHERE r.podcast_key = requested.podcast_key
-      AND r.started_at >= statement_timestamp() - interval '14 days'
+      AND r.started_at >= greatest(requested.activated_after, statement_timestamp() - interval '14 days')
       AND r.started_at <= statement_timestamp()
     ORDER BY r.started_at DESC
     LIMIT 2
@@ -43,7 +54,7 @@ LEFT JOIN LATERAL (
   SELECT r.started_at
   FROM public.episode_import_runs AS r
   WHERE r.podcast_key = requested.podcast_key
-    AND r.started_at >= statement_timestamp() - interval '14 days'
+    AND r.started_at >= greatest(requested.activated_after, statement_timestamp() - interval '14 days')
     AND r.started_at <= statement_timestamp()
     AND r.status = 'success'
   ORDER BY r.started_at DESC
@@ -53,7 +64,7 @@ LEFT JOIN LATERAL (
   SELECT r.started_at
   FROM public.episode_import_runs AS r
   WHERE r.podcast_key = requested.podcast_key
-    AND r.started_at >= statement_timestamp() - interval '14 days'
+    AND r.started_at >= greatest(requested.activated_after, statement_timestamp() - interval '14 days')
     AND r.started_at <= statement_timestamp()
     AND r.status = 'failed'
   ORDER BY r.started_at DESC

@@ -61,12 +61,14 @@ export function applyImportStatusAlarms({
     if (!observation?.import_status_received || !observation?.podcast_key) continue;
     const activationMs = Date.parse(observation.activated_at || "");
     const afterGrace = Number.isFinite(activationMs) && nowMs - activationMs >= IMPORT_STATUS_GRACE_MS;
+    const activationInWindow = Number.isFinite(activationMs) && activationMs >= nowMs - 14 * 24 * 60 * 60 * 1000;
     const activeCount = observation.active_episode_count;
     const lastSuccess = observation.last_success_at || null;
     const lastFailure = observation.last_failure_at || null;
     const problems = [];
     if (observation.consecutive_failure_count >= 2) problems.push("two_consecutive_import_failures");
-    if (observation.run_count === 0 && afterGrace) problems.push("missing_first_import");
+    if (observation.run_count === 0 && afterGrace && activationInWindow &&
+      observation.import_history_status !== "unknown_outside_window") problems.push("missing_first_import");
     if (activeCount === 0 && afterGrace) problems.push("zero_usable_episodes");
 
     for (const problemType of problems) {
@@ -192,14 +194,15 @@ export async function monitorEpisodeImportStatus({
         try { session = await authResponse.json(); } catch { session = null; }
         if (!session?.access_token) accessStatus = "api_error";
         else {
-          const activatedAfter = new Date(Math.max(Date.parse(timestamp) - 14 * 24 * 60 * 60 * 1000,
-            ...scope.map(item => Date.parse(item.activated_at)))).toISOString();
           let rpcResponse;
           try {
             apiRequestCount.rpc++;
             rpcResponse = await fetchImpl(new URL("/rest/v1/rpc/episode_import_monitor_status", baseUrl), {
               method: "POST", headers: { apikey: anonKey, authorization: `Bearer ${session.access_token}`, "content-type": "application/json" },
-              body: JSON.stringify({ p_podcast_ids: scope.map(item => item.candidate.podcast_key), p_activated_after: activatedAfter }),
+              body: JSON.stringify({
+                p_podcast_ids: scope.map(item => item.candidate.podcast_key),
+                p_activated_after: scope.map(item => item.activated_at)
+              }),
               signal: AbortSignal.timeout(10000)
             });
           } catch {
@@ -221,12 +224,14 @@ export async function monitorEpisodeImportStatus({
                   const episodeCount = await countActiveEpisodes({ baseUrl, anonKey, podcastKey: item.candidate.podcast_key, fetchImpl });
                   if (episodeCount.request_sent) apiRequestCount.episode_count++;
                   const status = statusesById.get(item.candidate.podcast_key);
-                  const afterActivation = status.latest_run_started_at && Date.parse(status.latest_run_started_at) >= Date.parse(item.activated_at);
+                  const activationIsInHistoryWindow = Date.parse(item.activated_at) >= Date.parse(timestamp) - 14 * 24 * 60 * 60 * 1000;
+                  const importHistoryStatus = status.run_count > 0 ? "import_observed_after_activation"
+                    : activationIsInHistoryWindow ? "no_import_after_activation" : "unknown_outside_window";
                   checkedRows.push({ ...status,
                     podcast_key: item.candidate.podcast_key,
                     activated_at: item.activated_at,
-                    imported_after_activation: Boolean(afterActivation),
-                    run_count: afterActivation ? status.run_count : 0,
+                    imported_after_activation: Boolean(status.imported_after_activation),
+                    import_history_status: importHistoryStatus,
                     active_episode_count: episodeCount.status === "counted" ? episodeCount.count : null,
                     status: episodeCount.status === "counted" ? "counted" : episodeCount.status,
                     import_status_received: true
@@ -273,12 +278,20 @@ export async function monitorEpisodeImportStatus({
 
 export function renderImportStatusSection(report) {
   const esc = value => String(value || "").replace(/@/gu, "＠").replace(/[<>]/gu, "");
+  const firstImportAlarms = new Set((report.alarms || [])
+    .filter(alarm => alarm.problem_type === "missing_first_import").map(alarm => alarm.podcast_key));
   const alarms = (report.alarms || []).map(alarm =>
     `- \`${esc(alarm.podcast_key)}\` — **${esc(alarm.problem_type)}**; sidste succes=${esc(alarm.last_success_at || "ukendt")}; sidste fejl=${esc(alarm.last_failure_at || "ukendt")}; seneste status=${esc(alarm.latest_run_status || "ingen kørsel")}; [workflow](${esc(alarm.workflow_url || report.workflow_url || "")})`);
+  const historyNotes = (report.observations || []).filter(observation =>
+    observation.import_history_status === "unknown_outside_window" ||
+    (observation.import_history_status === "no_import_after_activation" && !firstImportAlarms.has(observation.podcast_key)))
+    .map(observation => observation.import_history_status === "unknown_outside_window"
+      ? `- \`${esc(observation.podcast_key)}\` — **unknown_outside_window**; aktivering ligger uden for 14-dagesvinduet, så historikken beviser ikke, om første import fandt sted.`
+      : `- \`${esc(observation.podcast_key)}\` — **no_import_after_activation**; 36-timersfristen er ikke udløbet.`);
   const recoveries = (report.recovered_now || []).map(entry =>
     `- \`${esc(entry.podcast_key)}\` — **recovery: ${esc(entry.problem_type)}**; succes=${esc(entry.last_success_at || "ukendt")}; [workflow](${esc(entry.workflow_url || report.workflow_url || "")})`);
   const omitted = report.omitted_ids?.length ? `\n\nKøbegrænsning: ${report.omitted_ids.length} ID'er afventer næste daglige kontrol (maks. ${report.max_ids_per_query}).` : "";
-  return `<!-- episode-import-status-begin -->\n## Beskyttet importstatus\n\nAdgang=${esc(report.access_status)}; kontrollerede ID'er=${report.checked_count}/${report.candidate_count}; forespørgsler=${report.supabase_request_count}/${report.max_supabase_requests}; fejlede importer kræver 2 på hinanden følgende fejl. Teaser-only og Edge-deploystatus=ukendt.\n\n${alarms.length ? alarms.join("\n") : "Ingen åbne importstatusalarmer."}${recoveries.length ? `\n\n### Recovery\n${recoveries.join("\n")}` : ""}${omitted}\n<!-- episode-import-status-end -->`;
+  return `<!-- episode-import-status-begin -->\n## Beskyttet importstatus\n\nAdgang=${esc(report.access_status)}; kontrollerede ID'er=${report.checked_count}/${report.candidate_count}; forespørgsler=${report.supabase_request_count}/${report.max_supabase_requests}; fejlede importer kræver 2 på hinanden følgende fejl. Teaser-only og Edge-deploystatus=ukendt.\n\n${alarms.length ? alarms.join("\n") : "Ingen åbne importstatusalarmer."}${historyNotes.length ? `\n\n### Importhistorik uden alarm\n${historyNotes.join("\n")}` : ""}${recoveries.length ? `\n\n### Recovery\n${recoveries.join("\n")}` : ""}${omitted}\n<!-- episode-import-status-end -->`;
 }
 
 async function main() {
