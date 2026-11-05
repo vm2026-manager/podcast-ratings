@@ -1131,7 +1131,7 @@
    space for it in the desktop composition. */
 @media (min-width: 1101px) {
   html body.page-ranglister .desktop-ranking-table__head > span[role="columnheader"]:first-child {
-    transform: translateX(26px);
+    transform: translateX(20px);
   }
 
   html body.page-forside #pageIntroPanel .home-hero--logged-in .home-hero__welcome {

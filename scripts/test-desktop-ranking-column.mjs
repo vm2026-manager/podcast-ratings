@@ -4,11 +4,12 @@ import { fileURLToPath } from "node:url";
 import { chromium } from "playwright";
 
 const readRepoFile = (name) => readFile(fileURLToPath(new URL(`../${name}`, import.meta.url)), "utf8");
-const [desktopCss, movementCss, indexHtml, appJs] = await Promise.all([
+const [desktopCss, movementCss, indexHtml, appJs, manropeRankGlyphs] = await Promise.all([
   readRepoFile("desktop-home-mockup.css"),
   readRepoFile("ranking-movement.css"),
   readRepoFile("index.html"),
-  readRepoFile("app.js")
+  readRepoFile("app.js"),
+  readFile(fileURLToPath(new URL("./fixtures/manrope-rank-glyphs.woff2", import.meta.url)), "base64")
 ]);
 
 const standardColumns = "80px minmax(220px, 2.02fr) minmax(105px, 0.95fr) minmax(226px, 1.08fr) minmax(110px, 0.8fr) 82px";
@@ -44,7 +45,7 @@ assert.match(appJs, /desktop-ranking-row__number[\s\S]{0,260}getRankingMovementM
 assert.match(appJs, /rankDigits\s*>=\s*4/,
   "four-digit ranks receive controlled full-width number layout");
 assert.match(indexHtml, /desktop-home-mockup\.css\?v=20261105-ranking-column-header-v1/);
-assert.match(desktopCss, /\.desktop-ranking-table__head\s*>\s*span\[role="columnheader"\]:first-child\s*\{\s*transform:\s*translateX\(26px\);/);
+assert.match(desktopCss, /\.desktop-ranking-table__head\s*>\s*span\[role="columnheader"\]:first-child\s*\{\s*transform:\s*translateX\(20px\);/);
 assert.match(desktopCss, /\.desktop-ranking-row__podcast\s*\{[^}]*grid-template-columns:\s*58px minmax\(0, 1fr\)/);
 
 const browser = await chromium.launch({ headless: true });
@@ -62,11 +63,8 @@ try {
 }
 
 async function verifyMock(page, desktop, movement) {
-  await page.setContent(`<!doctype html><html><head>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap">
-    <style>
+  await page.setContent(`<!doctype html><html><head><style>
+    @font-face { font-family: Manrope; src: url(data:font/woff2;base64,${manropeRankGlyphs}) format("woff2"); font-style: normal; font-weight: 400 800; font-display: block; }
     * { box-sizing: border-box; }
     body { margin: 0; font: 900 21.12px/1 Manrope, Arial, sans-serif; }
     .desktop-ranking-table { width: 100%; }
@@ -76,7 +74,7 @@ async function verifyMock(page, desktop, movement) {
     .desktop-ranking-row__podcast { display:grid; grid-template-columns:58px minmax(0,1fr); gap:14px; padding-top:7px; }
     .desktop-ranking-row__cover { width:58px; height:58px; background:#ddd; }
   </style></head><body class="page-ranglister"><main class="desktop-ranking-table"></main></body></html>`);
-  await page.evaluate(() => document.fonts.ready);
+  await page.evaluate(() => document.fonts.load("900 21.12px Manrope", "#1234567890"));
   await page.addStyleTag({ content: desktop });
   await page.addStyleTag({ content: movement });
   const samples = [
