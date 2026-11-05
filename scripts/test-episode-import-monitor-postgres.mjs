@@ -71,7 +71,7 @@ async function api(pathname, { token, method = "GET", body } = {}) {
 }
 
 function statusQuery(ids, activatedAfter = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString()) {
-  return api("/rest/v1/rpc/episode_import_monitor_status", {
+  return api("/rpc/episode_import_monitor_status", {
     token: signedToken(), method: "POST", body: { p_podcast_ids: ids, p_activated_after: activatedAfter }
   });
 }
@@ -193,14 +193,14 @@ for (const [label, token] of [
   ["anon", signedToken({ role: "anon", sub: null })],
   ["ordinary authenticated", signedToken({ role: "authenticated", sub: "22222222-2222-4222-8222-222222222222" })]
 ]) {
-  const response = await api("/rest/v1/rpc/episode_import_monitor_status", {
+  const response = await api("/rpc/episode_import_monitor_status", {
     token, method: "POST", body: { p_podcast_ids: ["monitor-one-success"], p_activated_after: new Date(Date.now() - 60_000).toISOString() }
   });
   assert.ok(response.status >= 400, `${label} unexpectedly fetched protected statuses`);
 }
 
 const machineToken = signedToken();
-const directPrivateRpc = await api("/rest/v1/rpc/status_for_podcasts", {
+const directPrivateRpc = await api("/rpc/status_for_podcasts", {
   token: machineToken, method: "POST", body: { p_podcast_ids: ["monitor-one-success"], p_activated_after: new Date(Date.now() - 60_000).toISOString() }
 });
 assert.equal(directPrivateRpc.status, 404, "private schema is not exposed by PostgREST");
@@ -258,13 +258,13 @@ for (const [label, ids, date] of [
   assert.ok(response.status >= 400, `${label} unexpectedly returned HTTP ${response.status}`);
 }
 
-const expired = await api("/rest/v1/rpc/episode_import_monitor_status", {
+const expired = await api("/rpc/episode_import_monitor_status", {
   token: signedToken({ exp: Math.floor(Date.now() / 1000) - 60 }), method: "POST",
   body: { p_podcast_ids: ["monitor-one-success"], p_activated_after: activated }
 });
 assert.equal(expired.status, 401, "PostgREST rejects an expired test JWT");
 
-const identityDenied = await api("/rest/v1/rpc/episode_import_monitor_status", {
+const identityDenied = await api("/rpc/episode_import_monitor_status", {
   token: signedToken({ sub: "22222222-2222-4222-8222-222222222222" }), method: "POST",
   body: { p_podcast_ids: ["monitor-one-success"], p_activated_after: activated }
 });
