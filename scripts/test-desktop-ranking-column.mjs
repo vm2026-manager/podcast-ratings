@@ -62,7 +62,11 @@ try {
 }
 
 async function verifyMock(page, desktop, movement) {
-  await page.setContent(`<!doctype html><html><head><style>
+  await page.setContent(`<!doctype html><html><head>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap">
+    <style>
     * { box-sizing: border-box; }
     body { margin: 0; font: 900 21.12px/1 Manrope, Arial, sans-serif; }
     .desktop-ranking-table { width: 100%; }
@@ -72,6 +76,7 @@ async function verifyMock(page, desktop, movement) {
     .desktop-ranking-row__podcast { display:grid; grid-template-columns:58px minmax(0,1fr); gap:14px; padding-top:7px; }
     .desktop-ranking-row__cover { width:58px; height:58px; background:#ddd; }
   </style></head><body class="page-ranglister"><main class="desktop-ranking-table"></main></body></html>`);
+  await page.evaluate(() => document.fonts.ready);
   await page.addStyleTag({ content: desktop });
   await page.addStyleTag({ content: movement });
   const samples = [
