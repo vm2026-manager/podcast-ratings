@@ -45,7 +45,7 @@ assert.match(appJs, /desktop-ranking-row__number[\s\S]{0,260}getRankingMovementM
 assert.match(appJs, /rankDigits\s*>=\s*4/,
   "four-digit ranks receive controlled full-width number layout");
 assert.match(indexHtml, /desktop-home-mockup\.css\?v=20261105-ranking-column-header-v1/);
-assert.match(desktopCss, /\.desktop-ranking-table__head\s*>\s*span\[role="columnheader"\]:first-child\s*\{\s*transform:\s*translateX\(20px\);/);
+assert.match(desktopCss, /\.desktop-ranking-table__head\s*>\s*span\[role="columnheader"\]:first-child\s*\{\s*transform:\s*translateX\(19px\);/);
 assert.match(desktopCss, /\.desktop-ranking-row__podcast\s*\{[^}]*grid-template-columns:\s*58px minmax\(0, 1fr\)/);
 
 const browser = await chromium.launch({ headless: true });
