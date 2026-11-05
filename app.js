@@ -2731,10 +2731,20 @@ function rankingSearchTokenMatchesFieldVariants(queryToken, fieldVariants) {
   return false;
 }
 
-function rankingSearchQueryHasPrefixMatches(query, prefixTokenBuckets, canonicalTokenSet) {
-  return query.canonicalTokens.every((queryToken) =>
-    canonicalTokenSet.has(queryToken) || rankingSearchTokenHasPrefixMatch(queryToken, prefixTokenBuckets)
-  );
+function rankingSearchQueryHasPrefixMatches(query, fields) {
+  let fuzzyTokenUsed = false;
+  return query.canonicalTokens.every((canonicalToken, index) => {
+    if (fields.canonicalTokenSet.has(canonicalToken)) return true;
+    const queryToken = query.rawTokens[index] || canonicalToken;
+    if (rankingSearchTokenHasPrefixMatch(queryToken, fields.prefixTokenBuckets)) return true;
+    if (queryToken.length < 7 || rankingSearchStopWords.has(queryToken) || fuzzyTokenUsed) return false;
+    const fuzzyMatch = fields.fuzzyFields.some((field) => field.rawTokens.some((fieldToken) =>
+      fieldToken.length >= 7 && isOneEditApart(queryToken, fieldToken)
+    ));
+    if (!fuzzyMatch) return false;
+    fuzzyTokenUsed = true;
+    return true;
+  });
 }
 
 function rankingSearchFieldMatches(query, field) {
@@ -2784,22 +2794,9 @@ function matchesRankingEnhancedSearch(podcast, searchTerm) {
   if (fields.some((field) => rankingSearchFieldMatches(query, field))) return true;
 
   if (query.canonicalTokens.length > 1 && query.canonicalTokens.every((token) => fields.canonicalTokenSet.has(token))) return true;
-  if (rankingSearchQueryHasPrefixMatches(query, fields.prefixTokenBuckets, fields.canonicalTokenSet)) return true;
-
-  // A query may contain terms from different metadata fields, but only one typo
-  // across the complete podcast is tolerated, matching the existing fuzzy rule.
-  let fuzzyTokenUsed = false;
-  return query.rawTokens.every((queryToken, index) => {
-    const canonicalToken = query.rawCanonicalTokens[index];
-    if (fields.canonicalTokenSet.has(canonicalToken)) return true;
-    if (queryToken.length < 7 || rankingSearchStopWords.has(queryToken) || fuzzyTokenUsed) return false;
-    const match = fields.fuzzyFields.some((field) => field.rawTokens.some((fieldToken) =>
-      fieldToken.length >= 7 && isOneEditApart(queryToken, fieldToken)
-    ));
-    if (!match) return false;
-    fuzzyTokenUsed = true;
-    return true;
-  });
+  // Exact tokens, safe prefixes and at most one existing fuzzy token may combine
+  // across the same podcast's fields.
+  return rankingSearchQueryHasPrefixMatches(query, fields);
 }
 
 function deduplicatePodcastResults(podcasts) {
