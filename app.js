@@ -1581,7 +1581,10 @@ function getHeaderSearchMatches(rawQuery) {
           [fields.secondaryGenre, 150, "Genre"],
           [fields.topics, 150, "Genre"],
           [fields.memberMetadata, 100, "Podcast"]
-        ].find(([field]) => tokenMatches.some((token) => searchVariantsMatch(normalizeSearchVariants(token), field)));
+        ].find(([field]) => tokenMatches.some((token) =>
+          searchVariantsMatch(normalizeSearchVariants(token), field) ||
+          rankingSearchTokenMatchesFieldVariants(token, field)
+        ));
         [score, matchLabel] = partialField ? [partialField[1], partialField[2]] : [100, "Podcast"];
       }
 
@@ -2556,6 +2559,7 @@ const rankingSearchStopWords = new Set([
   "a", "af", "at", "da", "de", "den", "det", "en", "et", "for", "fra",
   "i", "med", "og", "om", "på", "til", "the", "and", "of", "in", "to"
 ]);
+const RANKING_SEARCH_PREFIX_MIN_LENGTH = 4;
 const rankingSearchFieldCache = new WeakMap();
 const rankingSearchQueryCache = new Map();
 
@@ -2591,6 +2595,13 @@ function canonicalizeRankingSearchText(value) {
   return canonicalizeNormalizedRankingSearchText(normalizeRankingSearchValue(value));
 }
 
+function addRankingSearchTokenBucket(buckets, token) {
+  if (token.length < RANKING_SEARCH_PREFIX_MIN_LENGTH) return;
+  const key = token.slice(0, RANKING_SEARCH_PREFIX_MIN_LENGTH);
+  if (!buckets.has(key)) buckets.set(key, new Set());
+  buckets.get(key).add(token);
+}
+
 function getRankingSearchQuery(searchTerm) {
   const normalized = normalizeRankingSearchValue(searchTerm);
   if (!normalized) return null;
@@ -2614,6 +2625,7 @@ function getRankingSearchFields(podcast) {
   if (cached) return cached;
 
   const fields = [];
+  const prefixTokenBuckets = new Map();
   for (const { value, fuzzyAllowed } of getPodcastSearchFieldEntries(podcast)) {
     const normalized = normalizeRankingSearchValue(value);
     if (!normalized) continue;
@@ -2624,12 +2636,16 @@ function getRankingSearchFields(podcast) {
     if (simplified !== normalized && simplified !== transliterated) variants.push(simplified);
     const canonicalTokens = [];
     for (const variant of variants) {
+      const variantTokens = variant.split(" ").filter(Boolean);
       canonicalTokens.push(...canonicalizeNormalizedRankingSearchText(variant).split(" ").filter(Boolean));
+      variantTokens.forEach((token) => addRankingSearchTokenBucket(prefixTokenBuckets, token));
     }
+    const canonicalTokenSet = new Set(canonicalTokens);
     fields.push({
       normalized,
       compact: variants.map((variant) => variant.replace(/\s+/g, "")),
       canonicalTokens,
+      canonicalTokenSet,
       rawTokens: normalized.split(" ").filter(Boolean),
       fuzzyAllowed
     });
@@ -2641,6 +2657,7 @@ function getRankingSearchFields(podcast) {
     if (field.fuzzyAllowed) fuzzyFields.push(field);
   }
   fields.canonicalTokenSet = canonicalTokenSet;
+  fields.prefixTokenBuckets = prefixTokenBuckets;
   fields.fuzzyFields = fuzzyFields;
   rankingSearchFieldCache.set(podcast, fields);
   return fields;
@@ -2673,6 +2690,53 @@ function isOneEditApart(left, right) {
   return edits + (longIndex < left.length ? 1 : 0) <= 1;
 }
 
+function rankingSearchTokenHasPrefixMatch(queryToken, prefixTokenBuckets) {
+  if (
+    queryToken.length < RANKING_SEARCH_PREFIX_MIN_LENGTH ||
+    rankingSearchStopWords.has(queryToken) ||
+    /^(?:\d+|[ivxlcdm]+)$/iu.test(queryToken)
+  ) return false;
+
+  const transliterated = queryToken.replace(/æ/g, "ae").replace(/ø/g, "oe").replace(/å/g, "aa");
+  const simplified = queryToken.replace(/[æå]/g, "a").replace(/ø/g, "o");
+  for (const variant of new Set([queryToken, transliterated, simplified])) {
+    if (variant.length < RANKING_SEARCH_PREFIX_MIN_LENGTH) continue;
+    const candidates = prefixTokenBuckets.get(variant.slice(0, RANKING_SEARCH_PREFIX_MIN_LENGTH));
+    if (candidates) {
+      for (const token of candidates) {
+        if (token.startsWith(variant)) return true;
+      }
+    }
+  }
+  return false;
+}
+
+function rankingSearchTokenMatchesFieldVariants(queryToken, fieldVariants) {
+  if (
+    queryToken.length < RANKING_SEARCH_PREFIX_MIN_LENGTH ||
+    rankingSearchStopWords.has(queryToken) ||
+    /^(?:\d+|[ivxlcdm]+)$/iu.test(queryToken)
+  ) return false;
+
+  const transliterated = queryToken.replace(/æ/g, "ae").replace(/ø/g, "oe").replace(/å/g, "aa");
+  const simplified = queryToken.replace(/[æå]/g, "a").replace(/ø/g, "o");
+  for (const variant of new Set([queryToken, transliterated, simplified])) {
+    if (variant.length < RANKING_SEARCH_PREFIX_MIN_LENGTH) continue;
+    for (const field of fieldVariants) {
+      for (const fieldToken of field.readable.split(" ").filter(Boolean)) {
+        if (fieldToken.startsWith(variant)) return true;
+      }
+    }
+  }
+  return false;
+}
+
+function rankingSearchQueryHasPrefixMatches(query, prefixTokenBuckets, canonicalTokenSet) {
+  return query.canonicalTokens.every((queryToken) =>
+    canonicalTokenSet.has(queryToken) || rankingSearchTokenHasPrefixMatch(queryToken, prefixTokenBuckets)
+  );
+}
+
 function rankingSearchFieldMatches(query, field) {
   if (!query?.canonicalTokens.length || !field?.canonicalTokens.length) return false;
   if (query.shortNumericQuery) return field.normalized === query.normalized;
@@ -2680,7 +2744,6 @@ function rankingSearchFieldMatches(query, field) {
   if (query.canonicalTokens.every((token) => field.canonicalTokens.includes(token)) ||
       query.canonicalTokens.length === 1 && query.canonicalTokens[0].length >= 5 &&
         field.compact.some((compact) => compact.includes(query.canonicalTokens[0]))) return true;
-
   // Fuzzy matching is limited to a single one-character edit across the whole
   // query. It only examines title/topic tokens and excludes short/stop words.
   let fuzzyTokenUsed = false;
@@ -2712,6 +2775,7 @@ function matchesRankingEnhancedSearch(podcast, searchTerm) {
     if (canonicalToken.length >= 5 && fields.some((field) =>
       field.compact.some((compact) => compact.includes(canonicalToken))
     )) return true;
+    if (rankingSearchTokenHasPrefixMatch(queryToken, fields.prefixTokenBuckets)) return true;
     if (queryToken.length < 7 || rankingSearchStopWords.has(queryToken)) return false;
     return fields.fuzzyFields.some((field) => field.rawTokens.some((fieldToken) =>
       fieldToken.length >= 7 && isOneEditApart(queryToken, fieldToken)
@@ -2720,6 +2784,7 @@ function matchesRankingEnhancedSearch(podcast, searchTerm) {
   if (fields.some((field) => rankingSearchFieldMatches(query, field))) return true;
 
   if (query.canonicalTokens.length > 1 && query.canonicalTokens.every((token) => fields.canonicalTokenSet.has(token))) return true;
+  if (rankingSearchQueryHasPrefixMatches(query, fields.prefixTokenBuckets, fields.canonicalTokenSet)) return true;
 
   // A query may contain terms from different metadata fields, but only one typo
   // across the complete podcast is tolerated, matching the existing fuzzy rule.
