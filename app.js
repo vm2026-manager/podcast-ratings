@@ -26122,7 +26122,7 @@ async function loadCriticalJsonSnapshot({ url, cacheKey, label, validate }) {
   let networkError = null;
 
   try {
-    const response = await fetch(url, { cache: "no-store" });
+    const response = await fetch(url, { cache: "no-cache" });
     if (!response.ok) throw new Error(`${label} svarede med HTTP ${response.status}.`);
 
     const data = await response.json();
@@ -26159,7 +26159,7 @@ async function loadPodcastObjectsFromJson() {
 
 async function loadFeaturedReviewObjectsFromJson() {
   const response = await fetch(`${FEATURED_JSON_DATA_URL}?v=${DATA_VERSION}`, {
-    cache: "no-store"
+    cache: "no-cache"
   });
 
   if (!response.ok) {
@@ -26192,7 +26192,7 @@ async function loadPodcastDisplayGroups() {
 async function loadCoverManifestFromJson() {
   try {
     const response = await fetch(`${COVER_MANIFEST_URL}?v=${DATA_VERSION}`, {
-      cache: "no-store"
+      cache: "no-cache"
     });
 
     if (!response.ok) {

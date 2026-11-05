@@ -39,6 +39,7 @@ const checks = [
   ["Google Sheet source drift watcher", ["scripts/test-sheet-source-drift.mjs"]],
   ["catalogue pipeline freshness and stuck PR checks", ["scripts/test-catalogue-pipeline-watch.mjs"]],
   ["production catalogue health", ["scripts/test-production-catalogue-health.mjs"]],
+  ["critical catalogue HTTP-cache revalidation and last-known-good fallback", ["scripts/test-critical-catalogue-http-cache.mjs"]],
   ["display-group catalogue", ["scripts/validate-podcast-display-groups.mjs"]],
   ["Kirsten season parsing and episode routing", ["--experimental-strip-types", "scripts/test-kirsten-apple-season-numbering.mjs"]],
   ["Kirsten season rating integrity across workspace switches", ["scripts/test-kirsten-season-rating-integrity.mjs"]],
