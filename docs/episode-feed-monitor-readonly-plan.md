@@ -134,12 +134,32 @@ executable `supabase/migrations/` directory so a routine migration push cannot
 apply it accidentally. Its identity UUID is a test sentinel: use a distinct
 test Auth identity in an isolated environment, and replace it with the
 specifically approved machine Auth UUID only for an approved production
-application. The current workstation has no Docker/Podman
-for local Supabase, and the inactive Supabase project has not been confirmed as
-an isolated test target; therefore no database integration test, actual
-`EXPLAIN (ANALYZE, BUFFERS)`, or query-budget measurement has been performed.
-The accompanying Node test checks source-level security invariants only; it is
-not evidence that PostgreSQL grants, RLS, Auth, or PostgREST behave correctly.
+application.
+
+The PR adds a disposable PostgreSQL 17 service and PostgREST v12.2.3 to the
+existing Critical Regression Gate workflow. It applies the full draft SQL only
+to a localhost-only synthetic fixture, verifies real PostgreSQL grants/RLS
+and both function security modes, then exercises the API with a CI-only JWT
+secret and synthetic IDs. It seeds 250,000 synthetic history rows for an
+index-plan check; test assertions reject sequential scans, temporary disk, over
+5,000 shared buffer blocks, or a query over 3 seconds. No Supabase project or
+production credentials are used by this job. These are generic PostgreSQL and
+PostgREST integration results, not managed Supabase Auth/session/revocation
+evidence; those specific tests remain required before the PR can leave draft.
+
+The daily workflow has an optional protected import-status job, disabled by
+default behind `PODCAST_EPISODE_IMPORT_STATUS_MONITOR_ENABLED`. It runs only
+after the existing coverage job on main, reuses its candidate artifact and
+the single existing schedule, and queries at most 10 exact Podcast-IDs per
+run. It uses one password-grant request, one bounded aggregate RPC and at most
+one active-episode count per ID (maximum 12 API requests), with a 14-day run
+window and 36-hour new-adapter grace period. Missing credentials, denied
+authorization, API errors and exact zero counts remain distinct. GitHub state
+is deduplicated in #256; identical status is not rewritten each day, and an
+alarm recovers only after a later successful run and at least one usable
+active episode. The protected GitHub environment, machine identity, credentials
+and enable variable have not been created or enabled. Step 1 continues to run
+independently.
 
 After authorization and security review, Step 2 can alert on two consecutive
 failed imports, no import following adapter activation, no usable active

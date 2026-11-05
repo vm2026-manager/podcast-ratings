@@ -3,6 +3,8 @@ import { readFile } from "node:fs/promises";
 
 const migration = await readFile(new URL("../supabase/migration-plans/20261104210000_add_protected_episode_import_monitor.sql", import.meta.url), "utf8");
 const documentation = await readFile(new URL("../docs/episode-feed-monitor-readonly-plan.md", import.meta.url), "utf8");
+const postgresWorkflow = await readFile(new URL("../.github/workflows/critical-regression-gate.yml", import.meta.url), "utf8");
+const dailyWorkflow = await readFile(new URL("../.github/workflows/episode-feed-coverage.yml", import.meta.url), "utf8");
 
 assert.match(migration, /CREATE ROLE episode_monitor_rpc_owner\s+NOLOGIN[^;]*NOBYPASSRLS/iu);
 assert.match(migration, /CREATE SCHEMA episode_monitor_private AUTHORIZATION postgres/iu);
@@ -31,5 +33,15 @@ assert.doesNotMatch(migration, /error_message|details|service_role|(?<!NO)BYPASS
 assert.match(documentation, /minimal `SECURITY INVOKER` wrapper/iu);
 assert.match(documentation, /dedicated non-exposed `episode_monitor_private` schema/iu);
 assert.doesNotMatch(documentation, /`SECURITY DEFINER` RPC in exposed `public`/iu);
+assert.match(postgresWorkflow, /image: postgres:17-alpine/iu);
+assert.match(postgresWorkflow, /EPISODE_MONITOR_TEST_JWT_SECRET/iu);
+assert.match(postgresWorkflow, /node scripts\/test-episode-import-monitor-postgres\.mjs --prepare-only/iu);
+assert.match(postgresWorkflow, /postgrest\/postgrest:v12\.2\.3/iu);
+assert.doesNotMatch(postgresWorkflow, /SUPABASE_SERVICE_ROLE|service_role|PRODUCTION_SUPABASE/iu);
+assert.match(dailyWorkflow, /protected-import-status:[\s\S]+?PODCAST_EPISODE_IMPORT_STATUS_MONITOR_ENABLED == 'true'/iu,
+  "the protected status step is optional and disabled unless the repository variable is explicitly enabled");
+assert.match(dailyWorkflow, /needs: coverage[\s\S]+?github\.event_name != 'pull_request'/iu);
+assert.doesNotMatch(dailyWorkflow.split("  protected-import-status:")[1] || "", /schedule\s*:/iu,
+  "the optional status checker adds no cron schedule of its own");
 
 console.log("Protected episode monitor migration static security checks: PASS");

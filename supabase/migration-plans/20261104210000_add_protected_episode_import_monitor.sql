@@ -157,6 +157,8 @@ BEGIN
     LIMIT 1
   ) AS failed ON true;
 EXCEPTION
+  WHEN insufficient_privilege THEN
+    RAISE EXCEPTION 'episode status unavailable' USING ERRCODE = '42501';
   WHEN OTHERS THEN
     RAISE EXCEPTION 'episode status unavailable' USING ERRCODE = 'P0001';
 END;
@@ -208,6 +210,8 @@ BEGIN
   RETURN QUERY
   SELECT * FROM episode_monitor_private.status_for_podcasts(p_podcast_ids, p_activated_after);
 EXCEPTION
+  WHEN insufficient_privilege THEN
+    RAISE EXCEPTION 'episode status unavailable' USING ERRCODE = '42501';
   WHEN OTHERS THEN
     RAISE EXCEPTION 'episode status unavailable' USING ERRCODE = 'P0001';
 END;
