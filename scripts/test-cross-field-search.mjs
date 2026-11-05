@@ -40,6 +40,9 @@ try {
     const bakspejlRanking = Object.fromEntries(bakspejlQueries.map((query) => [query,
       bakspejl.some((podcast) => matchesRankingEnhancedSearch(podcast, query))
     ]));
+    const bakspejlQueryTitles = Object.fromEntries(bakspejlQueries.map((query) => [query,
+      bakspejl.filter((podcast) => matchesRankingEnhancedSearch(podcast, query)).map((podcast) => podcast.title).sort()
+    ]));
     const bakspejlHeader = Object.fromEntries(bakspejlQueries.map((query) => [query,
       getHeaderSearchMatches(query).some(({ podcast }) =>
         (query.startsWith("bakspejl ")
@@ -77,13 +80,16 @@ try {
     clearActiveFilter();
     state.searchTerm = "";
     const afterFilterRating = getRankingCandidates().find((podcast) => getPodcastId(podcast) === "krig").ratingValue;
-    return { bakspejlTitles, bakspejl: bakspejl.map(({ title, host, mainSeries }) => ({ title, host, mainSeries })), bakspejlRanking, bakspejlHeader, queries, header, ranking, negative, aliases, matchingGenreFilter, nonmatchingGenreFilter, rating, afterFilterRating };
+    return { bakspejlTitles, bakspejl: bakspejl.map(({ title, host, mainSeries }) => ({ title, host, mainSeries })), bakspejlRanking, bakspejlQueryTitles, bakspejlHeader, queries, header, ranking, negative, aliases, matchingGenreFilter, nonmatchingGenreFilter, rating, afterFilterRating };
   });
   assert.ok(results.bakspejl.length > 0, `catalogue must contain verified Bakspejl titles and Martin Grønne: ${JSON.stringify(results.bakspejl)}`);
   assert.deepEqual(results.bakspejl.map(({ title }) => title).sort(), results.bakspejlTitles.slice().sort(), "both current Bakspejl title rows retain Martin Grønne as the verified host");
   for (const query of Object.keys(results.bakspejlRanking)) {
     assert.equal(results.bakspejlRanking[query], true, `Bakspejl ranking prefix query ${query}`);
     assert.equal(results.bakspejlHeader[query], true, `Bakspejl header prefix query ${query}`);
+  }
+  for (const query of ["kolonien grønne", "kolonien grønn", "grønn kolonien"]) {
+    assert.deepEqual(results.bakspejlQueryTitles[query], ["Koloni til salg", "Kolonien"], `complete and unfinished word queries preserve both relevant Bakspejl results: ${query}`);
   }
   for (const query of results.queries) {
     assert.equal(results.header[query], true, `header cross-field query ${query}`);

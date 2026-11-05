@@ -187,6 +187,8 @@ try {
         partialTitleAndHost: matchesRankingEnhancedSearch({ title: "Kolonien", host: "Martin Grønne" }, "koloni grønn"),
         seriesAndHost: matchesRankingEnhancedSearch({ title: "Kolonien", host: "Martin Grønne", mainSeries: "Bakspejl" }, "bakspejl mart"),
         reversedSeriesAndHost: matchesRankingEnhancedSearch({ title: "Kolonien", host: "Martin Grønne", mainSeries: "Bakspejl" }, "mart bakspejl"),
+        prefixWithOneTypo: matchesRankingEnhancedSearch({ title: "Koloni til salg", host: "Martin Grønne", searchTopics: ["salg af kolonier"] }, "kolonien grønn"),
+        prefixWithTwoTypos: matchesRankingEnhancedSearch({ title: "Koloni til salg", host: "Martin Grønne", searchTopics: ["salg af kolonier"] }, "kolonien gronnx"),
         transliterated: matchesRankingEnhancedSearch({ title: "Kolonien", host: "Martin Grønne" }, "koloni groen"),
         romanNumeralDoesNotPrefix: matchesRankingEnhancedSearch(secondWar, "ii verdens")
       },
@@ -218,6 +220,8 @@ try {
     partialTitleAndHost: true,
     seriesAndHost: true,
     reversedSeriesAndHost: true,
+    prefixWithOneTypo: true,
+    prefixWithTwoTypos: false,
     transliterated: true,
     romanNumeralDoesNotPrefix: false
   });
