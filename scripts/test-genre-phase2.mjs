@@ -173,12 +173,23 @@ try {
         shortCollision: matchesRankingEnhancedSearch(fixture("Verdenskrig", ["Verdenskrig"]), "krig"),
         romanCollision: matchesRankingEnhancedSearch(secondWar, "II"),
         separatedTopics: matchesRankingEnhancedSearch(fixture("Politik og historie", ["dansk politik", "europæisk historie"]), "dansk historie"),
+        substringAcrossFields: matchesRankingEnhancedSearch({ title: "Ukolonien", host: "Magrønne" }, "kolonien grønn"),
+        shortPrefixAcrossFields: matchesRankingEnhancedSearch({ title: "Kolonien", host: "Martin Grønne" }, "kolonien mar"),
         punctuationAndDanish: matchesRankingEnhancedSearch(fixture("ÆØÅ og verdenskrig", ["2. verdenskrig"]), "2. VERDENSKRIG!"),
         decomposedDanish: matchesRankingEnhancedSearch(fixture("Råd", ["råd"]), "råd"),
         hostOnly: matchesRankingEnhancedSearch({ title: "Podcast", searchTopics: [], host: "Verdenskrig" }, "verdenskrg"),
         tooManyTypos: matchesRankingEnhancedSearch(secondWar, "verdenskrgg verdenskrigg")
       },
       oneEditVariants: ["verdenskrg", "verdenskrigg", "verdensxrig", "verdenskrgi"].map((query) => matchesRankingEnhancedSearch(secondWar, query)),
+      prefixes: {
+        titleThenHost: matchesRankingEnhancedSearch({ title: "Kolonien", host: "Martin Grønne" }, "kolonien grønn"),
+        hostThenTitle: matchesRankingEnhancedSearch({ title: "Kolonien", host: "Martin Grønne" }, "grønn kolonien"),
+        partialTitleAndHost: matchesRankingEnhancedSearch({ title: "Kolonien", host: "Martin Grønne" }, "koloni grønn"),
+        seriesAndHost: matchesRankingEnhancedSearch({ title: "Kolonien", host: "Martin Grønne", mainSeries: "Bakspejl" }, "bakspejl mart"),
+        reversedSeriesAndHost: matchesRankingEnhancedSearch({ title: "Kolonien", host: "Martin Grønne", mainSeries: "Bakspejl" }, "mart bakspejl"),
+        transliterated: matchesRankingEnhancedSearch({ title: "Kolonien", host: "Martin Grønne" }, "koloni groen"),
+        romanNumeralDoesNotPrefix: matchesRankingEnhancedSearch(secondWar, "ii verdens")
+      },
       exploreStaysExact: {
         topic: matchesPodcastTopicSearch(secondWar, "WWII"),
         parts: getExploreSearchParts("WWII")
@@ -194,10 +205,21 @@ try {
     shortCollision: false,
     romanCollision: false,
     separatedTopics: true,
+    substringAcrossFields: false,
+    shortPrefixAcrossFields: false,
     punctuationAndDanish: true,
     decomposedDanish: true,
     hostOnly: false,
     tooManyTypos: false
+  });
+  assert.deepEqual(enhancedSearchCases.prefixes, {
+    titleThenHost: true,
+    hostThenTitle: true,
+    partialTitleAndHost: true,
+    seriesAndHost: true,
+    reversedSeriesAndHost: true,
+    transliterated: true,
+    romanNumeralDoesNotPrefix: false
   });
   assert.deepEqual(enhancedSearchCases.oneEditVariants, [true, true, true, true]);
   assert.deepEqual(enhancedSearchCases.exploreStaysExact, { topic: false, parts: ["wwii"] });
@@ -486,11 +508,15 @@ try {
 
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto(`http://127.0.0.1:${address.port}/#udforsk`, { waitUntil: "load" });
+  await page.waitForFunction(() => [...document.querySelectorAll('link[rel="stylesheet"]')]
+    .some((link) => new URL(link.href).pathname === "/desktop-home-mockup.css" && Boolean(link.sheet)));
   await page.evaluate(() => document.fonts.ready);
-  await page.waitForFunction(() => document.querySelectorAll(".explore-genre-chip").length === 11, null, { timeout: 30000 });
+  await page.waitForFunction(() => document.body.classList.contains("page-udforsk") &&
+    document.querySelectorAll(".page-udforsk .explore-genre-chip").length === 11 &&
+    Boolean(document.querySelector(".page-udforsk .explore-genres")), null, { timeout: 30000 });
   const exploreGenres = await page.locator(".explore-genre-chip").allTextContents();
   assert.deepEqual(exploreGenres.map((genre) => genre.trim()), expectedGenres);
-  for (const width of [320, 375, 390, 430, 768, 1101, 1280, 1440]) {
+  for (const width of [320, 375, 390, 430, 768, 1100, 1101, 1102, 1280, 1440]) {
     await page.setViewportSize({ width, height: width <= 768 ? 844 : 900 });
     const exploreLayout = await page.evaluate(() => {
       const container = document.querySelector(".page-udforsk .explore-genres");
@@ -500,8 +526,26 @@ try {
         return { left: box.left, right: box.right, top: box.top, bottom: box.bottom, width: box.width, height: box.height };
       };
       const style = getComputedStyle(container);
+      const searchDisplay = getComputedStyle(document.querySelector(".page-udforsk .explore-search")).display;
+      const desktopStylesheet = [...document.querySelectorAll('link[rel="stylesheet"]')]
+        .find((link) => new URL(link.href).pathname === "/desktop-home-mockup.css");
+      const desktopRules = [];
+      const collectRules = (rules, media = "all") => {
+        for (const rule of rules) {
+          if (rule.selectorText?.includes("html body.page-udforsk .explore-genres")) {
+            desktopRules.push({ media, display: rule.style.display, important: rule.style.getPropertyPriority("display") === "important" });
+          }
+          if (!rule.selectorText && rule.cssRules) collectRules(rule.cssRules, rule.conditionText || media);
+        }
+      };
+      if (desktopStylesheet?.sheet) collectRules(desktopStylesheet.sheet.cssRules);
       return {
         viewport: innerWidth,
+        bodyHasExploreRoute: document.body.classList.contains("page-udforsk"),
+        desktopBreakpointMatches: matchMedia("(min-width: 1101px)").matches,
+        desktopStylesheetLoaded: Boolean(desktopStylesheet?.sheet),
+        desktopRules,
+        searchDisplay,
         pageWidth: document.documentElement.scrollWidth,
         container: rect(container),
         display: style.display,
@@ -511,8 +555,21 @@ try {
       };
     });
     assert.equal(exploreLayout.pageWidth, width, `Explore page horizontal overflow at ${width}px: ${JSON.stringify(exploreLayout)}`);
+    assert.equal(exploreLayout.bodyHasExploreRoute, true, `Explore route class at ${width}px: ${JSON.stringify(exploreLayout)}`);
+    assert.equal(exploreLayout.desktopBreakpointMatches, width >= 1101, `Desktop media query at ${width}px: ${JSON.stringify(exploreLayout)}`);
+    assert.equal(exploreLayout.desktopStylesheetLoaded, true, `Desktop stylesheet loaded at ${width}px: ${JSON.stringify(exploreLayout)}`);
+    if (width >= 1101) {
+      assert.ok(exploreLayout.desktopRules.some((rule) => rule.media === "(min-width: 1101px)" && rule.display === "none" && rule.important), `Desktop explore hide rule remains present at ${width}px: ${JSON.stringify(exploreLayout)}`);
+    }
     assert.equal(exploreLayout.chips.length, expectedGenres.length, `Explore keeps all genre controls at ${width}px`);
-    assert.equal(exploreLayout.display, "none", `Explore preserves the existing logged-out genre-control state at ${width}px`);
+    // The existing responsive CSS hides these controls on mobile (max-width: 768px)
+    // and on the full desktop layout (min-width: 1101px). The 769–1100px tablet
+    // range keeps the base flex genre row visible; do not treat that as a regression.
+    const controlsShouldBeHidden = width <= 768 || width >= 1101;
+    assert.equal(exploreLayout.display, controlsShouldBeHidden ? "none" : "flex", `Explore genre control at ${width}px: ${JSON.stringify(exploreLayout)}`);
+    if (controlsShouldBeHidden) {
+      assert.equal(exploreLayout.searchDisplay, "none", `Explore search control at ${width}px: ${JSON.stringify(exploreLayout)}`);
+    }
   }
   await page.goto(`http://127.0.0.1:${address.port}/#ranglister`, { waitUntil: "domcontentloaded" });
   await page.waitForFunction(() => document.querySelectorAll(".genre-chip").length === 11);

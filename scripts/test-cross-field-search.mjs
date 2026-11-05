@@ -30,6 +30,23 @@ try {
   await page.waitForFunction(() => state.podcasts?.length > 0 && getRankingCandidates().some((podcast) => getPodcastId(podcast) === "krig"));
 
   const results = await page.evaluate(() => {
+    const bakspejlTitles = ["Kolonien", "Koloni til salg"];
+    const bakspejl = getRankingCandidates().filter((podcast) =>
+      bakspejlTitles.includes(podcast.title) &&
+      podcast.host === "Martin Grønne" &&
+      normalizeSearchValue(podcast.mainSeries) === "bakspejl"
+    );
+    const bakspejlQueries = ["kolonien grønne", "kolonien grønn", "grønn kolonien", "koloni grønn", "bakspejl mart"];
+    const bakspejlRanking = Object.fromEntries(bakspejlQueries.map((query) => [query,
+      bakspejl.some((podcast) => matchesRankingEnhancedSearch(podcast, query))
+    ]));
+    const bakspejlHeader = Object.fromEntries(bakspejlQueries.map((query) => [query,
+      getHeaderSearchMatches(query).some(({ podcast }) =>
+        (query.startsWith("bakspejl ")
+          ? normalizeSearchValue(podcast.mainSeries) === "bakspejl" && normalizeSearchValue(podcast.host).includes("martin grønne")
+          : bakspejlTitles.includes(podcast.title) && podcast.host === "Martin Grønne")
+      )
+    ]));
     const getIds = (query) => getFilteredPodcasts().filter((podcast) => matchesRankingEnhancedSearch(podcast, query)).map(getPodcastId);
     const candidate = getRankingCandidates().find((podcast) => getPodcastId(podcast) === "krig");
     const rating = candidate.ratingValue;
@@ -43,7 +60,9 @@ try {
     const negative = {
       ranking: (state.searchTerm = "tamm mørkeland", getIds(state.searchTerm).includes("krig")),
       header: getHeaderSearchMatches("tamm mørkeland").some(({ podcast }) => getPodcastId(podcast) === "krig"),
-      noFuzzyIdentity: matchesRankingEnhancedSearch({ title: "Krig", host: "Martin Tamm Andersen", searchTopics: [] }, "tamm moerkeland")
+      noFuzzyIdentity: matchesRankingEnhancedSearch({ title: "Krig", host: "Martin Tamm Andersen", searchTopics: [] }, "tamm moerkeland"),
+      noSubstringAcrossFields: matchesRankingEnhancedSearch({ title: "Ukolonien", host: "Magrønne" }, "kolonien grønn"),
+      noShortPrefixCollision: matchesRankingEnhancedSearch({ title: "Kolonien", host: "Martin Grønne" }, "kolonien mar")
     };
     const aliases = {
       radio24: matchesRankingEnhancedSearch({ title: "Radio 24/7" }, "Radio24syv"),
@@ -58,13 +77,19 @@ try {
     clearActiveFilter();
     state.searchTerm = "";
     const afterFilterRating = getRankingCandidates().find((podcast) => getPodcastId(podcast) === "krig").ratingValue;
-    return { queries, header, ranking, negative, aliases, matchingGenreFilter, nonmatchingGenreFilter, rating, afterFilterRating };
+    return { bakspejlTitles, bakspejl: bakspejl.map(({ title, host, mainSeries }) => ({ title, host, mainSeries })), bakspejlRanking, bakspejlHeader, queries, header, ranking, negative, aliases, matchingGenreFilter, nonmatchingGenreFilter, rating, afterFilterRating };
   });
+  assert.ok(results.bakspejl.length > 0, `catalogue must contain verified Bakspejl titles and Martin Grønne: ${JSON.stringify(results.bakspejl)}`);
+  assert.deepEqual(results.bakspejl.map(({ title }) => title).sort(), results.bakspejlTitles.slice().sort(), "both current Bakspejl title rows retain Martin Grønne as the verified host");
+  for (const query of Object.keys(results.bakspejlRanking)) {
+    assert.equal(results.bakspejlRanking[query], true, `Bakspejl ranking prefix query ${query}`);
+    assert.equal(results.bakspejlHeader[query], true, `Bakspejl header prefix query ${query}`);
+  }
   for (const query of results.queries) {
     assert.equal(results.header[query], true, `header cross-field query ${query}`);
     assert.equal(results.ranking[query], true, `ranking cross-field query ${query}`);
   }
-  assert.deepEqual(results.negative, { ranking: false, header: false, noFuzzyIdentity: false });
+  assert.deepEqual(results.negative, { ranking: false, header: false, noFuzzyIdentity: false, noSubstringAcrossFields: false, noShortPrefixCollision: false });
   assert.deepEqual(results.aliases, { radio24: true, radio4: true, danish: true });
   assert.equal(results.matchingGenreFilter, true, "active matching genre filters still apply alongside search");
   assert.equal(results.nonmatchingGenreFilter, false, "active nonmatching genre filters still exclude the podcast");
@@ -73,7 +98,7 @@ try {
   const deepLink = `http://127.0.0.1:${server.address().port}/?s=tamm%20krig#ranglister`;
   await page.goto(deepLink, { waitUntil: "domcontentloaded" });
   await page.waitForFunction(() => state.searchTerm === "tamm krig" && getFilteredPodcasts().some((podcast) => getPodcastId(podcast) === "krig"));
-  for (const width of [320, 375, 390, 768, 1024, 1280, 1440]) {
+  for (const width of [320, 375, 390, 768, 1024, 1101, 1280, 1440]) {
     await page.setViewportSize({ width, height: width <= 430 ? 844 : 900 });
     const layout = await page.evaluate(() => ({
       width: innerWidth,
