@@ -101,6 +101,18 @@ export function parseTyranFullEpisodes(html, series) {
   }));
 }
 
+export function parseTyranChildPage(html, series) {
+  const page = parseNextData(html)?.props?.pageProps;
+  const source = page?.series;
+  const description = String(source?.description ?? "").trim();
+  if (page?.pageType !== "series" || source?.id !== series.dr_series_id ||
+      String(source?.productionNumber ?? "") !== series.production_number ||
+      source?.presentationUrl !== series.source_url || !description) {
+    throw new Error(`DR child page lacks matching series description metadata: ${series.source_url}`);
+  }
+  return { description, description_source_url: series.source_url, episodes: parseTyranFullEpisodes(html, series) };
+}
+
 export function verifyTyranArtwork({ imageId, mimeType, width, height, byteLength, sha256, allImageIds = [] }) {
   const bareImageId = String(imageId ?? "").replace(/^urn:dr:radio:image:/u, "");
   return /^([0-9a-f]{64})$/iu.test(String(sha256 ?? "")) &&
@@ -153,26 +165,34 @@ export function discoverTyranSeries({ html, childPages = {}, coverChecksums = {}
     const prior = registryByKey.get(part.discovery_key);
     const podcastId = existingId || prior?.podcast_id || stableId(part.discovery_key);
     if (!existingId && (ids.has(podcastId) || registryIds.has(podcastId) && prior?.podcast_id !== podcastId)) { report.collisions.push({ title: part.title, podcast_id: podcastId, reason: "permanent Podcast-ID collision" }); continue; }
-    const fullEpisodes = childPages[part.discovery_key];
+    const childPage = childPages[part.discovery_key];
+    const fullEpisodes = Array.isArray(childPage) ? childPage : childPage?.episodes;
     if (!Array.isArray(fullEpisodes) || !fullEpisodes.length) { report.manual_review.push({ title: part.title, reason: "full DR episode page unavailable" }); continue; }
+    const description = String(part.description || childPage?.description || "").trim();
+    if (!description) { report.manual_review.push({ title: part.title, reason: "DR series description unavailable" }); continue; }
     const cover = coverChecksums[part.cover_image_id];
     if (!verifyTyranArtwork({ imageId: `urn:dr:radio:image:${part.cover_image_id}`, ...cover, allImageIds: imageIds })) {
       report.manual_review.push({ title: part.title, reason: "unique verified 720x720 DR cover unavailable" }); continue;
     }
-    if (prior && (prior.podcast_id !== podcastId || prior.cover_image_id !== part.cover_image_id || prior.cover_sha256 !== cover.sha256)) {
+    if (prior && (prior.podcast_id !== podcastId || prior.cover_image_id !== part.cover_image_id || prior.cover_sha256 !== cover.sha256 ||
+      (prior.description && prior.description !== description))) {
       throw new Error(`Registered Tyran identity or cover changed: ${part.title}`);
     }
-    const record = prior || {
+    const record = prior ? { ...prior, description, description_source_url: prior.description_source_url || part.source_url } : {
       discovery_key: part.discovery_key, podcast_id: podcastId, title: part.title, hovedserie: TYRAN_PARENT,
       publisher: "DR", source_url: part.source_url, source_series_production_number: part.production_number,
-      dr_series_id: part.dr_series_id, cover_image_id: part.cover_image_id,
+      dr_series_id: part.dr_series_id, cover_image_id: part.cover_image_id, description, description_source_url: part.source_url,
       cover_source_url: `https://asset.dr.dk/drlyd/images/urn:dr:radio:image:${part.cover_image_id}?im=AspectCrop%3D%28720%2C720%29%2CxPosition%3D.5%2CyPosition%3D.5%3BResize%3D%28720%2C720%29`,
       cover_mime_type: cover.mimeType, cover_width: cover.width, cover_height: cover.height,
       cover_byte_length: cover.byteLength, cover_sha256: cover.sha256,
       first_full_episode: fullEpisodes[0], needs_editorial_review: true, feed_activation_approved: false
     };
     if (!prior) { next.records.push(record); registryByKey.set(part.discovery_key, record); ids.add(podcastId); report.created.push(record); }
-    else report.existing.push({ title: part.title, podcast_id: podcastId, cover_image_id: part.cover_image_id });
+    else {
+      const priorIndex = next.records.findIndex((item) => item.discovery_key === part.discovery_key);
+      next.records[priorIndex] = record;
+      report.existing.push({ title: part.title, podcast_id: podcastId, cover_image_id: part.cover_image_id });
+    }
     report.full_episode_checks.push({ title: part.title, episodes: fullEpisodes.length });
   }
   for (const key of Object.keys(TYRAN_PROTECTED_IDS)) if (!report.existing.some((item) => normalizeTyranIdentity(item.title) === key) && !parts.some((part) => part.discovery_key === key)) throw new Error(`Protected Tyran series absent from DR directory: ${key}`);
@@ -183,7 +203,8 @@ export function mergeAutoDiscoveredTyranRows(sheetRows, registry) {
   const rows = Array.isArray(sheetRows) ? sheetRows : [];
   const appended = [];
   for (const record of registry?.records || []) {
-    if (record.feed_activation_approved !== false || record.cover_width !== 720 || record.cover_height !== 720 || !record.cover_sha256 || !record.cover_source_url) {
+    if (record.feed_activation_approved !== false || record.cover_width !== 720 || record.cover_height !== 720 || !record.cover_sha256 || !record.cover_source_url ||
+        !String(record.description ?? "").trim() || record.description_source_url !== record.source_url) {
       throw new Error(`Unverified or activatable Tyran registry record: ${record.title}`);
     }
     const sameId = rows.filter((row) => String(row["Podcast-ID"] ?? "").trim() === record.podcast_id);
@@ -196,7 +217,7 @@ export function mergeAutoDiscoveredTyranRows(sheetRows, registry) {
     }
     appended.push({ Titel: record.title, "Podcast-ID": record.podcast_id, Hovedserie: TYRAN_PARENT,
       Udgiver: "DR", Link: record.source_url, Kilde: record.source_url, Billedlink: record.cover_source_url,
-      "Kort beskrivelse": "", "Lang beskrivelse": "", Genre: "Historie", needs_editorial_review: true,
+      "Kort beskrivelse": "", "Lang beskrivelse": record.description, Genre: "Historie", needs_editorial_review: true,
       tyran_cover_sha256: record.cover_sha256 });
   }
   return [...rows, ...appended];
