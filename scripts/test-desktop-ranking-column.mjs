@@ -176,12 +176,19 @@ async function verifyLive(page, url) {
   await page.goto(url, { waitUntil: "domcontentloaded", timeout: 60000 });
   await page.waitForSelector(".desktop-ranking-row__number", { timeout: 60000 });
   await page.waitForSelector(".desktop-ranking-table__head [role=columnheader]", { timeout: 60000 });
+  const deployedCssHref = await page.locator('link[rel="stylesheet"][href*="desktop-home-mockup.css"]').getAttribute("href");
+  assert.match(deployedCssHref || "", /desktop-home-mockup\.css\?v=20261105-ranking-column-header-v1/,
+    "live page serves the new desktop ranking header CSS cache version");
   await page.waitForFunction(() => {
     const ranks = [...document.querySelectorAll(".desktop-ranking-row__number")].map((element) => element.textContent.trim());
     return ["#10", "#11", "#12", "#13", "#14"].every((rank) => ranks.includes(rank));
   }, { timeout: 60000 });
   for (const width of [1101, 1280, 1440, 1920]) {
     await page.setViewportSize({ width, height: 1000 });
+    const headerTransform = await page.locator(".desktop-ranking-table__head [role=columnheader]").first()
+      .evaluate((element) => new DOMMatrixReadOnly(getComputedStyle(element).transform).m41);
+    assert.ok(Math.abs(headerTransform - 19) <= 0.1,
+      `live first-column heading uses the 19px desktop-only offset at ${width}px`);
     const measurements = (await measureRows(page)).filter((row) => [10, 11, 12, 13, 14].includes(row.rank));
     assert.equal(measurements.length, 5, `live DOM includes #10–#14 at ${width}px`);
     assert.ok(measurements.every((row) => row.digitLines === 1 && row.number.right <= row.cover.left),
@@ -211,21 +218,24 @@ async function verifyLive(page, url) {
     console.log(`LIVE ${width}px #10–#14 number right edges: ${edges.map((edge) => edge.toFixed(2)).join(", " )}`);
   }
   await page.setViewportSize({ width: 1440, height: 1000 });
-  await page.locator(".desktop-ranking-row__number", { hasText: /^#10$/ }).scrollIntoViewIfNeeded();
-  const screenshotRows = await page.locator(".desktop-ranking-row").evaluateAll((rows) => rows
-    .filter((row) => {
-      const rankText = row.querySelector(".desktop-ranking-row__number")?.textContent || "";
-      return [10, 11, 12, 13, 14].includes(Number(rankText.replace(/\D/g, "")));
-    })
-    .map((row) => row.getBoundingClientRect().toJSON()));
-  const clipTop = Math.max(0, Math.min(...screenshotRows.map((rect) => rect.top)));
-  const clipBottom = Math.min(1000, Math.max(...screenshotRows.map((rect) => rect.bottom)));
-  assert.ok(clipBottom > clipTop, "live screenshot clip contains dynamic rows #10–#14");
+  await page.locator(".desktop-ranking-row__number", { hasText: /^#1$/ }).scrollIntoViewIfNeeded();
+  const screenshotBounds = await page.evaluate(() => {
+    const header = document.querySelector(".desktop-ranking-table__head");
+    const firstRow = [...document.querySelectorAll(".desktop-ranking-row")]
+      .find((row) => row.querySelector(".desktop-ranking-row__number")?.textContent.trim() === "#1");
+    return header && firstRow
+      ? { header: header.getBoundingClientRect().toJSON(), firstRow: firstRow.getBoundingClientRect().toJSON() }
+      : null;
+  });
+  assert.ok(screenshotBounds, "live screenshot includes the ranking header and #1 row");
+  const clipTop = Math.max(0, screenshotBounds.header.top);
+  const clipBottom = Math.min(1000, screenshotBounds.firstRow.bottom);
+  assert.ok(clipBottom > clipTop, "live screenshot clip contains the header and #1 row");
   const screenshotPath = process.argv.includes("--screenshot")
     ? process.argv[process.argv.indexOf("--screenshot") + 1]
     : `${process.env.TEMP || process.env.TMP || "."}/podcastlisten-live-ranking-grid.png`;
   await page.screenshot({ path: screenshotPath, clip: { x: 0, y: clipTop, width: 1440, height: clipBottom - clipTop } });
-  console.log(`LIVE ranking screenshot: ${screenshotPath}`);
+  console.log(`LIVE desktop header/#1 screenshot: ${screenshotPath}`);
   for (const width of [320, 375, 390, 700, 768, 769, 1024, 1100, 1101]) {
     await page.setViewportSize({ width, height: 900 });
     await page.waitForTimeout(150);
@@ -235,7 +245,7 @@ async function verifyLive(page, url) {
       cards: document.querySelectorAll(".podcast-card__placement").length,
       desktopRows: [...document.querySelectorAll(".desktop-ranking-row")].filter((row) => getComputedStyle(row).display !== "none").length
     }));
-    if (width <= 768) {
+    if (width <= 1100) {
       assert.ok(mobile.cards > 0, `mobile ranking badges render at ${width}px`);
       assert.equal(mobile.desktopRows, 0, `desktop ranking rows remain hidden at ${width}px`);
     } else {
@@ -244,5 +254,10 @@ async function verifyLive(page, url) {
     assert.ok(mobile.scroll <= mobile.viewport + 1, `mobile page has no horizontal overflow at ${width}px`);
     console.log(`LIVE mobile ${width}px viewport/scroll: ${mobile.viewport}/${mobile.scroll}`);
   }
+  await page.setViewportSize({ width: 390, height: 900 });
+  await page.evaluate(() => window.scrollTo(0, 0));
+  const mobileScreenshotPath = screenshotPath.replace(/\.png$/i, "-mobile.png");
+  await page.screenshot({ path: mobileScreenshotPath });
+  console.log(`LIVE 390px mobile screenshot: ${mobileScreenshotPath}`);
   console.log(`Live desktop and mobile ranking geometry passed for ${url}`);
 }
