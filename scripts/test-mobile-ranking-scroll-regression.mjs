@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { existsSync } from "node:fs";
 import { readFile } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
 import { chromium, webkit } from "playwright";
@@ -35,7 +36,14 @@ assert.doesNotMatch(gridRenderer, /podcastGrid\.innerHTML\s*=\s*["']{2}/,
 assert.match(gridRenderer, /reconcileMobileRankingCards\(/,
   "ready mobile ranking renders reconcile existing keyed cards");
 
-for (const { engine, browserType } of [{ engine: "Chromium", browserType: chromium }, { engine: "WebKit", browserType: webkit }]) {
+const browserEngines = [{ engine: "Chromium", browserType: chromium }];
+if (existsSync(webkit.executablePath())) {
+  browserEngines.push({ engine: "WebKit", browserType: webkit });
+} else {
+  console.log("WebKit browser regression skipped: Playwright WebKit is not installed in this environment.");
+}
+
+for (const { engine, browserType } of browserEngines) {
   const browser = await browserType.launch({ headless: true });
   try {
     const page = await browser.newPage({
@@ -331,4 +339,7 @@ for (const { engine, browserType } of [{ engine: "Chromium", browserType: chromi
   }
 }
 
-console.log("Mobile ranking scroll regression passed in Chromium (touch gesture emulation) and WebKit (wheel scroll) across 320/375/390/430/768px and desktop 1280/1440px viewports.");
+const engineSummary = browserEngines.map(({ engine }) => engine === "Chromium"
+  ? "Chromium touch gesture emulation"
+  : "WebKit wheel scroll").join(" and ");
+console.log(`Mobile ranking scroll regression passed in ${engineSummary} across 320/375/390/430/768px and desktop 1280/1440px viewports.`);
