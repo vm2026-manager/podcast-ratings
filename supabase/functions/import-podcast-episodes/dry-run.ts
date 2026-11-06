@@ -86,13 +86,14 @@ export async function runPodimoDryRun(options: {
     known_no_destination: routing.report.known_no_destination.slice(0, SAMPLE_SIZE)
   };
   const duplicateGuidCount = mapped.errors.filter((error) => (error.errors as string[] | undefined)?.includes("Duplicate GUID in feed")).length;
+  const activeFullEpisodeCount = routing.episodes.filter((episode) => episode.is_active).length;
   const routingIssues = routing.report
     ? routing.report.unmatched.length + routing.report.ambiguous.length + routing.report.known_no_destination.length
     : 0;
   const errorCount = mapped.errors.length + routingIssues;
 
   return {
-    status: errorCount ? "partial" : "success",
+    status: errorCount || activeFullEpisodeCount === 0 ? "partial" : "success",
     source: options.config.source,
     podcast_key: options.config.podcast_key,
     format: "podimo_graphql",
@@ -102,6 +103,8 @@ export async function runPodimoDryRun(options: {
     errors: mapped.errors.slice(0, SAMPLE_SIZE),
     page_count: pageCount,
     teaser_trailer_excluded_count: mapped.episodes.filter((episode) => episode.is_active === false).length,
+    active_full_episode_count: activeFullEpisodeCount,
+    health_warning: activeFullEpisodeCount === 0 ? "no_active_full_episodes" : null,
     duplicate_guid_count: duplicateGuidCount,
     audio_url_values_are_null: routing.episodes.every((episode) => episode.audio_url === null),
     routing: routingReport,
