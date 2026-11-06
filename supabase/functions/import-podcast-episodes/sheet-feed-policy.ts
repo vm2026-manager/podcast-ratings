@@ -31,7 +31,8 @@ function protectedConfig(config: FeedConfig): boolean {
     config.routes !== undefined || config.owned_podcast_keys !== undefined ||
     config.manual_identity_links !== undefined || config.metadata_only === true ||
     config.dedupe_by_episode_url_with_sources !== undefined || !isOrdinaryRssUrl(config.feed_url) ||
-    /(^|\.)dr\.dk$/.test(new URL(config.feed_url).hostname);
+    /(^|\.)dr\.dk$/.test(new URL(config.feed_url).hostname) ||
+    config.sheet_podimo_identity_required === true;
 }
 
 // Review is deliberately code-owned, never taken from editable Sheet cells.

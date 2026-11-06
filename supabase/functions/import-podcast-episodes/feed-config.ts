@@ -81,6 +81,9 @@ export type FeedConfig = {
   // Historically mapped Podimo sources are enabled from the Sheet only after
   // the ordinary same-source episode lookup proves GUID continuity.
   podimo_history_overlap_minimum?: number;
+  // Exact, code-approved Podcast-ID + Podimo UUID pair must be present in the
+  // current Sheet before this otherwise-disabled adapter can be scheduled.
+  sheet_podimo_identity_required?: boolean;
 };
 
 export type FeedConfigMap = Record<string, FeedConfig>;
@@ -253,6 +256,17 @@ export const FEED_CONFIGS: FeedConfigMap = {
     feed_url: "https://graphql.podimo.com/graphql",
     podcast_id: "0db490b8-907e-4f35-bd48-60eae9f8805b",
     podimo_show_url: "https://podimo.com/dk/shows/smat-braendbart"
+  },
+
+  "podimo_sidste_nedtaelling": {
+    podcast_key: "sidste nedtælling",
+    source: "podimo_sidste_nedtaelling",
+    format: "podimo_graphql",
+    feed_url: "https://graphql.podimo.com/graphql",
+    podcast_id: "cf50f8b4-eb76-4eec-a355-b4e99e4e30bf",
+    podimo_show_url: "https://podimo.com/dk/shows/cf50f8b4-eb76-4eec-a355-b4e99e4e30bf",
+    enabled: false,
+    sheet_podimo_identity_required: true
   },
 
   "borgen_unplugged_2_0": {
