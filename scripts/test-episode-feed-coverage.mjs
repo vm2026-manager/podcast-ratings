@@ -37,6 +37,9 @@ assert.equal(APPROVED_SHEET_FEED_BASELINE.find(([id]) => id === "hvid røg")?.[1
 assert.equal(APPROVED_SHEET_FEED_BASELINE.find(([id]) => id === "skønlitteratur")?.[1],
   "https://api.dr.dk/podcasts/v1/feeds/skoenlitteratur-pa-p1.xml?format=podcast&limit=100",
   "Skønlitteratur is pinned to the verified official DR feed rather than its retired URL");
+assert.equal(APPROVED_SHEET_FEED_BASELINE.find(([id]) => id === "verdens bedste film")?.[1],
+  "https://api.dr.dk/podcasts/v1/feeds/verdens-bedste-film-radio.xml?format=podcast",
+  "Verdens bedste film is pinned to the verified official DR feed rather than its retired URL");
 const mismatch = checkEpisodeFeedCoverage({ rows: [row("smat brændbart", 
   "https://open.podimo.com/podcast/ffffffff-ffff-ffff-ffff-ffffffffffff")] },
   { podimo_smat_braendbart: podimo });
