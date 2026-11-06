@@ -1,6 +1,6 @@
 import { createHash } from "node:crypto";
 import { readFile, writeFile } from "node:fs/promises";
-import { discoverTyranSeries, parseTyranDirectory, parseTyranFullEpisodes, TYRAN_PROGRAM_URL, TYRAN_PROTECTED_IDS } from "./tyran-auto-discovery.mjs";
+import { discoverTyranSeries, parseTyranChildPage, parseTyranDirectory, TYRAN_PROGRAM_URL, TYRAN_PROTECTED_IDS } from "./tyran-auto-discovery.mjs";
 
 const REGISTRY_PATH = "data/auto-discovered-tyran.json";
 const TIMEOUT_MS = 15000;
@@ -49,7 +49,7 @@ const aliases = Function(`return (${aliasMatch[1]}})`)();
 const candidates = parts.filter((part) => !Object.hasOwn(TYRAN_PROTECTED_IDS, part.discovery_key));
 const childPages = Object.fromEntries(await mapLimit(candidates, 3, async (part) => {
   const { bytes } = await fetchBytes(part.source_url, "text/html,application/xhtml+xml");
-  return [part.discovery_key, parseTyranFullEpisodes(bytes.toString("utf8"), part)];
+  return [part.discovery_key, parseTyranChildPage(bytes.toString("utf8"), part)];
 }));
 const coverChecksums = Object.fromEntries(await mapLimit(candidates, 3, async (part) => {
   const url = `https://asset.dr.dk/drlyd/images/urn:dr:radio:image:${part.cover_image_id}?im=AspectCrop%3D%28720%2C720%29%2CxPosition%3D.5%2CyPosition%3D.5%3BResize%3D%28720%2C720%29`;
