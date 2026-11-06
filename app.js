@@ -7778,7 +7778,7 @@ function getDesktopRankingTitleMarkup(podcast, variant) {
   `;
 }
 
-function createRankingHostCreditElement(podcast, rawCredit = podcast?.host || "") {
+function createRankingHostCreditElement(podcast, rawCredit = podcast?.host || "", { onHostActivate = null } = {}) {
   const credit = String(rawCredit ?? "");
   const creditElement = document.createElement("span");
   creditElement.className = "ranking-host-credit";
@@ -7814,7 +7814,8 @@ function createRankingHostCreditElement(podcast, rawCredit = podcast?.host || ""
     button.addEventListener("click", (event) => {
       event.preventDefault();
       event.stopPropagation();
-      setRankingHostFilterByKey(parsedPerson.key);
+      if (typeof onHostActivate === "function") onHostActivate(parsedPerson.key);
+      else setRankingHostFilterByKey(parsedPerson.key);
     });
     creditElement.appendChild(button);
     if (trailingWhitespace) creditElement.appendChild(document.createTextNode(trailingWhitespace));
@@ -14515,6 +14516,37 @@ function bindPodcastDetailFilterButtons(content, podcast) {
   });
 }
 
+function navigatePodcastDetailToHostRanking(podcast, hostKey) {
+  const person = getCatalogueHostPersonByKey(hostKey);
+  const podcastKey = getPodcastKey(podcast);
+  if (!person || !podcastKey) return false;
+
+  const currentState =
+    window.history.state && typeof window.history.state === "object"
+      ? window.history.state
+      : {};
+  const sourceRoute = window.location.hash || "#forside";
+  window.history.replaceState(
+    {
+      ...currentState,
+      podcastDetailRestore: {
+        podcastKey,
+        route: sourceRoute,
+        rankingFilters: getRankingFilterHistoryState()
+      }
+    },
+    "",
+    window.location.href
+  );
+
+  closePodcastDetailSheet({ returnFocus: false, preserveHistoryRestore: true });
+  window.history.pushState({}, "", "#ranglister");
+  setRankingHostFilterByKey(person.key, { historyMethod: "replaceState", shouldScroll: false });
+  render();
+  scrollToRankingStart();
+  return true;
+}
+
 function getDisplayGroupSharedMetadata(members) {
   const catalogueMembers = members.filter((member) => !member?.isDisplayGroupSeason);
   const metadataMembers = catalogueMembers.length ? catalogueMembers : members;
@@ -14715,6 +14747,12 @@ function renderPodcastDisplayGroupContent(dialog, displayGroup) {
     </section>
     <section class="podcast-detail-sheet__episode-rating-mobile-help" data-podcast-detail-season-rating-mobile-help${own.count ? "" : " hidden"} aria-live="polite">${own.count ? `<p>Din vurdering er låst, fordi den beregnes automatisk ud fra dine sæsonvurderinger. Redigér under Vurder sæsoner.</p>` : ""}</section>
     <div class="podcast-detail-sheet__recommendation-row">${relatedMarkup}<div class="podcast-detail-sheet__review-status" aria-label="Sæsoner vurderet"><span class="podcast-detail-sheet__review-status-icon" aria-hidden="true">★</span><span><strong>${editorialCount} sæsoner vurderet af Podcastlisten</strong><small>Se vurderingerne under Vurder sæsoner</small></span></div></div>`;
+  const displayGroupHostMeta = content.querySelector(".podcast-detail-sheet__meta");
+  if (displayGroupHostMeta && metadata.host) {
+    displayGroupHostMeta.replaceChildren(createRankingHostCreditElement(metadata.host, metadata.host, {
+      onHostActivate: (hostKey) => navigatePodcastDetailToHostRanking(displayGroup, hostKey)
+    }));
+  }
   setImage(content.querySelector(".podcast-detail-sheet__cover"), getPodcastImageSources(displayGroup), displayGroup.title);
   hydratePodcastSimilarityProduct(dialog, displayGroup);
   bindPodcastDetailFilterButtons(content, displayGroup);
@@ -15473,6 +15511,13 @@ function renderPodcastDetailSheetContent(
       }
     </template>
   `;
+
+  const hostMeta = content.querySelector(".podcast-detail-sheet__meta");
+  if (hostMeta && podcast.host) {
+    hostMeta.replaceChildren(createRankingHostCreditElement(podcast, podcast.host, {
+      onHostActivate: (hostKey) => navigatePodcastDetailToHostRanking(podcast, hostKey)
+    }));
+  }
 
   const toolbarActions = dialog.querySelector("[data-podcast-detail-toolbar-actions]");
   const headerActions = content.querySelector(".podcast-detail-sheet__header-action-icons");
