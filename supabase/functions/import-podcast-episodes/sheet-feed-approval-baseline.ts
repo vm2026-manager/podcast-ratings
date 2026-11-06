@@ -206,7 +206,7 @@ export const APPROVED_SHEET_FEED_BASELINE: readonly ApprovedSheetFeed[] = Object
   Object.freeze(["valley heat","https://feeds.simplecast.com/kKMR_wuB"] as const),
   Object.freeze(["vanvittig verdenshistorie","https://feeds.simplecast.com/7hwPKtA1"] as const),
   Object.freeze(["velfaerdsstatens vanvid","https://api.dr.dk/podcasts/v1/feeds/velfaerdsstatens-vanvid.xml?format=podcast"] as const),
-  Object.freeze(["verdens bedste film","https://drpodcast.nu/verdens-bedste-film/feed.xml"] as const),
+  Object.freeze(["verdens bedste film","https://api.dr.dk/podcasts/v1/feeds/verdens-bedste-film-radio.xml?format=podcast"] as const),
   Object.freeze(["verdens navle","https://drpodcast.nu/verdens-navle/feed.xml"] as const),
   Object.freeze(["vi henter bente","https://www.omnycontent.com/d/playlist/87e48115-d0ce-4e9b-83f0-ae5b01244e0a/bc1d69b0-a052-41e7-9d78-b43600b374f6/bd8f9b56-30e8-40ae-afdc-b43600b37911/podcast.rss"] as const),
   Object.freeze(["vildt naturligt","https://drpodcast.nu/vildt-naturligt/feed.xml"] as const),
