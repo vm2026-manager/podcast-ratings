@@ -1288,11 +1288,15 @@ export async function runEpisodeImport(options: {
     const routingIssueCount = unmatchedCount + ambiguousCount + routingConflictCount + manualIdentityConflicts.length;
     const error_count = itemErrors + batchErrors + routingIssueCount + manualMergeErrors;
     const hasWarnings = mapped.warnings.length > 0;
+    const activeRateableEpisodeCount = config.routes?.length
+      ? getEpisodeFeatureEligibility(routing.episodes).activeRateableEpisodes
+      : mapped.eligibility.activeRateableEpisodes;
+    const noActiveFullEpisodes = activeRateableEpisodeCount === 0;
     const status = routingIssueCount > 0
       ? "partial"
       : error_count > 0
         ? (writeRows.length > batchErrors ? "partial" : "failed")
-        : hasWarnings ? "partial" : "success";
+        : hasWarnings || noActiveFullEpisodes ? "partial" : "success";
     const summary: ImportSummary = {
       status,
       source: config.source,
@@ -1311,7 +1315,8 @@ export async function runEpisodeImport(options: {
         ...(config.rss_publication_boundary ? {
           boundary_excluded_count: "boundary_excluded_count" in mapped ? mapped.boundary_excluded_count : 0
         } : {}),
-        warning_count: mapped.warnings.length,
+        warning_count: mapped.warnings.length + (noActiveFullEpisodes ? 1 : 0),
+        health_warning: noActiveFullEpisodes ? "no_active_full_episodes" : null,
         manual_catalogue_merge_count: manualMergedCount,
         manual_catalogue_merge_error_count: manualMergeErrors,
         manual_catalogue_conflict_count: manualIdentityConflicts.length,
