@@ -5,6 +5,7 @@ import { parseSupplementarySimilarities } from "./manual-similarity-supplements.
 import { mergeAutoDiscoveredDjaevlenRows } from "./djaevlen-auto-discovery.mjs";
 import { mergeAutoDiscoveredBakspejlRows } from "./bakspejl-auto-discovery.mjs";
 import { mergeAutoDiscoveredRadioIIIIRows } from "./radio-iiii-auto-discovery.mjs";
+import { mergeAutoDiscoveredTyranRows } from "./tyran-auto-discovery.mjs";
 import { partitionSheetPodcastRows } from "./catalogue-intake.mjs";
 
 const SPREADSHEET_BASE_URL =
@@ -953,8 +954,9 @@ async function main() {
   const registry = JSON.parse(await readFile(path.join(repoRoot, "data", "auto-discovered-djaevlen.json"), "utf8"));
   const bakspejlRegistry = JSON.parse(await readFile(path.join(repoRoot, "data", "auto-discovered-bakspejl.json"), "utf8"));
   const radioIIIIRegistry = JSON.parse(await readFile(path.join(repoRoot, "data", "auto-discovered-radio-iiii.json"), "utf8"));
+  const tyranRegistry = JSON.parse(await readFile(path.join(repoRoot, "data", "auto-discovered-tyran.json"), "utf8"));
   const mergedCatalogueRows = mergeAutoDiscoveredRadioIIIIRows(
-    mergeAutoDiscoveredBakspejlRows(mergeAutoDiscoveredDjaevlenRows(identitySafeSheetRows, registry), bakspejlRegistry),
+    mergeAutoDiscoveredTyranRows(mergeAutoDiscoveredBakspejlRows(mergeAutoDiscoveredDjaevlenRows(identitySafeSheetRows, registry), bakspejlRegistry), tyranRegistry),
     radioIIIIRegistry
   );
   const catalogueRows = preserveCatalogueIdsByPodcastId(mergedCatalogueRows, previousCatalogue.rows).map((row) => row.catalogue_id ? row : {

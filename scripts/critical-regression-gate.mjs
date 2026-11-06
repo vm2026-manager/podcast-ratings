@@ -80,6 +80,7 @@ const checks = [
   ["New DR umbrella series monitor", ["--experimental-strip-types", "scripts/test-monitor-dr-umbrella-series.mjs"]],
   ["DR Lyd supplemental full episodes and RSS identity preservation", ["--experimental-strip-types", "scripts/test-dr-lyd-supplemental-umbrella.mjs"]],
   ["Future verified DR single-episode discovery", ["--experimental-strip-types", "scripts/test-dr-full-standalone-discovery.mjs"]],
+  ["Tyran verified identities, unique covers, additive sync, full episodes, and disabled feed activation", ["--experimental-strip-types", "scripts/test-tyran-auto-discovery.mjs"]],
   ["Mediano episode workspace", ["scripts/test-mediano-episode-workspace-config.mjs"]],
   ["Der var engang et mål episode identity, sources, rating preservation and fallback merging", ["scripts/test-der-var-engang-et-mal-episodes.mjs"]],
   ["Der var engang et mål manual mapping write guard", ["scripts/test-der-var-engang-et-mal-mapping-guard.mjs"]],

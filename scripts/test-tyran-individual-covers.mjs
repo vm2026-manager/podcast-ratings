@@ -4,6 +4,7 @@ import vm from "node:vm";
 
 const app = readFileSync(new URL("../app.js", import.meta.url), "utf8");
 const catalogue = JSON.parse(readFileSync(new URL("../data/podcasts.json", import.meta.url), "utf8"));
+const registry = JSON.parse(readFileSync(new URL("../data/auto-discovered-tyran.json", import.meta.url), "utf8"));
 const records = (catalogue.rows || []).filter((row) => row.Hovedserie === "Tyran");
 assert.equal(new Set(records.map((row) => row["Podcast-ID"])).size, records.length);
 
@@ -22,6 +23,10 @@ const context = { Set, Array, Object, String,
 context.globalThis = context;
 vm.runInNewContext(`${mapCode}\n${getterCode}\nglobalThis.getSources = getPodcastImageSources;\nglobalThis.getTyranMap = () => TYRAN_OFFICIAL_SQUARE_IMAGE_IDS;`, context);
 const lookup = context.getTyranMap();
+const registeredImageIds = {
+  macias: "6a4e30ea60319a54701828b9",
+  marcos: "6ad8a63dd1248e67782813bf"
+};
 const expectedImageIds = {
   "ayatollah khomeini": "696f3b31753c04e7ed879d0b",
   "benito mussolini": "689097bbab10e7b0b6977e33",
@@ -48,15 +53,18 @@ const expectedImageIds = {
 };
 const mappedIds = Object.keys(expectedImageIds);
 const mappedIdSet = new Set(mappedIds);
-const catalogueIds = records.map((row) => row["Podcast-ID"]);
+const catalogueIds = [...records.map((row) => row["Podcast-ID"]), ...(registry.records || []).map((record) => record.podcast_id)];
 assert.equal(mappedIds.length, 22, "Exactly 22 explicitly reviewed DR mappings must remain defined");
 assert.deepEqual(
-  Object.entries(lookup).sort(([left], [right]) => left.localeCompare(right)),
+  Object.entries(lookup).filter(([id]) => mappedIdSet.has(id)).sort(([left], [right]) => left.localeCompare(right)),
   Object.entries(expectedImageIds).sort(([left], [right]) => left.localeCompare(right)),
   "All 22 reviewed canonical IDs must retain their exact DR image IDs"
 );
+assert.deepEqual(Object.fromEntries(Object.entries(lookup).filter(([id]) => Object.hasOwn(registeredImageIds, id))), registeredImageIds,
+  "Newly verified DR series use their exact distinct SquareImage IDs");
 assert.ok(mappedIds.every((id) => catalogueIds.includes(id)), "All 22 reviewed IDs must remain in the Tyran catalogue");
-assert.equal(new Set(Object.values(lookup)).size, mappedIds.length, "Every mapped Tyran series must use a distinct official image ID");
+assert.ok(registry.records.every((record) => record.podcast_id && catalogueIds.includes(record.podcast_id)), "Registered DR series preserve or add exact canonical IDs");
+assert.equal(new Set(Object.values(lookup)).size, Object.keys(lookup).length, "Every mapped Tyran series must use a distinct official image ID");
 for (const { "Podcast-ID": id } of records) {
   assert.ok(id, "Every Tyran catalogue record must retain a canonical Podcast-ID");
 }
@@ -103,4 +111,4 @@ assert.deepEqual(Array.from(context.getSources({ podcastId: "transferguru tipsbl
 assert.deepEqual(Array.from(context.getSources({ podcastId: "svindlerne" })),
   ["assets/podcast-covers/manual-originals/series/svindlerne_podimo_saeson_1.webp"]);
 
-console.log("All 22 DR Tyran official square-image identities and existing cover fallbacks PASS; shared getter covers mobile and desktop.");
+console.log("All 22 protected DR Tyran square-image identities and 2 newer registered covers retain distinct official images and existing fallbacks.");
