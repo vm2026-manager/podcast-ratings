@@ -33,7 +33,7 @@ const state = {
   supabase: null
 };
 let historyQueries = 0;
-let renders = 0;
+let visibleMovementRefreshes = 0;
 let selectedDate = "";
 let baseline = { snapshotDate: "2026-10-20", periodLabel: "siden 20. oktober", mode: "initial" };
 let response = {
@@ -81,7 +81,7 @@ const load = new Function(
   "state", "isRankingMovementDataReady", "isRankingMovementEligible", "window",
   "getRankingCandidates", "getRankingMovementKey", "getRankingMovementFirstListedAt", "isVerifiedNewRankingListing",
   "getPodcastRatingForActiveSource", "getCommunityRatingCount",
-  "resolveCanonicalPodcastId", "isRankingRoute", "renderPodcastGrid", "console",
+  "resolveCanonicalPodcastId", "isRankingRoute", "refreshVisibleRankingMovement", "console",
   `${loadRankingMovementSnapshot}; return loadRankingMovementSnapshot;`
 )(
   state,
@@ -96,7 +96,7 @@ const load = new Function(
   () => 5,
   (key) => key,
   () => true,
-  () => { renders += 1; },
+  () => { visibleMovementRefreshes += 1; },
   { warn() {} }
 );
 
@@ -122,7 +122,7 @@ assert.equal(state.rankingMovementLoadAttempted, true);
 assert.equal(state.rankingMovementPeriodLabel, "siden 20. oktober");
 assert.equal(state.rankingMovementSnapshotValid, true);
 assert.equal(state.rankingMovementByKey.get("podcast-a"), 1);
-assert.equal(renders, 1);
+assert.equal(visibleMovementRefreshes, 1, "history completion updates visible badges without a full grid render");
 
 const movementMarkup = new Function(
   "state", "isRankingMovementEligible", "getRankingMovementKey", "getRankingMovementId", "escapeHtml",

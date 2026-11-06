@@ -5258,8 +5258,50 @@ async function loadRankingMovementSnapshot() {
   } finally {
     state.rankingMovementLoadAttempted = true;
     state.rankingMovementLoading = false;
-    if (isRankingRoute()) renderPodcastGrid();
+    if (isRankingRoute()) refreshVisibleRankingMovement();
   }
+}
+
+function refreshVisibleRankingMovement() {
+  if (!elements.podcastGrid || !isRankingRoute()) return;
+
+  const filtered = getRankingPresentationPodcasts();
+  const podcastsByKey = new Map(filtered.map((podcast) => [getPodcastKey(podcast), podcast]));
+  elements.podcastGrid.querySelectorAll(".podcast-card[data-key]").forEach((card) => {
+    const podcast = podcastsByKey.get(card.dataset.key);
+    if (!podcast) return;
+
+    const nextBadge = document.createElement("template");
+    nextBadge.innerHTML = getRankingMovementMarkup(podcast);
+    const desired = nextBadge.content.querySelector(".ranking-movement");
+    const current = card.querySelector(":scope > .podcast-card__placement .ranking-movement, :scope > .desktop-ranking-row__rank .ranking-movement, :scope > .desktop-ranking-rank .ranking-movement");
+
+    if (desired && current) {
+      current.className = desired.className;
+      current.textContent = desired.textContent;
+      for (const attribute of ["id", "aria-label", "title"]) {
+        if (desired.hasAttribute(attribute)) current.setAttribute(attribute, desired.getAttribute(attribute));
+        else current.removeAttribute(attribute);
+      }
+    } else if (desired) {
+      const number = card.querySelector(":scope > .podcast-card__placement .placement-value, :scope > .desktop-ranking-row__rank .desktop-ranking-row__number");
+      const badge = desired.cloneNode(true);
+      if (number) number.after(badge);
+      else card.querySelector(":scope > .desktop-ranking-rank")?.append(badge);
+    } else {
+      current?.remove();
+    }
+
+    card.querySelector(":scope > .podcast-card__placement .placement-value")?.classList.toggle("placement-value--with-movement", Boolean(desired));
+    const movementId = getRankingMovementId(podcast);
+    if (movementId) card.setAttribute("aria-describedby", movementId);
+    else card.removeAttribute("aria-describedby");
+  });
+
+  const visibleCount = isMobileRankingRoute()
+    ? (state.mobileRankingTailMode ? filtered.length : Math.min(state.visibleCount, filtered.length))
+    : elements.podcastGrid.querySelectorAll(".podcast-card").length;
+  if (elements.resultsText) setRankingResultsText(getResultsText(filtered.length, visibleCount));
 }
 
 function setRankingResultsText(text) {
@@ -17410,7 +17452,7 @@ function createPodcastReviewCardElement(podcast, review, key, displayRank = null
   return article;
 }
 
-function createPodcastCardElement(podcast, displayRank = null) {
+function createPodcastCardElement(podcast, displayRank = null, { observeRating = true } = {}) {
   const review = getReviewForPodcast(podcast);
   const key = getPodcastKey(podcast);
 
@@ -17515,7 +17557,7 @@ function createPodcastCardElement(podcast, displayRank = null) {
     applyPodcastRatingControlState(rateButton, podcast);
   }
   renderFavoriteButton(favoriteButton, key);
-  observePodcastRatingControl(podcast, article);
+  if (observeRating) observePodcastRatingControl(podcast, article);
 
   populateCardSummaries(article, podcast);
 
@@ -17639,18 +17681,127 @@ function renderDesktopRankingDataState(dataState) {
   cancelAutoExpandPodcastGrid();
 }
 
+function normalizeRankingMovementForComparison(card) {
+  const copy = card.cloneNode(true);
+  copy.removeAttribute("aria-describedby");
+  copy.querySelectorAll(".ranking-movement").forEach((badge) => badge.remove());
+  copy.querySelectorAll(".placement-value").forEach((placement) => {
+    placement.classList.remove("placement-value--with-movement");
+  });
+  return copy;
+}
+
+function syncRankingMovementBadge(card, nextCard) {
+  const currentSelector = ":scope > .podcast-card__placement .ranking-movement, :scope > .desktop-ranking-row__rank .ranking-movement, :scope > .desktop-ranking-rank .ranking-movement";
+  const current = card.querySelector(currentSelector);
+  const next = nextCard.querySelector(currentSelector);
+
+  if (current && next) {
+    current.className = next.className;
+    current.textContent = next.textContent;
+    for (const attribute of ["id", "aria-label", "title"]) {
+      if (next.hasAttribute(attribute)) current.setAttribute(attribute, next.getAttribute(attribute));
+      else current.removeAttribute(attribute);
+    }
+  } else if (next) {
+    const number = card.querySelector(":scope > .podcast-card__placement .placement-value, :scope > .desktop-ranking-row__rank .desktop-ranking-row__number");
+    const badge = next.cloneNode(true);
+    if (number) number.after(badge);
+    else card.querySelector(":scope > .desktop-ranking-rank")?.append(badge);
+  } else {
+    current?.remove();
+  }
+
+  card.querySelector(":scope > .podcast-card__placement .placement-value")?.classList.toggle(
+    "placement-value--with-movement",
+    Boolean(next)
+  );
+  if (nextCard.hasAttribute("aria-describedby")) {
+    card.setAttribute("aria-describedby", nextCard.getAttribute("aria-describedby"));
+  } else {
+    card.removeAttribute("aria-describedby");
+  }
+}
+
+function captureRankingScrollAnchor() {
+  if (!isRankingRoute() || window.scrollY < 1) return null;
+  const card = [...(elements.podcastGrid?.querySelectorAll(".podcast-card[data-key]") || [])]
+    .find((item) => item.getBoundingClientRect().bottom > 0);
+  if (!card) return null;
+  return { key: card.dataset.key, top: card.getBoundingClientRect().top };
+}
+
+function restoreRankingScrollAnchor(anchor) {
+  if (!anchor) return;
+  const card = [...(elements.podcastGrid?.querySelectorAll(".podcast-card[data-key]") || [])]
+    .find((item) => item.dataset.key === anchor.key);
+  if (!card) return;
+  const delta = card.getBoundingClientRect().top - anchor.top;
+  if (Math.abs(delta) > 1) window.scrollBy(0, delta);
+}
+
+function reconcileMobileRankingCards(nextCards, podcasts = []) {
+  const grid = elements.podcastGrid;
+  const anchor = captureRankingScrollAnchor();
+  const podcastsByKey = new Map(podcasts.map((podcast) => [getPodcastKey(podcast), podcast]));
+  const existingByKey = new Map(
+    [...grid.querySelectorAll(":scope > .podcast-card[data-key]")].map((card) => [card.dataset.key, card])
+  );
+  const active = document.activeElement;
+  let focusTarget = null;
+  const desiredCards = nextCards.map((nextCard) => {
+    const existing = existingByKey.get(nextCard.dataset.key);
+    if (!existing) return nextCard;
+
+    const oldNormalized = normalizeRankingMovementForComparison(existing);
+    const nextNormalized = normalizeRankingMovementForComparison(nextCard);
+    if (oldNormalized.isEqualNode(nextNormalized)) {
+      syncRankingMovementBadge(existing, nextCard);
+      return existing;
+    }
+    if (existing.contains(active)) {
+      focusTarget = { key: existing.dataset.key, action: active.getAttribute("data-action"), isCard: active === existing };
+    }
+    return nextCard;
+  });
+
+  desiredCards.forEach((card, index) => {
+    const current = grid.children[index] || null;
+    if (current !== card) grid.insertBefore(card, current);
+    if (card !== existingByKey.get(card.dataset.key)) {
+      const podcast = podcastsByKey.get(card.dataset.key);
+      if (podcast) observePodcastRatingControl(podcast, card);
+    }
+  });
+  for (const child of [...grid.children]) {
+    if (!desiredCards.includes(child)) child.remove();
+  }
+  if (focusTarget) {
+    const replacement = desiredCards.find((card) => card.dataset.key === focusTarget.key);
+    const control = focusTarget.isCard
+      ? replacement
+      : [...(replacement?.querySelectorAll("[data-action]") || [])]
+        .find((item) => item.getAttribute("data-action") === focusTarget.action);
+    control?.focus({ preventScroll: true });
+  }
+  restoreRankingScrollAnchor(anchor);
+}
+
 function renderPodcastGrid() {
   if (!elements.podcastGrid) return;
 
   syncDesktopRankingSearchPlacement();
-  elements.podcastGrid.innerHTML = "";
   updateDesktopRankingSourceContext();
 
   const rankingDataState = getDesktopRankingDataState();
   if (rankingDataState.status !== "ready") {
+    elements.podcastGrid.replaceChildren();
     renderDesktopRankingDataState(rankingDataState);
     return;
   }
+
+  const reconcileMobileCards = isMobileRankingRoute() && !isDesktopRankingViewport();
+  if (!reconcileMobileCards) elements.podcastGrid.replaceChildren();
 
   void loadRankingMovementSnapshot();
 
@@ -17667,17 +17818,22 @@ function renderPodcastGrid() {
     const empty = document.createElement("div");
     empty.className = "empty-state";
     empty.textContent = "Ingen podcasts matcher den valgte kombination af filtre.";
-    elements.podcastGrid.appendChild(empty);
+    elements.podcastGrid.replaceChildren(empty);
   } else if (isDesktopRankingViewport()) {
     renderDesktopRanking(visible);
   } else {
     const fragment = document.createDocumentFragment();
 
     visible.forEach((podcast, index) => {
-      fragment.appendChild(createPodcastCardElement(podcast, getRankingDisplayRank(visibleStart + index, podcast)));
+      fragment.appendChild(createPodcastCardElement(
+        podcast,
+        getRankingDisplayRank(visibleStart + index, podcast),
+        { observeRating: false }
+      ));
     });
 
-    elements.podcastGrid.appendChild(fragment);
+    if (reconcileMobileCards) reconcileMobileRankingCards([...fragment.children], visible);
+    else elements.podcastGrid.appendChild(fragment);
   }
 
   renderDesktopRankingDataWarning(rankingDataState);
