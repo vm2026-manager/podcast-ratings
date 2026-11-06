@@ -31,6 +31,9 @@ assert.ok(!check.findings.some(x => x.podcast_key === "smat brændbart"), "match
 const [approvedId, approvedFeed] = APPROVED_SHEET_FEED_BASELINE[0];
 const approvedCoverage = checkEpisodeFeedCoverage({ rows: [row(approvedId, approvedFeed)] });
 assert.equal(approvedCoverage.findings.length, 0, "an existing approved feed remains covered");
+assert.equal(APPROVED_SHEET_FEED_BASELINE.find(([id]) => id === "hvid røg")?.[1],
+  "https://omny.fm/shows/hvid-rog/playlists/podcast.rss",
+  "Hvid Røg is pinned to the verified official Omny RSS feed, not its HTML show page");
 assert.equal(APPROVED_SHEET_FEED_BASELINE.find(([id]) => id === "verdens bedste film")?.[1],
   "https://api.dr.dk/podcasts/v1/feeds/verdens-bedste-film-radio.xml?format=podcast",
   "Verdens bedste film is pinned to the verified official DR feed rather than its retired URL");

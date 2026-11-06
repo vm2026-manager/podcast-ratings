@@ -148,6 +148,18 @@ export function mergeSheetFeedConfigs(
     ...(djaevlenFullOwner ? { [DJAEVLEN_LYD_FULL_FEED_KEY]: { ...djaevlenFullOwner, routes: djaevlen.routes, enabled: djaevlen.routes.length > 0 } } : {}),
     ...(bakspejlFullOwner ? { [BAKSPEJL_LYD_FULL_FEED_KEY]: { ...bakspejlFullOwner, routes: bakspejl.routes, enabled: bakspejl.routes.length > 1 } } : {})
   };
+  // A reviewed exact Podimo mapping stays disabled unless the current Sheet
+  // contains one exact canonical Podcast-ID and the same exact show UUID.
+  // Either drift or ambiguity must fail closed before an import can be scheduled.
+  for (const [feedKey, config] of Object.entries(configs)) {
+    if (config.sheet_podimo_identity_required !== true) continue;
+    const matchingRows = rows.filter(row => getPodcastId(row) === config.podcast_key);
+    const hasNormalizedCollision = rows.some(row => getPodcastId(row) !== config.podcast_key &&
+      normalizePodcastKey(getPodcastId(row)) === normalizePodcastKey(config.podcast_key));
+    const exactShow = matchingRows.length === 1 && !hasNormalizedCollision &&
+      parsePodimoShowFeed(matchingRows[0].Feed ?? matchingRows[0].feed)?.showId === config.podcast_id?.toLowerCase();
+    configs[feedKey] = { ...config, enabled: exactShow };
+  }
   // Keep every previously approved ordinary Sheet feed active even if its
   // editable metadata is temporarily changed, blank, or absent. A replacement
   // URL is reviewed below and cannot displace this code-owned source.
