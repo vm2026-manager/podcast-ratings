@@ -1071,6 +1071,7 @@ const state = {
   homeFeaturedTransitionTimer: null,
   homeFeaturedTransitioning: false,
   activeFilter: null,
+  activeHostFilter: null,
   activePublisherFilter: "",
   activeMainSeriesFilter: "",
   searchTerm: "",
@@ -4134,7 +4135,7 @@ function updateRankingSearchUrl(value) {
   } else {
     url.searchParams.delete("s");
   }
-  window.history.replaceState(window.history.state, "", url);
+  window.history.replaceState(window.history.state, "", serializeRankingUrl(url));
   return routeChanged;
 }
 
@@ -4147,7 +4148,78 @@ function restoreRankingSearchFromUrl() {
   if (getRouteInfoFromHash().route !== "ranglister") {
     const url = new URL(window.location.href);
     url.hash = "#ranglister";
-    window.history.replaceState(window.history.state, "", url);
+    window.history.replaceState(window.history.state, "", serializeRankingUrl(url));
+  }
+  return true;
+}
+
+function getCatalogueHostPersonByKey(key) {
+  const normalizedKey = normalizeText(key);
+  if (!normalizedKey) return null;
+
+  for (const podcast of state.podcasts) {
+    const person = getHostPeople(podcast).find((candidate) => candidate.key === normalizedKey);
+    if (person) return person;
+  }
+  return null;
+}
+
+function serializeRankingUrl(url) {
+  const query = Array.from(url.searchParams.entries())
+    .map(([key, value]) => `${encodeURIComponent(key)}=${encodeURIComponent(value)}`)
+    .join("&");
+  url.search = query ? `?${query}` : "";
+  return url;
+}
+
+function syncRankingHostUrl({ historyMethod = "replaceState", person = state.activeHostFilter } = {}) {
+  const url = new URL(window.location.href);
+  url.searchParams.delete("host");
+  if (person?.name && person?.key) url.searchParams.append("host", person.name);
+  if (person?.name && getRouteInfoFromHash().route !== "ranglister") {
+    url.hash = "#ranglister";
+  }
+  const serializedUrl = serializeRankingUrl(url);
+  const historyState = window.history.state && typeof window.history.state === "object"
+    ? window.history.state
+    : {};
+  window.history[historyMethod](historyState, "", serializedUrl);
+}
+
+function restoreRankingHostFilterFromUrl({ canonicalize = true } = {}) {
+  const url = new URL(window.location.href);
+  const requestedName = normalizeText(url.searchParams.get("host"));
+  if (!requestedName) {
+    state.activeHostFilter = null;
+    return false;
+  }
+
+  // The catalogue is the identity authority. Ignore deep links until it has
+  // loaded, then accept only one exact full-name identity already in it.
+  if (!state.podcasts.length) return false;
+  const parsedRequest = parseHostPeople(requestedName);
+  const requestedPerson = parsedRequest.length === 1 &&
+    normalizeHostPersonKey(requestedName) === parsedRequest[0].key
+    ? parsedRequest[0]
+    : null;
+  const person = requestedPerson
+    ? getCatalogueHostPersonByKey(requestedPerson.key)
+    : null;
+
+  if (!person) {
+    state.activeHostFilter = null;
+    if (canonicalize) syncRankingHostUrl({ person: null });
+    return false;
+  }
+
+  state.activeHostFilter = person;
+  const canonicalUrl = new URL(url);
+  canonicalUrl.searchParams.delete("host");
+  canonicalUrl.searchParams.append("host", person.name);
+  canonicalUrl.hash = "#ranglister";
+  const serializedCanonicalUrl = serializeRankingUrl(canonicalUrl);
+  if (canonicalize && serializedCanonicalUrl.href !== window.location.href) {
+    window.history.replaceState(window.history.state, "", serializedCanonicalUrl);
   }
   return true;
 }
@@ -4408,6 +4480,45 @@ function mainSeriesMatchesExactFilter(mainSeries, filterValue) {
   );
 }
 
+function getRankingHostKeys(podcast) {
+  if (!podcast) return new Set();
+  const members = podcast.isDisplayGroup
+    ? (podcast.displayGroupMembers || getDisplayGroupMemberPodcasts(podcast))
+    : [podcast];
+  return new Set(members.flatMap((member) => getHostPeople(member).map((person) => person.key)));
+}
+
+function rankingPodcastHasHost(podcast, hostKey = state.activeHostFilter?.key) {
+  return Boolean(hostKey) && getRankingHostKeys(podcast).has(hostKey);
+}
+
+function setRankingHostFilterByKey(hostKey, { historyMethod = "pushState", shouldScroll = true } = {}) {
+  const person = getCatalogueHostPersonByKey(hostKey);
+  if (!person) return false;
+
+  const isSameHost = state.activeHostFilter?.key === person.key;
+  state.activeHostFilter = person;
+  if (isSameHost) {
+    syncRankingHostUrl({ historyMethod: "replaceState", person });
+    return true;
+  }
+
+  syncRankingHostUrl({ historyMethod, person });
+  resetVisibleCount();
+  render();
+  if (shouldScroll) scrollToRankingStart();
+  return true;
+}
+
+function clearRankingHostFilter({ historyMethod = "pushState", shouldRender = true } = {}) {
+  if (!state.activeHostFilter) return;
+  state.activeHostFilter = null;
+  syncRankingHostUrl({ historyMethod, person: null });
+  resetVisibleCount();
+  createGenreChips();
+  if (shouldRender) render();
+}
+
 function getDesktopPublisherLinksMarkup(value, buttonClass = "") {
   const tokens = getDesktopPublisherDisplayTokens(value);
   const publishers = tokens.length ? tokens : ["Ukendt"];
@@ -4490,7 +4601,7 @@ function syncRankingGenreUrlWithSelection(value) {
     url.searchParams.delete("genre");
   }
 
-  window.history.replaceState(window.history.state, "", url);
+  window.history.replaceState(window.history.state, "", serializeRankingUrl(url));
 }
 
 function consumePendingRankingGenre() {
@@ -4527,6 +4638,9 @@ function clearActiveFilter() {
 
 function getActiveCategoryFilters() {
   const filters = [];
+  if (state.activeHostFilter?.key && state.activeHostFilter?.name) {
+    filters.push({ type: "host", label: "Vært", value: state.activeHostFilter.name });
+  }
   if (state.activeFilter?.type === "genre" && state.activeFilter.value) {
     filters.push({ type: "genre", label: "Genre", value: state.activeFilter.value });
   }
@@ -4544,6 +4658,10 @@ function getActiveCategoryFilters() {
 }
 
 function clearCategoryFilter(type) {
+  if (type === "host") {
+    clearRankingHostFilter();
+    return;
+  }
   if (type === "genre" && state.activeFilter?.type === "genre") {
     state.activeFilter = null;
   } else if (type === "publisher") {
@@ -4658,7 +4776,9 @@ function setLanguageFilter(value) {
 }
 
 function clearRankingFilters() {
+  const hadHostFilter = Boolean(state.activeHostFilter || new URLSearchParams(window.location.search).has("host"));
   state.activeFilter = null;
+  state.activeHostFilter = null;
   state.activePublisherFilter = "";
   state.activeMainSeriesFilter = "";
   state.searchTerm = "";
@@ -4673,6 +4793,7 @@ function clearRankingFilters() {
   }
   state.desktopOwnRatingSortActive = false;
   state.ownRatingDirection = "desc";
+  if (hadHostFilter) syncRankingHostUrl({ person: null });
   if (elements.searchInput) {
     elements.searchInput.value = "";
   }
@@ -4689,13 +4810,17 @@ function resetRankingFiltersForPodcastDetailNavigation(type, value) {
   const nextValue = normalizeText(value);
   if (!nextValue) return;
 
+  const hadHostFilter = Boolean(state.activeHostFilter || new URLSearchParams(window.location.search).has("host"));
   state.activeFilter = null;
+  state.activeHostFilter = null;
   state.activePublisherFilter = "";
   state.activeMainSeriesFilter = "";
   state.searchTerm = "";
   state.minimumRating = 0;
   state.freeOnly = false;
   state.languageFilter = "all";
+
+  if (hadHostFilter) syncRankingHostUrl({ person: null });
 
   if (elements.searchInput) elements.searchInput.value = "";
 
@@ -4759,6 +4884,7 @@ function getRankingListCacheKey() {
     hasDesktopOwnRatingSort() ? state.ownRatingDirection : "",
     state.sort,
     activeFilter,
+    state.activeHostFilter?.key || "",
     getExactPublisherFilterToken(state.activePublisherFilter),
     getExactMainSeriesFilterToken(state.activeMainSeriesFilter),
     state.minimumRating,
@@ -4986,6 +5112,10 @@ function getFilteredPodcasts() {
         return false;
       }
 
+      if (state.activeHostFilter && !rankingPodcastHasHost(podcast, state.activeHostFilter.key)) {
+        return false;
+      }
+
       if (state.activeFilter?.type === "saved" && !isPodcastSaved(getPodcastKey(podcast))) {
         return false;
       }
@@ -5137,7 +5267,7 @@ function isRankingMovementEligible() {
   return Boolean(window.PodcastRankingMovement?.isEligible({
     route: isRankingRoute() ? "ranglister" : "other",
     source: state.rankingSource,
-    hasFilter: Boolean(state.activeFilter || state.activePublisherFilter || state.activeMainSeriesFilter || state.freeOnly || state.languageFilter !== "all"),
+    hasFilter: Boolean(state.activeFilter || state.activeHostFilter || state.activePublisherFilter || state.activeMainSeriesFilter || state.freeOnly || state.languageFilter !== "all"),
     hasSearch: Boolean(state.searchTerm),
     hasMinimumRating: state.minimumRating > 0,
     freeOnly: state.freeOnly,
@@ -5460,6 +5590,7 @@ function updateMobileRankingFilterUi() {
 
   const isMobileRanking = isMobileRankingFiltersViewport();
   const isOpen = isMobileRanking && state.mobileRankingFiltersOpen;
+  document.body.classList.toggle("ranking-host-filter-active", Boolean(state.activeHostFilter));
   document.body.classList.toggle("ranking-filters-open", isOpen);
   if (elements.rankingFilterPanel) {
     elements.rankingFilterPanel.hidden = isMobileRanking && !state.mobileRankingFiltersOpen;
@@ -5519,6 +5650,8 @@ function updateMobileRankingFilterUi() {
       ${freeOnlyMarkup}
       <span class="ranking-mobile-filter-summary__rating">${escapeHtml(ratingLabel)}</span>
     `;
+    elements.rankingMobileFilterSummary.hidden =
+      !categoryFilters.length && !languageMarkup && !freeOnlyMarkup && state.minimumRating <= 0;
   }
 
   if (elements.rankingMobileFilterCount) {
@@ -7645,6 +7778,58 @@ function getDesktopRankingTitleMarkup(podcast, variant) {
   `;
 }
 
+function createRankingHostCreditElement(podcast, rawCredit = podcast?.host || "") {
+  const credit = String(rawCredit ?? "");
+  const creditElement = document.createElement("span");
+  creditElement.className = "ranking-host-credit";
+  creditElement.dataset.rankingHostCredit = "true";
+  const knownPeople = new Map(getHostPeople(podcast).map((person) => [person.key, person]));
+  const separatorPattern = /&|,|;|\/|\b(?:og|and)\b/giu;
+  let cursor = 0;
+
+  const appendSegment = (rawSegment) => {
+    const leadingWhitespace = rawSegment.match(/^\s*/u)?.[0] || "";
+    const trailingWhitespace = rawSegment.match(/\s*$/u)?.[0] || "";
+    const segmentEnd = rawSegment.length - trailingWhitespace.length;
+    const name = rawSegment.slice(leadingWhitespace.length, segmentEnd);
+    const parsedPeople = name ? parseHostPeople(name) : [];
+    const parsedPerson = parsedPeople.length === 1 &&
+      normalizeHostPersonKey(name) === parsedPeople[0].key
+      ? knownPeople.get(parsedPeople[0].key)
+      : null;
+
+    if (!parsedPerson) {
+      creditElement.appendChild(document.createTextNode(rawSegment));
+      return;
+    }
+
+    if (leadingWhitespace) creditElement.appendChild(document.createTextNode(leadingWhitespace));
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "ranking-host-person";
+    button.dataset.action = "filter-ranking-host";
+    button.dataset.hostKey = parsedPerson.key;
+    button.setAttribute("aria-label", `Filtrér ranglisten efter vært ${parsedPerson.name}`);
+    button.textContent = name;
+    button.addEventListener("click", (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      setRankingHostFilterByKey(parsedPerson.key);
+    });
+    creditElement.appendChild(button);
+    if (trailingWhitespace) creditElement.appendChild(document.createTextNode(trailingWhitespace));
+  };
+
+  for (const separator of credit.matchAll(separatorPattern)) {
+    const index = separator.index ?? cursor;
+    appendSegment(credit.slice(cursor, index));
+    creditElement.appendChild(document.createTextNode(separator[0]));
+    cursor = index + separator[0].length;
+  }
+  appendSegment(credit.slice(cursor));
+  return creditElement;
+}
+
 function createDesktopRankingTopCardElement(podcast, displayRank = null) {
   const key = getPodcastKey(podcast);
   const score = getDesktopRankingScore(podcast);
@@ -7690,7 +7875,7 @@ function createDesktopRankingTopCardElement(podcast, displayRank = null) {
         )}
       </span>
       ${getDesktopRankingTitleMarkup(podcast, "top")}
-      <p class="desktop-ranking-host">${escapeHtml(podcast.host || "")}</p>
+      <p class="desktop-ranking-host" data-ranking-host-credit></p>
       ${getDesktopRankingScoreMarkup(score)}
     </div>
     <div class="desktop-ranking-top-card__actions">
@@ -7713,6 +7898,9 @@ function createDesktopRankingTopCardElement(podcast, displayRank = null) {
     </div>
   `;
 
+  article.querySelector("[data-ranking-host-credit]")?.appendChild(
+    createRankingHostCreditElement(podcast)
+  );
   applyPodcastRatingControlState(article.querySelector(".desktop-ranking-own-score"), podcast);
   setDesktopRankingCover(article, podcast);
   renderFavoriteButton(article.querySelector(".favorite-button"), key);
@@ -7757,7 +7945,7 @@ function createDesktopRankingTableRowElement(podcast, displayRank = null) {
       </button>
       <span class="desktop-ranking-row__identity">
         ${getDesktopRankingTitleMarkup(podcast, "row")}
-        <span>${escapeHtml(podcast.host || "")}</span>
+        <span class="desktop-ranking-row__host" data-ranking-host-credit></span>
       </span>
     </div>
     <span class="desktop-ranking-row__publisher" role="cell">
@@ -7813,6 +8001,9 @@ function createDesktopRankingTableRowElement(podcast, displayRank = null) {
     </span>
   `;
 
+  article.querySelector("[data-ranking-host-credit]")?.appendChild(
+    createRankingHostCreditElement(podcast)
+  );
   applyPodcastRatingControlState(article.querySelector(".desktop-ranking-row__own"), podcast);
   setDesktopRankingCover(article, podcast);
   renderFavoriteButton(article.querySelector(".favorite-button"), key);
@@ -15564,6 +15755,7 @@ function closePodcastDetailSheet({ returnFocus = true, preserveHistoryRestore = 
 function getRankingFilterHistoryState() {
   return {
     activeFilter: state.activeFilter ? { ...state.activeFilter } : null,
+    activeHostFilter: state.activeHostFilter ? { ...state.activeHostFilter } : null,
     activePublisherFilter: state.activePublisherFilter,
     activeMainSeriesFilter: state.activeMainSeriesFilter
   };
@@ -15572,6 +15764,9 @@ function getRankingFilterHistoryState() {
 function restoreRankingFilterHistoryState(snapshot) {
   if (!snapshot) return;
   state.activeFilter = snapshot.activeFilter ? { ...snapshot.activeFilter } : null;
+  state.activeHostFilter = snapshot.activeHostFilter?.key
+    ? getCatalogueHostPersonByKey(snapshot.activeHostFilter.key)
+    : null;
   state.activePublisherFilter = normalizeText(snapshot.activePublisherFilter);
   state.activeMainSeriesFilter = normalizeText(snapshot.activeMainSeriesFilter);
   resetVisibleCount();
@@ -17346,9 +17541,13 @@ function createPodcastReviewCardElement(podcast, review, key, displayRank = null
       ...podcast,
       title: review.title || podcast.title
     })}</h3>
-    <p class="review-card__host">${escapeHtml(review.host || podcast.host || "")}</p>
+    <p class="review-card__host" data-ranking-host-credit></p>
     <p class="review-card__date">${escapeHtml(review.reviewDateLabel || "")}</p>
   `;
+
+  headCopy.querySelector("[data-ranking-host-credit]")?.appendChild(
+    createRankingHostCreditElement(podcast, review.host || podcast.host || "")
+  );
 
   const actions = document.createElement("div");
   actions.className = "review-card__actions";
@@ -17530,7 +17729,7 @@ function createPodcastCardElement(podcast, displayRank = null, { observeRating =
   if (mobileTitleLengthClass) {
     title.classList.add(mobileTitleLengthClass);
   }
-  host.textContent = podcast.host || "";
+  host.replaceChildren(createRankingHostCreditElement(podcast));
   description.textContent = getPodcastCompactDescription(podcast);
 
   if (isNewPodcast(podcast)) {
@@ -18023,6 +18222,13 @@ function toggleFeaturedPause() {
 }
 
 function render() {
+  if (
+    state.podcasts.length &&
+    new URLSearchParams(window.location.search).has("host") &&
+    getRouteInfoFromHash().route !== "ranglister"
+  ) {
+    restoreRankingHostFilterFromUrl();
+  }
   const nextRouteInfo = getRouteInfoFromHash();
   const previousRoute = state.currentRoute;
   const previousRawRoute = state.currentRawRoute;
@@ -18060,6 +18266,7 @@ function render() {
 
   if (nextRouteInfo.route === "ranglister") {
     consumePendingRankingGenre();
+    restoreRankingHostFilterFromUrl();
   }
 
   resolveRankingSourceForRoute(nextRouteInfo.route);
@@ -25214,6 +25421,22 @@ function renderRoute() {
 }
 
 function handlePodcastGridClick(event) {
+  const directHostTarget = event.target.closest?.(".ranking-host-person");
+  const podcastCard = event.target.closest?.(".podcast-card");
+  const hostTarget = directHostTarget || (isMobileViewport() && podcastCard
+    ? [...podcastCard.querySelectorAll(".ranking-host-person")].find((button) => {
+      const rect = button.getBoundingClientRect();
+      return event.clientX >= rect.left && event.clientX <= rect.right &&
+        event.clientY >= rect.top && event.clientY <= rect.bottom;
+    })
+    : null);
+  if (hostTarget) {
+    event.preventDefault();
+    event.stopPropagation();
+    setRankingHostFilterByKey(hostTarget.dataset.hostKey || "");
+    return;
+  }
+
   const actionTarget = event.target.closest("[data-action]");
   if (!actionTarget || !elements.podcastGrid.contains(actionTarget)) {
     const card = event.target.closest(".podcast-card");
@@ -25237,6 +25460,13 @@ function handlePodcastGridClick(event) {
 
   const review = getReviewForPodcast(podcast);
   const action = actionTarget.dataset.action;
+
+  if (action === "filter-ranking-host") {
+    event.preventDefault();
+    event.stopPropagation();
+    setRankingHostFilterByKey(actionTarget.dataset.hostKey || "");
+    return;
+  }
 
   if (action === "filter-desktop-main-series") {
     event.preventDefault();
@@ -25759,6 +25989,7 @@ function setupEvents() {
   bindMobileHomeSearchOverlay();
   bindPodcastAccessTooltip();
   const handleRouteHistoryChange = () => {
+    restoreRankingHostFilterFromUrl();
     render();
     restorePodcastDetailFromHistory();
   };

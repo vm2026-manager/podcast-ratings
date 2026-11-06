@@ -60,6 +60,7 @@ const checks = [
   ["ranking movement scoring, entrant stability, and 1,300-item ranks", ["scripts/test-ranking-movement.mjs"]],
   ["ranking movement hydration lifecycle", ["scripts/test-ranking-movement-load-lifecycle.mjs"]],
   ["full ranking retains sequential positions and verified movement markers", ["scripts/test-ranking-full-list.mjs"]],
+  ["clickable ranking hosts, exact identities, deep links and responsive interaction", ["scripts/test-ranking-host-filter.mjs"]],
   ["mobile ranking movement badge geometry and scroll shortcut", ["scripts/test-mobile-ranking-movement-ux.mjs"]],
   ["mobile ranking scroll stability across delayed updates and batch loading", ["scripts/test-mobile-ranking-scroll-regression.mjs"]],
   ["mobile ranking toolbar alignment, visibility, accessibility and navigation", ["scripts/test-mobile-ranking-toolbar.mjs"]],

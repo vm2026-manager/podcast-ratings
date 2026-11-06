@@ -29809,3 +29809,51 @@ html body.page-forside.page-forside #pageIntroPanel .home-genres-card[data-genre
     gap: 10px !important;
   }
 }
+
+.ranking-host-person {
+  position: relative;
+  z-index: 1;
+  display: inline-block;
+  min-height: 24px;
+  margin: -2px -1px;
+  padding: 2px 1px;
+  border: 0;
+  border-radius: 3px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  line-height: inherit;
+  text-align: inherit;
+  text-decoration: underline dotted;
+  text-decoration-color: rgba(88, 61, 45, 0.6);
+  text-decoration-thickness: 1px;
+  text-underline-offset: 2px;
+  vertical-align: baseline;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  cursor: pointer;
+}
+
+.ranking-host-person:hover {
+  background: rgba(255, 92, 22, 0.08);
+  color: #7a2b08;
+  text-decoration-style: solid;
+}
+
+.ranking-host-person:focus-visible {
+  outline: 2px solid #c7561d;
+  outline-offset: 2px;
+  text-decoration-style: solid;
+}
+
+@media (max-width: 768px) {
+  body.page-ranglister.ranking-host-filter-active .ranking-mobile-filter-bar {
+    position: relative !important;
+    z-index: 5 !important;
+    display: grid !important;
+  }
+
+  body.page-ranglister.ranking-host-filter-active .ranking-mobile-filter-summary {
+    display: flex !important;
+  }
+}
