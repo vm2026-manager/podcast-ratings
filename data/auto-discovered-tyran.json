@@ -1,0 +1,66 @@
+{
+  "version": 1,
+  "baseline_published_at": "2026-11-06T00:00:00.000Z",
+  "records": [
+    {
+      "discovery_key": "marcos",
+      "podcast_id": "marcos",
+      "title": "Marcos",
+      "hovedserie": "Tyran",
+      "publisher": "DR",
+      "source_url": "https://www.dr.dk/lyd/p3/tyran-marcos-6641325831949",
+      "source_series_production_number": "6641325831949",
+      "dr_series_id": "urn:dr:radio:series:6ad1ecb299797788ba19118f",
+      "cover_image_id": "6ad8a63dd1248e67782813bf",
+      "cover_source_url": "https://asset.dr.dk/drlyd/images/urn:dr:radio:image:6ad8a63dd1248e67782813bf?im=AspectCrop%3D%28720%2C720%29%2CxPosition%3D.5%2CyPosition%3D.5%3BResize%3D%28720%2C720%29",
+      "cover_mime_type": "image/jpeg",
+      "cover_width": 720,
+      "cover_height": 720,
+      "cover_byte_length": 229851,
+      "cover_sha256": "3168d4eeb2db7a75e5b4644931fc37b0ba2cb7bd175b450c775c0101c58f3173",
+      "first_full_episode": {
+        "title": "1:6 - Marcos",
+        "production_number": "16122693711",
+        "published_at": "2026-10-22T03:00:00.000Z",
+        "duration_seconds": 1878,
+        "source_url": "https://www.dr.dk/lyd/p3/tyran-marcos/tyran-marcos-24/1-6-marcos-16122693711",
+        "square_image_ids": [
+          "6ad8a63dd1248e67782813bf",
+          "6ad8a63dd1248e67782813bf"
+        ]
+      },
+      "needs_editorial_review": true,
+      "feed_activation_approved": false
+    },
+    {
+      "discovery_key": "macias",
+      "podcast_id": "tyran-auto-v1-08d0021f",
+      "title": "Macias",
+      "hovedserie": "Tyran",
+      "publisher": "DR",
+      "source_url": "https://www.dr.dk/lyd/p3/tyran-macias-6641072699897",
+      "source_series_production_number": "6641072699897",
+      "dr_series_id": "urn:dr:radio:series:6a3e55fa1645505efca628b6",
+      "cover_image_id": "6a4e30ea60319a54701828b9",
+      "cover_source_url": "https://asset.dr.dk/drlyd/images/urn:dr:radio:image:6a4e30ea60319a54701828b9?im=AspectCrop%3D%28720%2C720%29%2CxPosition%3D.5%2CyPosition%3D.5%3BResize%3D%28720%2C720%29",
+      "cover_mime_type": "image/jpeg",
+      "cover_width": 720,
+      "cover_height": 720,
+      "cover_byte_length": 195791,
+      "cover_sha256": "5f8fa9bba69c3a5718623ea846d2608affd0074c8437411159c3240b429e4425",
+      "first_full_episode": {
+        "title": "1:4 - Macias",
+        "production_number": "16122693681",
+        "published_at": "2026-08-06T03:00:00.000Z",
+        "duration_seconds": 2234,
+        "source_url": "https://www.dr.dk/lyd/p3/tyran-macias/tyran-macias-22/1-4-macias-16122693681",
+        "square_image_ids": [
+          "6a4e30ea60319a54701828b9",
+          "6a4e30ea60319a54701828b9"
+        ]
+      },
+      "needs_editorial_review": true,
+      "feed_activation_approved": false
+    }
+  ]
+}

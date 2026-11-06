@@ -30,6 +30,8 @@ const TYRAN_OFFICIAL_SQUARE_IMAGE_IDS = Object.freeze({
   "kim il sung og kim jong il": "689092222e199a1c531f82a9",
   "lenin": "68909209ab10e7b0b697551a",
   "leopold ii": "6a96ae037472ce653345f984",
+  "macias": "6a4e30ea60319a54701828b9",
+  "marcos": "6ad8a63dd1248e67782813bf",
   "mao": "68bed3d32b60b4c321271a43",
   "milosevic": "6890922bab10e7b0b69759ec",
   "muammar gaddafi": "6a0c0f4e7b148e5451e16710",

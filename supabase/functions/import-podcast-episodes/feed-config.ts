@@ -92,6 +92,8 @@ export type FeedConfigMap = Record<string, FeedConfig>;
 // and deduplicate by canonical episode_url rather than changing stored GUIDs.
 export const DJAEVLEN_LYD_FULL_FEED_KEY = "djaevlen_lyd_full";
 export const BAKSPEJL_LYD_FULL_FEED_KEY = "bakspejl_lyd_full";
+export const TYRAN_MACIAS_LYD_FULL_FEED_KEY = "tyran_macias_lyd_full";
+export const TYRAN_MARCOS_LYD_FULL_FEED_KEY = "tyran_marcos_lyd_full";
 export { RADIO_IIII_FEED_KEY };
 
 export const FEED_CONFIGS: FeedConfigMap = {
@@ -159,6 +161,23 @@ export const FEED_CONFIGS: FeedConfigMap = {
     feed_url: "https://www.dr.dk/lyd/special-radio/bakspejl-2868092680000",
     dedupe_by_episode_url_with_sources: [BAKSPEJL_SOURCE],
     routes: [],
+    enabled: false
+  },
+  // Exact DR child-series pages expose full episodes where the umbrella RSS
+  // only has short migration teasers. Keep these adapters explicitly disabled
+  // until a separate import-activation review approves production routing.
+  [TYRAN_MACIAS_LYD_FULL_FEED_KEY]: {
+    podcast_key: "tyran-auto-v1-08d0021f",
+    source: "dr_lyd_tyran_macias_full",
+    format: "dr_lyd_next_data",
+    feed_url: "https://www.dr.dk/lyd/p3/tyran-macias-6641072699897",
+    enabled: false
+  },
+  [TYRAN_MARCOS_LYD_FULL_FEED_KEY]: {
+    podcast_key: "marcos",
+    source: "dr_lyd_tyran_marcos_full",
+    format: "dr_lyd_next_data",
+    feed_url: "https://www.dr.dk/lyd/p3/tyran-marcos-6641325831949",
     enabled: false
   },
   "podimo_grebet_af_gvfb": {
