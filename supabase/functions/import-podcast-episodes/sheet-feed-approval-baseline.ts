@@ -99,7 +99,7 @@ export const APPROVED_SHEET_FEED_BASELINE: readonly ApprovedSheetFeed[] = Object
   Object.freeze(["hvem er anton westerlin","https://drpodcast.nu/hvem-er-anton-westerlin/feed.xml"] as const),
   Object.freeze(["hvem er simon kvamm","https://drpodcast.nu/hvem-er-simon-kvamm/feed.xml"] as const),
   Object.freeze(["hvepsereden","https://www.spreaker.com/show/6293915/episodes/feed"] as const),
-  Object.freeze(["hvid røg","https://omny.fm/shows/hvid-rog/hvid-rog"] as const),
+  Object.freeze(["hvid røg","https://omny.fm/shows/hvid-rog/playlists/podcast.rss"] as const),
   Object.freeze(["hvorfor har jeg ikke en kæreste","https://drpodcast.nu/hvorfor-har-jeg-ikke-en-kaereste/feed.xml"] as const),
   Object.freeze(["i selskab med q","https://feeds.simplecast.com/GYgQi89q"] as const),
   Object.freeze(["ibens harem 18 ar efter","https://drpodcast.nu/ibens-harem-18-aar-efter/feed.xml"] as const),
