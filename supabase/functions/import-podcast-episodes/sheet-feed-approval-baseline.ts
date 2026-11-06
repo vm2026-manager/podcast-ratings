@@ -172,7 +172,7 @@ export const APPROVED_SHEET_FEED_BASELINE: readonly ApprovedSheetFeed[] = Object
   Object.freeze(["single","https://www.omnycontent.com/d/playlist/87e48115-d0ce-4e9b-83f0-ae5b01244e0a/ffb9c298-61e2-4ef9-bf96-b3a000f53480/7c14ad4f-a266-4547-b0d4-b3a000f5390c/podcast.rss"] as const),
   Object.freeze(["sjakket","https://feed.podbean.com/sjakketpod/feed.xml"] as const),
   Object.freeze(["skal for sandheden podradio","https://feed.podbean.com/skaalforsandheden/feed.xml"] as const),
-  Object.freeze(["skønlitteratur","https://drpodcast.nu/skoenlitteratur/feed.xml"] as const),
+  Object.freeze(["skønlitteratur","https://api.dr.dk/podcasts/v1/feeds/skoenlitteratur-pa-p1.xml?format=podcast&limit=100"] as const),
   Object.freeze(["sommeren 21","https://drpodcast.nu/sommeren-21/feed.xml"] as const),
   Object.freeze(["sort snak","https://feeds.soundcloud.com/users/soundcloud:users:353182352/sounds.rss"] as const),
   Object.freeze(["sort søndag","https://drpodcast.nu/sort-soendag/feed.xml"] as const),
