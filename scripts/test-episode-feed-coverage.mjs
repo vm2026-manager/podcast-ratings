@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { checkEpisodeFeedCoverage } from "./monitor-episode-feed-coverage.mjs";
 import { APPROVED_SHEET_FEED_BASELINE } from "../supabase/functions/import-podcast-episodes/sheet-feed-approval-baseline.ts";
+import { FEED_CONFIGS } from "../supabase/functions/import-podcast-episodes/feed-config.ts";
 
 const row = (id, feed, title = id) => ({ "Podcast-ID": id, Titel: title, Feed: feed });
 const podimoUrl = "https://open.podimo.com/podcast/0db490b8-907e-4f35-bd48-60eae9f8805b";
@@ -31,6 +32,11 @@ assert.ok(!check.findings.some(x => x.podcast_key === "smat brændbart"), "match
 const [approvedId, approvedFeed] = APPROVED_SHEET_FEED_BASELINE[0];
 const approvedCoverage = checkEpisodeFeedCoverage({ rows: [row(approvedId, approvedFeed)] });
 assert.equal(approvedCoverage.findings.length, 0, "an existing approved feed remains covered");
+assert.equal(APPROVED_SHEET_FEED_BASELINE.find(([id]) => id === "torsdagskoncerten")?.[1],
+  "https://www.dr.dk/lyd/p2/torsdagskoncerten-4012849570000",
+  "Torsdagskoncerten is pinned to its verified official DR Lyd programme page");
+assert.equal(FEED_CONFIGS.torsdagskoncerten.format, "dr_lyd_next_data",
+  "Torsdagskoncerten uses the existing DR Lyd importer rather than an empty RSS feed");
 const mismatch = checkEpisodeFeedCoverage({ rows: [row("smat brændbart", 
   "https://open.podimo.com/podcast/ffffffff-ffff-ffff-ffff-ffffffffffff")] },
   { podimo_smat_braendbart: podimo });
