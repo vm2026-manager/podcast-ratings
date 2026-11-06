@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { checkEpisodeFeedCoverage } from "./monitor-episode-feed-coverage.mjs";
 import { APPROVED_SHEET_FEED_BASELINE } from "../supabase/functions/import-podcast-episodes/sheet-feed-approval-baseline.ts";
+import { FEED_CONFIGS } from "../supabase/functions/import-podcast-episodes/feed-config.ts";
 
 const row = (id, feed, title = id) => ({ "Podcast-ID": id, Titel: title, Feed: feed });
 const podimoUrl = "https://open.podimo.com/podcast/0db490b8-907e-4f35-bd48-60eae9f8805b";
@@ -40,6 +41,11 @@ assert.equal(APPROVED_SHEET_FEED_BASELINE.find(([id]) => id === "skønlitteratur
 assert.equal(APPROVED_SHEET_FEED_BASELINE.find(([id]) => id === "verdens bedste film")?.[1],
   "https://api.dr.dk/podcasts/v1/feeds/verdens-bedste-film-radio.xml?format=podcast",
   "Verdens bedste film is pinned to the verified official DR feed rather than its retired URL");
+assert.equal(APPROVED_SHEET_FEED_BASELINE.find(([id]) => id === "torsdagskoncerten")?.[1],
+  "https://www.dr.dk/lyd/p2/torsdagskoncerten-4012849570000",
+  "Torsdagskoncerten is pinned to its verified official DR Lyd programme page");
+assert.equal(FEED_CONFIGS.torsdagskoncerten.format, "dr_lyd_next_data",
+  "Torsdagskoncerten uses the existing DR Lyd importer rather than an empty RSS feed");
 const mismatch = checkEpisodeFeedCoverage({ rows: [row("smat brændbart", 
   "https://open.podimo.com/podcast/ffffffff-ffff-ffff-ffff-ffffffffffff")] },
   { podimo_smat_braendbart: podimo });

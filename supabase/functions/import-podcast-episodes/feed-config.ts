@@ -971,7 +971,8 @@ export const FEED_CONFIGS: FeedConfigMap = {
   "torsdagskoncerten": {
     podcast_key: "torsdagskoncerten",
     source: "sheet_torsdagskoncerten_rss",
-    feed_url: "https://drpodcast.nu/torsdagskoncerten/feed.xml",
+    format: "dr_lyd_next_data",
+    feed_url: "https://www.dr.dk/lyd/p2/torsdagskoncerten-4012849570000",
     generated_from_sheet: true
   },
   "hvem_er_simon_kvamm": {

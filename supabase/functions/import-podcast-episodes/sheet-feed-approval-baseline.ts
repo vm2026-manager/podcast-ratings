@@ -195,7 +195,7 @@ export const APPROVED_SHEET_FEED_BASELINE: readonly ApprovedSheetFeed[] = Object
   Object.freeze(["thorborgs dagbog","https://rss.buzzsprout.com/2144473.rss"] as const),
   Object.freeze(["tiden","https://api.dr.dk/podcasts/v1/feeds/tiden"] as const),
   Object.freeze(["tingets tilstand med damsgaard og jespersen","https://www.spreaker.com/show/5425295/episodes/feed"] as const),
-  Object.freeze(["torsdagskoncerten","https://drpodcast.nu/torsdagskoncerten/feed.xml"] as const),
+  Object.freeze(["torsdagskoncerten","https://www.dr.dk/lyd/p2/torsdagskoncerten-4012849570000"] as const),
   Object.freeze(["troldspejlet podcast","https://drpodcast.nu/troldspejlet-podcast/feed.xml"] as const),
   Object.freeze(["tyvstart","https://drpodcast.nu/tyvstart/feed.xml"] as const),
   Object.freeze(["tættere pa himlen","https://drpodcast.nu/taettere-paa-himlen/feed.xml"] as const),
