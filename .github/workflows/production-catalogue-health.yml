@@ -81,4 +81,4 @@ jobs:
         with:
           script: |
             const { updateProductionCatalogueAlert } = await import(`${process.env.GITHUB_WORKSPACE}/scripts/production-catalogue-alert.mjs`);
-            await updateProductionCatalogueAlert({ github, context, core, outcome: "success" });
+            await updateProductionCatalogueAlert({ github, context, core, outcome: "success", resolveIncident: true });

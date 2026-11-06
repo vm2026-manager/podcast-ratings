@@ -82,6 +82,8 @@ assert.match(healthWorkflow, /node scripts\/catalogue-sync-recovery\.mjs --candi
 assert.match(healthWorkflow, /cron: "\*\/15 \* \* \* \*"/u, "existing health schedule is reused without adding a job or cron");
 assert.match(healthWorkflow, /resolve_incident:[\s\S]*?type: boolean[\s\S]*?default: false/u);
 assert.match(healthWorkflow, /github\.event_name == 'workflow_dispatch' && inputs\.resolve_incident == true/u);
+assert.match(healthWorkflow, /updateProductionCatalogueAlert\(\{ github, context, core, outcome: "success", resolveIncident: true \}\)/u,
+  "the explicitly gated manual resolver must pass its authorization through to the alert helper");
 assert.doesNotMatch(healthWorkflow, /github\.event_name == 'schedule'[\s\S]*?Resolve production catalogue alert/u);
 
 console.log("Catalogue drift recovery deduplication, cooldown, fail-closed, and workflow gates passed.");
