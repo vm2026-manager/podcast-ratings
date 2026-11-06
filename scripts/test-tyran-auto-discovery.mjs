@@ -56,7 +56,8 @@ assert.ok(positive.registry.records.every((record) => record.feed_activation_app
 assert.equal(discoverTyranSeries({ html: directory(), childPages, coverChecksums, catalogueRows: catalogue.rows, registry: positive.registry }).report.created.length, 0,
   "A repeated discovery run creates no duplicate identities");
 const sheetFirst = discoverTyranSeries({ html: directory(), childPages, coverChecksums,
-  catalogueRows: [...catalogue.rows, { Titel: "Macias", "Podcast-ID": "sheet-assigned-macias", Hovedserie: "Tyran" }], registry });
+  catalogueRows: [...catalogue.rows.filter((row) => row["Podcast-ID"] !== TYRAN_MACIAS_ID),
+    { Titel: "Macias", "Podcast-ID": "sheet-assigned-macias", Hovedserie: "Tyran" }], registry });
 assert.equal(sheetFirst.registry.records.find((record) => record.discovery_key === "macias").podcast_id, "sheet-assigned-macias",
   "A unique existing Sheet identity is adopted exactly instead of allocating a second ID");
 const aliasConflict = discoverTyranSeries({ html: directory(), childPages, coverChecksums, catalogueRows: catalogue.rows, registry, aliases: { "Macias": "old macias alias" } });
