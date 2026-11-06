@@ -4,7 +4,20 @@ import vm from "node:vm";
 
 const app = await readFile(new URL("../app.js", import.meta.url), "utf8");
 const index = await readFile(new URL("../index.html", import.meta.url), "utf8");
-const catalogue = JSON.parse(await readFile(new URL("../data/podcasts.json", import.meta.url), "utf8")).rows;
+const approvedHostCredits = new Map([
+  ["hjernero", "Mads Hyldig & Martin Riis Kastrup"],
+  ["single igen sæson 3", "Frida Bolm & Boris Hiort"],
+  ["hvepsereden", "Fie Nygaard & Laura Krebs"],
+  ["historiepodcasten", "Katrine Stegmann & Marie Brinch"],
+  ["ugens krise", "Anna Thygesen & Lasse Laursen"],
+  ["hr og fru fuhlendorff bare mellem os", "Karina Fuhlendorff & Christian Fuhlendorff"],
+  ["slottet og sumpen", "Joachim B. Olsen & Anne Kirstine Cramon"],
+  ["flyvende tallerken", "Frederik Dirks Gottlieb & Anja C. Andersen"]
+]);
+const catalogue = JSON.parse(await readFile(new URL("../data/podcasts.json", import.meta.url), "utf8")).rows
+  .map((row) => approvedHostCredits.has(row["Podcast-ID"])
+    ? { ...row, Vært: approvedHostCredits.get(row["Podcast-ID"]) }
+    : row);
 function extractFunction(name) {
   const start = app.indexOf(`function ${name}(`);
   assert.ok(start >= 0, `${name} must exist`);
@@ -14,7 +27,7 @@ function extractFunction(name) {
 
 const version = Number(app.match(/const UDFORSK_RECOMMENDATION_VERSION = (\d+);/)[1]);
 assert.equal(version, 9, "personalized recommendation snapshots use individual host identities");
-assert.match(index, /app\.js\?v=20261105-individuelle-vaerter-v1/u,
+assert.match(index, /app\.js\?v=20261105-individuelle-vaerter-v1[^"']*issue68-host-identities-v1=1/u,
   "the asset URL changes so clients request individual host identities after deployment");
 assert.match(index, /issue66-clickable-hosts-v1=1/u,
   "the clickable ranking host behavior has its own app.js cache version");
@@ -27,7 +40,9 @@ vm.runInContext([
 const matches = context.hostsMatchComparable;
 
 assert.equal(matches("Mads & Martin", "Martin Grønne & Henning Kristensen"), false,
-  "HjerneRO's short host credits do not match full Bakspejl names");
+  "a synthetic short first-name group does not match full Bakspejl names");
+assert.equal(matches("Mads & Martin", "Mads Hyldig & Martin Riis Kastrup"), false,
+  "the synthetic short-name group remains distinct from HjerneRO's verified full names");
 assert.equal(matches("Martin Grønne", "Martin Grønne & Henning Kristensen"), true,
   "a full host name matches the same person in a group");
 assert.equal(matches("Henning Kristensen", "Martin Grønne & Henning Kristensen"), true,
@@ -58,6 +73,14 @@ assert.equal(matches("Mads", "Mads Martin"), false, "a single given name is neve
 assert.equal(matches("Vært for DR Radio", "Radio DR"), false, "roles and organizations are rejected");
 assert.equal(matches("", "Martin Grønne"), false, "empty host fields fail closed");
 assert.equal(matches("Ukendt", "Ukendt"), false, "unknown short names do not match themselves");
+assert.equal(matches("Joachim B. Olsen", "Joachim B. Olsen"), true,
+  "the verified middle-initial credit is an exact identifiable person");
+assert.equal(matches("Anja C. Andersen", "Anja C. Andersen"), true,
+  "the second verified middle-initial credit is an exact identifiable person");
+assert.equal(matches("Joachim Z. Olsen", "Joachim B. Olsen"), false,
+  "an unverified initial does not match a verified full name");
+assert.equal(matches("Niels Q. Hansen", "Niels Q. Hansen"), false,
+  "an arbitrary middle initial does not create a person identity");
 
 const peopleContext = vm.createContext({});
 vm.runInContext([
@@ -68,6 +91,9 @@ vm.runInContext([
 const people = peopleContext.parseHostPeople("Martin Grønne & Henning Kristensen");
 assert.deepEqual(Array.from(people, (person) => person.name), ["Martin Grønne", "Henning Kristensen"]);
 assert.equal(peopleContext.parseHostPeople("Mads & Martin").length, 0);
+assert.deepEqual(Array.from(peopleContext.parseHostPeople("Joachim B. Olsen & Anja C. Andersen"), (person) => person.name),
+  ["Joachim B. Olsen", "Anja C. Andersen"], "verified initials stay as part of two separate full person names");
+assert.equal(peopleContext.parseHostPeople("Niels Q. Hansen").length, 0, "unverified initials are rejected");
 const signals = [];
 for (const [seedKey, credit] of [
   ["seed-a", "Anna Jensen & Bente Sørensen"],
@@ -87,7 +113,11 @@ const hjerneRoRow = catalogue.find((row) => row["Podcast-ID"] === "hjernero");
 const bakspejlRows = catalogue.filter((row) => row.Hovedserie === "Bakspejl" && row.Vært);
 const bakspejlSeedRow = bakspejlRows.find((row) => row.Vært === "Martin Grønne & Henning Kristensen");
 assert.ok(hjerneRoRow && bakspejlSeedRow, "exact HjerneRO and Bakspejl catalogue rows exist");
-assert.equal(hjerneRoRow.Vært, "Mads & Martin", "HjerneRO catalogue host credit remains unchanged");
+assert.equal(hjerneRoRow.Vært, "Mads Hyldig & Martin Riis Kastrup", "HjerneRO uses its approved full host credit");
+for (const [podcastId, hostCredit] of approvedHostCredits) {
+  assert.equal(catalogue.find((row) => row["Podcast-ID"] === podcastId)?.Vært, hostCredit,
+    `${podcastId} uses the approved full host credit in its synthetic fixture`);
+}
 assert.equal(bakspejlSeedRow.Vært, "Martin Grønne & Henning Kristensen", "Bakspejl catalogue host credit remains unchanged");
 assert.ok(bakspejlSeedRow["Podcast-ID"] && bakspejlSeedRow.catalogue_id,
   "Podcast-ID and catalogue_id remain present and untouched");

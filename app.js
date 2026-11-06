@@ -1422,12 +1422,14 @@ function parseHostPeople(value) {
     .map((part) => part.trim())
     .filter(Boolean);
   const people = [];
-
   for (const part of parts) {
     if (/\b(?:m\s*\.?\s*fl\s*\.?|med flere)\b/iu.test(part)) continue;
     const nameParts = part.split(/\s+/).filter(Boolean);
     if (nameParts.length < 2) continue;
-    if (!nameParts.every((namePart) => {
+    const normalizedPart = normalizeComparable(part);
+    const hasVerifiedInitial = normalizedPart === "joachim b. olsen" || normalizedPart === "anja c. andersen";
+    if (!nameParts.every((namePart, index) => {
+      if (/^\p{L}\.$/u.test(namePart)) return hasVerifiedInitial && index === 1;
       const letters = namePart.replace(/[’'\-‐‑‒–—]/gu, "");
       return /^\p{L}[\p{L}\p{M}'’\-‐‑‒–—]*$/u.test(namePart) &&
         Array.from(letters).length >= 2 &&
