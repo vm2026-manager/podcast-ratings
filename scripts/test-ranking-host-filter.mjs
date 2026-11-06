@@ -19,7 +19,7 @@ assert.equal(bakspejlSeed.Vært, "Martin Grønne & Henning Kristensen");
 assert.equal(hjerneRo.Vært, "Mads & Martin");
 assert.match(index, /app\.js\?[^"']*issue66-clickable-hosts-v1=1/u,
   "the ranking host behavior has a new app.js cache version");
-assert.match(index, /style\.css\?v=20261106-issue66-clickable-hosts-v1/u,
+assert.match(index, /style\.css\?v=20261106-issue67-host-links-v1/u,
   "the host-link affordance has a new stylesheet cache version");
 assert.match(app, /function createRankingHostCreditElement\(/u);
 assert.match(app, /button\.dataset\.action = "filter-ranking-host"/u);
@@ -27,6 +27,10 @@ assert.match(app, /activeHostFilter\?\.key \|\| ""/u,
   "host identity is represented in the ranking list cache key");
 assert.match(style, /\.ranking-host-person:focus-visible/u,
   "clickable host names retain a visible keyboard focus state");
+assert.match(style, /\.ranking-host-person\s*\{[^}]*text-decoration:\s*none/su,
+  "clickable host names have no visible underline or dotted decoration");
+assert.match(app, /function navigatePodcastDetailToHostRanking\(/u,
+  "detail host activation uses the safe ranking-navigation flow");
 
 const server = createServer(async (request, response) => {
   try {
@@ -98,6 +102,7 @@ try {
 
     if (width === 320 || width === 1440) {
       await exerciseHostHistoryAndActivation(page, width);
+      await exerciseDetailHostNavigation(page, width);
     }
     if (width === 320) {
       await exerciseReviewCard(page);
@@ -311,4 +316,54 @@ async function exerciseReviewCard(page) {
   await page.waitForFunction(() => Boolean(state.activeHostFilter?.key));
   assert.equal(await page.evaluate(() => state.activePodcastDetailKey), null);
   await clearHostFilter(page);
+}
+
+async function exerciseDetailHostNavigation(page, width) {
+  await clearHostFilter(page);
+  await page.locator("#searchClearButton").click().catch(() => {});
+  await page.waitForFunction(() => !state.searchTerm);
+  await page.evaluate(() => {
+    const podcast = state.podcastByKey["den jyske vietnamveteran"];
+    openPodcastDetailSheet(podcast, null, { allowDesktop: true });
+  });
+  const detail = page.locator("#podcastDetailSheet:not(.is-hidden)");
+  await detail.waitFor({ state: "visible" });
+  const hostButtons = detail.locator(".podcast-detail-sheet__meta .ranking-host-person");
+  assert.deepEqual(await hostButtons.allTextContents(), ["Martin Grønne", "Henning Kristensen"],
+    "the Bakspejl detail shows independently clickable verified hosts");
+  const henning = hostButtons.filter({ hasText: "Henning Kristensen" });
+  const styles = await henning.evaluate((button) => ({
+    decoration: getComputedStyle(button).textDecorationLine,
+    focusable: button.tabIndex === 0
+  }));
+  assert.equal(styles.decoration, "none", "detail host controls have no underline");
+  assert.equal(styles.focusable, true, "detail host control remains keyboard accessible");
+  if (width === 320) await henning.tap(); else await henning.click();
+  await page.waitForFunction(() => state.activeHostFilter?.name === "Henning Kristensen");
+  assert.equal(await detail.count(), 0, "host navigation closes the detail sheet");
+  assert.equal(new URL(page.url()).searchParams.get("host"), "Henning Kristensen",
+    "detail navigation activates the selected individual host filter");
+  assert.equal(new URL(page.url()).hash, "#ranglister");
+  assert.equal(await page.evaluate(() => state.activePodcastDetailKey), null,
+    "host activation does not reopen the podcast detail");
+  assert.equal(await page.evaluate(() => getFilteredPodcasts().every((podcast) => rankingPodcastHasHost(podcast, state.activeHostFilter?.key))), true,
+    "detail navigation returns only exact matches for Henning");
+  await page.goBack();
+  await page.waitForFunction(() => Boolean(state.activePodcastDetailKey) &&
+    document.querySelector("#podcastDetailSheet:not(.is-hidden)"));
+  assert.equal(await page.evaluate(() => state.activeHostFilter), null,
+    "Back restores the previous host-filter state with the detail sheet");
+  await page.evaluate(() => closePodcastDetailSheet({ returnFocus: false }));
+
+  await page.evaluate(() => {
+    openPodcastDetailSheet(state.podcastByKey.hjernero, null, { allowDesktop: true });
+  });
+  const ambiguousDetail = page.locator("#podcastDetailSheet:not(.is-hidden)");
+  await ambiguousDetail.waitFor({ state: "visible" });
+  const ambiguousMeta = ambiguousDetail.locator(".podcast-detail-sheet__meta");
+  assert.equal(await ambiguousMeta.innerText(), "Mads & Martin",
+    "ambiguous host wording stays visible in the detail sheet");
+  assert.equal(await ambiguousMeta.locator(".ranking-host-person").count(), 0,
+    "ambiguous wording does not create clickable host identities");
+  await page.evaluate(() => closePodcastDetailSheet({ returnFocus: false }));
 }
