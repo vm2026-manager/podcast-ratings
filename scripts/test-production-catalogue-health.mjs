@@ -178,4 +178,29 @@ assert.equal(alertCalls[0][1].title, undefined, "the existing shared issue keeps
 assert.equal(alertCalls[0][1].body.includes("Google Sheet changes"), true);
 assert.equal(alertCalls[0][1].body.includes("CATALOGUE_SYNC_PR_TOKEN is missing"), true, "health updates preserve the token setup instructions");
 
+const successCalls = [];
+const successGithub = {
+  ...alertGithub,
+  rest: { issues: { ...alertGithub.rest.issues,
+    async createComment(args) { successCalls.push(["comment", args]); },
+    async update(args) { successCalls.push(["update", args]); }
+  } }
+};
+await updateProductionCatalogueAlert({
+  github: successGithub,
+  context: { repo: { owner: "owner", repo: "repo" }, serverUrl: "https://github.com", runId: 43, sha: "def456" },
+  core: { error() {} },
+  outcome: "success",
+  resolveIncident: false
+});
+assert.deepEqual(successCalls, [], "scheduled and push health successes never close the incident automatically");
+await updateProductionCatalogueAlert({
+  github: successGithub,
+  context: { repo: { owner: "owner", repo: "repo" }, serverUrl: "https://github.com", runId: 44, sha: "def456" },
+  core: { error() {} },
+  outcome: "success",
+  resolveIncident: true
+});
+assert.deepEqual(successCalls.map(([name]) => name), ["comment", "update"], "explicit incident resolution records recovery before closing the issue");
+
 console.log("Production catalogue health safety checks passed.");

@@ -31,6 +31,7 @@ export async function updateProductionCatalogueAlert({
   context,
   core,
   outcome,
+  resolveIncident = false,
   readLog = () => readFile(".production-catalogue-health.log", "utf8"),
   now = () => new Date().toISOString()
 }) {
@@ -83,7 +84,7 @@ ${productionHealthExcerpt(log)}
     return;
   }
 
-  if (alert) {
+  if (alert && resolveIncident === true) {
     await github.rest.issues.createComment({
       ...context.repo,
       issue_number: alert.number,
