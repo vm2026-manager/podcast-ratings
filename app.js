@@ -6173,6 +6173,8 @@ function ensureMobileRankingSentinel() {
 function setupMobileRankingAutoLoad(filteredCount, visibleCount) {
   disconnectMobileRankingObserver();
 
+  if (state.popularNowActive) return;
+
   const sentinel = ensureMobileRankingSentinel();
   const hasMore = isRankingRoute() && visibleCount < filteredCount;
 
@@ -6205,6 +6207,18 @@ function appendRankingBatchItems(podcasts, startIndex) {
 
   const fragment = document.createDocumentFragment();
   if (isDesktopRankingViewport()) {
+    if (state.desktopRankingLayout === "cards") {
+      const cards = elements.podcastGrid.querySelector(".desktop-ranking-top");
+      if (!cards) return false;
+
+      podcasts.forEach((podcast, index) => {
+        const displayRank = getRankingDisplayRank(startIndex + index, podcast);
+        fragment.appendChild(createDesktopRankingTopCardElement(podcast, displayRank));
+      });
+      cards.appendChild(fragment);
+      return true;
+    }
+
     const table = elements.podcastGrid.querySelector(".desktop-ranking-table");
     if (!table) return false;
 
@@ -6225,6 +6239,7 @@ function appendRankingBatchItems(podcasts, startIndex) {
 
 function loadNextMobileRankingBatch({ trigger = "manual", token = null } = {}) {
   if (!isRankingRoute() || !elements.podcastGrid) return false;
+  if (trigger === "observer" && state.popularNowActive) return false;
   if (token !== null && token !== state.mobileRankingObserverToken) return false;
   if (state.mobileRankingBatchLoading) return false;
 
