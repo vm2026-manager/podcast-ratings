@@ -1573,6 +1573,12 @@ function getHeaderSearchMatches(rawQuery) {
       } else if (titleNative.startsWith(query)) {
         score = 500;
         matchLabel = "Titel";
+      } else if (
+        query.split(" ").length === 1 &&
+        rankingSearchTokenHasShortTitlePrefixMatch(query, getRankingSearchFields(podcast).titlePrefixTokens)
+      ) {
+        score = 450;
+        matchLabel = "Titel";
       } else if (titleNative.includes(query)) {
         score = 400;
         matchLabel = "Titel";
@@ -2752,7 +2758,8 @@ function rankingSearchTokenHasPrefixMatch(queryToken, prefixTokenBuckets) {
 
 function rankingSearchTokenHasShortTitlePrefixMatch(queryToken, titlePrefixTokens) {
   if (
-    queryToken.length !== 3 ||
+    queryToken.length < 2 ||
+    queryToken.length > 3 ||
     rankingSearchStopWords.has(queryToken) ||
     /^(?:\d+|[ivxlcdm]+)$/iu.test(queryToken)
   ) return false;
@@ -15750,6 +15757,8 @@ function refreshOpenPodcastDetailSheet() {
   updatePodcastDetailRatingSummary(dialog, podcast);
 }
 
+let podcastDetailInitialFocusTimer = 0;
+
 function openPodcastDetailSheet(
   podcast,
   triggerElement = null,
@@ -15757,6 +15766,11 @@ function openPodcastDetailSheet(
 ) {
   if ((!isMobileViewport() && !allowDesktop) || !podcast) return false;
 
+  if (podcastDetailInitialFocusTimer) {
+    window.clearTimeout(podcastDetailInitialFocusTimer);
+    podcastDetailInitialFocusTimer = 0;
+  }
+  const focusAtOpen = document.activeElement;
   const dialog = ensurePodcastDetailSheet();
   const isInternalModalNavigation =
     preserveModalHistory && !dialog.classList.contains("is-hidden");
@@ -15790,7 +15804,10 @@ function openPodcastDetailSheet(
   document.body.style.setProperty("--podcast-detail-scroll-y", `${state.podcastDetailScrollY}px`);
   document.body.classList.add("has-dialog-open", "has-podcast-detail-open");
 
-  window.setTimeout(() => {
+  podcastDetailInitialFocusTimer = window.setTimeout(() => {
+    podcastDetailInitialFocusTimer = 0;
+    if (dialog.classList.contains("is-hidden")) return;
+    if (document.activeElement !== focusAtOpen && dialog.contains(document.activeElement)) return;
     dialog.querySelector(".podcast-detail-sheet__close")?.focus();
   }, 40);
 
@@ -15800,6 +15817,11 @@ function openPodcastDetailSheet(
 function closePodcastDetailSheet({ returnFocus = true, preserveHistoryRestore = false } = {}) {
   const dialog = document.getElementById("podcastDetailSheet");
   if (!dialog || dialog.classList.contains("is-hidden")) return;
+
+  if (podcastDetailInitialFocusTimer) {
+    window.clearTimeout(podcastDetailInitialFocusTimer);
+    podcastDetailInitialFocusTimer = 0;
+  }
 
   dialog.classList.add("is-hidden");
   dialog.setAttribute("aria-hidden", "true");
