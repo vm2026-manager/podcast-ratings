@@ -7,6 +7,10 @@ const migration = readFileSync(
   new URL("../supabase/migrations/20260924065645_restrict_display_group_community_stats.sql", import.meta.url),
   "utf8"
 );
+const directRatingMigration = readFileSync(
+  new URL("../supabase/migrations/20261107185417_prioritize_display_group_direct_ratings.sql", import.meta.url),
+  "utf8"
+);
 
 function average(values) {
   return values.reduce((sum, value) => sum + value, 0) / values.length;
@@ -14,7 +18,7 @@ function average(values) {
 
 // This mirrors the aggregate-only SQL contract: first reduce all included
 // season ratings to one arithmetic mean per user, then average those users.
-function displayGroupStats(rows, memberKeys) {
+function displayGroupStats(rows, memberKeys, directGroupRatings = [], directGroupKey = "display-group:test") {
   const ratingsByUser = new Map();
   for (const row of rows) {
     if (!memberKeys.includes(row.podcastKey)) continue;
@@ -22,7 +26,13 @@ function displayGroupStats(rows, memberKeys) {
     ratings.push(row.rating);
     ratingsByUser.set(row.user, ratings);
   }
-  const userAverages = [...ratingsByUser.values()].map(average);
+  const directByUser = new Map(directGroupRatings
+    .filter((row) => row.podcastKey === directGroupKey)
+    .map((row) => [row.user, row.rating]));
+  const userIds = new Set([...ratingsByUser.keys(), ...directByUser.keys()]);
+  const userAverages = [...userIds].map((user) => directByUser.has(user)
+    ? directByUser.get(user)
+    : average(ratingsByUser.get(user)));
   return {
     averageRating: userAverages.length ? average(userAverages) : null,
     ratingCount: userAverages.length
@@ -55,6 +65,20 @@ assert.equal(stats.ratingCount, 1);
 stats = displayGroupStats([...oneUserSixSeasons, { user: "user-c", podcastKey: "season-2", rating: 4 }], seasons);
 assert.equal(stats.ratingCount, 2);
 
+// A direct whole-podcast rating wins over that user's six season ratings. A
+// user with no direct row keeps the existing season-derived average, and a
+// direct-only user is included exactly once.
+stats = displayGroupStats(
+  [...oneUserSixSeasons, { user: "user-b", podcastKey: "season-1", rating: 10 }],
+  seasons,
+  [
+    { user: "user-a", podcastKey: "display-group:test", rating: 4 },
+    { user: "user-c", podcastKey: "display-group:test", rating: 6 },
+    { user: "user-d", podcastKey: "display-group:other", rating: 10 }
+  ]
+);
+assert.deepEqual(stats, { averageRating: 20 / 3, ratingCount: 3 });
+
 // E: a one-key group remains the ordinary per-podcast average/count.
 stats = displayGroupStats([{ user: "user-a", podcastKey: "single", rating: 7 }, { user: "user-b", podcastKey: "single", rating: 9 }], ["single"]);
 assert.deepEqual(stats, { averageRating: 8, ratingCount: 2 });
@@ -67,7 +91,7 @@ assert.doesNotMatch(app, /communityStatsStoredKeysByCanonical|p_groups|podcast_k
 // G/I: editorial aggregation and the existing per-season own-rating helper
 // remain separate from the community RPC.
 assert.match(app, /ratingValue: averageNumbers\(editorialRatings\)/u);
-assert.match(app, /function getDisplayGroupOwnRatingStats\(members\)/u);
+assert.match(app, /function getDisplayGroupOwnRatingStats\(members, displayGroup = null\)/u);
 assert.match(app, /DISPLAY_GROUP_COMMUNITY_STATS_RPC/u);
 assert.doesNotMatch(app, /function getDisplayGroupUserStats\(group\)[\s\S]{0,500}weightedTotal/u);
 
@@ -85,6 +109,20 @@ assert.match(migration, /revoke all on function public\.get_display_group_commun
 assert.match(migration, /grant execute on function public\.get_display_group_community_stats\(text\[\]\) to anon, authenticated/u);
 assert.doesNotMatch(migration, /\b(?:insert into|update|delete from)\s+public\.(?:user_ratings|episode_ratings)\b/iu);
 assert.doesNotMatch(migration, /user_id.*returns|rating.*returns/iu);
+
+// The rollout migration changes only the aggregate function. Explicit group
+// ratings override the user's season average, while group membership stays
+// private and existing season/episode ratings remain the fallback.
+assert.match(directRatingMigration, /ratings\.podcast_key = 'display-group:' \|\| requested_group_ids\.display_group_id/u);
+assert.match(directRatingMigration, /where requested_group_ids\.display_group_id = 'kirsten-ringer-til-rasmus'/u,
+  "direct-rating community priority is scoped to Kirsten");
+assert.match(directRatingMigration, /coalesce\(max\(direct_group_ratings\.rating\), avg\(effective_user_ratings\.rating\)\)/u);
+assert.match(directRatingMigration, /group_user_ids[\s\S]*union[\s\S]*direct_group_ratings/u);
+assert.match(directRatingMigration, /count\(per_user_group_ratings\.user_id\)::integer/u);
+assert.match(directRatingMigration, /set search_path = ''/u);
+assert.match(directRatingMigration, /revoke all on function public\.get_display_group_community_stats\(text\[\]\) from public/u);
+assert.match(directRatingMigration, /grant execute on function public\.get_display_group_community_stats\(text\[\]\) to anon, authenticated/u);
+assert.doesNotMatch(directRatingMigration, /\b(?:insert into|update|delete from)\s+public\.(?:user_ratings|episode_ratings|podcast_episodes)\b/iu);
 
 function extractFunction(name) {
   const marker = `async function ${name}(`;
@@ -140,5 +178,21 @@ assert.equal(
   JSON.stringify(context.state.displayGroupCommunityStatsById),
   JSON.stringify({ narkobetjenten: { averageRating: 7.45, ratingCount: 1 } })
 );
+
+// Concurrent refresh paths share one RPC for the same reviewed group version.
+let resolveConcurrentRpc;
+let concurrentRpcCalls = 0;
+context.state.displayGroupCommunityStatsPromiseKey = "";
+context.state.displayGroupCommunityStatsPromise = null;
+context.state.supabase.rpc = () => {
+  concurrentRpcCalls += 1;
+  return new Promise((resolve) => { resolveConcurrentRpc = resolve; });
+};
+const concurrentA = context.fetchDisplayGroupCommunityStats(1);
+const concurrentB = context.fetchDisplayGroupCommunityStats(1);
+assert.equal(concurrentRpcCalls, 1, "startup and community refresh cannot duplicate the group RPC");
+resolveConcurrentRpc({ data: [], error: null });
+await Promise.all([concurrentA, concurrentB]);
+assert.equal(context.state.displayGroupCommunityStatsPromise, null, "the in-flight promise is cleared after resolution");
 
 console.log("display-group community stats regression tests passed");

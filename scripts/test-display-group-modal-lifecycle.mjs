@@ -33,6 +33,7 @@ const runtime = new Function("state", "ownRatings", `
   const getLegacyPodcastKey = (podcast) => podcast.legacyKey;
   const getPodcastKey = (podcast) => podcast.key || podcast.legacyKey || \`display-group:\${podcast.id}\`;
   const getUserRating = (key) => ownRatings[key] ?? null;
+  const isDisplayGroupRatingKey = (key) => String(key) === 'display-group:kirsten-ringer-til-rasmus';
   const buildSearchText = (values) => values.join(' ').toLowerCase();
   const averageNumbers = (values) => values.length ? values.reduce((a, b) => a + b, 0) / values.length : null;
   const formatCompactRating = (value) => Number(value).toFixed(1).replace('.', ',');
@@ -51,6 +52,7 @@ const runtime = new Function("state", "ownRatings", `
   const getPodcastImageSources = () => ({});
   const hydratePodcastSimilarityProduct = () => {};
   const bindPodcastDetailFilterButtons = () => {};
+  const bindPodcastDisplayGroupRatingEvents = () => {};
   const renderFavoriteButton = () => {};
   const isMobileViewport = () => false;
   ${extract("getDisplayGroupSeasonIdentities")}
@@ -143,7 +145,7 @@ assert.equal(seasonMobileHelp.classList.contains("is-episode-rating-lock-open"),
 globalThis.matchMedia = originalMatchMedia;
 
 const own = runtime.getDisplayGroupOwnRatingStats(members);
-assert.deepEqual(own, { average: 7.45, count: 6 });
+assert.deepEqual(own, { directRating: null, average: 7.45, count: 6 });
 for (const [value, expected] of [[7.44, "7,4"], [7.45, "7,5"], [7.46, "7,5"]]) assert.equal(Number(value).toFixed(1).replace('.', ','), expected);
 
 // Fail closed: clearing only group stats preserves ordinary stats and all own/editorial inputs.

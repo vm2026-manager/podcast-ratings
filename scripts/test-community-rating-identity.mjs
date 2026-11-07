@@ -20,12 +20,16 @@ assert.ok(medianoAliases);
 const ids = ["bedraget", "bedraget pa hvidovre hospital", "super", "superligaens sandheder", "the super always rings twice", "bomben", "genvej", "kapret", "barn med den forkerte sæson 1", "barn med den forkerte sæson 2", "kvinden med den tunge kuffert", "kvinden med den tunge kuffert det sidste kapitel", "agenterne politiken", "agenterne ekstra bladet", "bjarne corydon", "fa mere eventyr ind i hverdagen", "christian fuhlendorff", "joachim b olsen", "helle thorning", "saddam hussein", "hvem bortførte vores børn", "anders fogh", "hva sa", "112 for knuste hjerter"];
 const context = { console, state: { podcastById: Object.fromEntries(ids.map((podcastId) => [podcastId, { podcastId }])), podcastByLegacyKey: {}, userRatingPersistedKeyByCanonical: {}, userRatingsByKey: {} } };
 vm.createContext(context);
-vm.runInContext([aliases[0], medianoAliases[0], "function normalizeText(v) { return String(v ?? '').trim(); }", "function normalizeMatchKey(v) { return normalizeText(v).toLowerCase().normalize('NFD').replace(/[\\u0300-\\u036f]/g, '').replace(/&/g, ' og ').replace(/[^a-z0-9æøå]+/g, ' ').replace(/\\s+/g, ' ').trim(); }", "function parseNumber(v) { const n = Number(String(v ?? '').replace(',', '.')); return Number.isFinite(n) ? n : null; }", extract("getPodcastId"), extract("getLegacyPodcastKey"), extract("getPodcastKey"), extract("resolvePodcastByStoredKey"), extract("resolveCanonicalPodcastId"), extract("canonicalizeCommunityStats"), extract("canonicalizeUserRatingRows"), extract("getPersistedUserRatingKey"), extract("getUserRatingForPodcast")].join("\n\n"), context);
+vm.runInContext([aliases[0], medianoAliases[0], "function normalizeText(v) { return String(v ?? '').trim(); }", "function normalizeMatchKey(v) { return normalizeText(v).toLowerCase().normalize('NFD').replace(/[\\u0300-\\u036f]/g, '').replace(/&/g, ' og ').replace(/[^a-z0-9æøå]+/g, ' ').replace(/\\s+/g, ' ').trim(); }", "function parseNumber(v) { const n = Number(String(v ?? '').replace(',', '.')); return Number.isFinite(n) ? n : null; }", extract("getPodcastId"), extract("getLegacyPodcastKey"), extract("getPodcastKey"), extract("isDisplayGroupRatingKey"), extract("resolvePodcastByStoredKey"), extract("resolveCanonicalPodcastId"), extract("canonicalizeCommunityStats"), extract("canonicalizeUserRatingRows"), extract("getPersistedUserRatingKey"), extract("getUserRatingForPodcast")].join("\n\n"), context);
 
 const expected = [["agenterne politiken", ids[12]], ["et kapitel for sig bjarne corydon", ids[14]], ["adfærd fa mere eventyr ind i hverdagen med morten kirckhoff fra 0 stjerner", ids[15]], ["et kapitel for sig christian fuhlendorff", ids[16]], ["et kapitel for sig joachim b olsen", ids[17]], ["et kapitel for sig helle thorning", ids[18]], ["tyran saddam hussein", ids[19]], ["mørklagt hvem bortførte vores børn", ids[20]], ["et kapitel for sig anders fogh", ids[21]]];
 for (const [legacy, canonical] of expected) assert.equal(context.resolveCanonicalPodcastId(legacy), canonical);
 assert.equal(context.resolveCanonicalPodcastId("similar but unrelated"), "");
 assert.equal(context.resolveCanonicalPodcastId("hva så"), "", "The duplicate historical key must remain unresolved until public deduplication exists");
+assert.equal(context.isDisplayGroupRatingKey("display-group:kirsten-ringer-til-rasmus"), true);
+assert.equal(context.isDisplayGroupRatingKey("display-group:narkobetjenten"), false);
+assert.equal(context.isDisplayGroupRatingKey("display-group:"), false);
+assert.equal(context.isDisplayGroupRatingKey("display-group:kirsten ringer"), false);
 for (const rows of [[{ podcast_key: "mørklagt hvem bortførte vores børn", average_rating: 8.5, rating_count: 1 }, { podcast_key: "hvem bortførte vores børn", average_rating: 8, rating_count: 1 }], [{ podcast_key: "hvem bortførte vores børn", average_rating: 8, rating_count: 1 }, { podcast_key: "mørklagt hvem bortførte vores børn", average_rating: 8.5, rating_count: 1 }]]) { const stat = context.canonicalizeCommunityStats(rows).statsByKey[ids[20]]; assert.equal(stat.averageRating, 8.25); assert.equal(stat.ratingCount, 2); }
 assert.equal(context.resolveCanonicalPodcastId("bedraget"), ids[0]);
 assert.equal(context.resolveCanonicalPodcastId(ids[1]), ids[1]);
@@ -36,8 +40,16 @@ assert.equal(legacy112Stat.averageRating, 7, "112 historical ratings resolve thr
 assert.equal(legacy112Stat.ratingCount, 2, "112 historical ratings retain their user count");
 let hydrated = context.canonicalizeUserRatingRows([{ podcast_key: "bedraget", rating: 8 }]);
 context.state.userRatingPersistedKeyByCanonical = hydrated.persistedKeyByCanonical;
+context.state.userRatingsByKey = hydrated.ratingsByKey;
 assert.equal(context.getPersistedUserRatingKey(ids[0]), "bedraget");
 assert.equal(context.getPersistedUserRatingKey(ids[1]), ids[1]);
+const displayGroupKey = "display-group:kirsten-ringer-til-rasmus";
+hydrated = context.canonicalizeUserRatingRows([{ podcast_key: displayGroupKey, rating: 8.7 }]);
+context.state.userRatingPersistedKeyByCanonical = hydrated.persistedKeyByCanonical;
+context.state.userRatingsByKey = hydrated.ratingsByKey;
+assert.equal(hydrated.ratingsByKey[displayGroupKey], 8.7, "direct display-group ratings hydrate under their own key");
+assert.equal(context.getPersistedUserRatingKey(displayGroupKey), displayGroupKey, "whole-podcast ratings persist under their own display-group key");
+assert.equal(context.getUserRatingForPodcast({ legacyKey: displayGroupKey }), 8.7, "direct group score remains separate from its season identities");
 
 function ownRating(podcastId, ratings) {
   context.state.userRatingsByKey = { ...ratings };

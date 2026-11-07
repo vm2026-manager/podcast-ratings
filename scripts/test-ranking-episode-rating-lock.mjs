@@ -21,7 +21,9 @@ const deleteSource = extractFunction("deleteActiveRating");
 const openSource = extractFunction("openRatingDialog");
 const ratingSummarySource = extractFunction("getPodcastEpisodeUserRatingSummary");
 
-assert.match(openSource, /await ensurePodcastRatingEditState\(podcast, \{ retry: true, force: true \}\)/u);
+assert.match(openSource, /await ensurePodcastRatingEditState\(podcast, \{ retry: true \}\)/u);
+assert.doesNotMatch(openSource, /await ensurePodcastRatingEditState\(podcast, \{ retry: true, force: true \}\)/u,
+  "opening a detail rating reuses a successful user-bound episode check");
 assert.match(openSource, /activeRatingRequestToken !== requestToken/u);
 assert.match(saveSource, /await ensurePodcastRatingEditState\(podcast, \{ retry: true, force: true \}\)/u);
 assert.match(deleteSource, /await ensurePodcastRatingEditState\(podcast, \{ retry: true, force: true \}\)/u);
@@ -268,7 +270,7 @@ async function openRatingHarness({
   const request = { userId, generation: 0 };
   const runDialog = new Function(
     "state", "elements", "messages", "request", "initialState", "finalState", "onVerify",
-    "resetRatingDialogMode", "isLoggedIn", "getPodcastKey", "showAuthPrompt", "setAuthMessage",
+    "resetRatingDialogMode", "isLoggedIn", "getPodcastKey", "isDisplayGroupRatingKey", "showAuthPrompt", "setAuthMessage",
     "getUserScopedRequestContext", "getPodcastRatingEditState", "getUserRating", "formatRatingInputValue",
     "podcastSupportsEpisodes", "updateRatingDialogMessage", "document", "window",
     "ensurePodcastRatingEditState", "isCurrentUserScopedRequest", "getPodcastRatingControlDescription",
@@ -279,6 +281,7 @@ async function openRatingHarness({
     () => {},
     () => true,
     (podcast) => podcast.id,
+    (key) => String(key).startsWith("display-group:"),
     () => {},
     () => {},
     () => request,

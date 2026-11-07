@@ -10510,7 +10510,6 @@ html body #podcastDetailSheet .podcast-detail-sheet__inline-rating-save { min-wi
   }
 }
 
-
 /* =========================================================
    UDFORSK – STABILE KORTBREDDER + GENREANBEFALINGER
    + PODCASTDETAIL FINISH – 2026-07-22
@@ -19352,5 +19351,29 @@ html body.page-forside.page-forside #pageIntroPanel .home-genres-card[data-genre
 @media (min-width: 769px) {
   html body.page-forside.page-forside #pageIntroPanel .home-genres {
     overflow: visible !important;
+  }
+}
+
+@media (min-width: 769px) {
+  html body #podcastDetailSheet .podcast-detail-sheet__rating-cell--group-own {
+    grid-template-columns: minmax(0, 1fr) !important;
+    grid-template-rows: auto auto auto auto !important;
+    padding: 14px 16px 12px !important;
+    gap: 5px !important;
+  }
+  html body #podcastDetailSheet .podcast-detail-sheet__rating-cell--group-own > span,
+  html body #podcastDetailSheet .podcast-detail-sheet__rating-cell--group-own > strong,
+  html body #podcastDetailSheet .podcast-detail-sheet__rating-cell--group-own > em,
+  html body #podcastDetailSheet .podcast-detail-sheet__rating-cell--group-own > [data-podcast-display-group-rate] {
+    grid-column: 1 !important;
+  }
+  html body #podcastDetailSheet .podcast-detail-sheet__rating-cell--group-own > em {
+    position: static !important;
+    min-height: 0 !important;
+    margin: 0 !important;
+  }
+  html body #podcastDetailSheet .podcast-detail-sheet__rating-cell--group-own > [data-podcast-display-group-rate] {
+    justify-self: center !important;
+    width: min(100%, 250px) !important;
   }
 }
