@@ -25,12 +25,23 @@ const candidates = Object.keys(VERIFIED_DR_SERIES_METADATA).map(recordFor);
 const tyranRegistry = JSON.parse(await readFile(new URL("../data/auto-discovered-tyran.json", import.meta.url), "utf8"));
 
 class MockStaging {
-  constructor(rows = []) { this.rows = structuredClone(rows); this.appendCalls = 0; this.updateCalls = 0; this.failAfterAppend = false; this.failBeforeAppend = false; this.mutateOldRow = false; this.mutateAppend = false; }
+  constructor(rows = []) { this.rows = structuredClone(rows); this.appendCalls = 0; this.writeCalls = 0; this.writeStartRows = []; this.updateCalls = 0; this.failAfterAppend = false; this.failBeforeAppend = false; this.mutateOldRow = false; this.mutateAppend = false; }
   async readSheet() { return { headers: [...STAGING_HEADERS], rows: structuredClone(this.rows) }; }
   async appendRows(values) {
     this.appendCalls += 1;
     if (this.failBeforeAppend) { this.failBeforeAppend = false; throw new Error("simulated failure before staging append"); }
     this.rows.push(...structuredClone(values));
+    if (this.mutateOldRow && this.rows.length > 1) this.rows[0][CATALOGUE_HEADERS.indexOf("Titel")] = "tampered";
+    if (this.mutateAppend) this.rows[this.rows.length - 1][CATALOGUE_HEADERS.indexOf("Titel")] = "tampered append";
+    if (this.failAfterAppend) { this.failAfterAppend = false; throw new Error("simulated timeout after commit"); }
+  }
+  async writeRowsAt(startRow, values) {
+    this.writeCalls += 1;
+    this.writeStartRows.push(startRow);
+    if (this.failBeforeAppend) { this.failBeforeAppend = false; throw new Error("simulated failure before staging write"); }
+    const startIndex = startRow - 2;
+    while (this.rows.length < startIndex) this.rows.push(Array(STAGING_HEADERS.length).fill(""));
+    for (let offset = 0; offset < values.length; offset += 1) this.rows[startIndex + offset] = structuredClone(values[offset]);
     if (this.mutateOldRow && this.rows.length > 1) this.rows[0][CATALOGUE_HEADERS.indexOf("Titel")] = "tampered";
     if (this.mutateAppend) this.rows[this.rows.length - 1][CATALOGUE_HEADERS.indexOf("Titel")] = "tampered append";
     if (this.failAfterAppend) { this.failAfterAppend = false; throw new Error("simulated timeout after commit"); }
@@ -48,9 +59,11 @@ class MockStaging {
 // Staging is append-only and idempotent; existing editor changes win.
 const staging = new MockStaging();
 assert.deepEqual(await appendDrCandidatesToStaging({ client: staging, candidates, dryRun: true }), { dryRun: true, appended: 0, alreadyPresent: 0 });
-assert.equal(staging.appendCalls, 0);
+assert.equal(staging.writeCalls, 0);
 assert.deepEqual(await appendDrCandidatesToStaging({ client: staging, candidates, dryRun: false }), { dryRun: false, appended: candidates.length, alreadyPresent: 0 });
-assert.equal(staging.appendCalls, 1);
+assert.equal(staging.writeCalls, 1);
+assert.equal(staging.appendCalls, 0, "DR staging uses explicit row writes rather than table-detecting append");
+assert.deepEqual(staging.writeStartRows, [2]);
 const manuallyEditedStaging = structuredClone(staging.rows[0]);
 manuallyEditedStaging[STAGING_HEADERS.indexOf("Kort beskrivelse")] = "Redaktørens rettelse";
 manuallyEditedStaging[STAGING_HEADERS.indexOf("Vært")] = "Redaktørens værtsrettelse";
@@ -58,7 +71,7 @@ staging.rows[0] = manuallyEditedStaging;
 assert.deepEqual(await appendDrCandidatesToStaging({ client: staging, candidates, dryRun: false }), { dryRun: false, appended: 0, alreadyPresent: candidates.length });
 assert.equal(staging.rows[0][STAGING_HEADERS.indexOf("Kort beskrivelse")], "Redaktørens rettelse");
 assert.equal(staging.rows[0][STAGING_HEADERS.indexOf("Vært")], "Redaktørens værtsrettelse", "an existing editorial host edit is preserved");
-assert.equal(staging.appendCalls, 1);
+assert.equal(staging.writeCalls, 1);
 assert.equal(staging.updateCalls, 0, "a populated editorial host cell is never overwritten");
 const blankHostExisting = structuredClone(staging.rows[0]);
 blankHostExisting[STAGING_HEADERS.indexOf("Vært")] = "";
@@ -105,6 +118,7 @@ beforeFailure.failBeforeAppend = true;
 await assert.rejects(() => appendDrCandidatesToStaging({ client: beforeFailure, candidates: candidates.slice(0, 1), dryRun: false }), /read-back mismatch/);
 assert.equal(beforeFailure.rows.length, 0, "pre-append failure causes no staging write and is safe to rerun");
 assert.equal((await appendDrCandidatesToStaging({ client: beforeFailure, candidates: candidates.slice(0, 1), dryRun: false })).appended, 1);
+assert.equal(beforeFailure.writeCalls, 2, "a failed explicit write can be safely retried after readback confirms no candidate was written");
 const corrupting = new MockStaging([staging.rows[0]]);
 corrupting.mutateOldRow = true;
 await assert.rejects(() => appendDrCandidatesToStaging({ client: corrupting, candidates: candidates.slice(1), dryRun: false }), /Existing DR staging rows changed/);
@@ -193,6 +207,7 @@ assert.deepEqual(await appendDrCandidatesToStaging({ client: orphanMockStaging, 
 });
 assert.deepEqual(orphanMockStaging.rows[0], tyranOrphanNote, "the incomplete staging note is preserved byte-for-byte");
 assert.equal(orphanMockStaging.rows[1][STAGING_HEADERS.indexOf("Podcast-ID")], "tyran-auto-v1-08d0021f");
+assert.deepEqual(orphanMockStaging.writeStartRows, [3], "a candidate is written after a lone provenance-column note without moving it");
 const malformedGuidOrphan = [...tyranOrphanNote];
 malformedGuidOrphan[STAGING_HEADERS.indexOf("DR source GUID")] = "16122693681";
 assert.throws(() => buildStagingPlan({ headers: STAGING_HEADERS, existingRows: [malformedGuidOrphan], candidates: tyranRegistry.records }), /without Podcast-ID at row 2/u);
@@ -255,11 +270,15 @@ assert.match(requests[2].url, /staging-sheet-test/u);
 assert.doesNotMatch(requests[2].url, new RegExp(ORIGINAL_SHEET_ID, "u"));
 assert.match(requests[2].url, /valueInputOption=RAW/u);
 assert.equal(requests[2].method, "POST", "ambiguous appends are never blindly retried");
+await apiClient.writeRowsAt(7, [tyranRow]);
+assert.match(requests[3].url, /'DR%20staging'!A7%3AAI7/u);
+assert.equal(requests[3].method, "PUT", "DR staging targets an explicit row instead of table-detecting append");
+assert.match(requests[3].body, /tyran-auto-v1-08d0021f/u);
 await apiClient.updateHostCells([{ rowNumber: 4, podcastId: "bakspejl-auto-v1-1234abcd", host: "Celine Klint" }]);
-assert.match(requests[3].url, /values:batchUpdate/u);
-assert.match(requests[3].body, /DR staging.*C4/u);
-assert.match(requests[3].body, /"valueInputOption":"RAW"/u);
-assert.doesNotMatch(requests[3].url, new RegExp(ORIGINAL_SHEET_ID, "u"));
+assert.match(requests[4].url, /values:batchUpdate/u);
+assert.match(requests[4].body, /DR staging.*C4/u);
+assert.match(requests[4].body, /"valueInputOption":"RAW"/u);
+assert.doesNotMatch(requests[4].url, new RegExp(ORIGINAL_SHEET_ID, "u"));
 
 // Run the owner Apps Script against isolated mocks; no Google auth/network.
 const script = await readFile(new URL("../apps-script/append-dr-staging-to-ark1/Code.gs", import.meta.url), "utf8");

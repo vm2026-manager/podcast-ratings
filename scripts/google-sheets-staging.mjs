@@ -483,8 +483,21 @@ export async function appendDrCandidatesToStaging({ client, candidates, dryRun =
     }
   }
   if (!plan.append.length) return { dryRun: false, appended: 0, alreadyPresent: plan.alreadyPresent, ...(hostFilled ? { hostFilled } : {}), ...orphanSummary };
+  // The Values API append endpoint guesses where a table ends. A one-cell
+  // editor note in a provenance column can make that guess target the note
+  // instead of the staging table. Re-read and write to an explicit row after
+  // the last populated row so every candidate field lands in the same row.
+  const beforeAppend = initial;
+  initial = await client.readSheet();
+  assertRowsMatch(beforeAppend.rows, initial.rows, "DR staging changed during append preflight; stop and inspect before retry");
+  plan = buildStagingPlan({ headers: initial.headers, existingRows: initial.rows, candidates });
+  if (!allowHostUpdates) plan = { ...plan, hostUpdates: [] };
+  if (!plan.append.length) return { dryRun: false, appended: 0, alreadyPresent: plan.alreadyPresent, ...(hostFilled ? { hostFilled } : {}), ...orphanSummary };
+  if (typeof client.writeRowsAt !== "function") throw new Error("DR staging requires explicit-coordinate writes");
+  const lastPopulatedIndex = (initial.rows || []).findLastIndex((row) => (row || []).some((cell) => normal(cell)));
+  const startRow = lastPopulatedIndex + 3;
   try {
-    await client.appendRows(plan.append);
+    await client.writeRowsAt(startRow, plan.append);
   } catch (appendError) {
     const reread = await client.readSheet();
     buildStagingPlan({ headers: reread.headers, existingRows: reread.rows, candidates: [] });
