@@ -27,7 +27,7 @@ function extractFunction(name) {
 
 const version = Number(app.match(/const UDFORSK_RECOMMENDATION_VERSION = (\d+);/)[1]);
 assert.equal(version, 9, "personalized recommendation snapshots use individual host identities");
-assert.match(index, /app\.js\?v=20261105-individuelle-vaerter-v1[^"']*issue68-host-identities-v1=1/u,
+assert.match(index, /app\.js\?v=20261107-mobile-ranking-filter-chips-v1[^"']*issue68-host-identities-v1=1/u,
   "the asset URL changes so clients request individual host identities after deployment");
 assert.match(index, /issue66-clickable-hosts-v1=1/u,
   "the clickable ranking host behavior has its own app.js cache version");

@@ -183,7 +183,6 @@ html body .mobile-home-search-overlay { display: none; }
     box-sizing: border-box;
   }
 
-  body.page-ranglister .ranking-mobile-filter-summary,
   body.page-ranglister .ranking-mobile-filter-remove {
     display: none !important;
   }
@@ -653,5 +652,81 @@ html body .mobile-home-search-overlay { display: none; }
 
   html body.page-udforsk .explore-carousel-arrow {
     display: none !important;
+  }
+}
+
+/* Active mobile ranking filters sit beside the stable sort control. */
+@media (min-width: 769px) {
+  body.page-ranglister .ranking-toolbar .ranking-mobile-filter-summary {
+    display: none !important;
+  }
+}
+
+@media (max-width: 768px) {
+  body.page-ranglister:not(.force-desktop-view) .ranking-list-panel .ranking-toolbar {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    align-items: flex-start !important;
+    justify-content: flex-start !important;
+    gap: 8px !important;
+    min-width: 0;
+  }
+
+  body.page-ranglister:not(.force-desktop-view) .ranking-toolbar .mobile-sort-toggle {
+    flex: 0 0 auto !important;
+    order: 0 !important;
+    grid-area: auto !important;
+    grid-column: auto !important;
+    justify-self: auto !important;
+  }
+
+  body.page-ranglister:not(.force-desktop-view) .ranking-toolbar .ranking-mobile-filter-summary {
+    flex: 1 1 180px;
+    order: 1;
+    min-width: 0;
+    max-width: 100%;
+    display: flex !important;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 5px;
+    overflow: visible;
+    color: #6d645d;
+    font-size: 0.78rem;
+    line-height: 1.2;
+  }
+
+  body.page-ranglister:not(.force-desktop-view) .ranking-toolbar .ranking-mobile-filter-summary[hidden],
+  body.page-ranglister.force-desktop-view .ranking-mobile-filter-summary {
+    display: none !important;
+  }
+
+  body.page-ranglister:not(.force-desktop-view) .ranking-toolbar .ranking-mobile-active-filter-chip {
+    flex: 0 1 auto;
+    min-width: 44px;
+    min-height: 40px;
+    max-width: 100%;
+    padding: 4px 8px 4px 10px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    border: 1px solid rgba(255, 92, 22, 0.28);
+    border-radius: 999px;
+    background: #fff3ea;
+    color: #8c3a14;
+    font: 800 0.7rem/1.15 Manrope, Inter, system-ui, sans-serif;
+    text-align: left;
+    overflow-wrap: anywhere;
+    cursor: pointer;
+  }
+
+  body.page-ranglister:not(.force-desktop-view) .ranking-toolbar .ranking-mobile-active-filter-chip span {
+    flex: 0 0 auto;
+    font-size: 0.9rem;
+    line-height: 1;
+  }
+
+  body.page-ranglister:not(.force-desktop-view) .ranking-toolbar .ranking-mobile-active-filter-chip:focus-visible {
+    outline: 2px solid #c7561d;
+    outline-offset: 2px;
   }
 }

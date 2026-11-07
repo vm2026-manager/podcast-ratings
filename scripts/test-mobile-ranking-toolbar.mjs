@@ -13,7 +13,7 @@ const [index, app, styleCss, desktopCss, mobileCss, movementCss] = await Promise
   readRepoFile("ranking-movement.css")
 ]);
 
-assert.match(index, /mobile-layout-regressions\.css\?v=20261030-mobile-ranking-toolbar-v1/,
+assert.match(index, /mobile-layout-regressions\.css\?v=20261107-mobile-ranking-filter-chips-v1/,
   "the mobile layout stylesheet cache version is updated");
 assert.match(index, /<section class="ranking-toolbar" aria-live="polite">[\s\S]*?<div class="ranking-toolbar__results">[\s\S]*?<p id="resultsText">/,
   "the live results announcement stays in the ranking toolbar DOM");
