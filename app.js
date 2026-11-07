@@ -2655,6 +2655,15 @@ function getRankingSearchFields(podcast) {
 
   const fields = [];
   const prefixTokenBuckets = new Map();
+  const titlePrefixTokens = new Set();
+  const normalizedTitle = normalizeSearchValue(podcast?.title);
+  for (const titleVariant of new Set([
+    normalizedTitle,
+    normalizedTitle.replace(/æ/g, "ae").replace(/ø/g, "oe").replace(/å/g, "aa"),
+    normalizedTitle.replace(/[æå]/g, "a").replace(/ø/g, "o")
+  ])) {
+    titleVariant.split(" ").filter(Boolean).forEach((token) => titlePrefixTokens.add(token));
+  }
   for (const { value, fuzzyAllowed } of getPodcastSearchFieldEntries(podcast)) {
     const normalized = normalizeRankingSearchValue(value);
     if (!normalized) continue;
@@ -2687,6 +2696,7 @@ function getRankingSearchFields(podcast) {
   }
   fields.canonicalTokenSet = canonicalTokenSet;
   fields.prefixTokenBuckets = prefixTokenBuckets;
+  fields.titlePrefixTokens = titlePrefixTokens;
   fields.fuzzyFields = fuzzyFields;
   rankingSearchFieldCache.set(podcast, fields);
   return fields;
@@ -2735,6 +2745,23 @@ function rankingSearchTokenHasPrefixMatch(queryToken, prefixTokenBuckets) {
       for (const token of candidates) {
         if (token.startsWith(variant)) return true;
       }
+    }
+  }
+  return false;
+}
+
+function rankingSearchTokenHasShortTitlePrefixMatch(queryToken, titlePrefixTokens) {
+  if (
+    queryToken.length !== 3 ||
+    rankingSearchStopWords.has(queryToken) ||
+    /^(?:\d+|[ivxlcdm]+)$/iu.test(queryToken)
+  ) return false;
+
+  const transliterated = queryToken.replace(/æ/g, "ae").replace(/ø/g, "oe").replace(/å/g, "aa");
+  const simplified = queryToken.replace(/[æå]/g, "a").replace(/ø/g, "o");
+  for (const variant of new Set([queryToken, transliterated, simplified])) {
+    for (const titleToken of titlePrefixTokens) {
+      if (titleToken.startsWith(variant)) return true;
     }
   }
   return false;
@@ -2815,6 +2842,7 @@ function matchesRankingEnhancedSearch(podcast, searchTerm) {
       field.compact.some((compact) => compact.includes(canonicalToken))
     )) return true;
     if (rankingSearchTokenHasPrefixMatch(queryToken, fields.prefixTokenBuckets)) return true;
+    if (rankingSearchTokenHasShortTitlePrefixMatch(queryToken, fields.titlePrefixTokens)) return true;
     if (queryToken.length < 7 || rankingSearchStopWords.has(queryToken)) return false;
     return fields.fuzzyFields.some((field) => field.rawTokens.some((fieldToken) =>
       fieldToken.length >= 7 && isOneEditApart(queryToken, fieldToken)
