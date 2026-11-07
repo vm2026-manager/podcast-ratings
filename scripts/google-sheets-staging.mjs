@@ -199,10 +199,22 @@ export function buildStagingPlan({ headers, existingRows, candidates }) {
   const existing = new Map();
   const titleIndex = STAGING_HEADERS.indexOf("Titel");
   const seriesIndex = STAGING_HEADERS.indexOf("Hovedserie");
-  for (const row of existingRows || []) {
+  const sourceGuidIndex = STAGING_HEADERS.indexOf("DR source GUID");
+  const unidentifiedRows = [];
+  for (const [rowOffset, row] of (existingRows || []).entries()) {
     const id = normal(row[idIndex]);
     if (!id) {
-      if ((row || []).some((cell) => normal(cell))) throw new Error("DR staging contains populated row without Podcast-ID");
+      const populated = (row || []).map((cell, index) => ({ index, value: normal(cell) })).filter((cell) => cell.value);
+      if (populated.length) {
+        // Preserve a single non-GUID note left in the DR GUID column. It is
+        // not a row identity; rows with any identity, URL, or valid GUID data
+        // still stop the append so they can be reviewed manually.
+        if (populated.length === 1 && populated[0].index === sourceGuidIndex && !/^\d{6,}$/u.test(populated[0].value)) {
+          unidentifiedRows.push(rowOffset + 2);
+          continue;
+        }
+        throw new Error(`DR staging contains populated row without Podcast-ID at row ${rowOffset + 2}`);
+      }
       continue;
     }
     if (existing.has(id)) throw new Error(`DR staging contains duplicate Podcast-ID: ${id}`);
@@ -258,7 +270,7 @@ export function buildStagingPlan({ headers, existingRows, candidates }) {
     }
     append.push(row);
   }
-  return { append, hostUpdates, alreadyPresent: seen.size - append.length };
+  return { append, hostUpdates, alreadyPresent: seen.size - append.length, unidentifiedRows };
 }
 
 export function buildRadioIIIIStagingRow(record, checkedDate = new Date().toISOString().slice(0, 10)) {
@@ -444,8 +456,9 @@ export async function appendDrCandidatesToStaging({ client, candidates, dryRun =
   if (!client) throw new Error("DR staging client is required");
   let initial = await client.readSheet();
   let plan = buildStagingPlan({ headers: initial.headers, existingRows: initial.rows, candidates });
+  const orphanSummary = plan.unidentifiedRows.length ? { preservedUnidentifiedRows: plan.unidentifiedRows.length } : {};
   if (!allowHostUpdates) plan = { ...plan, hostUpdates: [] };
-  if (dryRun) return { dryRun, appended: 0, alreadyPresent: plan.alreadyPresent, ...(plan.hostUpdates.length ? { hostUpdates: plan.hostUpdates.length } : {}) };
+  if (dryRun) return { dryRun, appended: 0, alreadyPresent: plan.alreadyPresent, ...(plan.hostUpdates.length ? { hostUpdates: plan.hostUpdates.length } : {}), ...orphanSummary };
   let hostFilled = 0;
   if (plan.hostUpdates.length) {
     // Refresh the exact row and source identity immediately before the narrow host-only update.
@@ -469,7 +482,7 @@ export async function appendDrCandidatesToStaging({ client, candidates, dryRun =
       plan = buildStagingPlan({ headers: readback.headers, existingRows: readback.rows, candidates });
     }
   }
-  if (!plan.append.length) return { dryRun: false, appended: 0, alreadyPresent: plan.alreadyPresent, ...(hostFilled ? { hostFilled } : {}) };
+  if (!plan.append.length) return { dryRun: false, appended: 0, alreadyPresent: plan.alreadyPresent, ...(hostFilled ? { hostFilled } : {}), ...orphanSummary };
   try {
     await client.appendRows(plan.append);
   } catch (appendError) {
@@ -477,13 +490,13 @@ export async function appendDrCandidatesToStaging({ client, candidates, dryRun =
     buildStagingPlan({ headers: reread.headers, existingRows: reread.rows, candidates: [] });
     assertExistingRowsUnchanged(initial.rows, reread.rows);
     assertStagingAppendRowsMatch(plan.append, reread.rows);
-    return { dryRun: false, appended: plan.append.length, alreadyPresent: plan.alreadyPresent, ...(hostFilled ? { hostFilled } : {}), recoveredAfterAmbiguousFailure: true };
+    return { dryRun: false, appended: plan.append.length, alreadyPresent: plan.alreadyPresent, ...(hostFilled ? { hostFilled } : {}), recoveredAfterAmbiguousFailure: true, ...orphanSummary };
   }
   const readback = await client.readSheet();
   buildStagingPlan({ headers: readback.headers, existingRows: readback.rows, candidates: [] });
   assertExistingRowsUnchanged(initial.rows, readback.rows);
   assertStagingAppendRowsMatch(plan.append, readback.rows);
-  return { dryRun: false, appended: plan.append.length, alreadyPresent: plan.alreadyPresent, ...(hostFilled ? { hostFilled } : {}) };
+  return { dryRun: false, appended: plan.append.length, alreadyPresent: plan.alreadyPresent, ...(hostFilled ? { hostFilled } : {}), ...orphanSummary };
 }
 
 export async function appendRadioIIIIToStaging({ client, candidates, dryRun = true }) {
