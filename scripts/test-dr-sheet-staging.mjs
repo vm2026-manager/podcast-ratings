@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { createHash } from "node:crypto";
 import { readFile } from "node:fs/promises";
 import vm from "node:vm";
 import {
@@ -10,6 +11,7 @@ import { mergeAutoDiscoveredBakspejlRows } from "./bakspejl-auto-discovery.mjs";
 import { mergeAutoDiscoveredDjaevlenRows } from "./djaevlen-auto-discovery.mjs";
 import { buildRecommendationData } from "./build-recommendation-metadata.mjs";
 import { preserveCatalogueIdsByPodcastId } from "./sync-sheet-data.mjs";
+import { TYRAN_PROTECTED_IDS } from "./tyran-auto-discovery.mjs";
 
 function recordFor(id) {
   const metadata = VERIFIED_DR_SERIES_METADATA[id];
@@ -20,6 +22,7 @@ function recordFor(id) {
   };
 }
 const candidates = Object.keys(VERIFIED_DR_SERIES_METADATA).map(recordFor);
+const tyranRegistry = JSON.parse(await readFile(new URL("../data/auto-discovered-tyran.json", import.meta.url), "utf8"));
 
 class MockStaging {
   constructor(rows = []) { this.rows = structuredClone(rows); this.appendCalls = 0; this.updateCalls = 0; this.failAfterAppend = false; this.failBeforeAppend = false; this.mutateOldRow = false; this.mutateAppend = false; }
@@ -69,6 +72,12 @@ assert.equal(hostFillClient.rows[0][STAGING_HEADERS.indexOf("Vært")], "Per Lysh
 for (let index = 0; index < STAGING_HEADERS.length; index += 1) {
   if (index !== STAGING_HEADERS.indexOf("Vært")) assert.equal(hostFillClient.rows[0][index], hostFillBefore[index], `host-only update preserves staging cell ${index + 1}`);
 }
+const blankHostPreserved = new MockStaging([blankHostExisting]);
+assert.deepEqual(await appendDrCandidatesToStaging({ client: blankHostPreserved, candidates: candidates.slice(0, 1), dryRun: false, allowHostUpdates: false }), {
+  dryRun: false, appended: 0, alreadyPresent: 1
+});
+assert.equal(blankHostPreserved.updateCalls, 0, "the integrated owner-staging pipeline leaves every existing row unchanged");
+assert.equal(blankHostPreserved.rows[0][STAGING_HEADERS.indexOf("Vært")], "", "integrated staging never edits an existing blank cell");
 const draeberurten = candidates.find((candidate) => candidate.podcast_id === "dræberurten");
 const draeberurtenRow = buildStagingRow(draeberurten);
 assert.equal(draeberurtenRow[CATALOGUE_HEADERS.indexOf("Podcast-ID")], "dræberurten", "the existing legacy identity is preserved");
@@ -142,6 +151,72 @@ assert.throws(() => buildStagingPlan({ headers: STAGING_HEADERS, existingRows: [
 assert.throws(() => buildStagingPlan({ headers: STAGING_HEADERS, existingRows: [["orphan"]], candidates: [] }), /without Podcast-ID/);
 assert.throws(() => buildStagingPlan({ headers: STAGING_HEADERS, existingRows: [], candidates: [{ ...future, source_url: "https://evil.invalid/a/999999999999" }] }), /official full-episode source/);
 assert.throws(() => buildStagingPlan({ headers: STAGING_HEADERS, existingRows: [], candidates: [{ ...future, source_episode_guid: "1" }] }), /official full-episode source/);
+
+// Tyran uses the current DR staging schema. Marcos is a historical Ark1
+// identity; Macias is the only new owner-review proposal.
+const tyranPlan = buildStagingPlan({ headers: STAGING_HEADERS, existingRows: [], candidates: tyranRegistry.records });
+assert.equal(tyranPlan.append.length, 1);
+assert.equal(tyranPlan.alreadyPresent, 1);
+const tyranRow = tyranPlan.append[0];
+const tyranValue = (header) => tyranRow[STAGING_HEADERS.indexOf(header)];
+assert.equal(tyranValue("Podcast-ID"), "tyran-auto-v1-08d0021f");
+assert.equal(tyranValue("Titel"), "Macias");
+assert.equal(tyranValue("Hovedserie"), "Tyran");
+assert.equal(tyranValue("DR source GUID"), "16122693681");
+assert.equal(tyranValue("DR source URL"), tyranRegistry.records.find((record) => record.discovery_key === "macias").first_full_episode.source_url);
+assert.equal(tyranValue("Link"), tyranValue("DR source URL"));
+assert.equal(tyranValue("Kilde"), tyranValue("DR source URL"));
+assert.equal(tyranValue("Billedlink"), tyranRegistry.records.find((record) => record.discovery_key === "macias").cover_source_url);
+assert.equal(tyranValue("Review status"), "NEEDS_EDITORIAL_REVIEW");
+assert.equal(tyranValue("Vært"), "");
+for (const header of ["Genre", "2. genre", "Emner", "Feed", "Episoder", "Vuring (1-10)", "Antal afsnit", "Årstal afspillet", "Afgivet vurdering", "Undervurderet perle"]) {
+  assert.equal(tyranValue(header), "", `Tyran ${header} remains blank without independent evidence`);
+}
+assert.match(tyranValue("DR source description"), /TYRAN_DR_PROVENANCE_V1/u);
+assert.match(tyranValue("DR source description"), /"seriesId":"urn:dr:radio:series:6a3e55fa1645505efca628b6"/u);
+assert.match(tyranValue("DR source description"), /"seriesProductionNumber":"6641072699897"/u);
+assert.match(tyranValue("DR source description"), /"episodeGuid":"16122693681"/u);
+assert.match(tyranValue("DR source description"), /"coverSha256":"5f8fa9bba69c3a5718623ea846d2608affd0074c8437411159c3240b429e4425"/u);
+assert.equal(buildStagingPlan({ headers: STAGING_HEADERS, existingRows: [tyranRow], candidates: tyranRegistry.records }).append.length, 0, "a rerun adds no duplicate Tyran row");
+const tyranMockStaging = new MockStaging();
+assert.deepEqual(await appendDrCandidatesToStaging({ client: tyranMockStaging, candidates: tyranRegistry.records, dryRun: false }), {
+  dryRun: false, appended: 1, alreadyPresent: 1
+});
+assert.equal(tyranMockStaging.rows.length, 1, "only Macias is appended; Marcos is already in Ark1");
+const editorialTyran = [...tyranRow];
+editorialTyran[STAGING_HEADERS.indexOf("Lang beskrivelse")] = "Redaktørens rettelse";
+assert.equal(buildStagingPlan({ headers: STAGING_HEADERS, existingRows: [editorialTyran], candidates: tyranRegistry.records }).append.length, 0, "a rerun preserves an edited Tyran description");
+tyranMockStaging.rows[0][STAGING_HEADERS.indexOf("Lang beskrivelse")] = "Redaktørens rettelse";
+assert.deepEqual(await appendDrCandidatesToStaging({ client: tyranMockStaging, candidates: tyranRegistry.records, dryRun: false }), {
+  dryRun: false, appended: 0, alreadyPresent: 2
+});
+assert.equal(tyranMockStaging.rows[0][STAGING_HEADERS.indexOf("Lang beskrivelse")], "Redaktørens rettelse", "staging reruns do not overwrite editorial changes");
+const tyranConflict = [...tyranRow];
+tyranConflict[STAGING_HEADERS.indexOf("Titel")] = "Another series";
+assert.throws(() => buildStagingPlan({ headers: STAGING_HEADERS, existingRows: [tyranConflict], candidates: tyranRegistry.records }), /identity\/source conflict/u);
+for (const [label, mutate, pattern] of [
+  ["teaser", (record) => { record.first_full_episode.title = "Teaser - Macias"; }, /episode, cover/u],
+  ["wrong GUID", (record) => { record.first_full_episode.production_number = "12345678901"; }, /episode, cover/u],
+  ["wrong episode URL", (record) => { record.first_full_episode.source_url = "https://www.dr.dk/lyd/p3/tyran-macias/teaser-12345678901"; }, /episode, cover/u],
+  ["wrong series ID", (record) => { record.dr_series_id = "urn:dr:radio:series:wrong"; }, /source, identity/u],
+  ["wrong productionNumber", (record) => { record.source_series_production_number = "1234567890123"; }, /source, identity/u],
+  ["wrong cover", (record) => { record.cover_source_url = tyranRegistry.records[0].cover_source_url; }, /cover/u],
+  ["reused image", (record) => { record.first_full_episode.square_image_ids = ["different", "different"]; }, /cover/u],
+  ["wrong checksum", (record) => { record.cover_sha256 = "0".repeat(64); }, /cover/u],
+  ["feed activation", (record) => { record.feed_activation_approved = true; }, /source, identity/u],
+  ["review bypass", (record) => { record.needs_editorial_review = false; }, /source, identity/u],
+  ["missing description", (record) => { record.description = ""; }, /description/u],
+  ["wrong description source", (record) => { record.description_source_url = "https://evil.invalid/"; }, /description/u]
+]) {
+  const changed = structuredClone(tyranRegistry.records.find((record) => record.discovery_key === "macias"));
+  mutate(changed);
+  assert.throws(() => buildStagingPlan({ headers: STAGING_HEADERS, existingRows: [], candidates: [changed] }), pattern, `Tyran rejects ${label}`);
+}
+const macias = tyranRegistry.records.find((record) => record.discovery_key === "macias");
+const reusedTyranSource = [...tyranRow];
+reusedTyranSource[STAGING_HEADERS.indexOf("Podcast-ID")] = "other-id";
+reusedTyranSource[STAGING_HEADERS.indexOf("Titel")] = "Different title";
+assert.throws(() => buildStagingPlan({ headers: STAGING_HEADERS, existingRows: [reusedTyranSource], candidates: [macias] }), /source collision/u);
 assert.throws(() => new StagingSheetsApiClient({ accessToken: "test", spreadsheetId: ORIGINAL_SHEET_ID }), /original-sheet writes are forbidden/);
 assert.throws(() => new StagingSheetsApiClient({}), /credentials are missing/);
 assert.throws(() => assertStagingWriteGate({}), /gate is closed/);
@@ -175,7 +250,7 @@ const script = await readFile(new URL("../apps-script/append-dr-staging-to-ark1/
 function makeAppsScriptHarness({
   originalId = ORIGINAL_SHEET_ID, targetGid = 0, badHeader = false, targetRows = [], stagingRows,
   properties = {}, promptText, promptButton = "OK", lockAvailable = true, lockState = { locked: false },
-  appendFault = null, onAppend = null
+  appendFault = null, onAppend = null, stagingFormulas = null
 } = {}) {
   const headers = [...CATALOGUE_HEADERS];
   if (badHeader) headers[19] = "Wrong header";
@@ -202,7 +277,7 @@ function makeAppsScriptHarness({
     getDataRange() {
       return {
         getValues: () => structuredClone(stagingRows),
-        getFormulas: () => stagingRows.map((row) => row.map(() => ""))
+        getFormulas: () => structuredClone(stagingFormulas || stagingRows.map((row) => row.map(() => "")))
       };
     }
   };
@@ -241,6 +316,10 @@ function makeAppsScriptHarness({
       releaseLock: () => { lockState.locked = false; }
     }) },
     Logger: { logs: [], log(message) { this.logs.push(message); } },
+    Utilities: {
+      DigestAlgorithm: { SHA_256: "SHA_256" }, Charset: { UTF_8: "UTF_8" },
+      computeDigest(algorithm, value) { assert.equal(algorithm, "SHA_256"); return [...createHash("sha256").update(String(value), "utf8").digest()].map((byte) => byte > 127 ? byte - 256 : byte); }
+    },
     Map, Set, JSON, String, Date, Error, Math, RegExp
   };
   vm.createContext(context);
@@ -249,6 +328,94 @@ function makeAppsScriptHarness({
 }
 
 const stageRows = [STAGING_HEADERS, ...candidates.map((candidate) => buildStagingPlan({ headers: STAGING_HEADERS, existingRows: [], candidates: [candidate] }).append[0])];
+const tyranStageRows = [STAGING_HEADERS, tyranRow];
+const marcosArk1Row = Array(CATALOGUE_HEADERS.length).fill("");
+marcosArk1Row[CATALOGUE_HEADERS.indexOf("Titel")] = "Marcos";
+marcosArk1Row[CATALOGUE_HEADERS.indexOf("Hovedserie")] = "Tyran";
+marcosArk1Row[CATALOGUE_HEADERS.indexOf("Udgiver")] = "DR";
+marcosArk1Row[CATALOGUE_HEADERS.indexOf("Podcast-ID")] = "marcos";
+marcosArk1Row[CATALOGUE_HEADERS.indexOf("Link")] = "https://www.dr.dk/lyd/p3/tyran-marcos-6641325831949";
+marcosArk1Row[CATALOGUE_HEADERS.indexOf("Kilde")] = "https://www.dr.dk/lyd/p3/tyran-marcos-6641325831949";
+marcosArk1Row[CATALOGUE_HEADERS.indexOf("Billedlink")] = "https://asset.dr.dk/drlyd/images/urn:dr:radio:image:6ad8a63dd1248e67782813bf?im=AspectCrop%3D%28720%2C720%29%2CxPosition%3D.5%2CyPosition%3D.5%3BResize%3D%28720%2C720%29";
+const tyranDryRunClosed = makeAppsScriptHarness({ stagingRows: tyranStageRows, targetRows: [marcosArk1Row] });
+assert.deepEqual(Object.keys(tyranDryRunClosed.context.TYRAN_PROTECTED_IDENTITIES_).sort(), Object.keys(TYRAN_PROTECTED_IDS).sort(), "the owner gate protects all 22 historical Tyran identities");
+tyranDryRunClosed.context.reviewAndAppendTyranStagingRows();
+assert.equal(tyranDryRunClosed.originalData.length, 2, "the default-closed Tyran gate allows validation but performs no Ark1 write");
+assert.match(tyranDryRunClosed.ui.alerts[0], /dry run bestået/u);
+const tyranApproved = makeAppsScriptHarness({
+  stagingRows: tyranStageRows, targetRows: [marcosArk1Row], promptText: "APPEND tyran-auto-v1-08d0021f",
+  properties: { TYRAN_APPEND_ENABLED: "true" }
+});
+const appsTyranIdentities = tyranApproved.context.VERIFIED_TYRAN_IDENTITIES_;
+for (const record of tyranRegistry.records) {
+  const staged = appsTyranIdentities[record.podcast_id];
+  assert.ok(staged, `Apps Script has the exact owner gate identity for ${record.podcast_id}`);
+  assert.equal(staged.title, record.title);
+  assert.equal(staged.seriesId, record.dr_series_id);
+  assert.equal(staged.seriesProductionNumber, record.source_series_production_number);
+  assert.equal(staged.seriesUrl, record.source_url);
+  assert.equal(staged.episodeTitle, record.first_full_episode.title);
+  assert.equal(staged.guid, record.first_full_episode.production_number);
+  assert.equal(staged.episodeUrl, record.first_full_episode.source_url);
+  assert.equal(staged.coverImageId, record.cover_image_id);
+  assert.equal(staged.coverUrl, record.cover_source_url);
+  assert.equal(staged.coverSha256, record.cover_sha256);
+}
+tyranApproved.context.reviewAndAppendTyranStagingRows();
+assert.equal(tyranApproved.originalData.length, 3, "one exact owner approval appends Macias after an existing Marcos identity");
+assert.equal(tyranApproved.originalData[1][CATALOGUE_HEADERS.indexOf("Podcast-ID")], "marcos", "the existing Marcos row is unchanged");
+assert.equal(tyranApproved.originalData[2][CATALOGUE_HEADERS.indexOf("Podcast-ID")], "tyran-auto-v1-08d0021f");
+assert.equal(tyranApproved.originalData[2][CATALOGUE_HEADERS.indexOf("Link")], "https://www.dr.dk/lyd/p3/tyran-macias/tyran-macias-22/1-4-macias-16122693681");
+assert.equal(tyranApproved.originalData[2][CATALOGUE_HEADERS.indexOf("Feed")], "");
+assert.equal(tyranApproved.originalData[2][CATALOGUE_HEADERS.indexOf("Vuring (1-10)")], "");
+assert.equal(tyranApproved.context.Logger.logs.some((line) => line.includes("TYRAN_STAGING_APPEND")), true);
+const tyranWrongApproval = makeAppsScriptHarness({
+  stagingRows: tyranStageRows, promptText: "APPEND tyran-auto-v1-08d0021f2",
+  properties: { TYRAN_APPEND_ENABLED: "true" }
+});
+tyranWrongApproval.context.reviewAndAppendTyranStagingRows();
+assert.equal(tyranWrongApproval.originalData.length, 1, "Tyran append requires the exact approval phrase");
+const tyranStaleBackup = makeAppsScriptHarness({
+  stagingRows: tyranStageRows, promptText: "APPEND tyran-auto-v1-08d0021f",
+  properties: { TYRAN_APPEND_ENABLED: "true", BACKUP_VERIFIED_AT: new Date(Date.now() - 30 * 60 * 1000).toISOString() }
+});
+assert.throws(() => tyranStaleBackup.context.reviewAndAppendTyranStagingRows(), /15 minutter/u);
+assert.equal(tyranStaleBackup.originalData.length, 1, "stale backup prevents Tyran append");
+const tyranExistingExact = makeAppsScriptHarness({
+  stagingRows: tyranStageRows, targetRows: [tyranRow.slice(0, CATALOGUE_HEADERS.length)],
+  properties: { TYRAN_APPEND_ENABLED: "true" }
+});
+tyranExistingExact.context.reviewAndAppendTyranStagingRows();
+assert.equal(tyranExistingExact.originalData.length, 2, "an exact existing Ark1 Podcast-ID is an idempotent no-op");
+const marcosRegistryRecord = tyranRegistry.records.find((record) => record.discovery_key === "marcos");
+const stagedHistoricalMarcos = buildStagingRow(marcosRegistryRecord);
+const tyranExistingMarcos = makeAppsScriptHarness({
+  stagingRows: [STAGING_HEADERS, stagedHistoricalMarcos], targetRows: [marcosArk1Row],
+  properties: { TYRAN_APPEND_ENABLED: "true" }
+});
+tyranExistingMarcos.context.reviewAndAppendTyranStagingRows();
+assert.equal(tyranExistingMarcos.originalData.length, 2, "the owner gate verifies and skips the original Marcos Ark1 identity");
+const tyranCollisionTarget = [...marcosArk1Row];
+tyranCollisionTarget[CATALOGUE_HEADERS.indexOf("Podcast-ID")] = "different-id";
+tyranCollisionTarget[CATALOGUE_HEADERS.indexOf("Titel")] = "Macias";
+const tyranTitleCollision = makeAppsScriptHarness({
+  stagingRows: tyranStageRows, targetRows: [tyranCollisionTarget], properties: { TYRAN_APPEND_ENABLED: "true" }
+});
+assert.throws(() => tyranTitleCollision.context.reviewAndAppendTyranStagingRows(), /Tyran-titlen findes allerede/u);
+assert.equal(tyranTitleCollision.originalData.length, 2, "an Ark1 title collision blocks Tyran append");
+const tyranWrongSourceRow = [...tyranRow];
+tyranWrongSourceRow[STAGING_HEADERS.indexOf("DR source URL")] = "https://www.dr.dk/lyd/p3/tyran-macias/teaser-16122693681";
+const tyranWrongSource = makeAppsScriptHarness({
+  stagingRows: [STAGING_HEADERS, tyranWrongSourceRow], properties: { TYRAN_APPEND_ENABLED: "true" }
+});
+assert.throws(() => tyranWrongSource.context.reviewAndAppendTyranStagingRows(), /identitet, cover, reviewstatus/u);
+assert.equal(tyranWrongSource.originalData.length, 1);
+const tyranFormulaRow = tyranRow.map((cell) => cell);
+const tyranFormulaGrid = [STAGING_HEADERS.map(() => ""), tyranRow.map(() => "")];
+tyranFormulaGrid[1][STAGING_HEADERS.indexOf("Lang beskrivelse")] = "=IMPORTXML(\"https://evil.invalid\",\"//x\")";
+const tyranFormula = makeAppsScriptHarness({ stagingRows: tyranStageRows, stagingFormulas: tyranFormulaGrid, properties: { TYRAN_APPEND_ENABLED: "true" } });
+assert.throws(() => tyranFormula.context.reviewAndAppendTyranStagingRows(), /Formler i Tyran/u);
+assert.equal(tyranFormula.originalData.length, 1);
 const stagedIsdalenId = "djaevlen-auto-v1-1139735b";
 const existingIsdalenWithoutInlineCredit = [...stageRows[1]];
 existingIsdalenWithoutInlineCredit[STAGING_HEADERS.indexOf("DR source description")] = existingIsdalenWithoutInlineCredit[STAGING_HEADERS.indexOf("DR source description")].replace(" Vært: Per Lysholt.", "");
