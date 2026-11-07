@@ -271,7 +271,7 @@ try {
   for (let batch = 0; batch < 40 && !(await rankingHoxResult.isVisible()); batch += 1) {
     const loadMore = rankingPage.locator(".load-more-button:visible").last();
     if (!(await loadMore.count())) break;
-    await loadMore.click();
+    await loadMore.press("Enter");
   }
   try {
     await rankingHoxResult.waitFor({ state: "visible" });

@@ -119,9 +119,11 @@ function approvedResponses(id) { return [id, `GENRE Samfund ${id}`, `APPEND ${id
 
 const menuHarness = makeHarness();
 menuHarness.context.onOpen();
-assert.deepEqual(menuHarness.menus.map((menu) => menu.name), ["DR staging", "Radio IIII staging"]);
+assert.deepEqual(menuHarness.menus.map((menu) => menu.name), ["DR staging", "Radio IIII staging", "Ejerstyret staging"]);
 assert.equal(menuHarness.menus[0].entries[0].handler, "reviewAndAppendDrStagingRows", "existing DR menu target is unchanged");
 assert.equal(menuHarness.menus[1].entries[0].handler, "reviewAndAppendRadioIIIIStagingRow");
+assert.equal(menuHarness.menus[2].entries[0].label, "Gennemgå stagingforslag samlet");
+assert.equal(menuHarness.menus[2].entries[0].handler, "reviewAndAppendStagingBatch");
 
 const activeGenreValues = ["True Crime", "Historie", "Krig", "Politik", "Finans", "Samfund", "Sport", "Dokumentar", "Viden", "Underholdning", "Sladder"];
 assert.equal(activeGenreValues.includes("Portræt"), false, "Portræt is not in current main's active genre set");
@@ -223,7 +225,8 @@ assert.throws(duplicateGuid.run, /kilde- eller episodeidentitet/);
 const existingExact = targetRow({
   "Podcast-ID": oneId, Titel: candidates[0].title, "Vært": "Anne Sofie Kragh", Udgiver: "RADIO IIII",
   Genre: "Samfund", Hovedserie: "Et kapitel for sig", "Antal afsnit": "5",
-  Link: candidates[0].source_url, Kilde: candidates[0].source_url, Episoder: candidates[0].manual_episodes.join("; ")
+  Link: candidates[0].source_url, Kilde: candidates[0].source_url, Billedlink: candidates[0].image_url,
+  Episoder: candidates[0].manual_episodes.join("; ")
 });
 const idempotent = candidateRun({ targetRows: [existingExact], stagingRows: [RADIO_IIII_STAGING_HEADERS, stagedRows[1]] });
 idempotent.run();

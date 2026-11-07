@@ -309,6 +309,15 @@ function makeAppsScriptHarness({
     }
   };
   const stagingTab = {
+    getLastRow: () => stagingRows.length,
+    getRange(row, col, height, width) {
+      const selected = stagingRows.slice(row - 1, row - 1 + height).map((line) => line.slice(col - 1, col - 1 + width));
+      return {
+        getValues: () => structuredClone(selected),
+        getFormulas: () => structuredClone(stagingFormulas ? stagingFormulas.slice(row - 1, row - 1 + height).map((line) => line.slice(col - 1, col - 1 + width)) : selected.map((line) => line.map(() => ""))),
+        getDisplayValues: () => selected.map((line) => line.map((value) => String(value ?? "")))
+      };
+    },
     getDataRange() {
       return {
         getValues: () => structuredClone(stagingRows),
