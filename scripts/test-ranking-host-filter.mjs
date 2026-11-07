@@ -123,6 +123,7 @@ try {
     assert.equal(new URL(page.url()).searchParams.get("host"), "Martin Grønne", "direct URL is canonicalized to the catalogue name");
     assert.equal(new URL(page.url()).hash, "#ranglister");
 
+    if (width === 320) await verifyDetailInitialFocusDoesNotStealHostFocus(page);
     if (width === 320 || width === 1440) {
       await exerciseHostHistoryAndActivation(page, width);
       await exerciseDetailHostNavigation(page, width);
@@ -186,6 +187,68 @@ try {
 }
 
 console.log("Clickable ranking host identity, URL history, desktop/mobile interaction, and catalogue preservation passed.");
+
+async function verifyDetailInitialFocusDoesNotStealHostFocus(page) {
+  const normalFocus = await page.evaluate(() => {
+    const nativeSetTimeout = window.setTimeout;
+    let pendingFocus = null;
+    window.setTimeout = function (callback, delay, ...args) {
+      if (delay === 40 && String(callback).includes("podcast-detail-sheet__close")) {
+        pendingFocus = { callback, args };
+        return 987654321;
+      }
+      return nativeSetTimeout(callback, delay, ...args);
+    };
+    try {
+      openPodcastDetailSheet(state.podcastByKey.hvepsereden, null, { allowDesktop: true });
+    } finally {
+      window.setTimeout = nativeSetTimeout;
+    }
+    if (!pendingFocus) throw new Error("detail opening did not schedule its accessible initial focus");
+    pendingFocus.callback(...pendingFocus.args);
+    const closeButton = document.querySelector("#podcastDetailSheet:not(.is-hidden) .podcast-detail-sheet__close");
+    const focusedClose = document.activeElement === closeButton;
+    closePodcastDetailSheet({ returnFocus: false });
+    if (document.activeElement && document.querySelector("#podcastDetailSheet").contains(document.activeElement)) {
+      document.activeElement.blur?.();
+    }
+    return focusedClose;
+  });
+  assert.equal(normalFocus, true, "normal dialog opening keeps accessible initial focus on the close button");
+
+  for (const name of ["Fie Nygaard", "Laura Krebs"]) {
+    const result = await page.evaluate((hostName) => {
+      const nativeSetTimeout = window.setTimeout;
+      let pendingFocus = null;
+      window.setTimeout = function (callback, delay, ...args) {
+        if (delay === 40 && String(callback).includes("podcast-detail-sheet__close")) {
+          pendingFocus = { callback, args };
+          return 987654321;
+        }
+        return nativeSetTimeout(callback, delay, ...args);
+      };
+      try {
+        openPodcastDetailSheet(state.podcastByKey.hvepsereden, null, { allowDesktop: true });
+      } finally {
+        window.setTimeout = nativeSetTimeout;
+      }
+      const button = [...document.querySelectorAll("#podcastDetailSheet:not(.is-hidden) .podcast-detail-sheet__meta .ranking-host-person")]
+        .find((item) => item.textContent.trim() === hostName);
+      if (!pendingFocus || !button) throw new Error(`missing initial focus or host control: ${hostName}`);
+      button.focus();
+      const focusedBeforeCallback = document.activeElement === button;
+      pendingFocus.callback(...pendingFocus.args);
+      const focusPreserved = document.activeElement === button;
+      closePodcastDetailSheet({ returnFocus: false });
+      if (document.activeElement && document.querySelector("#podcastDetailSheet").contains(document.activeElement)) {
+        document.activeElement.blur?.();
+      }
+      return { focusedBeforeCallback, focusPreserved };
+    }, name);
+    assert.deepEqual(result, { focusedBeforeCallback: true, focusPreserved: true },
+      `delayed initial focus preserves the user's focus on ${name}`);
+  }
+}
 
 async function clearHostFilter(page) {
   const chip = page.locator('[data-clear-category-filter="host"]').filter({ visible: true }).first();
