@@ -29852,3 +29852,62 @@ html body.page-forside.page-forside #pageIntroPanel .home-genres-card[data-genre
     display: flex !important;
   }
 }
+
+/* Issue 74: keep the activity switch beside desktop search and below mobile search. */
+@media (min-width: 901px) {
+  html body.page-ranglister .ranking-search-strip {
+    grid-template-columns: minmax(0, min(72vw, 900px)) auto !important;
+    justify-content: center !important;
+    align-items: center !important;
+    column-gap: 10px !important;
+  }
+}
+
+body.page-ranglister .popular-now-toggle {
+  min-width: 44px;
+  min-height: 44px;
+  justify-self: start;
+  padding: 0 16px;
+  border: 1px solid rgba(142, 85, 49, 0.2);
+  border-radius: 14px;
+  color: #70513e;
+  background: rgba(255, 255, 255, 0.68);
+  box-shadow: 0 2px 8px rgba(66, 41, 20, 0.035);
+  font: 800 0.82rem/1.2 Manrope, Inter, system-ui, sans-serif;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: border-color 150ms ease, color 150ms ease, background-color 150ms ease, box-shadow 150ms ease;
+}
+
+body.page-ranglister .popular-now-toggle:hover,
+body.page-ranglister .popular-now-toggle:focus-visible {
+  border-color: rgba(255, 92, 22, 0.56);
+  color: #b9430d;
+  background: #fff8f3;
+}
+
+body.page-ranglister .popular-now-toggle:focus-visible {
+  outline: 3px solid rgba(255, 92, 22, 0.32);
+  outline-offset: 2px;
+}
+
+body.page-ranglister .popular-now-toggle.is-active {
+  border-color: rgba(255, 92, 22, 0.45);
+  color: #a83d0c;
+  background: #fff0e6;
+  box-shadow: 0 3px 10px rgba(176, 73, 23, 0.09);
+}
+
+@media (max-width: 900px) {
+  html body.page-ranglister .ranking-search-strip {
+    grid-template-columns: minmax(0, 1fr) !important;
+    justify-items: stretch !important;
+    row-gap: 10px !important;
+  }
+
+  body.page-ranglister .ranking-search-strip .popular-now-toggle {
+    justify-self: start;
+    max-width: 100%;
+    min-height: 42px;
+  }
+}

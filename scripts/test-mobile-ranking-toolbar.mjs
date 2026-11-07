@@ -19,8 +19,10 @@ assert.match(index, /<section class="ranking-toolbar" aria-live="polite">[\s\S]*
   "the live results announcement stays in the ranking toolbar DOM");
 assert.match(index, /<section\s+id="podcastGrid"[\s\S]*?class="podcast-grid"/,
   "ranking errors continue to render inside podcastGrid");
-assert.match(app, /elements\.mobileSortToggle\.addEventListener\("click",\s*\(\)\s*=>\s*\{\s*state\.sortTouched = true;\s*state\.sort =\s*state\.sort === "placement-asc" \? "placement-desc" : "placement-asc";/,
-  "the existing mobile sort click handler and sort transition remain intact");
+assert.match(app, /elements\.mobileSortToggle\.addEventListener\("click",\s*\(\)\s*=>\s*\{\s*if \(state\.popularNowActive\) return;\s*state\.sortTouched = true;\s*state\.sort =\s*state\.sort === "placement-asc" \? "placement-desc" : "placement-asc";/,
+  "the existing mobile sort transition remains intact and cannot override activity order");
+assert.match(app, /elements\.mobileSortToggle\.disabled = state\.popularNowActive/,
+  "mobile sorting is disabled while activity order is active");
 assert.match(app, /isAscending \? "Sorter efter laveste placering f\\u00f8rst" : "Sorter efter h\\u00f8jeste placering f\\u00f8rst"/,
   "the existing mobile sort accessibility label remains intact");
 

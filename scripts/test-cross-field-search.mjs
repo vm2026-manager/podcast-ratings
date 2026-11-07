@@ -174,6 +174,11 @@ try {
   await rankingSearch.fill("ho");
   await page.waitForFunction(() => state.searchTerm === "ho" && getFilteredPodcasts().some((podcast) => getPodcastId(podcast) === "enver hoxha"));
   const rankingHoxResult = page.locator('#podcastGrid [data-key="enver hoxha"]').first();
+  for (let batch = 0; batch < 40 && !(await rankingHoxResult.isVisible()); batch += 1) {
+    const loadMore = page.locator(".load-more-button:visible").last();
+    if (!(await loadMore.count())) break;
+    await loadMore.click();
+  }
   await rankingHoxResult.waitFor({ state: "visible" });
   assert.equal(await rankingHoxResult.isVisible(), true, "ranking search renders the two-letter title prefix result visibly");
   await rankingHoxResult.click();
