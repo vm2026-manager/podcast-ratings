@@ -1573,6 +1573,12 @@ function getHeaderSearchMatches(rawQuery) {
       } else if (titleNative.startsWith(query)) {
         score = 500;
         matchLabel = "Titel";
+      } else if (
+        query.split(" ").length === 1 &&
+        rankingSearchTokenHasShortTitlePrefixMatch(query, getRankingSearchFields(podcast).titlePrefixTokens)
+      ) {
+        score = 450;
+        matchLabel = "Titel";
       } else if (titleNative.includes(query)) {
         score = 400;
         matchLabel = "Titel";
@@ -2752,7 +2758,8 @@ function rankingSearchTokenHasPrefixMatch(queryToken, prefixTokenBuckets) {
 
 function rankingSearchTokenHasShortTitlePrefixMatch(queryToken, titlePrefixTokens) {
   if (
-    queryToken.length !== 3 ||
+    queryToken.length < 2 ||
+    queryToken.length > 3 ||
     rankingSearchStopWords.has(queryToken) ||
     /^(?:\d+|[ivxlcdm]+)$/iu.test(queryToken)
   ) return false;

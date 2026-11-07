@@ -72,6 +72,13 @@ try {
         headerFirst: getPodcastId(headerMatches[0]?.podcast) === "enver hoxha"
       }];
     }));
+    state.searchTerm = "ho";
+    const shortTwoLetterTitleSearch = {
+      ranking: getFilteredPodcasts().some((podcast) => getPodcastId(podcast) === "enver hoxha"),
+      header: getHeaderSearchMatches("ho").some(({ podcast }) => getPodcastId(podcast) === "enver hoxha"),
+      genericTitleWord: matchesRankingEnhancedSearch({ title: "Hobbitten" }, "ho"),
+      noGenericSubstring: matchesRankingEnhancedSearch({ title: "Hobbitten" }, "ob")
+    };
     const negative = {
       ranking: (state.searchTerm = "tamm mørkeland", getIds(state.searchTerm).includes("krig")),
       header: getHeaderSearchMatches("tamm mørkeland").some(({ podcast }) => getPodcastId(podcast) === "krig"),
@@ -80,9 +87,13 @@ try {
       noShortPrefixCollision: matchesRankingEnhancedSearch({ title: "Kolonien", host: "Martin Grønne" }, "kolonien mar"),
       noMidWordTitleMatch: matchesRankingEnhancedSearch({ title: "Ukolonien" }, "loni"),
       noShortHostOnlyMatch: matchesRankingEnhancedSearch({ title: "Kolonien", host: "Martin Grønne" }, "mar"),
-      noShortQuery: ["m", "ma"].some((query) => matchesRankingEnhancedSearch({ title: "Martin Tamm Andersen" }, query)),
-      noShortStopWord: matchesRankingEnhancedSearch({ title: "Enver Hoxha" }, "the"),
-      noShortNumericOrRoman: ["123", "xiv"].some((query) => matchesRankingEnhancedSearch({ title: "XIV Hoxha" }, query))
+      noTwoLetterHostPrefixCollision: matchesRankingEnhancedSearch({ title: "Kolonien", host: "Martin Grønne" }, "kolonien ma"),
+      noTwoLetterSubstring: matchesRankingEnhancedSearch({ title: "Tyran: Enver Hoxha" }, "ox"),
+      noShortQuery: matchesRankingEnhancedSearch({ title: "Martin Tamm Andersen" }, "m"),
+      noOneLetterPrefix: matchesRankingEnhancedSearch({ title: "Hoxha" }, "h"),
+      noTwoLetterMultiwordPrefix: matchesRankingEnhancedSearch({ title: "Hobbitten" }, "ho bi"),
+      noShortStopWord: ["the", "en"].some((query) => matchesRankingEnhancedSearch({ title: "Enver Hoxha" }, query)),
+      noShortNumericOrRoman: ["123", "xiv", "12", "iv"].some((query) => matchesRankingEnhancedSearch({ title: "XIV Hoxha" }, query))
     };
     const aliases = {
       radio24: matchesRankingEnhancedSearch({ title: "Radio 24/7" }, "Radio24syv"),
@@ -97,7 +108,7 @@ try {
     clearActiveFilter();
     state.searchTerm = "";
     const afterFilterRating = getRankingCandidates().find((podcast) => getPodcastId(podcast) === "krig").ratingValue;
-    return { bakspejlTitles, bakspejl: bakspejl.map(({ title, host, mainSeries }) => ({ title, host, mainSeries })), bakspejlRanking, bakspejlQueryTitles, bakspejlHeader, queries, header, ranking, shortTitleSearch, negative, aliases, matchingGenreFilter, nonmatchingGenreFilter, rating, afterFilterRating };
+    return { bakspejlTitles, bakspejl: bakspejl.map(({ title, host, mainSeries }) => ({ title, host, mainSeries })), bakspejlRanking, bakspejlQueryTitles, bakspejlHeader, queries, header, ranking, shortTitleSearch, shortTwoLetterTitleSearch, negative, aliases, matchingGenreFilter, nonmatchingGenreFilter, rating, afterFilterRating };
   });
   assert.ok(results.bakspejl.length > 0, `catalogue must contain verified Bakspejl titles and Martin Grønne: ${JSON.stringify(results.bakspejl)}`);
   assert.deepEqual(results.bakspejl.map(({ title }) => title).sort(), results.bakspejlTitles.slice().sort(), "both current Bakspejl title rows retain Martin Grønne as the verified host");
@@ -118,7 +129,8 @@ try {
     assert.equal(matches.rankingFirst, true, `short title prefix ranks the canonical podcast first in ranking results: ${query}`);
     assert.equal(matches.headerFirst, true, `short title prefix ranks the canonical podcast first in header suggestions: ${query}`);
   }
-  assert.deepEqual(results.negative, { ranking: false, header: false, noFuzzyIdentity: false, noSubstringAcrossFields: false, noShortPrefixCollision: false, noMidWordTitleMatch: false, noShortHostOnlyMatch: false, noShortQuery: false, noShortStopWord: false, noShortNumericOrRoman: false });
+  assert.deepEqual(results.shortTwoLetterTitleSearch, { ranking: true, header: true, genericTitleWord: true, noGenericSubstring: false });
+  assert.deepEqual(results.negative, { ranking: false, header: false, noFuzzyIdentity: false, noSubstringAcrossFields: false, noShortPrefixCollision: false, noMidWordTitleMatch: false, noShortHostOnlyMatch: false, noTwoLetterHostPrefixCollision: false, noTwoLetterSubstring: false, noShortQuery: false, noOneLetterPrefix: false, noTwoLetterMultiwordPrefix: false, noShortStopWord: false, noShortNumericOrRoman: false });
   assert.deepEqual(results.aliases, { radio24: true, radio4: true, danish: true });
   assert.equal(results.matchingGenreFilter, true, "active matching genre filters still apply alongside search");
   assert.equal(results.nonmatchingGenreFilter, false, "active nonmatching genre filters still exclude the podcast");
@@ -140,16 +152,35 @@ try {
     assert.equal(layout.match, true);
   }
 
-  await page.setViewportSize({ width: 1280, height: 900 });
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.goto(`http://127.0.0.1:${server.address().port}/`, { waitUntil: "domcontentloaded" });
+  await page.waitForFunction(() => state.podcasts?.length > 0);
+  const desktopSearchInput = page.locator("#desktopHeaderSearchInput");
+  await desktopSearchInput.fill("ho");
+  const desktopHoxResult = page.locator("[data-header-search-index]").filter({ hasText: "Enver Hoxha" }).first();
+  await desktopHoxResult.waitFor({ state: "visible" });
+  assert.ok((await desktopHoxResult.innerText()).includes("Enver Hoxha"), "desktop suggestions show the matching two-letter title prefix");
+  await desktopHoxResult.click();
+  await page.locator("#podcastDetailSheet:not(.is-hidden)").waitFor({ state: "visible" });
+  assert.ok((await page.locator("#podcastDetailSheet").innerText()).includes("Enver Hoxha"), "desktop suggestion opens the matching podcast");
+  await page.keyboard.press("Escape");
+  await page.locator("#podcastDetailSheet.is-hidden").waitFor({ state: "attached" });
+  await page.goto(`http://127.0.0.1:${server.address().port}/#ranglister`, { waitUntil: "domcontentloaded" });
+  await page.waitForFunction(() => state.podcasts?.length > 0);
   await page.evaluate(() => handleRankingSourceChange("mads"));
   await page.waitForFunction(() => state.rankingSource === "mads");
   const rankingSearch = page.locator("#searchInput");
   await rankingSearch.click();
-  await rankingSearch.fill("hox");
-  await page.waitForFunction(() => state.searchTerm === "hox" && getFilteredPodcasts().some((podcast) => getPodcastId(podcast) === "enver hoxha"));
+  await rankingSearch.fill("ho");
+  await page.waitForFunction(() => state.searchTerm === "ho" && getFilteredPodcasts().some((podcast) => getPodcastId(podcast) === "enver hoxha"));
   const rankingHoxResult = page.locator('#podcastGrid [data-key="enver hoxha"]').first();
   await rankingHoxResult.waitFor({ state: "visible" });
-  assert.equal(await page.evaluate(() => getPodcastId(getFilteredPodcasts()[0])), "enver hoxha", "ranking search ranks the canonical Hoxha podcast first");
+  assert.equal(await rankingHoxResult.isVisible(), true, "ranking search renders the two-letter title prefix result visibly");
+  await rankingHoxResult.click();
+  await page.locator("#podcastDetailSheet:not(.is-hidden)").waitFor({ state: "visible" });
+  assert.ok((await page.locator("#podcastDetailSheet").innerText()).includes("Enver Hoxha"), "ranking result opens the matching podcast");
+  await page.keyboard.press("Escape");
+  await page.locator("#podcastDetailSheet.is-hidden").waitFor({ state: "attached" });
 
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto(`http://127.0.0.1:${server.address().port}/`, { waitUntil: "domcontentloaded" });
@@ -175,8 +206,8 @@ try {
   assert.equal(await page.locator("#mobileHomeSearchOverlay").getAttribute("aria-hidden"), "true");
   await page.locator("[data-home-podcast-search-input]").focus();
   await page.locator("#mobileHomeSearchOverlayInput").waitFor({ state: "visible" });
-  await page.locator("#mobileHomeSearchOverlayInput").fill("hox");
-  await page.waitForFunction(() => getHeaderSearchMatches("hox").some(({ podcast }) => getPodcastId(podcast) === "enver hoxha"));
+  await page.locator("#mobileHomeSearchOverlayInput").fill("ho");
+  await page.waitForFunction(() => getHeaderSearchMatches("ho").some(({ podcast }) => getPodcastId(podcast) === "enver hoxha"));
   const mobileHoxResult = page.locator('[data-mobile-home-search-index]').filter({ hasText: "Enver Hoxha" }).first();
   await mobileHoxResult.waitFor({ state: "visible" });
   assert.ok((await mobileHoxResult.innerText()).includes("Enver Hoxha"), "mobile overlay shows the matching podcast title");
