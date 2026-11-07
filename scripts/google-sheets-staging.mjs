@@ -3,6 +3,8 @@
 import { VERIFIED_DR_SERIES_METADATA } from "./verified-dr-series-metadata.mjs";
 import { extractExplicitDrHostCredit } from "./dr-host-credit.mjs";
 import { RADIO_IIII_MAIN_SERIES, RADIO_IIII_HOST } from "./radio-iiii-auto-discovery.mjs";
+import { createHash } from "node:crypto";
+import { TYRAN_PROTECTED_IDS, normalizeTyranIdentity } from "./tyran-auto-discovery.mjs";
 
 export const STAGING_TAB = "DR staging";
 export const RADIO_IIII_STAGING_TAB = "Radio IIII staging";
@@ -22,6 +24,38 @@ export const RADIO_IIII_STAGING_HEADERS = Object.freeze([
   ...CATALOGUE_HEADERS, "Radio IIII source GUIDs", "Radio IIII source URL",
   "Radio IIII season URL", "Radio IIII source description", "Review status"
 ]);
+
+// The sheet does not gain columns for Tyran: its existing DR provenance cells
+// carry the separately verified child-series and full-episode identities.
+// Marcos is already a historical Ark1 identity and is intentionally not staged.
+export const TYRAN_EXISTING_ARK1_IDENTITIES = Object.freeze({
+  marcos: Object.freeze({ podcastId: "marcos", title: "Marcos", mainSeries: "Tyran",
+    seriesUrl: "https://www.dr.dk/lyd/p3/tyran-marcos-6641325831949" })
+});
+export const VERIFIED_TYRAN_STAGING_IDENTITIES = Object.freeze({
+  macias: Object.freeze({
+    podcastId: "tyran-auto-v1-08d0021f", title: "Macias", mainSeries: "Tyran",
+    seriesProductionNumber: "6641072699897", seriesId: "urn:dr:radio:series:6a3e55fa1645505efca628b6",
+    seriesUrl: "https://www.dr.dk/lyd/p3/tyran-macias-6641072699897",
+    coverImageId: "6a4e30ea60319a54701828b9",
+    coverUrl: "https://asset.dr.dk/drlyd/images/urn:dr:radio:image:6a4e30ea60319a54701828b9?im=AspectCrop%3D%28720%2C720%29%2CxPosition%3D.5%2CyPosition%3D.5%3BResize%3D%28720%2C720%29",
+    coverSha256: "5f8fa9bba69c3a5718623ea846d2608affd0074c8437411159c3240b429e4425", coverByteLength: 195791,
+    episodeTitle: "1:4 - Macias", episodeGuid: "16122693681", episodeUrl: "https://www.dr.dk/lyd/p3/tyran-macias/tyran-macias-22/1-4-macias-16122693681",
+    episodePublishedAt: "2026-08-06T03:00:00.000Z", episodeDurationSeconds: 2234,
+    descriptionSha256: "25f065f9ab606d61e9f32b497d6f50297e45c705917f8297f3892b28712f4897"
+  }),
+  marcos: Object.freeze({
+    podcastId: "marcos", title: "Marcos", mainSeries: "Tyran",
+    seriesProductionNumber: "6641325831949", seriesId: "urn:dr:radio:series:6ad1ecb299797788ba19118f",
+    seriesUrl: "https://www.dr.dk/lyd/p3/tyran-marcos-6641325831949",
+    coverImageId: "6ad8a63dd1248e67782813bf",
+    coverUrl: "https://asset.dr.dk/drlyd/images/urn:dr:radio:image:6ad8a63dd1248e67782813bf?im=AspectCrop%3D%28720%2C720%29%2CxPosition%3D.5%2CyPosition%3D.5%3BResize%3D%28720%2C720%29",
+    coverSha256: "3168d4eeb2db7a75e5b4644931fc37b0ba2cb7bd175b450c775c0101c58f3173", coverByteLength: 229851,
+    episodeTitle: "1:6 - Marcos", episodeGuid: "16122693711", episodeUrl: "https://www.dr.dk/lyd/p3/tyran-marcos/tyran-marcos-24/1-6-marcos-16122693711",
+    episodePublishedAt: "2026-10-22T03:00:00.000Z", episodeDurationSeconds: 1878,
+    descriptionSha256: "fd74bab19d25eced774d75634ffa3ef5cc9f2f8210700165a00ad24c6c801edd"
+  })
+});
 
 const normal = (value) => String(value ?? "").normalize("NFC").trim();
 
@@ -45,6 +79,7 @@ export function buildStagingRow(record, checkedDate = new Date().toISOString().s
   const id = normal(record?.podcast_id ?? record?.["Podcast-ID"]);
   const title = normal(record?.title ?? record?.Titel);
   const mainSeries = normal(record?.hovedserie ?? record?.Hovedserie);
+  if (mainSeries === "Tyran") return buildTyranStagingRow(record, checkedDate);
   const curated = VERIFIED_DR_SERIES_METADATA[id];
   const description = plainSourceText(record?.source_description || curated?.sourceDescription || curated?.longDescription);
   const parsedHost = extractExplicitDrHostCredit(record?.source_description || "");
@@ -107,6 +142,54 @@ export function buildStagingRow(record, checkedDate = new Date().toISOString().s
   return values;
 }
 
+function buildTyranStagingRow(record, checkedDate) {
+  const id = normal(record?.podcast_id ?? record?.["Podcast-ID"]);
+  const title = normal(record?.title ?? record?.Titel);
+  const expected = Object.values(VERIFIED_TYRAN_STAGING_IDENTITIES).find((identity) => identity.podcastId === id);
+  const episode = record?.first_full_episode;
+  const description = String(record?.description ?? "").trim();
+  const descriptionUrl = normal(record?.description_source_url);
+  const digest = (value) => createHash("sha256").update(String(value), "utf8").digest("hex");
+  if (!expected || title !== expected.title || normal(record?.hovedserie ?? record?.Hovedserie) !== expected.mainSeries ||
+      normal(record?.discovery_key) !== title.toLowerCase() || normal(record?.publisher) !== "DR" ||
+      normal(record?.source_url) !== expected.seriesUrl || normal(record?.source_series_production_number) !== expected.seriesProductionNumber ||
+      normal(record?.dr_series_id) !== expected.seriesId || normal(record?.cover_image_id) !== expected.coverImageId ||
+      normal(record?.cover_source_url) !== expected.coverUrl || normal(record?.cover_sha256) !== expected.coverSha256 ||
+      record?.cover_mime_type !== "image/jpeg" || record?.cover_width !== 720 || record?.cover_height !== 720 ||
+      record?.cover_byte_length !== expected.coverByteLength || record?.needs_editorial_review !== true || record?.feed_activation_approved !== false ||
+      !episode || normal(episode.title) !== expected.episodeTitle || normal(episode.production_number) !== expected.episodeGuid ||
+      normal(episode.source_url) !== expected.episodeUrl || !episode.source_url.endsWith(expected.episodeGuid) ||
+      new Date(episode.published_at).toISOString() !== expected.episodePublishedAt || episode.duration_seconds !== expected.episodeDurationSeconds ||
+      !Array.isArray(episode.square_image_ids) || episode.square_image_ids.length !== 2 || episode.square_image_ids.some((imageId) => imageId !== expected.coverImageId) ||
+      !description || descriptionUrl !== expected.seriesUrl || digest(description) !== expected.descriptionSha256 ||
+      !/^https:\/\/www\.dr\.dk\/lyd\/p3\/tyran-[a-z0-9-]+-\d{13}$/u.test(expected.seriesUrl) ||
+      !/^https:\/\/www\.dr\.dk\/lyd\/p3\/tyran-[a-z0-9-]+\/.+\d{8,20}$/u.test(expected.episodeUrl)) {
+    throw new Error(`Tyran staging source, identity, episode, cover, or description mismatch for ${id || "(missing ID)"}`);
+  }
+  const provenance = {
+    version: 1, discoveryKey: record.discovery_key, podcastId: id, title,
+    seriesId: expected.seriesId, seriesProductionNumber: expected.seriesProductionNumber,
+    seriesUrl: expected.seriesUrl, episodeTitle: expected.episodeTitle, episodeGuid: expected.episodeGuid,
+    episodeUrl: expected.episodeUrl, coverImageId: expected.coverImageId,
+    coverUrl: expected.coverUrl, coverSha256: expected.coverSha256,
+    descriptionUrl, descriptionSha256: expected.descriptionSha256
+  };
+  const provenanceText = `TYRAN_DR_PROVENANCE_V1 ${JSON.stringify(provenance)}\n\n${description}`;
+  const values = Array(STAGING_HEADERS.length).fill("");
+  const set = (header, value) => { values[STAGING_HEADERS.indexOf(header)] = String(value ?? ""); };
+  const shortDescription = boundedSourceExcerpt(plainSourceText(description), 240);
+  if (!shortDescription) throw new Error(`Tyran source description has no safe short excerpt for ${id}`);
+  for (const [header, value] of Object.entries({
+    Titel: title, Udgiver: "DR", Hovedserie: "Tyran", Link: expected.episodeUrl,
+    "Billedlink": expected.coverUrl, "Kort beskrivelse": shortDescription,
+    "Lang beskrivelse": description, "Podcast-ID": id, Kilde: expected.episodeUrl,
+    "Tjekket dato": checkedDate, "DR source GUID": expected.episodeGuid,
+    "DR source URL": expected.episodeUrl, "DR source description": provenanceText,
+    "Review status": "NEEDS_EDITORIAL_REVIEW"
+  })) set(header, value);
+  return values;
+}
+
 export function buildStagingPlan({ headers, existingRows, candidates }) {
   if (!Array.isArray(headers) || STAGING_HEADERS.some((header, index) => normal(headers[index]) !== header) ||
       headers.length !== STAGING_HEADERS.length) {
@@ -114,6 +197,8 @@ export function buildStagingPlan({ headers, existingRows, candidates }) {
   }
   const idIndex = STAGING_HEADERS.indexOf("Podcast-ID");
   const existing = new Map();
+  const titleIndex = STAGING_HEADERS.indexOf("Titel");
+  const seriesIndex = STAGING_HEADERS.indexOf("Hovedserie");
   for (const row of existingRows || []) {
     const id = normal(row[idIndex]);
     if (!id) {
@@ -131,12 +216,24 @@ export function buildStagingPlan({ headers, existingRows, candidates }) {
     const id = normal(row[idIndex]);
     if (seen.has(id)) throw new Error(`Duplicate DR staging candidate Podcast-ID: ${id}`);
     seen.add(id);
+    if (!existing.has(id) && normal(row[seriesIndex]) === "Tyran" && TYRAN_EXISTING_ARK1_IDENTITIES[id]) {
+      const known = TYRAN_EXISTING_ARK1_IDENTITIES[id];
+      let provenance;
+      try { provenance = JSON.parse(normal(row[STAGING_HEADERS.indexOf("DR source description")]).replace(/^TYRAN_DR_PROVENANCE_V1\s+/u, "").split("\n", 1)[0]); }
+      catch { throw new Error(`Tyran historical identity provenance is invalid for ${id}`); }
+      if (normal(row[titleIndex]) !== known.title || normal(row[seriesIndex]) !== known.mainSeries ||
+          provenance.podcastId !== known.podcastId || provenance.title !== known.title || provenance.seriesUrl !== known.seriesUrl) {
+        throw new Error(`Tyran historical identity/source conflict for ${id}`);
+      }
+      continue;
+    }
     if (existing.has(id)) {
       const stored = existing.get(id);
-      if (normal(stored[STAGING_HEADERS.indexOf("Titel")]) !== normal(row[STAGING_HEADERS.indexOf("Titel")]) ||
-          normal(stored[STAGING_HEADERS.indexOf("Hovedserie")]) !== normal(row[STAGING_HEADERS.indexOf("Hovedserie")]) ||
+      if (normal(stored[titleIndex]) !== normal(row[titleIndex]) ||
+          normal(stored[seriesIndex]) !== normal(row[seriesIndex]) ||
           normal(stored[STAGING_HEADERS.indexOf("DR source GUID")]) !== normal(row[STAGING_HEADERS.indexOf("DR source GUID")]) ||
-          normal(stored[STAGING_HEADERS.indexOf("DR source URL")]) !== normal(row[STAGING_HEADERS.indexOf("DR source URL")])) {
+          normal(stored[STAGING_HEADERS.indexOf("DR source URL")]) !== normal(row[STAGING_HEADERS.indexOf("DR source URL")]) ||
+          normal(stored[STAGING_HEADERS.indexOf("Billedlink")]) !== normal(row[STAGING_HEADERS.indexOf("Billedlink")])) {
         throw new Error(`Existing DR staging identity/source conflict for ${id}`);
       }
       const hostIndex = STAGING_HEADERS.indexOf("Vært");
@@ -145,6 +242,19 @@ export function buildStagingPlan({ headers, existingRows, candidates }) {
         hostUpdates.push({ rowNumber: existingRows.indexOf(stored) + 2, podcastId: id, host: candidateHost });
       }
       continue;
+    }
+    if (normal(row[seriesIndex]) === "Tyran") {
+      const titleKey = normalizeTyranIdentity(row[titleIndex]);
+      if (Object.keys(TYRAN_PROTECTED_IDS).includes(titleKey)) throw new Error(`Tyran historical identity collision for ${id}: ${normal(row[titleIndex])}`);
+      const candidateSources = [row[STAGING_HEADERS.indexOf("DR source GUID")], row[STAGING_HEADERS.indexOf("DR source URL")], row[STAGING_HEADERS.indexOf("Billedlink")]].map(normal).filter(Boolean);
+      if ((existingRows || []).some((stored) => {
+        if (normalizeTyranIdentity(stored?.[titleIndex]) === titleKey && titleKey) return true;
+        const storedSeries = normal(stored?.[seriesIndex]);
+        const storedId = normal(stored?.[STAGING_HEADERS.indexOf("Podcast-ID")]);
+        if (storedId === id || (storedSeries === "Tyran" && titleKey && normalizeTyranIdentity(stored?.[titleIndex]) === titleKey)) return true;
+        const storedSources = [stored?.[STAGING_HEADERS.indexOf("DR source GUID")], stored?.[STAGING_HEADERS.indexOf("DR source URL")], stored?.[STAGING_HEADERS.indexOf("Billedlink")]].map(normal);
+        return candidateSources.some((source) => storedSources.includes(source));
+      })) throw new Error(`DR staging Tyran identity/title/source collision for ${id}`);
     }
     append.push(row);
   }
@@ -330,16 +440,18 @@ export function assertStagingWriteGate(env = process.env) {
   }
 }
 
-export async function appendDrCandidatesToStaging({ client, candidates, dryRun = true }) {
+export async function appendDrCandidatesToStaging({ client, candidates, dryRun = true, allowHostUpdates = true }) {
   if (!client) throw new Error("DR staging client is required");
   let initial = await client.readSheet();
   let plan = buildStagingPlan({ headers: initial.headers, existingRows: initial.rows, candidates });
+  if (!allowHostUpdates) plan = { ...plan, hostUpdates: [] };
   if (dryRun) return { dryRun, appended: 0, alreadyPresent: plan.alreadyPresent, ...(plan.hostUpdates.length ? { hostUpdates: plan.hostUpdates.length } : {}) };
   let hostFilled = 0;
   if (plan.hostUpdates.length) {
     // Refresh the exact row and source identity immediately before the narrow host-only update.
     initial = await client.readSheet();
     plan = buildStagingPlan({ headers: initial.headers, existingRows: initial.rows, candidates });
+    if (!allowHostUpdates) plan = { ...plan, hostUpdates: [] };
     if (plan.hostUpdates.length) {
       try {
         await client.updateHostCells(plan.hostUpdates);

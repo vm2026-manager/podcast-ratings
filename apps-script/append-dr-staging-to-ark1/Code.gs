@@ -17,6 +17,33 @@ var HEADERS_ = [
 var STAGING_HEADERS_ = HEADERS_.concat([
   "DR source GUID", "DR source URL", "DR source description", "Review status"
 ]);
+var TYRAN_APPEND_ENABLED_PROPERTY_ = "TYRAN_APPEND_ENABLED";
+var TYRAN_BACKUP_MAX_AGE_MS_ = 15 * 60 * 1000;
+var TYRAN_PROTECTED_IDENTITIES_ = {
+  "ayatollah khomeini": true, "benito mussolini": true, bokassa: true, ceausescu: true,
+  "charles taylor": true, "enver hoxha": true, franco: true, hirohito: true,
+  "idi amin": true, "kim il sung og kim jong il": true, lenin: true, "leopold ii": true,
+  mao: true, milosevic: true, "muammar gaddafi": true, nijasov: true, "papa doc": true,
+  pinochet: true, "pol pot": true, "saddam hussein": true, suharto: true, trujillo: true
+};
+var VERIFIED_TYRAN_IDENTITIES_ = {
+  "tyran-auto-v1-08d0021f": {
+    key: "macias", title: "Macias", series: "Tyran", seriesProductionNumber: "6641072699897",
+    seriesId: "urn:dr:radio:series:6a3e55fa1645505efca628b6", seriesUrl: "https://www.dr.dk/lyd/p3/tyran-macias-6641072699897",
+    episodeTitle: "1:4 - Macias", guid: "16122693681", episodeUrl: "https://www.dr.dk/lyd/p3/tyran-macias/tyran-macias-22/1-4-macias-16122693681",
+    coverImageId: "6a4e30ea60319a54701828b9", coverUrl: "https://asset.dr.dk/drlyd/images/urn:dr:radio:image:6a4e30ea60319a54701828b9?im=AspectCrop%3D%28720%2C720%29%2CxPosition%3D.5%2CyPosition%3D.5%3BResize%3D%28720%2C720%29",
+    coverSha256: "5f8fa9bba69c3a5718623ea846d2608affd0074c8437411159c3240b429e4425",
+    descriptionSha256: "25f065f9ab606d61e9f32b497d6f50297e45c705917f8297f3892b28712f4897"
+  },
+  "marcos": {
+    key: "marcos", title: "Marcos", series: "Tyran", seriesProductionNumber: "6641325831949",
+    seriesId: "urn:dr:radio:series:6ad1ecb299797788ba19118f", seriesUrl: "https://www.dr.dk/lyd/p3/tyran-marcos-6641325831949",
+    episodeTitle: "1:6 - Marcos", guid: "16122693711", episodeUrl: "https://www.dr.dk/lyd/p3/tyran-marcos/tyran-marcos-24/1-6-marcos-16122693711",
+    coverImageId: "6ad8a63dd1248e67782813bf", coverUrl: "https://asset.dr.dk/drlyd/images/urn:dr:radio:image:6ad8a63dd1248e67782813bf?im=AspectCrop%3D%28720%2C720%29%2CxPosition%3D.5%2CyPosition%3D.5%3BResize%3D%28720%2C720%29",
+    coverSha256: "3168d4eeb2db7a75e5b4644931fc37b0ba2cb7bd175b450c775c0101c58f3173",
+    descriptionSha256: "fd74bab19d25eced774d75634ffa3ef5cc9f2f8210700165a00ad24c6c801edd"
+  }
+};
 var RADIO_IIII_TAB_NAME_ = "Radio IIII staging";
 var RADIO_IIII_HEADERS_ = HEADERS_.concat([
   "Radio IIII source GUIDs", "Radio IIII source URL", "Radio IIII season URL",
@@ -88,6 +115,7 @@ var VERIFIED_DR_HOST_CREDITS_ = {
 function onOpen() {
   SpreadsheetApp.getUi().createMenu("DR staging")
     .addItem("Gennemgå og tilføj verificerede serier", "reviewAndAppendDrStagingRows")
+    .addItem("Gennemgå Tyran-forslag (ejerstyret)", "reviewAndAppendTyranStagingRows")
     .addToUi();
   SpreadsheetApp.getUi().createMenu(RADIO_IIII_TAB_NAME_)
     .addItem("Gennemgå og tilføj verificeret gæsteserie", "reviewAndAppendRadioIIIIStagingRow")
@@ -106,6 +134,7 @@ function reviewAndAppendDrStagingRows() {
   for (var i = 1; i < data.values.length; i += 1) {
     var row = data.values[i];
     if (!String(row[idColumn] || "").trim()) continue;
+    if (String(row[HEADERS_.indexOf("Hovedserie")] || "").normalize("NFC").trim() === "Tyran") continue;
     var candidate = validateStagingCandidate_(row, data.formulas[i]);
     var existing = ids.get(candidate.id);
     if (existing) {
@@ -140,6 +169,55 @@ function reviewAndAppendDrStagingRows() {
     appended += 1;
   });
   ui.alert("Gennemgang afsluttet. Nye rækker tilføjet: " + appended + ". Eksisterende rækker blev ikke redigeret.");
+}
+
+function reviewAndAppendTyranStagingRows() {
+  var ui = SpreadsheetApp.getUi();
+  var context = assertTyranReadOnlyConfiguration_();
+  var data = readStaging_(context.stagingId);
+  var target = context.original.getSheetByName(TARGET_TAB_NAME_);
+  assertTargetSchema_(target);
+  readUniqueTargetIds_(target);
+  var targetSnapshot = snapshotTarget_(target);
+  var targetRows = targetSnapshot.values.slice(1);
+  var candidates = [];
+  for (var i = 1; i < data.values.length; i += 1) {
+    var row = data.values[i];
+    if (String(row[HEADERS_.indexOf("Hovedserie")] || "").normalize("NFC").trim() !== "Tyran") continue;
+    var candidate = validateTyranStagingCandidate_(row, data.formulas[i]);
+    var existing = findTyranTargetIdentity_(targetRows, candidate);
+    if (existing) continue;
+    assertNoTyranIdentityCollision_(targetRows, candidate);
+    candidates.push({ sourceRow: i + 1, row: row.slice(), candidate: candidate });
+  }
+  if (!candidates.length) {
+    ui.alert("Ingen nye, verificerede Tyran-rækker at gennemgå. Ark1 og eksisterende staging blev ikke ændret.");
+    return;
+  }
+  if (context.properties.getProperty(TYRAN_APPEND_ENABLED_PROPERTY_) !== "true") {
+    ui.alert("Tyran dry run bestået for " + candidates.length + " række(r). Ejerappend er stadig lukket; ingen backup eller Ark1-write blev udført.");
+    return;
+  }
+  context = assertOwnerConfiguration_();
+  assertTyranAppendConfiguration_(context);
+  candidates.forEach(function (item) {
+    var c = item.candidate;
+    var prompt = ui.prompt(
+      "Tyran: dry run bestået; gennemgå DR-kilder",
+      "Podcast-ID: " + c.id + "\nTitel: " + c.title + "\nHovedserie: Tyran" +
+        "\nDR series-ID: " + c.seriesId + "\nUnderseriens productionNumber: " + c.seriesProductionNumber +
+        "\nUnderserieside: " + c.seriesUrl + "\nFørste fulde episode: " + c.episodeTitle +
+        "\nEpisode-GUID: " + c.sourceGuid + "\nEpisode-URL: " + c.sourceUrl +
+        "\nIndividuelt DR-cover: " + c.coverUrl + "\nCover SHA-256: " + c.coverSha256 +
+        "\nBeskrivelse fra DR: " + c.descriptionUrl + "\n\nKort beskrivelse:\n" + c.shortDescription +
+        "\n\nLang beskrivelse:\n" + c.longDescription + "\n\nDR-beskrivelse og provenance:\n" + c.sourceDescription +
+        "\n\nKontrollér de officielle kilder, lav frisk fuld backup med testgendannelse, og skriv præcist APPEND " + c.id +
+        " for at tilføje denne ene række. Alle andre svar springer rækken over.",
+      ui.ButtonSet.OK_CANCEL
+    );
+    if (prompt.getSelectedButton() !== ui.Button.OK || prompt.getResponseText().trim() !== "APPEND " + c.id) return;
+    appendOneTyranReviewedRow_(context, item);
+  });
 }
 
 function reviewAndAppendRadioIIIIStagingRow() {
@@ -417,6 +495,31 @@ function assertOwnerConfiguration_() {
   return { original: original, properties: properties, stagingId: stagingId, userEmail: userEmail };
 }
 
+function assertTyranAppendConfiguration_(context) {
+  if (context.properties.getProperty(TYRAN_APPEND_ENABLED_PROPERTY_) !== "true") {
+    throw new Error("Tyran-ejerappend er lukket. TYRAN_APPEND_ENABLED skal aktiveres særskilt af ejeren efter gennemgang.");
+  }
+  if (context.properties.getProperty("BACKUP_RESTORE_TEST_VERIFIED") !== "true") {
+    throw new Error("Tyran-ejerappend kræver uafhængig backup med verificeret testgendannelse.");
+  }
+  var verifiedAt = Date.parse(context.properties.getProperty("BACKUP_VERIFIED_AT") || "");
+  if (!Number.isFinite(verifiedAt) || Date.now() - verifiedAt > TYRAN_BACKUP_MAX_AGE_MS_ || verifiedAt > Date.now() + 60 * 1000) {
+    throw new Error("Tyran-ejerappend kræver frisk backup og verificeret testgendannelse fra de seneste 15 minutter.");
+  }
+}
+
+function assertTyranReadOnlyConfiguration_() {
+  var properties = PropertiesService.getScriptProperties();
+  var original = SpreadsheetApp.getActiveSpreadsheet();
+  var userEmail = Session.getEffectiveUser().getEmail();
+  if (!original || original.getId() !== ORIGINAL_SPREADSHEET_ID_) throw new Error("Tyran dry run skal køres fra det godkendte originalark.");
+  if (!userEmail || userEmail !== properties.getProperty("OWNER_EMAIL")) throw new Error("Kun den konfigurerede ejer må køre Tyran dry run.");
+  var stagingId = properties.getProperty("STAGING_SPREADSHEET_ID");
+  var backupId = properties.getProperty("BACKUP_SPREADSHEET_ID");
+  if (!stagingId || stagingId === ORIGINAL_SPREADSHEET_ID_ || stagingId === backupId) throw new Error("Separat DR staging-regneark mangler eller kolliderer.");
+  return { original: original, properties: properties, stagingId: stagingId, userEmail: userEmail };
+}
+
 function readStaging_(stagingId) {
   var staging = SpreadsheetApp.openById(stagingId);
   var tab = staging.getSheetByName(STAGING_TAB_NAME_);
@@ -505,6 +608,154 @@ function validateStagingCandidate_(row, formulas) {
     topics: topics, similarities: similarities, host: host,
     hostCredit: sourceHost ? "Vært: " + sourceHost : exactHostProof ? verifiedHostCredit.credit : ""
   };
+}
+
+function validateTyranStagingCandidate_(row, formulas) {
+  if (formulas.some(function (formula) { return Boolean(formula); })) throw new Error("Formler i Tyran staging-rækken er ikke tilladt.");
+  var get = function (header) { return String(row[STAGING_HEADERS_.indexOf(header)] || "").normalize("NFC").trim(); };
+  var id = get("Podcast-ID");
+  var expected = VERIFIED_TYRAN_IDENTITIES_[id];
+  var sourceDescription = get("DR source description");
+  var match = sourceDescription.match(/^TYRAN_DR_PROVENANCE_V1\s+(\{[^\n]+\})\n\n([\s\S]+)$/u);
+  if (!expected || !match) throw new Error("Tyran Podcast-ID eller DR provenance er ikke på den eksakte godkendte liste.");
+  var provenance;
+  try { provenance = JSON.parse(match[1]); } catch (error) { throw new Error("Tyran DR provenance kunne ikke læses."); }
+  var sourceBody = match[2];
+  var descriptionDigest = sha256Hex_(sourceBody);
+  var expectedProvenance = {
+    version: 1, discoveryKey: expected.key, podcastId: id,
+    title: expected.title, seriesId: expected.seriesId, seriesProductionNumber: expected.seriesProductionNumber,
+    seriesUrl: expected.seriesUrl, episodeTitle: expected.episodeTitle, episodeGuid: expected.guid,
+    episodeUrl: expected.episodeUrl, coverImageId: expected.coverImageId, coverUrl: expected.coverUrl,
+    coverSha256: expected.coverSha256, descriptionUrl: expected.seriesUrl, descriptionSha256: expected.descriptionSha256
+  };
+  Object.keys(expectedProvenance).forEach(function (key) {
+    if (provenance[key] !== expectedProvenance[key]) throw new Error("Tyran DR provenance afviger for " + key + ".");
+  });
+  if (Object.keys(provenance).length !== Object.keys(expectedProvenance).length || descriptionDigest !== expected.descriptionSha256) {
+    throw new Error("Tyran DR-beskrivelse eller provenance-checksum afviger.");
+  }
+  var title = get("Titel");
+  var episodeUrl = get("DR source URL");
+  var guid = get("DR source GUID");
+  var coverUrl = get("Billedlink");
+  if (title !== expected.title || get("Hovedserie") !== "Tyran" || get("Udgiver") !== "DR" ||
+      episodeUrl !== expected.episodeUrl || guid !== expected.guid || !episodeUrl.endsWith(guid) ||
+      get("Link") !== expected.episodeUrl || get("Kilde") !== expected.episodeUrl || coverUrl !== expected.coverUrl ||
+      get("Review status") !== "NEEDS_EDITORIAL_REVIEW" || !get("Kort beskrivelse") || !get("Lang beskrivelse") ||
+      get("Vært") || get("Genre") || get("2. genre") || get("Emner") || get("Feed") || get("Episoder") ||
+      ["Vuring (1-10)", "Antal afsnit", "Årstal afspillet", "Afgivet vurdering", "Undervurderet perle", "Placering", "Adgang"]
+        .some(function (header) { return get(header) !== ""; })) {
+    throw new Error("Tyran staging-identitet, cover, reviewstatus eller tomme rating-/feedfelter afviger.");
+  }
+  row.slice(0, HEADERS_.length).concat([sourceDescription]).forEach(function (value) {
+    if (/^[\s]*[=+\-@]/u.test(String(value || ""))) throw new Error("Formel-lignende Tyran staging-indhold er ikke tilladt.");
+  });
+  return {
+    id: id, title: title, series: "Tyran", sourceUrl: expected.episodeUrl,
+    sourceGuid: expected.guid, sourceDescription: sourceDescription, shortDescription: get("Kort beskrivelse"),
+    longDescription: get("Lang beskrivelse"), seriesId: expected.seriesId,
+    seriesProductionNumber: expected.seriesProductionNumber, seriesUrl: expected.seriesUrl,
+    episodeTitle: expected.episodeTitle, coverUrl: expected.coverUrl, coverSha256: expected.coverSha256,
+    descriptionUrl: expected.seriesUrl
+  };
+}
+
+function sha256Hex_(value) {
+  var bytes = Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256, value, Utilities.Charset.UTF_8);
+  return bytes.map(function (byte) { return (byte < 0 ? byte + 256 : byte).toString(16).padStart(2, "0"); }).join("");
+}
+
+function normalizeTyranIdentity_(value) {
+  return String(value || "").normalize("NFD").replace(/[\u0300-\u036f]/gu, "").toLowerCase()
+    .replace(/æ/g, "ae").replace(/ø/g, "oe").replace(/å/g, "aa").replace(/&/g, " og ")
+    .replace(/[^a-z0-9]+/gu, " ").trim().replace(/\s+/gu, " ");
+}
+
+function findTyranTargetIdentity_(rows, candidate) {
+  var idIndex = HEADERS_.indexOf("Podcast-ID");
+  var titleIndex = HEADERS_.indexOf("Titel");
+  var seriesIndex = HEADERS_.indexOf("Hovedserie");
+  var found = null;
+  (rows || []).forEach(function (row, index) {
+    var id = String(row[idIndex] || "").normalize("NFC").trim();
+    if (id !== candidate.id) return;
+    if (found) throw new Error("Ark1 har dubleret Tyran Podcast-ID; append stoppet.");
+    var expectedLink = id === "marcos" ? candidate.seriesUrl : candidate.sourceUrl;
+    var storedSource = String(row[HEADERS_.indexOf("Kilde")] || "").trim();
+    if (String(row[titleIndex] || "").normalize("NFC").trim() !== candidate.title ||
+        String(row[seriesIndex] || "").normalize("NFC").trim() !== "Tyran" ||
+        String(row[HEADERS_.indexOf("Link")] || "").trim() !== expectedLink ||
+        (storedSource && storedSource !== expectedLink && storedSource !== candidate.sourceUrl) ||
+        String(row[HEADERS_.indexOf("Billedlink")] || "").trim() !== candidate.coverUrl) {
+      throw new Error("Eksisterende Tyran Podcast-ID har modstridende titel, hovedserie eller kilde.");
+    }
+    found = { rowNumber: index + 2, row: row };
+  });
+  return found;
+}
+
+function assertNoTyranIdentityCollision_(rows, candidate) {
+  var candidateTitle = normalizeTyranIdentity_(candidate.title);
+  if (TYRAN_PROTECTED_IDENTITIES_[candidateTitle]) throw new Error("Tyran-titlen kolliderer med en af de 22 beskyttede historiske identiteter.");
+  var identityTokens = [candidate.sourceUrl, candidate.seriesUrl, candidate.sourceGuid,
+    candidate.seriesProductionNumber, candidate.seriesId, candidate.coverUrl, candidate.coverSha256];
+  (rows || []).forEach(function (row) {
+    var id = String(row[HEADERS_.indexOf("Podcast-ID")] || "").normalize("NFC").trim();
+    var title = String(row[HEADERS_.indexOf("Titel")] || "").normalize("NFC").trim();
+    var series = String(row[HEADERS_.indexOf("Hovedserie")] || "").normalize("NFC").trim();
+    if (normalizeTyranIdentity_(title) === candidateTitle) throw new Error("Tyran-titlen findes allerede under Podcast-ID " + id + ".");
+    if (series === "Tyran" && id === candidate.title) throw new Error("Tyran kolliderer med en historisk Podcast-ID-identitet.");
+    var cells = row.map(function (cell) { return String(cell == null ? "" : cell); });
+    identityTokens.forEach(function (token) {
+      if (token && cells.some(function (cell) { return cell.indexOf(token) >= 0; })) {
+        throw new Error("Tyran DR-kilde, GUID, series-ID eller cover kolliderer med Ark1 Podcast-ID " + id + ".");
+      }
+    });
+  });
+}
+
+function appendOneTyranReviewedRow_(context, stagedItem) {
+  var lock = LockService.getDocumentLock();
+  if (!lock.tryLock(30000)) throw new Error("Kunne ikke låse Ark1; prøv igen senere.");
+  try {
+    var currentContext = assertOwnerConfiguration_();
+    assertTyranAppendConfiguration_(currentContext);
+    var target = currentContext.original.getSheetByName(TARGET_TAB_NAME_);
+    assertTargetSchema_(target);
+    var freshStaging = readStaging_(currentContext.stagingId);
+    var freshRow = freshStaging.values[stagedItem.sourceRow - 1];
+    var fresh = validateTyranStagingCandidate_(freshRow, freshStaging.formulas[stagedItem.sourceRow - 1]);
+    if (!sameArray_(freshRow.map(String), stagedItem.row.map(String))) throw new Error("Tyran staging-rækken ændrede sig under ejergennemgangen; intet blev skrevet.");
+    var before = snapshotTarget_(target);
+    var rows = before.values.slice(1);
+    if (findTyranTargetIdentity_(rows, fresh)) return;
+    assertNoTyranIdentityCollision_(rows, fresh);
+    var originalCount = target.getLastRow();
+    var output = stagedItem.row.slice(0, HEADERS_.length).map(function (value) { return value == null ? "" : String(value); });
+    try {
+      target.getRange(originalCount + 1, 1, 1, HEADERS_.length).setValues([output]);
+    } catch (appendError) {
+      var afterError = target.getSheetId() === TARGET_TAB_ID_ ? snapshotTarget_(target) : null;
+      assertOldCellsUnchanged_(before, afterError);
+      var recovered = readUniqueTargetIds_(target).get(fresh.id);
+      if (recovered && recovered.title === fresh.title && recovered.series === "Tyran") {
+        assertAppendedRowMatches_(target, recovered.rowNumber, output);
+        return;
+      }
+      throw appendError;
+    }
+    var after = snapshotTarget_(target);
+    assertOldCellsUnchanged_(before, after);
+    var verified = readUniqueTargetIds_(target).get(fresh.id);
+    if (!verified || verified.title !== fresh.title || verified.series !== "Tyran" || target.getLastRow() !== originalCount + 1) {
+      throw new Error("Tyran Ark1 append read-back fejlede; stop og undersøg manuelt.");
+    }
+    assertAppendedRowMatches_(target, verified.rowNumber, output);
+    Logger.log(JSON.stringify({ event: "TYRAN_STAGING_APPEND", podcastId: fresh.id, originalRowCount: originalCount, user: currentContext.userEmail, timestamp: new Date().toISOString() }));
+  } finally {
+    lock.releaseLock();
+  }
 }
 
 function extractDrHostCredit_(value) {
