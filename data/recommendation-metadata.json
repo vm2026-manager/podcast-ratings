@@ -2,7 +2,7 @@
   "version": 1,
   "source": {
     "path": "data/podcasts.json",
-    "generatedAt": "2026-11-06T22:21:50.988Z",
+    "generatedAt": "2026-11-07T15:10:06.130Z",
     "count": 1353,
     "topicAliases": "config/recommendation-topic-aliases.json",
     "topicAliasVersion": 1,
@@ -14,18 +14,18 @@
   "count": 1353,
   "summary": {
     "podcasts": 1353,
-    "validPrimaryGenres": 1330,
-    "invalidPrimaryGenres": 23,
-    "genreEligibleBeforeMapping": 1099,
-    "genreEligibleAfterMapping": 1330,
-    "recommendationMetadataEligibleBeforeMapping": 1096,
-    "recommendationMetadataEligibleAfterMapping": 1327,
-    "primaryGenreMappingNative": 1099,
+    "validPrimaryGenres": 1331,
+    "invalidPrimaryGenres": 22,
+    "genreEligibleBeforeMapping": 1100,
+    "genreEligibleAfterMapping": 1331,
+    "recommendationMetadataEligibleBeforeMapping": 1097,
+    "recommendationMetadataEligibleAfterMapping": 1328,
+    "primaryGenreMappingNative": 1100,
     "primaryGenreMappingCapitalization": 101,
     "primaryGenreMappingSpelling": 0,
     "primaryGenreMappingDirect": 130,
     "primaryGenreMappingConditionalDefault": 0,
-    "primaryGenreMappingUnmapped": 23,
+    "primaryGenreMappingUnmapped": 22,
     "uniqueUnmappedPrimaryGenres": 13,
     "conditionalGenreReviews": 0,
     "withSecondaryGenre": 1110,
@@ -33,8 +33,8 @@
     "withRawTopics": 1350,
     "withCanonicalTopics": 1350,
     "topicEligible": 1350,
-    "genreEligible": 1330,
-    "recommendationMetadataEligible": 1327,
+    "genreEligible": 1331,
+    "recommendationMetadataEligible": 1328,
     "approvedAliases": 17,
     "podcastsWithAliasApplied": 100,
     "rawTopicOccurrences": 5027,
@@ -51564,6 +51564,53 @@
       ]
     },
     {
+      "id": "mattias tesfaye",
+      "recommendationId": "rec-mattias-tesfaye-39bc3a84ba0c71b1fb481732c9c83d36",
+      "recommendationIdentityBasis": "title+link",
+      "identityDuplicateGroup": "",
+      "title": "Mattias Tesfaye",
+      "mainSeries": "Et kapitel for sig",
+      "primaryGenreRaw": "Samfund",
+      "primaryGenre": "Samfund",
+      "primaryGenreValid": true,
+      "primaryGenreMappingType": "native",
+      "primaryGenreMappingSource": "Samfund",
+      "primaryGenreNeedsReview": false,
+      "primaryGenreReviewReason": "",
+      "secondaryGenre": "",
+      "secondaryGenreValid": true,
+      "topicsRaw": [
+        "opvækst i Aarhus",
+        "arbejderklasse",
+        "murerfaget",
+        "dansk politik",
+        "ministerliv",
+        "AGF"
+      ],
+      "topicsCanonical": [
+        "opvækst i Aarhus",
+        "arbejderklasse",
+        "murerfaget",
+        "Dansk politik",
+        "Ministerliv",
+        "AGF"
+      ],
+      "topicKeys": [
+        "opvaekst-i-aarhus",
+        "arbejderklasse",
+        "murerfaget",
+        "dansk-politik",
+        "ministerliv",
+        "agf"
+      ],
+      "topicEligible": true,
+      "genreEligible": true,
+      "recommendationMetadataEligible": true,
+      "metadataIssues": [
+        "topic_alias_applied"
+      ]
+    },
+    {
       "id": "flashback",
       "recommendationId": "rec-flashback-545f50668f4e47cb6c758313bd6b76c7",
       "recommendationIdentityBasis": "title+link",
@@ -51751,54 +51798,6 @@
       "recommendationMetadataEligible": false,
       "metadataIssues": [
         "missing_topics"
-      ]
-    },
-    {
-      "id": "mattias tesfaye",
-      "recommendationId": "rec-mattias-tesfaye-39bc3a84ba0c71b1fb481732c9c83d36",
-      "recommendationIdentityBasis": "title+link",
-      "identityDuplicateGroup": "",
-      "title": "Mattias Tesfaye",
-      "mainSeries": "Et kapitel for sig",
-      "primaryGenreRaw": "Portræt",
-      "primaryGenre": "",
-      "primaryGenreValid": false,
-      "primaryGenreMappingType": "unmapped",
-      "primaryGenreMappingSource": "Portræt",
-      "primaryGenreNeedsReview": true,
-      "primaryGenreReviewReason": "unmapped_primary_genre",
-      "secondaryGenre": "",
-      "secondaryGenreValid": true,
-      "topicsRaw": [
-        "opvækst i Aarhus",
-        "arbejderklasse",
-        "murerfaget",
-        "dansk politik",
-        "ministerliv",
-        "AGF"
-      ],
-      "topicsCanonical": [
-        "opvækst i Aarhus",
-        "arbejderklasse",
-        "murerfaget",
-        "Dansk politik",
-        "Ministerliv",
-        "AGF"
-      ],
-      "topicKeys": [
-        "opvaekst-i-aarhus",
-        "arbejderklasse",
-        "murerfaget",
-        "dansk-politik",
-        "ministerliv",
-        "agf"
-      ],
-      "topicEligible": true,
-      "genreEligible": false,
-      "recommendationMetadataEligible": false,
-      "metadataIssues": [
-        "invalid_primary_genre",
-        "topic_alias_applied"
       ]
     },
     {
