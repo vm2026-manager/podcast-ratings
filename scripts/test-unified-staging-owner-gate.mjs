@@ -106,13 +106,12 @@ function makeHarness({
   };
   const now = Date.now();
   const propertyValues = new Map(Object.entries({
-    OWNER_EMAIL: "owner@example.invalid", APPEND_ENABLED: "true", BACKUP_RESTORE_TEST_VERIFIED: "true",
-    BACKUP_VERIFIED_AT: new Date(now).toISOString(), BACKUP_SPREADSHEET_ID: "independent-full-backup",
+    OWNER_EMAIL: "owner@example.invalid", APPEND_ENABLED: "false",
     STAGING_SPREADSHEET_ID: "separate-staging", ...properties
   }));
   let backupReads = 0;
   const props = {
-    getProperty(key) { if (key === "BACKUP_VERIFIED_AT") backupReads += 1; return propertyValues.get(key) ?? ""; },
+    getProperty(key) { return propertyValues.get(key) ?? ""; },
     setProperty(key, value) { propertyValues.set(key, value); return this; }
   };
   const promptLog = [];
@@ -136,6 +135,7 @@ function makeHarness({
       getActiveSpreadsheet: () => ({ getId: () => "1V21y9uMx_fGethrT47hILWczgK_ZSNRfksSKWuR69ss", getSheetByName: (name) => name === "Ark1" ? target : null }),
       openById: () => ({ getSheetByName: (name) => stagingTabs[name] || null }), getUi: () => ui
     },
+    HtmlService: { createHtmlOutput: (html) => ({ html, setTitle(title) { this.title = title; return this; } }) },
     PropertiesService: { getScriptProperties: () => props },
     Session: { getEffectiveUser: () => ({ getEmail: () => "owner@example.invalid" }) },
     LockService: { getDocumentLock: () => ({
@@ -151,7 +151,23 @@ function makeHarness({
   };
   vm.createContext(context);
   vm.runInContext(script, context, { filename: "Code.gs" });
-  return { context, originalData, drData, ui, promptLog, menus, propertyValues, get writes() { return writes; }, get backupReads() { return backupReads; }, get lockAcquires() { return lockAcquires; } };
+  const sidebarScript = context.STAGING_BATCH_SIDEBAR_HTML_.match(/<script>([\s\S]*)<\/script>/u)?.[1];
+  assert.ok(sidebarScript, "the Apps Script contains one embedded sidebar client");
+  new vm.Script(sidebarScript, { filename: "StagingBatchSidebar.html" });
+  let sidebar = null;
+  context.SpreadsheetApp.getUi = () => ({ ...ui, showSidebar(output) { sidebar = output; } });
+  return { context, originalData, drData, ui, promptLog, menus, propertyValues, changeStaging() { stagingTabs["DR staging"].changeFirstRow(); }, changeStagingOnApproval: changeStagingOnPrompt, get sidebar() { return sidebar; }, get writes() { return writes; }, get backupReads() { return backupReads; }, get lockAcquires() { return lockAcquires; } };
+}
+
+function runBatch(harness, { selectedIds, backupVerified = true } = {}) {
+  try {
+    const review = harness.context.getStagingBatchReview();
+    if (harness.changeStagingOnApproval) harness.changeStaging();
+    const ids = selectedIds ?? review.items.filter((item) => !item.existing).map((item) => item.id);
+    return harness.context.approveStagingBatch(ids, review.token, backupVerified);
+  } catch (error) {
+    return { success: false, message: error.message };
+  }
 }
 
 const expectedNewIds = [
@@ -164,18 +180,34 @@ const originalMacIasNotes = approved.drData.slice(-2).map((row) => row[STAGING_H
 approved.context.onOpen();
 assert.ok(approved.menus.some((menu) => menu.name === "DR staging"), "existing DR staging menu remains");
 assert.ok(approved.menus.some((menu) => menu.name === "Radio IIII staging"), "existing Radio IIII menu remains");
-assert.ok(approved.menus.some((menu) => menu.entries.some((entry) => entry.label === "Gennemgå stagingforslag samlet" && entry.handler === "reviewAndAppendStagingBatch")));
+assert.ok(approved.menus.find((menu) => menu.name === "DR staging").entries.some((entry) => entry.handler === "reviewAndAppendDrStagingRows"));
+assert.ok(approved.menus.find((menu) => menu.name === "DR staging").entries.some((entry) => entry.handler === "reviewAndAppendTyranStagingRows"));
+assert.ok(approved.menus.find((menu) => menu.name === "Radio IIII staging").entries.some((entry) => entry.handler === "reviewAndAppendRadioIIIIStagingRow"));
+assert.ok(approved.menus.some((menu) => menu.entries.some((entry) => entry.label === "Gennemgå og godkend samlet" && entry.handler === "reviewAndAppendStagingBatch")));
 approved.context.reviewAndAppendStagingBatch();
-assert.equal(approved.promptLog.length, 1, "the five verified proposals require one batch confirmation");
-assert.equal(approved.promptLog[0].title, "Gennemgå stagingforslag samlet");
-assert.match(approved.promptLog[0].message, /Mattias Tesfaye \| radio-iiii-auto-v1-7f0dfeb9 \| verificeret i Ark1/u);
-assert.match(approved.promptLog[0].message, /Marcos \| marcos \| verificeret i Ark1/u);
-assert.match(approved.promptLog[0].message, /NEEDS_EDITORIAL_REVIEW/u);
-assert.match(approved.promptLog[0].message, /Dræberurten[\s\S]*individuel redaktionel/u);
-assert.match(approved.promptLog[0].message, /Macias[\s\S]*individuel redaktionel/u);
-assert.match(approved.promptLog[0].message, /Kilde-GUID'er:/u);
-assert.match(approved.promptLog[0].message, /https:\/\/radio4data\.imgix\.net\/2026\/10\/Birgitte-Kosovic_master_episode_thumbnail\.png/u);
-assert.match(approved.promptLog[0].message, /https:\/\/www\.dr\.dk\/lyd\/special-radio\/bakspejl\/bakspejl-2026\/den-spanske-borgerkrig-1-3-11162611015/u);
+assert.equal(approved.sidebar.title, "Gennemgå og godkend samlet", "the menu opens the owner review sidebar");
+assert.match(approved.sidebar.html, /Jeg har netop gennemført og verificeret denne fulde backup/u);
+const preview = approved.context.getStagingBatchReview();
+assert.equal([...preview.items].map((item) => item.id).sort().join("|"), expectedNewIds.slice().sort().join("|"), "only the five validated current proposals are shown");
+for (const item of preview.items) assert.ok(item.sourceUrl && item.coverUrl && item.reviewStatus, JSON.stringify(item));
+for (const id of expectedNewIds) {
+  const item = preview.items.find((entry) => entry.id === id);
+  const record = known([...radio.records, ...bakspejl.records, ...djaevlen.records], id);
+  const expectedSource = record.source_url ?? ({
+    "bakspejl-auto-v1-4962cdc5": "https://www.dr.dk/lyd/special-radio/bakspejl/bakspejl-2026/den-spanske-borgerkrig-1-3-11162611015",
+    "djaevlen-auto-v1-1139735b": "https://www.dr.dk/lyd/special-radio/djaevlen-i-detaljen/djaevlen-i-detaljen-2026/kvinden-i-isdalen-1-5-et-braendt-lig-16122692642"
+  })[id];
+  assert.equal(item.sourceUrl, expectedSource, `preview source stays exact for ${id}`);
+  assert.equal(item.coverUrl, record.image_url ?? record.cover, `preview cover stays individual and exact for ${id}`);
+}
+assert.ok(preview.items.filter((item) => item.series === "Et kapitel for sig").every((item) => item.proposedGenre === "Samfund"));
+assert.equal([...preview.editorial].map((item) => item.id).sort().join("|"), "dræberurten|tyran-auto-v1-08d0021f");
+assert.equal([...preview.protectedIdentities].map((item) => item.id).join("|"), "radio-iiii-auto-v1-7f0dfeb9|marcos");
+assert.equal(approved.writes, 0, "read-only preview performs no writes");
+const approvedResult = runBatch(approved);
+assert.equal(approvedResult.success, true);
+assert.match(approvedResult.message, /readback-verificeret/u);
+assert.ok(approved.context.Logger.logs.some((line) => line.includes("STAGING_BATCH_BACKUP_AND_RESTORE_OWNER_ATTESTATION")), "the owner's immediate backup and restore attestation is auditable");
 assert.deepEqual(approved.originalData.slice(-5).map((row) => row[index("Podcast-ID")]).sort(), expectedNewIds.sort());
 assert.equal(approved.originalData.length, 8, "five new records append after the protected identities");
 assert.equal(approved.originalData[1][index("Podcast-ID")], "radio-iiii-auto-v1-7f0dfeb9", "Mattias is verified and never duplicated");
@@ -192,11 +224,11 @@ for (const row of approved.originalData.slice(-5)) {
 const radioCovers = approved.originalData.slice(-5).filter((row) => row[index("Hovedserie")] === "Et kapitel for sig").map((row) => row[index("Billedlink")]);
 assert.equal(new Set(radioCovers).size, 3, "the three Radio IIII guests retain distinct individual covers");
 assert.equal(approved.lockAcquires, 1, "one document lock covers the whole batch");
-assert.equal(approved.backupReads, 2, "one backup verification is checked twice around the batch, never once per row");
+assert.equal(approved.backupReads, 0, "the writer never opens or reads the independent backup");
 assert.equal(approved.propertyValues.get("APPEND_ENABLED"), "false", "the write gate closes automatically after success");
 assert.equal(approved.writes, 5);
 approved.propertyValues.set("APPEND_ENABLED", "true");
-approved.context.reviewAndAppendStagingBatch();
+runBatch(approved);
 assert.equal(approved.writes, 5, "a repeated fully verified batch does not duplicate any of the five guests");
 assert.equal(approved.originalData.length, 8);
 
@@ -221,7 +253,7 @@ futureRadio[index("Billedlink")] = "https://radio4data.imgix.net/2026/11/Fremtid
 futureRadio[RADIO_IIII_STAGING_HEADERS.indexOf("Radio IIII source GUIDs")] = [1, 2, 3, 4, 5].map((n) => `99999999-0000-4000-8000-00000000000${n}`).join(";");
 futureRadio[index("Episoder")] = ["Prolog: Fremtidig gæst", "Kapitel 1", "Kapitel 2", "Kapitel 3", "Kapitel 4"].join("; ");
 const future = makeHarness({ approval: "GODKEND BATCH 7", drStageRows: [...drRows, futureDr], radioStageRows: [...radioRows, futureRadio] });
-future.context.reviewAndAppendStagingBatch();
+runBatch(future);
 assert.equal(future.originalData.length, 10, "new series guests with validated IDs and official sources join the shared workflow dynamically");
 assert.ok(future.originalData.some((row) => row[index("Podcast-ID")] === "bakspejl-auto-v1-a1b2c3d4"));
 assert.ok(future.originalData.some((row) => row[index("Podcast-ID")] === "radio-iiii-auto-v1-badc0ffe"));
@@ -232,34 +264,40 @@ reviewedMacias[index("Genre")] = "True Crime";
 reviewedMacias[index("Emner")] = "Macias; Tyran";
 reviewedMacias[STAGING_HEADERS.indexOf("Review status")] = "EDITORIALLY_APPROVED_SOURCE_VERIFIED";
 const tyranApproval = makeHarness({ approval: "GODKEND BATCH 6", drStageRows: [...drRows.slice(0, 4), reviewedMacias] });
-tyranApproval.context.reviewAndAppendStagingBatch();
+runBatch(tyranApproval);
 if (!tyranApproval.originalData.some((row) => row[index("Podcast-ID")] === "tyran-auto-v1-08d0021f")) console.log(tyranApproval.ui.alerts);
 assert.ok(tyranApproval.originalData.some((row) => row[index("Podcast-ID")] === "tyran-auto-v1-08d0021f"), "Tyran becomes eligible only after its individual review status and source-backed metadata are complete");
 assert.equal(tyranApproval.writes, 6);
 
 for (const options of [
-  { approval: "", promptButton: "CANCEL" },
-  { approval: "GODKEND BATCH 4" },
-  { properties: { BACKUP_RESTORE_TEST_VERIFIED: "false" } },
-  { properties: { BACKUP_VERIFIED_AT: new Date(Date.now() - 20 * 60 * 1000).toISOString() } },
-  { properties: { BACKUP_SPREADSHEET_ID: "" } },
+  { backupVerified: false },
+  { backupVerified: { completedAt: new Date(Date.now() - 60 * 60 * 1000).toISOString() } },
+  { selectedIds: [] },
   { changeStagingOnPrompt: true }
 ]) {
   const blocked = makeHarness(options);
-  blocked.context.reviewAndAppendStagingBatch();
+  runBatch(blocked, options);
   assert.equal(blocked.writes, 0, "missing approval, backup or unchanged staging blocks every write");
   assert.equal(blocked.originalData.length, 3);
-  assert.equal(blocked.propertyValues.get("APPEND_ENABLED"), "false", "the write gate closes on cancellation and errors");
+  assert.equal(blocked.propertyValues.get("APPEND_ENABLED"), "false", "the write gate remains closed on rejected approval");
 }
 
+const subset = makeHarness();
+const subsetPreview = subset.context.getStagingBatchReview();
+const subsetResult = subset.context.approveStagingBatch(["bakspejl-auto-v1-4962cdc5"], subsetPreview.token, true);
+assert.equal(subsetResult.success, true, "the owner can select a validated subset");
+assert.equal(subset.writes, 1);
+assert.equal(subset.originalData.length, 4);
+
 const noGate = makeHarness({ properties: { APPEND_ENABLED: "false" } });
-noGate.context.reviewAndAppendStagingBatch();
-assert.equal(noGate.writes, 0, "the production write gate must be enabled by the owner");
+const noConsent = runBatch(noGate, { backupVerified: false });
+assert.equal(noGate.writes, 0, "missing batch approval blocks every write");
+assert.equal(noConsent.success, false);
 assert.equal(noGate.originalData.length, 3);
 
 const duplicateIdRows = [...drRows, drRows[1]];
 const duplicateId = makeHarness({ drStageRows: duplicateIdRows });
-duplicateId.context.reviewAndAppendStagingBatch();
+runBatch(duplicateId);
 assert.equal(duplicateId.writes, 0, "duplicate staging IDs stop the batch before confirmation");
 
 const foreignSource = Array(CATALOGUE_HEADERS.length).fill("");
@@ -267,21 +305,21 @@ foreignSource[index("Podcast-ID")] = "unrelated-existing-id";
 foreignSource[index("Titel")] = "Unrelated existing row";
 foreignSource[index("Kilde")] = "https://www.dr.dk/lyd/special-radio/bakspejl/bakspejl-2026/den-spanske-borgerkrig-1-3-11162611015";
 const sourceCollision = makeHarness({ targetRows: [protectedMattiasRow(), protectedMarcosRow(), foreignSource] });
-sourceCollision.context.reviewAndAppendStagingBatch();
+runBatch(sourceCollision);
 assert.equal(sourceCollision.writes, 0, "a source URL collision stops before the aggregate confirmation");
 
 const foreignCover = [...foreignSource];
 foreignCover[index("Kilde")] = "https://example.invalid/unrelated";
 foreignCover[index("Billedlink")] = "https://radio4data.imgix.net/2026/10/Birgitte-Kosovic_master_episode_thumbnail.png?width=1000&height=1000&fit=crop";
 const coverCollision = makeHarness({ targetRows: [protectedMattiasRow(), protectedMarcosRow(), foreignCover] });
-coverCollision.context.reviewAndAppendStagingBatch();
+runBatch(coverCollision);
 assert.equal(coverCollision.writes, 0, "a cover reused by an unrelated Ark1 identity stops before approval");
 
 const duplicateRadioGuid = [...futureRadio];
 duplicateRadioGuid[RADIO_IIII_STAGING_HEADERS.indexOf("Radio IIII source GUIDs")] =
   radioRows[2][RADIO_IIII_STAGING_HEADERS.indexOf("Radio IIII source GUIDs")].split(";")[0] + ";" + duplicateRadioGuid[RADIO_IIII_STAGING_HEADERS.indexOf("Radio IIII source GUIDs")].split(";").slice(1).join(";");
 const guidCollision = makeHarness({ approval: "GODKEND BATCH 6", radioStageRows: [...radioRows, duplicateRadioGuid] });
-guidCollision.context.reviewAndAppendStagingBatch();
+runBatch(guidCollision);
 assert.equal(guidCollision.writes, 0, "overlapping episode GUIDs stop before the first write");
 
 const existingOne = targetRow({
@@ -291,27 +329,27 @@ const existingOne = targetRow({
   Episoder: radio.records[1].manual_episodes.join("; ")
 });
 const idempotent = makeHarness({ approval: "GODKEND BATCH 4", targetRows: [protectedMattiasRow(), protectedMarcosRow(), existingOne] });
-idempotent.context.reviewAndAppendStagingBatch();
+runBatch(idempotent);
 assert.equal(idempotent.originalData.length, 8, "an exact already-existing proposal is skipped while the other four append");
 assert.equal(idempotent.originalData.filter((row) => row[index("Podcast-ID")] === "radio-iiii-auto-v1-915a06b7").length, 1);
 
 const partial = makeHarness({ failWrite: 3 });
-partial.context.reviewAndAppendStagingBatch();
+const partialResult = runBatch(partial);
 assert.equal(partial.writes, 3, "batch stops at the first failed write without retrying");
 assert.equal(partial.originalData.length, 5, "only the two completed rows remain after third-write failure");
-assert.match(partial.ui.alerts.at(-1), /Tilføjet og verificeret:[\s\S]*Ikke forsøgt:[\s\S]*Ingen automatisk retry/u);
+assert.match(partialResult.message, /Tilføjet og verificeret:[\s\S]*Ikke forsøgt:[\s\S]*Ingen automatisk retry/u);
 assert.equal(partial.propertyValues.get("APPEND_ENABLED"), "false");
 
 const committedTimeout = makeHarness({ failWrite: "after-first" });
-committedTimeout.context.reviewAndAppendStagingBatch();
+const committedTimeoutResult = runBatch(committedTimeout);
 assert.equal(committedTimeout.originalData.length, 4, "a timeout-after-commit is recognized only through readback");
-assert.match(committedTimeout.ui.alerts.at(-1), /Readback bekræfter at rækken blev skrevet/u);
+assert.match(committedTimeoutResult.message, /Readback bekræfter at rækken blev skrevet/u);
 assert.equal(committedTimeout.propertyValues.get("APPEND_ENABLED"), "false");
 
 const changedMidBatch = makeHarness({ changeStagingAfterFirstWrite: true });
-changedMidBatch.context.reviewAndAppendStagingBatch();
+const changedMidBatchResult = runBatch(changedMidBatch);
 assert.equal(changedMidBatch.writes, 1, "a staging edit after the first write stops all remaining writes");
-assert.match(changedMidBatch.ui.alerts.at(-1), /Staging ændrede sig under batchen/u);
+assert.match(changedMidBatchResult.message, /Staging ændrede sig under batchen/u);
 assert.equal(changedMidBatch.propertyValues.get("APPEND_ENABLED"), "false");
 
-console.log("Unified owner staging gate tests passed: four series, five verified proposals, protected identities, editorial review exclusions, one backup and lock per batch, source/GUID/cover checks, notes preservation, partial-write recovery, idempotency and automatic gate closure.");
+console.log("Unified owner staging gate tests passed: sidebar preview, four series, five verified proposals, owner backup attestation, protected identities, editorial review exclusions, one lock per batch, source/GUID/cover checks, notes preservation, partial-write recovery, idempotency and automatic gate closure.");
