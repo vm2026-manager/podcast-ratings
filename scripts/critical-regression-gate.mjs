@@ -69,6 +69,7 @@ const checks = [
   ["mobile ranking filter chips, independent removal and responsive layout", ["scripts/test-mobile-ranking-filter-chips.mjs"]],
   ["desktop ranking rank grid geometry in Chromium", ["scripts/test-desktop-ranking-column.mjs"]],
   ["popular-now activity, filters, responsive layout and safe fallback", ["scripts/test-popular-now-ranking.mjs"]],
+  ["popular-now batching, scroll gating, desktop cards and DOM reuse in Chromium", ["scripts/test-popular-now-batching.mjs"]],
   ["genre phase 2, ranking topic/synonym/typo search and responsive layouts", ["scripts/test-genre-phase2.mjs"]],
   ["cross-field podcast search across headers and ranking", ["scripts/test-cross-field-search.mjs"]],
   ["homepage layout clipping, alignment, genre access and responsive bounds", ["scripts/test-home-layout-regression.mjs"]],
