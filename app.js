@@ -1522,15 +1522,50 @@ function normalizeSearchVariants(value) {
   }));
 }
 
-function searchVariantsMatch(queryVariants, fieldVariants) {
-  const queryParts = [...new Set(queryVariants.flatMap((query) => query.readable.split(" ").filter(Boolean)))];
-  return queryParts.length > 0 && queryParts.every((part) => {
-    const partVariants = normalizeSearchVariants(part);
-    return fieldVariants.some((field) => partVariants.some((variant) =>
+function getSearchQueryTokenVariants(normalizedQuery) {
+  return [...new Set(String(normalizedQuery || "").split(" ").filter(Boolean))]
+    .map((token) => normalizeSearchVariants(token));
+}
+
+function searchTokenVariantsMatch(queryTokenVariants, fieldVariants) {
+  return queryTokenVariants.length > 0 && queryTokenVariants.every((tokenVariants) =>
+    fieldVariants.some((field) => tokenVariants.some((variant) =>
       field.readable.split(" ").includes(variant.readable) ||
       (variant.compact.length > 1 && field.compact.includes(variant.compact))
-    ));
-  });
+    ))
+  );
+}
+
+function searchVariantsMatch(queryVariants, fieldVariants) {
+  const queryParts = [...new Set(queryVariants.flatMap((query) => query.readable.split(" ").filter(Boolean)))];
+  return searchTokenVariantsMatch(queryParts.map((part) => normalizeSearchVariants(part)), fieldVariants);
+}
+
+const headerSearchFieldCache = new WeakMap();
+
+function getHeaderSearchFieldVariants(podcast) {
+  const cached = headerSearchFieldCache.get(podcast);
+  if (cached) return cached;
+
+  const isDisplayGroup = podcast.isDisplayGroup && Array.isArray(podcast.displayGroupMembers);
+  const memberTitles = isDisplayGroup ? podcast.displayGroupMembers.map((member) => member.title).join(" ") : "";
+  const memberMetadata = isDisplayGroup
+    ? podcast.displayGroupMembers.flatMap((member) => getPodcastSearchFieldValues(member)).join(" ")
+    : "";
+  const fields = {
+    title: normalizeSearchVariants(podcast.title),
+    titleNative: normalizeSearchValue(podcast.title),
+    memberAliases: normalizeSearchVariants(memberTitles),
+    host: normalizeSearchVariants(podcast.host),
+    mainSeries: normalizeSearchVariants(podcast.mainSeries),
+    publisher: normalizeSearchVariants(podcast.publisher),
+    genre: normalizeSearchVariants(podcast.genre),
+    secondaryGenre: normalizeSearchVariants(podcast.secondaryGenre),
+    topics: normalizeSearchVariants((podcast.searchTopics || []).join(" ")),
+    memberMetadata: normalizeSearchVariants(memberMetadata)
+  };
+  headerSearchFieldCache.set(podcast, fields);
+  return fields;
 }
 
 function getPublicSearchPodcasts() {
@@ -1540,30 +1575,22 @@ function getPublicSearchPodcasts() {
 function getHeaderSearchMatches(rawQuery) {
   const query = normalizeSearchValue(rawQuery);
   if (query.length < 2) return [];
+  const queryTokenVariants = getSearchQueryTokenVariants(query);
+  const rankingQuery = getRankingSearchQuery(rawQuery);
 
   return getPublicSearchPodcasts()
     .map((podcast) => {
-      const fields = {
-        title: normalizeSearchVariants(podcast.title),
-        memberAliases: normalizeSearchVariants(
-          podcast.isDisplayGroup ? podcast.displayGroupMembers.map((member) => member.title).join(" ") : ""
-        ),
-        host: normalizeSearchVariants(podcast.host),
-        mainSeries: normalizeSearchVariants(podcast.mainSeries),
-        publisher: normalizeSearchVariants(podcast.publisher),
-        genre: normalizeSearchVariants(podcast.genre),
-        secondaryGenre: normalizeSearchVariants(podcast.secondaryGenre),
-        topics: normalizeSearchVariants((podcast.searchTopics || []).join(" ")),
-        memberMetadata: normalizeSearchVariants(podcast.isDisplayGroup
-          ? podcast.displayGroupMembers.flatMap((member) => getPodcastSearchFieldValues(member)).join(" ")
-          : "")
-      };
-      const titleNative = normalizeSearchValue(podcast.title);
-      const matchesField = (field) => searchVariantsMatch(normalizeSearchVariants(rawQuery), field);
+      const fields = getHeaderSearchFieldVariants(podcast);
+      const titleNative = fields.titleNative;
+      const matchesField = (field) => searchTokenVariantsMatch(queryTokenVariants, field);
       const matchesAnyField = matchesRankingEnhancedSearch(podcast, rawQuery);
 
       if (!matchesAnyField) return null;
 
+      const titleSequenceMatch = rankingSearchQueryHasOrderedTitlePrefixMatch(
+        rankingQuery,
+        getRankingSearchFields(podcast).titleTokenSequences
+      );
       let score = 0;
       let matchLabel = "";
 
@@ -1578,6 +1605,9 @@ function getHeaderSearchMatches(rawQuery) {
         rankingSearchTokenHasShortTitlePrefixMatch(query, getRankingSearchFields(podcast).titlePrefixTokens)
       ) {
         score = 450;
+        matchLabel = "Titel";
+      } else if (titleSequenceMatch) {
+        score = 480;
         matchLabel = "Titel";
       } else if (titleNative.includes(query)) {
         score = 400;
@@ -1605,7 +1635,6 @@ function getHeaderSearchMatches(rawQuery) {
         score = 150;
         matchLabel = "Genre";
       } else {
-        const tokenMatches = normalizeSearchValue(rawQuery).split(" ").filter(Boolean);
         const partialField = [
           [fields.title, 350, "Titel"],
           [fields.memberAliases, 340, "Titel"],
@@ -1616,9 +1645,9 @@ function getHeaderSearchMatches(rawQuery) {
           [fields.secondaryGenre, 150, "Genre"],
           [fields.topics, 150, "Genre"],
           [fields.memberMetadata, 100, "Podcast"]
-        ].find(([field]) => tokenMatches.some((token) =>
-          searchVariantsMatch(normalizeSearchVariants(token), field) ||
-          rankingSearchTokenMatchesFieldVariants(token, field)
+        ].find(([field]) => queryTokenVariants.some((tokenVariants) =>
+          searchTokenVariantsMatch([tokenVariants], field) ||
+          rankingSearchTokenMatchesFieldVariants(tokenVariants[0]?.readable || "", field)
         ));
         [score, matchLabel] = partialField ? [partialField[1], partialField[2]] : [100, "Podcast"];
       }
@@ -2648,6 +2677,7 @@ function getRankingSearchQuery(searchTerm) {
     canonicalTokens: canonical.split(" ").filter(Boolean),
     rawTokens: normalized.split(" ").filter(Boolean),
     rawCanonicalTokens: normalized.split(" ").filter(Boolean).map(canonicalizeNormalizedRankingSearchText),
+    titleTokenVariants: getSearchQueryTokenVariants(normalized),
     shortNumericQuery: /^(?:\d+|[ivxlcdm]+)$/u.test(normalized) && normalized.length <= 3
   };
   if (rankingSearchQueryCache.size >= 128) rankingSearchQueryCache.delete(rankingSearchQueryCache.keys().next().value);
@@ -2663,12 +2693,16 @@ function getRankingSearchFields(podcast) {
   const prefixTokenBuckets = new Map();
   const titlePrefixTokens = new Set();
   const normalizedTitle = normalizeSearchValue(podcast?.title);
-  for (const titleVariant of new Set([
+  const titleVariants = [...new Set([
     normalizedTitle,
     normalizedTitle.replace(/æ/g, "ae").replace(/ø/g, "oe").replace(/å/g, "aa"),
     normalizedTitle.replace(/[æå]/g, "a").replace(/ø/g, "o")
-  ])) {
-    titleVariant.split(" ").filter(Boolean).forEach((token) => titlePrefixTokens.add(token));
+  ])];
+  const titleTokenSequences = [];
+  for (const titleVariant of titleVariants) {
+    const titleTokens = titleVariant.split(" ").filter(Boolean);
+    if (titleTokens.length) titleTokenSequences.push(titleTokens);
+    titleTokens.forEach((token) => titlePrefixTokens.add(token));
   }
   for (const { value, fuzzyAllowed } of getPodcastSearchFieldEntries(podcast)) {
     const normalized = normalizeRankingSearchValue(value);
@@ -2703,6 +2737,7 @@ function getRankingSearchFields(podcast) {
   fields.canonicalTokenSet = canonicalTokenSet;
   fields.prefixTokenBuckets = prefixTokenBuckets;
   fields.titlePrefixTokens = titlePrefixTokens;
+  fields.titleTokenSequences = titleTokenSequences;
   fields.fuzzyFields = fuzzyFields;
   rankingSearchFieldCache.set(podcast, fields);
   return fields;
@@ -2774,6 +2809,33 @@ function rankingSearchTokenHasShortTitlePrefixMatch(queryToken, titlePrefixToken
   return false;
 }
 
+function rankingSearchQueryHasOrderedTitlePrefixMatch(query, titleTokenSequences) {
+  if (!query || query.rawTokens.length < 2) return false;
+  const finalToken = query.rawTokens.at(-1);
+  if (
+    !finalToken ||
+    finalToken.length > 3 ||
+    (finalToken.length >= 2 && /^(?:\d+|[ivxlcdm]+)$/iu.test(finalToken))
+  ) return false;
+
+  const queryTokenVariants = query.titleTokenVariants || getSearchQueryTokenVariants(query.normalized);
+  return titleTokenSequences.some((titleTokens) => {
+    if (titleTokens.length < queryTokenVariants.length) return false;
+    for (let offset = 0; offset <= titleTokens.length - queryTokenVariants.length; offset += 1) {
+      const precedingTokensMatch = queryTokenVariants.slice(0, -1).every((tokenVariants, index) =>
+        tokenVariants.some((variant) => variant.readable === titleTokens[offset + index])
+      );
+      if (!precedingTokensMatch) continue;
+
+      const titleToken = titleTokens[offset + queryTokenVariants.length - 1];
+      if (queryTokenVariants.at(-1).some((variant) =>
+        variant.readable.length <= 3 && titleToken.startsWith(variant.readable)
+      )) return true;
+    }
+    return false;
+  });
+}
+
 function rankingSearchTokenMatchesFieldVariants(queryToken, fieldVariants) {
   if (
     queryToken.length < RANKING_SEARCH_PREFIX_MIN_LENGTH ||
@@ -2839,6 +2901,14 @@ function matchesRankingEnhancedSearch(podcast, searchTerm) {
   if (query.shortNumericQuery) {
     return fields.some((field) => field.normalized === query.normalized);
   }
+  const finalQueryToken = query.rawTokens.at(-1);
+  if (
+    query.rawTokens.length > 1 &&
+    finalQueryToken.length <= 3 &&
+    rankingSearchStopWords.has(finalQueryToken)
+  ) {
+    return rankingSearchQueryHasOrderedTitlePrefixMatch(query, fields.titleTokenSequences);
+  }
   // Single-token queries can use the podcast-wide token index directly; checking
   // every field first and retrying fuzzy matching across fields repeats the same work.
   if (query.rawTokens.length === 1 && query.canonicalTokens.length === 1) {
@@ -2856,6 +2926,8 @@ function matchesRankingEnhancedSearch(podcast, searchTerm) {
     ));
   }
   if (fields.some((field) => rankingSearchFieldMatches(query, field))) return true;
+
+  if (rankingSearchQueryHasOrderedTitlePrefixMatch(query, fields.titleTokenSequences)) return true;
 
   if (query.canonicalTokens.length > 1 && query.canonicalTokens.every((token) => fields.canonicalTokenSet.has(token))) return true;
   // Exact tokens, safe prefixes and at most one existing fuzzy token may combine
