@@ -429381,9 +429381,9 @@
           "editorialScore": null,
           "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQwXv2lFr4I1uX6B5ozCG7Ah4CzT1g8A0IwIA&s",
           "link": "https://www.podcastrepublic.net/podcast/1493271166",
-          "contentSimilarityScore": 24.9238,
+          "contentSimilarityScore": 39.9238,
           "topicSimilarityScore": 24.9238,
-          "genreSimilarityScore": 0,
+          "genreSimilarityScore": 15,
           "sharedTopics": [
             "Dansk politik"
           ],
@@ -429407,9 +429407,9 @@
           "editorialScore": null,
           "image": "https://radio4data.imgix.net/2025/08/Bjarne-Corydon.png?width=400&height=400&fit=crop",
           "link": "https://www.podcastrepublic.net/podcast/1493271166",
-          "contentSimilarityScore": 24.9238,
+          "contentSimilarityScore": 39.9238,
           "topicSimilarityScore": 24.9238,
-          "genreSimilarityScore": 0,
+          "genreSimilarityScore": 15,
           "sharedTopics": [
             "Dansk politik"
           ],
@@ -429433,9 +429433,9 @@
           "editorialScore": null,
           "image": "https://radio4data.imgix.net/2026/01/Helle_thorning_playerkort.png?width=1000&height=1000&fit=crop",
           "link": "https://radio4.dk/podcasts/et-kapitel-for-sig/kapitel-1-don-t-pick-up-the-shirt-helle-thorning-schmidt-1-5",
-          "contentSimilarityScore": 24.9238,
+          "contentSimilarityScore": 39.9238,
           "topicSimilarityScore": 24.9238,
-          "genreSimilarityScore": 0,
+          "genreSimilarityScore": 15,
           "sharedTopics": [
             "Dansk politik"
           ],
@@ -429459,9 +429459,9 @@
           "editorialScore": null,
           "image": "https://radio4data.imgix.net/2025/01/etkapitelforsig.png?width=1000&height=1000&fit=crop",
           "link": "https://radio4.dk/podcasts/et-kapitel-for-sig",
-          "contentSimilarityScore": 24.9238,
+          "contentSimilarityScore": 39.9238,
           "topicSimilarityScore": 24.9238,
-          "genreSimilarityScore": 0,
+          "genreSimilarityScore": 15,
           "sharedTopics": [
             "Dansk politik"
           ],
@@ -454579,7 +454579,7 @@
           "title": "Mattias Tesfaye",
           "publisher": "RADIO IIII",
           "authoritativeMainSeries": "Et kapitel for sig",
-          "primaryGenre": "",
+          "primaryGenre": "Samfund",
           "secondaryGenre": "",
           "topicsCanonical": [
             "opvækst i Aarhus",
@@ -454777,7 +454777,7 @@
           "title": "Mattias Tesfaye",
           "publisher": "RADIO IIII",
           "authoritativeMainSeries": "Et kapitel for sig",
-          "primaryGenre": "",
+          "primaryGenre": "Samfund",
           "secondaryGenre": "",
           "topicsCanonical": [
             "opvækst i Aarhus",
@@ -454973,7 +454973,7 @@
           "title": "Mattias Tesfaye",
           "publisher": "RADIO IIII",
           "authoritativeMainSeries": "Et kapitel for sig",
-          "primaryGenre": "",
+          "primaryGenre": "Samfund",
           "secondaryGenre": "",
           "topicsCanonical": [
             "opvækst i Aarhus",
@@ -720543,7 +720543,7 @@
     {
       "sourceRecommendationId": "rec-den-spanske-borgerkrig-5cc25237496c999b7a9819f11983108a",
       "sourceTitle": "Den spanske borgerkrig",
-      "sourceRow": 1349,
+      "sourceRow": 1350,
       "rawCellValue": "Franco; Europa i krig",
       "parsedTargetTitle": "Franco",
       "parsedHostQualifier": "",
@@ -720559,7 +720559,7 @@
     {
       "sourceRecommendationId": "rec-den-spanske-borgerkrig-5cc25237496c999b7a9819f11983108a",
       "sourceTitle": "Den spanske borgerkrig",
-      "sourceRow": 1349,
+      "sourceRow": 1350,
       "rawCellValue": "Franco; Europa i krig",
       "parsedTargetTitle": "Europa i krig",
       "parsedHostQualifier": "",
@@ -732351,7 +732351,7 @@
     {
       "sourceRecommendationId": "rec-flashback-545f50668f4e47cb6c758313bd6b76c7",
       "sourceTitle": "Flashback",
-      "sourceRow": 1346,
+      "sourceRow": 1347,
       "rawCellValue": "Scandinavian Star - Kampen for at få svar; Døgnet der rystede Danmark; Danmarks Titanic; Passagerflyet der forsvandt",
       "parsedTargetTitle": "Scandinavian Star - Kampen for at få svar",
       "parsedHostQualifier": "",
@@ -732367,7 +732367,7 @@
     {
       "sourceRecommendationId": "rec-flashback-545f50668f4e47cb6c758313bd6b76c7",
       "sourceTitle": "Flashback",
-      "sourceRow": 1346,
+      "sourceRow": 1347,
       "rawCellValue": "Scandinavian Star - Kampen for at få svar; Døgnet der rystede Danmark; Danmarks Titanic; Passagerflyet der forsvandt",
       "parsedTargetTitle": "Døgnet der rystede Danmark",
       "parsedHostQualifier": "",
@@ -732383,7 +732383,7 @@
     {
       "sourceRecommendationId": "rec-flashback-545f50668f4e47cb6c758313bd6b76c7",
       "sourceTitle": "Flashback",
-      "sourceRow": 1346,
+      "sourceRow": 1347,
       "rawCellValue": "Scandinavian Star - Kampen for at få svar; Døgnet der rystede Danmark; Danmarks Titanic; Passagerflyet der forsvandt",
       "parsedTargetTitle": "Danmarks Titanic",
       "parsedHostQualifier": "",
@@ -732399,7 +732399,7 @@
     {
       "sourceRecommendationId": "rec-flashback-545f50668f4e47cb6c758313bd6b76c7",
       "sourceTitle": "Flashback",
-      "sourceRow": 1346,
+      "sourceRow": 1347,
       "rawCellValue": "Scandinavian Star - Kampen for at få svar; Døgnet der rystede Danmark; Danmarks Titanic; Passagerflyet der forsvandt",
       "parsedTargetTitle": "Passagerflyet der forsvandt",
       "parsedHostQualifier": "",
@@ -752799,7 +752799,7 @@
     {
       "sourceRecommendationId": "rec-kvinden-i-isdalen-6c8e2a556a506ff16f00e759acc1eba1",
       "sourceTitle": "Kvinden i Isdalen",
-      "sourceRow": 1348,
+      "sourceRow": 1349,
       "rawCellValue": "Manden med de mange navne; Kvinden med den tunge kuffert",
       "parsedTargetTitle": "Manden med de mange navne",
       "parsedHostQualifier": "",
@@ -752815,7 +752815,7 @@
     {
       "sourceRecommendationId": "rec-kvinden-i-isdalen-6c8e2a556a506ff16f00e759acc1eba1",
       "sourceTitle": "Kvinden i Isdalen",
-      "sourceRow": 1348,
+      "sourceRow": 1349,
       "rawCellValue": "Manden med de mange navne; Kvinden med den tunge kuffert",
       "parsedTargetTitle": "Kvinden med den tunge kuffert",
       "parsedHostQualifier": "",

@@ -29,6 +29,41 @@ try {
   await page.goto(`http://127.0.0.1:${server.address().port}/#ranglister`, { waitUntil: "domcontentloaded" });
   await page.waitForFunction(() => state.podcasts?.length > 0 && getRankingCandidates().some((podcast) => getPodcastId(podcast) === "krig"));
 
+  const searchPerformance = await page.evaluate(() => {
+    const catalogueSize = getRankingCandidates().length;
+    const coldStart = performance.now();
+    const coldResults = getHeaderSearchMatches("sig d");
+    const coldHeaderMs = performance.now() - coldStart;
+
+    const input = elements.desktopHeaderSearchInput;
+    input.value = "sig de";
+    const visibleStart = performance.now();
+    renderHeaderSearchResults();
+    const visibleSuggestionMs = performance.now() - visibleStart;
+    const visibleTarget = [...(elements.desktopHeaderSearchResults?.querySelectorAll("[data-header-search-index]") || [])]
+      .some((option) => option.textContent.includes("Sig det' løgn"));
+
+    let warmTotalMs = 0;
+    for (let index = 0; index < 12; index += 1) {
+      const start = performance.now();
+      getHeaderSearchMatches(index % 2 ? "sig d" : "sig de");
+      warmTotalMs += performance.now() - start;
+    }
+    return {
+      catalogueSize,
+      coldHeaderMs,
+      visibleSuggestionMs,
+      warmAverageHeaderMs: warmTotalMs / 12,
+      coldResultCount: coldResults.length,
+      visibleTarget
+    };
+  });
+  assert.ok(searchPerformance.catalogueSize >= 1000, `performance sample uses the full catalogue: ${searchPerformance.catalogueSize}`);
+  assert.ok(searchPerformance.coldHeaderMs < 300, `cold full-catalogue search is under 300ms: ${JSON.stringify(searchPerformance)}`);
+  assert.ok(searchPerformance.visibleSuggestionMs < 300, `visible suggestion rendering is under 300ms: ${JSON.stringify(searchPerformance)}`);
+  assert.ok(searchPerformance.warmAverageHeaderMs < 300, `warm full-catalogue search is under 300ms: ${JSON.stringify(searchPerformance)}`);
+  assert.ok(searchPerformance.coldResultCount > 0 && searchPerformance.visibleTarget, "cold matching and visible suggestions both include the title-sequence result");
+
   const results = await page.evaluate(() => {
     const bakspejlTitles = ["Kolonien", "Koloni til salg"];
     const bakspejl = getRankingCandidates().filter((podcast) =>
@@ -79,6 +114,27 @@ try {
       genericTitleWord: matchesRankingEnhancedSearch({ title: "Hobbitten" }, "ho"),
       noGenericSubstring: matchesRankingEnhancedSearch({ title: "Hobbitten" }, "ob")
     };
+    const sigTarget = getRankingCandidates().find((podcast) => getPodcastId(podcast) === "sig det løgn");
+    const sigTypeaheadQueries = ["sig", "sig ", "sig d", "sig de", "sig det", "sig det'", "sig det' l", "sig det' løgn"];
+    const sigTypeahead = Object.fromEntries(sigTypeaheadQueries.map((query) => {
+      state.searchTerm = query;
+      const rankingMatches = getFilteredPodcasts().filter((podcast) => matchesRankingEnhancedSearch(podcast, query));
+      const headerMatches = getHeaderSearchMatches(query);
+      return [query, {
+        ranking: rankingMatches.some((podcast) => getPodcastId(podcast) === "sig det løgn"),
+        header: headerMatches.some(({ podcast }) => getPodcastId(podcast) === "sig det løgn"),
+        headerFirst: getPodcastId(headerMatches[0]?.podcast) === "sig det løgn"
+      }];
+    }));
+    const shortMiddleTitleSequences = [];
+    for (const podcast of getRankingCandidates()) {
+      const titleTokens = normalizeSearchValue(podcast.title).split(" ").filter(Boolean);
+      if (titleTokens.length < 3 || titleTokens[1].length > 3 || titleTokens[2].length < 2) continue;
+      const query = `${titleTokens[0]} ${titleTokens[1]} ${titleTokens[2].slice(0, 2)}`;
+      if (!matchesRankingEnhancedSearch(podcast, query)) continue;
+      shortMiddleTitleSequences.push({ id: getPodcastId(podcast), title: podcast.title, query });
+      if (shortMiddleTitleSequences.length >= 8) break;
+    }
     const negative = {
       ranking: (state.searchTerm = "tamm mørkeland", getIds(state.searchTerm).includes("krig")),
       header: getHeaderSearchMatches("tamm mørkeland").some(({ podcast }) => getPodcastId(podcast) === "krig"),
@@ -92,6 +148,12 @@ try {
       noShortQuery: matchesRankingEnhancedSearch({ title: "Martin Tamm Andersen" }, "m"),
       noOneLetterPrefix: matchesRankingEnhancedSearch({ title: "Hoxha" }, "h"),
       noTwoLetterMultiwordPrefix: matchesRankingEnhancedSearch({ title: "Hobbitten" }, "ho bi"),
+      noStopWordCrossFieldCombination: matchesRankingEnhancedSearch({ title: "Sig noget klogt", host: "De Lange" }, "sig de"),
+      noUnrelatedSigTitle: getRankingCandidates()
+        .filter((podcast) => /^sig /u.test(normalizeSearchValue(podcast.title)) && getPodcastId(podcast) !== "sig det løgn")
+        .some((podcast) => matchesRankingEnhancedSearch(podcast, "sig de")),
+      noRomanPrefixInTitleSequence: matchesRankingEnhancedSearch({ title: "Sig Ivan" }, "sig iv"),
+      noNumericPrefixInTitleSequence: matchesRankingEnhancedSearch({ title: "Sig 1234" }, "sig 12"),
       noShortStopWord: ["the", "en"].some((query) => matchesRankingEnhancedSearch({ title: "Enver Hoxha" }, query)),
       noShortNumericOrRoman: ["123", "xiv", "12", "iv"].some((query) => matchesRankingEnhancedSearch({ title: "XIV Hoxha" }, query))
     };
@@ -108,7 +170,7 @@ try {
     clearActiveFilter();
     state.searchTerm = "";
     const afterFilterRating = getRankingCandidates().find((podcast) => getPodcastId(podcast) === "krig").ratingValue;
-    return { bakspejlTitles, bakspejl: bakspejl.map(({ title, host, mainSeries }) => ({ title, host, mainSeries })), bakspejlRanking, bakspejlQueryTitles, bakspejlHeader, queries, header, ranking, shortTitleSearch, shortTwoLetterTitleSearch, negative, aliases, matchingGenreFilter, nonmatchingGenreFilter, rating, afterFilterRating };
+    return { bakspejlTitles, bakspejl: bakspejl.map(({ title, host, mainSeries }) => ({ title, host, mainSeries })), bakspejlRanking, bakspejlQueryTitles, bakspejlHeader, queries, header, ranking, shortTitleSearch, shortTwoLetterTitleSearch, sigTarget: sigTarget && { id: getPodcastId(sigTarget), title: sigTarget.title }, sigTypeaheadQueries, sigTypeahead, shortMiddleTitleSequences, negative, aliases, matchingGenreFilter, nonmatchingGenreFilter, rating, afterFilterRating };
   });
   assert.ok(results.bakspejl.length > 0, `catalogue must contain verified Bakspejl titles and Martin Grønne: ${JSON.stringify(results.bakspejl)}`);
   assert.deepEqual(results.bakspejl.map(({ title }) => title).sort(), results.bakspejlTitles.slice().sort(), "both current Bakspejl title rows retain Martin Grønne as the verified host");
@@ -130,7 +192,13 @@ try {
     assert.equal(matches.headerFirst, true, `short title prefix ranks the canonical podcast first in header suggestions: ${query}`);
   }
   assert.deepEqual(results.shortTwoLetterTitleSearch, { ranking: true, header: true, genericTitleWord: true, noGenericSubstring: false });
-  assert.deepEqual(results.negative, { ranking: false, header: false, noFuzzyIdentity: false, noSubstringAcrossFields: false, noShortPrefixCollision: false, noMidWordTitleMatch: false, noShortHostOnlyMatch: false, noTwoLetterHostPrefixCollision: false, noTwoLetterSubstring: false, noShortQuery: false, noOneLetterPrefix: false, noTwoLetterMultiwordPrefix: false, noShortStopWord: false, noShortNumericOrRoman: false });
+  assert.deepEqual(results.sigTarget, { id: "sig det løgn", title: "Sig det' løgn" }, "the typeahead regression is anchored to the actual catalogue identity");
+  for (const query of results.sigTypeaheadQueries) {
+    assert.deepEqual(results.sigTypeahead[query], { ranking: true, header: true, headerFirst: true }, `Sig det' løgn remains the visible top suggestion through title typing: ${JSON.stringify(query)}`);
+  }
+  assert.ok(results.shortMiddleTitleSequences.length >= 3, `several catalog titles with short middle words stay searchable as ordered typeahead prefixes: ${JSON.stringify(results.shortMiddleTitleSequences)}`);
+  assert.equal(new Set(results.shortMiddleTitleSequences.map(({ id }) => id)).size, results.shortMiddleTitleSequences.length, "typeahead examples use distinct canonical podcast identities");
+  assert.deepEqual(results.negative, { ranking: false, header: false, noFuzzyIdentity: false, noSubstringAcrossFields: false, noShortPrefixCollision: false, noMidWordTitleMatch: false, noShortHostOnlyMatch: false, noTwoLetterHostPrefixCollision: false, noTwoLetterSubstring: false, noShortQuery: false, noOneLetterPrefix: false, noTwoLetterMultiwordPrefix: false, noStopWordCrossFieldCombination: false, noUnrelatedSigTitle: false, noRomanPrefixInTitleSequence: false, noNumericPrefixInTitleSequence: false, noShortStopWord: false, noShortNumericOrRoman: false });
   assert.deepEqual(results.aliases, { radio24: true, radio4: true, danish: true });
   assert.equal(results.matchingGenreFilter, true, "active matching genre filters still apply alongside search");
   assert.equal(results.nonmatchingGenreFilter, false, "active nonmatching genre filters still exclude the podcast");
@@ -165,22 +233,95 @@ try {
   assert.ok((await page.locator("#podcastDetailSheet").innerText()).includes("Enver Hoxha"), "desktop suggestion opens the matching podcast");
   await page.keyboard.press("Escape");
   await page.locator("#podcastDetailSheet.is-hidden").waitFor({ state: "attached" });
-  await page.goto(`http://127.0.0.1:${server.address().port}/#ranglister`, { waitUntil: "domcontentloaded" });
-  await page.waitForFunction(() => state.podcasts?.length > 0);
-  await page.evaluate(() => handleRankingSourceChange("mads"));
-  await page.waitForFunction(() => state.rankingSource === "mads");
-  const rankingSearch = page.locator("#searchInput");
-  await rankingSearch.click();
-  await rankingSearch.fill("ho");
-  await page.waitForFunction(() => state.searchTerm === "ho" && getFilteredPodcasts().some((podcast) => getPodcastId(podcast) === "enver hoxha"));
-  const rankingHoxResult = page.locator('#podcastGrid [data-key="enver hoxha"]').first();
-  await rankingHoxResult.waitFor({ state: "visible" });
-  assert.equal(await rankingHoxResult.isVisible(), true, "ranking search renders the two-letter title prefix result visibly");
-  await rankingHoxResult.click();
+
+  await desktopSearchInput.fill("");
+  let desktopTypedQuery = "";
+  for (const character of Array.from("sig det' løgn")) {
+    await desktopSearchInput.pressSequentially(character);
+    desktopTypedQuery += character;
+    if (desktopTypedQuery.startsWith("sig")) {
+      await page.waitForFunction(() => headerSearchState.matches.some(({ podcast }) => getPodcastId(podcast) === "sig det løgn"));
+      const suggestion = page.locator("[data-header-search-index]").filter({ hasText: "Sig det' løgn" }).first();
+      await suggestion.waitFor({ state: "visible" });
+      const firstSuggestionId = await page.evaluate(() => getPodcastId(headerSearchState.matches[0]?.podcast));
+      assert.equal(firstSuggestionId, "sig det løgn", `title suggestion remains first while typing ${JSON.stringify(desktopTypedQuery)}`);
+    }
+  }
+  await desktopSearchInput.press("ArrowDown");
+  assert.ok(await desktopSearchInput.getAttribute("aria-activedescendant"), "desktop ArrowDown activates a suggestion");
+  await desktopSearchInput.press("Enter");
   await page.locator("#podcastDetailSheet:not(.is-hidden)").waitFor({ state: "visible" });
-  assert.ok((await page.locator("#podcastDetailSheet").innerText()).includes("Enver Hoxha"), "ranking result opens the matching podcast");
+  assert.ok((await page.locator("#podcastDetailSheet").innerText()).includes("Sig det' løgn"), "desktop Enter opens the selected title-sequence match");
   await page.keyboard.press("Escape");
   await page.locator("#podcastDetailSheet.is-hidden").waitFor({ state: "attached" });
+  assert.equal(await desktopSearchInput.inputValue(), "", "opening a desktop result clears the old query");
+
+  const rankingPage = await browser.newPage({ viewport: { width: 1280, height: 900 } });
+  rankingPage.on("pageerror", (error) => { throw error; });
+  await rankingPage.route(/^https?:\/\/(?!127\.0\.0\.1)/u, (route) => route.abort());
+  await rankingPage.goto(`http://127.0.0.1:${server.address().port}/#ranglister`, { waitUntil: "domcontentloaded" });
+  await rankingPage.waitForFunction(() => state.podcasts?.length > 0);
+  await rankingPage.evaluate(() => handleRankingSourceChange("mads"));
+  await rankingPage.waitForFunction(() => state.rankingSource === "mads");
+  const rankingSearch = rankingPage.locator("#searchInput");
+  await rankingSearch.click();
+  await rankingSearch.fill("ho");
+  await rankingPage.waitForFunction(() => state.searchTerm === "ho" && getFilteredPodcasts().some((podcast) => getPodcastId(podcast) === "enver hoxha"));
+  const rankingHoxResult = rankingPage.locator('#podcastGrid [data-key="enver hoxha"]').first();
+  for (let batch = 0; batch < 40 && !(await rankingHoxResult.isVisible()); batch += 1) {
+    const loadMore = rankingPage.locator(".load-more-button:visible").last();
+    if (!(await loadMore.count())) break;
+    await loadMore.click();
+  }
+  try {
+    await rankingHoxResult.waitFor({ state: "visible" });
+  } catch (error) {
+    const diagnostic = await rankingPage.evaluate(() => {
+      const result = document.querySelector('#podcastGrid [data-key="enver hoxha"]');
+      const rect = result?.getBoundingClientRect();
+      const filtered = getFilteredPodcasts();
+      return {
+        route: location.href,
+        viewport: innerWidth,
+        search: state.searchTerm,
+        rankingSource: state.rankingSource,
+        filteredCount: filtered.length,
+        targetIndex: filtered.findIndex((podcast) => getPodcastId(podcast) === "enver hoxha"),
+        renderedCount: document.querySelectorAll("#podcastGrid [data-key]").length,
+        resultExists: Boolean(result),
+        resultStyle: result && { display: getComputedStyle(result).display, visibility: getComputedStyle(result).visibility, rect: { width: rect.width, height: rect.height, top: rect.top } },
+        gridClass: document.querySelector("#podcastGrid")?.className,
+        inputValue: document.querySelector("#searchInput")?.value,
+        inputReadOnly: document.querySelector("#searchInput")?.readOnly
+      };
+    });
+    throw new Error(`Hoxha ranking result did not render visibly: ${JSON.stringify(diagnostic)}`, { cause: error });
+  }
+  assert.equal(await rankingHoxResult.isVisible(), true, "ranking search renders the two-letter title prefix result visibly");
+  await rankingHoxResult.click();
+  await rankingPage.locator("#podcastDetailSheet:not(.is-hidden)").waitFor({ state: "visible" });
+  assert.ok((await rankingPage.locator("#podcastDetailSheet").innerText()).includes("Enver Hoxha"), "ranking result opens the matching podcast");
+  await rankingPage.keyboard.press("Escape");
+  await rankingPage.locator("#podcastDetailSheet.is-hidden").waitFor({ state: "attached" });
+
+  await rankingSearch.fill("");
+  let rankingTypedQuery = "";
+  for (const character of Array.from("sig det' løgn")) {
+    await rankingSearch.pressSequentially(character);
+    rankingTypedQuery += character;
+    if (rankingTypedQuery.startsWith("sig")) {
+      await rankingPage.waitForFunction(() => state.searchTerm.startsWith("sig") && getFilteredPodcasts().some((podcast) => getPodcastId(podcast) === "sig det løgn"));
+      const rankingSigResult = rankingPage.locator('#podcastGrid [data-key="sig det løgn"]').first();
+      await rankingSigResult.waitFor({ state: "visible" });
+    }
+  }
+  await rankingPage.locator('#podcastGrid [data-key="sig det løgn"]').first().click();
+  await rankingPage.locator("#podcastDetailSheet:not(.is-hidden)").waitFor({ state: "visible" });
+  assert.ok((await rankingPage.locator("#podcastDetailSheet").innerText()).includes("Sig det' løgn"), "ranking search result opens the matching podcast");
+  await rankingPage.keyboard.press("Escape");
+  await rankingPage.locator("#podcastDetailSheet.is-hidden").waitFor({ state: "attached" });
+  await rankingSearch.fill("");
+  assert.equal(await rankingSearch.inputValue(), "", "ranking search can be cleared after opening a result");
 
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto(`http://127.0.0.1:${server.address().port}/`, { waitUntil: "domcontentloaded" });
@@ -216,7 +357,30 @@ try {
   assert.ok((await page.locator("#podcastDetailSheet").innerText()).includes("Enver Hoxha"), "mobile touch opens the matching podcast");
   await page.keyboard.press("Escape");
   await page.locator("#podcastDetailSheet.is-hidden").waitFor({ state: "attached" });
-  console.log("Cross-field podcast search regression: PASS");
+
+  await page.locator("[data-home-podcast-search-input]").focus();
+  await page.locator("#mobileHomeSearchOverlayInput").waitFor({ state: "visible" });
+  const mobileSearchInput = page.locator("#mobileHomeSearchOverlayInput");
+  let mobileTypedQuery = "";
+  for (const character of Array.from("sig det' løgn")) {
+    await mobileSearchInput.pressSequentially(character);
+    mobileTypedQuery += character;
+    if (mobileTypedQuery.startsWith("sig")) {
+      await page.waitForFunction(() => mobileHomeSearchOverlayState.matches.some(({ podcast }) => getPodcastId(podcast) === "sig det løgn"));
+      const suggestion = page.locator("[data-mobile-home-search-index]").filter({ hasText: "Sig det' løgn" }).first();
+      await suggestion.waitFor({ state: "visible" });
+      const firstSuggestionId = await page.evaluate(() => getPodcastId(mobileHomeSearchOverlayState.matches[0]?.podcast));
+      assert.equal(firstSuggestionId, "sig det løgn", `mobile title suggestion remains first while typing ${JSON.stringify(mobileTypedQuery)}`);
+    }
+  }
+  await mobileSearchInput.press("ArrowDown");
+  assert.ok(await mobileSearchInput.getAttribute("aria-activedescendant"), "mobile ArrowDown activates a suggestion");
+  await mobileSearchInput.press("Enter");
+  await page.locator("#podcastDetailSheet:not(.is-hidden)").waitFor({ state: "visible" });
+  assert.ok((await page.locator("#podcastDetailSheet").innerText()).includes("Sig det' løgn"), "mobile Enter opens the selected title-sequence match");
+  await page.keyboard.press("Escape");
+  await page.locator("#podcastDetailSheet.is-hidden").waitFor({ state: "attached" });
+  console.log(`Cross-field podcast search regression: PASS (${JSON.stringify({ ...searchPerformance, coldHeaderMs: Number(searchPerformance.coldHeaderMs.toFixed(1)), visibleSuggestionMs: Number(searchPerformance.visibleSuggestionMs.toFixed(1)), warmAverageHeaderMs: Number(searchPerformance.warmAverageHeaderMs.toFixed(1)) })})`);
 } finally {
   await browser.close();
   await new Promise((resolve) => server.close(resolve));
