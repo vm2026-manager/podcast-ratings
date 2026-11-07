@@ -139,9 +139,38 @@ function onOpen() {
     .addItem("Gennemgå og tilføj verificeret gæsteserie", "reviewAndAppendRadioIIIIStagingRow")
     .addToUi();
   SpreadsheetApp.getUi().createMenu("Ejerstyret staging")
-    .addItem("Gennemgå stagingforslag samlet", "reviewAndAppendStagingBatch")
+    .addItem("Gennemgå og godkend samlet", "reviewAndAppendStagingBatch")
     .addToUi();
 }
+
+var STAGING_BATCH_SIDEBAR_HTML_ = `<!doctype html><html><head><base target="_top"><style>
+body{font:14px Arial,sans-serif;color:#202124;padding:12px}h2{font-size:18px;margin:0 0 10px}h3{font-size:15px;margin:20px 0 8px}
+.item{border:1px solid #dadce0;border-radius:8px;padding:10px;margin:10px 0}.top{display:flex;gap:8px;align-items:start}.top input{margin-top:3px}
+.meta{color:#5f6368;font-size:12px;overflow-wrap:anywhere;margin:5px 0}.cover{width:64px;height:64px;object-fit:cover;border-radius:4px;float:right;margin:0 0 6px 8px}
+.warning{background:#fff7e0;padding:10px;border-radius:6px;margin:14px 0}.error{color:#b3261e;white-space:pre-wrap}.ok{color:#137333;white-space:pre-wrap}
+button{background:#1a73e8;color:white;border:0;border-radius:5px;padding:10px 14px;font-weight:bold;cursor:pointer}button:disabled{opacity:.5;cursor:default}
+#status{white-space:pre-wrap;margin:12px 0}.small{font-size:12px;color:#5f6368}
+</style></head><body><h2>Gennemgå stagingforslag samlet</h2><p id="status">Kontrollerer staging og eksisterende Ark1-identiteter…</p><div id="items"></div><div id="editorial"></div>
+<div id="approval" hidden><div class="warning"><strong>Backupkrav før godkendelse</strong><p>Før du fortsætter, lav én frisk, uafhængig fuld kopi af originalarket med en separat backupidentitet. Backupfilen må ikke deles med Apps Script-ejerkontoen eller GitHub-automation. Gendan kopien til et testark, og kontrollér faner og data. Dette script kontrollerer ikke backupfilen.</p><label><input id="backup" type="checkbox"> Jeg har netop gennemført og verificeret denne fulde backup og testgendannelse.</label></div><p class="small">Radio IIII-genren bliver Samfund kun i nye Ark1-rækker. Editorial-review-forslag forbliver udeladt.</p><button id="submit" disabled>Godkend valgte samlet</button></div>
+<script>
+let review;
+const el=(tag,attrs={},text='')=>{const n=document.createElement(tag);for(const [k,v] of Object.entries(attrs))if(k==='class')n.className=v;else n.setAttribute(k,v);n.textContent=text;return n};
+const officialUrl=value=>{const u=String(value||'');return ['https://dr.dk/','https://www.dr.dk/','https://api.dr.dk/','https://asset.dr.dk/','https://radio4.dk/','https://radio4data.imgix.net/'].some(prefix=>u.startsWith(prefix))?u:''};
+function show(data){review=data;const status=document.getElementById('status');status.textContent='Forhåndskontrol bestået. '+data.newCount+' nye rækker er klar; eksisterende identiteter kontrolleret.';
+const root=document.getElementById('items');root.replaceChildren();data.items.forEach(item=>{const card=el('section',{class:'item'});if(officialUrl(item.coverUrl)){const img=el('img',{class:'cover',src:officialUrl(item.coverUrl)});img.alt='Individuelt cover: '+item.title;card.appendChild(img)}
+const top=el('div',{class:'top'});const check=el('input',{type:'checkbox'});check.checked=!item.existing;check.disabled=item.existing;check.dataset.id=item.id;top.appendChild(check);const title=el('strong',{},item.title+' — '+item.series);top.appendChild(title);card.appendChild(top);
+[['Podcast-ID',item.id],['Kilde',item.sourceUrl],['Foreslået genre',item.proposedGenre?item.proposedGenre+' (ejerens batchgodkendelse)':item.genre],['Reviewstatus',item.reviewStatus],['Eksisterende status',item.existing?'Allerede i Ark1 — verificeret, springes over':'Ny række']].forEach(([label,value])=>{const p=el('div',{class:'meta'});p.appendChild(el('b',{},label+': '));if(label==='Kilde'&&officialUrl(value)){const a=el('a',{href:officialUrl(value)},value);p.appendChild(a)}else p.appendChild(document.createTextNode(value||'—'));card.appendChild(p)});
+if(item.sourceGuids.length)card.appendChild(el('div',{class:'meta'},'Kilde-/episode-GUID: '+item.sourceGuids.join(', ')));root.appendChild(card)});
+const identities=el('p',{class:'small'},'Kontrollerede eksisterende identiteter: '+data.protectedIdentities.map(x=>x.title+' ('+x.id+'): '+(x.verified?'verificeret':'MANGLER')).join(' · '));root.appendChild(identities);
+const editorial=document.getElementById('editorial');editorial.replaceChildren();if(data.editorial.length){editorial.appendChild(el('h3',{},'Udeladt: kræver særskilt redaktionel godkendelse'));data.editorial.forEach(item=>{const card=el('div',{class:'item'});if(officialUrl(item.coverUrl)){const img=el('img',{class:'cover',src:officialUrl(item.coverUrl)});img.alt='Individuelt cover: '+item.title;card.appendChild(img)}card.appendChild(el('strong',{},item.title+' — '+item.series));[['Podcast-ID',item.id],['Kilde',item.sourceUrl],['Genre',item.genre],['Reviewstatus',item.status],['Mangler',item.reason]].forEach(([label,value])=>{const p=el('div',{class:'meta'});p.appendChild(el('b',{},label+': '));if(label==='Kilde'&&officialUrl(value))p.appendChild(el('a',{href:officialUrl(value)},value));else p.appendChild(document.createTextNode(value||'—'));card.appendChild(p)});editorial.appendChild(card)})}
+document.getElementById('approval').hidden=data.newCount===0;document.getElementById('submit').disabled=true;document.getElementById('backup').checked=false;
+}
+document.getElementById('backup').addEventListener('change',()=>{document.getElementById('submit').disabled=!document.getElementById('backup').checked||!document.querySelector('#items input[type=checkbox]:checked:not(:disabled)')});
+document.getElementById('items').addEventListener('change',()=>{document.getElementById('submit').disabled=!document.getElementById('backup').checked||!document.querySelector('#items input[type=checkbox]:checked:not(:disabled)')});
+document.getElementById('submit').addEventListener('click',()=>{const ids=[...document.querySelectorAll('#items input[type=checkbox]:checked:not(:disabled)')].map(x=>x.dataset.id);if(!ids.length)return;const button=document.getElementById('submit');button.disabled=true;document.getElementById('status').textContent='Godkendelsen behandles; kontrollér rapporten nedenfor.';
+google.script.run.withSuccessHandler(result=>{document.getElementById('status').className=result.success?'ok':'error';document.getElementById('status').textContent=result.message;document.getElementById('approval').hidden=true}).withFailureHandler(error=>{document.getElementById('status').className='error';document.getElementById('status').textContent='Udfaldet kan ikke bekræftes: '+error.message+' | Kontrollér Ark1 read-only før et nyt forsøg. Genindlæs forhåndsvisningen; der udføres ingen automatisk retry.';document.getElementById('approval').hidden=true}).approveStagingBatch(ids,review.token,document.getElementById('backup').checked)});
+google.script.run.withSuccessHandler(show).withFailureHandler(error=>{document.getElementById('status').className='error';document.getElementById('status').textContent='Forhåndskontrol stoppet: '+error.message}).getStagingBatchReview();
+</script></body></html>`;
 
 function reviewAndAppendDrStagingRows() {
   var ui = SpreadsheetApp.getUi();
@@ -310,16 +339,77 @@ function reviewAndAppendRadioIIIIStagingRow() {
   ui.alert("Radio IIII-rækken blev verificeret og tilføjet. Kør menuen igen med en ny, frisk backup før næste gæst.");
 }
 
-/** One owner-confirmed batch across the four staging main series. */
+/** Opens the single, read-only review surface for all staging series. */
 function reviewAndAppendStagingBatch() {
+  SpreadsheetApp.getUi().showSidebar(HtmlService.createHtmlOutput(STAGING_BATCH_SIDEBAR_HTML_)
+    .setTitle("Gennemgå og godkend samlet"));
+}
+
+/** Read-only preview; no backup file or target cell is written or opened. */
+function getStagingBatchReview() {
+  var context = assertStagingBatchOwnerConfiguration_();
+  var target = context.original.getSheetByName(TARGET_TAB_NAME_);
+  assertTargetSchema_(target);
+  var stagingSnapshot = readUnifiedStagingSnapshot_(context.stagingId);
+  var proposalSet = validateStagingBatch_(stagingSnapshot);
+  var targetSnapshot = snapshotTarget_(target);
+  var targetIndex = readUniqueTargetIds_(target);
+  verifyProtectedExistingIdentities_(stagingSnapshot, target, targetIndex);
+  var plan = preflightStagingBatch_(proposalSet.approved, targetIndex);
+  return {
+    items: proposalSet.approved.filter(function (item) {
+      return item.candidate.id !== "radio-iiii-auto-v1-7f0dfeb9";
+    }).map(function (item) {
+      var c = item.candidate;
+      var existing = targetIndex.get(c.id);
+      return {
+        id: c.id, title: c.title, series: c.series, sourceUrl: c.sourceUrl || "",
+        coverUrl: c.coverUrl || "", genre: c.genre || (c.series === RADIO_IIII_SERIES_ ? RADIO_IIII_PROPOSED_GENRE_ : ""),
+        proposedGenre: c.series === RADIO_IIII_SERIES_ ? RADIO_IIII_PROPOSED_GENRE_ : "",
+        reviewStatus: item.reviewStatus || "", existing: Boolean(existing),
+        sourceGuids: (c.guids || [c.sourceGuid]).filter(Boolean)
+      };
+    }),
+    editorial: proposalSet.editorial,
+    alreadyPresent: plan.already,
+    protectedIdentities: [
+      { title: "Mattias Tesfaye", id: "radio-iiii-auto-v1-7f0dfeb9", verified: targetIndex.has("radio-iiii-auto-v1-7f0dfeb9") },
+      { title: "Marcos", id: "marcos", verified: targetIndex.has("marcos") }
+    ],
+    token: stagingBatchReviewToken_(stagingSnapshot, targetSnapshot),
+    newCount: plan.toWrite.length
+  };
+}
+
+/** One owner-confirmed batch across the four staging main series. */
+function approveStagingBatch(selectedIds, reviewToken, backupAndRestoreVerified) {
+  var properties = PropertiesService.getScriptProperties();
+  var isOwner = Session.getEffectiveUser().getEmail() === properties.getProperty("OWNER_EMAIL");
+  try {
+    if (backupAndRestoreVerified !== true) throw new Error("Batch stoppet: ejeren skal først attestere en frisk, fuld, uafhængig backup og verificeret testgendannelse.");
+    if (!Array.isArray(selectedIds) || !selectedIds.length) throw new Error("Batch stoppet: vælg mindst ét verificeret forslag.");
+    Logger.log(JSON.stringify({ event: "STAGING_BATCH_BACKUP_AND_RESTORE_OWNER_ATTESTATION", attestedAt: new Date().toISOString(), selectedIds: selectedIds.slice() }));
+    return executeStagingBatch_(selectedIds, reviewToken);
+  } finally {
+    if (isOwner) properties.setProperty("APPEND_ENABLED", "false");
+  }
+}
+
+function stagingBatchReviewToken_(stagingSnapshot, targetSnapshot) {
+  var bytes = Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256,
+    JSON.stringify({ staging: stagingSnapshot, target: targetSnapshot }), Utilities.Charset.UTF_8);
+  return bytes.map(function (value) { return ("0" + ((value + 256) % 256).toString(16)).slice(-2); }).join("");
+}
+
+function executeStagingBatch_(selectedIds, approvedReviewToken) {
   var ui = SpreadsheetApp.getUi();
   var properties = PropertiesService.getScriptProperties();
   var ownerMayCloseGate = Session.getEffectiveUser().getEmail() === properties.getProperty("OWNER_EMAIL");
-  var gateWasOpen = properties.getProperty("APPEND_ENABLED") === "true";
   var appendedIds = [];
   var alreadyPresentIds = [];
   var notAttemptedIds = [];
   var attemptedId = "";
+  var expectedEligibleIds = [];
   var lock = null;
   var lockAcquired = false;
   try {
@@ -333,29 +423,24 @@ function reviewAndAppendStagingBatch() {
     verifyProtectedExistingIdentities_(stagingSnapshot, target, targetIndex);
     var plan = preflightStagingBatch_(proposalSet.approved, targetIndex);
     notAttemptedIds = plan.toWrite.map(function (item) { return item.candidate.id; });
-
-    var preview = formatStagingBatchPreview_(proposalSet, plan, targetIndex);
-    if (!plan.toWrite.length) {
-      ui.alert("Stagingoversigt\n\n" + preview + "\n\nIngen nye rækker kræver append. Ingen Ark1-celler blev skrevet.");
-      return;
+    if (!plan.toWrite.length) return { success: true, message: "Ingen nye rækker kræver append. Ark1 er uændret." };
+    var selected = {};
+    selectedIds.forEach(function (id) {
+      if (selected[id]) throw new Error("Batch stoppet: Podcast-ID valgt flere gange: " + id);
+      selected[id] = true;
+    });
+    var eligibleIds = plan.toWrite.map(function (item) { return item.candidate.id; });
+    expectedEligibleIds = eligibleIds.slice();
+    if (Object.keys(selected).some(function (id) { return eligibleIds.indexOf(id) < 0; })) {
+      throw new Error("Batch stoppet: stagingforslag ændrede sig, eller valget matcher ikke de validerede nye forslag. Genindlæs oversigten.");
     }
-    var approvalPhrase = "GODKEND BATCH " + plan.toWrite.length;
-    var approval = ui.prompt(
-      "Gennemgå stagingforslag samlet",
-      preview + "\n\nGodkend alle " + plan.toWrite.length + " validerede, nye forslag samlet. Radio IIII-genren ændres kun i de nye Ark1-rækker til Samfund. " +
-        "Forslag med NEEDS_EDITORIAL_REVIEW er udeladt. Skriv præcist " + approvalPhrase + " for én samlet godkendelse. Annuller eller andet svar skriver intet.",
-      ui.ButtonSet.OK_CANCEL
-    );
-    if (approval.getSelectedButton() !== ui.Button.OK || approval.getResponseText().trim() !== approvalPhrase) {
-      ui.alert("Batchen blev ikke godkendt. Ingen Ark1-celler blev skrevet.");
-      return;
-    }
+    plan.toWrite = plan.toWrite.filter(function (item) { return selected[item.candidate.id]; });
+    notAttemptedIds = plan.toWrite.map(function (item) { return item.candidate.id; });
 
     lock = LockService.getDocumentLock();
     if (!lock.tryLock(30000)) throw new Error("Kunne ikke låse originalarket; ingen rækker blev forsøgt.");
     lockAcquired = true;
-    var lockedContext = assertOwnerConfiguration_();
-    assertStagingBatchBackupFresh_(lockedContext);
+    var lockedContext = assertStagingBatchOwnerConfiguration_();
     var lockedTarget = lockedContext.original.getSheetByName(TARGET_TAB_NAME_);
     assertTargetSchema_(lockedTarget);
     var freshStaging = readUnifiedStagingSnapshot_(lockedContext.stagingId);
@@ -368,11 +453,17 @@ function reviewAndAppendStagingBatch() {
     }
     var freshSet = validateStagingBatch_(freshStaging);
     var freshPlan = preflightStagingBatch_(freshSet.approved, readUniqueTargetIds_(lockedTarget));
-    if (!sameArray_(freshPlan.toWrite.map(function (item) { return item.candidate.id; }), notAttemptedIds)) {
+    if (!sameArray_(freshPlan.toWrite.map(function (item) { return item.candidate.id; }), expectedEligibleIds)) {
       throw new Error("Batchens identiteter ændrede sig under ejergodkendelsen; stop før første write.");
     }
+    if (stagingBatchReviewToken_(freshStaging, beforeWrite) !== approvedReviewToken) {
+      throw new Error("Batchen stoppet: Ark1 eller staging ændrede sig efter forhåndsvisningen. Genindlæs oversigten og gennemgå igen.");
+    }
 
-    var remaining = freshPlan.toWrite.slice();
+    // Temporary process-local permission; the gate is always closed in finally.
+    properties.setProperty("APPEND_ENABLED", "true");
+
+    var remaining = freshPlan.toWrite.filter(function (item) { return selected[item.candidate.id]; });
     while (remaining.length) {
       var item = remaining.shift();
       notAttemptedIds = remaining.map(function (pending) { return pending.candidate.id; });
@@ -425,27 +516,17 @@ function reviewAndAppendStagingBatch() {
       attemptedId = "";
     }
     notAttemptedIds = [];
-    ui.alert("Batch gennemført og readback-verificeret. Tilføjet: " + (appendedIds.length ? appendedIds.join(", ") : "ingen") +
+    return { success: true, message: "Batch gennemført og readback-verificeret. Tilføjet: " + (appendedIds.length ? appendedIds.join(", ") : "ingen") +
       ". Allerede til stede: " + (alreadyPresentIds.length ? alreadyPresentIds.join(", ") : "ingen") +
-      ". NEEDS_EDITORIAL_REVIEW blev udeladt.");
+      ". NEEDS_EDITORIAL_REVIEW blev udeladt." };
   } catch (error) {
-    ui.alert("Batch stoppet: " + error.message + "\nTilføjet og verificeret: " + (appendedIds.length ? appendedIds.join(", ") : "ingen") +
+    return { success: false, message: "Batch stoppet: " + error.message + "\nTilføjet og verificeret: " + (appendedIds.length ? appendedIds.join(", ") : "ingen") +
       "\nAllerede til stede: " + (alreadyPresentIds.length ? alreadyPresentIds.join(", ") : "ingen") +
       "\nSkriveforsøg: " + (attemptedId || "ingen") +
-      "\nIkke forsøgt: " + (notAttemptedIds.length ? notAttemptedIds.join(", ") : "ingen") + "\nIngen automatisk retry.");
+      "\nIkke forsøgt: " + (notAttemptedIds.length ? notAttemptedIds.join(", ") : "ingen") + "\nIngen automatisk retry." };
   } finally {
     if (lock && lockAcquired) lock.releaseLock();
-    if (ownerMayCloseGate && gateWasOpen) properties.setProperty("APPEND_ENABLED", "false");
-  }
-}
-
-function assertStagingBatchBackupFresh_(context) {
-  if (context.properties.getProperty("BACKUP_RESTORE_TEST_VERIFIED") !== "true") {
-    throw new Error("Samlet staginggodkendelse kræver en uafhængig fuld backup med verificeret testgendannelse.");
-  }
-  var verifiedAt = Date.parse(context.properties.getProperty("BACKUP_VERIFIED_AT") || "");
-  if (!Number.isFinite(verifiedAt) || Date.now() - verifiedAt > 15 * 60 * 1000 || verifiedAt > Date.now() + 60 * 1000) {
-    throw new Error("Samlet staginggodkendelse kræver én frisk backup og verificeret testgendannelse fra de seneste 15 minutter.");
+    if (ownerMayCloseGate) properties.setProperty("APPEND_ENABLED", "false");
   }
 }
 
@@ -456,13 +537,21 @@ function assertStagingBatchOwnerConfiguration_() {
   if (!original || original.getId() !== ORIGINAL_SPREADSHEET_ID_) throw new Error("Stagingoversigten skal åbnes fra det godkendte originalark.");
   if (!userEmail || userEmail !== properties.getProperty("OWNER_EMAIL")) throw new Error("Kun den konfigurerede ejer må gennemgå stagingforslag.");
   var stagingId = properties.getProperty("STAGING_SPREADSHEET_ID");
-  var backupId = properties.getProperty("BACKUP_SPREADSHEET_ID");
-  if (!stagingId || stagingId === ORIGINAL_SPREADSHEET_ID_ || stagingId === backupId) throw new Error("Separat DR staging-regneark mangler eller kolliderer.");
+  if (!stagingId || stagingId === ORIGINAL_SPREADSHEET_ID_) throw new Error("Separat DR staging-regneark mangler eller kolliderer.");
   return { original: original, properties: properties, stagingId: stagingId, userEmail: userEmail };
 }
 
 function readUnifiedStagingSnapshot_(stagingId) {
   return { dr: readStaging_(stagingId), radioIIII: readRadioIIIIStaging_(stagingId) };
+}
+
+function stagingEditorialSummary_(row, id, title, series, status) {
+  return {
+    id: id, title: title, series: series, status: status,
+    sourceUrl: String(row[STAGING_HEADERS_.indexOf("DR source URL")] || row[HEADERS_.indexOf("Kilde")] || ""),
+    coverUrl: String(row[HEADERS_.indexOf("Billedlink")] || ""),
+    genre: String(row[HEADERS_.indexOf("Genre")] || ""), reason: editorialReviewReason_(row, id)
+  };
 }
 
 function validateStagingBatch_(snapshot) {
@@ -488,20 +577,20 @@ function validateStagingBatch_(snapshot) {
     if (drIds[id]) throw new Error("DR staging har dubleret Podcast-ID: " + id);
     drIds[id] = true;
     if (status === "NEEDS_EDITORIAL_REVIEW") {
-      editorial.push({ id: id, title: title, series: series, status: status || "NEEDS_EDITORIAL_REVIEW", reason: editorialReviewReason_(row, id) });
+      editorial.push(stagingEditorialSummary_(row, id, title, series, status || "NEEDS_EDITORIAL_REVIEW"));
       return;
     }
     if (series === "Tyran") {
       if (status !== "EDITORIALLY_APPROVED_SOURCE_VERIFIED") {
-        editorial.push({ id: id, title: title, series: series, status: status || "NEEDS_EDITORIAL_REVIEW", reason: editorialReviewReason_(row, id) });
+        editorial.push(stagingEditorialSummary_(row, id, title, series, status || "NEEDS_EDITORIAL_REVIEW"));
         return;
       }
       var reviewedTyran = validateOwnerReviewedTyranCandidate_(row, formulas);
-      approved.push({ source: "DR staging", row: row.slice(0, HEADERS_.length), candidate: reviewedTyran });
+      approved.push({ source: "DR staging", row: row.slice(0, HEADERS_.length), candidate: reviewedTyran, reviewStatus: status });
       return;
     }
     if (id === "dræberurten" && status !== "EDITORIALLY_APPROVED_SOURCE_VERIFIED") {
-      editorial.push({ id: id, title: title, series: series, status: status, reason: editorialReviewReason_(row, id) });
+      editorial.push(stagingEditorialSummary_(row, id, title, series, status));
       return;
     }
     if (status !== "SOURCE_VERIFIED_REQUIRES_OWNER_APPROVAL" && status !== "EDITORIALLY_APPROVED_SOURCE_VERIFIED") {
@@ -518,11 +607,12 @@ function validateStagingBatch_(snapshot) {
         candidate.host !== verified.host || candidate.genre !== verified.genre)) {
       throw new Error("Kendt DR staging-ID afviger fra sin verificerede kilde, genre, vært eller individuelle cover: " + id);
     }
-    approved.push({ source: "DR staging", row: row.slice(0, HEADERS_.length), candidate: Object.assign({}, candidate, { coverUrl: coverUrl }) });
+    approved.push({ source: "DR staging", row: row.slice(0, HEADERS_.length), candidate: Object.assign({}, candidate, { coverUrl: coverUrl }), reviewStatus: status });
   });
 
   validateRadioIIIIStagingRows_(snapshot.radioIIII).forEach(function (item) {
-    approved.push({ source: RADIO_IIII_TAB_NAME_, row: item.row.slice(0, HEADERS_.length), candidate: item.candidate });
+    approved.push({ source: RADIO_IIII_TAB_NAME_, row: item.row.slice(0, HEADERS_.length), candidate: item.candidate,
+      reviewStatus: item.reviewStatus });
   });
   var ids = {};
   var guids = {};
@@ -658,29 +748,6 @@ function buildBatchOutputRow_(item) {
   return output;
 }
 
-function formatStagingBatchPreview_(proposalSet, plan, targetIds) {
-  var lines = ["Validerede forslag, som indgår ved samlet godkendelse:"];
-  proposalSet.approved.forEach(function (item) {
-    var c = item.candidate;
-    var statusIndex = item.source === RADIO_IIII_TAB_NAME_ ? RADIO_IIII_HEADERS_.indexOf("Review status") : STAGING_HEADERS_.indexOf("Review status");
-    var reviewStatus = String(item.row[statusIndex] || "").trim();
-    var state = targetIds.has(c.id) ? "ALLEREDE I ARK1 — identiteten verificeres og springes over" : "NYT — kan appendes";
-    lines.push("\n" + c.series + " | " + c.title + "\nPodcast-ID: " + c.id + "\nKilde: " + (c.sourceUrl || "") +
-      "\nCover: " + (c.coverUrl || "") + "\nGenre: " + (c.genre || (c.series === RADIO_IIII_SERIES_ ? RADIO_IIII_PROPOSED_GENRE_ + " (kræver samlet accept)" : "")) +
-      "\nKilde-GUID'er: " + ((c.guids || [c.sourceGuid]).filter(Boolean).join(", ")) +
-      "\nReviewstatus: " + reviewStatus + "\nStatus: " + state);
-  });
-  lines.push("\nKontrollerede eksisterende identiteter:");
-  lines.push("Mattias Tesfaye | radio-iiii-auto-v1-7f0dfeb9 | " + (targetIds.has("radio-iiii-auto-v1-7f0dfeb9") ? "verificeret i Ark1" : "MANGLER — stop"));
-  lines.push("Marcos | marcos | " + (targetIds.has("marcos") ? "verificeret i Ark1" : "MANGLER — stop"));
-  lines.push("\nUdeladt — kræver individuel redaktionel godkendelse og kildeverifikation:");
-  proposalSet.editorial.forEach(function (item) {
-    lines.push(item.series + " | " + item.title + " | " + item.id + "\nReviewstatus: " + item.status + "\nMangler: " + item.reason);
-  });
-  lines.push("\nNye rækker i denne batch: " + plan.toWrite.length + ". Allerede til stede med eksakt identitet: " + plan.already.length + ".");
-  return lines.join("\n");
-}
-
 function verifyProtectedExistingIdentities_(stagingSnapshot, target, targetIds) {
   var mattiasItem = validateRadioIIIIStagingRows_(stagingSnapshot.radioIIII).filter(function (item) {
     return item.candidate.id === "radio-iiii-auto-v1-7f0dfeb9";
@@ -733,7 +800,8 @@ function validateRadioIIIIStagingRows_(data) {
       if (seenGuids[guid] && seenGuids[guid] !== candidate.id) throw new Error("Radio IIII staging har overlappende episode-GUID'er.");
       seenGuids[guid] = candidate.id;
     });
-    candidates.push({ sourceRow: rowIndex + 1, row: row.slice(0, HEADERS_.length), candidate: candidate });
+    candidates.push({ sourceRow: rowIndex + 1, row: row.slice(0, HEADERS_.length), candidate: candidate,
+      reviewStatus: String(row[RADIO_IIII_HEADERS_.indexOf("Review status")] || "") });
   }
   return candidates;
 }

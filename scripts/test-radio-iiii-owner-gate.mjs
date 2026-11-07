@@ -122,7 +122,7 @@ menuHarness.context.onOpen();
 assert.deepEqual(menuHarness.menus.map((menu) => menu.name), ["DR staging", "Radio IIII staging", "Ejerstyret staging"]);
 assert.equal(menuHarness.menus[0].entries[0].handler, "reviewAndAppendDrStagingRows", "existing DR menu target is unchanged");
 assert.equal(menuHarness.menus[1].entries[0].handler, "reviewAndAppendRadioIIIIStagingRow");
-assert.equal(menuHarness.menus[2].entries[0].label, "Gennemgå stagingforslag samlet");
+assert.equal(menuHarness.menus[2].entries[0].label, "Gennemgå og godkend samlet");
 assert.equal(menuHarness.menus[2].entries[0].handler, "reviewAndAppendStagingBatch");
 
 const activeGenreValues = ["True Crime", "Historie", "Krig", "Politik", "Finans", "Samfund", "Sport", "Dokumentar", "Viden", "Underholdning", "Sladder"];
