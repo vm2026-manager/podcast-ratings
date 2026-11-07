@@ -63,24 +63,28 @@ var RADIO_IIII_IDENTITIES_ = {
   "radio-iiii-auto-v1-7f0dfeb9": {
     title: "Mattias Tesfaye", seasonUrl: "https://radio4.dk/podcasts/et-kapitel-for-sig?season=67",
     sourceUrl: "https://radio4.dk/podcasts/et-kapitel-for-sig/kapitel-1-jeg-har-trukket-nitten-1-4-mattias-tesfaye",
+    coverUrl: "https://radio4data.imgix.net/2026/02/Mattias-Tesfaye-episodebillede.png?width=1000&height=1000&fit=crop",
     guids: ["ee1d7c4e-c4ae-4ee1-ac27-b4f0003df1fe", "80e2a0b9-c7ce-4acd-8c85-b4f0003f4df9", "ab7baa37-d346-409f-bbda-b4f1003defee", "2600844c-f0d1-482a-bd50-b4f2003b14ac", "943609db-6521-4214-895c-b4f3003b13c1"],
     episodes: ["Prolog - Mattias Tesfaye", "Kapitel 1: “Jeg har trukket nitten” (1:4) – Mattias Tesfaye", "Kapitel 2: Forfalsker mors underskrift (2:4) – Mattias Tesfaye", "Kapitel 3: “Bange for det, der bor inde i mig” (3:4) – Mattias Tesfaye", "Kapitel 4: Klasseforræder? (4:4) - Mattias Tesfaye"]
   },
   "radio-iiii-auto-v1-915a06b7": {
     title: "Birgithe Kosovic", seasonUrl: "https://radio4.dk/podcasts/et-kapitel-for-sig?season=66",
     sourceUrl: "https://radio4.dk/podcasts/et-kapitel-for-sig/kapitel-1-som-en-tikkende-bombe-1-4-birgithe-kosovic",
+    coverUrl: "https://radio4data.imgix.net/2026/10/Birgitte-Kosovic_master_episode_thumbnail.png?width=1000&height=1000&fit=crop",
     guids: ["73ecb9b3-670e-4aba-853f-b4e9002ab92c", "32b3d843-1d9c-46b5-82a5-b4e9002c1840", "b65bda3b-b040-4031-bb28-b4ea002ab795", "b5dbcc87-ed84-4b30-ae69-b4eb006bdccb", "10db60d6-010b-43b9-ad77-b4ec002ab8de"],
     episodes: ["Prolog - Birgithe Kosovic", "Kapitel 1: Som en tikkende bombe (1:4) - Birgithe Kosovic", "Kapitel 2: To ægtemænd i far-roller (2:4) - Birgithe Kosovic", "Kapitel 3: I gæld til den serbiske mafia (3:4) - Birgithe Kosovic", "Kapitel 4: Har jeg slået min far ihjel? (4:4) - Birgithe Kosovic"]
   },
   "radio-iiii-auto-v1-ad97bb06": {
     title: "Ditlev Tamm", seasonUrl: "https://radio4.dk/podcasts/et-kapitel-for-sig?season=65",
     sourceUrl: "https://radio4.dk/podcasts/et-kapitel-for-sig/kapitel-1-en-opv-kst-med-sn-vre-gr-nser-1-4-ditlev-tamm",
+    coverUrl: "https://radio4data.imgix.net/2026/10/Ditlev-Tamm_master_episode_thumbnail.png?width=1000&height=1000&fit=crop",
     guids: ["80fb4638-3faf-4c3f-8cd7-b4db002ab35b", "83ab38ba-e17a-4f05-a1b1-b4db002c17cd", "04d93aa3-367e-4371-86fe-b4dc002ab7ed", "4ea0cf77-e409-44c2-852f-b4dd002ac1ae", "548966cb-1e58-445a-a98d-b4de002ab441"],
     episodes: ["Prolog: Ditlev Tamm", "Kapitel 1: En opvækst med snævre grænser (1:4) - Ditlev Tamm", "Kapitel 2: Opgør med opgøret (2:4) - Ditlev Tamm", "Kapitel 3: Tomrum, depression og skilsmisse (3:4) - Ditlev Tamm", "Kapitel 4: Når Ditlev Tamm bliver til Patricia (4:4) - Ditlev Tamm"]
   },
   "radio-iiii-auto-v1-f143ebcd": {
     title: "Sara Blædel", seasonUrl: "https://radio4.dk/podcasts/et-kapitel-for-sig?season=63",
     sourceUrl: "https://radio4.dk/podcasts/et-kapitel-for-sig/kapitel-1-de-f-rste-fire-forhindringer-1-4",
+    coverUrl: "https://radio4data.imgix.net/2026/09/Sara-Blaedel_master_episode_thumbnail.png?width=1000&height=1000&fit=crop",
     guids: ["cdeeead3-767e-4e56-aa56-b4cd002ab8c7", "450bd9ac-b118-46e8-b74a-b4cd002c177c", "08b9caef-ce66-47cc-826f-b4ce002abb77", "db0827b3-a3d6-4ef7-841b-b4cf002abbcf", "5797a7c4-6b7d-4a45-99de-b4d0002ab775"],
     episodes: ["Prolog: Sara Blædel", "Kapitel 1: De første fire forhindringer - Sara Blædel (1:4)", "Kapitel 2: En affære og en sen gave (2:4)", "Kapitel 3: Reddet af sit eget forlag og en lungebetændelse (3:4)", "Kapitel 4: Mord, der skaber ro i hovedet (4:4)"]
   }
@@ -111,6 +115,20 @@ var VERIFIED_DR_HOST_CREDITS_ = {
     credit: "Vært: Per Lysholt."
   }
 };
+var VERIFIED_CURRENT_DR_BATCH_IDENTITIES_ = {
+  "bakspejl-auto-v1-4962cdc5": {
+    title: "Den spanske borgerkrig", series: "Bakspejl", guid: "11162611015",
+    sourceUrl: "https://www.dr.dk/lyd/special-radio/bakspejl/bakspejl-2026/den-spanske-borgerkrig-1-3-11162611015",
+    coverUrl: "https://api.dr.dk/podcasts/v1/images/urn:dr:podcast:image:67e14d6f6273e8fc7077aa53.jpg",
+    host: "Celine Klint", genre: "Historie"
+  },
+  "djaevlen-auto-v1-1139735b": {
+    title: "Kvinden i Isdalen", series: "Djævlen i detaljen", guid: "16122692642",
+    sourceUrl: "https://www.dr.dk/lyd/special-radio/djaevlen-i-detaljen/djaevlen-i-detaljen-2026/kvinden-i-isdalen-1-5-et-braendt-lig-16122692642",
+    coverUrl: "https://api.dr.dk/podcasts/v1/images/urn:dr:podcast:image:66f271c4b75d19480fa40d01.jpg",
+    host: "Per Lysholt", genre: "True Crime"
+  }
+};
 
 function onOpen() {
   SpreadsheetApp.getUi().createMenu("DR staging")
@@ -119,6 +137,9 @@ function onOpen() {
     .addToUi();
   SpreadsheetApp.getUi().createMenu(RADIO_IIII_TAB_NAME_)
     .addItem("Gennemgå og tilføj verificeret gæsteserie", "reviewAndAppendRadioIIIIStagingRow")
+    .addToUi();
+  SpreadsheetApp.getUi().createMenu("Ejerstyret staging")
+    .addItem("Gennemgå stagingforslag samlet", "reviewAndAppendStagingBatch")
     .addToUi();
 }
 
@@ -289,6 +310,393 @@ function reviewAndAppendRadioIIIIStagingRow() {
   ui.alert("Radio IIII-rækken blev verificeret og tilføjet. Kør menuen igen med en ny, frisk backup før næste gæst.");
 }
 
+/** One owner-confirmed batch across the four staging main series. */
+function reviewAndAppendStagingBatch() {
+  var ui = SpreadsheetApp.getUi();
+  var properties = PropertiesService.getScriptProperties();
+  var ownerMayCloseGate = Session.getEffectiveUser().getEmail() === properties.getProperty("OWNER_EMAIL");
+  var gateWasOpen = properties.getProperty("APPEND_ENABLED") === "true";
+  var appendedIds = [];
+  var alreadyPresentIds = [];
+  var notAttemptedIds = [];
+  var attemptedId = "";
+  var lock = null;
+  var lockAcquired = false;
+  try {
+    var context = assertStagingBatchOwnerConfiguration_();
+    var target = context.original.getSheetByName(TARGET_TAB_NAME_);
+    assertTargetSchema_(target);
+    var stagingSnapshot = readUnifiedStagingSnapshot_(context.stagingId);
+    var proposalSet = validateStagingBatch_(stagingSnapshot);
+    var targetBeforeApproval = snapshotTarget_(target);
+    var targetIndex = readUniqueTargetIds_(target);
+    verifyProtectedExistingIdentities_(stagingSnapshot, target, targetIndex);
+    var plan = preflightStagingBatch_(proposalSet.approved, targetIndex);
+    notAttemptedIds = plan.toWrite.map(function (item) { return item.candidate.id; });
+
+    var preview = formatStagingBatchPreview_(proposalSet, plan, targetIndex);
+    if (!plan.toWrite.length) {
+      ui.alert("Stagingoversigt\n\n" + preview + "\n\nIngen nye rækker kræver append. Ingen Ark1-celler blev skrevet.");
+      return;
+    }
+    var approvalPhrase = "GODKEND BATCH " + plan.toWrite.length;
+    var approval = ui.prompt(
+      "Gennemgå stagingforslag samlet",
+      preview + "\n\nGodkend alle " + plan.toWrite.length + " validerede, nye forslag samlet. Radio IIII-genren ændres kun i de nye Ark1-rækker til Samfund. " +
+        "Forslag med NEEDS_EDITORIAL_REVIEW er udeladt. Skriv præcist " + approvalPhrase + " for én samlet godkendelse. Annuller eller andet svar skriver intet.",
+      ui.ButtonSet.OK_CANCEL
+    );
+    if (approval.getSelectedButton() !== ui.Button.OK || approval.getResponseText().trim() !== approvalPhrase) {
+      ui.alert("Batchen blev ikke godkendt. Ingen Ark1-celler blev skrevet.");
+      return;
+    }
+
+    lock = LockService.getDocumentLock();
+    if (!lock.tryLock(30000)) throw new Error("Kunne ikke låse originalarket; ingen rækker blev forsøgt.");
+    lockAcquired = true;
+    var lockedContext = assertOwnerConfiguration_();
+    assertStagingBatchBackupFresh_(lockedContext);
+    var lockedTarget = lockedContext.original.getSheetByName(TARGET_TAB_NAME_);
+    assertTargetSchema_(lockedTarget);
+    var freshStaging = readUnifiedStagingSnapshot_(lockedContext.stagingId);
+    if (JSON.stringify(freshStaging) !== JSON.stringify(stagingSnapshot)) {
+      throw new Error("Staging ændrede sig efter oversigten; batch stoppet før første write.");
+    }
+    var beforeWrite = snapshotTarget_(lockedTarget);
+    if (JSON.stringify(beforeWrite) !== JSON.stringify(targetBeforeApproval)) {
+      throw new Error("Ark1 ændrede sig efter oversigten; batch stoppet før første write.");
+    }
+    var freshSet = validateStagingBatch_(freshStaging);
+    var freshPlan = preflightStagingBatch_(freshSet.approved, readUniqueTargetIds_(lockedTarget));
+    if (!sameArray_(freshPlan.toWrite.map(function (item) { return item.candidate.id; }), notAttemptedIds)) {
+      throw new Error("Batchens identiteter ændrede sig under ejergodkendelsen; stop før første write.");
+    }
+
+    var remaining = freshPlan.toWrite.slice();
+    while (remaining.length) {
+      var item = remaining.shift();
+      notAttemptedIds = remaining.map(function (pending) { return pending.candidate.id; });
+      var latestStaging = readUnifiedStagingSnapshot_(lockedContext.stagingId);
+      if (JSON.stringify(latestStaging) !== JSON.stringify(stagingSnapshot)) {
+        throw new Error("Staging ændrede sig under batchen; resterende rækker er ikke forsøgt.");
+      }
+      var currentSnapshot = snapshotTarget_(lockedTarget);
+      assertOldCellsUnchanged_(beforeWrite, currentSnapshot);
+      var currentIndex = readUniqueTargetIds_(lockedTarget);
+      var existing = currentIndex.get(item.candidate.id);
+      if (existing) {
+        assertBatchExistingIdentity_(existing, item.candidate);
+        alreadyPresentIds.push(item.candidate.id);
+        continue;
+      }
+      assertNoBatchIdentityCollision_(currentSnapshot.values.slice(1), item.candidate);
+      var output = buildBatchOutputRow_(item);
+      var rowNumber = lockedTarget.getLastRow() + 1;
+      attemptedId = item.candidate.id;
+      try {
+        lockedTarget.getRange(rowNumber, 1, 1, HEADERS_.length).setValues([output]);
+      } catch (writeError) {
+        var afterError = snapshotTarget_(lockedTarget);
+        var recovered = null;
+        try { recovered = readUniqueTargetIds_(lockedTarget).get(item.candidate.id); } catch (readbackError) { /* report the attempted ID below */ }
+        if (recovered) {
+          assertBatchExistingIdentity_(recovered, item.candidate);
+          assertAppendedRowMatches_(lockedTarget, recovered.rowNumber, output);
+          appendedIds.push(item.candidate.id);
+        }
+        assertOldCellsUnchanged_(beforeWrite, afterError);
+        throw new Error("Skrivning stoppet ved " + item.candidate.id + ". Readback bekræfter " +
+          (recovered ? "at rækken blev skrevet" : "ingen ny række") + ". Tilføjet i denne batch: " +
+          (appendedIds.length ? appendedIds.join(", ") : "ingen") + ". Ikke forsøgt: " +
+          (notAttemptedIds.length ? notAttemptedIds.join(", ") : "ingen") + ". Ingen retry. Årsag: " + writeError.message);
+      }
+      var afterWrite = snapshotTarget_(lockedTarget);
+      var verified = readUniqueTargetIds_(lockedTarget).get(item.candidate.id);
+      if (!verified) {
+        throw new Error("Readback fejlede ved " + item.candidate.id + ". Tilføjet i denne batch: " +
+          (appendedIds.length ? appendedIds.join(", ") : "ingen") + ". Ikke forsøgt: " +
+          (notAttemptedIds.length ? notAttemptedIds.join(", ") : "ingen") + ". Ingen retry.");
+      }
+      assertBatchExistingIdentity_(verified, item.candidate);
+      assertAppendedRowMatches_(lockedTarget, verified.rowNumber, output);
+      appendedIds.push(item.candidate.id);
+      assertOldCellsUnchanged_(beforeWrite, afterWrite);
+      if (lockedTarget.getLastRow() !== rowNumber) throw new Error("Uventet rækkeændring efter append af " + item.candidate.id + ". Stop uden retry.");
+      attemptedId = "";
+    }
+    notAttemptedIds = [];
+    ui.alert("Batch gennemført og readback-verificeret. Tilføjet: " + (appendedIds.length ? appendedIds.join(", ") : "ingen") +
+      ". Allerede til stede: " + (alreadyPresentIds.length ? alreadyPresentIds.join(", ") : "ingen") +
+      ". NEEDS_EDITORIAL_REVIEW blev udeladt.");
+  } catch (error) {
+    ui.alert("Batch stoppet: " + error.message + "\nTilføjet og verificeret: " + (appendedIds.length ? appendedIds.join(", ") : "ingen") +
+      "\nAllerede til stede: " + (alreadyPresentIds.length ? alreadyPresentIds.join(", ") : "ingen") +
+      "\nSkriveforsøg: " + (attemptedId || "ingen") +
+      "\nIkke forsøgt: " + (notAttemptedIds.length ? notAttemptedIds.join(", ") : "ingen") + "\nIngen automatisk retry.");
+  } finally {
+    if (lock && lockAcquired) lock.releaseLock();
+    if (ownerMayCloseGate && gateWasOpen) properties.setProperty("APPEND_ENABLED", "false");
+  }
+}
+
+function assertStagingBatchBackupFresh_(context) {
+  if (context.properties.getProperty("BACKUP_RESTORE_TEST_VERIFIED") !== "true") {
+    throw new Error("Samlet staginggodkendelse kræver en uafhængig fuld backup med verificeret testgendannelse.");
+  }
+  var verifiedAt = Date.parse(context.properties.getProperty("BACKUP_VERIFIED_AT") || "");
+  if (!Number.isFinite(verifiedAt) || Date.now() - verifiedAt > 15 * 60 * 1000 || verifiedAt > Date.now() + 60 * 1000) {
+    throw new Error("Samlet staginggodkendelse kræver én frisk backup og verificeret testgendannelse fra de seneste 15 minutter.");
+  }
+}
+
+function assertStagingBatchOwnerConfiguration_() {
+  var properties = PropertiesService.getScriptProperties();
+  var original = SpreadsheetApp.getActiveSpreadsheet();
+  var userEmail = Session.getEffectiveUser().getEmail();
+  if (!original || original.getId() !== ORIGINAL_SPREADSHEET_ID_) throw new Error("Stagingoversigten skal åbnes fra det godkendte originalark.");
+  if (!userEmail || userEmail !== properties.getProperty("OWNER_EMAIL")) throw new Error("Kun den konfigurerede ejer må gennemgå stagingforslag.");
+  var stagingId = properties.getProperty("STAGING_SPREADSHEET_ID");
+  var backupId = properties.getProperty("BACKUP_SPREADSHEET_ID");
+  if (!stagingId || stagingId === ORIGINAL_SPREADSHEET_ID_ || stagingId === backupId) throw new Error("Separat DR staging-regneark mangler eller kolliderer.");
+  return { original: original, properties: properties, stagingId: stagingId, userEmail: userEmail };
+}
+
+function readUnifiedStagingSnapshot_(stagingId) {
+  return { dr: readStaging_(stagingId), radioIIII: readRadioIIIIStaging_(stagingId) };
+}
+
+function validateStagingBatch_(snapshot) {
+  var approved = [];
+  var editorial = [];
+  var drIds = {};
+  snapshot.dr.values.slice(1).forEach(function (row, index) {
+    var formulas = snapshot.dr.formulas[index + 1] || [];
+    var id = String(row[HEADERS_.indexOf("Podcast-ID")] || "").normalize("NFC").trim();
+    if (!id) {
+      var maciasNote = String(row[STAGING_HEADERS_.indexOf("DR source GUID")] || "").trim() === "Macias" &&
+        !formulas.some(function (formula) { return Boolean(formula); }) &&
+        row.every(function (value, cellIndex) { return cellIndex === STAGING_HEADERS_.indexOf("DR source GUID") || !String(value || "").trim(); });
+      if (maciasNote) return; // Preserve, but never promote, the two standalone notes.
+      if (row.some(function (value) { return String(value || "").trim(); }) || formulas.some(function (formula) { return Boolean(formula); })) {
+        throw new Error("DR staging har en udfyldt række uden Podcast-ID, som ikke er en af de to Macias-noter.");
+      }
+      return;
+    }
+    var status = String(row[STAGING_HEADERS_.indexOf("Review status")] || "").trim();
+    var title = String(row[HEADERS_.indexOf("Titel")] || "").trim();
+    var series = String(row[HEADERS_.indexOf("Hovedserie")] || "").trim();
+    if (drIds[id]) throw new Error("DR staging har dubleret Podcast-ID: " + id);
+    drIds[id] = true;
+    if (status === "NEEDS_EDITORIAL_REVIEW") {
+      editorial.push({ id: id, title: title, series: series, status: status || "NEEDS_EDITORIAL_REVIEW", reason: editorialReviewReason_(row, id) });
+      return;
+    }
+    if (series === "Tyran") {
+      if (status !== "EDITORIALLY_APPROVED_SOURCE_VERIFIED") {
+        editorial.push({ id: id, title: title, series: series, status: status || "NEEDS_EDITORIAL_REVIEW", reason: editorialReviewReason_(row, id) });
+        return;
+      }
+      var reviewedTyran = validateOwnerReviewedTyranCandidate_(row, formulas);
+      approved.push({ source: "DR staging", row: row.slice(0, HEADERS_.length), candidate: reviewedTyran });
+      return;
+    }
+    if (id === "dræberurten" && status !== "EDITORIALLY_APPROVED_SOURCE_VERIFIED") {
+      editorial.push({ id: id, title: title, series: series, status: status, reason: editorialReviewReason_(row, id) });
+      return;
+    }
+    if (status !== "SOURCE_VERIFIED_REQUIRES_OWNER_APPROVAL" && status !== "EDITORIALLY_APPROVED_SOURCE_VERIFIED") {
+      throw new Error("DR staging-rækken mangler en understøttet reviewstatus: " + id);
+    }
+    var candidate = validateStagingCandidate_(row, formulas);
+    var coverUrl = String(row[HEADERS_.indexOf("Billedlink")] || "").trim();
+    if (!/^https:\/\/api\.dr\.dk\/podcasts\/v1\/images\/urn:dr:podcast:image:[a-f0-9]+\.jpg$/u.test(coverUrl)) {
+      throw new Error("DR staging mangler et verificeret officielt DR-cover for " + id + ".");
+    }
+    var verified = VERIFIED_CURRENT_DR_BATCH_IDENTITIES_[id];
+    if (verified && (candidate.title !== verified.title || candidate.series !== verified.series ||
+        candidate.sourceGuid !== verified.guid || candidate.sourceUrl !== verified.sourceUrl || coverUrl !== verified.coverUrl ||
+        candidate.host !== verified.host || candidate.genre !== verified.genre)) {
+      throw new Error("Kendt DR staging-ID afviger fra sin verificerede kilde, genre, vært eller individuelle cover: " + id);
+    }
+    approved.push({ source: "DR staging", row: row.slice(0, HEADERS_.length), candidate: Object.assign({}, candidate, { coverUrl: coverUrl }) });
+  });
+
+  validateRadioIIIIStagingRows_(snapshot.radioIIII).forEach(function (item) {
+    approved.push({ source: RADIO_IIII_TAB_NAME_, row: item.row.slice(0, HEADERS_.length), candidate: item.candidate });
+  });
+  var ids = {};
+  var guids = {};
+  approved.forEach(function (item) {
+    var candidate = item.candidate;
+    if (ids[candidate.id]) throw new Error("Stagingbatchen har dubleret Podcast-ID: " + candidate.id);
+    ids[candidate.id] = true;
+    (candidate.guids || [candidate.sourceGuid]).filter(Boolean).forEach(function (guid) {
+      if (guids[guid] && guids[guid] !== candidate.id) throw new Error("Stagingbatchen har overlappende episode-GUID'er: " + guid);
+      guids[guid] = candidate.id;
+    });
+  });
+  return { approved: approved, editorial: editorial };
+}
+
+function editorialReviewReason_(row, id) {
+  var nextStep = "Når individuel redaktionel gennemgang og officiel kildeverifikation er færdig, udfyld de manglende metadata og sæt Review status til EDITORIALLY_APPROVED_SOURCE_VERIFIED.";
+  if (id === "dræberurten") return "Kræver individuel redaktionel vurdering og kildeverifikation. " + nextStep;
+  if (String(row[HEADERS_.indexOf("Hovedserie")] || "") === "Tyran") {
+    return "Kræver individuel redaktionel vurdering; vært, aktiv genre og emner skal verificeres. " + nextStep;
+  }
+  var missing = ["Vært", "Genre", "Emner", "Kort beskrivelse", "Lang beskrivelse", "Billedlink", "DR source GUID", "DR source URL"]
+    .filter(function (header) { return !String(row[STAGING_HEADERS_.indexOf(header)] || "").trim(); });
+  return "Kræver individuel redaktionel vurdering og kildeverifikation" + (missing.length ? "; mangler: " + missing.join(", ") : "") + ". " + nextStep;
+}
+
+function validateOwnerReviewedTyranCandidate_(row, formulas) {
+  if (formulas.some(function (formula) { return Boolean(formula); })) throw new Error("Formler i individuelt godkendt Tyran staging er ikke tilladt.");
+  var get = function (header) { return String(row[STAGING_HEADERS_.indexOf(header)] || "").normalize("NFC").trim(); };
+  var id = get("Podcast-ID");
+  var title = get("Titel");
+  var sourceUrl = get("DR source URL");
+  var sourceGuid = get("DR source GUID");
+  var linkUrl = get("Link");
+  var coverUrl = get("Billedlink");
+  var sourceText = get("DR source description");
+  var match = sourceText.match(/^TYRAN_DR_PROVENANCE_V1\s+(\{[^\n]+\})\n\n([\s\S]+)$/u);
+  var provenance;
+  if (!match) throw new Error("Individuelt godkendt Tyran mangler struktureret DR provenance.");
+  try { provenance = JSON.parse(match[1]); } catch (error) { throw new Error("Tyran DR provenance kunne ikke læses."); }
+  var expectedDigest = String(provenance.descriptionSha256 || "");
+  if (!/^tyran-auto-v1-[a-f0-9]{8}$/u.test(id) || !title || get("Hovedserie") !== "Tyran" || get("Udgiver") !== "DR" ||
+      !/^\d{6,}$/u.test(sourceGuid) || !sourceUrl.startsWith("https://www.dr.dk/lyd/p3/tyran-") || !sourceUrl.endsWith(sourceGuid) ||
+      !/^https:\/\/www\.dr\.dk\/lyd\/p3\/tyran-[^?#]+$/u.test(String(provenance.seriesUrl || "")) ||
+      !/^https:\/\/asset\.dr\.dk\/drlyd\/images\/urn:dr:radio:image:[a-f0-9]+\?/u.test(coverUrl) ||
+      provenance.podcastId !== id || provenance.title !== title || !/^urn:dr:radio:series:[a-f0-9]+$/u.test(String(provenance.seriesId || "")) ||
+      !/^\d{10,}$/u.test(String(provenance.seriesProductionNumber || "")) ||
+      provenance.episodeUrl !== sourceUrl || linkUrl !== sourceUrl || provenance.episodeGuid !== sourceGuid ||
+      provenance.coverUrl !== coverUrl || !/^[a-f0-9]{64}$/u.test(expectedDigest) || sha256Hex_(match[2]) !== expectedDigest ||
+      get("Review status") !== "EDITORIALLY_APPROVED_SOURCE_VERIFIED" || !get("Vært") || !RADIO_IIII_ACTIVE_GENRES_.includes(get("Genre")) ||
+      !get("Emner") || !get("Kort beskrivelse") || !get("Lang beskrivelse") || get("Feed") || get("Episoder") || get("Antal afsnit") ||
+      ["Vuring (1-10)", "Årstal afspillet", "Afgivet vurdering", "Undervurderet perle", "Placering", "Adgang"]
+        .some(function (header) { return get(header) !== ""; })) {
+    throw new Error("Individuel Tyran-redaktion, officiel kilde, cover eller katalogfelter kunne ikke verificeres.");
+  }
+  return {
+    id: id, title: title, series: "Tyran", sourceUrl: sourceUrl, sourceGuid: sourceGuid,
+    seriesUrl: provenance.seriesUrl, linkUrl: linkUrl, coverUrl: coverUrl, sourceDescription: sourceText,
+    genre: get("Genre"), host: get("Vært"), publisher: "DR"
+  };
+}
+
+function preflightStagingBatch_(items, targetIds) {
+  var toWrite = [];
+  var already = [];
+  items.forEach(function (item) {
+    var existing = targetIds.get(item.candidate.id);
+    if (existing) {
+      assertBatchExistingIdentity_(existing, item.candidate);
+      already.push(item.candidate.id);
+      return;
+    }
+    assertNoBatchIdentityCollision_(Array.from(targetIds.values()).map(function (value) { return value.row; }), item.candidate);
+    toWrite.push(item);
+  });
+  for (var i = 0; i < toWrite.length; i += 1) {
+    for (var j = i + 1; j < toWrite.length; j += 1) assertBatchCandidatesDoNotCollide_(toWrite[i].candidate, toWrite[j].candidate);
+  }
+  return { toWrite: toWrite, already: already };
+}
+
+function assertBatchExistingIdentity_(existing, candidate) {
+  if (candidate.series === RADIO_IIII_SERIES_) {
+    assertRadioIIIIExistingIdentity_(existing, candidate);
+    return;
+  }
+  if (candidate.series === "Tyran") {
+    var tyranAt = function (header) { return String(existing.row[HEADERS_.indexOf(header)] || "").normalize("NFC").trim(); };
+    if (tyranAt("Titel") !== candidate.title || tyranAt("Hovedserie") !== "Tyran" || tyranAt("Kilde") !== candidate.sourceUrl ||
+        tyranAt("Link") !== (candidate.linkUrl || candidate.seriesUrl || candidate.sourceUrl) || tyranAt("Billedlink") !== candidate.coverUrl) {
+      throw new Error("Eksisterende Tyran-identitet har modstridende titel, serie, kilde eller cover: " + candidate.id);
+    }
+    return;
+  }
+  var at = function (header) { return String(existing.row[HEADERS_.indexOf(header)] || "").normalize("NFC").trim(); };
+  if (at("Titel") !== candidate.title || at("Hovedserie") !== candidate.series || at("Kilde") !== candidate.sourceUrl ||
+      at("Link") !== candidate.sourceUrl || at("Billedlink") !== candidate.coverUrl) {
+    throw new Error("Eksisterende Podcast-ID har en anden titel, serie, kilde eller cover: " + candidate.id);
+  }
+}
+
+function assertNoBatchIdentityCollision_(rows, candidate) {
+  (rows || []).forEach(function (row) {
+    var id = String(row[HEADERS_.indexOf("Podcast-ID")] || "").normalize("NFC").trim();
+    if (id === candidate.id) return;
+    var title = String(row[HEADERS_.indexOf("Titel")] || "").normalize("NFC").trim();
+    var tokens = [candidate.sourceUrl, candidate.seasonUrl, candidate.seriesUrl, candidate.seriesId, candidate.seriesProductionNumber, candidate.coverUrl].concat(candidate.guids || [candidate.sourceGuid]);
+    if (title === candidate.title || tokens.filter(Boolean).some(function (token) {
+      return row.some(function (cell) { return String(cell == null ? "" : cell).toLowerCase().indexOf(String(token).toLowerCase()) >= 0; });
+    })) throw new Error("Podcast-ID, titel, kilde, GUID eller cover kolliderer med Ark1-identitet " + id + ".");
+  });
+}
+
+function assertBatchCandidatesDoNotCollide_(left, right) {
+  if (left.id === right.id || left.title === right.title || left.sourceUrl === right.sourceUrl) {
+    throw new Error("Valgte stagingforslag deler Podcast-ID, titel eller kilde.");
+  }
+  var leftTokens = [left.sourceUrl, left.seasonUrl, left.seriesUrl, left.coverUrl].filter(Boolean);
+  var rightTokens = [right.sourceUrl, right.seasonUrl, right.seriesUrl, right.coverUrl].filter(Boolean);
+  if (leftTokens.some(function (token) { return rightTokens.indexOf(token) >= 0; })) {
+    throw new Error("Valgte stagingforslag deler kilde, sæsonside eller cover.");
+  }
+  var leftGuids = left.guids || [left.sourceGuid];
+  var rightGuids = right.guids || [right.sourceGuid];
+  if (leftGuids.some(function (guid) { return guid && rightGuids.indexOf(guid) >= 0; })) {
+    throw new Error("Valgte stagingforslag deler episode-GUID.");
+  }
+}
+
+function buildBatchOutputRow_(item) {
+  var output = item.row.slice(0, HEADERS_.length).map(function (value) { return value == null ? "" : String(value); });
+  if (item.candidate.series === RADIO_IIII_SERIES_) output[HEADERS_.indexOf("Genre")] = RADIO_IIII_PROPOSED_GENRE_;
+  return output;
+}
+
+function formatStagingBatchPreview_(proposalSet, plan, targetIds) {
+  var lines = ["Validerede forslag, som indgår ved samlet godkendelse:"];
+  proposalSet.approved.forEach(function (item) {
+    var c = item.candidate;
+    var statusIndex = item.source === RADIO_IIII_TAB_NAME_ ? RADIO_IIII_HEADERS_.indexOf("Review status") : STAGING_HEADERS_.indexOf("Review status");
+    var reviewStatus = String(item.row[statusIndex] || "").trim();
+    var state = targetIds.has(c.id) ? "ALLEREDE I ARK1 — identiteten verificeres og springes over" : "NYT — kan appendes";
+    lines.push("\n" + c.series + " | " + c.title + "\nPodcast-ID: " + c.id + "\nKilde: " + (c.sourceUrl || "") +
+      "\nCover: " + (c.coverUrl || "") + "\nGenre: " + (c.genre || (c.series === RADIO_IIII_SERIES_ ? RADIO_IIII_PROPOSED_GENRE_ + " (kræver samlet accept)" : "")) +
+      "\nKilde-GUID'er: " + ((c.guids || [c.sourceGuid]).filter(Boolean).join(", ")) +
+      "\nReviewstatus: " + reviewStatus + "\nStatus: " + state);
+  });
+  lines.push("\nKontrollerede eksisterende identiteter:");
+  lines.push("Mattias Tesfaye | radio-iiii-auto-v1-7f0dfeb9 | " + (targetIds.has("radio-iiii-auto-v1-7f0dfeb9") ? "verificeret i Ark1" : "MANGLER — stop"));
+  lines.push("Marcos | marcos | " + (targetIds.has("marcos") ? "verificeret i Ark1" : "MANGLER — stop"));
+  lines.push("\nUdeladt — kræver individuel redaktionel godkendelse og kildeverifikation:");
+  proposalSet.editorial.forEach(function (item) {
+    lines.push(item.series + " | " + item.title + " | " + item.id + "\nReviewstatus: " + item.status + "\nMangler: " + item.reason);
+  });
+  lines.push("\nNye rækker i denne batch: " + plan.toWrite.length + ". Allerede til stede med eksakt identitet: " + plan.already.length + ".");
+  return lines.join("\n");
+}
+
+function verifyProtectedExistingIdentities_(stagingSnapshot, target, targetIds) {
+  var mattiasItem = validateRadioIIIIStagingRows_(stagingSnapshot.radioIIII).filter(function (item) {
+    return item.candidate.id === "radio-iiii-auto-v1-7f0dfeb9";
+  })[0];
+  var mattias = targetIds.get("radio-iiii-auto-v1-7f0dfeb9");
+  if (!mattiasItem || !mattias) throw new Error("Mattias Tesfayes kendte identitet skal være til stede i staging og Ark1.");
+  assertRadioIIIIExistingIdentity_(mattias, mattiasItem.candidate);
+  var marcos = targetIds.get("marcos");
+  var expectedMarcos = VERIFIED_TYRAN_IDENTITIES_["marcos"];
+  if (!marcos) throw new Error("Marcos-identiteten skal allerede være til stede i Ark1.");
+  findTyranTargetIdentity_([marcos.row], {
+    id: "marcos", title: expectedMarcos.title, series: "Tyran", seriesUrl: expectedMarcos.seriesUrl,
+    sourceUrl: expectedMarcos.episodeUrl, coverUrl: expectedMarcos.coverUrl
+  });
+}
+
 function readRadioIIIIStaging_(stagingId) {
   var staging = SpreadsheetApp.openById(stagingId);
   var tab = staging.getSheetByName(RADIO_IIII_TAB_NAME_);
@@ -335,17 +743,21 @@ function validateRadioIIIIStagingCandidate_(row, formulas) {
   var get = function (header) { return String(row[RADIO_IIII_HEADERS_.indexOf(header)] || "").normalize("NFC").trim(); };
   var id = get("Podcast-ID");
   var expected = RADIO_IIII_IDENTITIES_[id];
-  if (!expected || get("Titel") !== expected.title || get("Hovedserie") !== RADIO_IIII_SERIES_ ||
+  if (!id || (expected && get("Titel") !== expected.title) || get("Hovedserie") !== RADIO_IIII_SERIES_ ||
       get("Vært") !== RADIO_IIII_HOST_ || get("Udgiver") !== RADIO_IIII_PUBLISHER_) {
     throw new Error("Radio IIII Podcast-ID, titel, vært, udgiver eller hovedserie afviger fra den verificerede identitet.");
   }
   var sourceUrl = get("Radio IIII source URL");
   var seasonUrl = get("Radio IIII season URL");
+  var coverUrl = get("Billedlink");
   var sourceGuids = get("Radio IIII source GUIDs").split(";").map(function (guid) { return guid.trim(); }).filter(Boolean);
-  if (sourceUrl !== expected.sourceUrl || seasonUrl !== expected.seasonUrl ||
+  var knownIdentityMismatch = expected && (sourceUrl !== expected.sourceUrl || seasonUrl !== expected.seasonUrl || coverUrl !== expected.coverUrl);
+  if (knownIdentityMismatch || !/^radio-iiii-auto-v1-[a-f0-9]{8}$/u.test(id) ||
       !/^https:\/\/radio4\.dk\/podcasts\/et-kapitel-for-sig\//u.test(sourceUrl) ||
       !/^https:\/\/radio4\.dk\/podcasts\/et-kapitel-for-sig\?season=\d+$/u.test(seasonUrl) ||
-      sourceGuids.length !== 5 || new Set(sourceGuids).size !== 5 || !sameArray_(sourceGuids, expected.guids) ||
+      !/^https:\/\/radio4data\.imgix\.net\//u.test(coverUrl) ||
+      sourceGuids.length !== 5 || new Set(sourceGuids).size !== 5 ||
+      (expected && !sameArray_(sourceGuids, expected.guids)) ||
       sourceGuids.some(function (guid) { return !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/iu.test(guid); }) ||
       !get("Radio IIII source description") || get("Review status") !== RADIO_IIII_REVIEW_STATUS_) {
     throw new Error("Radio IIII officielle kilde, sæson, fem unikke episode-GUID'er eller reviewstatus afviger.");
@@ -354,7 +766,9 @@ function validateRadioIIIIStagingCandidate_(row, formulas) {
       !RADIO_IIII_ACTIVE_GENRES_.includes(RADIO_IIII_PROPOSED_GENRE_)) {
     throw new Error("Radio IIII kildeidentitet eller foreslået aktiv genre afviger; append stoppet.");
   }
-  if (get("Antal afsnit") !== "5" || get("Episoder") !== expected.episodes.join("; ") ||
+  var episodeTitles = get("Episoder").split(";").map(function (title) { return title.trim(); }).filter(Boolean);
+  if (get("Antal afsnit") !== "5" || episodeTitles.length !== 5 ||
+      (expected && !sameArray_(episodeTitles, expected.episodes)) ||
       !get("Kort beskrivelse") || !get("Lang beskrivelse") || !get("Emner")) {
     throw new Error("Radio IIII episodeantal, prolog-/kapitelrækkefølge eller verificeret redaktionelt indhold afviger.");
   }
@@ -367,10 +781,10 @@ function validateRadioIIIIStagingCandidate_(row, formulas) {
     if (/^[\s]*[=+\-@]/u.test(String(value || ""))) throw new Error("Formel-lignende Radio IIII-indhold er ikke tilladt.");
   });
   return {
-    id: id, title: expected.title, series: RADIO_IIII_SERIES_, host: RADIO_IIII_HOST_,
+    id: id, title: get("Titel"), series: RADIO_IIII_SERIES_, host: RADIO_IIII_HOST_,
     publisher: RADIO_IIII_PUBLISHER_, sourceUrl: sourceUrl, seasonUrl: seasonUrl,
-    sourceDescription: get("Radio IIII source description"), guids: sourceGuids,
-    episodes: expected.episodes, row: row.slice(0, HEADERS_.length)
+    coverUrl: coverUrl, sourceDescription: get("Radio IIII source description"), guids: sourceGuids,
+    episodes: expected ? expected.episodes : episodeTitles, row: row.slice(0, HEADERS_.length)
   };
 }
 
@@ -408,6 +822,7 @@ function assertRadioIIIIExistingIdentity_(existing, candidate) {
   if (at("Titel") !== candidate.title || at("Vært") !== candidate.host || at("Udgiver") !== candidate.publisher ||
       at("Hovedserie") !== candidate.series || at("Genre") !== RADIO_IIII_PROPOSED_GENRE_ ||
       at("Link") !== candidate.sourceUrl || at("Kilde") !== candidate.sourceUrl ||
+      at("Billedlink") !== candidate.coverUrl ||
       at("Antal afsnit") !== "5" || at("Episoder") !== candidate.episodes.join("; ")) {
     throw new Error("Eksisterende Radio IIII Podcast-ID har en anden titel, genre, kilde eller episodeidentitet.");
   }
@@ -421,7 +836,8 @@ function assertNoRadioIIIIIdentityCollision_(rows, candidate) {
     if (title === candidate.title) throw new Error("Radio IIII gæstetitel findes allerede under et andet Podcast-ID.");
     var cells = row.map(function (cell) { return String(cell == null ? "" : cell).toLowerCase(); });
     if (cells.some(function (cell) { return cell.indexOf(candidate.sourceUrl.toLowerCase()) >= 0 ||
-        cell.indexOf(candidate.seasonUrl.toLowerCase()) >= 0 || candidate.guids.some(function (guid) { return cell.indexOf(guid.toLowerCase()) >= 0; }); })) {
+        cell.indexOf(candidate.seasonUrl.toLowerCase()) >= 0 || cell.indexOf(candidate.coverUrl.toLowerCase()) >= 0 ||
+        candidate.guids.some(function (guid) { return cell.indexOf(guid.toLowerCase()) >= 0; }); })) {
       throw new Error("Radio IIII kilde- eller episodeidentitet kolliderer med en eksisterende Ark1-række.");
     }
   });
@@ -524,10 +940,12 @@ function readStaging_(stagingId) {
   var staging = SpreadsheetApp.openById(stagingId);
   var tab = staging.getSheetByName(STAGING_TAB_NAME_);
   if (!tab) throw new Error("DR staging-fanebladet mangler.");
-  var values = tab.getDataRange().getValues();
-  var formulas = tab.getDataRange().getFormulas();
-  if (!values.length || !sameArray_(values[0].slice(0, STAGING_HEADERS_.length), STAGING_HEADERS_) ||
-      values[0].length !== STAGING_HEADERS_.length) throw new Error("DR staging-header afviger; append stoppet.");
+  // Read the declared schema only. Standalone notes such as “Macias” in the
+  // DR source GUID column are ignored when they have no Podcast-ID.
+  var range = tab.getRange(1, 1, Math.max(1, tab.getLastRow()), STAGING_HEADERS_.length);
+  var values = range.getValues();
+  var formulas = range.getFormulas();
+  if (!values.length || !sameArray_(values[0], STAGING_HEADERS_)) throw new Error("DR staging-header afviger; append stoppet.");
   return { values: values, formulas: formulas };
 }
 
@@ -551,7 +969,7 @@ function readUniqueTargetIds_(target) {
       return;
     }
     if (ids.has(id)) throw new Error("Originalen har dubleret Podcast-ID; append stoppet.");
-    ids.set(id, { title: String(row[HEADERS_.indexOf("Titel")] || "").trim(), series: String(row[HEADERS_.indexOf("Hovedserie")] || "").trim(), rowNumber: index + 2 });
+    ids.set(id, { title: String(row[HEADERS_.indexOf("Titel")] || "").trim(), series: String(row[HEADERS_.indexOf("Hovedserie")] || "").trim(), rowNumber: index + 2, row: row });
   });
   return ids;
 }
@@ -602,7 +1020,7 @@ function validateStagingCandidate_(row, formulas) {
     if (/^[\s]*[=+\-@]/u.test(String(value || ""))) throw new Error("Formel-lignende staging-indhold er ikke tilladt.");
   });
   return {
-    id: id, title: title, series: series, sourceUrl: sourceUrl,
+    id: id, title: title, series: series, sourceUrl: sourceUrl, sourceGuid: sourceGuid,
     sourceDescription: sourceDescription, shortDescription: shortDescription,
     longDescription: longDescription, genre: genre, secondaryGenre: secondaryGenre,
     topics: topics, similarities: similarities, host: host,
