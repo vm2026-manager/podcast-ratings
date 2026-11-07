@@ -4667,7 +4667,11 @@ function clearCategoryFilter(type) {
     return;
   }
   if (type === "genre" && state.activeFilter?.type === "genre") {
-    state.activeFilter = null;
+    setActiveFilter(null, null);
+    return;
+  } else if (type === "saved" && state.activeFilter?.type === "saved") {
+    setActiveFilter(null, null);
+    return;
   } else if (type === "publisher") {
     state.activePublisherFilter = "";
   } else if (type === "mainSeries") {
@@ -5615,47 +5619,48 @@ function updateMobileRankingFilterUi() {
 
   const categoryFilters = getActiveCategoryFilters();
   const isSavedFilter = state.activeFilter?.type === "saved";
-  const ratingLabel = `Vurdering: ${formatMinimumRating(state.minimumRating)}`;
   const freeOnlyMarkup = state.freeOnly
-    ? '<span class="ranking-mobile-filter-summary__free">Kun gratis</span>'
+    ? `<button class="ranking-mobile-active-filter-chip" type="button" data-clear-mobile-filter="free" aria-label="Fjern filteret Kun gratis">Kun gratis <span aria-hidden="true">\u00d7</span></button>`
     : "";
   const languageMarkup =
     state.languageFilter === "danish"
-      ? '<span class="ranking-mobile-filter-summary__language">Dansk</span>'
+      ? '<button class="ranking-mobile-active-filter-chip" type="button" data-clear-mobile-filter="language" aria-label="Fjern sprogfiltret Dansk">Dansk <span aria-hidden="true">\u00d7</span></button>'
       : state.languageFilter === "english"
-        ? '<span class="ranking-mobile-filter-summary__language">Engelsk</span>'
+        ? '<button class="ranking-mobile-active-filter-chip" type="button" data-clear-mobile-filter="language" aria-label="Fjern sprogfiltret Engelsk">Engelsk <span aria-hidden="true">\u00d7</span></button>'
         : "";
 
   const categoryMarkup = categoryFilters
     .map(
-      (filter) => `
+      (filter) => {
+        const chipLabel = filter.type === "genre"
+          ? escapeHtml(filter.value)
+          : `${escapeHtml(filter.label)}: ${escapeHtml(filter.value)}`;
+        return `
         <button
           class="ranking-mobile-active-filter-chip"
           type="button"
           data-clear-category-filter="${escapeHtml(filter.type)}"
           aria-label="Fjern ${escapeHtml(filter.label.toLocaleLowerCase("da-DK"))}filteret ${escapeHtml(filter.value)}"
         >
-          ${escapeHtml(filter.label)}: ${escapeHtml(filter.value)}
+          ${chipLabel}
           <span aria-hidden="true">\u00d7</span>
         </button>
-      `
+      `;
+      }
     )
     .join("");
-  const baseLabel = isSavedFilter
-    ? '<span class="ranking-mobile-filter-summary__base">Gemte podcasts</span>'
-    : categoryFilters.length
-      ? ""
-      : '<span class="ranking-mobile-filter-summary__base">Alle genrer</span>';
+  const savedMarkup = isSavedFilter
+    ? '<button class="ranking-mobile-active-filter-chip" type="button" data-clear-category-filter="saved" aria-label="Fjern filteret Gemte podcasts">Gemte podcasts <span aria-hidden="true">\u00d7</span></button>'
+    : "";
   if (elements.rankingMobileFilterSummary) {
     elements.rankingMobileFilterSummary.innerHTML = `
-      ${baseLabel}
       ${categoryMarkup}
       ${languageMarkup}
       ${freeOnlyMarkup}
-      <span class="ranking-mobile-filter-summary__rating">${escapeHtml(ratingLabel)}</span>
+      ${savedMarkup}
     `;
     elements.rankingMobileFilterSummary.hidden =
-      !categoryFilters.length && !languageMarkup && !freeOnlyMarkup && state.minimumRating <= 0;
+      !categoryFilters.length && !languageMarkup && !freeOnlyMarkup && !savedMarkup;
   }
 
   if (elements.rankingMobileFilterCount) {
@@ -26268,6 +26273,15 @@ function setupEvents() {
 
   elements.rankingMobileActiveFilterRemove?.addEventListener("click", clearRankingFilters);
   elements.rankingMobileFilterSummary?.addEventListener("click", (event) => {
+    const mobileFilterButton = event.target.closest("[data-clear-mobile-filter]");
+    if (mobileFilterButton) {
+      event.preventDefault();
+      event.stopPropagation();
+      const type = mobileFilterButton.dataset.clearMobileFilter;
+      if (type === "language") setLanguageFilter("all");
+      if (type === "free") setFreeOnly(false);
+      return;
+    }
     const button = event.target.closest("[data-clear-category-filter]");
     if (!button) return;
     event.preventDefault();
