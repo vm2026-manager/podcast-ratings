@@ -19,8 +19,21 @@ episodes exist, filters the same Podcast-ID by `imported_at >= observed_at`.
 Responses contain count metadata only. The workflow caps each run at 10 IDs and
 20 API requests; full response bodies, episode rows, and all-feed scans are not
 used. Issue #256 stores the small pending state, deduplicated in one comment.
-Resolved checks are retained for at most 36 hours to avoid schedule-lookback
-re-alerts.
+Queue retention and alert grace are separate. Unchecked and unresolved queue
+entries (including `deferred_by_daily_budget`, zero-result, authorization, and
+API-error statuses) remain in the deduplicated #256 state until they are
+rechecked and verified or explicitly resolved. This prevents a delayed ID from
+being lost when a backlog takes more than 36 hours to process. The 36-hour
+window applies only to the new-episode alarm grace and the short Step 2
+handoff for a verified post-change observation; it is not queue expiry.
+
+The daily worker still checks at most 10 exact Podcast-IDs and makes at most 20
+HEAD requests. It prioritizes never-checked IDs deferred by the daily budget.
+Backlogs above 20 IDs raise a visible warning. A backlog above 400 IDs raises
+an actionable workflow failure after preserving the exact IDs in #256 state;
+no IDs are truncated. The issue comment shows at most 40 status rows and
+compresses larger state payloads while retaining compatibility with existing
+plain-JSON state.
 
 Observed production privileges were checked before implementation:
 
@@ -82,31 +95,36 @@ Proposed interface:
    `public`. Create a dedicated `episode_monitor_rpc_owner NOLOGIN NOBYPASSRLS`
    role; it must not own the table or any schema. Grant it only column-level
    `SELECT (podcast_key, started_at, status)` on `public.episode_import_runs`.
-   Grant only `USAGE` on the `public` schema to that function-owner role.
-   Do not grant `BYPASSRLS`, `service_role`, table ownership, or broad schema
-   access to this role or the Auth user.
+   Grant only the schema `USAGE` and narrowly required function access. Do not
+   grant `BYPASSRLS`, `service_role`, table ownership, or broad schema access to
+   this role or the Auth user.
 3. Keep RLS enabled. Add one SELECT policy for
    `episode_monitor_rpc_owner` whose predicate is
    `auth.uid() = '<approved fixed monitor-user-uuid>'::uuid`; no policy is
-   added for `anon` or general `authenticated` users. Create one narrow,
-   parameterized `SECURITY DEFINER` RPC in exposed `public` (the private schema
-   is not PostgREST-callable without adding API configuration). Its owner is
-   `episode_monitor_rpc_owner`, it has an empty/fixed `search_path`, uses fully
-   qualified relation names, and checks the same fixed `auth.uid()` before
-   querying. It accepts at most 10 exact Podcast-IDs and a short bounded time
-   window; it returns only per-ID aggregate fields:
-   last success timestamp, last failure timestamp, last status, consecutive
-   failure count capped at 2, and whether any import started after activation.
-   It returns no exception text, feed URL, raw log, episode title/GUID, or row.
-   Query with `WHERE podcast_key = ANY(input_ids)` and bounded `started_at`,
-   aggregate internally, and return no exception text, feed URL, raw log,
-   episode title/GUID, or row. Revoke execute on the exact function signature
-   from `public` and `anon`; grant it to `authenticated`. The function's fixed
-   `auth.uid()` check must reject every authenticated identity except the
-   approved monitor user. The function-owner role is not a table owner and has
-   `NOBYPASSRLS`, so the restrictive RLS policy remains in force inside the
-   definer function.
-4. Add negative tests proving anon, ordinary authenticated users, an unrelated
+   added for `anon` or general `authenticated` users. The exposed `public`
+   schema contains only a minimal `SECURITY INVOKER` wrapper with an empty
+   `search_path`, fully qualified names, and an exact fixed `auth.uid()` check.
+   It validates 1–10 distinct, non-empty exact Podcast-IDs and an activation
+   timestamp paired with every exact Podcast-ID. It clamps each ID's lower
+   bound to the later of its activation time and the 14-day history boundary.
+   It invokes the implementation in a
+   dedicated non-exposed `episode_monitor_private` schema. That function alone
+   is `SECURITY DEFINER`, owned by `episode_monitor_rpc_owner`, with
+   `SET search_path = ''`, `row_security = on`, fully qualified names, and its
+   own exact fixed `auth.uid()` check. It performs index-driven latest-two-run
+   lookups for consecutive-failure state and returns only aggregate fields:
+   latest status/timestamp, last observed success/failure timestamps, capped
+   consecutive-failure count, run count capped at two, and whether a run
+   followed activation. It returns no exception text, feed URL, raw log, episode
+   title/GUID, or table row. The private schema must not be in Supabase's
+   exposed schemas. Revoke default `PUBLIC` execution on both exact function
+   signatures; grant the wrapper to `authenticated`, and grant only the
+   execution/schema access required for the wrapper to call the private
+   function. The fixed identity check in the private function denies direct
+   invocation by every other Auth identity even if its schema is accidentally
+   exposed. The function role is not a table or schema owner and has
+   `NOBYPASSRLS`, so the row policy remains active.
+4. Add database-level negative tests proving anon, ordinary authenticated users, an unrelated
    Auth identity, malformed IDs, more than 10 IDs, out-of-window runs, direct
    table SELECT by anon/authenticated, other RPCs, and expired/revoked
    credentials are denied. Unknown exact IDs with no import run must return an
@@ -117,9 +135,58 @@ Proposed interface:
    `episode_import_runs_podcast_key_started_at_idx`, no full-table scan, no
    temporary disk, and a fixed low daily query limit before activation.
 
+The migration and credential setup are not production authorization. Apply
+them only to an owner-designated isolated test database until explicit,
+concrete approval is recorded for production role, RLS, Auth identity, and
+GitHub environment changes. Never treat an inactive or unlabelled Supabase
+project as a test environment. The monitor is not considered active until
+positive and negative PostgREST tests, query plans, expiry/revocation tests,
+and alarm/recovery checks pass in that isolated environment and again in
+production following separate owner approval.
+
+An unapplied draft is kept under `supabase/migration-plans/` rather than the
+executable `supabase/migrations/` directory so a routine migration push cannot
+apply it accidentally. Its identity UUID is a test sentinel: use a distinct
+test Auth identity in an isolated environment, and replace it with the
+specifically approved machine Auth UUID only for an approved production
+application.
+
+The PR adds a disposable PostgreSQL 17 service and PostgREST v12.2.3 to the
+existing Critical Regression Gate workflow. It applies the full draft SQL only
+to a localhost-only synthetic fixture, verifies real PostgreSQL grants/RLS
+and both function security modes, then exercises the API with a CI-only JWT
+secret and synthetic IDs. It seeds 250,000 synthetic history rows for an
+index-plan check; test assertions reject sequential scans, temporary disk, over
+5,000 shared buffer blocks, or a query over 3 seconds. No Supabase project or
+production credentials are used by this job. These are generic PostgreSQL and
+PostgREST integration results, not managed Supabase Auth/session/revocation
+evidence; those specific tests remain required before the PR can leave draft.
+
+The daily workflow has an optional protected import-status job, disabled by
+default behind `PODCAST_EPISODE_IMPORT_STATUS_MONITOR_ENABLED`. It runs only
+after the existing coverage job on main, reuses its candidate artifact and
+the single existing schedule, and queries at most 10 exact Podcast-IDs per
+run. Each ID carries its own activation timestamp in the single bounded RPC.
+Runs before activation are excluded from that ID's latest-two, last-success,
+last-failure and consecutive-failure aggregates. If activation is older than
+14 days and no run is visible in the bounded window, status is
+`unknown_outside_window`; it does not trigger a false `missing_first_import`.
+A recent activation with no post-activation run is `no_import_after_activation`
+and becomes actionable after the 36-hour grace period. The monitor uses one
+password-grant request, one aggregate RPC and at most one active-episode count
+per ID (maximum 12 API requests), with a 14-day run
+window and 36-hour new-adapter grace period. Missing credentials, denied
+authorization, API errors and exact zero counts remain distinct. GitHub state
+is deduplicated in #256; identical status is not rewritten each day, and an
+alarm recovers only after a later successful run and at least one usable
+active episode. The protected GitHub environment, machine identity, credentials
+and enable variable have not been created or enabled. Step 1 continues to run
+independently.
+
 After authorization and security review, Step 2 can alert on two consecutive
 failed imports, no import following adapter activation, no usable active
-episodes, teaser-only/inactive posts, recovery, deployment lag, and identity
-collisions. Deduplication belongs in #256 and adapter-routing review in #288;
+episodes, recovery, and identity collisions. Teaser-only/inactive posts and
+Edge deploy status remain unknown until separate verified signals exist.
+Deduplication belongs in #256 and adapter-routing review in #288;
 the five feed-specific issues remain independent. #256 stays open until that
 protected reader and post-merge recovery have been verified in production.
