@@ -9,7 +9,7 @@ const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const expectedGenres = ["True Crime", "Historie", "Krig", "Politik", "Finans", "Samfund", "Sport", "Dokumentar", "Viden", "Underholdning"];
 const indexSource = await readFile(path.join(root, "index.html"), "utf8");
 assert.match(indexSource, /desktop-home-mockup\.css\?v=20261105-ranking-column-header-v1/u, "The homepage stylesheet cache version matches the desktop ranking header alignment fix");
-assert.match(indexSource, /app\.js\?v=20261107-mobile-ranking-filter-chips-v1/u, "The homepage JavaScript cache version matches current ranking behavior");
+assert.match(indexSource, /app\.js\?v=20261107-issue74-popular-now-v1/u, "The homepage JavaScript cache version matches current ranking behavior");
 const server = createServer(async (request, response) => {
   try {
     const urlPath = decodeURIComponent(new URL(request.url, "http://localhost").pathname);

@@ -268,6 +268,11 @@ try {
   await rankingSearch.fill("ho");
   await rankingPage.waitForFunction(() => state.searchTerm === "ho" && getFilteredPodcasts().some((podcast) => getPodcastId(podcast) === "enver hoxha"));
   const rankingHoxResult = rankingPage.locator('#podcastGrid [data-key="enver hoxha"]').first();
+  for (let batch = 0; batch < 40 && !(await rankingHoxResult.isVisible()); batch += 1) {
+    const loadMore = rankingPage.locator(".load-more-button:visible").last();
+    if (!(await loadMore.count())) break;
+    await loadMore.click();
+  }
   try {
     await rankingHoxResult.waitFor({ state: "visible" });
   } catch (error) {
