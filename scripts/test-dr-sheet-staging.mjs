@@ -183,6 +183,22 @@ assert.deepEqual(await appendDrCandidatesToStaging({ client: tyranMockStaging, c
   dryRun: false, appended: 1, alreadyPresent: 1
 });
 assert.equal(tyranMockStaging.rows.length, 1, "only Macias is appended; Marcos is already in Ark1");
+const tyranOrphanNote = Array(STAGING_HEADERS.length).fill("");
+tyranOrphanNote[STAGING_HEADERS.indexOf("DR source GUID")] = "Macias";
+const tyranOrphanPlan = buildStagingPlan({ headers: STAGING_HEADERS, existingRows: [tyranOrphanNote], candidates: tyranRegistry.records });
+assert.deepEqual(tyranOrphanPlan.unidentifiedRows, [2], "a single non-GUID note is identified without treating it as a staging identity");
+const orphanMockStaging = new MockStaging([tyranOrphanNote]);
+assert.deepEqual(await appendDrCandidatesToStaging({ client: orphanMockStaging, candidates: tyranRegistry.records, dryRun: false, allowHostUpdates: false }), {
+  dryRun: false, appended: 1, alreadyPresent: 1, preservedUnidentifiedRows: 1
+});
+assert.deepEqual(orphanMockStaging.rows[0], tyranOrphanNote, "the incomplete staging note is preserved byte-for-byte");
+assert.equal(orphanMockStaging.rows[1][STAGING_HEADERS.indexOf("Podcast-ID")], "tyran-auto-v1-08d0021f");
+const malformedGuidOrphan = [...tyranOrphanNote];
+malformedGuidOrphan[STAGING_HEADERS.indexOf("DR source GUID")] = "16122693681";
+assert.throws(() => buildStagingPlan({ headers: STAGING_HEADERS, existingRows: [malformedGuidOrphan], candidates: tyranRegistry.records }), /without Podcast-ID at row 2/u);
+const orphanTitle = Array(STAGING_HEADERS.length).fill("");
+orphanTitle[STAGING_HEADERS.indexOf("Titel")] = "Macias";
+assert.throws(() => buildStagingPlan({ headers: STAGING_HEADERS, existingRows: [orphanTitle], candidates: tyranRegistry.records }), /without Podcast-ID at row 2/u);
 const editorialTyran = [...tyranRow];
 editorialTyran[STAGING_HEADERS.indexOf("Lang beskrivelse")] = "Redaktørens rettelse";
 assert.equal(buildStagingPlan({ headers: STAGING_HEADERS, existingRows: [editorialTyran], candidates: tyranRegistry.records }).append.length, 0, "a rerun preserves an edited Tyran description");

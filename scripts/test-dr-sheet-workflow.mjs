@@ -19,6 +19,7 @@ assert.doesNotMatch(cli, /ORIGINAL_SHEET_ID|GOOGLE_SHEETS_SPREADSHEET_ID/u);
 assert.match(cli, /auto-discovered-tyran\.json/u);
 assert.match(cli, /TYRAN_BASELINE/u);
 assert.match(cli, /allowHostUpdates: false/u);
+assert.match(writer, /preservedUnidentifiedRows/u);
 assert.match(writer, /TYRAN_DR_PROVENANCE_V1/u);
 assert.match(writer, /NEEDS_EDITORIAL_REVIEW/u);
 assert.match(ownerGate, /TYRAN_APPEND_ENABLED/u);
