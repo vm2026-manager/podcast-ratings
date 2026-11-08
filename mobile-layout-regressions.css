@@ -655,6 +655,33 @@ html body .mobile-home-search-overlay { display: none; }
   }
 }
 
+/* Keep ranking search full width, then align mobile filters and activity on one row. */
+@media (max-width: 768px) {
+  html body.page-ranglister:not(.force-desktop-view) .ranking-search-strip {
+    grid-template-columns: minmax(0, 1fr) auto !important;
+    grid-template-rows: auto auto !important;
+    row-gap: 8px !important;
+  }
+
+  html body.page-ranglister:not(.force-desktop-view) .ranking-search-strip > .search-field {
+    grid-column: 1 / -1 !important;
+    grid-row: 1 !important;
+  }
+
+  html body.page-ranglister:not(.force-desktop-view) .ranking-search-strip > .ranking-mobile-filter-bar {
+    grid-column: 1 !important;
+    grid-row: 2 !important;
+    justify-self: start !important;
+  }
+
+  html body.page-ranglister:not(.force-desktop-view) .ranking-search-strip > #popularNowToggle {
+    grid-column: 2 !important;
+    grid-row: 2 !important;
+    justify-self: end !important;
+    align-self: stretch !important;
+  }
+}
+
 /* Active mobile ranking filters sit beside the stable sort control. */
 @media (min-width: 769px) {
   body.page-ranglister .ranking-toolbar .ranking-mobile-filter-summary {

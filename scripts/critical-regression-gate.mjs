@@ -67,6 +67,7 @@ const checks = [
   ["mobile ranking scroll stability across delayed updates and batch loading", ["scripts/test-mobile-ranking-scroll-regression.mjs"]],
   ["mobile ranking toolbar alignment, visibility, accessibility and navigation", ["scripts/test-mobile-ranking-toolbar.mjs"]],
   ["mobile ranking filter chips, independent removal and responsive layout", ["scripts/test-mobile-ranking-filter-chips.mjs"]],
+  ["mobile ranking search, filter and popular controls share the intended rows", ["scripts/test-ranking-search-controls-layout.mjs"]],
   ["desktop ranking rank grid geometry in Chromium", ["scripts/test-desktop-ranking-column.mjs"]],
   ["popular-now activity, filters, responsive layout and safe fallback", ["scripts/test-popular-now-ranking.mjs"]],
   ["popular-now batching, scroll gating, desktop cards and DOM reuse in Chromium", ["scripts/test-popular-now-batching.mjs"]],
