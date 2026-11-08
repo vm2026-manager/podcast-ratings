@@ -54,7 +54,7 @@ try {
       if (group.id === "narkobetjenten") {
         const season23 = group.seasonIdentities.find((season) => season.season === 23).podcast_key;
         state.communityStatsByKey[season23] = {
-          recentUsers7d: 1, recentUsers30d: 1, recentUsers90d: 1, momentumScore: 50000
+          recentUsers7d: 99, recentUsers30d: 99, recentUsers90d: 99, momentumScore: 50000
         };
       }
       if (group.id === "kirsten-ringer-til-rasmus") {
@@ -63,7 +63,7 @@ try {
         const rawKey = getPodcastKey(member);
         const key = resolveCanonicalPodcastId(normalizeText(rawKey)) || normalizeText(rawKey);
         state.communityStatsByKey[key] = {
-          recentUsers7d: 0, recentUsers30d: 1, recentUsers90d: 1, momentumScore: 40000
+          recentUsers7d: 5, recentUsers30d: 5, recentUsers90d: 5, momentumScore: 40000
         };
       }
     }
@@ -83,6 +83,7 @@ try {
     renderPodcastGrid();
 
     window.__rankingObserverStats = { created: 0, observed: 0, callbackHits: 0, disconnected: 0 };
+    window.__activeRankingObservers = new Set();
     const NativeObserver = window.IntersectionObserver;
     window.IntersectionObserver = class extends NativeObserver {
       constructor(callback, options) {
@@ -99,11 +100,16 @@ try {
         if (target?.classList?.contains("mobile-ranking-autoload-sentinel")) {
           window.__rankingObserverStats.observed += 1;
           this.__rankingObserverTracked = true;
+          window.__activeRankingObservers.add(this);
         }
         return super.observe(target);
       }
       disconnect() {
-        if (this.__rankingObserverTracked) window.__rankingObserverStats.disconnected += 1;
+        if (this.__rankingObserverTracked) {
+          window.__rankingObserverStats.disconnected += 1;
+          window.__activeRankingObservers.delete(this);
+          this.__rankingObserverTracked = false;
+        }
         return super.disconnect();
       }
     };
@@ -169,7 +175,7 @@ try {
         }),
         sentinelHidden: !document.querySelector(".mobile-ranking-autoload-sentinel") ||
           document.querySelector(".mobile-ranking-autoload-sentinel").classList.contains("is-hidden"),
-        observers: { ...window.__rankingObserverStats },
+        observers: { ...window.__rankingObserverStats, active: window.__activeRankingObservers.size },
         overflow: document.documentElement.scrollWidth > innerWidth
       };
     });
@@ -180,13 +186,13 @@ try {
     assert.deepEqual(initial.ranks, ["#1", "#2", "#3", "#4", "#5"], `placements are sequential at ${width}px`);
     if (width === 1280) assert.equal(initial.layout, "cards", "1280px desktop exercises card batching");
     if (width === 1440) assert.equal(initial.layout, "list", "1440px desktop exercises table batching");
-    assert.ok(initial.eligible && initial.ordered, `90-day cohort and momentum order remain correct at ${width}px`);
+    assert.ok(initial.eligible && initial.ordered, `30-day cohort and 7/30-day momentum order remain correct at ${width}px`);
     assert.ok(Object.values(initial.groupCounts).every((count) => count <= 1),
       `each configured main series appears at most once at ${width}px`);
     assert.equal(initial.hasIndividualSeason, false, `individual season rows are suppressed at ${width}px`);
-    assert.ok(initial.excludesInactive, `podcasts without 90-day activity stay out at ${width}px`);
+    assert.ok(initial.excludesInactive, `podcasts without 30-day activity stay out at ${width}px`);
     assert.ok(initial.sentinelHidden, `popular mode hides the autoload sentinel at ${width}px`);
-    assert.equal(initial.observers.observed, 0, `popular mode installs no ranking observer at ${width}px`);
+    assert.equal(initial.observers.active, 0, `popular mode leaves no ranking observer active at ${width}px`);
     assert.equal(initial.overflow, false, `no horizontal overflow at ${width}px`);
 
     if (width === 390) {
