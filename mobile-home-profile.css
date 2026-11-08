@@ -18,6 +18,64 @@
     min-width: 0 !important;
     white-space: nowrap !important;
   }
+  /* The sixth mobile shortcut shares the genre grid without becoming a genre. */
+  html body.page-forside #pageIntroPanel .home-popular-now-card {
+    display: none !important;
+  }
+
+  @media (max-width: 430px) {
+    html body.page-forside #pageIntroPanel .home-popular-now-card {
+      min-width: 0 !important;
+      min-height: 66px !important;
+      padding: 6px 5px !important;
+      display: grid !important;
+      grid-template-columns: minmax(0, 1fr) 14px !important;
+      grid-template-rows: 19px auto !important;
+      gap: 3px 4px !important;
+      align-items: center !important;
+      border: 1px solid rgba(235, 168, 102, 0.9) !important;
+      border-radius: 12px !important;
+      background: #fff0dc !important;
+      box-shadow: 0 8px 20px rgba(110, 59, 18, 0.09) !important;
+      color: #8f3e12 !important;
+      font: 850 0.58rem/1.12 "Manrope", sans-serif !important;
+      text-align: center !important;
+      cursor: pointer;
+    }
+
+    html body.page-forside #pageIntroPanel .home-popular-now-card:hover,
+    html body.page-forside #pageIntroPanel .home-popular-now-card:focus-visible {
+      border-color: #df7b35 !important;
+      background: #ffe6c5 !important;
+      outline: 2px solid #a54822 !important;
+      outline-offset: 2px;
+    }
+
+    html body.page-forside #pageIntroPanel .home-popular-now-card__flame {
+      width: 19px;
+      height: 19px;
+      grid-column: 1;
+      grid-row: 1;
+      justify-self: center;
+      color: #e45a19;
+    }
+
+    html body.page-forside #pageIntroPanel .home-popular-now-card__label {
+      min-width: 0;
+      grid-column: 1 / -1;
+      grid-row: 2;
+      overflow-wrap: break-word;
+    }
+
+    html body.page-forside #pageIntroPanel .home-popular-now-card__arrow {
+      width: 14px;
+      height: 14px;
+      grid-column: 2;
+      grid-row: 1;
+      color: #a54822;
+    }
+  }
+
   html body.page-forside #pageIntroPanel .home-genres__all-link {
     flex: 0 0 auto !important;
     display: inline-flex !important;
