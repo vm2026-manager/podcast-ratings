@@ -99,7 +99,7 @@ const candidates = new Function(
   "getDisplayGroupMemberPodcasts", "createRankingDisplayGroup", "getPopularNowActivityStat",
   "hasValidPopularNowActivityStat", "hasDocumentedRecentActivity", "isStandaloneSeasonPodcast",
   "deduplicatePodcastResults", "console",
-  `${extractFunction("getPopularNowCandidates")}; return getPopularNowCandidates;`
+  `${extractFunction("getPopularNowCandidateUniverse")}; return getPopularNowCandidateUniverse;`
 )(state, normalizeMatchKey, normalizeText, getLegacyKey, getKey, getDisplayGroupMemberPodcasts,
   createRankingDisplayGroup, getActivityStat, isValidActivity, isEligible, isStandaloneSeason,
   (items) => [...new Map(items.map((item) => [item.key, item])).values()], { warn() {} });

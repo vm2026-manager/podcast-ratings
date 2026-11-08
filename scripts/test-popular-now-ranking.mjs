@@ -81,7 +81,7 @@ const candidatesFactory = new Function(
   "getDisplayGroupMemberPodcasts", "createRankingDisplayGroup", "getPopularNowActivityStat",
   "hasValidPopularNowActivityStat", "hasDocumentedRecentActivity", "isStandaloneSeasonPodcast",
   "deduplicatePodcastResults", "console",
-  `${extractFunction("getPopularNowCandidates")}; return getPopularNowCandidates;`
+  `${extractFunction("getPopularNowCandidateUniverse")}; return getPopularNowCandidateUniverse;`
 )(
   Object.assign(state, {
     podcastDisplayGroups: [{ id: "series", rankingEnabled: true, memberLegacyKeys: ["season-one"] }],
@@ -171,10 +171,10 @@ const transitionState = {
 };
 let invalidations = 0;
 const toggle = new Function(
-  "state", "normalizeRankingSource", "resetVisibleCount", "invalidateRankingListCache",
+  "state", "elements", "normalizeRankingSource", "resetVisibleCount", "invalidateRankingListCache",
   "updatePopularNowUi", "updateMobileRankingFilterUi", "renderPodcastGrid",
   `${extractFunction("togglePopularNow")}; return togglePopularNow;`
-)(transitionState, (value) => value, () => {}, () => { invalidations += 1; }, () => {}, () => {}, () => {});
+)(transitionState, { podcastGrid: { replaceChildren() {} } }, (value) => value, () => {}, () => { invalidations += 1; }, () => {}, () => {}, () => {});
 toggle();
 assert.equal(transitionState.popularNowActive, true);
 assert.equal(transitionState.rankingSource, "users", "activation selects user rankings");
@@ -205,20 +205,21 @@ assert.equal(sourceChangeState.rankingSource, "mads");
 const dataState = new Function(
   "state", `${extractFunction("getPopularNowActivityDataState")}; return getPopularNowActivityDataState;`
 );
-assert.deepEqual(dataState({ communityStatsHasSuccessfulLoad: false, communityStatsStatus: "loading" })(), {
-  status: "loading", title: "Indlæser brugeraktivitet", message: "Populære lige nu vises, når aktivitetsdata er klar."
+const completeCatalogue = { podcastDataStatus: "ready", podcasts: [{ key: "one" }], podcastDisplayGroupsReady: true };
+assert.deepEqual(dataState({ ...completeCatalogue, communityStatsHasSuccessfulLoad: false, communityStatsStatus: "loading" })(), {
+  status: "loading", title: "Indlæser Populære lige nu", message: "Henter og validerer podcastkatalog, hovedserier og aktivitetsdata …"
 });
-assert.equal(dataState({ communityStatsHasSuccessfulLoad: false, communityStatsStatus: "error" })().status, "error",
+assert.equal(dataState({ ...completeCatalogue, communityStatsHasSuccessfulLoad: false, communityStatsStatus: "error" })().status, "error",
   "a failed first load is an honest error instead of an all-podcasts fallback");
-assert.equal(dataState({ communityStatsHasSuccessfulLoad: true, communityStatsStatus: "error" })().warning !== undefined, true,
-  "a failed refresh is explicitly marked while the last good activity snapshot remains available");
+assert.equal(dataState({ ...completeCatalogue, communityStatsHasSuccessfulLoad: true, communityStatsStatus: "refreshing" })().status, "ready",
+  "a prior complete public activity response remains valid while a background refresh runs");
 
 assert.match(index, /id="popularNowToggle"[\s\S]*aria-pressed="false"[\s\S]*>Populære lige nu<\/button>/,
   "the toggle is an accessible button with the requested label");
 assert.match(app, /state\.popularNowActive\s*\?\s*getPopularNowCandidates\(\)\s*:\s*getRankingCandidates\(\)/,
   "popular candidates still run through the normal genre, search, language, free and rating filters");
-assert.match(app, /state\.popularNowActive\) return comparePopularNowCandidates\(a, b\)/,
-  "popular mode takes precedence over ratings and sortable ranking columns");
+assert.match(app, /const filtered = state\.popularNowActive\s*\?\s*filteredCandidates\s*:/,
+  "popular mode preserves the snapshot order instead of sorting again after each filter-cache miss");
 assert.match(app, /state\.popularNowActive \\|\\| state\.activeFilter/,
   "historical ranking movement is disabled for the activity cohort");
 assert.match(css, /Issue 74: keep the activity switch beside desktop search and below mobile search/,

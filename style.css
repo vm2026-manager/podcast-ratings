@@ -7887,6 +7887,19 @@ body.has-dialog-open {
   font-weight: 700;
 }
 
+body.page-ranglister .popular-now-data-state--loading {
+  min-height: 76px;
+  padding: 20px 14px;
+  border-style: solid;
+  border-color: rgba(120, 101, 83, 0.12);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.28);
+  color: #756d66;
+  font-size: 0.88rem;
+  font-weight: 650;
+  text-align: center;
+}
+
 .load-more-wrap {
   display: flex;
   justify-content: center;

@@ -56,6 +56,7 @@ const INITIAL_VISIBLE_COUNT = 24;
 const MOBILE_RANKING_BATCH_SIZE = 20;
 const MOBILE_RANKING_TAIL_SIZE = 50;
 const DESKTOP_RANKING_BATCH_SIZE = 24;
+const POPULAR_NOW_REFRESH_INTERVAL_MS = 6 * 60 * 60 * 1000;
 const VALID_RANKING_SOURCES = new Set(["mads", "users"]);
 const VALID_LANGUAGE_FILTERS = new Set(["all", "danish", "english"]);
 const PODCAST_DATA_REFRESH_INTERVAL_MS = 60 * 60 * 1000;
@@ -755,6 +756,7 @@ const DATA_VERSION = "2026-11-04-issue58-editorial-cover";
 const EXPANDED_LIST_STORAGE_KEY = "podcast-ratings-expanded-list";
 const VIEW_MODE_STORAGE_KEY = "podcast-ratings-desktop-view";
 const DESKTOP_RANKING_LAYOUT_STORAGE_KEY = "podcast-ratings-desktop-ranking-layout";
+const POPULAR_NOW_SNAPSHOT_STORAGE_KEY = "podcastlisten-popular-now-public-snapshot-v1";
 const AUTH_PERSISTENCE_STORAGE_KEY = "podcast-ratings-auth-persistence";
 const PROFILE_PREFERENCES_STORAGE_KEY = "podcast-ratings-profile-preferences";
 const EXPLORE_PERSONAL_SEED_HISTORY_STORAGE_KEY =
@@ -1085,6 +1087,8 @@ const state = {
   rankingSource: "mads",
   popularNowActive: false,
   popularNowPreviousState: null,
+  popularNowSnapshot: null,
+  popularNowRenderedSignature: "",
   rankingMovementByKey: new Map(),
   rankingMovementPeriodLabel: "",
   rankingMovementSnapshotValid: false,
@@ -4177,6 +4181,11 @@ function getPodcastRandomTieBreaker(podcast) {
 
 function getPopularNowActivityStat(podcast) {
   if (!podcast) return null;
+  const snapshotKey = normalizeText(getPodcastKey(podcast));
+  const snapshotStats = state.popularNowActive ? state.popularNowSnapshot?.activityStatsByKey : null;
+  if (snapshotStats && Object.prototype.hasOwnProperty.call(snapshotStats, snapshotKey)) {
+    return snapshotStats[snapshotKey];
+  }
   if (podcast.isDisplayGroup) return podcast.popularNowActivityStat || null;
   // The SQL view aggregates each user once per podcast across direct and episode ratings.
   // When a direct rating exists, only a positive new episode rating can renew its activity.
@@ -4215,7 +4224,7 @@ function comparePopularNowCandidates(a, b) {
   return aKey.localeCompare(bKey, "en", { sensitivity: "base" }) || aKey.localeCompare(bKey);
 }
 
-function getPopularNowCandidates() {
+function getPopularNowCandidateUniverse({ requireActivity = true } = {}) {
   const activeGroups = state.podcastDisplayGroups.filter((group) => group.rankingEnabled);
   const groupedPodcastKeys = new Set();
   activeGroups.forEach((group) => {
@@ -4236,10 +4245,10 @@ function getPopularNowCandidates() {
       .map((member) => getPopularNowActivityStat(member))
       .filter(hasValidPopularNowActivityStat)
       .sort((a, b) => Number(b.momentumScore) - Number(a.momentumScore));
-    if (!activeSeasonStats.length) return null;
+    if (requireActivity && !activeSeasonStats.length) return null;
     const displayGroup = createRankingDisplayGroup(group);
     return displayGroup
-      ? { ...displayGroup, popularNowActivityStat: activeSeasonStats[0] }
+      ? { ...displayGroup, popularNowActivityStat: activeSeasonStats[0] || null }
       : null;
   }).filter(Boolean);
   const ordinary = state.podcasts.filter(
@@ -4256,10 +4265,167 @@ function getPopularNowCandidates() {
       console.warn("Populære lige nu skjuler en sæson uden verificeret hovedserie; redaktionel gennemgang påkrævet:", key);
     });
   }
-  return deduplicatePodcastResults([
+  const candidates = deduplicatePodcastResults([
     ...groupMembers,
     ...ordinary.filter((podcast) => !isStandaloneSeasonPodcast(podcast))
-  ].filter(hasDocumentedRecentActivity));
+  ]);
+  return requireActivity ? candidates.filter(hasDocumentedRecentActivity) : candidates;
+}
+
+function getPopularNowWindowId(timestamp = Date.now()) {
+  return Math.floor(Number(timestamp) / POPULAR_NOW_REFRESH_INTERVAL_MS);
+}
+
+function readPopularNowSnapshot(windowId) {
+  try {
+    const raw = window.localStorage.getItem(POPULAR_NOW_SNAPSHOT_STORAGE_KEY);
+    if (!raw) return null;
+    const snapshot = JSON.parse(raw);
+    if (
+      snapshot?.version !== 1 ||
+      snapshot.windowId !== windowId ||
+      !Array.isArray(snapshot.orderedKeys) ||
+      !snapshot.activityStatsByKey || typeof snapshot.activityStatsByKey !== "object" ||
+      !snapshot.communityStatsByKey || typeof snapshot.communityStatsByKey !== "object"
+    ) return null;
+
+    const uniqueKeys = new Set(snapshot.orderedKeys);
+    if (
+      uniqueKeys.size !== snapshot.orderedKeys.length ||
+      snapshot.orderedKeys.some((key) => typeof key !== "string" || !key.trim()) ||
+      snapshot.orderedKeys.some((key) => !hasValidPopularNowActivityStat(snapshot.activityStatsByKey[key]))
+    ) return null;
+
+    return snapshot;
+  } catch {
+    return null;
+  }
+}
+
+function buildPopularNowSnapshotCandidateEntries(candidatePool, snapshotData) {
+  const byKey = new Map(candidatePool.map((podcast) => [getPodcastKey(podcast), podcast]));
+  const orderedEntries = snapshotData.orderedKeys.map((key) => byKey.get(key));
+  if (orderedEntries.some((podcast) => !podcast)) return null;
+
+  return orderedEntries.map((podcast) => {
+    const key = getPodcastKey(podcast);
+    const communityStat = snapshotData.communityStatsByKey[key] || null;
+    const snapshotPodcast = {
+      ...podcast,
+      popularNowActivityStat: snapshotData.activityStatsByKey[key]
+    };
+    if (podcast.isDisplayGroup && communityStat) {
+      snapshotPodcast.userAverageRating = communityStat.averageRating;
+      snapshotPodcast.userRatingCount = communityStat.ratingCount;
+    }
+    return snapshotPodcast;
+  });
+}
+
+function getPopularNowActivityDataState() {
+  if (state.popularNowActive && state.popularNowSnapshot) return { status: "ready" };
+
+  if (state.podcastDataStatus === "error") {
+    return {
+      status: "error",
+      title: "Podcastkataloget kunne ikke indlæses",
+      message: "Populære lige nu vises ikke uden et gyldigt podcastkatalog. Prøv at genindlæse siden."
+    };
+  }
+  if (
+    !["ready", "refreshing"].includes(state.podcastDataStatus) ||
+    !state.podcasts.length ||
+    !state.podcastDisplayGroupsReady
+  ) {
+    return {
+      status: "loading",
+      title: "Indlæser Populære lige nu",
+      message: "Henter og validerer podcastkatalog, hovedserier og aktivitetsdata …"
+    };
+  }
+
+  if (state.communityStatsHasSuccessfulLoad) return { status: "ready" };
+  if (state.communityStatsStatus === "error") {
+    return {
+      status: "error",
+      title: "Brugeraktivitet kunne ikke indlæses",
+      message: "Populære lige nu vises ikke uden komplette aktivitetsdata. Prøv at genindlæse siden."
+    };
+  }
+  return {
+    status: "loading",
+    title: "Indlæser Populære lige nu",
+    message: "Henter og validerer podcastkatalog, hovedserier og aktivitetsdata …"
+  };
+}
+
+function ensurePopularNowSnapshot() {
+  if (!state.popularNowActive) return { status: "inactive" };
+  if (state.popularNowSnapshot) return { status: "ready", snapshot: state.popularNowSnapshot };
+
+  const dataState = getPopularNowActivityDataState();
+  if (dataState.status !== "ready") return dataState;
+
+  const windowId = getPopularNowWindowId();
+  const candidatePool = getPopularNowCandidateUniverse({ requireActivity: false });
+  const storedSnapshot = readPopularNowSnapshot(windowId);
+  let snapshotData = storedSnapshot;
+  let entries = null;
+
+  if (storedSnapshot) {
+    entries = buildPopularNowSnapshotCandidateEntries(candidatePool, storedSnapshot);
+    if (!entries) {
+      return {
+        status: "error",
+        title: "Populære lige nu kunne ikke gendannes",
+        message: "Et podcast-ID fra periodens gemte liste mangler i det validerede katalog. Genindlæs siden, når kataloget er opdateret."
+      };
+    }
+  } else {
+    const ordered = candidatePool
+      .filter(hasDocumentedRecentActivity)
+      .sort(comparePopularNowCandidates);
+    const orderedKeys = ordered.map(getPodcastKey);
+    const activityStatsByKey = Object.create(null);
+    const communityStatsByKey = Object.create(null);
+    ordered.forEach((podcast, index) => {
+      const key = orderedKeys[index];
+      activityStatsByKey[key] = { ...getPopularNowActivityStat(podcast) };
+      communityStatsByKey[key] = getCommunityStat(key);
+    });
+    snapshotData = { version: 1, windowId, orderedKeys, activityStatsByKey, communityStatsByKey };
+    try {
+      window.localStorage.setItem(POPULAR_NOW_SNAPSHOT_STORAGE_KEY, JSON.stringify(snapshotData));
+    } catch {
+      return {
+        status: "error",
+        title: "Populære lige nu kunne ikke gemmes",
+        message: "Den offentlige sekstimersliste kunne ikke gemmes i browseren. Kontrollér browserens lagerplads, og prøv igen."
+      };
+    }
+    entries = buildPopularNowSnapshotCandidateEntries(candidatePool, snapshotData);
+    if (!entries) {
+      return {
+        status: "error",
+        title: "Populære lige nu kunne ikke indlæses",
+        message: "Listen kunne ikke matches med det validerede katalog. Prøv at genindlæse siden."
+      };
+    }
+  }
+
+  state.popularNowSnapshot = {
+    windowId,
+    orderedKeys: snapshotData.orderedKeys.slice(),
+    activityStatsByKey: snapshotData.activityStatsByKey,
+    communityStatsByKey: snapshotData.communityStatsByKey,
+    entries
+  };
+  return { status: "ready", snapshot: state.popularNowSnapshot };
+}
+
+function getPopularNowCandidates() {
+  const snapshotState = ensurePopularNowSnapshot();
+  return snapshotState.status === "ready" ? snapshotState.snapshot.entries : [];
 }
 
 function isStandaloneSeasonPodcast(podcast) {
@@ -5312,7 +5478,7 @@ function getFilteredPodcasts() {
   if (cached) return cached;
 
   const candidates = state.popularNowActive ? getPopularNowCandidates() : getRankingCandidates();
-  const filtered = deduplicatePodcastResults(candidates
+  const filteredCandidates = deduplicatePodcastResults(candidates
     .filter((podcast) => {
       if (
         state.activePublisherFilter &&
@@ -5388,9 +5554,10 @@ function getFilteredPodcasts() {
         return matchesRankingEnhancedSearch(podcast, state.searchTerm);
       }
       return matchesRankingEnhancedSearch(podcast, state.searchTerm);
-    }))
-    .sort((a, b) => {
-      if (state.popularNowActive) return comparePopularNowCandidates(a, b);
+    }));
+  const filtered = state.popularNowActive
+    ? filteredCandidates
+    : filteredCandidates.sort((a, b) => {
       const usesDesktopUserRankingSort = hasDesktopUserRankingSort();
       const usesDesktopOwnRatingSort = hasDesktopOwnRatingSort();
       const isUserCountSort = usesDesktopUserRankingSort && state.userRankingSort === "count";
@@ -5978,6 +6145,8 @@ function handleRankingSourceChange(source) {
   if (nextSource === "mads" && state.popularNowActive) {
     state.popularNowActive = false;
     state.popularNowPreviousState = null;
+    state.popularNowSnapshot = null;
+    state.popularNowRenderedSignature = "";
     updatePopularNowUi();
   }
   if (state.rankingSource === nextSource) {
@@ -6033,6 +6202,9 @@ function togglePopularNow() {
     state.popularNowPreviousState = null;
   }
   state.popularNowActive = nextActive;
+  state.popularNowSnapshot = null;
+  state.popularNowRenderedSignature = "";
+  elements.podcastGrid?.replaceChildren();
   resetVisibleCount();
   invalidateRankingListCache();
   updatePopularNowUi();
@@ -6070,6 +6242,7 @@ function getResultsText(filteredCount, visibleCount) {
 
   if (state.popularNowActive) {
     suffixes.push("Sorteret efter aktivitet de seneste 90 dage.");
+    suffixes.push("Listen opdateres hver 6. time.");
     if (state.communityStatsStatus === "error" && state.communityStatsHasSuccessfulLoad) {
       suffixes.push("Opdatering mislykkedes; viser senest indlæste data.");
     }
@@ -7325,6 +7498,11 @@ function renderAuthPanel() {
 }
 
 function getCommunityStat(podcastKey) {
+  const snapshotKey = normalizeText(podcastKey);
+  const snapshotStats = state.popularNowActive ? state.popularNowSnapshot?.communityStatsByKey : null;
+  if (snapshotStats && Object.prototype.hasOwnProperty.call(snapshotStats, snapshotKey)) {
+    return snapshotStats[snapshotKey];
+  }
   const displayGroupId = normalizeText(podcastKey).replace(/^display-group:/, "");
   if (normalizeText(podcastKey).startsWith("display-group:")) {
     const displayGroup = createRankingDisplayGroup(state.podcastDisplayGroupById[displayGroupId]);
@@ -8473,6 +8651,24 @@ function updateDesktopRankingSourceContext() {
   };
 }
 
+function reconcilePopularNowDesktopItems(container, podcasts, createItem, prefixChildCount = 0) {
+  const existingByKey = new Map(
+    [...container.querySelectorAll(":scope > .podcast-card[data-key]")]
+      .map((card) => [card.dataset.key, card])
+  );
+  const desiredItems = podcasts.map((podcast, index) =>
+    existingByKey.get(getPodcastKey(podcast)) || createItem(podcast, index)
+  );
+
+  desiredItems.forEach((item, index) => {
+    const current = container.children[index + prefixChildCount] || null;
+    if (current !== item) container.insertBefore(item, current);
+  });
+  for (const child of [...container.querySelectorAll(":scope > .podcast-card[data-key]")]) {
+    if (!desiredItems.includes(child)) child.remove();
+  }
+}
+
 function renderDesktopRanking(podcasts) {
   const activeScoreLabel =
     state.rankingSource === "users"
@@ -8486,28 +8682,41 @@ function renderDesktopRanking(podcasts) {
   const showsCards = state.desktopRankingLayout === "cards";
 
   if (showsCards) {
-    const top = document.createElement("section");
-    top.className = "desktop-ranking-top";
-    top.setAttribute("aria-label", "Ranglisten som kort");
-
-    podcasts.forEach((podcast, index) => {
-      const displayRank = getRankingDisplayRank(index, podcast);
-      top.appendChild(createDesktopRankingTopCardElement(podcast, displayRank));
-    });
-    elements.podcastGrid.appendChild(top);
+    let top = state.popularNowActive
+      ? elements.podcastGrid.querySelector(":scope > .desktop-ranking-top")
+      : null;
+    if (!top) {
+      elements.podcastGrid.querySelector(":scope > .desktop-ranking-table")?.remove();
+      top = document.createElement("section");
+      top.className = "desktop-ranking-top";
+      top.setAttribute("aria-label", "Ranglisten som kort");
+      elements.podcastGrid.appendChild(top);
+    }
+    if (state.popularNowActive) {
+      reconcilePopularNowDesktopItems(top, podcasts, (podcast, index) =>
+        createDesktopRankingTopCardElement(podcast, getRankingDisplayRank(index, podcast))
+      );
+    } else {
+      podcasts.forEach((podcast, index) => {
+        const displayRank = getRankingDisplayRank(index, podcast);
+        top.appendChild(createDesktopRankingTopCardElement(podcast, displayRank));
+      });
+    }
     return;
   }
 
   if (!podcasts.length) return;
 
-  const table = document.createElement("section");
-  table.className = "desktop-ranking-table";
-  table.setAttribute("role", "table");
-  table.setAttribute(
-    "aria-label",
-    "Hele ranglisten som liste"
-  );
-  table.innerHTML = `
+  let table = state.popularNowActive
+    ? elements.podcastGrid.querySelector(":scope > .desktop-ranking-table")
+    : null;
+  if (!table) {
+    elements.podcastGrid.querySelector(":scope > .desktop-ranking-top")?.remove();
+    table = document.createElement("section");
+    table.className = "desktop-ranking-table";
+    table.setAttribute("role", "table");
+    table.setAttribute("aria-label", "Hele ranglisten som liste");
+    table.innerHTML = `
     <div class="desktop-ranking-table__head" role="row">
       <span role="columnheader">#</span>
       <span role="columnheader">Podcast</span>
@@ -8522,13 +8731,20 @@ function renderDesktopRanking(podcasts) {
       <span role="columnheader"${canToggleOwnRatingDirection && ownSortActive ? ` aria-sort="${ownSortDirection === "asc" ? "ascending" : "descending"}"` : ""}>${canToggleOwnRatingDirection ? `<button class="desktop-ranking-score-direction" type="button" data-ranking-own-direction-toggle aria-label="Sortér Min vurdering: ${ownSortActive && ownSortDirection === "desc" ? "laveste først" : "højeste først"}"><span>Min vurdering</span>${ownSortActive ? `<span class="desktop-ranking-score-direction__indicator" aria-hidden="true">${ownSortDirection === "asc" ? "↑" : "↓"}</span>` : ""}</button>` : "Min vurdering"}</span>
       <span role="columnheader"><span class="sr-only">Handlinger</span></span>
     </div>
-  `;
+    `;
+    elements.podcastGrid.appendChild(table);
+  }
 
-  podcasts.forEach((podcast, index) => {
-    const displayRank = getRankingDisplayRank(index, podcast);
-    table.appendChild(createDesktopRankingTableRowElement(podcast, displayRank));
-  });
-  elements.podcastGrid.appendChild(table);
+  if (state.popularNowActive) {
+    reconcilePopularNowDesktopItems(table, podcasts, (podcast, index) =>
+      createDesktopRankingTableRowElement(podcast, getRankingDisplayRank(index, podcast)), 1
+    );
+  } else {
+    podcasts.forEach((podcast, index) => {
+      const displayRank = getRankingDisplayRank(index, podcast);
+      table.appendChild(createDesktopRankingTableRowElement(podcast, displayRank));
+    });
+  }
 
   table.querySelector("[data-ranking-user-direction-toggle]")?.addEventListener("click", () => {
     state.desktopOwnRatingSortActive = false;
@@ -18266,28 +18482,9 @@ function getDesktopRankingDataState() {
   return { status: "ready" };
 }
 
-function getPopularNowActivityDataState() {
-  if (state.communityStatsHasSuccessfulLoad) {
-    return state.communityStatsStatus === "error"
-      ? { status: "ready", warning: "Brugeraktivitet kunne ikke opdateres. Viser senest indlæste data." }
-      : { status: "ready" };
-  }
-  if (state.communityStatsStatus === "error") {
-    return {
-      status: "error",
-      title: "Brugeraktivitet kunne ikke indlæses",
-      message: "Populære lige nu vises ikke uden aktivitetsdata. Prøv at genindlæse siden."
-    };
-  }
-  return {
-    status: "loading",
-    title: "Indlæser brugeraktivitet",
-    message: "Populære lige nu vises, når aktivitetsdata er klar."
-  };
-}
-
 function renderPopularNowActivityDataState(dataState) {
   if (!elements.podcastGrid) return;
+  state.popularNowRenderedSignature = "";
   elements.podcastGrid.replaceChildren();
   const message = document.createElement("div");
   message.className = `empty-state popular-now-data-state popular-now-data-state--${dataState.status}`;
@@ -18302,7 +18499,17 @@ function renderPopularNowActivityDataState(dataState) {
 }
 
 function renderDesktopRankingDataWarning(dataState) {
-  if (!dataState.warning || !elements.podcastGrid || !isDesktopRankingViewport()) return;
+  if (!elements.podcastGrid) return;
+
+  const existingWarning = elements.podcastGrid.querySelector(":scope > .desktop-ranking-data-warning");
+  if (!dataState.warning || !isDesktopRankingViewport()) {
+    existingWarning?.remove();
+    return;
+  }
+  if (existingWarning) {
+    if (existingWarning.textContent !== dataState.warning) existingWarning.textContent = dataState.warning;
+    return;
+  }
 
   const warning = document.createElement("p");
   warning.className = "desktop-ranking-data-warning";
@@ -18465,7 +18672,7 @@ function renderPodcastGrid() {
   updateDesktopRankingSourceContext();
 
   if (state.popularNowActive) {
-    const activityDataState = getPopularNowActivityDataState();
+    const activityDataState = ensurePopularNowSnapshot();
     if (activityDataState.status !== "ready") {
       renderPopularNowActivityDataState(activityDataState);
       return;
@@ -18480,7 +18687,10 @@ function renderPodcastGrid() {
   }
 
   const reconcileMobileCards = isMobileRankingRoute() && !isDesktopRankingViewport();
-  if (!reconcileMobileCards) elements.podcastGrid.replaceChildren();
+  if (!reconcileMobileCards && !state.popularNowActive) {
+    elements.podcastGrid.replaceChildren();
+    state.popularNowRenderedSignature = "";
+  }
 
   void loadRankingMovementSnapshot();
 
@@ -18490,19 +18700,42 @@ function renderPodcastGrid() {
   const visible = isMobileTail
     ? filtered.slice(visibleStart)
     : filtered.slice(0, state.visibleCount);
+  const popularNowRenderSignature = state.popularNowActive
+    ? JSON.stringify([
+      isDesktopRankingViewport() ? state.desktopRankingLayout : "mobile-cards",
+      state.rankingPositionMode,
+      visibleStart,
+      visible.map(getPodcastKey)
+    ])
+    : "";
+  const existingPopularNowKeys = state.popularNowActive
+    ? [...elements.podcastGrid.querySelectorAll(isDesktopRankingViewport()
+      ? state.desktopRankingLayout === "cards"
+        ? ".desktop-ranking-top .podcast-card[data-key]"
+        : ".desktop-ranking-table .podcast-card[data-key]"
+      : ":scope > .podcast-card[data-key]")].map((item) => item.dataset.key)
+    : [];
+  const canReusePopularNowDom = Boolean(
+    state.popularNowActive &&
+    popularNowRenderSignature &&
+    popularNowRenderSignature === state.popularNowRenderedSignature &&
+    JSON.stringify(existingPopularNowKeys) === JSON.stringify(visible.map(getPodcastKey))
+  );
 
   elements.podcastGrid.setAttribute("aria-busy", "false");
 
   if (!filtered.length) {
-    const empty = document.createElement("div");
-    empty.className = "empty-state";
-    empty.textContent = state.popularNowActive
-      ? "Ingen podcasts har dokumenteret vurderingsaktivitet de seneste 90 dage, der matcher filtrene."
-      : "Ingen podcasts matcher den valgte kombination af filtre.";
-    elements.podcastGrid.replaceChildren(empty);
-  } else if (isDesktopRankingViewport()) {
+    if (!canReusePopularNowDom) {
+      const empty = document.createElement("div");
+      empty.className = "empty-state";
+      empty.textContent = state.popularNowActive
+        ? "Ingen podcasts har dokumenteret vurderingsaktivitet de seneste 90 dage, der matcher filtrene."
+        : "Ingen podcasts matcher den valgte kombination af filtre.";
+      elements.podcastGrid.replaceChildren(empty);
+    }
+  } else if (!canReusePopularNowDom && isDesktopRankingViewport()) {
     renderDesktopRanking(visible);
-  } else {
+  } else if (!canReusePopularNowDom) {
     const fragment = document.createDocumentFragment();
 
     visible.forEach((podcast, index) => {
@@ -18516,6 +18749,7 @@ function renderPodcastGrid() {
     if (reconcileMobileCards) reconcileMobileRankingCards([...fragment.children], visible);
     else elements.podcastGrid.appendChild(fragment);
   }
+  state.popularNowRenderedSignature = popularNowRenderSignature;
 
   renderDesktopRankingDataWarning(rankingDataState);
 
@@ -18717,6 +18951,21 @@ function render() {
   const routeChanged =
     previousRoute !== nextRouteInfo.route || previousRawRoute !== nextRouteInfo.rawRoute;
   const mainRouteChanged = previousRoute && previousRoute !== nextRouteInfo.route;
+
+  if (
+    routeChanged &&
+    previousRoute &&
+    previousRoute !== "ranglister" &&
+    nextRouteInfo.route === "ranglister" &&
+    state.popularNowActive &&
+    state.popularNowSnapshot &&
+    state.popularNowSnapshot.windowId !== getPopularNowWindowId()
+  ) {
+    state.popularNowSnapshot = null;
+    state.popularNowRenderedSignature = "";
+    elements.podcastGrid?.replaceChildren();
+    invalidateRankingListCache();
+  }
 
   if (routeChanged) {
     hidePodcastAccessTooltip();

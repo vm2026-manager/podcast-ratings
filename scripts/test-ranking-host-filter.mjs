@@ -36,7 +36,7 @@ for (const [podcastId, hostCredit] of approvedHostCredits) {
 }
 assert.match(index, /app\.js\?[^"']*issue66-clickable-hosts-v1=1[^"']*issue68-host-identities-v1=1/u,
   "the ranking host behavior has a new app.js cache version");
-assert.match(index, /style\.css\?v=20261107-issue74-popular-now-v1/u,
+assert.match(index, /style\.css\?v=20261108-issue79-fast-popular-list-v1/u,
   "the host-link affordance and ranking activity switch have a new stylesheet cache version");
 assert.match(app, /function createRankingHostCreditElement\(/u);
 assert.match(app, /button\.dataset\.action = "filter-ranking-host"/u);
