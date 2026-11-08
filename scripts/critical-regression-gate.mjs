@@ -70,6 +70,7 @@ const checks = [
   ["mobile ranking search, filter and popular controls share the intended rows", ["scripts/test-ranking-search-controls-layout.mjs"]],
   ["desktop ranking rank grid geometry in Chromium", ["scripts/test-desktop-ranking-column.mjs"]],
   ["popular-now activity, filters, responsive layout and safe fallback", ["scripts/test-popular-now-ranking.mjs"]],
+  ["popular-now verified main-series season grouping and conservative activity", ["scripts/test-popular-now-display-groups.mjs"]],
   ["popular-now batching, scroll gating, desktop cards and DOM reuse in Chromium", ["scripts/test-popular-now-batching.mjs"]],
   ["genre phase 2, ranking topic/synonym/typo search and responsive layouts", ["scripts/test-genre-phase2.mjs"]],
   ["cross-field podcast search across headers and ranking", ["scripts/test-cross-field-search.mjs"]],
