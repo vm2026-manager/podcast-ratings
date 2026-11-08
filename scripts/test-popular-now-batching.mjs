@@ -50,6 +50,23 @@ try {
         ratingCount: index * 10
       };
     });
+    for (const group of groups) {
+      if (group.id === "narkobetjenten") {
+        const season23 = group.seasonIdentities.find((season) => season.season === 23).podcast_key;
+        state.communityStatsByKey[season23] = {
+          recentUsers7d: 1, recentUsers30d: 1, recentUsers90d: 1, momentumScore: 50000
+        };
+      }
+      if (group.id === "kirsten-ringer-til-rasmus") {
+        const member = state.podcasts.find((podcast) => getLegacyPodcastKey(podcast) ===
+          normalizeMatchKey(group.memberLegacyKeys[0]));
+        const rawKey = getPodcastKey(member);
+        const key = resolveCanonicalPodcastId(normalizeText(rawKey)) || normalizeText(rawKey);
+        state.communityStatsByKey[key] = {
+          recentUsers7d: 0, recentUsers30d: 1, recentUsers90d: 1, momentumScore: 40000
+        };
+      }
+    }
     const excludedKey = [...unique.keys()][0];
     state.communityStatsByKey[excludedKey] = {
       recentUsers7d: 0, recentUsers30d: 0, recentUsers90d: 0,
@@ -143,10 +160,9 @@ try {
         expected: records.slice(0, state.visibleCount).map((item) => getPodcastKey(item)),
         eligible: records.every((item) => hasDocumentedRecentActivity(item)),
         ordered: records.every((item, index) => !index || comparePopularNowCandidates(records[index - 1], item) <= 0),
-        cohorts: records.map((item) => {
-          const key = resolveCanonicalPodcastId(normalizeText(getPodcastKey(item))) || normalizeText(getPodcastKey(item));
-          return state.communityStatsByKey[key].recentUsers7d ? 7 : state.communityStatsByKey[key].recentUsers30d ? 30 : 90;
-        }),
+        groupCounts: Object.fromEntries(["narkobetjenten", "kirsten-ringer-til-rasmus"].map((id) => [id,
+          records.filter((item) => item.displayGroupId === id).length])),
+        hasIndividualSeason: records.some((item) => item.isDisplayGroupSeason || /\bsæson\s+\d+\s*\)?$/iu.test(item.title)),
         excludesInactive: !records.some((item) => {
           const key = resolveCanonicalPodcastId(normalizeText(getPodcastKey(item))) || normalizeText(getPodcastKey(item));
           return key === window.__excludedPopularKey;
@@ -165,12 +181,24 @@ try {
     if (width === 1280) assert.equal(initial.layout, "cards", "1280px desktop exercises card batching");
     if (width === 1440) assert.equal(initial.layout, "list", "1440px desktop exercises table batching");
     assert.ok(initial.eligible && initial.ordered, `90-day cohort and momentum order remain correct at ${width}px`);
+    assert.ok(Object.values(initial.groupCounts).every((count) => count <= 1),
+      `each configured main series appears at most once at ${width}px`);
+    assert.equal(initial.hasIndividualSeason, false, `individual season rows are suppressed at ${width}px`);
     assert.ok(initial.excludesInactive, `podcasts without 90-day activity stay out at ${width}px`);
-    assert.ok(initial.cohorts.every((cohort, index) => !index || initial.cohorts[index - 1] <= cohort),
-      `7/30/90-day activity tiers sort in order at ${width}px`);
     assert.ok(initial.sentinelHidden, `popular mode hides the autoload sentinel at ${width}px`);
     assert.equal(initial.observers.observed, 0, `popular mode installs no ranking observer at ${width}px`);
     assert.equal(initial.overflow, false, `no horizontal overflow at ${width}px`);
+
+    if (width === 390) {
+      const mainSeriesCard = page.locator('.podcast-card[data-key="display-group:narkobetjenten"]');
+      assert.equal(await mainSeriesCard.count(), 1, "Narkobetjenten main series is rendered once on mobile");
+      await mainSeriesCard.locator(".podcast-card__title").click();
+      await page.waitForFunction(() => document.querySelector("#podcastDetailSheet")?.getAttribute("aria-hidden") === "false");
+      assert.match(await page.locator("#podcastDetailSheet").innerText(), /Narkobetjenten/u,
+        "clicking the grouped ranking result opens the main series details");
+      await page.locator("#podcastDetailSheet button[data-podcast-detail-close]").click();
+      await page.waitForFunction(() => document.querySelector("#podcastDetailSheet")?.getAttribute("aria-hidden") !== "false");
+    }
 
     await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
     await page.waitForTimeout(750);
