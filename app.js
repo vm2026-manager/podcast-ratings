@@ -17576,6 +17576,29 @@ function renderHomeGenres(container) {
     return;
   }
 
+  const popularNowCard = document.createElement("button");
+  popularNowCard.className = "home-popular-now-card";
+  popularNowCard.type = "button";
+  popularNowCard.style.display = "none";
+  popularNowCard.setAttribute("aria-label", "Åbn ranglisten Populære lige nu");
+  popularNowCard.innerHTML = `
+    <svg class="home-popular-now-card__flame" aria-hidden="true" viewBox="0 0 24 24" focusable="false">
+      <path d="M13.2 2.5c.4 3.2-.8 4.6-2.4 6.2-1.1-1.2-1.5-2.4-1.3-3.6C6.7 7.4 5 10.2 5 13.4a7 7 0 0 0 14 0c0-4.2-2.4-7.8-5.8-10.9ZM12 18.8a3 3 0 0 1-3-3c0-1.4.8-2.5 2.1-3.8.2 1.1.8 1.7 1.6 2.3.8.6 1.3 1.2 1.3 2.1a3 3 0 0 1-2 2.4Z" fill="currentColor"/>
+    </svg>
+    <span class="home-popular-now-card__label">Populære lige nu</span>
+    <svg class="home-popular-now-card__arrow" aria-hidden="true" viewBox="0 0 20 20" focusable="false">
+      <path d="M3.5 10h12m-5-5 5 5-5 5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+  `;
+  popularNowCard.addEventListener("click", (event) => {
+    event.preventDefault();
+    if (!state.popularNowActive) togglePopularNow();
+    if (window.location.hash.slice(1).toLowerCase() !== "ranglister") {
+      window.location.hash = "#ranglister";
+    }
+  });
+  fragment.appendChild(popularNowCard);
+
   container.appendChild(fragment);
 }
 

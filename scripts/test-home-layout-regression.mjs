@@ -10,6 +10,7 @@ const expectedGenres = ["True Crime", "Historie", "Krig", "Politik", "Finans", "
 const indexSource = await readFile(path.join(root, "index.html"), "utf8");
 assert.match(indexSource, /desktop-home-mockup\.css\?v=20261105-ranking-column-header-v1/u, "The homepage stylesheet cache version matches the desktop ranking header alignment fix");
 assert.match(indexSource, /app\.js\?v=20261107-issue74-popular-now-v1/u, "The homepage JavaScript cache version matches current ranking behavior");
+assert.match(indexSource, /mobile-home-profile\.css\?v=20261108-home-popular-now-v1/u, "The mobile shortcut stylesheet cache version is current");
 const server = createServer(async (request, response) => {
   try {
     const urlPath = decodeURIComponent(new URL(request.url, "http://localhost").pathname);
@@ -33,7 +34,7 @@ await new Promise((resolve) => server.listen(0, "127.0.0.1", resolve));
 const browser = await chromium.launch({ headless: true });
 const page = await browser.newPage({ viewport: { width: 1280, height: 1000 } });
 try {
-  for (const width of [320, 375, 390, 430, 1101, 1280, 1440, 1920, 2560]) {
+  for (const width of [320, 375, 390, 430, 768, 1024, 1101, 1280, 1440, 1920, 2560]) {
     await page.setViewportSize({ width, height: 1000 });
     await page.goto(`http://127.0.0.1:${server.address().port}/#forside`, { waitUntil: "domcontentloaded" });
     await page.waitForFunction(() => state.podcasts.length > 0 && document.querySelectorAll("#pageIntroPanel .home-genres__grid .home-genres-card").length === 5);
@@ -46,6 +47,7 @@ try {
         return { left, right, top, bottom, width, height };
       };
       const cards = [...grid.querySelectorAll(".home-genres-card")];
+      const shortcut = grid.querySelector(".home-popular-now-card");
       const popularityScores = new Map(CANONICAL_GENRES.map((genre) => [genre, 0]));
       const ratedPodcastIds = new Set();
       state.podcasts.forEach((podcast) => {
@@ -82,12 +84,31 @@ try {
         genreOverflowY: getComputedStyle(genres).overflowY,
         grid: rect(grid),
         gridScrollHeight: grid.scrollHeight,
+        shortcut: shortcut ? {
+          visible: getComputedStyle(shortcut).display !== "none",
+          isGenre: shortcut.matches(".home-genres-card") || shortcut.hasAttribute("data-genre"),
+          label: shortcut.querySelector(".home-popular-now-card__label")?.textContent.trim(),
+          labelWidth: shortcut.querySelector(".home-popular-now-card__label")?.clientWidth || 0,
+          labelScrollWidth: shortcut.querySelector(".home-popular-now-card__label")?.scrollWidth || 0,
+          clippedBy: clipping(shortcut),
+          ...rect(shortcut)
+        } : null,
         quick: quick.map((element) => ({ label: element.innerText.trim(), ...rect(element), clippedBy: clipping(element) })),
         cards: cards.map((element) => ({ label: element.querySelector(".home-genres-card__genre")?.textContent.trim(), labelWidth: element.querySelector(".home-genres-card__genre")?.clientWidth, labelScrollWidth: element.querySelector(".home-genres-card__genre")?.scrollWidth, labelHeight: element.querySelector(".home-genres-card__genre")?.clientHeight, labelScrollHeight: element.querySelector(".home-genres-card__genre")?.scrollHeight, genre: element.dataset.genre, ...rect(element), clippedBy: clipping(element) }))
       };
     });
     assert.ok(layout.pageWidth <= width, `Home page has horizontal overflow at ${width}px: ${JSON.stringify(layout)}`);
     assert.equal(layout.cards.length, 5, `The home shows exactly five genres at ${width}px`);
+    assert.equal(layout.shortcut?.visible, width <= 430, `The popular-now shortcut is visible only in the approved mobile grid at ${width}px`);
+    assert.equal(layout.shortcut?.isGenre, false, `The popular-now shortcut is not registered as a genre at ${width}px`);
+    assert.equal(layout.shortcut?.label, "Populære lige nu", `The shortcut has the approved label at ${width}px`);
+    if (width <= 430) {
+      const lastGenre = layout.cards.at(-1);
+      assert.ok(Math.abs(layout.shortcut.left - lastGenre.right - 10) <= 1, `The shortcut is not in the bottom-right sixth grid cell at ${width}px`);
+      assert.ok(Math.abs(layout.shortcut.width - lastGenre.width) <= 1 && Math.abs(layout.shortcut.height - lastGenre.height) <= 1, `The shortcut does not match the genre card dimensions at ${width}px`);
+      assert.ok(layout.shortcut.right <= width + 1 && layout.shortcut.clippedBy.length === 0, `The shortcut is clipped at ${width}px`);
+      assert.ok(layout.shortcut.labelWidth > 0 && layout.shortcut.labelScrollWidth <= layout.shortcut.labelWidth + 1, `The shortcut label overflows at ${width}px`);
+    }
     assert.deepEqual(layout.canonicalGenres, expectedGenres, "The full canonical set remains available in rankings");
     assert.deepEqual(layout.cards.map((card) => card.label), layout.rankedHomeGenres.map(({ genre }) => genre), `Home genres are selected by catalogue popularity at ${width}px`);
     assert.notDeepEqual(layout.cards.map((card) => card.label), expectedGenres.slice(0, 5), "Home selection is not simply the first five canonical genres");
@@ -133,6 +154,37 @@ try {
   await keyboardGenre.focus();
   await page.keyboard.press("Enter");
   await page.waitForFunction((genre) => state.activeFilter?.type === "genre" && state.activeFilter.value === genre, keyboardGenreValue);
+
+  await page.setViewportSize({ width: 390, height: 640 });
+  await page.goto(`http://127.0.0.1:${server.address().port}/#forside`, { waitUntil: "domcontentloaded" });
+  await page.waitForFunction(() => state.podcasts.length > 0 && document.querySelector("#pageIntroPanel .home-popular-now-card"));
+  const popularShortcut = page.locator("#pageIntroPanel .home-popular-now-card");
+  const preservedHomeFilter = await page.evaluate(() => ({ activeFilter: state.activeFilter, minimumRating: state.minimumRating }));
+  assert.equal(await popularShortcut.getAttribute("type"), "button", "The shortcut uses native button keyboard behavior");
+  assert.equal(await popularShortcut.getAttribute("data-genre"), null, "The shortcut has no genre filter value");
+  assert.equal(await popularShortcut.evaluate((element) => element.matches(".home-genres-card")), false, "The shortcut is not a genre card");
+  await popularShortcut.click();
+  await page.waitForFunction(() => location.hash === "#ranglister" && state.popularNowActive && state.rankingSource === "users");
+  assert.deepEqual(await page.evaluate(() => ({ activeFilter: state.activeFilter, minimumRating: state.minimumRating })), preservedHomeFilter,
+    "Activating the shortcut preserves active ranking filters");
+  await page.goBack();
+  await page.waitForFunction(() => location.hash === "#forside" && state.popularNowActive);
+  await popularShortcut.evaluate((element) => element.focus({ focusVisible: true }));
+  const shortcutFocus = await popularShortcut.evaluate((element) => ({
+    visible: element.matches(":focus-visible"),
+    outlineStyle: getComputedStyle(element).outlineStyle,
+    outlineWidth: getComputedStyle(element).outlineWidth
+  }));
+  assert.equal(shortcutFocus.visible, true, "Keyboard focus is visible on the shortcut");
+  assert.equal(shortcutFocus.outlineStyle, "solid", "Keyboard focus has a visible outline");
+  assert.equal(shortcutFocus.outlineWidth, "2px", "Keyboard focus outline has the approved thickness");
+  await page.keyboard.press("Enter");
+  await page.waitForFunction(() => location.hash === "#ranglister" && state.popularNowActive,
+    undefined, { timeout: 10000 });
+  assert.equal(await page.evaluate(() => state.popularNowActive), true, "Keyboard activation does not toggle an already active mode off");
+  await page.goBack();
+  await page.waitForFunction(() => location.hash === "#forside");
+
   await page.setViewportSize({ width: 390, height: 640 });
   await page.goto(`http://127.0.0.1:${server.address().port}/#forside`, { waitUntil: "domcontentloaded" });
   await page.waitForFunction(() => state.podcasts.length > 0 && document.querySelectorAll("#pageIntroPanel .home-genres-card").length === 5);

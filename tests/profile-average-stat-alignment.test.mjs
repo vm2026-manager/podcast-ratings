@@ -31,6 +31,6 @@ test("mobile genre stat card keeps its existing geometry and left aligned conten
   );
   assert.match(
     index,
-    /href="mobile-home-profile\.css\?v=20261030-average-card-centered-v1"/
+    /href="mobile-home-profile\.css\?v=20261108-home-popular-now-v1"/
   );
 });
