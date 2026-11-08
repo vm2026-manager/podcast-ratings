@@ -4,6 +4,9 @@ import { fileURLToPath } from "node:url";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const checks = [
+  // Run the browser-search performance budget before other UI suites start
+  // Chromium instances; keep every assertion and its 300ms budget intact.
+  ["genre phase 2, ranking topic/synonym/typo search and responsive layouts", ["scripts/test-genre-phase2.mjs"]],
   ["Issue #58 qualified historical editorial episode rating and cover guard", ["scripts/test-issue58-editorial-review-visibility.mjs"]],
   ["mobile profile average stat alignment and unchanged genre card", ["tests/profile-average-stat-alignment.test.mjs"]],
   ["Har du hørt source identity and episode visibility", ["--experimental-strip-types", "scripts/test-har-du-hoert-source-boundary.mjs"]],
@@ -73,7 +76,6 @@ const checks = [
   ["popular-now verified main-series season grouping and conservative activity", ["scripts/test-popular-now-display-groups.mjs"]],
   ["popular-now batching, scroll gating, desktop cards and DOM reuse in Chromium", ["scripts/test-popular-now-batching.mjs"]],
   ["popular-now six-hour immutable public snapshot and responsive DOM stability in Chromium", ["scripts/test-popular-now-snapshot.mjs"]],
-  ["genre phase 2, ranking topic/synonym/typo search and responsive layouts", ["scripts/test-genre-phase2.mjs"]],
   ["cross-field podcast search across headers and ranking", ["scripts/test-cross-field-search.mjs"]],
   ["homepage layout clipping, alignment, genre access and responsive bounds", ["scripts/test-home-layout-regression.mjs"]],
   ["community ranking load safety", ["scripts/test-community-ranking-load-safety.mjs"]],
