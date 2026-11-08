@@ -28,10 +28,13 @@ const activityStat = new Function(
   "state", "normalizeText", "resolveCanonicalPodcastId", "getPodcastKey",
   `${extractFunction("getPopularNowActivityStat")}; return getPopularNowActivityStat;`
 )(state, (value) => String(value || "").trim().toLowerCase(), (key) => key, (podcast) => podcast.key);
+const isValidActivityStat = new Function(
+  "Object", `${extractFunction("hasValidPopularNowActivityStat")}; return hasValidPopularNowActivityStat;`
+)(Object);
 const eligible = new Function(
-  "getPopularNowActivityStat", "Object",
+  "getPopularNowActivityStat", "hasValidPopularNowActivityStat",
   `${extractFunction("hasDocumentedRecentActivity")}; return hasDocumentedRecentActivity;`
-)(activityStat, Object);
+)(activityStat, isValidActivityStat);
 const compare = new Function(
   "getPopularNowActivityStat", "getPodcastKey",
   `${extractFunction("comparePopularNowCandidates")}; return comparePopularNowCandidates;`
@@ -60,9 +63,9 @@ const aliasActivityStat = new Function(
 )(state, (value) => String(value || "").trim().toLowerCase(), (key) => key === "legacy-7d" ? "last-7-days" : key,
   (podcast) => podcast.key);
 const aliasEligible = new Function(
-  "getPopularNowActivityStat", "Object",
+  "getPopularNowActivityStat", "hasValidPopularNowActivityStat",
   `${extractFunction("hasDocumentedRecentActivity")}; return hasDocumentedRecentActivity;`
-)(aliasActivityStat, Object);
+)(aliasActivityStat, isValidActivityStat);
 assert.equal(aliasEligible({ key: "legacy-7d" }), true,
   "legacy podcast identities resolve to the same canonical activity record");
 
@@ -74,8 +77,10 @@ assert.equal(eligible({ key: "many-episodes-one-user", episodeRatingRows: 80 }),
   "the client consumes the existing unique-user aggregate, not raw episode-rating row counts");
 
 const candidatesFactory = new Function(
-  "state", "normalizeMatchKey", "getLegacyPodcastKey", "getDisplayGroupMemberPodcasts",
-  "hasDocumentedRecentActivity", "deduplicatePodcastResults",
+  "state", "normalizeMatchKey", "normalizeText", "getLegacyPodcastKey", "getPodcastKey",
+  "getDisplayGroupMemberPodcasts", "createRankingDisplayGroup", "getPopularNowActivityStat",
+  "hasValidPopularNowActivityStat", "hasDocumentedRecentActivity", "isStandaloneSeasonPodcast",
+  "deduplicatePodcastResults", "console",
   `${extractFunction("getPopularNowCandidates")}; return getPopularNowCandidates;`
 )(
   Object.assign(state, {
@@ -83,16 +88,28 @@ const candidatesFactory = new Function(
     podcasts: [{ key: "outside", legacyKey: "outside" }, { key: "season-one", legacyKey: "season-one" }]
   }),
   (value) => String(value || "").toLowerCase(),
+  (value) => String(value || "").toLowerCase(),
   (podcast) => podcast.legacyKey,
-  () => [{ key: "season-one", legacyKey: "season-one" }, { key: "season-two", legacyKey: "season-two" }],
+  (podcast) => podcast.key,
+  () => [
+    { key: "season-one", legacyKey: "season-one", title: "Series (sæson 1)" },
+    { key: "season-two", legacyKey: "season-two", title: "Series (sæson 2)" }
+  ],
+  () => ({ key: "display-group:series", title: "Series", isDisplayGroup: true }),
+  (podcast) => activityStat(podcast),
+  new Function(`${extractFunction("hasValidPopularNowActivityStat")}; return hasValidPopularNowActivityStat;`)(),
   eligible,
-  (items) => [...new Map(items.map((item) => [item.key, item])).values()]
+  new Function(`${extractFunction("isStandaloneSeasonPodcast")}; return isStandaloneSeasonPodcast;`)(),
+  (items) => [...new Map(items.map((item) => [item.key, item])).values()],
+  { warn() {} }
 );
 state.communityStatsByKey.outside = { recentUsers7d: 0, recentUsers30d: 0, recentUsers90d: 0, momentumScore: 0 };
 state.communityStatsByKey["season-one"] = { recentUsers7d: 0, recentUsers30d: 1, recentUsers90d: 1, momentumScore: 0.35 };
 state.communityStatsByKey["season-two"] = { recentUsers7d: 0, recentUsers30d: 0, recentUsers90d: 1, momentumScore: 0.1 };
-assert.deepEqual(candidatesFactory().map(({ key }) => key).sort(), ["season-one", "season-two"],
-  "display-group totals are excluded; their individually identified seasons qualify only on their own stats");
+assert.deepEqual(candidatesFactory().map(({ key }) => key), ["display-group:series"],
+  "active seasons produce one display-group result, not individual season rows");
+assert.equal(activityStat(candidatesFactory()[0]).momentumScore, 0.35,
+  "display group uses its most active season as the conservative momentum sort signal");
 
 const activeCandidates = [
   { key: "alpha-da", title: "Alpha comedy", genre: "comedy", isEnglish: false, accessType: "free", ratingValue: 1 },

@@ -4176,7 +4176,8 @@ function getPodcastRandomTieBreaker(podcast) {
 }
 
 function getPopularNowActivityStat(podcast) {
-  if (!podcast || podcast.isDisplayGroup) return null;
+  if (!podcast) return null;
+  if (podcast.isDisplayGroup) return podcast.popularNowActivityStat || null;
   // The SQL view aggregates each user once per podcast across direct and episode ratings.
   // When a direct rating exists, only a positive new episode rating can renew its activity.
   const rawKey = normalizeText(getPodcastKey(podcast));
@@ -4185,7 +4186,10 @@ function getPopularNowActivityStat(podcast) {
 }
 
 function hasDocumentedRecentActivity(podcast) {
-  const stat = getPopularNowActivityStat(podcast);
+  return hasValidPopularNowActivityStat(getPopularNowActivityStat(podcast));
+}
+
+function hasValidPopularNowActivityStat(stat) {
   const fields = ["recentUsers7d", "recentUsers30d", "recentUsers90d", "momentumScore"];
   if (!stat || fields.some((field) => !Object.prototype.hasOwnProperty.call(stat, field))) return false;
   const [recentUsers7d, recentUsers30d, recentUsers90d, momentumScore] = fields.map((field) => Number(stat[field]));
@@ -4213,14 +4217,53 @@ function comparePopularNowCandidates(a, b) {
 
 function getPopularNowCandidates() {
   const activeGroups = state.podcastDisplayGroups.filter((group) => group.rankingEnabled);
-  const memberKeys = new Set(
-    activeGroups.flatMap((group) => group.memberLegacyKeys.map(normalizeMatchKey))
-  );
-  const groupMembers = activeGroups.flatMap((group) => getDisplayGroupMemberPodcasts(group));
+  const groupedPodcastKeys = new Set();
+  activeGroups.forEach((group) => {
+    (group.memberLegacyKeys || []).forEach((key) => groupedPodcastKeys.add(normalizeMatchKey(key)));
+    (group.seasonIdentities || []).forEach((season) => {
+      groupedPodcastKeys.add(normalizeText(season.podcast_key));
+      groupedPodcastKeys.add(normalizeMatchKey(season.podcast_key));
+    });
+  });
+  const groupMembers = activeGroups.map((group) => {
+    const members = getDisplayGroupMemberPodcasts(group);
+    members.forEach((member) => {
+      groupedPodcastKeys.add(normalizeText(getPodcastKey(member)));
+      groupedPodcastKeys.add(normalizeMatchKey(getLegacyPodcastKey(member)));
+    });
+    const activeSeasonStats = members
+      .filter((member) => member.isDisplayGroupSeason || isStandaloneSeasonPodcast(member))
+      .map((member) => getPopularNowActivityStat(member))
+      .filter(hasValidPopularNowActivityStat)
+      .sort((a, b) => Number(b.momentumScore) - Number(a.momentumScore));
+    if (!activeSeasonStats.length) return null;
+    const displayGroup = createRankingDisplayGroup(group);
+    return displayGroup
+      ? { ...displayGroup, popularNowActivityStat: activeSeasonStats[0] }
+      : null;
+  }).filter(Boolean);
   const ordinary = state.podcasts.filter(
-    (podcast) => !memberKeys.has(getLegacyPodcastKey(podcast))
+    (podcast) => !groupedPodcastKeys.has(normalizeText(getPodcastKey(podcast))) &&
+      !groupedPodcastKeys.has(normalizeMatchKey(getLegacyPodcastKey(podcast)))
   );
-  return deduplicatePodcastResults([...groupMembers, ...ordinary].filter(hasDocumentedRecentActivity));
+  const standaloneSeasons = ordinary.filter(isStandaloneSeasonPodcast);
+  if (standaloneSeasons.length) {
+    state.popularNowUnmatchedSeasonReviewKeys ||= new Set();
+    standaloneSeasons.forEach((podcast) => {
+      const key = normalizeText(getPodcastKey(podcast));
+      if (state.popularNowUnmatchedSeasonReviewKeys.has(key)) return;
+      state.popularNowUnmatchedSeasonReviewKeys.add(key);
+      console.warn("Populære lige nu skjuler en sæson uden verificeret hovedserie; redaktionel gennemgang påkrævet:", key);
+    });
+  }
+  return deduplicatePodcastResults([
+    ...groupMembers,
+    ...ordinary.filter((podcast) => !isStandaloneSeasonPodcast(podcast))
+  ].filter(hasDocumentedRecentActivity));
+}
+
+function isStandaloneSeasonPodcast(podcast) {
+  return /(?:\s*\(\s*sæson\s+\d+\s*\)|\s+sæson\s+\d+)\s*$/iu.test(String(podcast?.title || ""));
 }
 
 function compareRandomTieBreaker(a, b) {
