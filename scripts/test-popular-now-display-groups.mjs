@@ -87,21 +87,24 @@ const isEligible = new Function(
   "getPopularNowActivityStat", "hasValidPopularNowActivityStat",
   `${extractFunction("hasDocumentedRecentActivity")}; return hasDocumentedRecentActivity;`
 )(getActivityStat, isValidActivity);
+const thirtyDayScore = new Function(
+  `${extractFunction("getPopularNow30DayScore")}; return getPopularNow30DayScore;`
+)();
 const compare = new Function(
-  "getPopularNowActivityStat", "getPodcastKey",
+  "getPopularNowActivityStat", "getPodcastKey", "getPopularNow30DayScore",
   `${extractFunction("comparePopularNowCandidates")}; return comparePopularNowCandidates;`
-)(getActivityStat, getKey);
+)(getActivityStat, getKey, thirtyDayScore);
 const isStandaloneSeason = new Function(
   `${extractFunction("isStandaloneSeasonPodcast")}; return isStandaloneSeasonPodcast;`
 )();
 const candidates = new Function(
   "state", "normalizeMatchKey", "normalizeText", "getLegacyPodcastKey", "getPodcastKey",
   "getDisplayGroupMemberPodcasts", "createRankingDisplayGroup", "getPopularNowActivityStat",
-  "hasValidPopularNowActivityStat", "hasDocumentedRecentActivity", "isStandaloneSeasonPodcast",
+  "getPopularNow30DayScore", "hasValidPopularNowActivityStat", "hasDocumentedRecentActivity", "isStandaloneSeasonPodcast",
   "deduplicatePodcastResults", "console",
   `${extractFunction("getPopularNowCandidateUniverse")}; return getPopularNowCandidateUniverse;`
 )(state, normalizeMatchKey, normalizeText, getLegacyKey, getKey, getDisplayGroupMemberPodcasts,
-  createRankingDisplayGroup, getActivityStat, isValidActivity, isEligible, isStandaloneSeason,
+  createRankingDisplayGroup, getActivityStat, thirtyDayScore, isValidActivity, isEligible, isStandaloneSeason,
   (items) => [...new Map(items.map((item) => [item.key, item])).values()], { warn() {} });
 
 function activity({ key, seven = 0, thirty = 0, ninety = 0, momentum }) {
@@ -115,9 +118,9 @@ const kirsten = groups.find((group) => group.id === "kirsten-ringer-til-rasmus")
 const narko23 = narko.seasonIdentities.find((season) => season.season === 23).podcast_key;
 const kirsten4 = podcasts.find((podcast) => podcast.title.toLowerCase().includes("sæson 4"))?.key;
 assert.ok(kirsten4, "the catalogue's Kirsten season 4 is present");
-activity({ key: narko23, thirty: 1, ninety: 1, momentum: 0.4 });
+activity({ key: narko23, seven: 1, thirty: 1, ninety: 1, momentum: 0.4 });
 activity({ key: podcasts.find((podcast) => podcast.legacyKey === normalizeMatchKey(narko.representativeMemberLegacyKey)).key,
-  seven: 1, thirty: 1, ninety: 1, momentum: 0.8 });
+  seven: 1, thirty: 1, ninety: 100, momentum: 0.8 });
 activity({ key: kirsten4, thirty: 1, ninety: 1, momentum: 0.6 });
 const allCandidates = candidates();
 assert.equal(allCandidates.filter((podcast) => podcast.displayGroupId === "narkobetjenten").length, 1,
@@ -128,8 +131,11 @@ assert.equal(allCandidates.filter((podcast) => podcast.displayGroupId === "kirst
   "Kirsten ringer til Rasmus appears once through the verified season 4 identity");
 assert.equal(allCandidates.some((podcast) => podcast.isDisplayGroupSeason), false,
   "verified season identities are used only to qualify their main display group");
-assert.equal(getActivityStat(allCandidates.find((podcast) => podcast.displayGroupId === "narkobetjenten")).momentumScore, 0.8,
-  "the strongest validated season momentum is used without summing season activity");
+const narkoActivity = getActivityStat(allCandidates.find((podcast) => podcast.displayGroupId === "narkobetjenten"));
+assert.equal(thirtyDayScore(narkoActivity), 1,
+  "the display group uses its strongest validated 7/30-day season score without summing activity");
+assert.equal(narkoActivity.recentUsers90d, 1,
+  "equal 7/30-day season scores use the canonical season key, not SQL momentum or 90-day activity");
 assert.ok(compare(allCandidates.find((podcast) => podcast.displayGroupId === "narkobetjenten"),
   allCandidates.find((podcast) => podcast.displayGroupId === "kirsten-ringer-til-rasmus")) < 0,
 "group ordering uses the most active season's momentum");
@@ -154,10 +160,10 @@ assert.equal(candidates().some((podcast) => podcast.displayGroupId === "kirsten-
   "a main series without any season activity data is not shown");
 activity({ key: kirsten4, thirty: 0, ninety: 0, momentum: 0 });
 assert.equal(candidates().some((podcast) => podcast.displayGroupId === "kirsten-ringer-til-rasmus"), false,
-  "inactive seasons beyond 90 days do not qualify their main series");
+  "inactive seasons beyond 30 days do not qualify their main series");
 activity({ key: kirsten4, thirty: 0, ninety: 1, momentum: 0.1 });
-assert.equal(candidates().filter((podcast) => podcast.displayGroupId === "kirsten-ringer-til-rasmus").length, 1,
-  "documented activity in the 90-day window includes the main series once");
+assert.equal(candidates().filter((podcast) => podcast.displayGroupId === "kirsten-ringer-til-rasmus").length, 0,
+  "a verified season active only in days 31-90 cannot qualify its main series");
 assert.equal(candidates().filter((podcast) => podcast.isDisplayGroupSeason).length, 0,
   "no individual verified season leaks into popular results");
 
@@ -168,4 +174,4 @@ assert.match(app, /if \(podcast\.isDisplayGroup\) renderPodcastDisplayGroupConte
 assert.match(app, /getPodcastRatingControlDescription|episode-derived|is-episode-rating-locked/u,
   "existing rating-lock behavior remains available for ranking controls");
 
-console.log("PASS: verified season grouping, 90-day eligibility, conservative momentum, unmatched-season suppression, and ranking isolation.");
+console.log("PASS: verified season grouping, 30-day eligibility, conservative recent momentum, unmatched-season suppression, and ranking isolation.");

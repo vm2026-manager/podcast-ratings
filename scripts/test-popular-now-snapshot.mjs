@@ -35,7 +35,31 @@ try {
   await page.route(/^https?:\/\/(?!127\.0\.0\.1)/u, (route) => route.abort());
   await page.goto(`http://127.0.0.1:${server.address().port}/#ranglister`, { waitUntil: "domcontentloaded" });
   await page.waitForFunction(() => state.podcastDataStatus === "ready" && state.podcasts.length > 100 && state.podcastDisplayGroupsReady);
-  await page.evaluate(() => localStorage.removeItem("podcastlisten-popular-now-public-snapshot-v1"));
+  await page.evaluate(() => localStorage.removeItem("podcastlisten-popular-now-public-snapshot-v2"));
+  const legacySnapshotRejection = await page.evaluate(() => {
+    const v1Key = "podcastlisten-popular-now-public-snapshot-v1";
+    const v2Key = "podcastlisten-popular-now-public-snapshot-v2";
+    const previousV1 = localStorage.getItem(v1Key);
+    const previousV2 = localStorage.getItem(v2Key);
+    const legacy = JSON.stringify({
+      version: 1,
+      windowId: getPopularNowWindowId(),
+      orderedKeys: [],
+      activityStatsByKey: {},
+      communityStatsByKey: {}
+    });
+    localStorage.setItem(v1Key, legacy);
+    const oldStorageKeyIgnored = readPopularNowSnapshot(getPopularNowWindowId()) === null;
+    localStorage.setItem(v2Key, legacy);
+    const oldSchemaRejected = readPopularNowSnapshot(getPopularNowWindowId()) === null;
+    if (previousV1 === null) localStorage.removeItem(v1Key);
+    else localStorage.setItem(v1Key, previousV1);
+    if (previousV2 === null) localStorage.removeItem(v2Key);
+    else localStorage.setItem(v2Key, previousV2);
+    return { oldStorageKeyIgnored, oldSchemaRejected };
+  });
+  assert.deepEqual(legacySnapshotRejection, { oldStorageKeyIgnored: true, oldSchemaRejected: true },
+    "the prior v1 storage key and schema cannot restore a 90-day snapshot");
 
   const dstWindowIds = await page.evaluate(() => {
     const interval = 6 * 60 * 60 * 1000;
@@ -84,9 +108,9 @@ try {
       podcast_key: key,
       average_rating: 7 + (index % 30) / 10,
       rating_count: 3 + (index % 20),
-      recent_users_7d: 1,
-      recent_users_30d: 2,
-      recent_users_90d: 3,
+      recent_users_7d: reverse ? keys.length - index : index + 1,
+      recent_users_30d: reverse ? keys.length - index : index + 1,
+      recent_users_90d: keys.length + 1,
       momentum_score: reverse ? keys.length - index : index + 1
     }));
     window.__popularStatsA = makeStats(false);
@@ -144,7 +168,7 @@ try {
     count: elements.podcastGrid.querySelectorAll(".podcast-card").length,
     busy: elements.podcastGrid.getAttribute("aria-busy"),
     intervalMessage: elements.resultsText.textContent,
-    cache: localStorage.getItem("podcastlisten-popular-now-public-snapshot-v1")
+    cache: localStorage.getItem("podcastlisten-popular-now-public-snapshot-v2")
   }));
   await page.evaluate(() => { window.__popularNowFirstNode = elements.podcastGrid.querySelector(".podcast-card"); });
   assert.equal(firstSnapshot.dataState, "ready");
@@ -154,8 +178,11 @@ try {
   assert.match(firstSnapshot.intervalMessage, /hver 6\. time/u, "the ranking interval is visible in the results status");
   const persistedSnapshot = JSON.parse(firstSnapshot.cache);
   assert.deepEqual(persistedSnapshot.orderedKeys, firstSnapshot.keys);
-  assert.equal(persistedSnapshot.version, 1);
+  assert.equal(persistedSnapshot.version, 2);
   assert.equal(Object.hasOwn(persistedSnapshot, "userId"), false, "browser storage contains public snapshot data only");
+  assert.ok(persistedSnapshot.orderedKeys.every((key) =>
+    persistedSnapshot.activityStatsByKey[key]?.recentUsers30d > 0),
+  "all persisted snapshot candidates have validated activity in the last 30 days");
   assert.equal(Object.hasOwn(persistedSnapshot, "email"), false, "browser storage contains no account data");
 
   await page.evaluate(() => {
@@ -295,7 +322,7 @@ try {
   assert.deepEqual(samePeriodNavigation.restored, firstSnapshot.keys, "navigation away and back within six hours preserves every rank");
   assert.equal(samePeriodNavigation.windowId, firstSnapshot.windowId);
 
-  const storedBeforeReload = await page.evaluate(() => JSON.parse(localStorage.getItem("podcastlisten-popular-now-public-snapshot-v1")));
+  const storedBeforeReload = await page.evaluate(() => JSON.parse(localStorage.getItem("podcastlisten-popular-now-public-snapshot-v2")));
   await page.reload({ waitUntil: "domcontentloaded" });
   await page.waitForFunction(() => state.podcastDataStatus === "ready" && state.podcastDisplayGroupsReady && state.podcasts.length > 100);
   await page.evaluate((statsRows) => {
@@ -311,7 +338,7 @@ try {
     active: state.popularNowActive,
     windowId: state.popularNowSnapshot.windowId,
     keys: state.popularNowSnapshot.orderedKeys,
-    stored: JSON.parse(localStorage.getItem("podcastlisten-popular-now-public-snapshot-v1")).orderedKeys
+    stored: JSON.parse(localStorage.getItem("podcastlisten-popular-now-public-snapshot-v2")).orderedKeys
   }));
   assert.equal(reloadSnapshot.active, true);
   assert.equal(reloadSnapshot.windowId, storedBeforeReload.windowId);
