@@ -35,10 +35,13 @@ const eligible = new Function(
   "getPopularNowActivityStat", "hasValidPopularNowActivityStat",
   `${extractFunction("hasDocumentedRecentActivity")}; return hasDocumentedRecentActivity;`
 )(activityStat, isValidActivityStat);
+const thirtyDayScore = new Function(
+  `${extractFunction("getPopularNow30DayScore")}; return getPopularNow30DayScore;`
+)();
 const compare = new Function(
-  "getPopularNowActivityStat", "getPodcastKey",
+  "getPopularNowActivityStat", "getPodcastKey", "getPopularNow30DayScore",
   `${extractFunction("comparePopularNowCandidates")}; return comparePopularNowCandidates;`
-)(activityStat, (podcast) => podcast.key);
+)(activityStat, (podcast) => podcast.key, thirtyDayScore);
 
 const fixtures = [
   { key: "last-7-days", stat: { recentUsers7d: 1, recentUsers30d: 1, recentUsers90d: 1, momentumScore: 1 } },
@@ -53,10 +56,39 @@ const fixtures = [
 fixtures.forEach(({ key, stat }) => { if (stat) state.communityStatsByKey[key] = stat; });
 const podcasts = fixtures.map(({ key }) => ({ key }));
 const candidates = podcasts.filter(eligible);
-assert.deepEqual(candidates.map(({ key }) => key), ["last-7-days", "last-30-days", "last-90-days"],
-  "only complete, internally consistent activity data with recentUsers90d > 0 can qualify");
-assert.deepEqual(candidates.sort(compare).map(({ key }) => key), ["last-7-days", "last-30-days", "last-90-days"],
-  "momentum sorts 7-day activity above 30-day and 90-day activity without historical rating tie-breaks");
+assert.deepEqual(candidates.map(({ key }) => key), ["last-7-days", "last-30-days"],
+  "only complete, internally consistent activity data with recentUsers30d > 0 can qualify");
+assert.deepEqual(candidates.sort(compare).map(({ key }) => key), ["last-7-days", "last-30-days"],
+  "the 7-day and 8-30-day cohorts are eligible; days 31-90 are excluded");
+assert.equal(thirtyDayScore(fixtures[0].stat), 1, "a 7-day active user has full weight");
+assert.equal(thirtyDayScore(fixtures[1].stat), 0.35, "an 8-30-day user has 0.35 weight");
+assert.equal(thirtyDayScore(fixtures[2].stat), 0, "activity from days 31-90 has zero weight");
+const historicalOnly = { key: "historical-only", stat: {
+  recentUsers7d: 0, recentUsers30d: 0, recentUsers90d: 100, momentumScore: 10
+} };
+state.communityStatsByKey[historicalOnly.key] = historicalOnly.stat;
+assert.equal(eligible(historicalOnly), false, "even high historical 90-day momentum cannot qualify");
+assert.equal(compare({ key: "last-30-days" }, historicalOnly) < 0, true,
+  "a current 30-day user ranks above old historical activity");
+const sevenDayTie = { key: "seven-day-tie", stat: {
+  recentUsers7d: 8, recentUsers30d: 8, recentUsers90d: 80, momentumScore: 0.1
+} };
+const thirtyDayTie = { key: "thirty-day-tie", stat: {
+  recentUsers7d: 1, recentUsers30d: 21, recentUsers90d: 21, momentumScore: 100
+} };
+state.communityStatsByKey[sevenDayTie.key] = sevenDayTie.stat;
+state.communityStatsByKey[thirtyDayTie.key] = thirtyDayTie.stat;
+assert.equal(thirtyDayScore(sevenDayTie.stat), thirtyDayScore(thirtyDayTie.stat));
+assert.ok(compare(sevenDayTie, thirtyDayTie) < 0, "7-day counts break equal 30-day-score ties first");
+const keyTieA = { key: "canonical-a", stat: {
+  recentUsers7d: 2, recentUsers30d: 4, recentUsers90d: 4, momentumScore: 100
+} };
+const keyTieB = { key: "canonical-b", stat: {
+  recentUsers7d: 2, recentUsers30d: 4, recentUsers90d: 400, momentumScore: 0.1
+} };
+state.communityStatsByKey[keyTieA.key] = keyTieA.stat;
+state.communityStatsByKey[keyTieB.key] = keyTieB.stat;
+assert.ok(compare(keyTieA, keyTieB) < 0, "canonical key breaks ties without using 90-day activity or SQL momentum");
 const aliasActivityStat = new Function(
   "state", "normalizeText", "resolveCanonicalPodcastId", "getPodcastKey",
   `${extractFunction("getPopularNowActivityStat")}; return getPopularNowActivityStat;`
@@ -79,7 +111,7 @@ assert.equal(eligible({ key: "many-episodes-one-user", episodeRatingRows: 80 }),
 const candidatesFactory = new Function(
   "state", "normalizeMatchKey", "normalizeText", "getLegacyPodcastKey", "getPodcastKey",
   "getDisplayGroupMemberPodcasts", "createRankingDisplayGroup", "getPopularNowActivityStat",
-  "hasValidPopularNowActivityStat", "hasDocumentedRecentActivity", "isStandaloneSeasonPodcast",
+  "getPopularNow30DayScore", "hasValidPopularNowActivityStat", "hasDocumentedRecentActivity", "isStandaloneSeasonPodcast",
   "deduplicatePodcastResults", "console",
   `${extractFunction("getPopularNowCandidateUniverse")}; return getPopularNowCandidateUniverse;`
 )(
@@ -96,7 +128,7 @@ const candidatesFactory = new Function(
     { key: "season-two", legacyKey: "season-two", title: "Series (sæson 2)" }
   ],
   () => ({ key: "display-group:series", title: "Series", isDisplayGroup: true }),
-  (podcast) => activityStat(podcast),
+  (podcast) => activityStat(podcast), thirtyDayScore,
   new Function(`${extractFunction("hasValidPopularNowActivityStat")}; return hasValidPopularNowActivityStat;`)(),
   eligible,
   new Function(`${extractFunction("isStandaloneSeasonPodcast")}; return isStandaloneSeasonPodcast;`)(),

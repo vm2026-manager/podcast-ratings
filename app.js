@@ -756,7 +756,7 @@ const DATA_VERSION = "2026-11-04-issue58-editorial-cover";
 const EXPANDED_LIST_STORAGE_KEY = "podcast-ratings-expanded-list";
 const VIEW_MODE_STORAGE_KEY = "podcast-ratings-desktop-view";
 const DESKTOP_RANKING_LAYOUT_STORAGE_KEY = "podcast-ratings-desktop-ranking-layout";
-const POPULAR_NOW_SNAPSHOT_STORAGE_KEY = "podcastlisten-popular-now-public-snapshot-v1";
+const POPULAR_NOW_SNAPSHOT_STORAGE_KEY = "podcastlisten-popular-now-public-snapshot-v2";
 const AUTH_PERSISTENCE_STORAGE_KEY = "podcast-ratings-auth-persistence";
 const PROFILE_PREFERENCES_STORAGE_KEY = "podcast-ratings-profile-preferences";
 const EXPLORE_PERSONAL_SEED_HISTORY_STORAGE_KEY =
@@ -4205,17 +4205,25 @@ function hasValidPopularNowActivityStat(stat) {
   const validCounts = [recentUsers7d, recentUsers30d, recentUsers90d]
     .every((count) => Number.isSafeInteger(count) && count >= 0) &&
     recentUsers7d <= recentUsers30d && recentUsers30d <= recentUsers90d;
-  return validCounts && recentUsers90d > 0 &&
+  return validCounts && recentUsers30d > 0 &&
     Number.isFinite(momentumScore) && momentumScore > 0;
+}
+
+// Only the last 30 days can affect Populære lige nu. The public SQL view keeps
+// its historical 90-day signal for other site features; never mutate that data.
+function getPopularNow30DayScore(stat) {
+  const recentUsers7d = Number(stat?.recentUsers7d || 0);
+  const recentUsers30d = Number(stat?.recentUsers30d || 0);
+  return recentUsers7d + (recentUsers30d - recentUsers7d) * 0.35;
 }
 
 function comparePopularNowCandidates(a, b) {
   const aStat = getPopularNowActivityStat(a);
   const bStat = getPopularNowActivityStat(b);
-  const aMomentum = Number(aStat?.momentumScore);
-  const bMomentum = Number(bStat?.momentumScore);
+  const aMomentum = getPopularNow30DayScore(aStat);
+  const bMomentum = getPopularNow30DayScore(bStat);
   if (bMomentum !== aMomentum) return bMomentum - aMomentum;
-  for (const field of ["recentUsers7d", "recentUsers30d", "recentUsers90d"]) {
+  for (const field of ["recentUsers7d", "recentUsers30d"]) {
     const delta = Number(bStat?.[field] || 0) - Number(aStat?.[field] || 0);
     if (delta) return delta;
   }
@@ -4242,13 +4250,16 @@ function getPopularNowCandidateUniverse({ requireActivity = true } = {}) {
     });
     const activeSeasonStats = members
       .filter((member) => member.isDisplayGroupSeason || isStandaloneSeasonPodcast(member))
-      .map((member) => getPopularNowActivityStat(member))
-      .filter(hasValidPopularNowActivityStat)
-      .sort((a, b) => Number(b.momentumScore) - Number(a.momentumScore));
+      .map((member) => ({ key: getPodcastKey(member), stat: getPopularNowActivityStat(member) }))
+      .filter(({ stat }) => hasValidPopularNowActivityStat(stat))
+      .sort((a, b) => getPopularNow30DayScore(b.stat) - getPopularNow30DayScore(a.stat) ||
+        Number(b.stat.recentUsers7d) - Number(a.stat.recentUsers7d) ||
+        Number(b.stat.recentUsers30d) - Number(a.stat.recentUsers30d) ||
+        a.key.localeCompare(b.key, "en", { sensitivity: "base" }) || a.key.localeCompare(b.key));
     if (requireActivity && !activeSeasonStats.length) return null;
     const displayGroup = createRankingDisplayGroup(group);
     return displayGroup
-      ? { ...displayGroup, popularNowActivityStat: activeSeasonStats[0] || null }
+      ? { ...displayGroup, popularNowActivityStat: activeSeasonStats[0]?.stat || null }
       : null;
   }).filter(Boolean);
   const ordinary = state.podcasts.filter(
@@ -4282,7 +4293,7 @@ function readPopularNowSnapshot(windowId) {
     if (!raw) return null;
     const snapshot = JSON.parse(raw);
     if (
-      snapshot?.version !== 1 ||
+      snapshot?.version !== 2 ||
       snapshot.windowId !== windowId ||
       !Array.isArray(snapshot.orderedKeys) ||
       !snapshot.activityStatsByKey || typeof snapshot.activityStatsByKey !== "object" ||
@@ -4390,10 +4401,11 @@ function ensurePopularNowSnapshot() {
     const communityStatsByKey = Object.create(null);
     ordered.forEach((podcast, index) => {
       const key = orderedKeys[index];
-      activityStatsByKey[key] = { ...getPopularNowActivityStat(podcast) };
+      const stat = getPopularNowActivityStat(podcast);
+      activityStatsByKey[key] = { ...stat, momentumScore: getPopularNow30DayScore(stat) };
       communityStatsByKey[key] = getCommunityStat(key);
     });
-    snapshotData = { version: 1, windowId, orderedKeys, activityStatsByKey, communityStatsByKey };
+    snapshotData = { version: 2, windowId, orderedKeys, activityStatsByKey, communityStatsByKey };
     try {
       window.localStorage.setItem(POPULAR_NOW_SNAPSHOT_STORAGE_KEY, JSON.stringify(snapshotData));
     } catch {
@@ -5933,7 +5945,7 @@ function updateSortToggleUi() {
     elements.mobileSortToggle.setAttribute(
       "aria-label",
       state.popularNowActive
-        ? "Ranglisten er sorteret efter aktivitet de seneste 90 dage"
+        ? "Ranglisten er sorteret efter aktivitet de seneste 30 dage"
         : isAscending ? "Sorter efter laveste placering f\u00f8rst" : "Sorter efter h\u00f8jeste placering f\u00f8rst"
     );
   }
@@ -6241,7 +6253,7 @@ function getResultsText(filteredCount, visibleCount) {
   const suffixes = [];
 
   if (state.popularNowActive) {
-    suffixes.push("Sorteret efter aktivitet de seneste 90 dage.");
+    suffixes.push("Sorteret efter aktivitet de seneste 30 dage.");
     suffixes.push("Listen opdateres hver 6. time.");
     if (state.communityStatsStatus === "error" && state.communityStatsHasSuccessfulLoad) {
       suffixes.push("Opdatering mislykkedes; viser senest indlæste data.");
@@ -18729,7 +18741,7 @@ function renderPodcastGrid() {
       const empty = document.createElement("div");
       empty.className = "empty-state";
       empty.textContent = state.popularNowActive
-        ? "Ingen podcasts har dokumenteret vurderingsaktivitet de seneste 90 dage, der matcher filtrene."
+        ? "Ingen podcasts har dokumenteret vurderingsaktivitet de seneste 30 dage, der matcher filtrene."
         : "Ingen podcasts matcher den valgte kombination af filtre.";
       elements.podcastGrid.replaceChildren(empty);
     }
