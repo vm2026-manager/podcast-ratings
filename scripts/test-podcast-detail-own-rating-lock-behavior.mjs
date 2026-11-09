@@ -115,7 +115,7 @@ function createHarness({ eligible = false, ratings = {}, manualRating = null, ac
   const saveCalls = [];
   const retryCalls = [];
   const helpers = new Function(
-    "state", "podcastSupportsEpisodes", "getPodcastEpisodeState", "getEpisodePodcastConfig", "getEpisodeIdsForQuery",
+    "state", "getKirstenDisplayGroupRatingEditState", "podcastSupportsEpisodes", "getPodcastEpisodeState", "getEpisodePodcastConfig", "getEpisodeIdsForQuery",
     "getPodcastEpisodeUserRatingSummary", "getPodcastKey", "getUserRating", "formatCompactRating", "escapeHtml",
     "savePodcastDetailInlineRating", "fetchPodcastEpisodeParentRatings", "fetchGenstartEpisodes",
     "ensureManualPodcastEpisodeState", "getLocalEpisodePodcastKey", "refreshManualEpisodeRatingData",
@@ -123,6 +123,7 @@ function createHarness({ eligible = false, ratings = {}, manualRating = null, ac
     `${runtimeSource}; return { getPodcastDetailEpisodeRatingState, canEditPodcastDetailInlineRating, getPodcastDetailOwnRatingMarkup, updatePodcastDetailOwnRatingCell };`
   )(
     state,
+    () => null,
     () => true,
     () => episodeState,
     () => config,

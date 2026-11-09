@@ -61,6 +61,11 @@ const runtime = new Function("state", "ownRatings", `
   ${extract("createRankingDisplayGroup")}
   ${extract("resolvePublicPodcastDisplayItem")}
   ${extract("getDisplayGroupOwnRatingStats")}
+  ${extract("getPodcastDisplayGroupSeasonLockMarkup")}
+  const getPodcastRatingEditState = (displayGroup) => {
+    const own = getDisplayGroupOwnRatingStats(displayGroup.displayGroupMembers || [], displayGroup);
+    return { resolved: true, count: own.count, average: own.average };
+  };
   ${extract("getPodcastDisplayGroupOwnRatingMarkup")}
   ${extract("bindPodcastDisplayGroupRatingLock")}
   ${extract("renderPodcastDisplayGroupContent")}

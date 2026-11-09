@@ -41,7 +41,17 @@ for (const [legacyKey, podcastId] of Object.entries(migratedKeys)) {
 
 assert(!appSource.includes("EPISODE_DATABASE_KEY_READ_BRIDGES"), "Midlertidig read bridge findes stadig");
 assert(!appSource.includes("getEpisodeDatabaseReadKeys"), "Midlertidig read-key helper findes stadig");
-assert(!appSource.includes('.in("podcast_key",'), "Episode-læsning må ikke bruge multi-key filter");
+const groupSeasonReadStart = appSource.indexOf("async function ensureKirstenDisplayGroupRatingEditState(");
+const groupSeasonReadEnd = appSource.indexOf("\nfunction getPodcastDetailEpisodeRatingState(", groupSeasonReadStart);
+const groupSeasonRead = appSource.slice(groupSeasonReadStart, groupSeasonReadEnd);
+assert(
+  /\.from\("user_ratings"\)[\s\S]*?\.eq\("user_id", request\.userId\)[\s\S]*?\.in\("podcast_key", memberKeys\)/u.test(groupSeasonRead),
+  "Kirsten season verification may read only the current user's exact season keys"
+);
+assert(
+  !appSource.replace(groupSeasonRead, "").includes('.in("podcast_key",'),
+  "Episode parent-rating reads must not use a multi-key podcast-key filter"
+);
 const canonicalReadFilter = '.eq("podcast_key", getEpisodeDatabasePodcastKey(config))';
 assert(
   appSource.split(canonicalReadFilter).length - 1 === 2,
