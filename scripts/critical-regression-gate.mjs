@@ -104,6 +104,7 @@ const checks = [
   ["episode canonical identity", ["scripts/validate-episode-canonical-identity.mjs"]],
   ["legacy community rating identity", ["scripts/test-community-rating-identity.mjs"]],
   ["display-group unique community users", ["scripts/test-display-group-community-stats.mjs"]],
+  ["display-group season-first aggregate SQL proposal", ["scripts/test-display-group-season-priority.mjs"]],
   ["display-group community readiness", ["scripts/test-display-group-community-readiness.mjs"]],
   ["display-group modal lifecycle", ["scripts/test-display-group-modal-lifecycle.mjs"]],
   ["legacy local episode identity", ["scripts/validate-local-episode-identity.mjs"]],
