@@ -18,6 +18,7 @@ const checks = [
   ["Krop til salg identity-preserving Podimo sync", ["--experimental-strip-types", "scripts/test-krop-podimo-migration.mjs"]],
   ["Podimo pagination and existing sources", ["--experimental-strip-types", "scripts/test-podimo-grebet-routing.mjs"]],
   ["Podimo historical sources and identity-preserving imports", ["--experimental-strip-types", "scripts/test-two-podimo-show-imports.mjs"]],
+  ["Historien om alt exact Podimo transition and cross-source identity", ["--experimental-strip-types", "scripts/test-historien-om-alt-podimo-transition.mjs"]],
   ["Sidste nedtælling exact Podimo identity, health and idempotency", ["--experimental-strip-types", "scripts/test-sidste-nedtaelling-podimo.mjs"]],
   ["Bounded cross-source episode URL lookup preserves existing IDs", ["--experimental-strip-types", "scripts/test-cross-source-episode-url-batching.mjs"]],
   ["Episode feed configuration coverage", ["--experimental-strip-types", "scripts/test-episode-feed-coverage.mjs"]],

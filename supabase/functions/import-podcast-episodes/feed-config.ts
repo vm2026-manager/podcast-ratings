@@ -3,6 +3,11 @@ import { DJAEVLEN_FEED_KEY, DJAEVLEN_FEED_URL, DJAEVLEN_IMPORT_LABEL, DJAEVLEN_S
 import { BAKSPEJL_FEED_KEY, BAKSPEJL_FEED_URL, BAKSPEJL_IMPORT_LABEL, BAKSPEJL_SOURCE } from "./bakspejl-routing.mjs";
 import { KROP_MANUAL_LINKS } from "./manual-podimo.ts";
 import { RADIO_IIII_FEED_KEY, RADIO_IIII_FEED_URL } from "./radio-iiii-routing.mjs";
+import {
+  HISTORIEN_OM_ALT_PODIMO_CROSSWALK,
+  HISTORIEN_OM_ALT_PODIMO_INITIAL_NEW_GUIDS,
+  HISTORIEN_OM_ALT_PODIMO_UNRESOLVED_GUIDS
+} from "./historien-om-alt-podimo-identity.ts";
 
 export type FeedFormat = "rss" | "radio4_json" | "dr_lyd_next_data" | "apple_podcasts_html" | "podimo_graphql";
 
@@ -84,6 +89,16 @@ export type FeedConfig = {
   // Exact, code-approved Podcast-ID + Podimo UUID pair must be present in the
   // current Sheet before this otherwise-disabled adapter can be scheduled.
   sheet_podimo_identity_required?: boolean;
+  // Narrow ART19-to-Podimo transition. Cross-source identities are pinned by
+  // immutable GUIDs; unresolved historical IDs are held out; unseen future
+  // episodes must have a season/episode title and publication after the cutover.
+  podimo_transition?: {
+    historical_source: string;
+    crosswalk: ReadonlyArray<{ podimo_guid: string; legacy_guid: string }>;
+    unresolved_guids: readonly string[];
+    initial_new_guids: readonly string[];
+    future_episode_not_before: string;
+  };
 };
 
 export type FeedConfigMap = Record<string, FeedConfig>;
@@ -131,6 +146,24 @@ export const FEED_CONFIGS: FeedConfigMap = {
     podcast_id: "1aba8d20-8fbd-4606-aed0-1329f597cf32",
     podimo_show_url: "https://podimo.com/dk/shows/q-og-co",
     podimo_history_overlap_minimum: 3
+  },
+  "podimo_historien_om_alt": {
+    podcast_key: "historien om alt",
+    source: "podimo_historien_om_alt",
+    format: "podimo_graphql",
+    feed_url: "https://graphql.podimo.com/graphql",
+    podcast_id: "138a7a8f-7248-4801-83b5-7b499ffc7241",
+    podimo_show_url: "https://podimo.com/dk/shows/simon-jul-rane-willerslev",
+    enabled: false,
+    sheet_podimo_identity_required: true,
+    dedupe_by_episode_url_with_sources: ["sheet_historien_om_alt_rss"],
+    podimo_transition: {
+      historical_source: "sheet_historien_om_alt_rss",
+      crosswalk: HISTORIEN_OM_ALT_PODIMO_CROSSWALK,
+      unresolved_guids: HISTORIEN_OM_ALT_PODIMO_UNRESOLVED_GUIDS,
+      initial_new_guids: HISTORIEN_OM_ALT_PODIMO_INITIAL_NEW_GUIDS,
+      future_episode_not_before: "2026-11-04T00:00:00.000Z"
+    }
   },
   [DJAEVLEN_FEED_KEY]: {
     // The historical source is the GUID/episode identity namespace. Routes
@@ -745,12 +778,6 @@ export const FEED_CONFIGS: FeedConfigMap = {
     podcast_key: "avistid",
     source: "sheet_avistid_rss",
     feed_url: "https://www.omnycontent.com/d/playlist/1283f5f4-2508-4981-a99f-acb500e64dcf/fb3a977a-4990-43b8-a721-ad0800b112ce/e0860d64-3c50-4ea3-8817-ad0800b112e1/podcast.rss",
-    generated_from_sheet: true
-  },
-  "historien_om_alt": {
-    podcast_key: "historien om alt",
-    source: "sheet_historien_om_alt_rss",
-    feed_url: "https://rss.art19.com/historien-om-alt",
     generated_from_sheet: true
   },
   "fodboldlisten": {

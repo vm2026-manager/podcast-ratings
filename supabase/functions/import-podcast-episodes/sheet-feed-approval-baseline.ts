@@ -88,7 +88,6 @@ export const APPROVED_SHEET_FEED_BASELINE: readonly ApprovedSheetFeed[] = Object
   Object.freeze(["gyldne generationer burgaard mortensen og tanderup","https://drpodcast.nu/gyldne-generationer-burgaard-mortensen-og-tanderup/feed.xml"] as const),
   Object.freeze(["hard fork","https://feeds.simplecast.com/6HKOhNgS"] as const),
   Object.freeze(["hemmeligheder","https://api.dr.dk/podcasts/v1/feeds/hemmeligheder-2"] as const),
-  Object.freeze(["historien om alt","https://rss.art19.com/historien-om-alt"] as const),
   Object.freeze(["hjulmand mennesket lederen landstræneren","https://drpodcast.nu/hjulmand-mennesket-lederen-landstraeneren/feed.xml"] as const),
   Object.freeze(["hojtryk","https://www.spreaker.com/show/5708185/episodes/feed"] as const),
   Object.freeze(["hollywood hacket","https://drpodcast.nu/kup-hollywood-hacket/feed.xml"] as const),
