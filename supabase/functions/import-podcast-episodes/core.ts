@@ -1143,6 +1143,52 @@ export async function runEpisodeImport(options: {
           })
         : routing.episodes;
 
+    const transitionCrossSourceDuplicates = new Set<string>();
+    const transitionUnresolvedEpisodes = new Set<string>();
+    if (config.podimo_transition) {
+      const transition = config.podimo_transition;
+      const byPodimoGuid = new Map(transition.crosswalk.map(entry => [entry.podimo_guid, entry.legacy_guid]));
+      const uniqueLegacyGuids = new Set(transition.crosswalk.map(entry => entry.legacy_guid));
+      if (byPodimoGuid.size !== transition.crosswalk.length || uniqueLegacyGuids.size !== transition.crosswalk.length) {
+        throw new Error("Podimo transition identity review required: duplicate crosswalk identities");
+      }
+      for (const entry of transition.crosswalk) {
+        const historical = existing.filter(row =>
+          row.source === transition.historical_source &&
+          row.podcast_key === config.podcast_key &&
+          row.external_guid === entry.legacy_guid
+        );
+        if (historical.length !== 1) {
+          throw new Error("Podimo transition identity review required: historical crosswalk row missing or duplicated");
+        }
+      }
+      const approvedNewGuids = new Set(transition.initial_new_guids);
+      const unresolvedGuids = new Set(transition.unresolved_guids);
+      const futureSequenceMatch = (title: string): [number, number] | null => {
+        const match = title.match(/^S(\d+)\s*[-–.]?\s*E(\d+)\b/i);
+        return match ? [Number(match[1]), Number(match[2])] : null;
+      };
+      for (const episode of episodesForClassification) {
+        if (byPodimoGuid.has(episode.external_guid)) {
+          transitionCrossSourceDuplicates.add(episode.external_guid);
+          continue;
+        }
+        if (unresolvedGuids.has(episode.external_guid)) {
+          transitionUnresolvedEpisodes.add(episode.external_guid);
+          continue;
+        }
+        if (approvedNewGuids.has(episode.external_guid)) continue;
+        const sequence = futureSequenceMatch(episode.title);
+        const afterLastKnown = sequence &&
+          (sequence[0] > 5 || (sequence[0] === 5 && sequence[1] > 8));
+        const publication = episode.published_at ? Date.parse(episode.published_at) : Number.NaN;
+        const cutoff = Date.parse(transition.future_episode_not_before);
+        if (!afterLastKnown || !Number.isFinite(publication) || !Number.isFinite(cutoff) || publication < cutoff) {
+          throw new Error("Podimo transition identity review required: unreviewed historical episode");
+        }
+      }
+    }
+
     const existingByGuid = new Map(existing.filter((episode) => episode.source === config.source).map((episode) => [episode.external_guid, episode]));
     const existingCrossSourceEpisodes = existing
       .filter((episode) => episode.source !== config.source && episode.episode_url);
@@ -1236,13 +1282,15 @@ export async function runEpisodeImport(options: {
     const manualDuplicateGuids = new Set(manualIdentityDuplicates.map(({ episode }) => episode.external_guid));
     const manualConflictGuids = new Set(manualIdentityConflicts.map(({ episode }) => episode.external_guid));
     const unsafeEpisodes = routingConflicts.concat(crossSourceUrlConflicts);
-    const safeEpisodesForClassification = unsafeEpisodes.length || crossSourceUrlDuplicates.length || crossSourceIdentityDuplicates.length || manualDuplicateGuids.size || manualConflictGuids.size
+    const safeEpisodesForClassification = unsafeEpisodes.length || crossSourceUrlDuplicates.length || crossSourceIdentityDuplicates.length || manualDuplicateGuids.size || manualConflictGuids.size || transitionCrossSourceDuplicates.size || transitionUnresolvedEpisodes.size
       ? episodesForClassification.filter((episode) =>
           !unsafeEpisodes.some((conflict) => conflict.external_guid === episode.external_guid) &&
           !crossSourceUrlDuplicates.some((duplicate) => duplicate.external_guid === episode.external_guid) &&
           !crossSourceIdentityDuplicates.some((duplicate) => duplicate.external_guid === episode.external_guid) &&
           !manualDuplicateGuids.has(episode.external_guid) &&
-          !manualConflictGuids.has(episode.external_guid)
+          !manualConflictGuids.has(episode.external_guid) &&
+          !transitionCrossSourceDuplicates.has(episode.external_guid) &&
+          !transitionUnresolvedEpisodes.has(episode.external_guid)
         )
       : episodesForClassification;
     if (routing.report && (routing.report.unmatched.length || routing.report.ambiguous.length || routing.report.known_no_destination.length || routingConflicts.length || crossSourceUrlConflicts.length)) {
@@ -1285,7 +1333,8 @@ export async function runEpisodeImport(options: {
     const routingConflictCount = routingConflicts.length + crossSourceUrlConflicts.length;
     const unmatchedCount = routing.report?.unmatched.length || 0;
     const ambiguousCount = routing.report?.ambiguous.length || 0;
-    const routingIssueCount = unmatchedCount + ambiguousCount + routingConflictCount + manualIdentityConflicts.length;
+    const transitionReviewCount = transitionUnresolvedEpisodes.size;
+    const routingIssueCount = unmatchedCount + ambiguousCount + routingConflictCount + manualIdentityConflicts.length + transitionReviewCount;
     const error_count = itemErrors + batchErrors + routingIssueCount + manualMergeErrors;
     const hasWarnings = mapped.warnings.length > 0;
     const activeRateableEpisodeCount = config.routes?.length
@@ -1304,7 +1353,7 @@ export async function runEpisodeImport(options: {
       fetched_count: mapped.fetched_count,
       inserted_count: classified.inserted.length - Math.min(batchErrors, classified.inserted.length),
       updated_count: classified.updated.length - Math.max(0, batchErrors - classified.inserted.length) + manualMergedCount,
-      skipped_count: classified.skipped_count,
+      skipped_count: classified.skipped_count + transitionCrossSourceDuplicates.size + transitionUnresolvedEpisodes.size,
       error_count,
       runtime_ms: Date.now() - startedAt,
       details: {
@@ -1317,6 +1366,9 @@ export async function runEpisodeImport(options: {
         } : {}),
         warning_count: mapped.warnings.length + (noActiveFullEpisodes ? 1 : 0),
         health_warning: noActiveFullEpisodes ? "no_active_full_episodes" : null,
+        podimo_transition_cross_source_duplicate_count: transitionCrossSourceDuplicates.size,
+        podimo_transition_unresolved_identity_count: transitionUnresolvedEpisodes.size,
+        podimo_transition_identity_review_required: transitionReviewCount > 0,
         manual_catalogue_merge_count: manualMergedCount,
         manual_catalogue_merge_error_count: manualMergeErrors,
         manual_catalogue_conflict_count: manualIdentityConflicts.length,
@@ -1413,6 +1465,10 @@ export async function runEpisodeImport(options: {
           ...(config.podimo_history_overlap_minimum ? {
             identity_review_required: message.includes("Podimo identity review required"),
             podimo_history_overlap_minimum: config.podimo_history_overlap_minimum,
+            podimo_podcast_id: config.podcast_id
+          } : {}),
+          ...(config.podimo_transition ? {
+            podimo_transition_identity_review_required: message.includes("Podimo transition identity review required"),
             podimo_podcast_id: config.podcast_id
           } : {})
         }

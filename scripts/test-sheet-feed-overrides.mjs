@@ -74,7 +74,9 @@ const publishedApproved = publishedRuntime.audit.active_feeds
   .filter(feed => feed.origin === "sheet" && feed.enabled && feed.source.startsWith("sheet_"))
   .map(({ feed_key, podcast_key, source, feed_url }) => ({ feed_key, podcast_key, source, feed_url }))
   .sort((a, b) => a.podcast_key.localeCompare(b.podcast_key, "da-DK"));
-assert.equal(APPROVED_SHEET_FEED_BASELINE.length, 205);
+// Historien om alt's ART19 source is retired from the scheduled Sheet-feed
+// baseline; its exact Podimo adapter is separately gated by the show UUID.
+assert.equal(APPROVED_SHEET_FEED_BASELINE.length, 204);
 assert.deepEqual(publishedApproved.map(feed => [feed.podcast_key, feed.feed_url]),
   [...APPROVED_SHEET_FEED_BASELINE].map(([podcastKey, feedUrl]) => [podcastKey, feedUrl])
     .sort((a, b) => a[0].localeCompare(b[0], "da-DK")));
