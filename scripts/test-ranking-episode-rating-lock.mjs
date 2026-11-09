@@ -176,7 +176,7 @@ function createHarness({ ratingState, input = "8.3", userId = "user-a", onVerify
   const derivedViews = [];
   const harness = new Function(
     "state", "elements", "podcast", "writes", "messages", "ratingState", "onVerify",
-    "getPodcastRatingEditState", "resolvePodcastByStoredKey", "getPodcastKey", "podcastSupportsEpisodes",
+    "getPodcastRatingEditState", "resolvePodcastByStoredKey", "getPodcastKey", "isDisplayGroupRatingKey", "podcastSupportsEpisodes",
     "getUserScopedRequestContext", "isCurrentUserScopedRequest", "ensurePodcastRatingEditState",
     "getUserRating", "normalizeRatingInputField", "normalizeText", "parseRatingInputValue",
     "getPodcastRatingControlDescription",
@@ -190,6 +190,7 @@ function createHarness({ ratingState, input = "8.3", userId = "user-a", onVerify
     () => ratingState,
     () => podcast,
     (item) => item.id,
+    (key) => String(key).startsWith("display-group:"),
     () => true,
     () => request,
     (candidate) => candidate.userId === state.authUser?.id && candidate.generation === 0,

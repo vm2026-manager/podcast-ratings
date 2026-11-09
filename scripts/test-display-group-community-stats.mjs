@@ -30,9 +30,9 @@ function displayGroupStats(rows, memberKeys, directGroupRatings = [], directGrou
     .filter((row) => row.podcastKey === directGroupKey)
     .map((row) => [row.user, row.rating]));
   const userIds = new Set([...ratingsByUser.keys(), ...directByUser.keys()]);
-  const userAverages = [...userIds].map((user) => directByUser.has(user)
-    ? directByUser.get(user)
-    : average(ratingsByUser.get(user)));
+  const userAverages = [...userIds].map((user) => ratingsByUser.has(user)
+    ? average(ratingsByUser.get(user))
+    : directByUser.get(user));
   return {
     averageRating: userAverages.length ? average(userAverages) : null,
     ratingCount: userAverages.length
@@ -65,9 +65,11 @@ assert.equal(stats.ratingCount, 1);
 stats = displayGroupStats([...oneUserSixSeasons, { user: "user-c", podcastKey: "season-2", rating: 4 }], seasons);
 assert.equal(stats.ratingCount, 2);
 
-// A direct whole-podcast rating wins over that user's six season ratings. A
-// user with no direct row keeps the existing season-derived average, and a
-// direct-only user is included exactly once.
+// Once a user has rated any season, those season ratings determine that
+// user's group score. A direct-only user still contributes once. The applied
+// production SQL currently has the earlier direct-first priority; because
+// production writes are not part of this task, that function remains an
+// explicitly documented follow-up instead of an automatic migration.
 stats = displayGroupStats(
   [...oneUserSixSeasons, { user: "user-b", podcastKey: "season-1", rating: 10 }],
   seasons,
@@ -77,7 +79,7 @@ stats = displayGroupStats(
     { user: "user-d", podcastKey: "display-group:other", rating: 10 }
   ]
 );
-assert.deepEqual(stats, { averageRating: 20 / 3, ratingCount: 3 });
+assert.deepEqual(stats, { averageRating: 23.5 / 3, ratingCount: 3 });
 
 // E: a one-key group remains the ordinary per-podcast average/count.
 stats = displayGroupStats([{ user: "user-a", podcastKey: "single", rating: 7 }, { user: "user-b", podcastKey: "single", rating: 9 }], ["single"]);

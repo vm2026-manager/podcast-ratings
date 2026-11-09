@@ -7783,7 +7783,8 @@ body.has-dialog-open {
     position: static;
   }
 
-  .podcast-detail-sheet__rating-cell--group-own > [data-podcast-display-group-rate] {
+  .podcast-detail-sheet__rating-cell--group-own > [data-podcast-display-group-rate],
+  .podcast-detail-sheet__rating-cell--group-own > [data-podcast-display-group-rating-retry] {
     max-width: 100%;
     min-height: 34px;
     padding: 6px 10px;
@@ -7797,13 +7798,15 @@ body.has-dialog-open {
     touch-action: manipulation;
   }
 
-  .podcast-detail-sheet__rating-cell--group-own > [data-podcast-display-group-rate] > strong {
+  .podcast-detail-sheet__rating-cell--group-own > [data-podcast-display-group-rate] > strong,
+  .podcast-detail-sheet__rating-cell--group-own > [data-podcast-display-group-rating-retry] > strong {
     color: inherit;
     font: inherit;
     line-height: inherit;
   }
 
-  .podcast-detail-sheet__rating-cell--group-own > [data-podcast-display-group-rate]:focus-visible {
+  .podcast-detail-sheet__rating-cell--group-own > [data-podcast-display-group-rate]:focus-visible,
+  .podcast-detail-sheet__rating-cell--group-own > [data-podcast-display-group-rating-retry]:focus-visible {
     outline: 2px solid rgba(255, 92, 22, 0.62);
     outline-offset: 2px;
   }

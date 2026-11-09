@@ -62,12 +62,12 @@ assert.match(fetchGroups, /podcastDetailRecommendationCache\?\.clear\(\)/u);
 // separate editable path.
 const groupRender = extractFunction("renderPodcastDisplayGroupContent");
 assert.match(groupRender, /is-episode-rating-locked/u);
-assert.match(groupRender, /is-episode-calculated/u);
-assert.match(groupRender, /disabled/u);
-assert.match(groupRender, /Beregnet fra \$\{own\.count\} \$\{own\.count === 1 \? "sæsonvurdering" : "sæsonvurderinger"\}/u);
+assert.match(extractFunction("getPodcastDisplayGroupSeasonLockMarkup"), /is-episode-calculated/u);
+assert.match(extractFunction("getPodcastDisplayGroupSeasonLockMarkup"), /disabled/u);
+assert.match(extractFunction("getPodcastDisplayGroupSeasonLockMarkup"), /Beregnet fra \$\{own\.count\} \$\{own\.count === 1 \? "sæsonvurdering" : "sæsonvurderinger"\}/u);
 assert.match(app, /data-podcast-season-rate/u);
 assert.doesNotMatch(groupRender, /data-podcast-detail-inline-rating-save/u);
-assert.match(app, /function getDisplayGroupOwnRatingStats\(members\)/u);
+assert.match(app, /function getDisplayGroupOwnRatingStats\(members, displayGroup = null\)/u);
 
 // Ratings are persisted at one decimal. Their integer-tenths average avoids
 // the old IEEE-754 path where this exact set became 7.449999999999999 and was
