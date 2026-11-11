@@ -7,6 +7,10 @@ import { mergeAutoDiscoveredBakspejlRows } from "./bakspejl-auto-discovery.mjs";
 import { mergeAutoDiscoveredRadioIIIIRows } from "./radio-iiii-auto-discovery.mjs";
 import { mergeAutoDiscoveredTyranRows } from "./tyran-auto-discovery.mjs";
 import { partitionSheetPodcastRows } from "./catalogue-intake.mjs";
+import {
+  applyManualCatalogueMetadataOverrides,
+  loadManualCatalogueMetadataRegistry
+} from "./manual-catalogue-metadata.mjs";
 
 const SPREADSHEET_BASE_URL =
   "https://docs.google.com/spreadsheets/d/e/2PACX-1vQRBWQdj-WDNN3l9yxIMCCu_O2dYfP7modSODcYgJRoQDG3GYsu83W_wIFyijPx6v8l-W011zrFyOdq/pub";
@@ -934,7 +938,13 @@ async function main() {
   );
   const podcastsSheet = loadedSheets.find(([sheet]) => sheet.sheetName === "Ark1");
   const previousCatalogue = JSON.parse(await readFile(path.join(repoRoot, "data", "podcasts.json"), "utf8"));
-  const intake = partitionSheetPodcastRows(filterPodcastRows(podcastsSheet[1].objects), previousCatalogue.rows);
+  const editoriallyEnrichedSheetRows = applyManualCatalogueMetadataOverrides({
+    sheetRows: filterPodcastRows(podcastsSheet[1].objects),
+    publishedRows: previousCatalogue.rows,
+    registry: loadManualCatalogueMetadataRegistry(repoRoot),
+    root: repoRoot
+  });
+  const intake = partitionSheetPodcastRows(editoriallyEnrichedSheetRows, previousCatalogue.rows);
   if (intakeOnly) {
     await writeJsonFile(path.join(outputDirectory, "catalogue-intake-candidates.json"), {
       generatedAt: new Date().toISOString(),

@@ -63,6 +63,7 @@ const checks = [
   ["Det levende bevis DR cover identity and stale override removal", ["scripts/test-det-levende-bevis-cover.mjs"]],
   ["cover source freshness", ["scripts/test-cover-source-freshness.mjs"]],
   ["manual cover intake identity", ["scripts/test-manual-cover-intake.mjs"]],
+  ["exact-ID local editorial catalogue metadata override", ["scripts/test-manual-catalogue-metadata.mjs"]],
   ["startup rating hydration", ["scripts/test-startup-rating-hydration.mjs"]],
   ["ranking movement scoring, entrant stability, and 1,300-item ranks", ["scripts/test-ranking-movement.mjs"]],
   ["ranking movement hydration lifecycle", ["scripts/test-ranking-movement-load-lifecycle.mjs"]],

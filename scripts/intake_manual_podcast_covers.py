@@ -65,7 +65,13 @@ def validate(root, rows, manifest, registry):
             raise ValueError(f'Unverified registration: {source}')
         if reg.get('expectedTitle') != row.get('Titel') or reg.get('expectedPublisher') != row.get('Udgiver'):
             raise ValueError(f'Conflicting title/publisher/ID evidence: {source}')
-        if reg.get('expectedImageUrl') != row.get('Billedlink', ''):
+        artwork_kind = reg.get('artworkKind')
+        if artwork_kind not in (None, 'OWNER_APPROVED_EDITORIAL'):
+            raise ValueError(f'Unsupported artwork classification: {source}')
+        if artwork_kind == 'OWNER_APPROVED_EDITORIAL':
+            if reg.get('expectedImageUrl') != '':
+                raise ValueError(f'Owner-approved editorial artwork must not claim a publisher image URL: {source}')
+        elif reg.get('expectedImageUrl') != row.get('Billedlink', ''):
             raise ValueError(f'Catalogue image evidence changed: {source}')
         content = path.read_bytes()
         if digest(content) != reg.get('sourceSha256'):
