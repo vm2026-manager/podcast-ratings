@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "overrides": [
+    {
+      "podcastId": "krigen i bosnien",
+      "expectedIdentity": {
+        "Titel": "Krigen i Bosnien",
+        "Vært": "Frederik Gabrielsson",
+        "Udgiver": "Politiken",
+        "Hovedserie": "Flashback"
+      },
+      "metadata": {
+        "Link": "https://politiken.dk/podcast/Flashback/",
+        "Billedlink": "assets/podcast-covers/manual-inbox/krigen_i_bosnien_editorial.png"
+      },
+      "linkSourcePodcastId": "flashback politiken",
+      "linkSourceTitle": "Flashback",
+      "linkSourcePublisher": "Politiken",
+      "sourcePath": "assets/podcast-covers/manual-inbox/krigen_i_bosnien_editorial.png",
+      "sourceSha256": "eabde7a7ab0a05313516fda1d9c863c6f59968f60ba8fc4124534922d65bf1da",
+      "artworkKind": "OWNER_APPROVED_EDITORIAL",
+      "sourceEvidence": "Exact Ark1 Podcast-ID row was read-only verified. Link reuses the existing published Flashback parent Link. Billedlink names the owner-approved Podcastlisten editorial PNG whose SHA-256 is recorded here; it is not official Politiken artwork."
+    }
+  ]
+}
