@@ -22,7 +22,8 @@ assert.ok(getterStart >= 0 && getterEnd > getterStart, "Cover source resolver is
 const context = {
   getPodcastId: (podcast) => String(podcast?.podcastId ?? "").trim(),
   normalizeText: (value) => String(value ?? "").trim(),
-  TYRAN_OFFICIAL_SQUARE_IMAGE_IDS: {}
+  TYRAN_OFFICIAL_SQUARE_IMAGE_IDS: {},
+  TYRAN_OFFICIAL_SQUARE_IMAGE_FALLBACKS: {}
 };
 vm.runInNewContext(`${app.slice(getterStart, getterEnd)}\nglobalThis.getSources = getPodcastImageSources;`, context);
 const desktopAndMobileSources = Array.from(context.getSources({

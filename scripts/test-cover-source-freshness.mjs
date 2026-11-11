@@ -35,7 +35,11 @@ const tyranMapStart = app.indexOf("const TYRAN_OFFICIAL_SQUARE_IMAGE_IDS = Objec
 const tyranMapEnd = app.indexOf("});", tyranMapStart);
 assert.ok(tyranMapStart >= 0 && tyranMapEnd > tyranMapStart, "Official DR Tyran image map must exist");
 const tyranImageMap = app.slice(tyranMapStart, tyranMapEnd + 3);
-vm.runInNewContext(`${tyranImageMap}\n${extract("applyLocalCoverManifest")}\n${extract("getPodcastImageSources")}`, context);
+const tyranFallbackMapStart = app.indexOf("const TYRAN_OFFICIAL_SQUARE_IMAGE_FALLBACKS = Object.freeze({");
+const tyranFallbackMapEnd = app.indexOf("});", tyranFallbackMapStart);
+assert.ok(tyranFallbackMapStart >= 0 && tyranFallbackMapEnd > tyranFallbackMapStart, "Verified DR Tyran fallback map must exist");
+const tyranFallbackMap = app.slice(tyranFallbackMapStart, tyranFallbackMapEnd + 3);
+vm.runInNewContext(`${tyranImageMap}\n${tyranFallbackMap}\n${extract("applyLocalCoverManifest")}\n${extract("getPodcastImageSources")}`, context);
 
 const variants = {
   "480": { path: "data/covers/480/current.webp", width: 480 },

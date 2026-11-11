@@ -43,6 +43,12 @@ const TYRAN_OFFICIAL_SQUARE_IMAGE_IDS = Object.freeze({
   "suharto": "689092012e199a1c531f7ebc",
   "trujillo": "6901d9eb91066218a4c409de",
 });
+
+// DR's transformed image endpoint can fail independently from its stable raw
+// SquareImage URL. Keep this verified second URL scoped to the exact catalogue ID.
+const TYRAN_OFFICIAL_SQUARE_IMAGE_FALLBACKS = Object.freeze({
+  "leopold ii": "https://asset.dr.dk/drlyd/images/urn:dr:radio:image:6a96ae037472ce653345f984"
+});
 const EXPLORE_CLUSTERS_URL = "data/explore-clusters.json";
 
 const CANONICAL_GENRES = window.PODCAST_CANONICAL_GENRES;
@@ -3426,6 +3432,7 @@ function getPodcastImageSources(podcast) {
   const tyranSquareImage = tyranSquareImageId
     ? `https://asset.dr.dk/drlyd/images/urn:dr:radio:image:${tyranSquareImageId}?im=AspectCrop%3D%28720%2C720%29%2CxPosition%3D.5%2CyPosition%3D.5%3BResize%3D%28720%2C720%29`
     : "";
+  const tyranSquareImageFallback = TYRAN_OFFICIAL_SQUARE_IMAGE_FALLBACKS[getPodcastId(podcast)] || "";
 
   const localSources = Array.isArray(podcast.localCoverVariants)
     ? podcast.localCoverVariants.map((variant) => variant.path)
@@ -3440,6 +3447,7 @@ function getPodcastImageSources(podcast) {
     new Set(
       [
         tyranSquareImage,
+        tyranSquareImageFallback,
         ...(podcast.preferExternalCoverSource ? externalSources : localSources),
         ...(podcast.preferExternalCoverSource ? localSources : externalSources)
       ]
