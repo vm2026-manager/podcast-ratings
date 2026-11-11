@@ -122,15 +122,17 @@ for (const [name, change, expected] of [
 test("ASCII apostrophe Podcast-ID is accepted and preserved exactly", async () => fixture(async (root) => {
   const id = "ta'r jeg fejl";
   await setSource(root, (s) => {
-    const template = s.rows.find((row) => row.Genre === "True Crime");
-    s.rows.push({ ...template, "Podcast-ID": id, Titel: id });
-    s.count++;
+    if (!s.rows.some((row) => row["Podcast-ID"] === id)) {
+      const template = s.rows.find((row) => row.Genre === "True Crime");
+      s.rows.push({ ...template, "Podcast-ID": id, Titel: id });
+      s.count++;
+    }
   });
   const before = await snapshot(root);
   const pages = await generateSeoPodcastPages({ root, write: false });
   const source = JSON.parse(await readFile(path.join(root, "data/podcasts.json"), "utf8"));
-  const entry = trueCrimeData(source.rows).find((row) => row.title === id);
-  assert.equal(source.rows.at(-1)["Podcast-ID"], id);
+  const entry = trueCrimeData(source.rows).find((row) => row.id === id);
+  assert.equal(source.rows.filter((row) => row["Podcast-ID"] === id).length, 1);
   assert.equal(entry.id, id);
   assert(renderTrueCrimePage([entry]).includes(`href="/?podcast=${encodeURIComponent(id)}"`));
   assert.equal(slugFromPodcastId(id), "tar-jeg-fejl");
@@ -141,11 +143,12 @@ test("ASCII apostrophe Podcast-ID is accepted and preserved exactly", async () =
 test("apostrophe ID that collides with an existing slug blocks publication", async () => fixture(async (root) => {
   await setSource(root, (s) => {
     const template = s.rows.find((row) => row.Genre === "True Crime");
-    s.rows.push(
-      { ...template, "Podcast-ID": "ta'r jeg fejl", Titel: "Ta'r jeg fejl" },
-      { ...template, "Podcast-ID": "tar jeg fejl", Titel: "Tar jeg fejl" }
-    );
-    s.count += 2;
+    const additions = [
+      ["ta'r jeg fejl", "Ta'r jeg fejl"],
+      ["tar jeg fejl", "Tar jeg fejl"]
+    ].filter(([id]) => !s.rows.some((row) => row["Podcast-ID"] === id));
+    for (const [id, title] of additions) s.rows.push({ ...template, "Podcast-ID": id, Titel: title });
+    s.count += additions.length;
   });
   await assertBlocked(root, /slug collision/);
 }));
