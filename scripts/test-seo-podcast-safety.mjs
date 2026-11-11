@@ -6,7 +6,7 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 import { test } from "node:test";
 import { fileURLToPath } from "node:url";
-import { generateSeoPodcastPages, renderPage, renderTrueCrimePage, trueCrimeData } from "./generate-seo-podcast-pages.mjs";
+import { generateSeoPodcastPages, renderPage, renderTrueCrimePage, slugFromPodcastId, trueCrimeData } from "./generate-seo-podcast-pages.mjs";
 import { prepareSeoPlan, publishSeoPlan, validateSitemap } from "./seo-podcast-safety.mjs";
 
 const repository = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
@@ -119,9 +119,39 @@ for (const [name, change, expected] of [
   await assertBlocked(root, expected);
 }));
 
-for (const id of ["", null, 42, "../genstart", "genstart/escape", " genstart", "genstart\n", "!!!"]) test(`invalid ID ${JSON.stringify(id)} blocks publication`, async () => fixture(async (root) => {
+for (const id of ["", null, 42, "../genstart", "genstart/escape", "genstart\\escape", " genstart", "genstart\n", "genstart\u0000", "'leading", "trailing'", "a'1", "a''b", "!!!"]) test(`invalid ID ${JSON.stringify(id)} blocks publication`, async () => fixture(async (root) => {
   await setSource(root, (s) => { s.rows[0]["Podcast-ID"] = id; });
   await assertBlocked(root, /Invalid Podcast-ID/);
+}));
+
+test("internal ASCII apostrophe stays in the Podcast-ID and dry-run leaves existing routes untouched", async () => fixture(async (root) => {
+  await setSource(root, (s) => {
+    const row = structuredClone(s.rows[0]);
+    row["Podcast-ID"] = "ta'r jeg fejl";
+    row.catalogue_id = "catalogue-v1-seo-apostrophe-fixture";
+    row.Titel = "Ta'r jeg fejl?";
+    s.rows.push(row);
+    s.count += 1;
+  });
+  const before = await snapshot(root);
+  const pages = await generateSeoPodcastPages({ root, write: false });
+  assert.deepEqual(await snapshot(root), before, "SEO dry-run does not write files");
+  assert.equal(slugFromPodcastId("ta'r jeg fejl"), "ta-r-jeg-fejl", "slug derivation remains unchanged");
+  assert.equal(JSON.parse(await readFile(path.join(root, "data/podcasts.json"), "utf8")).rows.at(-1)["Podcast-ID"], "ta'r jeg fejl");
+  assert.deepEqual(pages.map(({ id, slug, canonical }) => ({ id, slug, canonical })), baseline.podcasts);
+}));
+
+test("apostrophe-derived slug collision blocks publication", async () => fixture(async (root) => {
+  await setSource(root, (s) => {
+    for (const id of ["ta'r jeg fejl", "ta r jeg fejl"]) {
+      const row = structuredClone(s.rows[0]);
+      row["Podcast-ID"] = id;
+      row.catalogue_id = `catalogue-v1-seo-slug-fixture-${s.count}`;
+      s.rows.push(row);
+      s.count += 1;
+    }
+  });
+  await assertBlocked(root, /Podcast slug collision: ta-r-jeg-fejl/);
 }));
 
 test("invalid JSON never changes existing pages", async () => fixture(async (root) => {
