@@ -51,6 +51,34 @@ class IntakeTests(unittest.TestCase):
         self.assertNotIn('-', Path(path).name)
         self.assertEqual((self.root / self.source).read_bytes(), self.content)
 
+    def test_owner_approved_editorial_cover_is_bound_by_exact_id_and_checksum(self):
+        self.rows[0]['Billedlink'] = self.source
+        self.reg['registrations'][0]['expectedImageUrl'] = ''
+        self.reg['registrations'][0]['artworkKind'] = 'OWNER_APPROVED_EDITORIAL'
+        self.reg['registrations'][0]['evidence'] = 'Owner-approved editorial artwork, not publisher artwork.'
+        self.run_intake()
+        after = json.loads((self.root / MANIFEST).read_text(encoding='utf-8'))
+        self.assertEqual(after['podcasts'][1]['podcastId'], 'sport-id')
+        self.assertEqual(after['podcasts'][1]['manualIntakeSourceChecksum'], digest(self.content))
+
+    def test_owner_approved_editorial_cover_survives_later_sheet_image(self):
+        self.rows[0]['Billedlink'] = 'https://publisher.example/approved-later.jpg'
+        self.reg['registrations'][0]['expectedImageUrl'] = ''
+        self.reg['registrations'][0]['artworkKind'] = 'OWNER_APPROVED_EDITORIAL'
+        self.reg['registrations'][0]['evidence'] = 'Owner-approved editorial artwork, not publisher artwork.'
+        self.run_intake()
+        after = json.loads((self.root / MANIFEST).read_text(encoding='utf-8'))
+        self.assertEqual(after['podcasts'][1]['manualOverride'], True)
+        self.assertEqual(after['podcasts'][1]['manualIntakeSourceChecksum'], digest(self.content))
+
+    def test_editorial_cover_cannot_claim_publisher_image_url(self):
+        self.reg['registrations'][0]['artworkKind'] = 'OWNER_APPROVED_EDITORIAL'
+        self.rejects_without_writes('must not claim a publisher image URL')
+
+    def test_unknown_artwork_classification_rejected(self):
+        self.reg['registrations'][0]['artworkKind'] = 'OFFICIAL_PUBLISHER'
+        self.rejects_without_writes('Unsupported artwork classification')
+
     def test_unknown_and_ambiguous_names_are_reported_never_resolved(self):
         for name in ['unknown.png', 'Magasinet Jennings.png', 'Sport & Perspektiv.png', 'sport-perspektiv.png']:
             (self.root / INBOX / name).write_bytes(self.content)
