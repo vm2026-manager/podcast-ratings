@@ -132,6 +132,27 @@ const workflow = await readFile(
 assert.match(workflow, /cron: "\*\/15 \* \* \* \*"/u);
 assert.match(workflow, /push:[\s\S]*branches:[\s\S]*- main/u);
 assert.match(workflow, /issues: write/u);
+const diagnosticStep = (name) => {
+  const start = workflow.indexOf(`- name: ${name}`);
+  assert.notEqual(start, -1, `${name} exists`);
+  const end = workflow.indexOf("\n      - name:", start + 1);
+  return workflow.slice(start, end === -1 ? undefined : end);
+};
+const sourceFailureSafeCondition = /if: \$\{\{ !cancelled\(\) && steps\.sheet-source-check\.outcome != 'skipped' \}\}/u;
+const shouldRunCatalogueDiagnostics = (sourceCheckOutcome, cancelled = false) =>
+  !cancelled && sourceCheckOutcome !== "skipped";
+for (const name of [
+  "Check scheduled sync freshness and pending catalogue PR age",
+  "Check production catalogue"
+]) {
+  const step = diagnosticStep(name);
+  assert.match(step, sourceFailureSafeCondition, `${name} still runs after a failed source comparison`);
+  assert.doesNotMatch(step, /if:\s*success\(\)/u, `${name} is not gated on prior success`);
+}
+assert.equal(shouldRunCatalogueDiagnostics("failure"), true, "a source drift failure does not suppress read-only diagnostics");
+assert.equal(shouldRunCatalogueDiagnostics("success"), true, "healthy source comparisons still run diagnostics");
+assert.equal(shouldRunCatalogueDiagnostics("skipped"), false, "diagnostics stay skipped if checkout/setup never reaches the source comparison");
+assert.equal(shouldRunCatalogueDiagnostics("failure", true), false, "diagnostics do not run after cancellation");
 assert.match(
   workflow,
   /node scripts\/production-catalogue-health\.mjs 2>&1 \| tee -a \.production-catalogue-health\.log/u

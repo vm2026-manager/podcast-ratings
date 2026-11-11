@@ -53,6 +53,7 @@ jobs:
 
       - name: Check scheduled sync freshness and pending catalogue PR age
         id: pipeline-watch
+        if: ${{ !cancelled() && steps.sheet-source-check.outcome != 'skipped' }}
         env:
           GITHUB_TOKEN: ${{ github.token }}
         shell: bash
@@ -62,6 +63,7 @@ jobs:
 
       - name: Check production catalogue
         id: health-check
+        if: ${{ !cancelled() && steps.sheet-source-check.outcome != 'skipped' }}
         shell: bash
         run: |
           set -o pipefail
