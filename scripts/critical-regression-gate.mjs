@@ -28,6 +28,7 @@ const checks = [
   ["Flashback parent identity preservation", ["scripts/test-flashback-parent-preservation.mjs"]],
   ["catalogue identity alerts", ["scripts/test-catalogue-identity-alert.mjs"]],
   ["catalogue sync PR/token safety contract", ["scripts/test-catalogue-sync-workflow-contract.mjs"]],
+  ["critical regression workflow keeps browser coverage without apt dependency installation", ["scripts/test-critical-regression-workflow.mjs"]],
   ["incomplete catalogue intake and conservative metadata rules", ["scripts/test-catalogue-intake-quality.mjs"]],
   ["catalogue feed reference classification", ["scripts/test-catalogue-feed-quality.mjs"]],
   ["full read-only catalogue quality report and protected baselines", ["scripts/test-catalogue-quality-report.mjs"]],
