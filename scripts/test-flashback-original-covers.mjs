@@ -16,7 +16,8 @@ assert.ok(mapStart >= 0 && mapEnd > mapStart && getterStart >= 0 && getterEnd > 
 const context = {
   getPodcastId: (podcast) => String(podcast?.podcastId ?? "").trim(),
   normalizeText: (value) => String(value ?? "").trim(),
-  TYRAN_OFFICIAL_SQUARE_IMAGE_IDS: {}
+  TYRAN_OFFICIAL_SQUARE_IMAGE_IDS: {},
+  TYRAN_OFFICIAL_SQUARE_IMAGE_FALLBACKS: {}
 };
 context.globalThis = context;
 vm.runInNewContext(`${app.slice(mapStart, mapEnd + 3)}\n${app.slice(getterStart, getterEnd)}\nglobalThis.getSources = getPodcastImageSources; globalThis.flashbackCovers = FLASHBACK_UPLOADED_COVER_BY_ID;`, context);
