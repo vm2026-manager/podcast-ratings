@@ -20,6 +20,9 @@ const context = {
   getExploreMatchedHostName: () => "",
   hostsMatchComparable: () => false
 };
+// The selector consumes the catalogue's common public-row projection; in this
+// isolated ordering test the fixture already contains only ordinary rows.
+context.getOrdinaryPodcastRows = () => context.state.podcasts;
 vm.createContext(context);
 vm.runInContext(`${source.slice(start, end)}; globalThis.select = getPodcastDetailDynamicRecommendations;`, context);
 const selected = Array.from(context.select(sourcePodcast, null), (entry) => entry.item.podcast.id);

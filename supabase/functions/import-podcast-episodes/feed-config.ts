@@ -114,6 +114,27 @@ export const TYRAN_MARCOS_LYD_FULL_FEED_KEY = "tyran_marcos_lyd_full";
 export { RADIO_IIII_FEED_KEY };
 
 export const FEED_CONFIGS: FeedConfigMap = {
+  kampen_om_historien_dr: {
+    podcast_key: "kampen om historien dr",
+    source: "dr_kampen_om_historien_p1_rss",
+    feed_url: "https://api.dr.dk/podcasts/v1/feeds/kampen-om-historien-3.xml?format=podcast",
+    format: "rss",
+    expected_rss_channel_title: "Kampen om historien",
+    expected_rss_unique_guids: true,
+    // The feed is verified, but its import destination and historic episode
+    // identities still require owner approval before activation.
+    enabled: false
+  },
+  podimo_styr_pa_historien: {
+    podcast_key: "kampen om historien",
+    source: "podimo_styr_pa_historien",
+    feed_url: "https://graphql.podimo.com/graphql",
+    format: "podimo_graphql",
+    podimo_show_url: "https://podimo.com/dk/shows/styr-pa-historien",
+    // The show UUID has not been positively verified; keep this route inert.
+    sheet_podimo_identity_required: true,
+    enabled: false
+  },
   sig_noget_klogt_omny: {
     podcast_key: "sig noget klogt",
     source: "omny_sig_noget_klogt_rss",

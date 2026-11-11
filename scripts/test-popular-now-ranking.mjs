@@ -109,7 +109,7 @@ assert.equal(eligible({ key: "many-episodes-one-user", episodeRatingRows: 80 }),
   "the client consumes the existing unique-user aggregate, not raw episode-rating row counts");
 
 const candidatesFactory = new Function(
-  "state", "normalizeMatchKey", "normalizeText", "getLegacyPodcastKey", "getPodcastKey",
+  "state", "getOrdinaryPodcastRows", "normalizeMatchKey", "normalizeText", "getLegacyPodcastKey", "getPodcastKey",
   "getDisplayGroupMemberPodcasts", "createRankingDisplayGroup", "getPopularNowActivityStat",
   "getPopularNow30DayScore", "hasValidPopularNowActivityStat", "hasDocumentedRecentActivity", "isStandaloneSeasonPodcast",
   "deduplicatePodcastResults", "console",
@@ -119,6 +119,7 @@ const candidatesFactory = new Function(
     podcastDisplayGroups: [{ id: "series", rankingEnabled: true, memberLegacyKeys: ["season-one"] }],
     podcasts: [{ key: "outside", legacyKey: "outside" }, { key: "season-one", legacyKey: "season-one" }]
   }),
+  () => state.podcasts,
   (value) => String(value || "").toLowerCase(),
   (value) => String(value || "").toLowerCase(),
   (podcast) => podcast.legacyKey,
