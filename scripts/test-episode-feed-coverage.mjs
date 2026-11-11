@@ -28,6 +28,15 @@ assert.equal(check.findings.find(x => x.podcast_key === "another podimo")?.cause
   "podimo_adapter_review_required");
 assert.equal(check.findings.find(x => x.podcast_key === "ordinary rss")?.cause, "missing_or_disabled_import_adapter",
   "new RSS metadata remains inactive until code explicitly approves it");
+const newRssFinding = check.findings.find(x => x.podcast_key === "ordinary rss");
+assert.equal(newRssFinding?.feed_url, "https://example.test/rss.xml");
+assert.equal(newRssFinding?.source, "sheet_ordinary_rss_rss");
+assert.equal(newRssFinding?.blocking, "explicit_activation_required");
+assert.equal(newRssFinding?.required_approval, "code_owned_source_identity_review_and_explicit_activation");
+const newPodimoFinding = check.findings.find(x => x.podcast_key === "another podimo");
+assert.equal(newPodimoFinding?.feed_url, "https://open.podimo.com/podcast/a0b490b8-907e-4f35-bd48-60eae9f8805b");
+assert.equal(newPodimoFinding?.podimo_show_id, "a0b490b8-907e-4f35-bd48-60eae9f8805b");
+assert.equal(newPodimoFinding?.blocking, "podimo_adapter_review_required");
 assert.ok(!check.findings.some(x => x.podcast_key === "smat brændbart"), "matching Podimo show is covered");
 const [approvedId, approvedFeed] = APPROVED_SHEET_FEED_BASELINE[0];
 const approvedCoverage = checkEpisodeFeedCoverage({ rows: [row(approvedId, approvedFeed)] });

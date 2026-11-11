@@ -62,6 +62,8 @@ export type FeedConfig = {
   // Optional exact identity pins for single-show RSS sources.
   expected_rss_channel_title?: string;
   expected_external_guid_prefix?: string;
+  // Reject an ambiguous feed before importing any item if any GUID repeats.
+  expected_rss_unique_guids?: boolean;
   // A shared RSS feed may contain a previous show's archive. These
   // code-owned bounds require a verified premiere date, GUID anchors, and an
   // exact GUID shape before any post-premiere entries can be imported.
@@ -266,6 +268,25 @@ export const FEED_CONFIGS: FeedConfigMap = {
     source: "dr_genstart_rss",
     format: "dr_lyd_next_data",
     feed_url: "https://www.dr.dk/lyd/special-radio/genstart-2642056922000"
+  },
+
+  "dobbeltliv_dr_rss": {
+    podcast_key: "dobbeltliv",
+    source: "dr_dobbeltliv_rss",
+    format: "rss",
+    feed_url: "https://api.dr.dk/podcasts/v1/feeds/bedraget",
+    expected_rss_channel_title: "Dobbeltliv",
+    expected_external_guid_prefix: "1612259280",
+    expected_rss_unique_guids: true
+  },
+
+  "podimo_112_for_parforhold": {
+    podcast_key: "112 for parforhold",
+    source: "podimo_112_for_parforhold",
+    format: "podimo_graphql",
+    feed_url: "https://graphql.podimo.com/graphql",
+    podcast_id: "556dfd00-ae31-49b0-a346-0bf66eb9b0e3",
+    podimo_show_url: "https://podimo.com/dk/shows/112-for-parforhold"
   },
 
   "det_vi_taler_om": {
