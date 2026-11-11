@@ -36,22 +36,36 @@ export function checkEpisodeFeedCoverage(payload, staticConfigs = FEED_CONFIGS) 
       .some(owned => normalizeKey(owned) === key));
     const enabled = owners.filter(config => config.enabled !== false && config.metadata_only !== true);
     const podimo = parsePodimoShowFeed(feed);
+    const resolution = audit.feed_warnings.find(entry =>
+      normalizeKey(entry.podcast_key) === key && entry.sheet_feed === feed);
+    const adapterSource = owners.find(config => config.format === "podimo_graphql")?.source ||
+      owners.find(config => config.source)?.source ||
+      (podimo ? "podimo_graphql (not approved)" : `sheet_${key.replace(/\s+/gu, "_")}_rss`);
+    const approvalFields = {
+      feed_url: feed,
+      source: adapterSource,
+      blocking: resolution?.reason || null,
+      required_approval: "code_owned_source_identity_review_and_explicit_activation"
+    };
     if (podimo) {
       const reviewedRssOverride = enabled.some(config => config.supersedes_sheet_feed === true &&
         config.format === "rss" && config.expected_rss_channel_title && config.expected_external_guid_prefix);
       const showId = podimo.showId;
       const podimoAdapters = enabled.filter(config => config.format === "podimo_graphql");
       if (podimoAdapters.length && !podimoAdapters.some(config => String(config.podcast_id || "").toLowerCase() === showId)) {
-        findings.push({ podcast_key: podcastKey, title, cause: "podimo_show_id_mismatch" });
+        findings.push({ podcast_key: podcastKey, title, cause: "podimo_show_id_mismatch", ...approvalFields,
+          blocking: "podimo_show_id_mismatch", podimo_show_id: showId });
         continue;
       }
       if (!podimoAdapters.length && !reviewedRssOverride) {
-        findings.push({ podcast_key: podcastKey, title, cause: "podimo_adapter_review_required" });
+        findings.push({ podcast_key: podcastKey, title, cause: "podimo_adapter_review_required", ...approvalFields,
+          blocking: resolution?.reason || "podimo_adapter_review_required", podimo_show_id: showId });
         continue;
       }
     }
     if (!enabled.length) {
-      findings.push({ podcast_key: podcastKey, title, cause: "missing_or_disabled_import_adapter" });
+      findings.push({ podcast_key: podcastKey, title, cause: "missing_or_disabled_import_adapter", ...approvalFields,
+        blocking: resolution?.reason || (owners.length ? "adapter_disabled" : "missing_or_disabled_import_adapter") });
     }
   }
   findings.sort((a, b) => a.podcast_key.localeCompare(b.podcast_key, "da") || a.cause.localeCompare(b.cause));

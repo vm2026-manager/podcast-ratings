@@ -472,6 +472,14 @@ export function validateExpectedRssIdentity(feed: ReturnType<typeof parseFeed>, 
   if (config.expected_rss_channel_title && feed.channel.title !== config.expected_rss_channel_title) {
     throw new Error(`RSS channel identity mismatch: expected ${config.expected_rss_channel_title}`);
   }
+  if (config.expected_rss_unique_guids) {
+    const seen = new Set<string>();
+    for (const item of feed.items) {
+      const guid = normalizeText(item.guid);
+      if (guid && seen.has(guid)) throw new Error("RSS duplicate GUID identity mismatch");
+      if (guid) seen.add(guid);
+    }
+  }
   if (config.expected_external_guid_prefix) {
     const suffixPattern = /^\d+$/;
     const invalid = feed.items.find((item) => {
