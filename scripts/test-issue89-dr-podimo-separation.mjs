@@ -43,9 +43,15 @@ assert.match(app, /openPodcastDetailFromModal\(target, editorialReviewButton\)/u
 assert.match(app, /getDrEditorialReviewMarkup\(podcast\)/u, "detail view renders the review context");
 assert.match(css, /podcast-detail-sheet__dr-editorial-reviews[\s\S]*?focus-visible/u,
   "review links have responsive, keyboard-visible focus styles");
-assert.match(proposal, /Ark1-række \| Kolonne/u);
-for (const rowNumber of [122, 439, 447]) assert.match(proposal, new RegExp(`\\| ${rowNumber} \\|`, "u"));
-assert.match(proposal, /showets UUID er ikke positivt verificeret/u);
+assert.match(proposal, /G123/u);
+assert.match(proposal, /G440/u);
+assert.match(proposal, /B448.*J448.*L448.*M448.*O448.*X448/u);
+assert.match(proposal, /A1371:Y1371/u);
+assert.match(proposal, /må aldrig bruges som mål/u);
+assert.match(proposal, /Ved manglende ID, flere matches eller én eneste afvigelse: stop uden writes/u);
+assert.match(proposal, /bekræftede, at redaktionel score `5,8` tilhører Podimos/u);
+assert.match(proposal, /asset-UUID er \*\*ikke\*\* Podimo-showets UUID/u);
+assert.match(proposal, /Podimo-showets UUID verificeres positivt/u);
 
 const drConfig = FEED_CONFIGS.kampen_om_historien_dr;
 assert.equal(drConfig.podcast_key, "kampen om historien dr");
@@ -113,6 +119,7 @@ try {
   await page.addScriptTag({ content: `
     window.__issue89OpenParent = async () => {
       const source = await fetch('/data/podcasts.json').then((response) => response.json());
+      window.__issue89SourceRows = source.rows;
       applyPodcastDataRefresh(source.rows, [], {}, []);
       const parent = state.podcastById['kampen om historien dr'];
       if (!parent || parent.ratingValue != null) throw new Error('DR parent missing or has a score');
@@ -142,6 +149,32 @@ try {
     [reviewIds[0], 7.7], [reviewIds[1], 5.9]
   ], "the DR parent stores the two original scores separately and has no aggregated rating");
   assert.ok(fixture.parentSearchText.includes("rwanda - verdens hurtigste folkemord"), "searching a reviewed episode title can find its parent podcast");
+
+  const generatedSheetParent = await page.evaluate(() => {
+    const generatedDrRow = {
+      "Podcast-ID": "kampen om historien dr",
+      Titel: "Kampen om historien",
+      Genre: "Historie",
+      Udgiver: "DR",
+      Link: "https://www.dr.dk/lyd/p1/kampen-om-historien-3166339029000",
+      Feed: "https://api.dr.dk/podcasts/v1/feeds/kampen-om-historien-3.xml?format=podcast",
+      Billedlink: "https://api.dr.dk/podcasts/v1/images/urn:dr:podcast:image:69b92600196d91f77288ecdc.jpg"
+    };
+    applyPodcastDataRefresh([...window.__issue89SourceRows, generatedDrRow], [], {}, []);
+    const parents = state.podcasts.filter((podcast) => getPodcastId(podcast) === "kampen om historien dr");
+    return {
+      count: parents.length,
+      id: getPodcastId(state.podcastById["kampen om historien dr"]),
+      title: state.podcastById["kampen om historien dr"]?.title,
+      attachedReviews: state.podcastById["kampen om historien dr"]?.editorialEpisodeReviews?.length
+    };
+  });
+  assert.deepEqual(generatedSheetParent, {
+    count: 1,
+    id: "kampen om historien dr",
+    title: "Kampen om historien",
+    attachedReviews: 2
+  }, "an exact-ID Sheet-generated DR row replaces the local fallback without duplication or review loss");
 
   for (const width of [320, 375, 390, 768, 1024, 1440]) {
     await page.setViewportSize({ width, height: 900 });
