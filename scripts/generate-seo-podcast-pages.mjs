@@ -19,6 +19,7 @@ export const PILOT_PODCAST_IDS = [
 
 export function slugFromPodcastId(id) {
   return String(id ?? "").trim().toLowerCase()
+    .replace(/'/g, "")
     .replace(/æ/g, "ae").replace(/ø/g, "oe").replace(/å/g, "aa")
     .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
     .replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
