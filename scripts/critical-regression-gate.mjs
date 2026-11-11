@@ -22,6 +22,7 @@ const checks = [
   ["Sidste nedtælling exact Podimo identity, health and idempotency", ["--experimental-strip-types", "scripts/test-sidste-nedtaelling-podimo.mjs"]],
   ["Bounded cross-source episode URL lookup preserves existing IDs", ["--experimental-strip-types", "scripts/test-cross-source-episode-url-batching.mjs"]],
   ["Episode feed configuration coverage", ["--experimental-strip-types", "scripts/test-episode-feed-coverage.mjs"]],
+  ["Fri Mads metadata-only discovery and exact URL identity", ["scripts/test-fri-mads-discovery.mjs"]],
   ["Bounded production episode post-import monitoring", ["--experimental-strip-types", "scripts/test-episode-feed-post-import.mjs"]],
   ["Sig noget klogt bounded RSS identity and single-episode visibility", ["--experimental-strip-types", "scripts/test-sig-noget-klogt-feed-boundary.mjs"]],
   ["sheet access source isolation", ["scripts/test-sync-sheet-access.mjs"]],

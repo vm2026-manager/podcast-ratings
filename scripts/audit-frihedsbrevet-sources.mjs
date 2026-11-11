@@ -317,6 +317,11 @@ export function parseRssEvidence(xmlText, { expectedChannelTitle } = {}) {
     const item = {
       title: xmlTag(block, "title"),
       guid: xmlTag(block, "guid"),
+      link: xmlTag(block, "link"),
+      author: xmlTag(block, "dc:creator") || xmlTag(block, "author"),
+      categories: [...block.matchAll(/<(?:[\w.-]+:)?category(?:\s[^>]*)?>([\s\S]*?)<\/(?:[\w.-]+:)?category\s*>/giu)]
+        .map((category) => decodeXml(category[1]))
+        .filter(Boolean),
       publishedAt: xmlTag(block, "pubDate"),
       episodeType: xmlTag(block, "itunes:episodeType"),
       hasEnclosure: enclosures.length > 0,
