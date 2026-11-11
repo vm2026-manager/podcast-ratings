@@ -17,7 +17,7 @@ on:
       - "scripts/audit-frihedsbrevet-sources.mjs"
       - "scripts/discover-fri-mads-releases.mjs"
       - "scripts/test-fri-mads-discovery.mjs"
-      - "scripts/fixtures/fri-mads-rss-snapshot.mjs"
+      - "scripts/fixtures/fri-mads-overview-snapshot.mjs"
       - "docs/fri-mads-discovery.md"
       - ".github/workflows/episode-feed-coverage.yml"
 

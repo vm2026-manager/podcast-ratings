@@ -1,22 +1,31 @@
 import path from "node:path";
 import { pathToFileURL } from "node:url";
-import { parseRssEvidence } from "./audit-frihedsbrevet-sources.mjs";
 
-export const FRI_MADS_PUBLIC_FEED_URL = "https://frihedsbrevet.dk/feed/";
+export const FRI_MADS_OVERVIEW_URL = "https://frihedsbrevet.dk/nyhedsbrev/fri-mads/";
+export const FRI_MADS_SECOND_PAGE_URL = "https://frihedsbrevet.dk/nyhedsbrev/fri-mads/?paginate=2";
+export const FRI_MADS_PUBLISHER_FEED_URL = "https://frihedsbrevet.dk/feed/";
 export const FRI_MADS_PODCAST_ID = "fri mads";
 export const FRI_MADS_CATALOGUE_ID = "catalogue-v1-d94fc39e";
 export const FRI_MADS_ACCESS_TYPE = "paid";
 export const FRI_MADS_HISTORICAL_SOURCE_URL = "https://frihedsbrevet.dk/fri-mads-140-verden-af-i-gaar/";
 export const FRI_MADS_BASELINE_NUMBER = 172;
-export const FRI_MADS_MAX_RESPONSE_BYTES = 262144;
+export const FRI_MADS_MAX_RESPONSE_BYTES = 524288;
 export const FRI_MADS_REQUEST_TIMEOUT_MS = 8000;
+export const FRI_MADS_MAX_NEW_RELEASES = 27;
 
 const SERIES_TITLE = /^Fri Mads #([1-9]\d*):\s*(.+)$/u;
-const SERIES_MARKER = /^Fri Mads(?:\s|$)/u;
 const PERMALINK = /^\/fri-mads-(\d+)-[a-z0-9-]+\/$/u;
 const TEASER = /(?:^|\b)(?:teaser|trailer|smagsprøve|uddrag)(?:\b|$)/iu;
 const JWT_LIKE = /\beyJ[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}\b/u;
 const SENSITIVE_QUERY = /(?:^|[?&])(?:token|access_token|auth_token|api_key|api-key|key|signature|sig)=/iu;
+const DANISH_MONTHS = new Map([
+  ["januar", 1], ["februar", 2], ["marts", 3], ["april", 4], ["maj", 5], ["juni", 6],
+  ["juli", 7], ["august", 8], ["september", 9], ["oktober", 10], ["november", 11], ["december", 12]
+]);
+
+class OverviewParseError extends Error {
+  constructor(code) { super(code); this.code = code; }
+}
 
 function baseReport(afterNumber) {
   return {
@@ -28,17 +37,64 @@ function baseReport(afterNumber) {
     catalogueWrites: 0,
     episodeImports: 0,
     articleRequests: 0,
-    sourceFeed: FRI_MADS_PUBLIC_FEED_URL,
+    sourceOverview: FRI_MADS_OVERVIEW_URL,
+    supplementalFeed: "not_requested_overview_is_primary",
     podcastId: FRI_MADS_PODCAST_ID,
     catalogueId: FRI_MADS_CATALOGUE_ID,
     accessType: FRI_MADS_ACCESS_TYPE,
     afterNumber,
     status: "unavailable",
     reasonCodes: [],
-    feedItemCount: 0,
+    overviewItemCount: 0,
     candidateCount: 0,
+    pagesRequested: [],
     releases: []
   };
+}
+
+function decodeHtmlEntities(value) {
+  return String(value ?? "").replace(/&(#x[\da-f]{1,6}|#\d{1,7}|amp|lt|gt|quot|apos|nbsp|shy);/giu, (entity, name) => {
+    const normalized = name.toLowerCase();
+    if (normalized === "amp") return "&";
+    if (normalized === "lt") return "<";
+    if (normalized === "gt") return ">";
+    if (normalized === "quot") return '"';
+    if (normalized === "apos") return "'";
+    if (normalized === "nbsp") return "\u00a0";
+    if (normalized === "shy") return "\u00ad";
+    const codePoint = normalized.startsWith("#x")
+      ? Number.parseInt(normalized.slice(2), 16)
+      : Number.parseInt(normalized.slice(1), 10);
+    if (!Number.isInteger(codePoint) || codePoint < 1 || codePoint > 0x10ffff || (codePoint >= 0xd800 && codePoint <= 0xdfff)) return "\ufffd";
+    return String.fromCodePoint(codePoint);
+  });
+}
+
+function textContent(markup) {
+  return decodeHtmlEntities(String(markup ?? "")
+    .replace(/<!--[\s\S]*?-->/gu, " ")
+    .replace(/<script\b[^>]*>[\s\S]*?<\/script\s*>/giu, " ")
+    .replace(/<style\b[^>]*>[\s\S]*?<\/style\s*>/giu, " ")
+    .replace(/<[^>]*>/gu, " "))
+    .replace(/[\u00ad\u200b\ufeff]/gu, "")
+    .replace(/\s+/gu, " ")
+    .normalize("NFC")
+    .trim();
+}
+
+function attributes(tag) {
+  const result = new Map();
+  const source = String(tag || "").replace(/^<\w+/u, "").replace(/>$/u, "");
+  const pattern = /([^\s=/>]+)\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s>]+))/gu;
+  for (const match of source.matchAll(pattern)) result.set(match[1].toLowerCase(), decodeHtmlEntities(match[2] ?? match[3] ?? match[4] ?? ""));
+  return result;
+}
+
+function safeText(value, maxLength) {
+  const text = String(value ?? "").normalize("NFC").trim();
+  if (!text || text.length > maxLength || /[\u0000-\u001f\u007f]/u.test(text) ||
+      JWT_LIKE.test(text) || SENSITIVE_QUERY.test(text) || /\bBearer\s+/iu.test(text)) return null;
+  return text;
 }
 
 function exactCanonicalArticleUrl(value) {
@@ -52,201 +108,201 @@ function exactCanonicalArticleUrl(value) {
   return { url: url.href, number: Number(match[1]) };
 }
 
-function safeText(value, maxLength) {
-  const text = String(value ?? "").normalize("NFC").trim();
-  if (!text || text.length > maxLength || /[\u0000-\u001f\u007f]/u.test(text) ||
-      JWT_LIKE.test(text) || SENSITIVE_QUERY.test(text) || /\bBearer\s+/iu.test(text)) return null;
-  return text;
+function publicationDate(value) {
+  const match = String(value || "").trim().match(/^(\d{1,2})\.\s+([\p{L}]+)\s+(\d{4})\s+kl\.\s+(\d{2}):(\d{2})$/iu);
+  if (!match) return null;
+  const day = Number(match[1]);
+  const month = DANISH_MONTHS.get(match[2].toLocaleLowerCase("da-DK"));
+  const year = Number(match[3]);
+  const hour = Number(match[4]);
+  const minute = Number(match[5]);
+  if (!month || hour > 23 || minute > 59) return null;
+  const date = new Date(Date.UTC(year, month - 1, day));
+  if (date.getUTCFullYear() !== year || date.getUTCMonth() !== month - 1 || date.getUTCDate() !== day) return null;
+  return `${String(year).padStart(4, "0")}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
 }
 
-function sourceGuidEvidence(item, canonicalUrl, guidCounts) {
-  const guid = String(item.guid || "").trim();
-  if (!guid) return { sourceGuid: null, sourceGuidStatus: "missing" };
-  if ((guidCounts.get(guid) || 0) !== 1) return { sourceGuid: null, sourceGuidStatus: "not_unique_in_feed" };
-  if (JWT_LIKE.test(guid) || SENSITIVE_QUERY.test(guid) || /\bBearer\s+/iu.test(guid)) {
-    return { sourceGuid: null, sourceGuidStatus: "unsafe_withheld" };
+function matchingClass(elements, className) {
+  return elements.filter((match) => (attributes(match[1]).get("class") || "").split(/\s+/u).includes(className));
+}
+
+function extractCard(anchorTag, anchorBody) {
+  const attrs = attributes(anchorTag);
+  const cardClass = (attrs.get("class") || "").split(/\s+/u);
+  if (!cardClass.includes("post-card") && !cardClass.includes("post-card-link")) throw new OverviewParseError("overview_markup_changed");
+
+  const titleTags = [...anchorBody.matchAll(/<h3\b([^>]*)>([\s\S]*?)<\/h3\s*>/giu)];
+  const categoryTags = [...anchorBody.matchAll(/<p\b([^>]*)>([\s\S]*?)<\/p\s*>/giu)];
+  const metadataBlocks = [];
+  for (const match of anchorBody.matchAll(/<div\b([^>]*)>/giu)) {
+    if (!/(?:article-meta|post-card-meta)/u.test(attributes(match[1]).get("class") || "")) continue;
+    const bodyStart = match.index + match[0].length;
+    const closeAt = anchorBody.slice(bodyStart).search(/<\/div\s*>/iu);
+    if (closeAt < 0) throw new OverviewParseError("overview_markup_changed");
+    metadataBlocks.push(anchorBody.slice(bodyStart, bodyStart + closeAt));
   }
-  try {
-    const url = new URL(guid);
-    if (url.protocol !== "https:" || url.origin !== "https://frihedsbrevet.dk" ||
-        url.username || url.password || url.search || url.hash || url.href !== canonicalUrl) {
-      return { sourceGuid: null, sourceGuidStatus: "noncanonical_withheld" };
-    }
-    return { sourceGuid: guid, sourceGuidStatus: "verified_unique" };
-  } catch {
-    if (!/^[A-Za-z0-9._:-]{1,200}$/u.test(guid)) return { sourceGuid: null, sourceGuidStatus: "unsafe_withheld" };
-    return { sourceGuid: guid, sourceGuidStatus: "verified_unique" };
+  const recognizedTitles = titleTags.filter((match) => {
+    const classes = (attributes(match[1]).get("class") || "").split(/\s+/u);
+    return classes.includes("c-post-card__title") || classes.includes("post-card-headline");
+  });
+  const recognizedCategories = categoryTags.filter((match) => {
+    const classes = (attributes(match[1]).get("class") || "").split(/\s+/u);
+    return (classes.includes("c-post-card__category__title") || classes.includes("post-card-category--title")) && textContent(match[2]) === "Fri Mads";
+  });
+  if (recognizedTitles.length !== 1 || recognizedCategories.length !== 1 || metadataBlocks.length !== 1) {
+    throw new OverviewParseError("overview_markup_changed");
   }
+  const title = textContent(recognizedTitles[0][2]);
+  const series = title.match(SERIES_TITLE);
+  const spans = [...metadataBlocks[0].matchAll(/<span\b[^>]*>([\s\S]*?)<\/span\s*>/giu)].map((match) => textContent(match[1]));
+  if (!series || spans.length !== 2 || !spans[0].startsWith("Af ")) throw new OverviewParseError("overview_metadata_changed");
+  const author = safeText(spans[0].slice(3), 120);
+  const date = publicationDate(spans[1]);
+  if (!author || !date || !safeText(title, 300)) throw new OverviewParseError("overview_metadata_changed");
+
+  const href = attrs.get("href");
+  const canonical = exactCanonicalArticleUrl(href);
+  if (!canonical) throw new OverviewParseError("untrusted_or_invalid_permalink");
+  const titleNumber = Number(series[1]);
+  if ((titleNumber === 140 && canonical.url !== FRI_MADS_HISTORICAL_SOURCE_URL) ||
+      (canonical.url === FRI_MADS_HISTORICAL_SOURCE_URL && titleNumber !== 140)) {
+    throw new OverviewParseError("historical_source_conflict");
+  }
+  if (titleNumber !== canonical.number) throw new OverviewParseError("number_permalink_conflict");
+  if (TEASER.test(title)) throw new OverviewParseError("teaser_or_trailer");
+  return { number: titleNumber, title, publishedDate: date, url: canonical.url, author };
 }
 
-function normalizePublicationDate(value) {
-  const raw = String(value || "").trim();
-  if (!raw) return { value: null, invalid: false };
-  const timestamp = Date.parse(raw);
-  return Number.isFinite(timestamp)
-    ? { value: new Date(timestamp).toISOString(), invalid: false }
-    : { value: null, invalid: true };
+export function parseFriMadsOverview(html) {
+  if (typeof html !== "string" || !html.trim() || new TextEncoder().encode(html).byteLength > FRI_MADS_MAX_RESPONSE_BYTES) {
+    throw new OverviewParseError("invalid_or_unreadable_overview");
+  }
+  if (!/<html\b[\s\S]*<\/html\s*>/iu.test(html)) throw new OverviewParseError("overview_markup_changed");
+
+  const records = [];
+  const anchorPattern = /<a\b([^>]*)>([\s\S]*?)<\/a\s*>/giu;
+  for (const match of html.matchAll(anchorPattern)) {
+    const attrs = attributes(`<a ${match[1]}>`);
+    const href = attrs.get("href") || "";
+    let pathname = "";
+    try { pathname = new URL(href, FRI_MADS_OVERVIEW_URL).pathname; } catch { /* non-series links are ignored */ }
+    if (!/fri-mads-/iu.test(pathname)) continue;
+    records.push(extractCard(`<a ${match[1]}>`, match[2]));
+  }
+  if (records.length > 50) throw new OverviewParseError("overview_item_limit_exceeded");
+  if (records.length === 0) throw new OverviewParseError("empty_source");
+
+  const numbers = new Set();
+  const urls = new Set();
+  for (const record of records) {
+    if (numbers.has(record.number)) throw new OverviewParseError("duplicate_release_number");
+    if (urls.has(record.url)) throw new OverviewParseError("duplicate_permalink");
+    numbers.add(record.number);
+    urls.add(record.url);
+  }
+  const descending = [...records].sort((left, right) => right.number - left.number);
+  for (let index = 1; index < descending.length; index += 1) {
+    if (descending[index - 1].number - descending[index].number !== 1) throw new OverviewParseError("release_number_gap");
+  }
+  return descending;
 }
 
-export function discoverFriMadsArticles(xml, { afterNumber = FRI_MADS_BASELINE_NUMBER } = {}) {
+function failure(afterNumber, status, code, extra = {}) {
+  return { ...baseReport(afterNumber), ...extra, status, reasonCodes: [code], releases: [] };
+}
+
+function buildDiscovery(firstPageHtml, { afterNumber = FRI_MADS_BASELINE_NUMBER, secondPageHtml = null } = {}) {
   const report = baseReport(afterNumber);
-  if (!Number.isSafeInteger(afterNumber) || afterNumber < 0) {
-    return { ...report, status: "invalid_cursor", reasonCodes: ["invalid_after_number"] };
+  if (!Number.isSafeInteger(afterNumber) || afterNumber < 0) return { ...report, status: "invalid_cursor", reasonCodes: ["invalid_after_number"] };
+
+  let firstPage;
+  let secondPage = [];
+  try {
+    firstPage = parseFriMadsOverview(firstPageHtml);
+    if (secondPageHtml !== null) secondPage = parseFriMadsOverview(secondPageHtml);
+  } catch (error) {
+    const code = error instanceof OverviewParseError ? error.code : "overview_markup_changed";
+    return failure(afterNumber, code === "empty_source" ? "empty_source" : "source_invalid", code);
   }
+  report.overviewItemCount = firstPage.length + secondPage.length;
 
-  let evidence;
-  try { evidence = parseRssEvidence(xml, { expectedChannelTitle: "Frihedsbrevet" }); }
-  catch { return { ...report, status: "source_invalid", reasonCodes: ["invalid_xml"] }; }
-  report.feedItemCount = evidence.itemCount;
-  if (!evidence.channelMatches) {
-    return { ...report, status: "identity_conflict", reasonCodes: ["wrong_channel_identity"] };
+  const firstMinimum = firstPage.at(-1).number;
+  const hasNewer = firstPage[0].number > afterNumber;
+  if (hasNewer && firstMinimum > afterNumber + 1 && secondPageHtml === null) {
+    return { ...report, status: "pagination_required", reasonCodes: ["older_page_needed_for_incremental_boundary"], candidateCount: firstPage.length };
   }
-  if (!evidence.itemCount) return { ...report, status: "empty_feed", reasonCodes: ["empty_feed"] };
-
-  const guidCounts = new Map();
-  for (const item of evidence.items) {
-    const guid = String(item.guid || "").trim();
-    if (guid) guidCounts.set(guid, (guidCounts.get(guid) || 0) + 1);
-  }
-
-  const candidates = [];
-  const conflicts = [];
-  const rejected = [];
-  for (const item of evidence.items) {
-    const title = String(item.title || "").trim();
-    const categories = Array.isArray(item.categories) ? item.categories : [];
-    const hasSeriesCategory = categories.includes("Fri Mads");
-    const titleHasSeriesMarker = SERIES_MARKER.test(title);
-    if (!hasSeriesCategory && !titleHasSeriesMarker) continue;
-
-    const titleMatch = title.match(SERIES_TITLE);
-    if (!hasSeriesCategory || !titleMatch) {
-      conflicts.push("series_marker_mismatch");
-      continue;
+  if (secondPageHtml !== null) {
+    const secondMaximum = secondPage[0].number;
+    if (firstMinimum - secondMaximum !== 1) {
+      return { ...report, status: "identity_conflict", reasonCodes: ["pagination_boundary_gap"], candidateCount: firstPage.length + secondPage.length };
     }
-    const titleNumber = Number(titleMatch[1]);
-    const canonical = exactCanonicalArticleUrl(item.link);
-    if (!canonical) {
-      conflicts.push("untrusted_or_invalid_permalink");
-      continue;
+    const combined = [...firstPage, ...secondPage].sort((left, right) => right.number - left.number);
+    const numbers = new Set();
+    const urls = new Set();
+    for (const record of combined) {
+      if (numbers.has(record.number)) return { ...report, status: "identity_conflict", reasonCodes: ["duplicate_release_number"], candidateCount: combined.length };
+      if (urls.has(record.url)) return { ...report, status: "identity_conflict", reasonCodes: ["duplicate_permalink"], candidateCount: combined.length };
+      numbers.add(record.number);
+      urls.add(record.url);
     }
-    if ((titleNumber === 140 && canonical.url !== FRI_MADS_HISTORICAL_SOURCE_URL) ||
-        (canonical.url === FRI_MADS_HISTORICAL_SOURCE_URL && titleNumber !== 140)) {
-      conflicts.push("historical_source_conflict");
-      continue;
-    }
-    if (canonical.number !== titleNumber) {
-      conflicts.push("number_permalink_conflict");
-      continue;
-    }
-
-    const date = normalizePublicationDate(item.publishedAt);
-    if (date.invalid) {
-      conflicts.push("invalid_publication_date");
-      continue;
-    }
-    if (title.length > 300 || !safeText(title, 300)) {
-      conflicts.push("unsafe_title_withheld");
-      continue;
-    }
-
-    if (item.classification === "trailer" || TEASER.test(title) || TEASER.test(String(item.episodeType || ""))) {
-      rejected.push("teaser_or_trailer");
-      continue;
-    }
-    if (item.hasAudioEnclosure) {
-      rejected.push("audio_requires_separate_review");
-      continue;
-    }
-    candidates.push({
-      number: titleNumber,
-      title,
-      publishedAt: date.value,
-      url: canonical.url,
-      author: safeText(item.author, 120),
-      ...sourceGuidEvidence(item, canonical.url, guidCounts)
-    });
-  }
-
-  if (conflicts.length) {
-    return {
-      ...report,
-      status: "identity_conflict",
-      candidateCount: candidates.length,
-      reasonCodes: [...new Set(conflicts)].sort()
-    };
-  }
-
-  const seenNumbers = new Set();
-  const seenUrls = new Set();
-  for (const candidate of candidates) {
-    if (seenNumbers.has(candidate.number)) conflicts.push("duplicate_release_number");
-    if (seenUrls.has(candidate.url)) conflicts.push("duplicate_permalink");
-    seenNumbers.add(candidate.number);
-    seenUrls.add(candidate.url);
-  }
-  if (conflicts.length) {
-    return {
-      ...report,
-      status: "identity_conflict",
-      candidateCount: candidates.length,
-      reasonCodes: [...new Set(conflicts)].sort()
-    };
-  }
-
-  if (!candidates.length) {
-    return rejected.length
-      ? { ...report, status: "no_eligible_releases", reasonCodes: [...new Set(rejected)].sort() }
-      : { ...report, status: "series_absent_from_feed_window", reasonCodes: ["no_exact_fri_mads_item"] };
-  }
-
-  const newCandidates = candidates.filter((candidate) => candidate.number > afterNumber)
-    .sort((left, right) => left.number - right.number);
-  if (newCandidates.length) {
-    let expectedNumber = afterNumber + 1;
-    for (const candidate of newCandidates) {
-      if (candidate.number !== expectedNumber) {
-        return { ...report, status: "identity_conflict", candidateCount: candidates.length, reasonCodes: ["release_number_gap"] };
+    for (let index = 1; index < combined.length; index += 1) {
+      if (combined[index - 1].number - combined[index].number !== 1) {
+        return { ...report, status: "identity_conflict", reasonCodes: ["release_number_gap"], candidateCount: combined.length };
       }
-      expectedNumber += 1;
+    }
+    firstPage = combined;
+  }
+
+  const newRecords = firstPage.filter((record) => record.number > afterNumber).sort((left, right) => left.number - right.number);
+  if (newRecords.length > FRI_MADS_MAX_NEW_RELEASES) {
+    return { ...report, status: "identity_conflict", reasonCodes: ["incremental_window_exceeded"], candidateCount: firstPage.length };
+  }
+  for (let index = 0; index < newRecords.length; index += 1) {
+    if (newRecords[index].number !== afterNumber + index + 1) {
+      return { ...report, status: "identity_conflict", reasonCodes: ["release_number_gap"], candidateCount: firstPage.length };
     }
   }
 
-  const releases = newCandidates
-    .map((candidate) => ({
-      releaseId: "fri-mads:" + candidate.number + ":" + candidate.url,
-      podcastId: FRI_MADS_PODCAST_ID,
-      catalogueId: FRI_MADS_CATALOGUE_ID,
-      releaseNumber: candidate.number,
-      title: candidate.title,
-      publishedAt: candidate.publishedAt,
-      canonicalUrl: candidate.url,
-      author: candidate.author,
-      sourceGuid: candidate.sourceGuid,
-      sourceGuidStatus: candidate.sourceGuidStatus,
-      accessType: FRI_MADS_ACCESS_TYPE,
-      contentKind: "article",
-      metadataOnly: true,
-      playable: false,
-      rateable: false,
-      audioUrl: null
-    }));
+  const releases = newRecords.map((record) => ({
+    releaseId: `fri-mads:${record.number}:${record.url}`,
+    podcastId: FRI_MADS_PODCAST_ID,
+    catalogueId: FRI_MADS_CATALOGUE_ID,
+    releaseNumber: record.number,
+    title: record.title,
+    publishedDate: record.publishedDate,
+    canonicalUrl: record.url,
+    author: record.author,
+    sourceGuid: null,
+    sourceGuidStatus: "official_overview_has_no_guid",
+    accessType: FRI_MADS_ACCESS_TYPE,
+    contentKind: "article",
+    metadataOnly: true,
+    playable: false,
+    rateable: false,
+    audioUrl: null
+  }));
 
   return {
     ...report,
-    status: releases.length ? "new_metadata_discovered" : rejected.length ? "no_eligible_releases" : "no_new_releases",
-    candidateCount: candidates.length,
-    reasonCodes: [...new Set(rejected)].sort(),
+    status: releases.length ? "new_metadata_discovered" : "no_new_releases",
+    candidateCount: firstPage.length,
+    reasonCodes: [],
     releases
   };
 }
 
-async function readBoundedRss(response) {
+export function discoverFriMadsArticles(firstPageHtml, options = {}) {
+  return buildDiscovery(firstPageHtml, options);
+}
+
+async function readBoundedHtml(response) {
+  const contentType = String(response.headers?.get?.("content-type") || "").toLowerCase();
+  if (!contentType.includes("text/html")) throw new OverviewParseError("unexpected_content_type");
   const declaredBytes = Number(response.headers?.get?.("content-length") || 0);
-  if (declaredBytes > FRI_MADS_MAX_RESPONSE_BYTES) throw new Error("response_too_large");
+  if (declaredBytes > FRI_MADS_MAX_RESPONSE_BYTES) throw new OverviewParseError("response_too_large");
   if (!response.body?.getReader) {
     const text = await response.text();
-    if (new TextEncoder().encode(text).byteLength > FRI_MADS_MAX_RESPONSE_BYTES) throw new Error("response_too_large");
+    if (new TextEncoder().encode(text).byteLength > FRI_MADS_MAX_RESPONSE_BYTES) throw new OverviewParseError("response_too_large");
     return text;
   }
   const reader = response.body.getReader();
@@ -258,53 +314,51 @@ async function readBoundedRss(response) {
     bytes += part.value.byteLength;
     if (bytes > FRI_MADS_MAX_RESPONSE_BYTES) {
       await reader.cancel();
-      throw new Error("response_too_large");
+      throw new OverviewParseError("response_too_large");
     }
     chunks.push(part.value);
   }
   const merged = new Uint8Array(bytes);
   let offset = 0;
-  for (const chunk of chunks) {
-    merged.set(chunk, offset);
-    offset += chunk.byteLength;
-  }
+  for (const chunk of chunks) { merged.set(chunk, offset); offset += chunk.byteLength; }
   try { return new TextDecoder("utf-8", { fatal: true }).decode(merged); }
-  catch { throw new Error("invalid_encoding"); }
+  catch { throw new OverviewParseError("invalid_encoding"); }
 }
 
-export async function runFriMadsDiscovery({ fetchImpl = fetch, afterNumber = FRI_MADS_BASELINE_NUMBER } = {}) {
-  const report = baseReport(afterNumber);
-  if (!Number.isSafeInteger(afterNumber) || afterNumber < 0) {
-    return { ...report, status: "invalid_cursor", reasonCodes: ["invalid_after_number"] };
-  }
+async function fetchOverview(url, fetchImpl) {
   let response;
   try {
-    response = await fetchImpl(FRI_MADS_PUBLIC_FEED_URL, {
+    response = await fetchImpl(url, {
       method: "GET",
-      headers: { accept: "application/rss+xml, application/xml, text/xml" },
+      headers: { accept: "text/html" },
       redirect: "error",
       signal: AbortSignal.timeout(FRI_MADS_REQUEST_TIMEOUT_MS)
     });
   } catch (error) {
-    return {
-      ...report,
-      status: "source_unavailable",
-      reasonCodes: [error?.name === "TimeoutError" || error?.name === "AbortError" ? "source_timeout" : "source_request_failed"]
-    };
+    return { error: error?.name === "TimeoutError" || error?.name === "AbortError" ? "source_timeout" : "source_request_failed" };
   }
-  if (!response.ok) {
-    return { ...report, status: "source_unavailable", reasonCodes: ["source_http_" + response.status] };
+  if (!response.ok) return { error: `source_http_${response.status}` };
+  try { return { html: await readBoundedHtml(response) }; }
+  catch (error) { return { error: error instanceof OverviewParseError ? error.code : "invalid_or_unreadable_response" }; }
+}
+
+export async function runFriMadsDiscovery({ fetchImpl = fetch, afterNumber = FRI_MADS_BASELINE_NUMBER } = {}) {
+  const report = baseReport(afterNumber);
+  if (!Number.isSafeInteger(afterNumber) || afterNumber < 0) return { ...report, status: "invalid_cursor", reasonCodes: ["invalid_after_number"] };
+  const first = await fetchOverview(FRI_MADS_OVERVIEW_URL, fetchImpl);
+  if (first.error) {
+    const status = first.error.startsWith("source_http_") ? "source_unavailable" : "source_unavailable";
+    return { ...report, status, reasonCodes: [first.error], pagesRequested: [FRI_MADS_OVERVIEW_URL] };
   }
-  let xml;
-  try { xml = await readBoundedRss(response); }
-  catch (error) {
-    return {
-      ...report,
-      status: "source_unavailable",
-      reasonCodes: [error?.message === "response_too_large" ? "response_too_large" : "invalid_or_unreadable_response"]
-    };
-  }
-  return discoverFriMadsArticles(xml, { afterNumber });
+  let result = buildDiscovery(first.html, { afterNumber });
+  result.pagesRequested = [FRI_MADS_OVERVIEW_URL];
+  if (result.status !== "pagination_required") return result;
+
+  const second = await fetchOverview(FRI_MADS_SECOND_PAGE_URL, fetchImpl);
+  if (second.error) return { ...report, status: "source_unavailable", reasonCodes: [second.error], pagesRequested: [FRI_MADS_OVERVIEW_URL, FRI_MADS_SECOND_PAGE_URL] };
+  result = buildDiscovery(first.html, { afterNumber, secondPageHtml: second.html });
+  result.pagesRequested = [FRI_MADS_OVERVIEW_URL, FRI_MADS_SECOND_PAGE_URL];
+  return result;
 }
 
 async function main() {

@@ -55,6 +55,18 @@
       "expectedImageUrl": "",
       "verdict": "VERIFIED",
       "evidence": "The owner explicitly supplied and approved these exact 1254x1254 image bytes for canonical Podcast-ID der var engang et mal on 2026-11-04. This is owner-approved Podcastlisten editorial artwork, not an official Mediano cover. Original checksum verified; no cropping, generated content, overlays or typography."
+    },
+    {
+      "sourcePath": "assets/podcast-covers/manual-inbox/krigen_i_bosnien_editorial.png",
+      "sourceSha256": "eabde7a7ab0a05313516fda1d9c863c6f59968f60ba8fc4124534922d65bf1da",
+      "podcastId": "krigen i bosnien",
+      "stableKey": "krigen_i_bosnien_editorial",
+      "expectedTitle": "Krigen i Bosnien",
+      "expectedPublisher": "Politiken",
+      "expectedImageUrl": "",
+      "artworkKind": "OWNER_APPROVED_EDITORIAL",
+      "verdict": "VERIFIED",
+      "evidence": "Owner-supplied, owner-approved Podcastlisten editorial artwork for the exact Krigen i Bosnien identity. It is not official Politiken artwork. Original 1400x1400 PNG checksum verified; no crop, added text, redesign, or changes to other covers."
     }
   ]
 }

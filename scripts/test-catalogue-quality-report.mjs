@@ -81,7 +81,9 @@ assert.equal(summary.historicalAuditReconciliation.completedDecisionsNamedInIssu
 assert.deepEqual(summary.historicalAuditReconciliation.separateApprovedFinanceBatchIssue383Pr388.sort(), approvedFinanceIds.slice().sort());
 assert.match(summary.historicalAuditReconciliation.overlapBetweenFinanceBatchAnd136RowList, /Unresolved/u);
 const radioIiiiProposalCount = report.records.filter((row) => row.podcastId.startsWith("radio-iiii-auto-v1-") && row.status === "Afventer redaktionel godkendelse").length;
-assert.equal(summary.historicalAuditReconciliation.currentMachineProposalCountBeforeHistoricalHold, 27 + radioIiiiProposalCount, "verified Radio IIII intake proposals are counted separately from the stable historical audit baseline");
+const bosniaProposalCount = report.records.filter((row) => row.podcastId === "krigen i bosnien" && row.status === "Afventer redaktionel godkendelse").length;
+assert.equal(bosniaProposalCount, 1, "the exact new Bosnien ID contributes one unchanged Historie audit row");
+assert.equal(summary.historicalAuditReconciliation.currentMachineProposalCountBeforeHistoricalHold, 27 + radioIiiiProposalCount + bosniaProposalCount, "verified Radio IIII intake proposals and the one new Bosnien row are counted separately from the stable historical audit baseline");
 assert.equal(summary.historicalAuditReconciliation.currentMachineProposalCountAfterHistoricalHold, summary.proposals.total);
 assert.ok(summary.historicalAuditReconciliation.limitation.includes("not versioned"));
 assert.ok(report.reconciliationRows.some((row) => row["Podcast-ID"] === "se og hor lige her" && row.Kategori.includes("historisk label")));

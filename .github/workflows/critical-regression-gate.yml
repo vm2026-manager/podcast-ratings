@@ -13,7 +13,7 @@ on:
 jobs:
   critical-regression-gate:
     name: Critical Regression Gate
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
@@ -24,7 +24,7 @@ jobs:
           node-version: 24
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      - run: pnpm exec playwright install --with-deps chromium
+      - run: pnpm exec playwright install chromium
       - run: node scripts/critical-regression-gate.mjs
       - name: Verify regression tests leave the checkout unchanged
         run: |
