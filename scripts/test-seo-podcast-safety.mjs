@@ -6,7 +6,7 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 import { test } from "node:test";
 import { fileURLToPath } from "node:url";
-import { generateSeoPodcastPages, renderPage, renderTrueCrimePage, trueCrimeData } from "./generate-seo-podcast-pages.mjs";
+import { generateSeoPodcastPages, renderPage, renderTrueCrimePage, slugFromPodcastId, trueCrimeData } from "./generate-seo-podcast-pages.mjs";
 import { prepareSeoPlan, publishSeoPlan, validateSitemap } from "./seo-podcast-safety.mjs";
 
 const repository = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
@@ -119,7 +119,38 @@ for (const [name, change, expected] of [
   await assertBlocked(root, expected);
 }));
 
-for (const id of ["", null, 42, "../genstart", "genstart/escape", " genstart", "genstart\n", "!!!"]) test(`invalid ID ${JSON.stringify(id)} blocks publication`, async () => fixture(async (root) => {
+test("ASCII apostrophe Podcast-ID is accepted and preserved exactly", async () => fixture(async (root) => {
+  const id = "ta'r jeg fejl";
+  await setSource(root, (s) => {
+    const template = s.rows.find((row) => row.Genre === "True Crime");
+    s.rows.push({ ...template, "Podcast-ID": id, Titel: id });
+    s.count++;
+  });
+  const before = await snapshot(root);
+  const pages = await generateSeoPodcastPages({ root, write: false });
+  const source = JSON.parse(await readFile(path.join(root, "data/podcasts.json"), "utf8"));
+  const entry = trueCrimeData(source.rows).find((row) => row.title === id);
+  assert.equal(source.rows.at(-1)["Podcast-ID"], id);
+  assert.equal(entry.id, id);
+  assert(renderTrueCrimePage([entry]).includes(`href="/?podcast=${encodeURIComponent(id)}"`));
+  assert.equal(slugFromPodcastId(id), "tar-jeg-fejl");
+  assert.equal(pages.length, baseline.podcasts.length);
+  assert.deepEqual(await snapshot(root), before, "dry-run generation must not change any files");
+}));
+
+test("apostrophe ID that collides with an existing slug blocks publication", async () => fixture(async (root) => {
+  await setSource(root, (s) => {
+    const template = s.rows.find((row) => row.Genre === "True Crime");
+    s.rows.push(
+      { ...template, "Podcast-ID": "ta'r jeg fejl", Titel: "Ta'r jeg fejl" },
+      { ...template, "Podcast-ID": "tar jeg fejl", Titel: "Tar jeg fejl" }
+    );
+    s.count += 2;
+  });
+  await assertBlocked(root, /slug collision/);
+}));
+
+for (const id of ["", null, 42, "../genstart", "genstart/escape", " genstart", "genstart ", "genstart\t", "genstart\n", "gen\u0000start", "!!!"]) test(`invalid ID ${JSON.stringify(id)} blocks publication`, async () => fixture(async (root) => {
   await setSource(root, (s) => { s.rows[0]["Podcast-ID"] = id; });
   await assertBlocked(root, /Invalid Podcast-ID/);
 }));

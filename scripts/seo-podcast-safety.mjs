@@ -9,7 +9,7 @@ export function validateCatalogue(source, baseline, slugFromId) {
   const ids = new Set(), slugs = new Set();
   for (const row of source.rows) {
     const id = row?.["Podcast-ID"];
-    if (typeof id !== "string" || id !== id.trim() || !/^[\p{L}\p{N}][\p{L}\p{N} _-]*$/u.test(id)) throw new Error(`Invalid Podcast-ID: ${id}`);
+    if (typeof id !== "string" || id !== id.trim() || !/^[\p{L}\p{N}][\p{L}\p{N} _'-]*$/u.test(id)) throw new Error(`Invalid Podcast-ID: ${id}`);
     if (ids.has(id)) throw new Error(`Duplicate Podcast-ID: ${id}`);
     ids.add(id);
     const slug = slugFromId(id);
