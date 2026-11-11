@@ -448,7 +448,9 @@ try {
   await page.goto(`http://127.0.0.1:${address.port}/?s=1#ranglister`, { waitUntil: "domcontentloaded" });
   await page.waitForFunction(() => state.searchTerm === "1" && state.podcasts?.length > 0);
   const shortNumberResults = await page.evaluate(() => getFilteredPodcasts().map((podcast) => normalizeSearchValue(podcast.title)));
-  assert.ok(shortNumberResults.every((title) => title === "1"), `A short numeric query only matches an exact title: ${JSON.stringify(shortNumberResults)}`);
+  assert.ok(shortNumberResults.length > 0, "a one-digit query finds catalogue titles containing that exact numeric title word");
+  assert.ok(shortNumberResults.every((title) => title.split(" ").includes("1")), `A one-digit query matches only a complete numeric title word: ${JSON.stringify(shortNumberResults)}`);
+  assert.ok(!shortNumberResults.some((title) => title.split(" ").some((token) => /^\d+$/u.test(token) && token !== "1")), `A one-digit query does not match a longer number: ${JSON.stringify(shortNumberResults)}`);
 
   await page.setViewportSize({ width: 320, height: 844 });
   await page.goto(`http://127.0.0.1:${address.port}/#ranglister`, { waitUntil: "domcontentloaded" });

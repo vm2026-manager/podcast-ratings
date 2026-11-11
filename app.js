@@ -752,7 +752,7 @@ const EPISODE_SEARCH_DEBOUNCE_MS = 320;
 const PROFILE_EPISODE_RATINGS_PAGE_SIZE = 20;
 const PODCAST_RATING_PUBLIC_STATS_VIEW = "podcast_rating_combined_public_stats";
 const DISPLAY_GROUP_COMMUNITY_STATS_RPC = "get_display_group_community_stats";
-const DATA_VERSION = "2026-11-04-issue58-editorial-cover";
+const DATA_VERSION = "2026-11-11-issue84-search-numbers";
 const EXPANDED_LIST_STORAGE_KEY = "podcast-ratings-expanded-list";
 const VIEW_MODE_STORAGE_KEY = "podcast-ratings-desktop-view";
 const DESKTOP_RANKING_LAYOUT_STORAGE_KEY = "podcast-ratings-desktop-ranking-layout";
@@ -1582,20 +1582,25 @@ function getPublicSearchPodcasts() {
   return getRankingCandidates();
 }
 
+function isPodcastSearchQueryReady(rawQuery) {
+  const query = normalizeSearchValue(rawQuery);
+  return query.length >= 2 || /^\d$/u.test(query);
+}
+
 function getHeaderSearchMatches(rawQuery) {
   const query = normalizeSearchValue(rawQuery);
-  if (query.length < 2) return [];
+  if (!isPodcastSearchQueryReady(query)) return [];
   const queryTokenVariants = getSearchQueryTokenVariants(query);
   const rankingQuery = getRankingSearchQuery(rawQuery);
 
   return getPublicSearchPodcasts()
     .map((podcast) => {
+      const matchesAnyField = matchesRankingEnhancedSearch(podcast, rawQuery);
+      if (!matchesAnyField) return null;
+
       const fields = getHeaderSearchFieldVariants(podcast);
       const titleNative = fields.titleNative;
       const matchesField = (field) => searchTokenVariantsMatch(queryTokenVariants, field);
-      const matchesAnyField = matchesRankingEnhancedSearch(podcast, rawQuery);
-
-      if (!matchesAnyField) return null;
 
       const titleSequenceMatch = rankingSearchQueryHasOrderedTitlePrefixMatch(
         rankingQuery,
@@ -1717,7 +1722,7 @@ function renderHeaderSearchResults() {
   if (!input || !results) return;
 
   const query = input.value.trim();
-  if (normalizeSearchValue(query).length < 2) {
+  if (!isPodcastSearchQueryReady(query)) {
     closeHeaderPodcastSearch();
     return;
   }
@@ -1769,7 +1774,7 @@ function refreshOpenHeaderSearchResults() {
   const input = elements.desktopHeaderSearchInput;
   const results = elements.desktopHeaderSearchResults;
   if (!input || !results || results.classList.contains("is-hidden")) return;
-  if (normalizeSearchValue(input.value).length < 2) return;
+  if (!isPodcastSearchQueryReady(input.value)) return;
 
   renderHeaderSearchResults();
 }
@@ -1884,7 +1889,7 @@ function renderHomePodcastSearchResults({ exitFocusOnEmpty = false } = {}) {
   const { input, results } = getHomeSearchElements();
   if (!input || !results) return;
   const query = input.value.trim();
-  if (normalizeSearchValue(query).length < 2) {
+  if (!isPodcastSearchQueryReady(query)) {
     closeHomePodcastSearch({ exitFocus: exitFocusOnEmpty && query.length === 0 });
     return;
   }
@@ -2087,7 +2092,7 @@ function renderMobileHomeSearchOverlayResults() {
   if (!input || !results) return;
 
   const query = input.value.trim();
-  if (normalizeSearchValue(query).length < 2) {
+  if (!isPodcastSearchQueryReady(query)) {
     clearMobileHomeSearchOverlayResults();
     scheduleMobileHomeSearchOverlayGeometry();
     return;
@@ -2635,6 +2640,7 @@ const rankingSearchStopWords = new Set([
 ]);
 const RANKING_SEARCH_PREFIX_MIN_LENGTH = 4;
 const rankingSearchFieldCache = new WeakMap();
+const rankingSearchTitleTokenSequenceCache = new WeakMap();
 const rankingSearchQueryCache = new Map();
 
 function normalizeRankingSearchValue(value) {
@@ -2688,11 +2694,29 @@ function getRankingSearchQuery(searchTerm) {
     rawTokens: normalized.split(" ").filter(Boolean),
     rawCanonicalTokens: normalized.split(" ").filter(Boolean).map(canonicalizeNormalizedRankingSearchText),
     titleTokenVariants: getSearchQueryTokenVariants(normalized),
-    shortNumericQuery: /^(?:\d+|[ivxlcdm]+)$/u.test(normalized) && normalized.length <= 3
+    numericTitleWordQuery: /^\d+$/u.test(normalized),
+    shortRomanQuery: /^[ivxlcdm]+$/u.test(normalized) && normalized.length <= 3
   };
   if (rankingSearchQueryCache.size >= 128) rankingSearchQueryCache.delete(rankingSearchQueryCache.keys().next().value);
   rankingSearchQueryCache.set(normalized, query);
   return query;
+}
+
+function getRankingSearchTitleTokenSequences(podcast) {
+  const cached = rankingSearchTitleTokenSequenceCache.get(podcast);
+  if (cached) return cached;
+
+  const normalizedTitle = normalizeSearchValue(podcast?.title);
+  const titleVariants = [...new Set([
+    normalizedTitle,
+    normalizedTitle.replace(/æ/g, "ae").replace(/ø/g, "oe").replace(/å/g, "aa"),
+    normalizedTitle.replace(/[æå]/g, "a").replace(/ø/g, "o")
+  ])];
+  const sequences = titleVariants
+    .map((titleVariant) => titleVariant.split(" ").filter(Boolean))
+    .filter((tokens) => tokens.length > 0);
+  rankingSearchTitleTokenSequenceCache.set(podcast, sequences);
+  return sequences;
 }
 
 function getRankingSearchFields(podcast) {
@@ -2702,18 +2726,8 @@ function getRankingSearchFields(podcast) {
   const fields = [];
   const prefixTokenBuckets = new Map();
   const titlePrefixTokens = new Set();
-  const normalizedTitle = normalizeSearchValue(podcast?.title);
-  const titleVariants = [...new Set([
-    normalizedTitle,
-    normalizedTitle.replace(/æ/g, "ae").replace(/ø/g, "oe").replace(/å/g, "aa"),
-    normalizedTitle.replace(/[æå]/g, "a").replace(/ø/g, "o")
-  ])];
-  const titleTokenSequences = [];
-  for (const titleVariant of titleVariants) {
-    const titleTokens = titleVariant.split(" ").filter(Boolean);
-    if (titleTokens.length) titleTokenSequences.push(titleTokens);
-    titleTokens.forEach((token) => titlePrefixTokens.add(token));
-  }
+  const titleTokenSequences = getRankingSearchTitleTokenSequences(podcast);
+  for (const titleTokens of titleTokenSequences) titleTokens.forEach((token) => titlePrefixTokens.add(token));
   for (const { value, fuzzyAllowed } of getPodcastSearchFieldEntries(podcast)) {
     const normalized = normalizeRankingSearchValue(value);
     if (!normalized) continue;
@@ -2825,7 +2839,8 @@ function rankingSearchQueryHasOrderedTitlePrefixMatch(query, titleTokenSequences
   if (
     !finalToken ||
     finalToken.length > 3 ||
-    (finalToken.length >= 2 && /^(?:\d+|[ivxlcdm]+)$/iu.test(finalToken))
+    /^\d+$/u.test(finalToken) ||
+    (finalToken.length >= 2 && /^[ivxlcdm]+$/iu.test(finalToken))
   ) return false;
 
   const queryTokenVariants = query.titleTokenVariants || getSearchQueryTokenVariants(query.normalized);
@@ -2882,9 +2897,17 @@ function rankingSearchQueryHasPrefixMatches(query, fields) {
   });
 }
 
+function rankingSearchHasExactTokenInAnyField(podcast, canonicalToken) {
+  return getPodcastSearchFieldEntries(podcast).some(({ value }) =>
+    canonicalizeNormalizedRankingSearchText(normalizeRankingSearchValue(value))
+      .split(" ")
+      .includes(canonicalToken)
+  );
+}
+
 function rankingSearchFieldMatches(query, field) {
   if (!query?.canonicalTokens.length || !field?.canonicalTokens.length) return false;
-  if (query.shortNumericQuery) return field.normalized === query.normalized;
+  if (query.shortRomanQuery) return field.normalized === query.normalized;
 
   if (query.canonicalTokens.every((token) => field.canonicalTokens.includes(token)) ||
       query.canonicalTokens.length === 1 && query.canonicalTokens[0].length >= 5 &&
@@ -2907,18 +2930,38 @@ function rankingSearchFieldMatches(query, field) {
 function matchesRankingEnhancedSearch(podcast, searchTerm) {
   const query = getRankingSearchQuery(searchTerm);
   if (!query) return false;
-  const fields = getRankingSearchFields(podcast);
-  if (query.shortNumericQuery) {
+  if (query.numericTitleWordQuery) {
+    return getRankingSearchTitleTokenSequences(podcast).some((titleTokens) =>
+      titleTokens.includes(query.normalized)
+    );
+  }
+  if (query.shortRomanQuery) {
+    const fields = getRankingSearchFields(podcast);
     return fields.some((field) => field.normalized === query.normalized);
   }
   const finalQueryToken = query.rawTokens.at(-1);
   if (
     query.rawTokens.length > 1 &&
+    query.canonicalTokens.length === query.rawTokens.length &&
     finalQueryToken.length <= 3 &&
     rankingSearchStopWords.has(finalQueryToken)
   ) {
-    return rankingSearchQueryHasOrderedTitlePrefixMatch(query, fields.titleTokenSequences);
+    return rankingSearchQueryHasOrderedTitlePrefixMatch(
+      query,
+      getRankingSearchTitleTokenSequences(podcast)
+    );
   }
+  if (
+    query.rawTokens.length > 1 &&
+    query.canonicalTokens.length === query.rawTokens.length &&
+    finalQueryToken.length <= 3
+  ) {
+    const titleTokenSequences = getRankingSearchTitleTokenSequences(podcast);
+    if (rankingSearchQueryHasOrderedTitlePrefixMatch(query, titleTokenSequences)) return true;
+    const finalCanonicalToken = query.rawCanonicalTokens.at(-1);
+    if (!rankingSearchHasExactTokenInAnyField(podcast, finalCanonicalToken)) return false;
+  }
+  const fields = getRankingSearchFields(podcast);
   // Single-token queries can use the podcast-wide token index directly; checking
   // every field first and retrying fuzzy matching across fields repeats the same work.
   if (query.rawTokens.length === 1 && query.canonicalTokens.length === 1) {
@@ -5564,13 +5607,6 @@ function getFilteredPodcasts() {
       }
 
       if (!state.searchTerm) return true;
-
-      const enhancedQuery = getRankingSearchQuery(state.searchTerm);
-      // A short number/Roman numeral is too ambiguous to search as a token
-      // across the full catalogue; retain only an exact title match.
-      if (enhancedQuery?.shortNumericQuery) {
-        return matchesRankingEnhancedSearch(podcast, state.searchTerm);
-      }
       return matchesRankingEnhancedSearch(podcast, state.searchTerm);
     }));
   const filtered = state.popularNowActive

@@ -9,7 +9,11 @@ assert.ok(helperStart >= 0 && helperEnd > helperStart, "Header-refresh helper is
 const helper = app.slice(helperStart, helperEnd);
 
 assert.match(helper, /results\.classList\.contains\("is-hidden"\)/, "Closed header search must remain closed");
-assert.match(helper, /normalizeSearchValue\(input\.value\)\.length < 2/, "Empty header query must remain untouched");
+assert.match(helper, /isPodcastSearchQueryReady\(input\.value\)/, "Header refresh must use the shared query readiness rule");
+assert.ok(
+  app.includes("return query.length >= 2 || /^\\d$/u.test(query);"),
+  "One-digit search is enabled without opening one-letter text searches"
+);
 assert.match(helper, /renderHeaderSearchResults\(\)/, "Open header search must be recomputed through the normal renderer");
 
 const refreshStart = app.indexOf("function applyPodcastDataRefresh(");

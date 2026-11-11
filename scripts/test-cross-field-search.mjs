@@ -62,7 +62,7 @@ try {
   assert.ok(searchPerformance.coldHeaderMs < 300, `cold full-catalogue search is under 300ms: ${JSON.stringify(searchPerformance)}`);
   assert.ok(searchPerformance.visibleSuggestionMs < 300, `visible suggestion rendering is under 300ms: ${JSON.stringify(searchPerformance)}`);
   assert.ok(searchPerformance.warmAverageHeaderMs < 300, `warm full-catalogue search is under 300ms: ${JSON.stringify(searchPerformance)}`);
-  assert.ok(searchPerformance.coldResultCount > 0 && searchPerformance.visibleTarget, "cold matching and visible suggestions both include the title-sequence result");
+  assert.ok(searchPerformance.coldResultCount > 0 && searchPerformance.visibleTarget, `cold matching and visible suggestions both include the title-sequence result: ${JSON.stringify(searchPerformance)}`);
 
   const results = await page.evaluate(() => {
     const bakspejlTitles = ["Kolonien", "Koloni til salg"];
@@ -115,6 +115,46 @@ try {
       noGenericSubstring: matchesRankingEnhancedSearch({ title: "Hobbitten" }, "ob")
     };
     const sigTarget = getRankingCandidates().find((podcast) => getPodcastId(podcast) === "sig det løgn");
+    const numericTarget = getRankingCandidates().find((podcast) => getPodcastId(podcast) === "112 for knuste hjerter");
+    const ampersandTarget = getRankingCandidates().find((podcast) => podcast.title === "Q&CO");
+    const numberSearch = {
+      catalogueTarget: numericTarget && { id: getPodcastId(numericTarget), title: numericTarget.title },
+      ranking112: matchesRankingEnhancedSearch(numericTarget, "112"),
+      header112: getHeaderSearchMatches("112").some(({ podcast }) => getPodcastId(podcast) === "112 for knuste hjerter"),
+      header112First: getPodcastId(getHeaderSearchMatches("112")[0]?.podcast),
+      ranking112Fo: matchesRankingEnhancedSearch(numericTarget, "112 fo"),
+      header112Fo: getHeaderSearchMatches("112 fo").some(({ podcast }) => getPodcastId(podcast) === "112 for knuste hjerter"),
+      no11Prefix: matchesRankingEnhancedSearch(numericTarget, "11"),
+      no11LongNumberFragment: matchesRankingEnhancedSearch({ title: "Podcast 1124" }, "11"),
+      noNumericPrefixInTitleSequence: matchesRankingEnhancedSearch({ title: "Sig 112" }, "sig 11"),
+      noMiddleDigitsInLongNumber: matchesRankingEnhancedSearch({ title: "Podcast 12345" }, "234"),
+      start: matchesRankingEnhancedSearch({ title: "112 i starten" }, "112"),
+      middle: matchesRankingEnhancedSearch({ title: "Podcast 112 i midten" }, "112"),
+      end: matchesRankingEnhancedSearch({ title: "Podcast slutter med 112" }, "112"),
+      exactSingleDigit: matchesRankingEnhancedSearch({ title: "1. verdenskrig" }, "1"),
+      noSingleDigitPrefix: matchesRankingEnhancedSearch({ title: "10-20-30" }, "1"),
+      noNumericMetadata: matchesRankingEnhancedSearch({ title: "Podcast uden nummer", host: "112" }, "112"),
+      singleDigitHeaderReady: isPodcastSearchQueryReady("1"),
+      oneLetterTextHeaderReady: isPodcastSearchQueryReady("h")
+    };
+    const specialCharacterSearch = {
+      slash: matchesRankingEnhancedSearch({ title: "Radio 24/7" }, "24/7"),
+      slashSpaced: matchesRankingEnhancedSearch({ title: "Radio 24/7" }, "24 7"),
+      ampersandTarget: ampersandTarget && { id: getPodcastId(ampersandTarget), title: ampersandTarget.title },
+      ampersand: matchesRankingEnhancedSearch(ampersandTarget, "Q&CO"),
+      ampersandHeader: getHeaderSearchMatches("Q&CO").some(({ podcast }) => podcast.title === "Q&CO"),
+      apostrophe: matchesRankingEnhancedSearch(sigTarget, "sig det' løgn"),
+      hyphen: matchesRankingEnhancedSearch({ title: "Rwanda - verdens hurtigste folkemord" }, "verdens-hurtigste"),
+      enver: matchesRankingEnhancedSearch(getRankingCandidates().find((podcast) => getPodcastId(podcast) === "enver hoxha"), "Enver Hoxha"),
+      bakspejl: bakspejl.some((podcast) => matchesRankingEnhancedSearch(podcast, "Bakspejl"))
+    };
+    state.searchTerm = "112";
+    numberSearch.rankingList112 = getFilteredPodcasts().some((podcast) => getPodcastId(podcast) === "112 for knuste hjerter");
+    state.searchTerm = "112 fo";
+    numberSearch.rankingList112Fo = getFilteredPodcasts().some((podcast) => getPodcastId(podcast) === "112 for knuste hjerter");
+    state.searchTerm = "11";
+    numberSearch.rankingList11IsNot112 = !getFilteredPodcasts().some((podcast) => getPodcastId(podcast) === "112 for knuste hjerter");
+    state.searchTerm = "";
     const sigTypeaheadQueries = ["sig", "sig ", "sig d", "sig de", "sig det", "sig det'", "sig det' l", "sig det' løgn"];
     const sigTypeahead = Object.fromEntries(sigTypeaheadQueries.map((query) => {
       state.searchTerm = query;
@@ -170,7 +210,7 @@ try {
     clearActiveFilter();
     state.searchTerm = "";
     const afterFilterRating = getRankingCandidates().find((podcast) => getPodcastId(podcast) === "krig").ratingValue;
-    return { bakspejlTitles, bakspejl: bakspejl.map(({ title, host, mainSeries }) => ({ title, host, mainSeries })), bakspejlRanking, bakspejlQueryTitles, bakspejlHeader, queries, header, ranking, shortTitleSearch, shortTwoLetterTitleSearch, sigTarget: sigTarget && { id: getPodcastId(sigTarget), title: sigTarget.title }, sigTypeaheadQueries, sigTypeahead, shortMiddleTitleSequences, negative, aliases, matchingGenreFilter, nonmatchingGenreFilter, rating, afterFilterRating };
+    return { bakspejlTitles, bakspejl: bakspejl.map(({ title, host, mainSeries }) => ({ title, host, mainSeries })), bakspejlRanking, bakspejlQueryTitles, bakspejlHeader, queries, header, ranking, shortTitleSearch, shortTwoLetterTitleSearch, sigTarget: sigTarget && { id: getPodcastId(sigTarget), title: sigTarget.title }, numberSearch, specialCharacterSearch, sigTypeaheadQueries, sigTypeahead, shortMiddleTitleSequences, negative, aliases, matchingGenreFilter, nonmatchingGenreFilter, rating, afterFilterRating };
   });
   assert.ok(results.bakspejl.length > 0, `catalogue must contain verified Bakspejl titles and Martin Grønne: ${JSON.stringify(results.bakspejl)}`);
   assert.deepEqual(results.bakspejl.map(({ title }) => title).sort(), results.bakspejlTitles.slice().sort(), "both current Bakspejl title rows retain Martin Grønne as the verified host");
@@ -193,6 +233,42 @@ try {
   }
   assert.deepEqual(results.shortTwoLetterTitleSearch, { ranking: true, header: true, genericTitleWord: true, noGenericSubstring: false });
   assert.deepEqual(results.sigTarget, { id: "sig det løgn", title: "Sig det' løgn" }, "the typeahead regression is anchored to the actual catalogue identity");
+  assert.deepEqual(results.numberSearch.catalogueTarget, { id: "112 for knuste hjerter", title: "112 for knuste hjerter" }, "the number regression is anchored to the existing catalogue identity");
+  assert.equal(results.numberSearch.ranking112, true, "a complete numeric title word matches without requiring the whole title");
+  assert.equal(results.numberSearch.header112, true, "header and mobile suggestion matching find the numeric title word");
+  assert.equal(results.numberSearch.header112First, "112 for knuste hjerter", "an exact numeric title word ranks above weak metadata matches");
+  assert.equal(results.numberSearch.ranking112Fo, true, "numeric title typeahead keeps the existing multiword title match");
+  assert.equal(results.numberSearch.header112Fo, true, "header typeahead keeps the existing 112 fo match");
+  assert.equal(results.numberSearch.rankingList112, true, "the ranking list returns the actual podcast for query 112");
+  assert.equal(results.numberSearch.rankingList112Fo, true, "the ranking list retains the 112 fo result");
+  assert.equal(results.numberSearch.rankingList11IsNot112, true, "ranking search does not expand 11 to 112");
+  assert.deepEqual(Object.fromEntries(Object.entries(results.numberSearch).filter(([key]) => key.startsWith("no"))), {
+    no11Prefix: false,
+    no11LongNumberFragment: false,
+    noNumericPrefixInTitleSequence: false,
+    noMiddleDigitsInLongNumber: false,
+    noSingleDigitPrefix: false,
+    noNumericMetadata: false
+  }, "numeric queries reject prefixes, interior substrings, and metadata-only matches");
+  assert.equal(results.numberSearch.singleDigitHeaderReady, true, "one-digit input can open exact numeric title results in header and mobile search");
+  assert.equal(results.numberSearch.oneLetterTextHeaderReady, false, "one-letter text searches stay disabled");
+  assert.deepEqual(Object.fromEntries(Object.entries(results.numberSearch).filter(([key]) => ["start", "middle", "end", "exactSingleDigit"].includes(key))), {
+    start: true,
+    middle: true,
+    end: true,
+    exactSingleDigit: true
+  }, "numeric title words match at every title position, including a precise one-digit word");
+  assert.deepEqual(results.specialCharacterSearch, {
+    slash: true,
+    slashSpaced: true,
+    ampersandTarget: { id: "q og co", title: "Q&CO" },
+    ampersand: true,
+    ampersandHeader: true,
+    apostrophe: true,
+    hyphen: true,
+    enver: true,
+    bakspejl: true
+  }, "slash, ampersand, apostrophe, hyphen, Danish, and existing title searches stay intact");
   for (const query of results.sigTypeaheadQueries) {
     assert.deepEqual(results.sigTypeahead[query], { ranking: true, header: true, headerFirst: true }, `Sig det' løgn remains the visible top suggestion through title typing: ${JSON.stringify(query)}`);
   }
@@ -220,6 +296,10 @@ try {
     assert.equal(layout.match, true);
   }
 
+  await page.goto(`http://127.0.0.1:${server.address().port}/?s=112#ranglister`, { waitUntil: "domcontentloaded" });
+  await page.waitForFunction(() => state.searchTerm === "112" && getFilteredPodcasts().some((podcast) => getPodcastId(podcast) === "112 for knuste hjerter"));
+  assert.equal(await page.locator("#searchInput").inputValue(), "112", "shareable ranking URLs retain numeric search terms");
+
   await page.setViewportSize({ width: 1440, height: 900 });
   await page.goto(`http://127.0.0.1:${server.address().port}/`, { waitUntil: "domcontentloaded" });
   await page.waitForFunction(() => state.podcasts?.length > 0);
@@ -233,6 +313,24 @@ try {
   assert.ok((await page.locator("#podcastDetailSheet").innerText()).includes("Enver Hoxha"), "desktop suggestion opens the matching podcast");
   await page.keyboard.press("Escape");
   await page.locator("#podcastDetailSheet.is-hidden").waitFor({ state: "attached" });
+
+  await desktopSearchInput.fill("");
+  await desktopSearchInput.pressSequentially("112");
+  await page.waitForFunction(() => headerSearchState.matches.some(({ podcast }) => getPodcastId(podcast) === "112 for knuste hjerter"));
+  await desktopSearchInput.fill("112");
+  const desktop112Result = page.locator("[data-header-search-index]").filter({ hasText: "112 for knuste hjerter" }).first();
+  await desktop112Result.waitFor({ state: "visible" });
+  assert.equal(await page.evaluate(() => getPodcastId(headerSearchState.matches[0]?.podcast)), "112 for knuste hjerter", "desktop header puts the exact numeric title result first");
+  await desktopSearchInput.press("ArrowDown");
+  await desktopSearchInput.press("Enter");
+  await page.locator("#podcastDetailSheet:not(.is-hidden)").waitFor({ state: "visible" });
+  assert.ok((await page.locator("#podcastDetailSheet").innerText()).includes("112 for knuste hjerter"), "desktop Enter opens the numeric title result");
+  await page.keyboard.press("Escape");
+  await page.locator("#podcastDetailSheet.is-hidden").waitFor({ state: "attached" });
+  await desktopSearchInput.fill("11");
+  await page.waitForFunction(() => !headerSearchState.matches.some(({ podcast }) => getPodcastId(podcast) === "112 for knuste hjerter"));
+  await desktopSearchInput.fill("112 fo");
+  await page.waitForFunction(() => headerSearchState.matches.some(({ podcast }) => getPodcastId(podcast) === "112 for knuste hjerter"));
 
   await desktopSearchInput.fill("");
   let desktopTypedQuery = "";
@@ -304,6 +402,16 @@ try {
   await rankingPage.keyboard.press("Escape");
   await rankingPage.locator("#podcastDetailSheet.is-hidden").waitFor({ state: "attached" });
 
+  await rankingSearch.fill("112");
+  await rankingPage.waitForFunction(() => state.searchTerm === "112" && getFilteredPodcasts().some((podcast) => getPodcastId(podcast) === "112 for knuste hjerter"));
+  const ranking112Result = rankingPage.locator('#podcastGrid [data-key="112 for knuste hjerter"]').first();
+  await ranking112Result.waitFor({ state: "visible" });
+  await ranking112Result.click();
+  await rankingPage.locator("#podcastDetailSheet:not(.is-hidden)").waitFor({ state: "visible" });
+  assert.ok((await rankingPage.locator("#podcastDetailSheet").innerText()).includes("112 for knuste hjerter"), "ranking search opens the numeric title result");
+  await rankingPage.keyboard.press("Escape");
+  await rankingPage.locator("#podcastDetailSheet.is-hidden").waitFor({ state: "attached" });
+
   await rankingSearch.fill("");
   let rankingTypedQuery = "";
   for (const character of Array.from("sig det' løgn")) {
@@ -327,6 +435,35 @@ try {
   await page.goto(`http://127.0.0.1:${server.address().port}/`, { waitUntil: "domcontentloaded" });
   await page.waitForFunction(() => state.podcasts?.length > 0);
   await page.locator("[data-home-podcast-search-input]").tap();
+  await page.locator("#mobileHomeSearchOverlayInput").waitFor({ state: "visible" });
+  await page.locator("#mobileHomeSearchOverlayInput").fill("112");
+  await page.waitForFunction(() => mobileHomeSearchOverlayState.matches.some(({ podcast }) => getPodcastId(podcast) === "112 for knuste hjerter"));
+  assert.equal(await page.evaluate(() => getPodcastId(mobileHomeSearchOverlayState.matches[0]?.podcast)), "112 for knuste hjerter", "mobile search overlay puts the numeric title result first");
+  await page.locator("#mobileHomeSearchOverlayInput").fill("11");
+  await page.waitForFunction(() => !mobileHomeSearchOverlayState.matches.some(({ podcast }) => getPodcastId(podcast) === "112 for knuste hjerter"));
+  await page.locator("#mobileHomeSearchOverlayInput").fill("112 fo");
+  await page.waitForFunction(() => mobileHomeSearchOverlayState.matches.some(({ podcast }) => getPodcastId(podcast) === "112 for knuste hjerter"));
+  await page.locator("#mobileHomeSearchOverlayResults [data-mobile-home-search-index]").first().tap();
+  await page.locator("#podcastDetailSheet:not(.is-hidden)").waitFor({ state: "visible" });
+  assert.ok((await page.locator("#podcastDetailSheet").innerText()).includes("112 for knuste hjerter"), "mobile touch opens the numeric search result");
+  await page.keyboard.press("Escape");
+  await page.locator("#podcastDetailSheet.is-hidden").waitFor({ state: "attached" });
+  await page.locator("[data-home-podcast-search-input]").focus();
+  await page.locator("#mobileHomeSearchOverlayInput").waitFor({ state: "visible" });
+  const mobileOverlayInput = page.locator("#mobileHomeSearchOverlayInput");
+  await mobileOverlayInput.pressSequentially("112");
+  await page.waitForFunction(() => mobileHomeSearchOverlayState.matches.some(({ podcast }) => getPodcastId(podcast) === "112 for knuste hjerter"));
+  await mobileOverlayInput.fill("112");
+  await mobileOverlayInput.press("Backspace");
+  await page.waitForFunction(() => document.getElementById("mobileHomeSearchOverlayInput").value === "11" && !mobileHomeSearchOverlayState.matches.some(({ podcast }) => getPodcastId(podcast) === "112 for knuste hjerter"));
+  await mobileOverlayInput.fill("112");
+  await page.waitForFunction(() => mobileHomeSearchOverlayState.matches.some(({ podcast }) => getPodcastId(podcast) === "112 for knuste hjerter"));
+  await page.locator("#mobileHomeSearchOverlayResults [data-mobile-home-search-index]").first().tap();
+  await page.locator("#podcastDetailSheet:not(.is-hidden)").waitFor({ state: "visible" });
+  assert.ok((await page.locator("#podcastDetailSheet").innerText()).includes("112 for knuste hjerter"), "mobile touch opens the 112 result");
+  await page.keyboard.press("Escape");
+  await page.locator("#podcastDetailSheet.is-hidden").waitFor({ state: "attached" });
+  await page.locator("[data-home-podcast-search-input]").focus();
   await page.locator("#mobileHomeSearchOverlayInput").waitFor({ state: "visible" });
   await page.locator("#mobileHomeSearchOverlayInput").fill("tamm krig");
   await page.waitForFunction(() => getHeaderSearchMatches("tamm krig").some(({ podcast }) => getPodcastId(podcast) === "krig"));

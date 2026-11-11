@@ -104,7 +104,7 @@ for (const [relative, checksum] of [
   assert.equal(output.readUInt32BE(16), 1400, `${relative} is 1400 pixels wide`);
   assert.equal(output.readUInt32BE(20), 1400, `${relative} is 1400 pixels tall`);
 }
-assert.match(app, /const DATA_VERSION = "2026-11-04-issue58-editorial-cover";/u, 'the manifest URL version is advanced');
+assert.match(app, /const DATA_VERSION = "2026-11-11-issue84-search-numbers";/u, 'the manifest URL version is advanced');
 assert.match(index, /app\.js\?[^"']*issue58-approved-editorial-cover-v1=1/u, 'the browser receives the updated app script');
 const historicalSponsor = manifest.podcasts.find(e => e.appPodcastKey === 'der var engang et mal af peter møller mod farum');
 assert.equal(historicalSponsor?.stableKey, 'der-var-engang-et-mal-af-peter-moeller-mod-farum-882602eb57', 'the historical episode identity stays intact');
