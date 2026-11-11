@@ -14,6 +14,11 @@ on:
       - "scripts/monitor-episode-feed-coverage.mjs"
       - "scripts/episode-feed-post-import.mjs"
       - "scripts/test-episode-feed-post-import.mjs"
+      - "scripts/audit-frihedsbrevet-sources.mjs"
+      - "scripts/discover-fri-mads-releases.mjs"
+      - "scripts/test-fri-mads-discovery.mjs"
+      - "scripts/fixtures/fri-mads-rss-snapshot.mjs"
+      - "docs/fri-mads-discovery.md"
       - ".github/workflows/episode-feed-coverage.yml"
 
 permissions:
@@ -34,6 +39,11 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: "24"
+      - name: Fri Mads metadata-only discovery dry-run
+        shell: bash
+        run: |
+          node scripts/test-fri-mads-discovery.mjs
+          node scripts/discover-fri-mads-releases.mjs --dry-run
       - name: Load bounded monitor state from #256
         uses: actions/github-script@v7
         env:
