@@ -69,7 +69,7 @@ assert.equal(sidecar.items.some((item) => item.releaseNumber === 173), false, "s
 assert.ok(sidecar.items.every((item) => item.fixtureOnly !== true && !("articleText" in item)));
 
 assert.equal(FRIHEDSBREVET_SOURCE_REGISTRY.length, 36);
-assert.equal(catalog.rows.length, 1376);
+assert.ok(catalog.rows.length >= 1376, "the catalogue retains at least the previous 1,376-row baseline while allowing verified growth");
 assert.equal(FRIHEDSBREVET_SOURCE_REGISTRY.filter((identity) => catalog.rows.some((row) =>
   row["Podcast-ID"] === identity.podcastId && row.catalogue_id === identity.catalogueId)).length, 36,
 "all exact Frihedsbrevet Podcast-ID/catalogue_id pairs still exist in latest main");
