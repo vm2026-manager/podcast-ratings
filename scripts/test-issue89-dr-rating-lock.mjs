@@ -339,6 +339,7 @@ try {
     const episodeState = getPodcastEpisodeState(parent);
     return {
       own: getPodcastDetailEpisodeRatingState(parent),
+      displayedOwnRating: getUserRatingForPodcast(parent),
       direct: state.userRatingsByKey.magten,
       stored: window.__issue89RatingFixture.userRatings.get("magten-a|magten"),
       edit: canEditPodcastDetailInlineRating(parent),
@@ -347,6 +348,7 @@ try {
     };
   });
   assert.deepEqual(magtenLocked.own, { resolved: true, error: "", count: 1, average: 6.6 });
+  assert.equal(magtenLocked.displayedOwnRating, 6.6, "the episode average is surfaced as Magten's current user's score");
   assert.equal(magtenLocked.direct, 8.4);
   assert.equal(magtenLocked.stored, 8.4);
   assert.equal(magtenLocked.edit, false);
