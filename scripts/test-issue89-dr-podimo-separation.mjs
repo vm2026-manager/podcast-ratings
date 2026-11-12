@@ -31,6 +31,10 @@ assert.equal(rowById["kampen om historien"]?.["Podcast-ID"], "kampen om historie
 assert.equal(rows.filter((row) => row["Podcast-ID"] === "kampen om historien dr").length, 0,
   "the staged DR ID does not collide with the sheet-backed catalogue");
 assert.match(app, /"Podcast-ID": "kampen om historien dr"/u, "the new DR parent is local and additive");
+assert.match(app, /"Kort beskrivelse": "DR’s historiske podcast om fortidens begivenheder og deres betydning\."/u,
+  "the DR fallback short description exactly matches approved staging text");
+assert.match(app, /"Lang beskrivelse": "Kampen om historien er DR’s historiske podcast om begivenheder, konflikter og personer, der har sat spor i historien\."/u,
+  "the DR fallback long description exactly matches approved staging text");
 assert.match(app, /DR_EDITORIAL_REVIEW_PARENT_BY_PODCAST_ID\s*=\s*Object\.freeze\(\{[\s\S]*?"rwanda verdens hurtigste folkemord": "kampen om historien dr"[\s\S]*?"sovjetunionen lenin og stalins danske agent": "kampen om historien dr"/u);
 assert.match(app, /function isDrEditorialReviewPodcast\(podcast\)[\s\S]*?state\.podcastById\[parentId\]/u,
   "routing depends on exact IDs and an available parent record");
@@ -50,7 +54,10 @@ assert.match(proposal, /B448.*J448.*L448.*M448.*O448.*X448/u);
 assert.match(proposal, /A1371:Y1371/u);
 assert.match(proposal, /må aldrig bruges som mål/u);
 assert.match(proposal, /Ved manglende ID, flere matches eller én eneste afvigelse: stop uden writes/u);
-assert.match(proposal, /bekræftede, at redaktionel score `5,8` tilhører Podimos/u);
+assert.match(proposal, /ejerens udtrykkelige bekræftelse den 12\.11\.2026 dokumenterer den fulde redaktionelle beslutning/u);
+assert.match(proposal, /Adam Holm fortæller om historiske konflikter og begivenheder, der har formet den verden, vi lever i\./u);
+assert.match(proposal, /I Styr på historien undersøger Adam Holm historiske konflikter og begivenheder og deres betydning for den verden, vi lever i i dag\./u);
+assert.match(proposal, /eksakte ID-søgninger i `V1:V2960` fandt hver af de tre eksisterende ID'er præcis én gang/u);
 assert.match(proposal, /asset-UUID er \*\*ikke\*\* Podimo-showets UUID/u);
 assert.match(proposal, /Podimo-showets UUID verificeres positivt/u);
 

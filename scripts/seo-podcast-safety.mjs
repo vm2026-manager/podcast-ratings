@@ -45,13 +45,53 @@ export function validateSitemap(xml, { requiredUrls = [], minimumUrls = 0 } = {}
   return urls;
 }
 
-async function assertRegularTarget(root, relative) {
+async function assertRegularTarget(root, relative, { allowMissing = false } = {}) {
   if (path.isAbsolute(relative) || relative.split(/[\\/]/).some((part) => !part || part === ".." || part === ".")) throw new Error(`Unsafe output path: ${relative}`);
   const parts = [root];
   for (const part of relative.split("/")) parts.push(path.join(parts.at(-1), part));
   for (let index = 0; index < parts.length; index += 1) {
-    const stat = await lstat(parts[index]);
+    let stat;
+    try { stat = await lstat(parts[index]); }
+    catch (error) {
+      if (error.code === "ENOENT" && allowMissing) return false;
+      throw error;
+    }
     if (stat.isSymbolicLink() || (index === parts.length - 1 ? !stat.isFile() : !stat.isDirectory())) throw new Error(`Unsafe output target: ${parts[index]}`);
+  }
+  return true;
+}
+
+function validateCreatablePodcastOutput(output) {
+  if (!output.allowCreate) return;
+  let url;
+  try { url = new URL(output.canonical); } catch { throw new Error(`Unsafe new podcast canonical: ${output.canonical}`); }
+  const match = url.pathname.match(/^\/podcast\/([a-z0-9]+(?:-[a-z0-9]+)*)\/$/);
+  if (!output.id || url.origin !== "https://podcastlisten.dk" || url.search || url.hash || !match || output.relative !== `podcast/${match[1]}/index.html`) {
+    throw new Error(`Unsafe new podcast output: ${output.relative}`);
+  }
+}
+
+async function ensureSafeParents(root, relative, createdDirectories) {
+  const directoryParts = relative.split("/").slice(0, -1);
+  let current = root;
+  for (const part of directoryParts) {
+    current = path.join(current, part);
+    try {
+      await mkdir(current);
+      createdDirectories.push(current);
+    } catch (error) {
+      if (error.code !== "EEXIST") throw error;
+    }
+    const stat = await lstat(current);
+    if (stat.isSymbolicLink() || !stat.isDirectory()) throw new Error(`Unsafe output directory: ${current}`);
+  }
+}
+
+async function removeCreatedDirectories(directories) {
+  for (const directory of [...directories].reverse()) {
+    await rm(directory).catch((error) => {
+      if (error.code !== "ENOENT" && error.code !== "ENOTEMPTY" && error.code !== "EEXIST") throw error;
+    });
   }
 }
 
@@ -73,14 +113,20 @@ export async function prepareSeoPlan({ root, sourceText, existingSitemap, pages,
   validateSitemap(existingSitemap, { requiredUrls: baseline.sitemapUrls, minimumUrls: baseline.sitemapUrls.length });
   const snapshots = new Map([["data/podcasts.json", sourceText]]);
   for (const output of outputs) {
-    await assertRegularTarget(root, output.relative);
-    const original = await readFile(path.join(root, output.relative), "utf8");
+    validateCreatablePodcastOutput(output);
+    if (output.allowCreate) {
+      const accepted = baseline.podcasts.find((page) => page.id === output.id && page.canonical === output.canonical);
+      const resolved = pages.find((page) => page.id === output.id && page.canonical === output.canonical);
+      if (!accepted || !resolved || output.relative !== `podcast/${resolved.slug}/index.html`) throw new Error(`Unapproved new podcast output: ${output.id}`);
+    }
+    const exists = await assertRegularTarget(root, output.relative, { allowMissing: Boolean(output.allowCreate) });
+    const original = exists ? await readFile(path.join(root, output.relative), "utf8") : null;
     if (output.relative === "sitemap.xml" && original !== existingSitemap) throw new Error("Sitemap changed during generation");
     snapshots.set(output.relative, original);
     if (output.canonical) {
-      validatePage(original.trimEnd(), output.canonical);
+      if (original !== null) validatePage(original.trimEnd(), output.canonical);
       validatePage(output.content, output.canonical);
-      if (output.id && !original.includes(`href="/?podcast=${encodeURIComponent(output.id)}"`)) throw new Error(`Existing podcast identity conflict: ${output.id}`);
+      if (original !== null && output.id && !original.includes(`href="/?podcast=${encodeURIComponent(output.id)}"`)) throw new Error(`Existing podcast identity conflict: ${output.id}`);
       if (output.relative === "genre/true-crime/index.html") {
         const oldIds = [...original.matchAll(/href="\/\?podcast=([^"&]+)"/g)].map((match) => match[1]);
         if (!oldIds.length) throw new Error("Missing existing True Crime catalogue");
@@ -100,6 +146,7 @@ export async function publishSeoPlan(plan, { renameFile = rename } = {}) {
   await mkdir(lock);
   let stage;
   const applied = [];
+  const createdDirectories = [];
   let retainBackups = false;
   async function atomicReplace(relative, content, move = renameFile) {
     const destination = path.join(plan.root, relative);
@@ -117,7 +164,8 @@ export async function publishSeoPlan(plan, { renameFile = rename } = {}) {
     for (let index = 0; index < plan.outputs.length; index += 1) {
       const output = plan.outputs[index];
       await writeFile(path.join(stage, `${index}.html`), output.content, "utf8");
-      await writeFile(path.join(stage, `${index}.backup`), plan.snapshots.get(output.relative), "utf8");
+      const snapshot = plan.snapshots.get(output.relative);
+      if (snapshot !== null) await writeFile(path.join(stage, `${index}.backup`), snapshot, "utf8");
     }
     for (let index = 0; index < plan.outputs.length; index += 1) {
       const output = plan.outputs[index];
@@ -129,21 +177,29 @@ export async function publishSeoPlan(plan, { renameFile = rename } = {}) {
     }
     // Catch concurrent edits to source data or any output before publication.
     for (const [relative, original] of plan.snapshots) {
-      await assertRegularTarget(plan.root, relative);
-      if (await readFile(path.join(plan.root, relative), "utf8") !== original) throw new Error(`File changed during generation: ${relative}`);
+      const output = plan.outputs.find((candidate) => candidate.relative === relative);
+      const exists = await assertRegularTarget(plan.root, relative, { allowMissing: Boolean(output?.allowCreate) });
+      if (original === null ? exists : !exists || await readFile(path.join(plan.root, relative), "utf8") !== original) throw new Error(`File changed during generation: ${relative}`);
     }
     for (let index = 0; index < plan.outputs.length; index += 1) {
       const output = plan.outputs[index];
       if (output.content === plan.snapshots.get(output.relative)) continue;
+      if (plan.snapshots.get(output.relative) === null) await ensureSafeParents(plan.root, output.relative, createdDirectories);
       await atomicReplace(output.relative, await readFile(path.join(stage, `${index}.html`), "utf8"));
       applied.push(output.relative);
     }
   } catch (error) {
     const failures = [];
     for (const relative of applied.reverse()) {
-      try { await atomicReplace(relative, plan.snapshots.get(relative), rename); }
+      try {
+        const original = plan.snapshots.get(relative);
+        if (original === null) await unlink(path.join(plan.root, relative));
+        else await atomicReplace(relative, original, rename);
+      }
       catch (rollbackError) { failures.push(rollbackError); }
     }
+    try { await removeCreatedDirectories(createdDirectories); }
+    catch (rollbackError) { failures.push(rollbackError); }
     if (failures.length) {
       retainBackups = true;
       throw new AggregateError([error, ...failures], `Publication failed; recovery backups retained in ${stage}`);

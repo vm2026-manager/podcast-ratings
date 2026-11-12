@@ -55,8 +55,10 @@ async function assertBlocked(root, expected) {
   assert.deepEqual(await snapshot(root), before, "a rejected generation must not touch existing files");
 }
 
-test("all 30 original URLs, existing pages and sitemap metadata survive repeated generation", async () => fixture(async (root) => {
-  assert.equal(baseline.podcasts.length, 30);
+test("all 60 URLs, the original 30 identities and sitemap metadata survive repeated generation", async () => fixture(async (root) => {
+  assert.equal(baseline.podcasts.length, 60);
+  assert.equal(baseline.originalPodcasts.length, 30);
+  assert.equal(baseline.additionalPodcasts.length, 30);
   for (const original of baseline.podcasts) assert.equal(slugFromPublishedUrl(original.canonical), original.slug);
   const manualPodcast = path.join(root, "podcast/manual-page/index.html");
   const manualGenre = path.join(root, "genre/true-crime/manual-guide/index.html");
@@ -74,11 +76,18 @@ test("all 30 original URLs, existing pages and sitemap metadata survive repeated
   assert.deepEqual(pages.map(({ id, slug, canonical }) => ({ id, slug, canonical })), baseline.podcasts);
   const urls = validateSitemap(await readFile(sitemapFile, "utf8"));
   for (const url of [...baseline.sitemapUrls, manualUrl]) assert(urls.has(url));
-  assert.equal(await readFile(sitemapFile, "utf8"), expandedXml, "sitemap metadata must remain byte-identical");
+  const generatedSitemap = await readFile(sitemapFile, "utf8");
+  assert(generatedSitemap.startsWith(expandedXml.slice(0, expandedXml.lastIndexOf("</urlset>"))), "existing sitemap entries and metadata stay byte-identical");
+  assert(generatedSitemap.includes(`<loc>${manualUrl}</loc><lastmod>2026-10-09</lastmod>`));
   for (const original of baseline.podcasts) {
     const html = await readFile(path.join(root, `podcast/${original.slug}/index.html`), "utf8");
     assert(html.includes(`href="${original.canonical}"`));
     assert(html.includes(`href="/?podcast=${encodeURIComponent(original.id)}"`));
+  }
+  for (const original of baseline.originalPodcasts) {
+    const expanded = baseline.podcasts.find((page) => page.id === original.id);
+    assert.equal(expanded.slug, original.slug);
+    assert.equal(expanded.canonical, original.canonical);
   }
   const after = await snapshot(root);
   for (const file of ["podcast/manual-page/index.html", "genre/true-crime/manual-guide/index.html"]) assert.deepEqual(after[file], before[file]);
@@ -108,10 +117,12 @@ for (const [name, change, expected] of [
   ["duplicate non-pilot ID", (s) => { s.rows.push(structuredClone(s.rows.find((r) => !baseline.podcasts.some((p) => p.id === r["Podcast-ID"])))); s.count++; }, /Duplicate Podcast-ID/],
   ["slug collision", (s) => { s.rows.push({ ...s.rows[0], "Podcast-ID": "moerkeland" }); s.count++; }, /slug collision/],
   ["missing pilot with unchanged count", (s) => { s.rows.find((r) => r["Podcast-ID"] === "genstart")["Podcast-ID"] = "missing pilot replacement"; }, /resolve uniquely/],
+  ["missing new pilot ID with unchanged count", (s) => { s.rows.find((r) => r["Podcast-ID"] === "kapret")["Podcast-ID"] = "missing new pilot replacement"; }, /resolve uniquely/],
   ["fewer catalogue podcasts", (s) => { s.rows.pop(); s.count--; }, /fall in podcast count/],
   ["fewer True Crime podcasts", (s) => { s.rows.find((r) => r.Genre === "True Crime").Genre = "Other"; }, /fall in True Crime count/],
   ["missing title", (s) => { delete s.rows[0].Titel; delete s.rows[0].Title; }, /Missing title\/description/],
   ["missing description", (s) => { delete s.rows[0]["Kort beskrivelse"]; delete s.rows[0]["Lang beskrivelse"]; }, /Missing title\/description/],
+  ["missing new pilot long description", (s) => { delete s.rows.find((r) => r["Podcast-ID"] === "kapret")["Lang beskrivelse"]; }, /documented long description or genre/],
   ["wrong source count", (s) => { s.count++; }, /Invalid catalogue rows\/count/],
   ["missing rows array", (s) => { delete s.rows; }, /Invalid catalogue rows\/count/]
 ]) test(`${name} blocks publication without damaging any files`, async () => fixture(async (root) => {
@@ -188,6 +199,24 @@ test("symlink targets are rejected", async () => fixture(async (root) => {
   await rm(file);
   await symlink(sentinel, file);
   await assertBlocked(root, /Unsafe output target/);
+}));
+
+test("unsafe new output paths and symlink destinations block publication without changes", async () => fixture(async (root) => {
+  const sourceText = await readFile(path.join(root, "data/podcasts.json"), "utf8");
+  const sitemap = await readFile(path.join(root, "sitemap.xml"), "utf8");
+  const pages = await generateSeoPodcastPages({ root });
+  const page = pages.find((candidate) => candidate.id === "kapret");
+  const unsafe = [{ relative: "../escape.html", id: page.id, canonical: page.canonical, allowCreate: true, content: renderPage(page) }];
+  const before = await snapshot(root);
+  await assert.rejects(prepareSeoPlan({ root, sourceText, existingSitemap: sitemap, pages, outputs: unsafe, baseline }), /Unsafe new podcast output|Unsafe output path/);
+  assert.deepEqual(await snapshot(root), before);
+
+  const target = path.join(root, `podcast/${page.slug}`);
+  const outside = path.join(root, "outside");
+  await rm(target, { recursive: true });
+  await mkdir(outside);
+  await symlink(outside, target);
+  await assertBlocked(root, /Unsafe output target|Unsafe output directory/);
 }));
 
 test("catalogue growth is accepted and a later drop from its high-water mark is blocked", async () => fixture(async (root) => {
