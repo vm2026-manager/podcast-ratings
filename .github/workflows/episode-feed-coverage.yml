@@ -18,6 +18,12 @@ on:
       - "scripts/discover-fri-mads-releases.mjs"
       - "scripts/test-fri-mads-discovery.mjs"
       - "scripts/fixtures/fri-mads-overview-snapshot.mjs"
+      - "scripts/update-fri-mads-article-sidecar.mjs"
+      - "scripts/test-fri-mads-article-sidecar.mjs"
+      - "scripts/test-fri-mads-article-preview.mjs"
+      - "data/fri-mads-articles.json"
+      - "app.js"
+      - "style.css"
       - "docs/fri-mads-discovery.md"
       - ".github/workflows/episode-feed-coverage.yml"
 
@@ -36,14 +42,141 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          persist-credentials: false
       - uses: actions/setup-node@v4
         with:
           node-version: "24"
-      - name: Fri Mads metadata-only discovery dry-run
+      - name: Fri Mads sidecar and discovery contract tests
         shell: bash
         run: |
           node scripts/test-fri-mads-discovery.mjs
-          node scripts/discover-fri-mads-releases.mjs --dry-run
+          node scripts/test-fri-mads-article-sidecar.mjs
+          node scripts/test-fri-mads-article-sidecar-workflow.mjs
+      - name: Discover current Fri Mads overview and stage bounded article metadata
+        id: fri-mads-sidecar
+        if: github.ref == 'refs/heads/main'
+        continue-on-error: true
+        env:
+          FRI_MADS_DISCOVERY_REPORT_FILE: ${{ runner.temp }}/fri-mads-discovery.json
+        shell: bash
+        run: |
+          node scripts/discover-fri-mads-releases.mjs --dry-run --report-file "$FRI_MADS_DISCOVERY_REPORT_FILE"
+          node scripts/update-fri-mads-article-sidecar.mjs --report-file "$FRI_MADS_DISCOVERY_REPORT_FILE"
+          if git diff --quiet -- data/fri-mads-articles.json; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          fi
+      - name: Require trusted token for real pull_request checks
+        id: fri-mads-token-preflight
+        if: github.ref == 'refs/heads/main' && steps.fri-mads-sidecar.outcome == 'success' && steps.fri-mads-sidecar.outputs.changed == 'true'
+        continue-on-error: true
+        env:
+          CATALOGUE_SYNC_PR_TOKEN: ${{ secrets.CATALOGUE_SYNC_PR_TOKEN }}
+        shell: bash
+        run: |
+          if [ -z "$CATALOGUE_SYNC_PR_TOKEN" ]; then
+            echo "::error::CATALOGUE_SYNC_PR_TOKEN is missing. Refusing to publish Fri Mads metadata without real pull_request checks."
+            exit 1
+          fi
+
+      - name: Verify trusted token repository access
+        id: fri-mads-token-check
+        if: github.ref == 'refs/heads/main' && steps.fri-mads-token-preflight.outcome == 'success'
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ secrets.CATALOGUE_SYNC_PR_TOKEN }}
+        shell: bash
+        run: gh api "repos/${GITHUB_REPOSITORY}" --silent
+
+      - name: Create or update the bounded Fri Mads metadata PR
+        id: fri-mads-pr
+        if: github.ref == 'refs/heads/main' && steps.fri-mads-token-check.outcome == 'success'
+        continue-on-error: true
+        uses: peter-evans/create-pull-request@v7
+        with:
+          token: ${{ secrets.CATALOGUE_SYNC_PR_TOKEN }}
+          branch: automation/fri-mads-article-feed
+          base: main
+          title: Update Fri Mads article metadata
+          commit-message: "chore: update verified Fri Mads article metadata"
+          body: |
+            Automated, bounded update of the public Fri Mads article metadata sidecar from the approved official series overview.
+
+            This PR contains only `data/fri-mads-articles.json`. It does not change the catalogue, podcast identities, episode records, ratings, Google Sheets, Supabase, or article content. The independent Critical Regression Gate must pass on this exact pull request head before automatic merge.
+          add-paths: data/fri-mads-articles.json
+
+      - name: Read current Fri Mads metadata PR head
+        id: fri-mads-pr-head
+        if: github.ref == 'refs/heads/main' && steps.fri-mads-pr.outcome == 'success'
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ secrets.CATALOGUE_SYNC_PR_TOKEN }}
+        shell: bash
+        run: |
+          pr_json=$(gh pr list --base main --head automation/fri-mads-article-feed --state open --json number,headRefOid --jq '.[0]')
+          if [ "$pr_json" = "null" ] || [ -z "$pr_json" ]; then
+            echo "::error::The changed Fri Mads sidecar did not produce an open pull request."
+            exit 1
+          fi
+          echo "number=$(echo "$pr_json" | jq -r .number)" >> "$GITHUB_OUTPUT"
+          echo "head_sha=$(echo "$pr_json" | jq -r .headRefOid)" >> "$GITHUB_OUTPUT"
+
+      - name: Wait for the real pull_request gate on the exact Fri Mads PR head
+        id: fri-mads-required-gate
+        if: github.ref == 'refs/heads/main' && steps.fri-mads-pr-head.outputs.head_sha != ''
+        continue-on-error: true
+        env:
+          HEAD_SHA: ${{ steps.fri-mads-pr-head.outputs.head_sha }}
+          GH_TOKEN: ${{ secrets.CATALOGUE_SYNC_PR_TOKEN }}
+        shell: bash
+        run: |
+          for attempt in $(seq 1 60); do
+            pr_json=$(gh pr list --base main --head automation/fri-mads-article-feed --state open --json number,headRefOid --jq '.[0]')
+            pr_head=$(echo "$pr_json" | jq -r '.headRefOid // empty')
+            if [ "$pr_head" != "$HEAD_SHA" ]; then
+              echo "::error::Fri Mads PR head changed while waiting; refusing to use stale checks."
+              exit 1
+            fi
+            run_json=$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs?event=pull_request&head_sha=${HEAD_SHA}&per_page=100")
+            gate=$(echo "$run_json" | jq -c --arg sha "$HEAD_SHA" '[.workflow_runs[] | select(.name == "Critical Regression Gate") | select(.head_sha == $sha)] | sort_by(.created_at) | last // empty')
+            conclusion=$(echo "$gate" | jq -r '.conclusion // empty')
+            status=$(echo "$gate" | jq -r '.status // empty')
+            if [ "$status" = "completed" ]; then
+              if [ "$conclusion" != "success" ]; then
+                echo "::error::The real pull_request Critical Regression Gate concluded $conclusion for $HEAD_SHA."
+                exit 1
+              fi
+              current_head=$(gh pr list --base main --head automation/fri-mads-article-feed --state open --json headRefOid --jq '.[0].headRefOid // empty')
+              if [ "$current_head" != "$HEAD_SHA" ]; then
+                echo "::error::Fri Mads PR head changed after the gate passed; refusing auto-merge."
+                exit 1
+              fi
+              echo "Verified Critical Regression Gate success on exact Fri Mads PR head $HEAD_SHA"
+              exit 0
+            fi
+            sleep 20
+          done
+          echo "::error::Timed out waiting for the real pull_request gate on $HEAD_SHA."
+          exit 1
+
+      - name: Enable automatic merge after the exact required gate passes
+        id: fri-mads-auto-merge
+        if: github.ref == 'refs/heads/main' && steps.fri-mads-required-gate.outcome == 'success'
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ secrets.CATALOGUE_SYNC_PR_TOKEN }}
+          PR_URL: https://github.com/${{ github.repository }}/pull/${{ steps.fri-mads-pr-head.outputs.number }}
+          HEAD_SHA: ${{ steps.fri-mads-pr-head.outputs.head_sha }}
+        shell: bash
+        run: gh pr merge --auto --merge --match-head-commit "$HEAD_SHA" "$PR_URL"
+
+      - name: Record fail-closed Fri Mads publication status
+        if: always() && github.ref == 'refs/heads/main' && (steps.fri-mads-sidecar.outcome == 'failure' || steps.fri-mads-token-preflight.outcome == 'failure' || steps.fri-mads-token-check.outcome == 'failure' || steps.fri-mads-pr.outcome == 'failure' || steps.fri-mads-pr-head.outcome == 'failure' || steps.fri-mads-required-gate.outcome == 'failure' || steps.fri-mads-auto-merge.outcome == 'failure')
+        shell: bash
+        run: |
+          echo "::warning::Fri Mads public article metadata was not published. The source/update/token/PR/current-head gate/auto-merge step failed closed; see the step logs."
+          echo "Fri Mads metadata publication did not complete. No direct write to main occurred; only an exact-head PR with the real Critical Regression Gate can publish the sidecar." >> "$GITHUB_STEP_SUMMARY"
       - name: Load bounded monitor state from #256
         uses: actions/github-script@v7
         env:

@@ -1,0 +1,42 @@
+{
+  "fixtureOnly": true,
+  "podcast": {
+    "podcastId": "fri mads",
+    "catalogueId": "catalogue-v1-d94fc39e"
+  },
+  "releases": [
+    {
+      "releaseId": "fri-mads:173:https://frihedsbrevet.dk/fri-mads-173-testpost-173/",
+      "podcastId": "fri mads",
+      "catalogueId": "catalogue-v1-d94fc39e",
+      "releaseNumber": 173,
+      "title": "Fri Mads #173: Testpost 173",
+      "publishedDate": "2026-11-12",
+      "canonicalUrl": "https://frihedsbrevet.dk/fri-mads-173-testpost-173/",
+      "sourceGuid": null,
+      "accessType": "paid",
+      "contentKind": "article",
+      "metadataOnly": true,
+      "playable": false,
+      "rateable": false,
+      "audioUrl": null,
+      "fixtureOnly": true
+    },
+    {
+      "releaseId": "fri-mads:172:https://frihedsbrevet.dk/fri-mads-172-alle-elsker-mette/",
+      "podcastId": "fri mads",
+      "catalogueId": "catalogue-v1-d94fc39e",
+      "releaseNumber": 172,
+      "title": "Fri Mads #172: Alle elsker Mette",
+      "publishedDate": "2026-11-08",
+      "canonicalUrl": "https://frihedsbrevet.dk/fri-mads-172-alle-elsker-mette/",
+      "sourceGuid": null,
+      "accessType": "paid",
+      "contentKind": "article",
+      "metadataOnly": true,
+      "playable": false,
+      "rateable": false,
+      "audioUrl": null
+    }
+  ]
+}
