@@ -113,7 +113,7 @@ function validateGenreNavigation(content) {
   const sections = [...content.matchAll(/<section class="genre-section"[\s\S]*?<\/section>/g)];
   assert.equal(sections.length, 9);
   for (const [section] of sections) {
-    const helper = section.match(/<p class="more-in-genre"><a href="([^\"]+)">[^<]+<\/a><span>Vælg ([^<]+) i ranglistens genrefilter\.<\/span><\/p>/);
+    const helper = section.match(/<p class="more-in-genre"><a href="([^\"]+)">[^<]+<\/a><span>Vælg ([^<]+?) i ranglistens genrefilter\.[\s\S]*?<\/span><\/p>/);
     assert(helper, "each section has a concrete, validated next step");
     const [, href, filter] = helper;
     assert.equal(href, "/#ranglister");
@@ -133,8 +133,58 @@ for (const invalid of ["Nyheder", "Fodbold", "Forskning", "Snakke", "Kærlighed"
 }
 assert.throws(() => validateGenreNavigation(html.replace("Vælg Sport i", "Vælg Samfund i")), /filter must include/, "a real but mismatched filter is also misleading");
 
+const supplementalPodcastExpectations = new Map([
+  ["menneskedyret", { section: "true-crime", genre: "True Crime" }],
+  ["kvinden med den tunge kuffert det sidste kapitel", { section: "true-crime", genre: "True Crime" }],
+  ["agent storm", { section: "true-crime", genre: "True crime" }],
+  ["tsunamien i 2004", { section: "historie", genre: "Historie" }],
+  ["store penge", { section: "finans", genre: "Finans" }],
+  ["24 spørgsmal til professoren", { section: "forskning", genre: "Videnskab" }],
+  ["brinkmanns briks", { section: "forskning", genre: "Viden" }],
+]);
+function validateSupplementalPodcastLinks(content) {
+  const records = [];
+  for (const [, sectionId, section] of content.matchAll(/<section class="genre-section" id="([^"]+)"[\s\S]*?>([\s\S]*?)<\/section>/g)) {
+    for (const [, id, href, label] of section.matchAll(/<a class="supplemental-podcast-link" data-podcast-id="([^"]+)" href="([^"]+)">([^<]+)<\/a>/g)) {
+      records.push({ id: decode(id), href: decode(href), label: decode(label), sectionId });
+    }
+  }
+  assert.equal(records.length, supplementalPodcastExpectations.size, "all seven supplementary links are present exactly once");
+  assert.equal(new Set(records.map((record) => record.id)).size, records.length, "supplementary Podcast-IDs are unique");
+  assert.equal(new Set(records.map((record) => record.href)).size, records.length, "supplementary canonical slugs do not collide");
+  for (const record of records) {
+    const expected = supplementalPodcastExpectations.get(record.id);
+    assert(expected, `supplemental link uses a verified Podcast-ID: ${record.id}`);
+    assert.equal(record.sectionId, expected.section, `supplemental link is in its relevant section: ${record.id}`);
+    const matches = source.rows.filter((row) => row["Podcast-ID"] === record.id);
+    assert.equal(matches.length, 1, `supplemental Podcast-ID resolves uniquely: ${record.id}`);
+    const row = matches[0];
+    assert.equal(row.Genre, expected.genre, `supplemental podcast has the verified catalogue genre: ${record.id}`);
+    assert.equal(record.label, row.Titel, `supplemental link uses the exact catalogue title: ${record.id}`);
+    const page = baseline.podcasts.find((item) => item.id === record.id);
+    assert(page, `supplemental podcast has an established SEO page: ${record.id}`);
+    assert.equal(record.href, `/${page.slug ? `podcast/${page.slug}/` : ""}`);
+    assert.equal(page.canonical, `https://podcastlisten.dk${record.href}`, `canonical URL remains stable: ${record.id}`);
+  }
+  assert.deepEqual(new Set(records.map((record) => record.id)), new Set(supplementalPodcastExpectations.keys()));
+}
+validateSupplementalPodcastLinks(html);
+const firstSupplementalLink = html.match(/<a class="supplemental-podcast-link"[^>]+>[\s\S]*?<\/a>/)?.[0];
+assert(firstSupplementalLink);
+assert.throws(() => validateSupplementalPodcastLinks(html.replace('data-podcast-id="menneskedyret"', 'data-podcast-id="unlisted podcast"')), /verified Podcast-ID/, "reject unknown Podcast-IDs");
+assert.throws(() => validateSupplementalPodcastLinks(html.replace('href="/podcast/menneskedyret/"', 'href="/podcast/agent-storm/"')), /canonical slugs do not collide/, "reject SEO slug collisions");
+assert.throws(() => validateSupplementalPodcastLinks(html.replace('<section class="genre-section" id="historie"', '<section class="genre-section" id="true-crime"')), /relevant section/, "reject links in the wrong genre section");
+assert.throws(() => validateSupplementalPodcastLinks(html.replace(firstSupplementalLink, `${firstSupplementalLink}${firstSupplementalLink}`)), /exactly once/, "reject duplicate supplementary links");
+
 const cards = [...html.matchAll(/<article class="podcast-card" data-podcast-id="([^"]+)">([\s\S]*?)<\/article>/g)];
 assert.equal(cards.length, 15, "reviewed selection must render all 15 verified podcasts");
+const existingRecommendationIds = ["genstart", "tiden", "danske drabssager", "afhørt", "bomben", "vanvittig verdenshistorie", "fantino og bonde", "mathias helts talkshow", "hva sa", "112 for knuste hjerter", "børsen brænder", "only in america", "transferguru", "kvart i bold", "jagten pa det evige liv"];
+function validateExistingRecommendationIds(content) {
+  const found = [...content.matchAll(/<article class="podcast-card" data-podcast-id="([^"]+)">/g)].map((match) => decode(match[1]));
+  assert.deepEqual(found, existingRecommendationIds, "all previously reviewed recommendation cards remain present in the same order");
+}
+validateExistingRecommendationIds(html);
+assert.throws(() => validateExistingRecommendationIds(html.replace('<article class="podcast-card" data-podcast-id="genstart">', '<article class="podcast-card" data-podcast-id="removed-genstart">')), /previously reviewed recommendation cards/, "reject loss or identity changes in existing recommendations");
 assert.equal([...html.matchAll(/<section class="genre-section"/g)].length, 9);
 const seen = new Set(), genres = new Set();
 for (const [, encodedId, card] of cards) {
