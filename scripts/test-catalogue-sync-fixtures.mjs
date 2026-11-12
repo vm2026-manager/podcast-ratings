@@ -30,6 +30,39 @@ try {
 
   const stagedBytes = await readFile(path.join(stagePath, podcast.Billedlink));
   assert.equal(stagedBytes.toString("utf8"), "hello");
+
+  const published = JSON.parse(await readFile(path.join(root, "data/podcasts.json"), "utf8"));
+  const existingCoverRow = published.rows.find((row) => row["Podcast-ID"] && /^data\/covers\//u.test(row.Billedlink || ""));
+  assert.ok(existingCoverRow, "published catalogue has an identified local cover to preserve");
+  const existingCoverBytes = await readFile(path.join(root, existingCoverRow.Billedlink));
+  const sourceRow = {
+    Titel: existingCoverRow.Titel,
+    "Podcast-ID": existingCoverRow["Podcast-ID"],
+    Billedlink: `data:image/${path.extname(existingCoverRow.Billedlink).slice(1) === "jpg" ? "jpeg" : path.extname(existingCoverRow.Billedlink).slice(1)};base64,${existingCoverBytes.toString("base64")}`
+  };
+  const [preservedCoverRow] = await slimPodcastRows([sourceRow], stageName, [existingCoverRow]);
+  assert.equal(preservedCoverRow.Billedlink, existingCoverRow.Billedlink, "unchanged cover bytes keep the published path despite placement changes");
+  assert.deepEqual(await readFile(path.join(stagePath, preservedCoverRow.Billedlink)), existingCoverBytes);
+
+  const changedSourceRow = { ...sourceRow, Billedlink: "data:image/png;base64,Y2hhbmdlZA==" };
+  if (path.extname(existingCoverRow.Billedlink) !== ".png") {
+    changedSourceRow.Billedlink = `data:image/${path.extname(existingCoverRow.Billedlink).slice(1)};base64,Y2hhbmdlZA==`;
+  }
+  await assert.rejects(
+    slimPodcastRows([changedSourceRow], stageName, [existingCoverRow]),
+    /Cover bytes changed without verified source\/variant provenance/u,
+    "changed cover bytes cannot silently replace a published variant"
+  );
+  await assert.rejects(
+    slimPodcastRows([sourceRow], stageName, [{ ...existingCoverRow, Billedlink: "data/covers/../unsafe.png" }]),
+    /Cannot safely preserve published cover path/u,
+    "unsafe published asset paths are rejected"
+  );
+  await assert.rejects(
+    slimPodcastRows([sourceRow, sourceRow], stageName, [existingCoverRow]),
+    /Cannot generate duplicate Podcast-ID/u,
+    "duplicate candidate Podcast-IDs are rejected"
+  );
 } finally {
   await rm(stagePath, { recursive: true, force: true });
 }
