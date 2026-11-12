@@ -1,4 +1,5 @@
-import { mkdir, readFile, rename, writeFile } from "node:fs/promises";
+import { createHash } from "node:crypto";
+import { lstat, mkdir, readFile, rename, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { parseSupplementarySimilarities } from "./manual-similarity-supplements.mjs";
@@ -626,6 +627,52 @@ async function writeInlineImageFile(assetBaseName, inlineImage, outputDirectory 
   return relativePath.replace(/\\/g, "/");
 }
 
+async function getPreservedCoverBaseName(row, previousRows, outputDirectory = "") {
+  const podcastId = normalizeText(getField(row, ["Podcast-ID"]));
+  if (!podcastId) return null;
+
+  const matches = previousRows.filter((previous) => normalizeText(previous["Podcast-ID"]) === podcastId);
+  if (matches.length > 1) {
+    throw new Error(`Cannot preserve cover for duplicate published Podcast-ID: ${podcastId}`);
+  }
+  if (!matches.length) return null;
+
+  const candidateCover = normalizeText(getField(row, ["Billedlink", "Cover"]));
+  const publishedCover = normalizeText(matches[0].Billedlink);
+  if (!publishedCover.startsWith("data/covers/")) return null;
+  const safeCoverMatch = publishedCover.match(/^data\/covers\/([A-Za-z0-9._-]+)\.(png|jpg|webp|gif|svg)$/u);
+  if (!safeCoverMatch || safeCoverMatch[1].includes("..")) {
+    throw new Error(`Cannot safely preserve published cover path for ${podcastId}: ${publishedCover || "missing"}`);
+  }
+
+  const inlineImage = parseInlineImage(candidateCover);
+  if (!inlineImage) {
+    if (candidateCover === publishedCover) return null;
+    throw new Error(`Cover source conflicts with published asset for ${podcastId}`);
+  }
+
+  const extension = IMAGE_EXTENSION_BY_MIME[inlineImage.mimeType];
+  if (!extension || extension !== safeCoverMatch[2]) {
+    throw new Error(`Cover format conflicts with published asset for ${podcastId}`);
+  }
+
+  const previousPath = path.join(repoRoot, publishedCover);
+  const previousStat = await lstat(previousPath);
+  if (!previousStat.isFile()) {
+    throw new Error(`Published cover is not a regular file for ${podcastId}`);
+  }
+  const oldBytes = await readFile(previousPath);
+  const newBytes = Buffer.from(inlineImage.base64, "base64");
+  const oldHash = createHash("sha256").update(oldBytes).digest("hex");
+  const newHash = createHash("sha256").update(newBytes).digest("hex");
+  if (oldHash !== newHash) {
+    throw new Error(`Cover bytes changed without verified source/variant provenance for ${podcastId}`);
+  }
+
+  await writeInlineImageFile(`${safeCoverMatch[1]}`, inlineImage, outputDirectory);
+  return safeCoverMatch[1];
+}
+
 async function sanitizeExportValue(outputKey, value, assetBaseName, outputDirectory = "") {
   const normalizedValue = normalizeText(value);
 
@@ -734,14 +781,23 @@ function repairMisroutedJoachimEpisodes(podcasts) {
   else delete source.manualEpisodes;
 }
 
-async function slimPodcastRows(rows, outputDirectory = "") {
+async function slimPodcastRows(rows, outputDirectory = "", previousRows = []) {
+  const candidateIds = new Set();
+  for (const row of rows) {
+    const podcastId = normalizeText(getField(row, ["Podcast-ID"]));
+    if (!podcastId) continue;
+    if (candidateIds.has(podcastId)) throw new Error(`Cannot generate duplicate Podcast-ID: ${podcastId}`);
+    candidateIds.add(podcastId);
+  }
+
   const slimRows = [];
 
   for (let index = 0; index < rows.length; index += 1) {
     const row = rows[index];
     const title = getField(row, ["Titel", "Title"]);
     const placement = getField(row, ["Placering", "Rank", "Rangering"]) || String(index + 1);
-    const assetBaseName = `${String(placement).padStart(3, "0")}-${slugify(title) || `podcast-${index + 1}`}`;
+    const generatedAssetBaseName = `${String(placement).padStart(3, "0")}-${slugify(title) || `podcast-${index + 1}`}`;
+    const assetBaseName = await getPreservedCoverBaseName(row, previousRows, outputDirectory) || generatedAssetBaseName;
     const podcast = await pickFields(row, PODCAST_FIELDS, assetBaseName, outputDirectory);
     podcast.catalogue_id = createCatalogueId({
       title,
@@ -957,7 +1013,7 @@ async function main() {
   if (intake.intakeRows.length && !outputDirectory) {
     throw new Error(`Ark1 has ${intake.intakeRows.length} incomplete intake candidate(s). Use --output-dir to stage a review report; no catalogue files were written.`);
   }
-  const sheetCatalogueRows = await slimPodcastRows(intake.publishableRows, outputDirectory);
+  const sheetCatalogueRows = await slimPodcastRows(intake.publishableRows, outputDirectory, previousCatalogue.rows);
   const identitySafeSheetRows = preserveFlashbackParentIdentity(sheetCatalogueRows, previousCatalogue.rows);
   // This registry is committed separately from the Sheet export. Sheet rows win
   // editorially, while a previously allocated auto identity is never discarded.
