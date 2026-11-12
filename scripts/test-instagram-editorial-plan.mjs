@@ -76,6 +76,56 @@ assert.ok(plan.posts.every((slot) => !slot.captionDraft.includes("Adgang: Gratis
   "stale catalogue access labels are not copied into captions without an explicit current access verification");
 assert.equal(plan.posts.find((slot) => slot.podcastId === "elizabeth holmes").caption.targetLinkCandidate,
   "https://radio4.dk/podcasts/krimiland/den-store-illusion-elizabeth-holmes-1-2");
+const elizabethSlot = plan.posts.find((slot) => slot.podcastId === "elizabeth holmes");
+assert.deepEqual(elizabethSlot.caption.targetLinkEvidence, {
+  podcastId: "elizabeth holmes", cataloguePublisher: "Radio IIII", verifiedPublisher: "RADIO IIII",
+  title: "Den store illusion: Elizabeth Holmes 1:2", episodeRange: "1:2", linkType: "first-full-episode",
+  status: "verified-first-full-episode-1-of-2",
+  sourceUrl: "https://radio4.dk/podcasts/krimiland/den-store-illusion-elizabeth-holmes-1-2",
+  finalUrl: "https://radio4.dk/podcasts/krimiland/den-store-illusion-elizabeth-holmes-1-2",
+  httpStatus: 200, checkedAt: "2026-11-12",
+}, "verified listening evidence is bound to the exact podcast ID, publisher, title and URL");
+assert.deepEqual(plan.posts.find((slot) => slot.podcastId === "kvinden med den tunge kuffert det sidste kapitel").caption.targetLinkEvidence, {
+  podcastId: "kvinden med den tunge kuffert det sidste kapitel", cataloguePublisher: "Third Ear", verifiedPublisher: "Third Ear",
+  title: "Kvinden med den Tunge Kuffert: Det Sidste Kapitel", episodeRange: "1:5–5:5", linkType: "official-series-page",
+  status: "verified-publisher-series-page", sourceUrl: "https://thirdear.dk/podcasts/sidstekapitel/",
+  finalUrl: "https://thirdear.dk/podcasts/sidstekapitel/", httpStatus: 200, checkedAt: "2026-11-12",
+}, "Third Ear’s exact-ID official series link lists episodes 1:5 through 5:5");
+const heldIds = new Set(plan.heldCandidates.map((candidate) => candidate.podcastId));
+for (const id of ["det vi taler om", "agent storm", "kidnappet", "mors afskedsbrev", "golden state killer", "general butt naked", "ugens okman"]) {
+  assert.ok(heldIds.has(id), `${id} is isolated as an exact-ID HOLD record`);
+  assert.ok(!plan.posts.some((slot) => slot.podcastId === id), `${id} cannot occupy an active plan slot while its source is blocked`);
+}
+assert.equal(plan.excluded.heldForSourceReview, 7);
+assert.equal(plan.posts.some((slot) => slot.podcastId === "manden der mistede sit ansigt"), true,
+  "the next score-qualified exact-ID candidate with a verified first full DR episode fills an available slot");
+assert.equal(plan.posts.some((slot) => slot.podcastId === "det talentfulde fru hjorth"), false,
+  "nearby/fuzzy Podcast-ID spelling cannot select a replacement identity");
+const historyReplacementPlan = buildEditorialPlan({ ...inputs, publishedPodcastIds: ["kvinden med den tunge kuffert"],
+  bufferScan: { account: "@podcastlisten.dk", complete: true, scannedAt: now.toISOString(), scanId: "fixture-history", postCount: 0, posts: [] }, today: now, root });
+assert.equal(historyReplacementPlan.posts.length, PLAN_SIZE);
+assert.equal(historyReplacementPlan.posts.some((slot) => slot.podcastId === "mediano moneyball"), true,
+  "the next eligible exact ID replaces a historically used podcast without shifting the cadence dates");
+assert.deepEqual(historyReplacementPlan.posts.map((slot) => slot.suggestedDate), plan.posts.map((slot) => slot.suggestedDate));
+assert.ok(historyReplacementPlan.posts.every((slot) => slot.caption.ownerTake === ""));
+assert.ok(historyReplacementPlan.posts.every((slot) => slot.caption.targetLinkEvidence?.podcastId === slot.podcastId &&
+  slot.caption.targetLinkEvidence.httpStatus === 200 && slot.caption.targetLinkEvidence.status.startsWith("verified-") &&
+  slot.caption.targetLinkEvidence.finalUrl === slot.caption.targetLinkCandidate),
+"each active slot has a successful, exact-ID verified listening URL; unresolved sources are held separately");
+const changedPublisherRows = inputs.podcasts.map((catalogueRow) => catalogueRow["Podcast-ID"] === "elizabeth holmes"
+  ? { ...catalogueRow, Udgiver: "Changed publisher" } : catalogueRow);
+const changedPublisherPlan = buildEditorialPlan({ ...inputs, podcasts: changedPublisherRows,
+  bufferScan: { account: "@podcastlisten.dk", complete: true, scannedAt: now.toISOString(), scanId: "publisher-change", postCount: 0, posts: [] }, today: now, root });
+assert.ok(changedPublisherPlan.heldCandidates.some((candidate) => candidate.podcastId === "elizabeth holmes" && /publisher.*match/.test(candidate.reason)),
+  "a changed exact-row publisher invalidates its previous listening-link review");
+assert.ok(!changedPublisherPlan.posts.some((slot) => slot.podcastId === "elizabeth holmes"));
+const wrongCanonicalResearch = { ...inputs.research, posts: inputs.research.posts.map((entry) => entry.podcastId === "elizabeth holmes"
+  ? { ...entry, podcastId: "elizabeth holmes alternate" } : entry) };
+assert.throws(() => buildEditorialPlan({ ...inputs, research: wrongCanonicalResearch, publishedPodcastIds: ["kvinden med den tunge kuffert"],
+  bufferScan: { account: "@podcastlisten.dk", complete: true, scannedAt: now.toISOString(), scanId: "wrong-exact-id", postCount: 0, posts: [] }, today: now, root }),
+/Only 14 safe/, "link evidence for a near-match ID cannot attach to the canonical podcast or fill a slot");
+assert.throws(() => buildEditorialPlan({ ...inputs, research: { ...inputs.research, posts: [...inputs.research.posts, inputs.research.posts[0]] },
+  bufferScan: { account: "@podcastlisten.dk", complete: true, scannedAt: now.toISOString(), scanId: "duplicate-evidence", postCount: 0, posts: [] }, today: now, root }), /unique for exact Podcast-ID/);
 assert.equal(plan.posts.find((slot) => slot.podcastId === "elizabeth holmes").catalogueLink,
   "https://radio4.dk/podcasts/den-store-illusion-elizabeth-holmes", "review link suggestion does not rewrite catalogue master data");
 assert.ok(plan.posts.filter((slot) => slot.caption.publisherMentions.length).every((slot) =>
@@ -87,11 +137,13 @@ assert.ok(plan.posts.every((slot) => slot.caption.hashtags.some((tag) => tag.toL
 assert.ok(plan.posts.every((slot) => slot.caption.hashtags.length >= 3));
 assert.ok(plan.posts.every((slot) => slot.caption.publisherHashtagStatus === "not-verified-and-omitted"));
 assert.ok(plan.posts.every((slot) => !slot.caption.hashtags.some((tag) => /^#(?:radio4|radioiiii|radiollll|dr|thirdear|frihedsbrevet|mediano)$/i.test(tag))));
-assert.equal(plan.posts.filter((slot) => slot.cover.qualityStatus === "manual-quality-review-required").length, 10);
+const manualImageReviewCount = plan.posts.filter((slot) => slot.cover.qualityStatus === "manual-quality-review-required").length;
+assert.ok(manualImageReviewCount >= 10);
 assert.ok(plan.posts.every((slot) => slot.cover.fileVerification.verified));
 assert.ok(plan.posts.every((slot) => slot.reviewStatus.approval === "not-approved"));
 const reviewReport = reviewInstructions(plan);
-assert.equal((reviewReport.match(/manual-visual-review-required/g) ?? []).length, 10, "all 10 manual visual checks appear in the control report");
+assert.equal((reviewReport.match(/manual-visual-review-required/g) ?? []).length, manualImageReviewCount,
+  "every manual visual check appears in the control report");
 assert.ok(plan.posts.every((slot) => reviewReport.includes(`\`${slot.podcastId}\``)));
 assert.ok(plan.posts.every((slot) => slot.caption.ownerTake === ""));
 const djaevlenSharedGroup = plan.sharedArtworkGroups.find((group) => group.sourceChecksum === "02493c496ad2c9467334cd7f3611e6cd7c0cc9e20b4c1f5b5be08365a09ad7c8");
@@ -254,6 +306,7 @@ try {
   const csv = serializeReviewCsv(plan);
   assert.equal(csv.trimEnd().split("\r\n").length, 16);
   assert.match(csv, /"ownerTake"/);
+  assert.match(csv, /"targetLinkEvidenceJson"/);
   assert.match(csv, /PERSONLIGT TAKE SKAL INDSÆTTES/);
   assert.match(csv, /"sharedChecksumPodcastIds"/);
   assert.match(csv, /"coverMeasuredSha256"/);

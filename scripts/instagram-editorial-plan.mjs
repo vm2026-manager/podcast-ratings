@@ -170,6 +170,19 @@ function makeCaptionFields(row, profileUrl, hashtags, research = {}, publisherPr
     targetLinkResearchEvidenceUrl: research.finalUrl || research.sourceUrl || "",
     targetLinkResearchCheckedAt: research.checkedAt ?? "",
     targetLinkHttpStatus: research.httpStatus ?? null,
+    targetLinkEvidence: research.podcastId ? {
+      podcastId: research.podcastId,
+      cataloguePublisher: research.cataloguePublisher ?? "",
+      verifiedPublisher: research.verifiedPublisher ?? "",
+      title: research.evidenceTitle ?? "",
+      episodeRange: research.episodeRange ?? "",
+      linkType: research.linkType ?? "",
+      status: research.linkStatus ?? "",
+      sourceUrl: research.sourceUrl ?? "",
+      finalUrl: research.finalUrl ?? "",
+      httpStatus: research.httpStatus ?? null,
+      checkedAt: research.checkedAt ?? "",
+    } : null,
     canonicalProfileUrl: profileUrl,
     hashtags,
   };
@@ -249,13 +262,50 @@ export function buildEditorialPlan({ podcasts, coverManifest, rights, research, 
   if (!Array.isArray(posts) || bufferScan.postCount !== posts.length) throw new Error("A complete Buffer post history is required");
   for (const id of extractPodcastIdsFromBufferPosts(posts, podcasts)) seen.add(id);
 
+  const researchById = new Map();
+  for (const entry of research?.posts ?? []) {
+    const id = clean(entry?.podcastId);
+    if (!id) throw new Error("Instagram link research requires an exact Podcast-ID");
+    if (researchById.has(id)) throw new Error(`Instagram research evidence must be unique for exact Podcast-ID ${id}`);
+    researchById.set(id, entry);
+  }
   const options = [];
-  const excluded = { duplicateIdentity: 0, alreadyInBufferOrHistory: 0, invalidCatalogue: 0, missingVerifiedOriginal: 0 };
+  const heldCandidates = [];
+  const excluded = { duplicateIdentity: 0, alreadyInBufferOrHistory: 0, invalidCatalogue: 0, missingVerifiedOriginal: 0,
+    heldForSourceReview: 0, unverifiedListeningSource: 0 };
   for (const row of podcasts) {
     const id = clean(row?.["Podcast-ID"]);
     if (!id || !isEligibleCatalogueRow(row)) { excluded.invalidCatalogue += 1; continue; }
     if (counts.get(id) !== 1) { excluded.duplicateIdentity += 1; continue; }
     if (seen.has(id)) { excluded.alreadyInBufferOrHistory += 1; continue; }
+    const postResearch = researchById.get(id) ?? null;
+    const cataloguePublisherChanged = Boolean(postResearch?.cataloguePublisher) && postResearch.cataloguePublisher !== clean(row.Udgiver);
+    const reviewedPublisherDiffers = Boolean(postResearch?.verifiedPublisher) &&
+      postResearch.verifiedPublisher.trim().toLocaleLowerCase("da-DK") !== clean(row.Udgiver).toLocaleLowerCase("da-DK");
+    const publisherChanged = cataloguePublisherChanged || reviewedPublisherDiffers;
+    if (postResearch?.candidateDisposition === "hold" || publisherChanged) {
+      excluded.heldForSourceReview += 1;
+      heldCandidates.push({
+        podcastId: id,
+        title: clean(row.Titel),
+        score: parseEditorialScore(row["Vuring (1-10)"]),
+        publisher: clean(row.Udgiver),
+        status: "hold",
+        reason: publisherChanged
+          ? "Catalogue and verified source publisher no longer match the exact-ID link review; repeat source review before selection."
+          : clean(postResearch.holdReason) || "Exact-ID listening-source review is unresolved.",
+        linkResearchStatus: postResearch?.linkStatus ?? "no-current-link-review",
+        linkResearchEvidenceUrl: postResearch?.finalUrl || postResearch?.sourceUrl || "",
+        linkResearchCheckedAt: postResearch?.checkedAt ?? "",
+      });
+      continue;
+    }
+    const linkIsVerified = postResearch && String(postResearch.linkStatus ?? "").startsWith("verified-") &&
+      postResearch.httpStatus === 200 && urlIsHttps(postResearch.finalUrl);
+    if (!linkIsVerified) {
+      excluded.unverifiedListeningSource += 1;
+      continue;
+    }
     const cover = verifiedOriginal(row, coverManifest.podcasts, root);
     if (!cover || !verifiedCoverIds.has(id)) { excluded.missingVerifiedOriginal += 1; continue; }
     const score = parseEditorialScore(row["Vuring (1-10)"]);
@@ -268,12 +318,10 @@ export function buildEditorialPlan({ podcasts, coverManifest, rights, research, 
       cover: cover.sourceChecksum,
       catalogueIdentity: sha256(JSON.stringify({ id, title: row.Titel, publisher: row.Udgiver, genre: row.Genre })),
     };
-    const postResearch = (research?.posts ?? []).filter((entry) => entry?.podcastId === id);
-    if (postResearch.length > 1) throw new Error(`Instagram research evidence must be unique for exact Podcast-ID ${id}`);
     const publisherMatches = (research?.publisherProfiles ?? []).filter((entry) => entry?.publisher === row.Udgiver &&
       entry?.status === "verified-official-site-link" && /^@[A-Za-z0-9._]+$/.test(entry.handle ?? "") && urlIsHttps(entry.evidenceUrl));
     if (publisherMatches.length > 1) throw new Error(`Instagram publisher evidence is ambiguous for exact publisher ${row.Udgiver}`);
-    const caption = makeCaptionFields(row, profileUrl, hashtags, postResearch[0] ?? {}, publisherMatches[0] ?? null);
+    const caption = makeCaptionFields(row, profileUrl, hashtags, postResearch ?? {}, publisherMatches[0] ?? null);
     const fileVerification = inspectOriginalCoverFile(root, cover);
     const artworkIdentity = sharedArtworkIdentity(cover, coverManifest);
     const artworkResearchMatches = (research?.sharedArtworkReviews ?? []).filter((entry) =>
@@ -308,11 +356,11 @@ export function buildEditorialPlan({ podcasts, coverManifest, rights, research, 
       sourceDescription: clean(row["Kort beskrivelse"]),
       catalogueLink: clean(row.Link),
       access: { type: row.accessType, evidenceUrl: row.accessEvidenceUrl, checkedAt: row.accessCheckedAt },
-      currentAccessReview: postResearch[0] ? {
-        status: postResearch[0].accessStatus,
-        evidenceUrl: postResearch[0].accessEvidenceUrl,
-        checkedAt: postResearch[0].checkedAt,
-        sourceHttpStatus: postResearch[0].httpStatus,
+      currentAccessReview: postResearch ? {
+        status: postResearch.accessStatus,
+        evidenceUrl: postResearch.accessEvidenceUrl,
+        checkedAt: postResearch.checkedAt,
+        sourceHttpStatus: postResearch.httpStatus,
       } : { status: "no-current-source-review", evidenceUrl: "", checkedAt: "", sourceHttpStatus: null },
       canonicalProfileUrl: profileUrl,
       factualSources: { source: "catalogue-master", fields: ["Titel", "Udgiver", "Genre", "Kort beskrivelse", "Hovedserie"] },
@@ -388,6 +436,7 @@ export function buildEditorialPlan({ podcasts, coverManifest, rights, research, 
       excludedPodcastIds: [...extractPodcastIdsFromBufferPosts(posts, podcasts)].sort((a, b) => a.localeCompare(b, "da")),
       historicalUsedIds: [...publishedPodcastIds].sort((a, b) => a.localeCompare(b, "da")) },
     rights: { approvalCount: rights?.approvals?.length ?? 0, missingRightsBlockPosting: true, automaticGenreFallback: false },
+    heldCandidates: heldCandidates.sort((a, b) => a.podcastId.localeCompare(b.podcastId, "da")),
     sharedArtworkGroups: [...new Map(selected.filter((slot) => slot.cover.sharedArtwork.required)
       .map((slot) => [slot.cover.sourceChecksum, {
         ...slot.cover.sharedArtwork,
@@ -479,7 +528,7 @@ export function serializeReviewCsv(plan) {
   const columns = [
     "position", "suggestedDate", "podcastId", "title", "score", "underratedPearl", "publisher", "genre", "mainSeries",
     "sourceDescription", "ownerTake", "publisherInstagramMentions", "publisherMentionEvidenceJson", "targetLinkCandidate",
-    "targetLinkEvidenceUrl", "targetLinkVerifiedBy", "targetLinkVerifiedAt", "captionDraft (read-only preview)",
+    "targetLinkEvidenceUrl", "targetLinkEvidenceJson", "targetLinkVerifiedBy", "targetLinkVerifiedAt", "captionDraft (read-only preview)",
     "targetLinkStatus", "linkResearchStatus", "linkResearchEvidenceUrl", "linkResearchCheckedAt", "linkHttpStatus",
     "accessType", "accessEvidenceUrl", "accessCheckedAt", "currentAccessStatus", "currentAccessEvidenceUrl", "currentAccessCheckedAt", "accessFreshness", "canonicalProfileUrl", "hashtags",
     "verifiedPublisherMentions", "coverSourcePath", "coverSourceUrl", "coverArtworkId", "coverSourceChecksum",
@@ -497,6 +546,7 @@ export function serializeReviewCsv(plan) {
     const values = [slot.position, slot.suggestedDate, slot.podcastId, slot.title, slot.score.display, slot.underratedPearl ? "x" : "",
       slot.publisher, slot.genre, slot.mainSeries, slot.caption.factualLines, slot.caption.ownerTake, slot.caption.publisherMentions.join("; "),
       JSON.stringify(slot.caption.publisherMentionEvidence), slot.caption.targetLinkCandidate, slot.caption.targetLinkEvidenceUrl,
+      JSON.stringify(slot.caption.targetLinkEvidence),
       slot.caption.targetLinkVerifiedBy, slot.caption.targetLinkVerifiedAt, slot.captionDraft, slot.caption.targetLinkStatus,
       slot.caption.targetLinkResearchStatus, slot.caption.targetLinkResearchEvidenceUrl, slot.caption.targetLinkResearchCheckedAt,
       slot.caption.targetLinkHttpStatus, slot.access.type, slot.access.evidenceUrl, slot.access.checkedAt,
@@ -616,6 +666,22 @@ export function validateEditorialPlan(plan, context = {}) {
         const expectedTargetLink = researchMatches.length === 1 && String(researchMatches[0].linkStatus ?? "").startsWith("verified-") &&
           urlIsHttps(researchMatches[0].finalUrl) ? researchMatches[0].finalUrl : clean(row.Link);
         if (slot.caption?.targetLinkCandidate !== expectedTargetLink) slotErrors.push("Candidate listening link differs from exact-ID current source review");
+        if (researchMatches.length === 1) {
+          const evidence = researchMatches[0];
+          if (evidence.candidateDisposition === "hold") slotErrors.push("Exact-ID listening source is on HOLD");
+          if (evidence.cataloguePublisher && evidence.cataloguePublisher !== clean(row.Udgiver)) {
+            slotErrors.push("Catalogue publisher changed since the exact-ID listening-link review");
+          }
+          if (evidence.verifiedPublisher && evidence.verifiedPublisher.trim().toLocaleLowerCase("da-DK") !== clean(row.Udgiver).toLocaleLowerCase("da-DK")) {
+            slotErrors.push("Verified source publisher differs from the exact catalogue publisher");
+          }
+          const linkEvidence = slot.caption?.targetLinkEvidence;
+          if (linkEvidence?.podcastId !== slot.podcastId || linkEvidence?.sourceUrl !== evidence.sourceUrl ||
+              linkEvidence?.finalUrl !== evidence.finalUrl || linkEvidence?.status !== evidence.linkStatus ||
+              linkEvidence?.httpStatus !== evidence.httpStatus || linkEvidence?.checkedAt !== evidence.checkedAt) {
+            slotErrors.push("Listening-link evidence is missing or no longer bound to this exact Podcast-ID and URL");
+          }
+        }
         const coverMatches = (context.coverManifest?.podcasts ?? []).filter((cover) => cover.appPodcastKey === slot.podcastId && cover.title === row.Titel);
         if (coverMatches.length !== 1 || coverMatches[0].sourceChecksum !== slot.cover?.sourceChecksum ||
             coverMatches[0].original?.checksum !== slot.cover?.sourceChecksum) slotErrors.push("Original cover identity or source checksum changed");
