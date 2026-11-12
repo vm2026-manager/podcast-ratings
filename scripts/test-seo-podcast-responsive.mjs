@@ -53,7 +53,34 @@ try {
     }
     assert(navFocused, `keyboard focus does not reach main navigation at ${width}px`);
 
+    const guideResponse = await page.goto(`${origin}/podcast-anbefalinger/`, { waitUntil: "domcontentloaded" });
+    assert.equal(guideResponse.status(), 200, `recommendation guide should return HTTP 200 at ${width}px`);
+    const guide = await page.evaluate(() => ({
+      documentWidth: document.documentElement.scrollWidth,
+      bodyWidth: document.body.scrollWidth,
+      nav: [...document.querySelectorAll('.site-header nav[aria-label="Hovednavigation"] a')]
+        .filter((link) => getComputedStyle(link).display !== "none" && link.getBoundingClientRect().width > 0)
+        .map((link) => link.textContent.trim()),
+      links: [...document.querySelectorAll("a.supplemental-podcast-link")].map((link) => ({ text: link.textContent.trim(), href: link.getAttribute("href") }))
+    }));
+    assert(guide.documentWidth <= width + 1 && guide.bodyWidth <= width + 1, `recommendation guide overflows at ${width}px: ${JSON.stringify(guide)}`);
+    assert(["Forside", "Ranglister", "Udforsk", "Podcastforslag"].every((label) => guide.nav.includes(label)), `recommendation navigation missing at ${width}px`);
+    assert.equal(guide.links.length, 7, `all supplementary podcast links render at ${width}px`);
+    assert(guide.links.some((link) => link.text === "Menneskedyret" && link.href === "/podcast/menneskedyret/"));
+    if (width === 320) {
+      let suggestionFocused = false;
+      for (let index = 0; index < 60 && !suggestionFocused; index += 1) {
+        await page.keyboard.press("Tab");
+        suggestionFocused = await page.evaluate(() => document.activeElement?.matches('a.supplemental-podcast-link[href="/podcast/menneskedyret/"]:focus-visible') || false);
+      }
+      assert(suggestionFocused, "keyboard focus visibly reaches the new podcast suggestions");
+    }
+    const suggestionResponse = await page.locator('a.supplemental-podcast-link[href="/podcast/menneskedyret/"]').click().then(() => page.waitForLoadState("domcontentloaded")).then(() => page);
+    assert.equal(suggestionResponse.url(), `${origin}/podcast/menneskedyret/`, `supplementary link navigates to its existing SEO page at ${width}px`);
+    assert.equal(await page.locator('link[rel="canonical"]').getAttribute("href"), "https://podcastlisten.dk/podcast/menneskedyret/");
+
     if (width === 1440) {
+      await page.goto(`${origin}/`, { waitUntil: "domcontentloaded" });
       await page.locator('.site-nav__link[href="#ranglister"]').first().click();
       const desktopPilotLink = page.locator('a.desktop-ranking-title-link[href="/podcast/kapret/"]');
       await desktopPilotLink.waitFor({ state: "visible" });
