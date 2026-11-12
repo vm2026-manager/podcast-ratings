@@ -18,7 +18,6 @@ jobs:
       BUFFER_API_KEY: ${{ secrets.BUFFER_API_KEY }}
       INSTAGRAM_PLAN_MODE: read-only
       INSTAGRAM_HISTORY_FILE: ${{ github.workspace }}/.instagram/used-podcast-ids.json
-      INSTAGRAM_PLAN_OUTPUT_DIR: ${{ runner.temp }}/instagram-editorial-plan
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -32,6 +31,8 @@ jobs:
           restore-keys: instagram-history-
       - name: Prepare 15 unapproved owner-review candidates
         run: node scripts/run-instagram-editorial-plan.mjs
+        env:
+          INSTAGRAM_PLAN_OUTPUT_DIR: ${{ runner.temp }}/instagram-editorial-plan
       - uses: actions/upload-artifact@v4
         with:
           name: instagram-editorial-review-${{ github.run_id }}
