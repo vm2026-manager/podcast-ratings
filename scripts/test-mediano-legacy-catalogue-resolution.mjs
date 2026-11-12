@@ -19,19 +19,94 @@ const aliases = {
   "sådan blev han victor froholdt": "klub mediano",
   "den store talentserie": "klub mediano"
   , "mediano special hvad siger data om superligaen": "mediano special"
+  , "der var engang et mal af peter møller mod farum": "der var engang et mal"
+  , "her er vores bud pa de ti spillere har været de største transfersucceser i superligaen": "transfer special"
+  , "sagen om de 15 point forsvandt fra i lommen af den gamle dame": "mediano special"
+  , "landsholdets analytiker mounir akhiat": "troels bech i en samtale"
+  , "kristjaan speakmann": "bruchmann ringer til"
 };
 const jenningsLegacyIds = rows.filter((row) => row.publisher === "Mediano" && row.mainSeries === "Jennings").map((row) => row.id);
 assert.equal(jenningsLegacyIds.length, 18, "all reviewed Jennings legacy rows are enumerated");
 const jenningsAliases = Object.fromEntries(jenningsLegacyIds.map((id) => [id, "magasinet jennings"]));
 Object.assign(aliases, jenningsAliases);
-const localCanonicalIds = new Set(["magasinet jennings", "mediano special", "transfer special", "bruchmann ringer til", "der var engang et mal"]);
+const localCanonicalIds = new Set([
+  "magasinet jennings",
+  "mediano special",
+  "transfer special",
+  "bruchmann ringer til",
+  "der var engang et mal",
+  "kampen om historien dr"
+]);
 const canonicalIds = new Set(rows.map((row) => row.id));
+const allCurrentIds = new Set([...canonicalIds, ...localCanonicalIds]);
+const suppressedRows = rows.filter((row) => aliases[row.id] && allCurrentIds.has(aliases[row.id]));
+const suppressedIds = suppressedRows.map((row) => row.id).sort();
+const expectedSuppressedIds = [
+  "ciao gianni",
+  "den store talentserie",
+  "der var engang et mal af peter møller mod farum",
+  "eksklusivt interview med jesper møller om fifa og infantino",
+  "fodbold og samfund med wrexham st pauli athletic club vsk og aarhus fremad",
+  "forudsigelsesmarkederne er kommet for at blive derfor skal det bekymre dig",
+  "fra johnny til donny fredspris fifa og forspil til vm 2026",
+  "her er scenariet alle frygter betting bag superliga og samtlige divisioner",
+  "her er vores bud pa de ti spillere har været de største transfersucceser i superligaen",
+  "infantino abner for russisk comeback dbu reagerer",
+  "infantino foran genvalg iran overladt til sig selv og fifa i mystisk sponsorat",
+  "infantinos mislykkede fredsforsøg dyrt vm og saudisk nedjustering",
+  "jesper møller ved ikke om dbu vil stemme pa infantino det har vi ikke taget stilling til endnu",
+  "kristjaan speakmann",
+  "landsholdets analytiker mounir akhiat",
+  "landskabet for dansk børnefodbold med politiken og fc københavn",
+  "mediano special hvad siger data om superligaen",
+  "sadan blev han victor froholdt",
+  "sagen om de 15 point forsvandt fra i lommen af den gamle dame",
+  "sprængfarlig rapport om datagigant det gra marked i england og tryktest af christiansborg",
+  "trumps krig sætter fifa i kattepine og european super league er død",
+  "vi præsenterer erik skjærbæk",
+  "vm boykot handboldchef har faet nok og city sag trækker i langdrag",
+  "vm optakt sadan lyder infantino bag facaden",
+  "vm special om trump infantino indrejseproblemer og manden bag balogun breaking",
+  "whistlebloweren der afslørede qatar sadan snød vi verdenspressen",
+  "flere priser flere aftaler og flere penge op af fansenes lommer"
+].sort();
+assert.deepEqual(suppressedIds, expectedSuppressedIds, "only exact reviewed Mediano episode IDs with present canonical targets are suppressed");
+assert.ok(rows.every((row) => row.title), "every source row survives the runtime's title-presence check");
+const localAdditions = [...localCanonicalIds].filter((id) => !canonicalIds.has(id));
+for (const id of localAdditions) {
+  assert.match(app, new RegExp(`"Podcast-ID": "${id}"`, "u"), `${id} must be an exact local canonical Podcast-ID`);
+}
+for (const row of suppressedRows) {
+  const escapedId = row.id.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  assert.match(
+    app,
+    new RegExp(`"${escapedId}": "${aliases[row.id]}"`, "u"),
+    `${row.id} must use its reviewed exact-ID mapping to ${aliases[row.id]}`
+  );
+}
 const visibleIds = new Set([
   ...localCanonicalIds,
   ...rows
-    .filter((row) => !aliases[row.id] || !(canonicalIds.has(aliases[row.id]) || localCanonicalIds.has(aliases[row.id])))
+    .filter((row) => !aliases[row.id] || !allCurrentIds.has(aliases[row.id]))
     .map((row) => row.id)
 ]);
+const retainedRawIds = rows.map((row) => row.id).filter((id) => visibleIds.has(id)).sort();
+assert.ok(suppressedIds.every((id) => !visibleIds.has(id)), "suppressed episode IDs are not also emitted as podcasts");
+assert.deepEqual(
+  [...retainedRawIds, ...suppressedIds].sort(),
+  [...canonicalIds].sort(),
+  "every raw Podcast-ID is either retained exactly or routed by its exact legacy mapping"
+);
+assert.equal(
+  visibleIds.size,
+  rows.length + localAdditions.length - suppressedRows.length,
+  "runtime count is raw unique IDs + missing reviewed local canonicals - exact legacy episode IDs"
+);
+assert.equal(rows.length, new Set(rows.map((row) => row.id)).size, "raw catalogue Podcast-IDs stay unique");
+assert.equal(localCanonicalIds.size, 6, "all six reviewed local canonical IDs stay enumerated");
+assert.equal(suppressedRows.length, 27, "27 exact legacy episode rows currently resolve to present canonical series");
+assert.ok(visibleIds.has("balkans knuste hjerte"), "Balkans remains a direct current podcast ID");
+assert.ok(visibleIds.has("hvem er saveus"), "Saveus remains a direct current podcast ID");
 
 assert.equal(rows.find((row) => row.id === "vi præsenterer erik skjærbæk")?.mainSeries, "Klub Mediano");
 assert.equal(rows.find((row) => row.id === "sadan blev han victor froholdt")?.mainSeries, "Klub Mediano");
@@ -43,6 +118,7 @@ assert.equal(visibleIds.has("den store talentserie"), false);
 assert.equal(visibleIds.has("mediano special hvad siger data om superligaen"), false);
 assert.equal(visibleIds.has("mediano special"), true);
 assert.equal(visibleIds.has("klub mediano"), true);
+assert.equal(visibleIds.has("kampen om historien dr"), true);
 assert.equal(visibleIds.has("ciao gianni"), false);
 assert.equal(visibleIds.has("infantino abner for russisk comeback dbu reagerer"), false);
 assert.match(app, /"Podcast-ID": "magasinet jennings"/u);
@@ -79,5 +155,27 @@ assert.match(app, /function resolveCanonicalPodcastId[\s\S]*?resolvePodcastBySto
 assert.match(app, /function resolveSavedPodcastKey[\s\S]*?resolveCanonicalPodcastId/u);
 assert.match(app, /function getPersistedUserRatingKey[\s\S]*?userRatingPersistedKeyByCanonical/u);
 assert.equal(rows.find((row) => row.id === "sadan blev han victor froholdt")?.title, "Sådan blev han Victor Froholdt");
+
+// Display groups do not remove their exact catalogue members from state.podcasts.
+// Ranking presentation replaces these 13 source rows with two synthetic groups
+// (net -11 ranking cards); this is separate from the 27 Mediano legacy episodes.
+const displayGroups = JSON.parse(await readFile(new URL("../data/podcast-display-groups.json", import.meta.url), "utf8")).groups
+  .filter((group) => group.rankingEnabled);
+const groupedMemberIds = displayGroups.flatMap((group) => group.memberLegacyKeys);
+assert.equal(groupedMemberIds.length, 13, "active display groups contain 13 exact catalogue members");
+assert.ok(groupedMemberIds.every((id) => visibleIds.has(id)), "group members remain in the canonical podcast lookup");
+assert.equal(displayGroups.length, 2, "the ranking representation has two synthetic display groups");
+
+console.log(JSON.stringify({
+  rawPodcastIds: rows.length,
+  localCanonicalAdditions: localAdditions.length,
+  exactLegacyEpisodesRouted: suppressedRows.length,
+  internalPodcastCount: visibleIds.size,
+  rankingGroupMembers: groupedMemberIds.length,
+  rankingDisplayGroups: displayGroups.length,
+  rankingDeltaFromGrouping: groupedMemberIds.length - displayGroups.length,
+  "balkans knuste hjerte": visibleIds.has("balkans knuste hjerte"),
+  "hvem er saveus": visibleIds.has("hvem er saveus")
+}, null, 2));
 
 console.log("Mediano legacy catalogue resolution regression checks passed.");
