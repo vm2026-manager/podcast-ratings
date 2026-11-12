@@ -17641,6 +17641,10 @@ html body #podcastDetailSheet [data-podcast-detail-placement]:empty {
     text-align: left !important;
   }
 
+  html body.page-ranglister .desktop-ranking-title-link {
+    text-decoration: none !important;
+  }
+
   html body.page-ranglister .desktop-ranking-title {
     margin-bottom: 7px !important;
     display: -webkit-box !important;

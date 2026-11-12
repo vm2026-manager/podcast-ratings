@@ -53,6 +53,13 @@ try {
     }
     assert(navFocused, `keyboard focus does not reach main navigation at ${width}px`);
 
+    if (width === 1440) {
+      await page.locator('.site-nav__link[href="#ranglister"]').first().click();
+      const desktopPilotLink = page.locator('a.desktop-ranking-title-link[href="/podcast/kapret/"]');
+      await desktopPilotLink.waitFor({ state: "visible" });
+      assert.equal(await desktopPilotLink.textContent().then((text) => text.trim()), "Kapret");
+    }
+
     const pagesToCheck = width === 320 ? baseline.podcasts : [baseline.podcasts[0]];
     for (const podcast of pagesToCheck) {
       const response = await page.goto(`${origin}/podcast/${podcast.slug}/`, { waitUntil: "domcontentloaded" });

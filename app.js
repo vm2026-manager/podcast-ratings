@@ -8303,12 +8303,28 @@ function getDesktopRankingTitleMarkup(podcast, variant) {
     getDesktopRankingTitleParts(podcast);
   const titleClass =
     variant === "top" ? "desktop-ranking-title" : "desktop-ranking-row__title";
+  const seoRoute = getSeoPilotRoute(podcast);
 
   if (!series) {
+    if (seoRoute) {
+      return `
+        <a class="${titleClass} desktop-ranking-title-link" href="${escapeHtml(seoRoute)}" data-action="open-details" aria-label="Vis detaljer om ${escapeHtml(displayText)}">
+          ${escapeHtml(displayText)}${getPodcastAccessIndicatorMarkup(podcast)}
+        </a>
+      `;
+    }
     return `
       <button class="${titleClass}" type="button" data-action="open-details">
         ${escapeHtml(displayText)}${getPodcastAccessIndicatorMarkup(podcast)}
       </button>
+    `;
+  }
+
+  if (seoRoute && !titleText) {
+    return `
+      <a class="${titleClass} desktop-ranking-title-link" href="${escapeHtml(seoRoute)}" data-action="open-details" aria-label="Vis detaljer om ${escapeHtml(displayText)}">
+        ${escapeHtml(displayText)}${getPodcastAccessIndicatorMarkup(podcast)}
+      </a>
     `;
   }
 
@@ -8320,7 +8336,12 @@ function getDesktopRankingTitleMarkup(podcast, variant) {
         data-action="filter-desktop-main-series"
         data-value="${escapeHtml(series)}"
         aria-label="Filtr\u00e9r efter hovedserien ${escapeHtml(series)}"
-      >${escapeHtml(seriesLinkText)}</button>${titleText ? ` <button
+      >${escapeHtml(seriesLinkText)}</button>${titleText ? seoRoute ? ` <a
+        class="desktop-ranking-title-rest desktop-ranking-title-link"
+        href="${escapeHtml(seoRoute)}"
+        data-action="open-details"
+        aria-label="Vis detaljer om ${escapeHtml(displayText)}"
+      >${escapeHtml(titleText)}${getPodcastAccessIndicatorMarkup(podcast)}</a>` : ` <button
         class="desktop-ranking-title-rest"
         type="button"
         data-action="open-details"
@@ -26567,6 +26588,7 @@ function handlePodcastGridClick(event) {
   }
 
   if (action === "open-details") {
+    if (actionTarget.tagName === "A") event.preventDefault();
     openPodcastDetailSheet(podcast, actionTarget, { allowDesktop: true });
     return;
   }
