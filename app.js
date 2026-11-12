@@ -243,7 +243,28 @@ const LOCAL_CANONICAL_CATALOGUE_ROWS = Object.freeze([{
   "Kort beskrivelse": "Medianos serie om ikoniske scoringer og historierne omkring dem – med analyse, fodboldhistorie og kontekst.",
   "Lang beskrivelse": "Der var engang et mål tager udgangspunkt i en mindeværdig scoring og bruger den som indgang til en større fodboldhistorie. Værter og eksperter genbesøger kampens og spillerens betydning, den taktiske detalje og den tid, klub eller kultur som målet blev en del af.",
   manualEpisodes: DER_VAR_ENGANG_ET_MAL_MANUAL_EPISODES
+}, {
+  "Podcast-ID": "kampen om historien dr",
+  Titel: "Kampen om historien",
+  Genre: "Historie",
+  Udgiver: "DR",
+  Link: "https://www.dr.dk/lyd/p1/kampen-om-historien-3166339029000",
+  Feed: "https://api.dr.dk/podcasts/v1/feeds/kampen-om-historien-3.xml?format=podcast",
+  Billedlink: "https://api.dr.dk/podcasts/v1/images/urn:dr:podcast:image:69b92600196d91f77288ecdc.jpg",
+  "Kort beskrivelse": "DR’s historiske podcast om fortidens begivenheder og deres betydning.",
+  "Lang beskrivelse": "Kampen om historien er DR’s historiske podcast om begivenheder, konflikter og personer, der har sat spor i historien.",
+  accessType: "free",
+  accessEvidenceUrl: "https://www.dr.dk/lyd/p1/kampen-om-historien-3166339029000",
+  accessCheckedAt: "2026-11-11"
 }]);
+
+// These catalogue records are historical editorial episode reviews. Their
+// exact IDs remain addressable for existing links and ratings, while the
+// public catalogue presents them under the verified DR parent show.
+const DR_EDITORIAL_REVIEW_PARENT_BY_PODCAST_ID = Object.freeze({
+  "rwanda verdens hurtigste folkemord": "kampen om historien dr",
+  "sovjetunionen lenin og stalins danske agent": "kampen om historien dr"
+});
 
 // Registry-derived historical episode preservation for a canonical catalogue
 // row which already exists in data/podcasts.json. This is deliberately an
@@ -553,8 +574,19 @@ const EPISODE_PODCAST_CONFIG = {
     podcastKey: "magten",
     databasePodcastKey: "magten",
     enabled: true,
+    ownRatingMode: "episode-derived",
     displayName: "Magten",
     searchPlaceholder: "Søg i Magten-episoder",
+    source: "dr",
+    persistence: "supabase"
+  },
+  "kampen om historien dr": {
+    podcastKey: "kampen om historien dr",
+    databasePodcastKey: "kampen om historien dr",
+    enabled: true,
+    ownRatingMode: "episode-derived",
+    displayName: "Kampen om historien",
+    searchPlaceholder: "Søg i Kampen om historien-episoder",
     source: "dr",
     persistence: "supabase"
   },
@@ -4322,7 +4354,7 @@ function getPopularNowCandidateUniverse({ requireActivity = true } = {}) {
       ? { ...displayGroup, popularNowActivityStat: activeSeasonStats[0]?.stat || null }
       : null;
   }).filter(Boolean);
-  const ordinary = state.podcasts.filter(
+  const ordinary = getOrdinaryPodcastRows().filter(
     (podcast) => !groupedPodcastKeys.has(normalizeText(getPodcastKey(podcast))) &&
       !groupedPodcastKeys.has(normalizeMatchKey(getLegacyPodcastKey(podcast)))
   );
@@ -5519,12 +5551,30 @@ function getRankingCandidates() {
     activeGroups.flatMap((group) => group.memberLegacyKeys.map(normalizeMatchKey))
   );
   const ordinary = state.podcasts.filter(
-    (podcast) => !memberKeys.has(getLegacyPodcastKey(podcast))
+    (podcast) => !memberKeys.has(getLegacyPodcastKey(podcast)) &&
+      !isDrEditorialReviewPodcast(podcast)
   );
   return activeGroups
     .map(createRankingDisplayGroup)
     .filter(Boolean)
     .concat(ordinary);
+}
+
+function getOrdinaryPodcastRows(source = state.podcasts) {
+  return source.filter((podcast) => !isDrEditorialReviewPodcast(podcast));
+}
+
+function isDrEditorialReviewPodcast(podcast) {
+  const parentId = DR_EDITORIAL_REVIEW_PARENT_BY_PODCAST_ID[getPodcastId(podcast)];
+  return Boolean(parentId && state.podcastById[parentId]);
+}
+
+function getDrEditorialReviewPodcasts(parentPodcast) {
+  if (getPodcastId(parentPodcast) !== "kampen om historien dr") return [];
+  return Object.entries(DR_EDITORIAL_REVIEW_PARENT_BY_PODCAST_ID)
+    .filter(([, parentId]) => parentId === getPodcastId(parentPodcast))
+    .map(([podcastId]) => state.podcastById[podcastId])
+    .filter(Boolean);
 }
 
 function getRankingDisplayItemByKey(key) {
@@ -7829,6 +7879,17 @@ async function synchronizeEpisodeDerivedParentRating(
   const episodeConfig = getEpisodePodcastConfig(podcastKey);
   const canonicalKey = getEpisodeParentRatingKey(podcastKey);
   if (!episodeKey || !canonicalKey) return;
+  if (episodeConfig?.ownRatingMode === "episode-derived") {
+    // The episode average is a display-only overlay. Keep user_ratings and its
+    // in-memory direct value untouched so deleting the last episode rating
+    // reveals the original direct rating again.
+    if (refreshUi) {
+      rebuildUserRanks();
+      render();
+      refreshOpenPodcastDetailSheet();
+    }
+    return;
+  }
   const summary = getPodcastEpisodeUserRatingSummary(episodeKey);
   const backup = getEpisodeParentRatingBackup(episodeKey, { local });
   if (hasProtectedDisplayGroupSeasonRating(episodeConfig, canonicalKey, backup)) return;
@@ -7857,6 +7918,7 @@ async function synchronizeEpisodeDerivedParentRating(
 }
 
 async function reconcileExistingEpisodeDerivedParentRating(podcastKey) {
+  if (getEpisodePodcastConfig(podcastKey)?.ownRatingMode === "episode-derived") return;
   const local = usesLocalEpisodePersistence(podcastKey);
   const episodeKey = local
     ? getLocalEpisodePodcastKey(podcastKey)
@@ -7961,6 +8023,12 @@ function getUserRatingForPodcast(podcast) {
 
   const podcastKey = getPodcastKey(podcast);
   const canonicalKey = resolveCanonicalPodcastId(podcastKey) || (isDisplayGroupRatingKey(podcastKey) ? podcastKey : "");
+  const episodeConfig = getEpisodePodcastConfig(podcast);
+  if (canonicalKey && episodeConfig?.ownRatingMode === "episode-derived" && state.authUser) {
+    const episodeRatings = getPodcastDetailEpisodeRatingState(podcast);
+    if (!episodeRatings.resolved) return null;
+    if (episodeRatings.count > 0) return Math.round(Number(episodeRatings.average) * 10) / 10;
+  }
   return canonicalKey ? state.userRatingsByKey[canonicalKey] ?? null : null;
 }
 
@@ -10113,7 +10181,9 @@ async function saveActiveEpisodeRating() {
       throw new Error("Din konto eller episode ændrede sig. Luk dialogen, og prøv igen.");
     }
 
-    if (previousEpisodeSummary.count === 0 && !getEpisodeParentRatingBackup(podcastKey, { local: isLocalEpisodeRating })) {
+    if (episodeConfig?.ownRatingMode !== "episode-derived" &&
+        previousEpisodeSummary.count === 0 &&
+        !getEpisodeParentRatingBackup(podcastKey, { local: isLocalEpisodeRating })) {
       captureEpisodeParentRatingBackup(podcastKey, { local: isLocalEpisodeRating });
       if (!getEpisodeParentRatingBackup(podcastKey, { local: isLocalEpisodeRating })) {
         throw new Error("Din tidligere samlede vurdering kunne ikke bevares.");
@@ -10175,7 +10245,7 @@ async function saveActiveEpisodeRating() {
         saveLocalEpisodeRating(podcastKey, episodeId, previousUserRating);
       }
     }
-    if (previousEpisodeSummary.count === 0) {
+    if (episodeConfig?.ownRatingMode !== "episode-derived" && previousEpisodeSummary.count === 0) {
       clearEpisodeParentRatingBackup(podcastKey, { local: isLocalEpisodeRating });
     }
     console.error(error);
@@ -11081,7 +11151,7 @@ function getPodcastDetailFallbackRecommendations(podcast, seenPodcastKeys, seenP
   const currentGenre = normalizeComparable(podcast?.genre);
   const currentSeries = normalizeComparable(podcast?.mainSeries);
   const currentRating = Number(podcast?.ratingValue) || 0;
-  const candidates = state.podcasts
+  const candidates = getOrdinaryPodcastRows()
     .filter((candidatePodcast) => {
       const candidateKey = getPodcastKey(candidatePodcast);
       const candidateTitle = normalizeComparable(candidatePodcast?.title);
@@ -11242,7 +11312,7 @@ function getPodcastDetailDynamicRecommendations(podcast, validated) {
   });
 
   const seenTitles = new Set([currentTitle]);
-  const scoredCandidates = state.podcasts
+  const scoredCandidates = getOrdinaryPodcastRows()
     .filter((candidatePodcast) => {
       const candidateKey = getPodcastKey(candidatePodcast);
       const candidateTitle = normalizeComparable(candidatePodcast?.title);
@@ -11465,7 +11535,7 @@ function resolvePublicPodcastDisplayItem(podcast) {
 
 function getPublicDisplayPodcasts(source = state.podcasts) {
   const seenKeys = new Set();
-  return source.reduce((podcasts, podcast) => {
+  return getOrdinaryPodcastRows(source).reduce((podcasts, podcast) => {
     const displayItem = resolvePublicPodcastDisplayItem(podcast);
     const key = getPodcastKey(displayItem);
     if (!displayItem || !key || seenKeys.has(key)) return podcasts;
@@ -11793,6 +11863,34 @@ function getHistoricalMedianoEditorialEpisodeReviewMarkup(podcast) {
   `;
 }
 
+function getDrEditorialReviewMarkup(podcast) {
+  const podcastId = getPodcastId(podcast);
+  const parentId = DR_EDITORIAL_REVIEW_PARENT_BY_PODCAST_ID[podcastId];
+  if (parentId && state.podcastById[parentId]) {
+    const parent = state.podcastById[parentId];
+    return `<section class="podcast-detail-sheet__dr-review-context" aria-label="Tilknyttet DR-hovedpodcast">
+      <span>Anmeldt afsnit fra</span>
+      <button type="button" data-dr-editorial-review-target="${escapeHtml(parentId)}">${escapeHtml(parent.title)}</button>
+    </section>`;
+  }
+
+  const reviews = getDrEditorialReviewPodcasts(podcast);
+  if (!reviews.length) return "";
+  return `<section class="podcast-detail-sheet__dr-editorial-reviews" aria-labelledby="drEditorialReviewsHeading">
+    <h3 id="drEditorialReviewsHeading">Tidligere anmeldelser af afsnit</h3>
+    <ul>${reviews.map((review) => `<li>
+      <button type="button" data-dr-editorial-review-target="${escapeHtml(getPodcastId(review))}">
+        <span class="podcast-detail-sheet__dr-editorial-review-copy">
+          <strong>${escapeHtml(review.title)}</strong>
+          ${review.shortDescription ? `<small>${escapeHtml(review.shortDescription)}</small>` : ""}
+        </span>
+        <span class="podcast-detail-sheet__dr-editorial-review-score" aria-label="Oprindelig vurdering ${escapeHtml(formatCompactRating(review.ratingValue))} af 10">${escapeHtml(formatCompactRating(review.ratingValue))}<small>/10</small></span>
+      </button>
+    </li>`).join("")}</ul>
+    <p>Vurderingerne gælder de oprindelige anmeldelser og er ikke en vurdering af hele podcasten.</p>
+  </section>`;
+}
+
 function getMainSeriesPodcasts(mainSeries) {
   const seriesKey = normalizeComparable(mainSeries);
   if (!seriesKey) return [];
@@ -11912,6 +12010,12 @@ function ensurePodcastDetailSheet() {
   dialog.addEventListener("click", (event) => {
     if (event.target.closest("[data-podcast-detail-close]")) {
       closePodcastDetailSheet();
+      return;
+    }
+    const editorialReviewButton = event.target.closest("[data-dr-editorial-review-target]");
+    if (editorialReviewButton) {
+      const target = state.podcastById[editorialReviewButton.dataset.drEditorialReviewTarget];
+      if (target) openPodcastDetailFromModal(target, editorialReviewButton);
     }
   });
 
@@ -16404,6 +16508,7 @@ function renderPodcastDetailSheetContent(
         ${getPodcastDetailOwnRatingMarkup(podcast)}
       </div>
     </section>
+    ${getDrEditorialReviewMarkup(podcast)}
     ${getFriMadsArticlePreviewPlaceholder(podcast)}
     ${getHistoricalMedianoEditorialEpisodeReviewMarkup(podcast)}
     <section class="podcast-detail-sheet__episode-rating-mobile-help" data-podcast-detail-episode-rating-mobile-help${mobileEpisodeRatingLockHelpMarkup ? "" : " hidden"} aria-live="polite">${mobileEpisodeRatingLockHelpMarkup}</section>
@@ -18285,7 +18390,7 @@ function createRecentCardElement(podcast) {
 function renderRecent() {
   if (!elements.recentGrid) return;
 
-  const recent = [...state.podcasts]
+  const recent = [...getOrdinaryPodcastRows()]
     .filter((podcast) => podcast.ratingDateObject)
     .sort((a, b) => b.ratingDateObject - a.ratingDateObject)
     .slice(0, 3);
@@ -20352,7 +20457,7 @@ function bindModeratorSuggestionActions(container) {
     if (!card || !results) return;
     const query = normalizeSearchValue(field.value);
     const queryVariants = normalizeSearchVariants(query);
-    const matches = query.length < 2 ? [] : state.podcasts
+    const matches = query.length < 2 ? [] : getOrdinaryPodcastRows()
       .filter((podcast) => searchVariantsMatch(queryVariants, normalizeSearchVariants([podcast.title, podcast.host, podcast.publisher, podcast.mainSeries].join(" "))))
       .slice(0, 6);
     results.innerHTML = matches.map((podcast) => `<button type="button" data-admin-suggestion-select-match="${escapeHtml(podcast.catalogueId)}"><img src="${escapeHtml(getPodcastImageSources(podcast)[0] || "")}" alt="" /><span><strong>${escapeHtml(podcast.title)}</strong><small>${escapeHtml([podcast.host, podcast.publisher, podcast.mainSeries].filter(Boolean).join(" · "))}</small></span></button>`).join("");
@@ -22618,7 +22723,7 @@ function getExploreSearchParts(searchTerm) {
 }
 
 function matchesExploreFilters(podcast, searchParts = [], genre = "Alle") {
-  if (isOutdatedPodcast(podcast)) {
+  if (isOutdatedPodcast(podcast) || isDrEditorialReviewPodcast(podcast)) {
     return false;
   }
 
@@ -24199,7 +24304,7 @@ function getHomeCommunityPopularSourcePodcasts() {
     .filter((group) => group.rankingEnabled)
     .flatMap((group) => getDisplayGroupSeasonIdentities(group));
   const groupItems = new Map();
-  return [...state.podcasts, ...seasonPodcasts].map((podcast) => {
+  return [...getOrdinaryPodcastRows(), ...seasonPodcasts].map((podcast) => {
     const group = state.podcastDetailDisplayGroupByPodcastKey[getPodcastKey(podcast)];
     if (!group) return podcast;
     let displayGroup = groupItems.get(group.id);
@@ -27904,6 +28009,19 @@ function applyPodcastDataRefresh(podcastRows, featuredRows, coverManifestLookup 
     const canonicalPodcast = lookups.byId[canonicalId];
     if (canonicalPodcast) state.podcastByKey[legacyKey] = canonicalPodcast;
   });
+  const drHistoryParent = lookups.byId["kampen om historien dr"];
+  if (drHistoryParent) {
+    const drHistoryReviews = getDrEditorialReviewPodcasts(drHistoryParent);
+    drHistoryParent.editorialEpisodeReviews = drHistoryReviews.map((review) => ({
+      podcastId: getPodcastId(review),
+      title: review.title,
+      ratingValue: review.ratingValue
+    }));
+    drHistoryParent.searchText = buildSearchText([
+      drHistoryParent.searchText,
+      ...drHistoryReviews.map((review) => review.title)
+    ]);
+  }
   state.podcastDisplayGroups = displayGroups;
   state.podcastDisplayGroupsReady = true;
   state.podcastDisplayGroupsVersion += 1;

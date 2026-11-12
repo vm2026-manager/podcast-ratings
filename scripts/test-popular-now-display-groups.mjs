@@ -98,12 +98,12 @@ const isStandaloneSeason = new Function(
   `${extractFunction("isStandaloneSeasonPodcast")}; return isStandaloneSeasonPodcast;`
 )();
 const candidates = new Function(
-  "state", "normalizeMatchKey", "normalizeText", "getLegacyPodcastKey", "getPodcastKey",
+  "state", "getOrdinaryPodcastRows", "normalizeMatchKey", "normalizeText", "getLegacyPodcastKey", "getPodcastKey",
   "getDisplayGroupMemberPodcasts", "createRankingDisplayGroup", "getPopularNowActivityStat",
   "getPopularNow30DayScore", "hasValidPopularNowActivityStat", "hasDocumentedRecentActivity", "isStandaloneSeasonPodcast",
   "deduplicatePodcastResults", "console",
   `${extractFunction("getPopularNowCandidateUniverse")}; return getPopularNowCandidateUniverse;`
-)(state, normalizeMatchKey, normalizeText, getLegacyKey, getKey, getDisplayGroupMemberPodcasts,
+)(state, () => state.podcasts, normalizeMatchKey, normalizeText, getLegacyKey, getKey, getDisplayGroupMemberPodcasts,
   createRankingDisplayGroup, getActivityStat, thirtyDayScore, isValidActivity, isEligible, isStandaloneSeason,
   (items) => [...new Map(items.map((item) => [item.key, item])).values()], { warn() {} });
 

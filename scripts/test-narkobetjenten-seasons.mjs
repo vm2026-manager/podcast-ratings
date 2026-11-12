@@ -23,6 +23,7 @@ const rateButtons = [];
 const content = { classList: { add() {} }, innerHTML: '', querySelector() { return null; }, querySelectorAll(selector) { return selector === '[data-podcast-season-rate]' ? rateButtons : []; } };
 let opened;
 const context = vm.createContext({ state, normalizeText: norm, normalizeComparable: comparable, normalizeMatchKey: match,
+  isDrEditorialReviewPodcast: () => false,
   LEGACY_PODCAST_RATING_KEY_ALIASES: {}, MEDIANO_LEGACY_CATALOGUE_CANONICAL_IDS: {},
   mapPodcast: (row) => ({ title: row.Titel, podcastId: row['Podcast-ID'], legacyKey: match(row.Titel), ratingValue: null }),
   buildSearchText: values => values.join(' '), averageNumbers: values => values.length ? values.reduce((a,b)=>a+b,0)/values.length : null,

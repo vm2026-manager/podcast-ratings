@@ -37,6 +37,7 @@ const state = {
 const publicGroup = { key: "display-group:narkobetjenten", title: "Narkobetjenten", isDisplayGroup: true };
 const displayRuntime = new Function("state", `
   const getPodcastKey = (podcast) => podcast?.key || "";
+  const getOrdinaryPodcastRows = (source = state.podcasts) => source;
   const createRankingDisplayGroup = () => (${JSON.stringify(publicGroup)});
   ${extractFunction("resolvePublicPodcastDisplayItem")}
   ${extractFunction("getPublicDisplayPodcasts")}
@@ -102,6 +103,7 @@ const communityRuntime = new Function("state", `
   const HOME_COMMUNITY_SECONDARY_MIN_COUNT = 2;
   const HOME_POPULAR_CAROUSEL_POOL_LIMIT = 50;
   const getPodcastKey = (podcast) => podcast?.key || "";
+  const getOrdinaryPodcastRows = (source = state.podcasts) => source;
   const getDisplayGroupSeasonIdentities = () => [{
     key: "display-season:narkobetjenten:4", title: "Narkobetjenten (sæson 4)"
   }];

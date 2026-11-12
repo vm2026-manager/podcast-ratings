@@ -401,23 +401,74 @@ async function exerciseDesktopCardAndTable(page) {
 
 async function exerciseReviewCard(page) {
   const target = await page.evaluate(() => {
-    const podcast = state.podcasts.find((candidate) => !candidate.isDisplayGroup && getHostPeople(candidate).some((person) => person.name === "Martin Grønne") && getReviewForPodcast(candidate)?.review);
+    const podcast = state.podcasts.find((candidate) => {
+      if (candidate.isDisplayGroup || !getHostPeople(candidate).some((person) => person.name === "Martin Grønne")) return false;
+      const review = getReviewForPodcast(candidate);
+      const reviewCredit = review?.host || candidate.host || "";
+      const reviewHostKeys = new Set(getHostPeople(reviewCredit).map((person) => person.key));
+      return Boolean(review?.review && getHostPeople(candidate).some((person) =>
+        person.name === "Martin Grønne" && reviewHostKeys.has(person.key)));
+    });
     if (!podcast) return null;
     const key = getPodcastKey(podcast);
-    const reviewCard = createPodcastReviewCardElement(podcast, getReviewForPodcast(podcast), key);
-    elements.podcastGrid.appendChild(reviewCard);
-    return { key, title: podcast.title };
+    const review = getReviewForPodcast(podcast);
+    const reviewCredit = review.host || podcast.host || "";
+    const host = getHostPeople(podcast).find((person) =>
+      person.name === "Martin Grønne" && getHostPeople(reviewCredit).some((reviewPerson) => reviewPerson.key === person.key));
+    const fixtureId = "ranking-host-filter-review-fixture";
+    document.getElementById(fixtureId)?.remove();
+    const fixture = document.createElement("div");
+    fixture.id = fixtureId;
+    fixture.dataset.testFixture = "ranking-host-filter-review";
+    fixture.setAttribute("aria-label", "Testfixture for anmeldelseskort med værtsfilter");
+    document.body.appendChild(fixture);
+    fixture.appendChild(createPodcastReviewCardElement(podcast, review, key));
+    return {
+      fixtureId,
+      key,
+      podcastId: getPodcastId(podcast),
+      title: podcast.title,
+      podcastHost: podcast.host || "",
+      reviewHost: review.host || "",
+      reviewCredit,
+      hostName: host?.name || "",
+      hostKey: host?.key || ""
+    };
   });
   assert.ok(target, "a Martin Grønne podcast has an existing review-card fixture");
-  const card = page.locator('[data-key="' + target.key + '"]');
-  const reviewCredit = card.locator(".review-card__host .ranking-host-person");
-  await reviewCredit.first().waitFor({ state: "visible" });
-  assert.ok((await reviewCredit.count()) > 0, "the expanded review card exposes verified individual host buttons");
-  const button = reviewCredit.first();
-  await button.press("Enter");
-  await page.waitForFunction(() => Boolean(state.activeHostFilter?.key));
-  assert.equal(await page.evaluate(() => state.activePodcastDetailKey), null);
-  await clearHostFilter(page);
+  assert.equal(target.hostName, "Martin Grønne", "the selected review credit contains the exact verified Martin Grønne identity");
+  assert.ok(target.reviewCredit, "the selected review has an explicit, auditable host credit");
+  console.log("Ranking review host fixture:", JSON.stringify(target));
+
+  try {
+    const card = page.locator("#" + target.fixtureId + ' [data-key="' + target.key + '"]');
+    const reviewCredit = card.locator(".review-card__host .ranking-host-person");
+    await reviewCredit.first().waitFor({ state: "visible" });
+    const renderedHosts = await reviewCredit.evaluateAll((buttons) => buttons.map((button) => ({
+      name: button.textContent.trim(),
+      key: button.dataset.hostKey,
+      label: button.getAttribute("aria-label")
+    })));
+    assert.ok(renderedHosts.length > 0, "the expanded review card exposes verified individual host buttons");
+    assert.ok(renderedHosts.some((button) => button.name === target.hostName && button.key === target.hostKey),
+      "the review card exposes the exact individually identified podcast host");
+    const button = card.getByRole("button", { name: "Filtrér ranglisten efter vært " + target.hostName });
+    await button.press("Enter");
+    await page.waitForFunction((expected) =>
+      state.activeHostFilter?.key === expected.key && state.activeHostFilter?.name === expected.name,
+    { key: target.hostKey, name: target.hostName });
+    const afterActivation = await page.evaluate(() => ({
+      detailKey: state.activePodcastDetailKey,
+      filterName: state.activeHostFilter?.name,
+      allResultsMatch: getFilteredPodcasts().every((podcast) => rankingPodcastHasHost(podcast, state.activeHostFilter?.key))
+    }));
+    assert.equal(afterActivation.detailKey, null, "Enter on a review host never opens podcast details");
+    assert.equal(afterActivation.filterName, target.hostName, "Enter activates the exact review host filter");
+    assert.equal(afterActivation.allResultsMatch, true, "the activated review host filter returns only exact identity matches");
+  } finally {
+    await page.evaluate((fixtureId) => document.getElementById(fixtureId)?.remove(), target.fixtureId);
+    await clearHostFilter(page);
+  }
 }
 
 async function exerciseDetailHostNavigation(page, width) {

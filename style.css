@@ -30072,3 +30072,42 @@ body.page-ranglister .popular-now-toggle.is-active {
     min-height: 42px;
   }
 }
+.podcast-detail-sheet__dr-editorial-reviews,
+.podcast-detail-sheet__dr-review-context {
+  min-width: 0;
+  margin-block: 12px;
+  padding: 12px;
+  border: 1px solid rgba(224, 208, 191, 0.72);
+  border-radius: 13px;
+  background: rgba(255, 255, 255, 0.52);
+}
+.podcast-detail-sheet__dr-editorial-reviews h3 { margin: 0 0 8px; font-size: .95rem; }
+.podcast-detail-sheet__dr-editorial-reviews ul { display: grid; gap: 7px; margin: 0; padding: 0; list-style: none; }
+.podcast-detail-sheet__dr-editorial-reviews li { min-width: 0; }
+.podcast-detail-sheet__dr-editorial-reviews li button {
+  display: flex;
+  width: 100%;
+  min-width: 0;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px;
+  border: 1px solid rgba(224, 208, 191, 0.72);
+  border-radius: 10px;
+  background: #fff;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.podcast-detail-sheet__dr-editorial-review-copy { display: grid; min-width: 0; gap: 3px; }
+.podcast-detail-sheet__dr-editorial-review-copy strong { overflow-wrap: anywhere; }
+.podcast-detail-sheet__dr-editorial-review-copy small,
+.podcast-detail-sheet__dr-editorial-reviews > p,
+.podcast-detail-sheet__dr-review-context { color: #756b62; font-size: .78rem; line-height: 1.4; }
+.podcast-detail-sheet__dr-editorial-review-score { flex: none; color: #ff5c16; font-weight: 850; }
+.podcast-detail-sheet__dr-editorial-review-score small { color: #756b62; font-size: .68em; }
+.podcast-detail-sheet__dr-editorial-reviews > p { margin: 8px 0 0; }
+.podcast-detail-sheet__dr-review-context { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px; }
+.podcast-detail-sheet__dr-review-context button { padding: 0; border: 0; background: none; color: #a63b0a; font: inherit; font-weight: 750; text-align: left; text-decoration: underline; text-underline-offset: 2px; cursor: pointer; }
+.podcast-detail-sheet__dr-editorial-reviews button:focus-visible,
+.podcast-detail-sheet__dr-review-context button:focus-visible { outline: 3px solid #ff8a52; outline-offset: 2px; }
