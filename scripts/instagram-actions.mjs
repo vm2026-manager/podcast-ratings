@@ -10,16 +10,16 @@ export async function performInstagramAction({ mode, channel, selected, graphql,
   }
   const existingDuplicate = (history.posts ?? []).find((post) => post.text?.includes(selected.canonicalUrl));
   if (existingDuplicate) throw new Error(`Duplicate Buffer post exists for Podcast-ID ${selected.id} (${existingDuplicate.id})`);
-  await verifyImage(selected.cover.url);
+  await verifyImage(selected.media);
   const output = { mode, podcastId: selected.id, title: selected.title, canonicalUrl: selected.canonicalUrl,
-    imageUrl: selected.cover.url, caption: selected.caption, channel: { name: channel.name, service: channel.service },
+    imageUrl: selected.media.url, mediaKind: selected.media.kind, caption: selected.caption, channel: { name: channel.name, service: channel.service },
     knownPosts: history.posts?.length ?? 0, action: mode === "dry-run" ? "none" : mode };
   if (mode === "dry-run") {
     logger.log(JSON.stringify(output, null, 2));
     return { output, wrote: false };
   }
   const input = { text: selected.caption, channelId: channel.id, schedulingType: "automatic", mode: "addToQueue",
-    assets: [{ image: { url: selected.cover.url } }], ...(mode === "draft" ? { saveToDraft: true } : {}) };
+    assets: [{ image: { url: selected.media.url } }], ...(mode === "draft" ? { saveToDraft: true } : {}) };
   const mutation = `mutation CreateInstagramPost($input: CreatePostInput!) { createPost(input: $input) { ... on PostActionSuccess { __typename post { id text status channelId assets { id mimeType } } } ... on MutationError { __typename message } } }`;
   const data = await graphql(mutation, { input });
   const post = assertMutationSuccess(data, "createPost");

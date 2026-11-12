@@ -1,29 +1,42 @@
 import assert from "node:assert/strict";
+import { readFile } from "node:fs/promises";
 import { createBufferClient, assertMutationSuccess, BufferApiError } from "./buffer-graphql.mjs";
-import { resolveInstagramChannel, selectPodcast, validateReviewLinkage, buildCaption } from "./instagram-selector.mjs";
+import { resolveInstagramChannel, selectPodcast, validateEditorialLinkage, validateReviewLinkage, buildCaption } from "./instagram-selector.mjs";
 import { performInstagramAction, QUEUE_ACKNOWLEDGEMENT } from "./instagram-actions.mjs";
+import { verifyGraphicManifestSources, verifyInstagramMedia } from "./instagram-media.mjs";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
 
 const id = "test podcast";
 const podcast = { "Podcast-ID": id, Titel: "Test Podcast", Udgiver: "Test Publisher", "Kort beskrivelse": "Beskrivelse", Genre: "Dokumentar" };
 const review = { Aktiv: "JA", Titel: "Test Podcast", "Auto-udgiver": "Test Publisher", "Auto-genre": "Dokumentar", "Kort vurdering": "En velfortalt serie.", "Samlet score": "8,2", "Anmeldelsesdato": "01-01-2026" };
 const sourceChecksum = "a".repeat(64);
 const coverChecksum = "b".repeat(64);
-const cover = { appPodcastKey: id, title: podcast.Titel, publisher: podcast.Udgiver, genre: podcast.Genre, status: "success", sourceAuditStatus: "valid", qualityCategory: "A", needsPlaceholder: false, originalImageUrl: "https://publisher.example/cover.jpg", sourceChecksum, successfulSourceChecksum: sourceChecksum, variants: { "800": { path: "data/covers/800/test-podcast.webp", actualWidth: 800, checksum: coverChecksum } } };
+const cover = { appPodcastKey: id, title: podcast.Titel, publisher: podcast.Udgiver, genre: podcast.Genre, status: "success", sourceAuditStatus: "valid", qualityCategory: "A", needsPlaceholder: false, originalImageUrl: "https://publisher.example/cover.jpg", sourceChecksum, successfulSourceChecksum: sourceChecksum, variants: { "800": { path: "data/covers/800/test-podcast.webp", actualWidth: 800, bytes: 4096, format: "WEBP", contentType: "image/webp", checksum: coverChecksum } } };
 const approvals = { schemaVersion: 1, approvals: [{ podcastId: id, status: "approved", coverChecksum, evidenceUrl: "https://rights.example/license", approvedBy: "owner", approvedAt: "2026-01-01" }] };
 const manifest = { podcasts: [cover] };
+const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
+const graphicsManifest = JSON.parse(await readFile(path.join(root, "assets/instagram/manifest.json"), "utf8"));
+assert.equal(await verifyGraphicManifestSources(graphicsManifest, { root }), true);
+await assert.rejects(verifyGraphicManifestSources({ ...graphicsManifest, generatorSha256: "0".repeat(64) }, { root }), /source does not match/);
 
 const org = { id: "org-1", name: "Podcastlisten" };
 const channel = { id: "chan-1", name: "podcastlisten.dk", service: "instagram", externalLink: "https://www.instagram.com/podcastlisten.dk/", organizationId: "org-1", allowedActions: ["createPost"], isDisconnected: false, isLocked: false };
 assert.equal(resolveInstagramChannel([org], new Map([[org.id, [channel]]])).id, channel.id);
 assert.throws(() => resolveInstagramChannel([org], new Map([[org.id, [{ ...channel, id: "chan-2" }, channel]]])), /found 2/);
 assert.throws(() => resolveInstagramChannel([org], new Map([[org.id, [{ ...channel, name: "different", externalLink: "https://instagram.com/different/" }]]])), /found 0/);
-assert.throws(() => resolveInstagramChannel([org], new Map([[org.id, [{ ...channel, allowedActions: [] }]]])), /permissions/);
+assert.equal(resolveInstagramChannel([org], new Map([[org.id, [{ ...channel, allowedActions: [] }]]])).id, channel.id,
+  "Buffer channel actions do not represent post-creation permission; write access is handled by API error checks");
+assert.throws(() => resolveInstagramChannel([org], new Map([[org.id, [{ ...channel, allowedActions: undefined }]]])), /permission metadata/);
 assert.throws(() => resolveInstagramChannel([org], new Map([[org.id, [{ ...channel, externalLink: "https://instagram.com/someone-else/" }]]])), /found 0/);
 
 const selected = validateReviewLinkage(id, { podcasts: [podcast], reviews: [review], manifest, approvals });
 assert.equal(selected.id, id);
 assert.equal(selected.canonicalUrl, "https://podcastlisten.dk/podcast/test-podcast/");
 assert.match(buildCaption(selected), /En velfortalt serie/);
+assert.equal(selected.media.kind, "rights_approved_podcast_cover");
+const approvedCoverSelection = selectPodcast({ podcasts: [podcast], reviews: [review], manifest, approvals, graphicsManifest });
+assert.equal(approvedCoverSelection.media.kind, "rights_approved_podcast_cover", "a matching explicit cover-rights approval keeps the separate cover path");
 assert.throws(() => validateReviewLinkage(id, { podcasts: [podcast, podcast], reviews: [review], manifest, approvals }), /exactly one catalogue row/);
 assert.throws(() => validateReviewLinkage(id, { podcasts: [podcast], reviews: [{ ...review, Titel: "Almost Test Podcast" }], manifest, approvals }), /exactly one active exact editorial review/);
 assert.throws(() => validateReviewLinkage(id, { podcasts: [podcast], reviews: [{ ...review, "Auto-udgiver": "Other publisher" }], manifest, approvals }), /exactly one active exact editorial review/);
@@ -33,10 +46,19 @@ assert.throws(() => validateReviewLinkage(id, { podcasts: [podcast], reviews: [r
 assert.throws(() => validateReviewLinkage(id, { podcasts: [podcast], reviews: [review], manifest, approvals: { approvals: [] } }), /cover with explicit rights/);
 assert.throws(() => validateReviewLinkage(id, { podcasts: [podcast], reviews: [review], manifest, approvals: { approvals: [{ ...approvals.approvals[0], coverChecksum: "old-checksum" }] } }), /cover with explicit rights/);
 assert.throws(() => selectPodcast({ podcasts: [podcast], reviews: [review], manifest, approvals, usedPodcastIds: [id] }), /No podcast/);
-assert.throws(() => selectPodcast({ podcasts: [podcast], reviews: [review], manifest, approvals: { approvals: [] } }), /No podcast/);
+const originalSelection = selectPodcast({ podcasts: [podcast], reviews: [review], manifest, approvals: { approvals: [] }, graphicsManifest });
+assert.equal(originalSelection.media.kind, "original_podcastlisten_graphic", "unapproved third-party artwork must be replaced only by an original graphic");
+assert.equal(originalSelection.media.genre, podcast.Genre);
+assert.match(originalSelection.media.path, /^assets\/instagram\/original-cards\/[^/]+\.png$/);
+assert.notEqual(originalSelection.media.path, cover.variants["800"].path);
+assert.equal(originalSelection.media.width, 1080);
+assert.throws(() => selectPodcast({ podcasts: [podcast], reviews: [review, review], manifest, approvals: { approvals: [] }, graphicsManifest }), /No podcast/);
+assert.throws(() => validateEditorialLinkage("wrong id", { podcasts: [podcast], reviews: [review] }), /exactly one catalogue row/);
+assert.throws(() => selectPodcast({ podcasts: [podcast], reviews: [{ ...review, "Samlet score": "6,9" }], manifest, approvals: { approvals: [] }, graphicsManifest }), /No podcast/);
+assert.throws(() => selectPodcast({ podcasts: [podcast], reviews: [review], manifest, approvals: { approvals: [] }, graphicsManifest: { ...graphicsManifest, assets: graphicsManifest.assets.filter((asset) => asset.genre !== podcast.Genre) } }), /No podcast/);
 
 let mutations = 0;
-const actionSelected = { ...selected, caption: buildCaption(selected) };
+const actionSelected = { ...originalSelection, caption: buildCaption(originalSelection) };
 const actionHistory = { posts: [], usedPodcastIds: new Set(), persist: async () => {} };
 const fakeGraphql = async (query) => {
   if (query.includes("mutation")) mutations += 1;
@@ -57,7 +79,7 @@ const draftResult = await performInstagramAction({ mode: "draft", channel, selec
 assert.equal(draftResult.output.status, "draft");
 assert.equal(draftInput.saveToDraft, true);
 assert.equal(draftInput.dueAt, undefined);
-assert.deepEqual(draftInput.assets, [{ image: { url: selected.cover.url } }]);
+assert.deepEqual(draftInput.assets, [{ image: { url: originalSelection.media.url } }]);
 assert.ok(actionHistory.usedPodcastIds.has(id));
 await assert.rejects(performInstagramAction({ mode: "draft", channel, selected: actionSelected, graphql: draftClient, verifyImage: imageVerified, history: { ...actionHistory, posts: [{ id: "old", text: actionSelected.canonicalUrl }] }, logger: { log() {} } }), /Duplicate Buffer post/);
 await assert.rejects(performInstagramAction({ mode: "draft", channel, selected: actionSelected, graphql: async () => { throw new Error("must not write"); }, verifyImage: async () => { throw new Error("image unavailable"); }, history: actionHistory, logger: { log() {} } }), /image unavailable/);
@@ -65,6 +87,17 @@ let queueInput;
 const queueClient = async (_query, variables) => { queueInput = variables.input; return { createPost: { __typename: "PostActionSuccess", post: { id: "scheduled-1", status: "scheduled" } } }; };
 await performInstagramAction({ mode: "queue", queueEnabled: true, queueAcknowledgement: QUEUE_ACKNOWLEDGEMENT, channel, selected: actionSelected, graphql: queueClient, verifyImage: imageVerified, history: { posts: [], usedPodcastIds: new Set(), persist: async () => {} }, logger: { log() {} } });
 assert.equal(queueInput.saveToDraft, undefined, "only explicit queue mode omits saveToDraft");
+
+const graphicsEntry = graphicsManifest.assets.find((asset) => asset.genre === podcast.Genre);
+const graphicsBytes = await readFile(path.join(root, graphicsEntry.path));
+const validResponse = new Response(graphicsBytes, { status: 200, headers: { "content-type": "image/png" } });
+assert.equal((await verifyInstagramMedia(originalSelection.media, { root, fetchImpl: async () => validResponse })).checksum, graphicsEntry.sha256);
+await assert.rejects(verifyInstagramMedia({ ...originalSelection.media, bytes: originalSelection.media.bytes + 1 }, { root, fetchImpl: async () => validResponse }), /Local media size or SHA-256/);
+await assert.rejects(verifyInstagramMedia({ ...originalSelection.media, checksum: "f".repeat(64) }, { root, fetchImpl: async () => validResponse }), /Local media size or SHA-256/);
+await assert.rejects(verifyInstagramMedia({ ...originalSelection.media, url: "http://podcastlisten.dk/image.png" }, { root, fetchImpl: async () => validResponse }), /HTTPS URL/);
+await assert.rejects(verifyInstagramMedia(originalSelection.media, { root, fetchImpl: async () => new Response("missing", { status: 404, headers: { "content-type": "text/plain" } }) }), /unavailable or has the wrong content type/);
+await assert.rejects(verifyInstagramMedia(originalSelection.media, { root, fetchImpl: async () => new Response(Buffer.from("wrong image"), { status: 200, headers: { "content-type": "image/png" } }) }), /Public Pages media size or SHA-256/);
+await assert.rejects(verifyInstagramMedia({ ...originalSelection.media, path: cover.variants["800"].path }, { root, fetchImpl: async () => validResponse }), /isolated Instagram asset path/);
 for (const [response, code] of [
   [{ ok: false, status: 500 }, "http_error"], [{ ok: false, status: 401 }, "unauthorized"], [{ ok: false, status: 403 }, "forbidden"],
   [{ ok: true, status: 200, json: async () => ({ errors: [{ message: "denied" }] }) }, "graphql_error"],

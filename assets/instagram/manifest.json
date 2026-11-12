@@ -1,0 +1,169 @@
+{
+  "schemaVersion": 1,
+  "generator": "scripts/generate-instagram-cards.py",
+  "generatorSha256": "f7b9b54fa10a3ef96a17fd2dfabce421ee88adaeea8c93ea6e5b1259476b9b49",
+  "paletteSource": {
+    "file": "style.css",
+    "variables": [
+      "--bg",
+      "--panel",
+      "--text",
+      "--muted",
+      "--line",
+      "--accent",
+      "--accent-deep",
+      "--accent-soft"
+    ],
+    "values": {
+      "--bg": "#e8dccb",
+      "--panel": "#f7f2eb",
+      "--text": "#1f1815",
+      "--muted": "#7c7269",
+      "--line": "#dfd3c4",
+      "--accent": "#ff6a13",
+      "--accent-deep": "#df5410",
+      "--accent-soft": "#efe5db"
+    }
+  },
+  "genreSource": {
+    "file": "canonical-genres.js",
+    "count": 10
+  },
+  "renderer": "Pillow 12.2.0 ImageFont.load_default(); no external fonts or images",
+  "width": 1080,
+  "height": 1080,
+  "format": "PNG",
+  "contentType": "image/png",
+  "assets": [
+    {
+      "genre": "True Crime",
+      "path": "assets/instagram/original-cards/true-crime.png",
+      "format": "PNG",
+      "contentType": "image/png",
+      "width": 1080,
+      "height": 1080,
+      "bytes": 43172,
+      "sha256": "ff41db4c75adfd8bf91dc30f1f2d27613c15cdeed31b135d4393955bfe548396",
+      "sourceKind": "original_podcastlisten_graphic",
+      "sourceSha256": "a700759af1fd94936c6ed348ed20e20b89656c147559f7c1e907d3de36a5d84b",
+      "thirdPartyMaterials": false
+    },
+    {
+      "genre": "Historie",
+      "path": "assets/instagram/original-cards/historie.png",
+      "format": "PNG",
+      "contentType": "image/png",
+      "width": 1080,
+      "height": 1080,
+      "bytes": 43003,
+      "sha256": "5db5210129ef23ae5e4120acbce1344a9c35bd97fc84b1c65180fb7d5ad170b3",
+      "sourceKind": "original_podcastlisten_graphic",
+      "sourceSha256": "a700759af1fd94936c6ed348ed20e20b89656c147559f7c1e907d3de36a5d84b",
+      "thirdPartyMaterials": false
+    },
+    {
+      "genre": "Krig",
+      "path": "assets/instagram/original-cards/krig.png",
+      "format": "PNG",
+      "contentType": "image/png",
+      "width": 1080,
+      "height": 1080,
+      "bytes": 42360,
+      "sha256": "bd0fddbe4eb98e4c40bdc64e0b233c206049e4aaf60b939d3ba17bbe17970a8a",
+      "sourceKind": "original_podcastlisten_graphic",
+      "sourceSha256": "a700759af1fd94936c6ed348ed20e20b89656c147559f7c1e907d3de36a5d84b",
+      "thirdPartyMaterials": false
+    },
+    {
+      "genre": "Politik",
+      "path": "assets/instagram/original-cards/politik.png",
+      "format": "PNG",
+      "contentType": "image/png",
+      "width": 1080,
+      "height": 1080,
+      "bytes": 42450,
+      "sha256": "c046eba3123fc8e6c8215ff0d7a980633c02e3bd6197e5521e594f0cf68a6cd3",
+      "sourceKind": "original_podcastlisten_graphic",
+      "sourceSha256": "a700759af1fd94936c6ed348ed20e20b89656c147559f7c1e907d3de36a5d84b",
+      "thirdPartyMaterials": false
+    },
+    {
+      "genre": "Finans",
+      "path": "assets/instagram/original-cards/finans.png",
+      "format": "PNG",
+      "contentType": "image/png",
+      "width": 1080,
+      "height": 1080,
+      "bytes": 42460,
+      "sha256": "e4484585ee4b18cba51a1bce0fa19f011f2e1828d2a71150825e04813ee9250b",
+      "sourceKind": "original_podcastlisten_graphic",
+      "sourceSha256": "a700759af1fd94936c6ed348ed20e20b89656c147559f7c1e907d3de36a5d84b",
+      "thirdPartyMaterials": false
+    },
+    {
+      "genre": "Samfund",
+      "path": "assets/instagram/original-cards/samfund.png",
+      "format": "PNG",
+      "contentType": "image/png",
+      "width": 1080,
+      "height": 1080,
+      "bytes": 43796,
+      "sha256": "e39bb28dfce84bb0202845ee7996105db23d7facbb101b6234cc7181cb260669",
+      "sourceKind": "original_podcastlisten_graphic",
+      "sourceSha256": "a700759af1fd94936c6ed348ed20e20b89656c147559f7c1e907d3de36a5d84b",
+      "thirdPartyMaterials": false
+    },
+    {
+      "genre": "Sport",
+      "path": "assets/instagram/original-cards/sport.png",
+      "format": "PNG",
+      "contentType": "image/png",
+      "width": 1080,
+      "height": 1080,
+      "bytes": 43052,
+      "sha256": "cd89cd9e4dc754580460e473399f690c67700be782576e796b22cc40670cbc2c",
+      "sourceKind": "original_podcastlisten_graphic",
+      "sourceSha256": "a700759af1fd94936c6ed348ed20e20b89656c147559f7c1e907d3de36a5d84b",
+      "thirdPartyMaterials": false
+    },
+    {
+      "genre": "Dokumentar",
+      "path": "assets/instagram/original-cards/dokumentar.png",
+      "format": "PNG",
+      "contentType": "image/png",
+      "width": 1080,
+      "height": 1080,
+      "bytes": 44538,
+      "sha256": "840a060ad16e98c57669e8a8caaf36bf4465a6518ab27be33c7d231a2b50baf0",
+      "sourceKind": "original_podcastlisten_graphic",
+      "sourceSha256": "a700759af1fd94936c6ed348ed20e20b89656c147559f7c1e907d3de36a5d84b",
+      "thirdPartyMaterials": false
+    },
+    {
+      "genre": "Viden",
+      "path": "assets/instagram/original-cards/viden.png",
+      "format": "PNG",
+      "contentType": "image/png",
+      "width": 1080,
+      "height": 1080,
+      "bytes": 42902,
+      "sha256": "b3993d2f4b396bc01b1722c1bb8840e129463b7c60445721182ce49ef83fccca",
+      "sourceKind": "original_podcastlisten_graphic",
+      "sourceSha256": "a700759af1fd94936c6ed348ed20e20b89656c147559f7c1e907d3de36a5d84b",
+      "thirdPartyMaterials": false
+    },
+    {
+      "genre": "Underholdning",
+      "path": "assets/instagram/original-cards/underholdning.png",
+      "format": "PNG",
+      "contentType": "image/png",
+      "width": 1080,
+      "height": 1080,
+      "bytes": 43997,
+      "sha256": "4ac2eb4e11b629cde4c15877b04ae6bc376449dd5aa44dbf6f6d3067c048a014",
+      "sourceKind": "original_podcastlisten_graphic",
+      "sourceSha256": "a700759af1fd94936c6ed348ed20e20b89656c147559f7c1e907d3de36a5d84b",
+      "thirdPartyMaterials": false
+    }
+  ]
+}

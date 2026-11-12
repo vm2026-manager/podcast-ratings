@@ -5,6 +5,7 @@ import { createBufferClient } from "./buffer-graphql.mjs";
 import { buildCaption, resolveInstagramChannel, selectPodcast } from "./instagram-selector.mjs";
 import { performInstagramAction } from "./instagram-actions.mjs";
 import { slugFromPodcastId } from "./generate-seo-podcast-pages.mjs";
+import { verifyGraphicManifestSources, verifyInstagramMedia } from "./instagram-media.mjs";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const mode = process.env.BUFFER_MODE || "dry-run";
@@ -31,13 +32,6 @@ async function writeHistory(ids) {
   await mkdir(path.dirname(historyPath), { recursive: true });
   await writeFile(historyPath, `${JSON.stringify({ schemaVersion: 1, usedPodcastIds: [...ids].sort() }, null, 2)}\n`, "utf8");
 }
-async function verifyPublicImage(url) {
-  const response = await fetch(url, { method: "GET", headers: { range: "bytes=0-31" }, redirect: "error" });
-  if (!response.ok || !/^image\/(webp|jpeg|png)$/.test(response.headers.get("content-type") ?? "")) {
-    throw new Error(`Cover URL is not a publicly reachable image (${response.status})`);
-  }
-  if (response.body) await response.body.cancel();
-}
 async function allChannelPosts(graphql, organizationId, channelId) {
   const posts = [];
   let after;
@@ -55,10 +49,11 @@ async function allChannelPosts(graphql, organizationId, channelId) {
 
 if (!new Set(["dry-run", "draft", "queue"]).has(mode)) throw new Error(`Unsupported BUFFER_MODE: ${mode}`);
 
-const [catalog, reviews, manifest, approvals, history] = await Promise.all([
-  json("data/podcasts.json"), json("data/featured-reviews.json"), json("data/podcast-cover-manifest.json"),
+const [catalog, reviews, coverManifest, graphicsManifest, approvals, history] = await Promise.all([
+  json("data/podcasts.json"), json("data/featured-reviews.json"), json("data/podcast-cover-manifest.json"), json("assets/instagram/manifest.json"),
   json("config/instagram-cover-rights.json"), readHistory(),
 ]);
+await verifyGraphicManifestSources(graphicsManifest, { root });
 const graphql = createBufferClient({ token: process.env.BUFFER_API_KEY });
 const accountData = await graphql(queries.organizations);
 const organizations = accountData?.account?.organizations;
@@ -78,7 +73,7 @@ for (const post of posts) {
   if (matches.length > 1) throw new Error(`Existing Buffer post URL maps to ${matches.length} catalogue Podcast-IDs; refusing to continue`);
   if (matches.length === 1) history.add(matches[0]["Podcast-ID"]);
 }
-const selected = selectPodcast({ podcasts: catalog.rows, reviews, manifest, approvals, usedPodcastIds: [...history] });
+const selected = selectPodcast({ podcasts: catalog.rows, reviews, manifest: coverManifest, approvals, graphicsManifest, usedPodcastIds: [...history] });
 await performInstagramAction({ mode, channel, selected: { ...selected, caption: buildCaption(selected) }, graphql,
-  verifyImage: verifyPublicImage, history: { posts, usedPodcastIds: history, persist: () => writeHistory(history) },
+  verifyImage: (media) => verifyInstagramMedia(media, { root }), history: { posts, usedPodcastIds: history, persist: () => writeHistory(history) },
   queueEnabled: process.env.BUFFER_QUEUE_ENABLED === "true", queueAcknowledgement: process.env.BUFFER_QUEUE_ACK });

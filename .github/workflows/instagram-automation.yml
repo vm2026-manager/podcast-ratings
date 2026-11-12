@@ -38,6 +38,15 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 24
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install pinned graphic renderer
+        run: python -m pip install Pillow==12.2.0
+      - name: Verify committed Instagram graphics against source and checksums
+        run: python scripts/generate-instagram-cards.py --check
+      - name: Test Instagram selection, media isolation and Buffer modes
+        run: node scripts/test-instagram-automation.mjs
       - name: Restore duplicate-prevention history
         id: history
         uses: actions/cache/restore@v4
