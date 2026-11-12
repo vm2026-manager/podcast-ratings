@@ -1,7 +1,7 @@
 import { FEED_CONFIGS, DJAEVLEN_LYD_FULL_FEED_KEY, BAKSPEJL_LYD_FULL_FEED_KEY, type FeedConfig, type FeedConfigMap } from "./feed-config.ts";
 import { APPROVED_SHEET_FEED_BASELINE } from "./sheet-feed-approval-baseline.ts";
 import { appleShowUrl, parseAppleFeed, parseHttpFeed, parsePodimoShowFeed } from "./feed-syntax.mjs";
-import { applySheetFeedPolicy, type FeedResolution } from "./sheet-feed-policy.ts";
+import { applySheetFeedPolicy, isOrdinaryRssUrl, type FeedResolution } from "./sheet-feed-policy.ts";
 import { buildDjaevlenRoutes, DJAEVLEN_FEED_KEY } from "./djaevlen-routing.mjs";
 import { buildBakspejlRoutes, BAKSPEJL_FEED_KEY } from "./bakspejl-routing.mjs";
 import { buildRadioIIIIRoutes, RADIO_IIII_FEED_KEY } from "./radio-iiii-routing.mjs";
@@ -284,18 +284,54 @@ export function mergeSheetFeedConfigs(
       // The previous URL stays configured and active from the code-owned
       // baseline. The candidate is recorded for review, never as an importer.
       if (!previous) {
+        const verification = row.episodeFeedVerification as Record<string, unknown> | undefined;
+        const exactIdRows = rows.filter(candidate => getPodcastId(candidate) === podcastId);
+        const normalizedIdRows = rows.filter(candidate => normalizePodcastKey(getPodcastId(candidate)) === normalizePodcastKey(podcastId));
+        const catalogueId = String(row.catalogue_id ?? "").trim();
+        const catalogueIdRows = catalogueId ? rows.filter(candidate => String(candidate.catalogue_id ?? "").trim() === catalogueId) : [];
+        const attested = verification?.version === 1 && verification.status === "verified" &&
+          verification.podcast_id === podcastId && verification.catalogue_id === catalogueId &&
+          verification.feed_url === feedUrl && verification.official_url === String(row.Link ?? "").trim() &&
+          verification.publisher === String(row.Udgiver ?? "").trim() &&
+          typeof verification.channel_title === "string" && verification.channel_title === String(row.Titel ?? "").trim() &&
+          typeof verification.channel_link === "string" && verification.channel_link === String(row.Link ?? "").trim() &&
+          typeof verification.self_url === "string" && verification.self_url === feedUrl &&
+          typeof verification.channel_owner === "string" && verification.channel_owner === String(row.Udgiver ?? "").trim() &&
+          Number.isInteger(verification.unique_guid_count) && Number(verification.unique_guid_count) > 0 &&
+          exactIdRows.length === 1 && normalizedIdRows.length === 1 && catalogueIdRows.length === 1 &&
+          isOrdinaryRssUrl(feedUrl) && !parsePodimoShowFeed(rawFeed);
         configs[feedKey] = {
           podcast_key: podcastKey,
           source,
           feed_url: feedUrl,
           format: "rss",
-          enabled: false
+          enabled: attested,
+          ...(attested ? {
+            generated_from_sheet: true,
+            expected_rss_channel_title: verification!.channel_title as string,
+            expected_rss_channel_link: verification!.channel_link as string,
+            expected_rss_self_url: verification!.self_url as string,
+            expected_rss_publisher: verification!.channel_owner as string,
+            expected_rss_unique_guids: true,
+            auto_verified_rss: true
+          } : {})
         };
+        if (attested) {
+          policy.resolutions.push({ podcast_key: podcastKey, sheet_feed: String(rawFeed).trim(),
+            active_feed_urls: [feedUrl], origin: "auto_verified", differs_from_sheet: false,
+            reason: "official_page_and_rss_identity_verified" });
+        }
       }
-      policy.resolutions.push({ podcast_key: podcastKey, sheet_feed: String(rawFeed).trim(),
-        active_feed_urls: previous ? [previous.feed_url] : [], origin: "review_required",
-        differs_from_sheet: true,
-        reason: previous ? "feed_change_requires_code_approval" : "explicit_activation_required" });
+      if (!policy.resolutions.some(entry => entry.podcast_key === podcastKey && entry.origin === "auto_verified")) {
+        const verification = row.episodeFeedVerification as Record<string, unknown> | undefined;
+        const reason = previous ? "feed_change_requires_code_approval" :
+          verification?.version === 1 && verification.status === "review_required"
+            ? `source_verification_${String(verification.reason || "identity_evidence_missing").replace(/[^a-zA-Z0-9_-]/gu, "_").slice(0, 100)}`
+            : "explicit_activation_required";
+        policy.resolutions.push({ podcast_key: podcastKey, sheet_feed: String(rawFeed).trim(),
+          active_feed_urls: previous ? [previous.feed_url] : [], origin: "review_required",
+          differs_from_sheet: true, reason });
+      }
       dynamicSheetFeedCount += 1;
       continue;
     }
@@ -322,8 +358,9 @@ export function mergeSheetFeedConfigs(
       active_feeds: Object.entries(configs).map(([key, config]) => ({
         feed_key: key, podcast_key: config.podcast_key, feed_url: config.feed_url,
         source: config.source, enabled: config.enabled !== false,
-        origin: policy.resolutions.some(entry => entry.podcast_key === config.podcast_key && entry.origin === "sheet_override")
-          ? "sheet_override" : staticKeys.has(key) ? "static" : "sheet"
+        origin: policy.resolutions.find(entry => entry.podcast_key === config.podcast_key &&
+          (entry.origin === "sheet_override" || entry.origin === "auto_verified"))?.origin ||
+          (staticKeys.has(key) ? "static" : "sheet")
       })),
       static_feed_count: Object.keys(manualStaticConfigs).length,
       dynamic_sheet_feed_count: dynamicSheetFeedCount,

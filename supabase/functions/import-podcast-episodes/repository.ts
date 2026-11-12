@@ -110,6 +110,18 @@ export function createSupabaseImportRepository(client: any): ImportRepository {
       ).values()];
     },
 
+    async loadAutoFeedGuidOwners(externalGuids: string[]) {
+      const rows: PodcastEpisodeRow[] = [];
+      for (const guidBatch of chunk([...new Set(externalGuids)], BATCH_SIZE)) {
+        if (!guidBatch.length) continue;
+        const { data, error } = await client.from("podcast_episodes").select(SELECT_FIELDS)
+          .in("external_guid", guidBatch);
+        if (error) throw new Error("Automatic RSS GUID ownership preflight failed");
+        rows.push(...(data || []));
+      }
+      return rows;
+    },
+
     async upsertEpisodes(rows: PodcastEpisodeRow[]) {
       if (!rows.length) return;
       const { error } = await client

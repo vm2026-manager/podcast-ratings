@@ -54,6 +54,9 @@ jobs:
             const candidateData = JSON.parse(candidate);
             delete publishedData.generatedAt;
             delete candidateData.generatedAt;
+            for (const data of [publishedData, candidateData]) {
+              for (const row of data.rows || []) delete row.episodeFeedVerification;
+            }
             if (JSON.stringify(publishedData) === JSON.stringify(candidateData)) {
               await writeFile(stagePath, published, 'utf8');
               console.log(`Unchanged ${file}: preserving existing generatedAt`);
@@ -67,6 +70,9 @@ jobs:
 
       - name: Validate incomplete catalogue intake
         run: node scripts/validate-catalogue-intake.mjs --before data/podcasts.json --candidate .sync-stage/data/podcasts.json --intake .sync-stage/catalogue-intake-candidates.json
+
+      - name: Verify new ordinary RSS identities from official source evidence
+        run: node scripts/verify-rss-feed-catalogue.mjs .sync-stage/data/podcasts.json data/podcasts.json
 
       - name: Hard podcast identity integrity gate
         id: identity-gate

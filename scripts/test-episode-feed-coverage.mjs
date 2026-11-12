@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { readFile } from "node:fs/promises";
 import { checkEpisodeFeedCoverage } from "./monitor-episode-feed-coverage.mjs";
 import { APPROVED_SHEET_FEED_BASELINE } from "../supabase/functions/import-podcast-episodes/sheet-feed-approval-baseline.ts";
 import { FEED_CONFIGS } from "../supabase/functions/import-podcast-episodes/feed-config.ts";
@@ -32,7 +33,23 @@ const newRssFinding = check.findings.find(x => x.podcast_key === "ordinary rss")
 assert.equal(newRssFinding?.feed_url, "https://example.test/rss.xml");
 assert.equal(newRssFinding?.source, "sheet_ordinary_rss_rss");
 assert.equal(newRssFinding?.blocking, "explicit_activation_required");
-assert.equal(newRssFinding?.required_approval, "code_owned_source_identity_review_and_explicit_activation");
+assert.equal(newRssFinding?.required_approval, "automatic_source_verification_pending",
+  "new ordinary RSS is evaluated automatically; only failed evidence needs review");
+const sourceReview = checkEpisodeFeedCoverage({ rows: [{
+  ...row("network-error", "https://example.test/rss.xml"),
+  episodeFeedVerification: { version: 1, status: "review_required", feed_url: "https://example.test/rss.xml", reason: "dns_lookup_failed" }
+}] }).findings[0];
+assert.equal(sourceReview.blocking, "source_verification_dns_lookup_failed");
+assert.equal(sourceReview.required_approval, "automatic_retry_after_24_hours_no_manual_approval");
+const identityReview = checkEpisodeFeedCoverage({ rows: [{
+  ...row("false-channel", "https://example.test/rss.xml"),
+  episodeFeedVerification: { version: 1, status: "review_required", feed_url: "https://example.test/rss.xml", reason: "rss_publisher_mismatch" }
+}] }).findings[0];
+assert.equal(identityReview.required_approval, "human_source_identity_review_required");
+const coverageWorkflow = await readFile(new URL("../.github/workflows/episode-feed-coverage.yml", import.meta.url), "utf8");
+for (const marker of ["--verify-active-sources", "source: ", "feed: ", "blocking: ", "required approval: "]) {
+  assert.ok(coverageWorkflow.includes(marker), "the deduplicated #288 workflow reports " + marker.trim());
+}
 const newPodimoFinding = check.findings.find(x => x.podcast_key === "another podimo");
 assert.equal(newPodimoFinding?.feed_url, "https://open.podimo.com/podcast/a0b490b8-907e-4f35-bd48-60eae9f8805b");
 assert.equal(newPodimoFinding?.podimo_show_id, "a0b490b8-907e-4f35-bd48-60eae9f8805b");
