@@ -249,7 +249,8 @@ assertCatalogueUnchanged(catalogueBefore, catalogue);
 
 const growthProbe = structuredClone(catalogueBefore);
 growthProbe.rows.push({ "Podcast-ID": "__synthetic-catalogue-growth__", catalogue_id: "catalogue-test-only" });
-assert.equal(growthProbe.rows.length, 1377);
+assert.equal(growthProbe.rows.length, catalogueBefore.rows.length + 1,
+  "catalogue growth is measured against the current input instead of a stale row count");
 assertCatalogueSnapshotIntegrity(growthProbe);
 assertCatalogueUnchanged(growthProbe, structuredClone(growthProbe));
 
@@ -264,7 +265,7 @@ assert.throws(() => assertCatalogueSnapshotIntegrity(duplicateCatalogueIdProbe),
   "duplicate catalogue_id values remain rejected");
 
 const shrunkProbe = structuredClone(catalogueBefore);
-shrunkProbe.rows.pop();
+shrunkProbe.rows = shrunkProbe.rows.slice(0, MIN_CATALOGUE_ROWS - 1);
 assert.throws(() => assertCatalogueSnapshotIntegrity(shrunkProbe), /at least the previous 1376 rows/,
   "catalogue shrink below the historical minimum remains rejected");
 
