@@ -82,7 +82,15 @@ const SEO_PILOT_PODCAST_IDS = new Set([
   "børsen morgenbriefing", "jagten pa det evige liv", "sig det løgn", "frontlinjen",
   "børsen brænder", "hva sa", "112 for knuste hjerter", "aftalt spil",
   "transferguru", "grebet af gvfb", "opskriften pa kærlighed", "bomben",
-  "mathias helts talkshow", "tiden", "nationens mareridt", "kvart i bold"
+  "mathias helts talkshow", "tiden", "nationens mareridt", "kvart i bold",
+  "kapret", "operation pellegrino", "fire patroner pa lommen", "den forunderlige dr kavousi",
+  "kvinden med den tunge kuffert det sidste kapitel", "menneskedyret", "mors afskedsbrev",
+  "robert og thetanerne", "tsunamien i 2004", "agent storm", "marathonmanden",
+  "hammer og bruchmann", "krigen pa isen", "kvinden pa første", "bedraget", "falske minder",
+  "huset færch sæson 1", "hvem er phlake", "den korte podcast", "ringbindsattentatet",
+  "i skyggen af den gule trøje", "barn med den forkerte sæson 1", "general butt naked",
+  "detektor", "24 spørgsmal til professoren", "boraghi og pengedoktoren", "store penge",
+  "dato", "peter og profeterne", "brinkmanns briks"
 ]);
 const EPISODE_DATABASE_KEY_ALIASES = {
   "genstart": "genstart",
