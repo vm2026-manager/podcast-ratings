@@ -14554,6 +14554,140 @@ function renderPodcastEpisodeOverview(podcast) {
   `;
 }
 
+let friMadsArticleSidecarPromise = null;
+
+function getFriMadsArticlePreviewPlaceholder(podcast) {
+  if (
+    podcast?.podcastId !== "fri mads" ||
+    podcast?.catalogueId !== "catalogue-v1-d94fc39e" ||
+    podcast?.link !== "https://frihedsbrevet.dk/nyhedsbrev/fri-mads/"
+  ) return "";
+
+  return `<section class="fri-mads-article-preview" data-fri-mads-article-preview hidden aria-label="Fri Mads-artikler"></section>`;
+}
+
+function isValidFriMadsArticleSidecar(sidecar) {
+  const sidecarFields = ["schemaVersion", "podcastId", "catalogueId", "sourceOverview", "accessType", "contentKind", "metadataOnly", "playable", "rateable", "audioUrl", "items"];
+  if (!sidecar || typeof sidecar !== "object" || Array.isArray(sidecar) ||
+      Object.keys(sidecar).sort().join("|") !== sidecarFields.slice().sort().join("|") ||
+      sidecar.schemaVersion !== 1 || sidecar.podcastId !== "fri mads" ||
+      sidecar.catalogueId !== "catalogue-v1-d94fc39e" ||
+      sidecar.sourceOverview !== "https://frihedsbrevet.dk/nyhedsbrev/fri-mads/" ||
+      sidecar.accessType !== "paid" || sidecar.contentKind !== "article" ||
+      sidecar.metadataOnly !== true || sidecar.playable !== false || sidecar.rateable !== false ||
+      sidecar.audioUrl !== null || !Array.isArray(sidecar.items) ||
+      sidecar.items.length < 1 || sidecar.items.length > 5) return false;
+
+  const ids = new Set();
+  const numbers = new Set();
+  const urls = new Set();
+  const releaseFields = ["releaseId", "releaseNumber", "title", "publishedDate", "canonicalUrl"];
+  const valid = sidecar.items.every((release, index) => {
+    if (!release || typeof release !== "object" || Array.isArray(release) ||
+        Object.keys(release).sort().join("|") !== releaseFields.slice().sort().join("|") ||
+        typeof release.releaseId !== "string" || typeof release.title !== "string" ||
+        typeof release.publishedDate !== "string" || typeof release.canonicalUrl !== "string") return false;
+    const number = Number(release.releaseNumber);
+    const titleMatch = String(release.title || "").match(/^Fri Mads #(\d+):\s+\S/u);
+    const dateMatch = String(release.publishedDate || "").match(/^(\d{4})-(\d{2})-(\d{2})$/u);
+    let articleUrl;
+    try { articleUrl = new URL(release.canonicalUrl); } catch { return false; }
+    const permalinkMatch = articleUrl.pathname.match(/^\/fri-mads-(\d+)-[a-z0-9-]+\/$/u);
+    if (
+      !Number.isSafeInteger(number) || number < 1 ||
+      !titleMatch || Number(titleMatch[1]) !== number ||
+      !dateMatch || articleUrl.protocol !== "https:" || articleUrl.hostname !== "frihedsbrevet.dk" ||
+      articleUrl.port || articleUrl.username || articleUrl.password || articleUrl.search || articleUrl.hash ||
+      articleUrl.href !== release.canonicalUrl || !permalinkMatch || Number(permalinkMatch[1]) !== number ||
+      release.releaseId !== `fri-mads:${number}:${release.canonicalUrl}`
+    ) return false;
+
+    const date = new Date(`${release.publishedDate}T00:00:00Z`);
+    if (!Number.isFinite(date.getTime()) || date.toISOString().slice(0, 10) !== release.publishedDate) return false;
+    if (ids.has(release.releaseId) || numbers.has(number) || urls.has(release.canonicalUrl)) return false;
+    if (index > 0 && Number(sidecar.items[index - 1].releaseNumber) - number !== 1) return false;
+    ids.add(release.releaseId);
+    numbers.add(number);
+    urls.add(release.canonicalUrl);
+    return true;
+  });
+  return valid;
+}
+
+function renderFriMadsArticleMetadataPreview(podcast, sidecar) {
+  if (
+    podcast?.podcastId !== "fri mads" ||
+    podcast?.catalogueId !== "catalogue-v1-d94fc39e" ||
+    podcast?.link !== "https://frihedsbrevet.dk/nyhedsbrev/fri-mads/" ||
+    !isValidFriMadsArticleSidecar(sidecar)
+  ) return "";
+
+  const articleCards = [...sidecar.items]
+    .sort((left, right) => Number(right.releaseNumber) - Number(left.releaseNumber))
+    .map((release) => {
+      const date = new Intl.DateTimeFormat("da-DK", {
+        day: "numeric", month: "long", year: "numeric", timeZone: "UTC"
+      }).format(new Date(`${release.publishedDate}T00:00:00Z`));
+      return `
+        <article class="fri-mads-article-preview__card" data-fri-mads-release-id="${escapeHtml(release.releaseId)}">
+          <div class="fri-mads-article-preview__meta">
+            <span class="fri-mads-article-preview__kind">Artikel · nyhedsbrev</span>
+            <time datetime="${escapeHtml(release.publishedDate)}">${escapeHtml(date)}</time>
+          </div>
+          <h3>${escapeHtml(release.title)}</h3>
+          <p class="fri-mads-article-preview__access">Betalt artikel · læseadgang kan kræve abonnement</p>
+          <a href="${escapeHtml(release.canonicalUrl)}" target="_blank" rel="noopener noreferrer">Læs hos Frihedsbrevet</a>
+        </article>`;
+    })
+    .join("");
+
+  return `
+    <section class="fri-mads-article-preview" data-fri-mads-article-preview aria-labelledby="friMadsArticlePreviewTitle">
+      <div class="fri-mads-article-preview__heading">
+        <h2 id="friMadsArticlePreviewTitle">Fri Mads-artikler</h2>
+        <span>Artikel/nyhedsbrev · betalt adgang</span>
+      </div>
+      <div class="fri-mads-article-preview__list">${articleCards}</div>
+    </section>`;
+}
+
+async function getFriMadsArticleSidecar() {
+  if (friMadsArticleSidecarPromise) return friMadsArticleSidecarPromise;
+  const sidecarUrl = new URL("data/fri-mads-articles.json", window.location.href);
+  if (sidecarUrl.origin !== window.location.origin || sidecarUrl.search || sidecarUrl.hash) return null;
+  const options = {
+    method: "GET",
+    headers: { accept: "application/json" },
+    credentials: "same-origin",
+    cache: "no-cache",
+    redirect: "error"
+  };
+  if (window.AbortSignal && typeof window.AbortSignal.timeout === "function") {
+    options.signal = window.AbortSignal.timeout(5000);
+  }
+  friMadsArticleSidecarPromise = window.fetch(sidecarUrl.href, options)
+    .then((response) => {
+      if (!response.ok || !String(response.headers.get("content-type") || "").toLowerCase().includes("application/json")) return null;
+      return response.json();
+    })
+    .catch(() => null);
+  return friMadsArticleSidecarPromise;
+}
+
+async function hydrateFriMadsArticleMetadataPreview(podcast, target) {
+  if (
+    podcast?.podcastId !== "fri mads" ||
+    podcast?.catalogueId !== "catalogue-v1-d94fc39e" ||
+    podcast?.link !== "https://frihedsbrevet.dk/nyhedsbrev/fri-mads/" ||
+    !target?.isConnected
+  ) return;
+  const sidecar = await getFriMadsArticleSidecar();
+  if (!target.isConnected) return;
+  const markup = renderFriMadsArticleMetadataPreview(podcast, sidecar);
+  if (!markup) return;
+  target.outerHTML = markup;
+}
+
 function bindPodcastEpisodeOverviewEvents(dialog, podcast) {
   const overview = dialog?.querySelector("[data-podcast-episode-overview]");
   if (!overview) return;
@@ -16346,6 +16480,7 @@ function renderPodcastDetailSheetContent(
       </div>
     </section>
     ${getDrEditorialReviewMarkup(podcast)}
+    ${getFriMadsArticlePreviewPlaceholder(podcast)}
     ${getHistoricalMedianoEditorialEpisodeReviewMarkup(podcast)}
     <section class="podcast-detail-sheet__episode-rating-mobile-help" data-podcast-detail-episode-rating-mobile-help${mobileEpisodeRatingLockHelpMarkup ? "" : " hidden"} aria-live="polite">${mobileEpisodeRatingLockHelpMarkup}</section>
     ${episodesMarkup}
@@ -16392,6 +16527,9 @@ function renderPodcastDetailSheetContent(
       }
     </template>
   `;
+
+  const friMadsArticlePreviewTarget = content.querySelector("[data-fri-mads-article-preview]");
+  if (friMadsArticlePreviewTarget) void hydrateFriMadsArticleMetadataPreview(podcast, friMadsArticlePreviewTarget);
 
   const hostMeta = content.querySelector(".podcast-detail-sheet__meta");
   if (hostMeta && podcast.host) {

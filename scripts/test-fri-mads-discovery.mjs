@@ -37,6 +37,10 @@ assert.deepEqual(secondPage.map((item) => item.number), Array.from({ length: 27 
 const unchanged = discoverFriMadsArticles(FRI_MADS_OVERVIEW_172_TO_146_HTML);
 assert.equal(unchanged.status, "no_new_releases", "the established #172 baseline is not historically backfilled");
 assert.deepEqual(unchanged.releases, []);
+assert.deepEqual(unchanged.latestOverviewReleases.map((item) => item.releaseNumber), [172, 171, 170, 169, 168],
+  "the same bounded parser result exposes only the five newest verified overview cards for the static sidecar");
+assert.equal(unchanged.latestOverviewReleases[0].title, "Fri Mads #172: Alle elsker Mette");
+assert.equal(unchanged.latestOverviewReleases[0].canonicalUrl, "https://frihedsbrevet.dk/fri-mads-172-alle-elsker-mette/");
 assert.equal(unchanged.sourceOverview, FRI_MADS_OVERVIEW_URL);
 assert.equal(unchanged.supplementalFeed, "not_requested_overview_is_primary");
 assert.equal(unchanged.pagesRequested.length, 0, "pure parsing does not claim network requests");
