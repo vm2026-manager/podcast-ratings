@@ -1,0 +1,35 @@
+name: Instagram private Buffer smoke draft
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: instagram-smoke-draft-main
+  cancel-in-progress: false
+
+jobs:
+  smoke-draft:
+    if: github.ref == 'refs/heads/main' && github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-24.04
+    env:
+      BUFFER_API_KEY: ${{ secrets.BUFFER_API_KEY }}
+      BUFFER_MODE: smoke-draft
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install pinned Pillow renderer
+        run: python -m pip install Pillow==12.2.0
+      - name: Verify first-party smoke image and checksum
+        run: python scripts/generate-instagram-smoke-test.py --check
+      - name: Test isolated smoke-draft safeguards
+        run: node scripts/test-instagram-smoke-draft.mjs
+      - name: Create or verify the one private Instagram draft
+        run: node scripts/run-instagram-smoke-draft.mjs

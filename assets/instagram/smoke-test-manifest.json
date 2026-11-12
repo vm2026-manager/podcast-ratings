@@ -1,0 +1,38 @@
+{
+  "schemaVersion": 1,
+  "purpose": "one private, non-publishable Buffer Instagram integration smoke test",
+  "sourceKind": "original_podcastlisten_test_graphic",
+  "origin": "Podcastlisten-owned text, geometric shapes, and palette from style.css",
+  "thirdPartyMaterials": false,
+  "generator": "scripts/generate-instagram-smoke-test.py",
+  "generatorSha256": "d19c23d860feaf31d98787098a504f5306ca404f0e6e3e6a9877b281abcd208e",
+  "paletteSource": {
+    "file": "style.css",
+    "variables": [
+      "--bg",
+      "--panel",
+      "--text",
+      "--muted",
+      "--line",
+      "--accent",
+      "--accent-deep"
+    ],
+    "values": {
+      "--bg": "#e8dccb",
+      "--panel": "#f7f2eb",
+      "--text": "#1f1815",
+      "--muted": "#7c7269",
+      "--line": "#dfd3c4",
+      "--accent": "#ff6a13",
+      "--accent-deep": "#df5410"
+    }
+  },
+  "renderer": "Pillow 12.2.0 ImageFont.load_default(); deterministic 16-color PNG encoder; no external fonts or images",
+  "width": 1080,
+  "height": 1080,
+  "format": "PNG",
+  "contentType": "image/png",
+  "bytes": 584448,
+  "sha256": "851dd23035a04cf2c876b7fc532ebd2ca5451018272e14a859acf1cabf1e2011",
+  "sourceSha256": "b51b643432f828afeccbf6e92ae8ce7442f8e32434158e3ce93de8565eba0f62"
+}

@@ -7,3 +7,5 @@ Før et cover kan vælges, skal en ansvarlig tilføje en rettighedsregistrering 
 Dublet- og gentagelseshistorik gemmes i en GitHub Actions cache under `.instagram/`, ikke i en daglig commit eller database. Workflowet serialiseres med GitHub Actions concurrency. Buffer-opslag scannes også med cursorbaseret paginering, og historik fra posts genkendes via Podcastlistens kanoniske profil-URL. Hvis historik mangler eller er ugyldig under tidsplanen, stopper workflowet.
 
 Buffer kræver et offentligt HTTPS-billede, som fortsat er tilgængeligt, når opslaget publiceres. Workflowet kontrollerer billedets offentlige URL umiddelbart før enhver Buffer-mutation.
+
+Den separate, manuelle `.github/workflows/instagram-smoke-draft.yml` tester alene Buffer-forbindelsen med én fast Podcast-ID og den førsteparts testgrafik i `assets/instagram/smoke-test.png`. Den bruger en commit-SHA-låst GitHub raw-URL, fast testmarkør og `saveToDraft: true`; den har ingen schedule, queue-tilstand eller kobling til den normale selector. Kørsel kontrollerer eksisterende Buffer-opslag før mutation og læser derefter status tilbage. En genkørsel finder den samme markør og opretter ikke en ny kladde.

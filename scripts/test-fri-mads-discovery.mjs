@@ -20,6 +20,36 @@ import {
   makeFriMadsOverview
 } from "./fixtures/fri-mads-overview-snapshot.mjs";
 
+const MIN_CATALOGUE_ROWS = 1376;
+
+function assertCatalogueSnapshotIntegrity(snapshot) {
+  assert.ok(snapshot && Array.isArray(snapshot.rows), "catalogue snapshot has a rows array");
+  assert.ok(snapshot.rows.length >= MIN_CATALOGUE_ROWS,
+    `catalogue snapshot retains at least the previous ${MIN_CATALOGUE_ROWS} rows`);
+
+  const podcastIds = snapshot.rows.map((row) => row["Podcast-ID"]);
+  assert.ok(podcastIds.every((id) => typeof id === "string" && id.length > 0),
+    "every catalogue row has an exact Podcast-ID");
+  assert.equal(new Set(podcastIds).size, podcastIds.length, "catalogue Podcast-IDs are unique");
+
+  const catalogueIds = snapshot.rows.map((row) => row.catalogue_id).filter((id) => id != null);
+  assert.equal(new Set(catalogueIds).size, catalogueIds.length, "catalogue_id values are unique");
+
+  const expectedIdentities = new Map(FRIHEDSBREVET_SOURCE_REGISTRY.map((entry) => [entry.podcastId, entry.catalogueId]));
+  const frihedsbrevetRows = snapshot.rows.filter((row) => expectedIdentities.has(row["Podcast-ID"]));
+  assert.equal(expectedIdentities.size, 36, "the source audit covers all 36 exact Frihedsbrevet identities");
+  assert.equal(frihedsbrevetRows.length, 36, "all 36 Frihedsbrevet rows occur exactly once");
+  const byPodcastId = new Map(frihedsbrevetRows.map((row) => [row["Podcast-ID"], row]));
+  for (const [podcastId, catalogueId] of expectedIdentities) {
+    assert.equal(byPodcastId.get(podcastId)?.catalogue_id, catalogueId,
+      `catalogue identity is preserved for ${podcastId}`);
+  }
+}
+
+function assertCatalogueUnchanged(before, after) {
+  assert.deepEqual(after, before, "discovery leaves all catalogue rows and identities unchanged");
+}
+
 const firstPage = parseFriMadsOverview(FRI_MADS_OVERVIEW_172_TO_146_HTML);
 assert.equal(firstPage.length, 27);
 assert.deepEqual([firstPage[0].number, firstPage.at(-1).number], [172, 146]);
@@ -214,8 +244,34 @@ assert.equal(friMadsRow.Link, FRI_MADS_OVERVIEW_URL);
 assert.equal(friMadsRow.accessEvidenceUrl, FRI_MADS_HISTORICAL_SOURCE_URL);
 assert.equal(friMadsRow.Feed, undefined);
 assert.equal(friMadsRow.manualEpisodes, undefined);
-assert.equal(catalogue.rows.length, 1376, "test uses the latest main catalogue snapshot without editing it");
-assert.deepEqual(catalogue, catalogueBefore, "discovery leaves all catalogue rows and identities unchanged");
+assertCatalogueSnapshotIntegrity(catalogue);
+assertCatalogueUnchanged(catalogueBefore, catalogue);
+
+const growthProbe = structuredClone(catalogueBefore);
+growthProbe.rows.push({ "Podcast-ID": "__synthetic-catalogue-growth__", catalogue_id: "catalogue-test-only" });
+assert.equal(growthProbe.rows.length, 1377);
+assertCatalogueSnapshotIntegrity(growthProbe);
+assertCatalogueUnchanged(growthProbe, structuredClone(growthProbe));
+
+const duplicateIdProbe = structuredClone(growthProbe);
+duplicateIdProbe.rows.push(structuredClone(duplicateIdProbe.rows[0]));
+assert.throws(() => assertCatalogueSnapshotIntegrity(duplicateIdProbe), /Podcast-IDs are unique/,
+  "duplicate Podcast-IDs remain rejected");
+
+const duplicateCatalogueIdProbe = structuredClone(growthProbe);
+duplicateCatalogueIdProbe.rows.push({ "Podcast-ID": "__synthetic-second-growth__", catalogue_id: "catalogue-test-only" });
+assert.throws(() => assertCatalogueSnapshotIntegrity(duplicateCatalogueIdProbe), /catalogue_id values are unique/,
+  "duplicate catalogue_id values remain rejected");
+
+const shrunkProbe = structuredClone(catalogueBefore);
+shrunkProbe.rows.pop();
+assert.throws(() => assertCatalogueSnapshotIntegrity(shrunkProbe), /at least the previous 1376 rows/,
+  "catalogue shrink below the historical minimum remains rejected");
+
+const mutationProbe = structuredClone(catalogueBefore);
+mutationProbe.rows[0].Link = "https://example.invalid/changed-link";
+assert.throws(() => assertCatalogueUnchanged(catalogueBefore, mutationProbe), /all catalogue rows and identities/,
+  "catalogue link and identity mutations remain prohibited");
 assert.equal(FRI_MADS_BASELINE_NUMBER, 172);
 
 console.log("Fri Mads official overview discovery tests passed.");
