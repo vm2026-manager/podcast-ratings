@@ -566,8 +566,19 @@ const EPISODE_PODCAST_CONFIG = {
     podcastKey: "magten",
     databasePodcastKey: "magten",
     enabled: true,
+    ownRatingMode: "episode-derived",
     displayName: "Magten",
     searchPlaceholder: "Søg i Magten-episoder",
+    source: "dr",
+    persistence: "supabase"
+  },
+  "kampen om historien dr": {
+    podcastKey: "kampen om historien dr",
+    databasePodcastKey: "kampen om historien dr",
+    enabled: true,
+    ownRatingMode: "episode-derived",
+    displayName: "Kampen om historien",
+    searchPlaceholder: "Søg i Kampen om historien-episoder",
     source: "dr",
     persistence: "supabase"
   },
@@ -7860,6 +7871,17 @@ async function synchronizeEpisodeDerivedParentRating(
   const episodeConfig = getEpisodePodcastConfig(podcastKey);
   const canonicalKey = getEpisodeParentRatingKey(podcastKey);
   if (!episodeKey || !canonicalKey) return;
+  if (episodeConfig?.ownRatingMode === "episode-derived") {
+    // The episode average is a display-only overlay. Keep user_ratings and its
+    // in-memory direct value untouched so deleting the last episode rating
+    // reveals the original direct rating again.
+    if (refreshUi) {
+      rebuildUserRanks();
+      render();
+      refreshOpenPodcastDetailSheet();
+    }
+    return;
+  }
   const summary = getPodcastEpisodeUserRatingSummary(episodeKey);
   const backup = getEpisodeParentRatingBackup(episodeKey, { local });
   if (hasProtectedDisplayGroupSeasonRating(episodeConfig, canonicalKey, backup)) return;
@@ -7888,6 +7910,7 @@ async function synchronizeEpisodeDerivedParentRating(
 }
 
 async function reconcileExistingEpisodeDerivedParentRating(podcastKey) {
+  if (getEpisodePodcastConfig(podcastKey)?.ownRatingMode === "episode-derived") return;
   const local = usesLocalEpisodePersistence(podcastKey);
   const episodeKey = local
     ? getLocalEpisodePodcastKey(podcastKey)
@@ -7992,6 +8015,12 @@ function getUserRatingForPodcast(podcast) {
 
   const podcastKey = getPodcastKey(podcast);
   const canonicalKey = resolveCanonicalPodcastId(podcastKey) || (isDisplayGroupRatingKey(podcastKey) ? podcastKey : "");
+  const episodeConfig = getEpisodePodcastConfig(podcast);
+  if (canonicalKey && episodeConfig?.ownRatingMode === "episode-derived" && state.authUser) {
+    const episodeRatings = getPodcastDetailEpisodeRatingState(podcast);
+    if (!episodeRatings.resolved) return null;
+    if (episodeRatings.count > 0) return Math.round(Number(episodeRatings.average) * 10) / 10;
+  }
   return canonicalKey ? state.userRatingsByKey[canonicalKey] ?? null : null;
 }
 
@@ -10123,7 +10152,9 @@ async function saveActiveEpisodeRating() {
       throw new Error("Din konto eller episode ændrede sig. Luk dialogen, og prøv igen.");
     }
 
-    if (previousEpisodeSummary.count === 0 && !getEpisodeParentRatingBackup(podcastKey, { local: isLocalEpisodeRating })) {
+    if (episodeConfig?.ownRatingMode !== "episode-derived" &&
+        previousEpisodeSummary.count === 0 &&
+        !getEpisodeParentRatingBackup(podcastKey, { local: isLocalEpisodeRating })) {
       captureEpisodeParentRatingBackup(podcastKey, { local: isLocalEpisodeRating });
       if (!getEpisodeParentRatingBackup(podcastKey, { local: isLocalEpisodeRating })) {
         throw new Error("Din tidligere samlede vurdering kunne ikke bevares.");
@@ -10185,7 +10216,7 @@ async function saveActiveEpisodeRating() {
         saveLocalEpisodeRating(podcastKey, episodeId, previousUserRating);
       }
     }
-    if (previousEpisodeSummary.count === 0) {
+    if (episodeConfig?.ownRatingMode !== "episode-derived" && previousEpisodeSummary.count === 0) {
       clearEpisodeParentRatingBackup(podcastKey, { local: isLocalEpisodeRating });
     }
     console.error(error);

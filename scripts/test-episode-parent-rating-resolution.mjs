@@ -42,7 +42,7 @@ const episodeState = {
   loading: false
 };
 const helpers = new Function(
-  "state", "getPodcastEpisodeState", "getEpisodePodcastConfig", "getEpisodeIdsForQuery", "podcastSupportsEpisodes", "parseNumber", "getEpisodeKey", "getGenstartEpisodeById", "episodeMatchesPodcastSourceBoundary",
+  "state", "getPodcastEpisodeState", "getEpisodePodcastConfig", "getEpisodeIdsForQuery", "podcastSupportsEpisodes", "parseNumber", "getEpisodeKey", "getGenstartEpisodeById", "episodeMatchesPodcastSourceBoundary", "getKirstenDisplayGroupRatingEditState",
   `${summary}\n${detailState}; return { getPodcastEpisodeUserRatingSummary, getPodcastDetailEpisodeRatingState };`
 )(
   state,
@@ -53,7 +53,8 @@ const helpers = new Function(
   (value) => value === null || value === undefined || value === "" ? null : Number.isFinite(Number(value)) ? Number(value) : null,
   (episode) => String(episode?.id || episode?.episode_id || ""),
   () => null,
-  () => true
+  () => true,
+  () => null
 );
 
 let result = helpers.getPodcastDetailEpisodeRatingState({ key: "frontlinjen" });
@@ -78,7 +79,7 @@ const manualEpisodeState = {
   loading: false
 };
 const manualHelpers = new Function(
-  "state", "getPodcastEpisodeState", "getEpisodePodcastConfig", "getEpisodeIdsForQuery", "podcastSupportsEpisodes", "parseNumber", "getEpisodeKey", "getGenstartEpisodeById", "episodeMatchesPodcastSourceBoundary",
+  "state", "getPodcastEpisodeState", "getEpisodePodcastConfig", "getEpisodeIdsForQuery", "podcastSupportsEpisodes", "parseNumber", "getEpisodeKey", "getGenstartEpisodeById", "episodeMatchesPodcastSourceBoundary", "getKirstenDisplayGroupRatingEditState",
   `${summary}\n${detailState}; return getPodcastDetailEpisodeRatingState;`
 )(
   { authUser: { id: "user-a" } },
@@ -89,7 +90,8 @@ const manualHelpers = new Function(
   (value) => value === null || value === undefined || value === "" ? null : Number.isFinite(Number(value)) ? Number(value) : null,
   (episode) => String(episode?.id || ""),
   () => null,
-  () => true
+  () => true,
+  () => null
 );
 assert.deepEqual(manualHelpers({ key: "bitcoin bedraget" }), { resolved: true, error: "", count: 0, average: null }, "manual episodes resolve from their completed local/canonical rating load");
 

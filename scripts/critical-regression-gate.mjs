@@ -9,6 +9,7 @@ const checks = [
   ["genre phase 2, ranking topic/synonym/typo search and responsive layouts", ["scripts/test-genre-phase2.mjs"]],
   ["Issue #58 qualified historical editorial episode rating and cover guard", ["scripts/test-issue58-editorial-review-visibility.mjs"]],
   ["Issue #89 DR/Podimo identity separation, original review ratings, disabled imports, and responsive navigation", ["--experimental-strip-types", "scripts/test-issue89-dr-podimo-separation.mjs"]],
+  ["Issue #89 DR exact-ID episode-derived own-rating lock and direct-rating preservation", ["scripts/test-issue89-dr-rating-lock.mjs"]],
   ["mobile profile average stat alignment and unchanged genre card", ["tests/profile-average-stat-alignment.test.mjs"]],
   ["Har du hørt source identity and episode visibility", ["--experimental-strip-types", "scripts/test-har-du-hoert-source-boundary.mjs"]],
   ["Sheet feed override safety and audit", ["--experimental-strip-types", "scripts/test-sheet-feed-overrides.mjs"]],
