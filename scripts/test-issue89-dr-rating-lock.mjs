@@ -87,17 +87,17 @@ const fixtureScript = `
     };
     window.refreshSupabaseStatePreservingCurrentUserState = async () => {};
     window.refreshSupabaseState = async () => {};
-    window.__issue89Setup = async (userId, directRating) => {
+    window.__issue89Setup = async (userId, directRating, podcastId = "kampen om historien dr") => {
       const source = await fetch("/data/podcasts.json").then((response) => response.json());
       state.podcastEpisodesByKey = {};
       state.authUser = { id: userId };
       state.userScopedRequestGeneration = (state.userScopedRequestGeneration || 0) + 1;
       state.supabase = fixture.fakeSupabase;
-      state.userRatingsByKey["kampen om historien dr"] = directRating;
-      fixture.userRatings.set(userId + "|kampen om historien dr", directRating);
+      state.userRatingsByKey[podcastId] = directRating;
+      fixture.userRatings.set(userId + "|" + podcastId, directRating);
       applyPodcastDataRefresh(source.rows, [], {}, []);
-      const parent = state.podcastById["kampen om historien dr"];
-      if (!parent || parent.ratingValue !== undefined && parent.ratingValue !== null) throw new Error("DR parent identity/score is wrong");
+      const parent = state.podcastById[podcastId];
+      if (!parent || podcastId === "kampen om historien dr" && parent.ratingValue != null) throw new Error("podcast parent identity/score is wrong");
       await fetchPodcastEpisodeParentRatings(parent, { force: true });
       return {
         id: getPodcastId(parent),
@@ -106,12 +106,12 @@ const fixtureScript = `
         ratingState: getPodcastDetailEpisodeRatingState(parent)
       };
     };
-    window.__issue89RateFixtureEpisode = (userId, episodeId, rating) => {
+    window.__issue89RateFixtureEpisode = (userId, episodeId, rating, podcastId = "kampen om historien dr") => {
       fixture.episodeRatings.push({
         user_id: userId,
         episode_id: episodeId,
         rating,
-        podcast_episodes: { podcast_key: "kampen om historien dr", is_active: true, source: "dr", description: "", metadata: {} }
+        podcast_episodes: { podcast_key: podcastId, is_active: true, source: "dr", description: "", metadata: {} }
       });
     };
   })();
@@ -308,6 +308,83 @@ try {
   }
 
   await context.close();
+
+  // Run the same state transitions against Magten's exact database key. This
+  // proves that the configuration is shared behavior, not a DR-only branch.
+  const magtenPage = await createPage();
+  const magten = await magtenPage.page.evaluate(() => window.__issue89Setup("magten-a", 8.2, "magten"));
+  assert.equal(magten.id, "magten");
+  assert.equal(magten.databaseKey, "magten");
+  assert.equal(magten.ratingState.count, 0);
+  await magtenPage.page.evaluate(() => openPodcastDetailSheet(state.podcastById.magten, null, { allowDesktop: true }));
+  const magtenEditor = magtenPage.page.locator("[data-podcast-detail-inline-rating-input]");
+  await magtenEditor.waitFor({ state: "visible" });
+  await magtenEditor.fill("8.4");
+  await magtenEditor.press("Enter");
+  await magtenPage.page.waitForFunction(() => window.__issue89RatingFixture.userRatings.get("magten-a|magten") === 8.4);
+
+  await magtenPage.page.evaluate(() => window.__issue89RateFixtureEpisode("magten-b", "magten-other-user-ep", 5.1, "magten"));
+  const magtenOtherUser = await magtenPage.page.evaluate(async () => {
+    await fetchPodcastEpisodeParentRatings(state.podcastById.magten, { force: true });
+    return { own: getPodcastDetailEpisodeRatingState(state.podcastById.magten), editable: canEditPodcastDetailInlineRating(state.podcastById.magten) };
+  });
+  assert.equal(magtenOtherUser.own.count, 0, "another Magten user's episode rating does not lock this user");
+  assert.equal(magtenOtherUser.editable, true);
+
+  await magtenPage.page.evaluate(() => window.__issue89RateFixtureEpisode("magten-a", "magten-own-ep", 6.6, "magten"));
+  const magtenLocked = await magtenPage.page.evaluate(async () => {
+    const parent = state.podcastById.magten;
+    await fetchPodcastEpisodeParentRatings(parent, { force: true });
+    updatePodcastDetailOwnRatingCell(document.getElementById("podcastDetailSheet"), parent);
+    const episodeState = getPodcastEpisodeState(parent);
+    return {
+      own: getPodcastDetailEpisodeRatingState(parent),
+      direct: state.userRatingsByKey.magten,
+      stored: window.__issue89RatingFixture.userRatings.get("magten-a|magten"),
+      edit: canEditPodcastDetailInlineRating(parent),
+      queryKey: window.__issue89RatingFixture.queries.at(-1).filters.find(([column]) => column === "podcast_episodes.podcast_key")?.[1],
+      episodeState
+    };
+  });
+  assert.deepEqual(magtenLocked.own, { resolved: true, error: "", count: 1, average: 6.6 });
+  assert.equal(magtenLocked.direct, 8.4);
+  assert.equal(magtenLocked.stored, 8.4);
+  assert.equal(magtenLocked.edit, false);
+  assert.equal(magtenLocked.queryKey, "magten");
+  const magtenWritesAtLock = await magtenPage.page.evaluate(() => window.__issue89RatingFixture.writes.length);
+  await magtenPage.page.evaluate(async () => {
+    await synchronizeEpisodeDerivedParentRating("magten", 8.4, { refreshUi: false });
+    await reconcileExistingEpisodeDerivedParentRating("magten");
+  });
+  assert.equal(await magtenPage.page.evaluate(() => window.__issue89RatingFixture.writes.length), magtenWritesAtLock,
+    "Magten episode locking also preserves direct-rating storage without upserts or deletes");
+
+  const magtenUnlocked = await magtenPage.page.evaluate(async () => {
+    window.__issue89RatingFixture.episodeRatings = window.__issue89RatingFixture.episodeRatings
+      .filter((row) => row.user_id !== "magten-a");
+    await fetchPodcastEpisodeParentRatings(state.podcastById.magten, { force: true });
+    return {
+      own: getPodcastDetailEpisodeRatingState(state.podcastById.magten),
+      direct: getUserRatingForPodcast(state.podcastById.magten),
+      editable: canEditPodcastDetailInlineRating(state.podcastById.magten)
+    };
+  });
+  assert.equal(magtenUnlocked.own.count, 0);
+  assert.equal(magtenUnlocked.direct, 8.4);
+  assert.equal(magtenUnlocked.editable, true, "the last Magten episode rating can be removed and direct editing resumes");
+  const magtenSafety = await magtenPage.page.evaluate(async () => {
+    const parent = state.podcastById.magten;
+    const episodeState = getPodcastEpisodeState(parent);
+    episodeState.parentUserRatingsResolvedFor = "";
+    episodeState.parentUserRatingsLoading = true;
+    const loading = canEditPodcastDetailInlineRating(parent);
+    episodeState.parentUserRatingsLoading = false;
+    window.__issue89RatingFixture.failEpisodeQuery = true;
+    await fetchPodcastEpisodeParentRatings(parent, { force: true });
+    return { loading, error: canEditPodcastDetailInlineRating(parent), direct: state.userRatingsByKey.magten };
+  });
+  assert.deepEqual(magtenSafety, { loading: false, error: false, direct: 8.4 });
+  await magtenPage.context.close();
 
   // Real coarse-pointer tap, keyboard activation and focus behavior on the
   // existing inline editor and modal; no new visual controls are introduced.

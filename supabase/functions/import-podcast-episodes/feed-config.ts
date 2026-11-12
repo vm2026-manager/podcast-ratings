@@ -64,6 +64,12 @@ export type FeedConfig = {
   expected_external_guid_prefix?: string;
   // Reject an ambiguous feed before importing any item if any GUID repeats.
   expected_rss_unique_guids?: boolean;
+  // Pipeline-attested identities for new ordinary RSS feeds. These exact
+  // pins are generated from the official show page and feed, never Sheet-only.
+  expected_rss_channel_link?: string;
+  expected_rss_self_url?: string;
+  expected_rss_publisher?: string;
+  auto_verified_rss?: boolean;
   // A shared RSS feed may contain a previous show's archive. These
   // code-owned bounds require a verified premiere date, GUID anchors, and an
   // exact GUID shape before any post-premiere entries can be imported.
