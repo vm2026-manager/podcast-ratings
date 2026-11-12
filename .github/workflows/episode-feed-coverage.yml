@@ -11,6 +11,8 @@ on:
       - "data/podcasts.json"
       - "supabase/functions/import-podcast-episodes/feed-config.ts"
       - "supabase/functions/import-podcast-episodes/runtime-feed-config.ts"
+      - "scripts/rss-feed-verification.mjs"
+      - "scripts/verify-rss-feed-catalogue.mjs"
       - "scripts/monitor-episode-feed-coverage.mjs"
       - "scripts/episode-feed-post-import.mjs"
       - "scripts/test-episode-feed-post-import.mjs"
@@ -204,7 +206,7 @@ jobs:
         shell: bash
         run: |
           node --experimental-strip-types scripts/test-episode-feed-coverage.mjs
-          node --experimental-strip-types scripts/monitor-episode-feed-coverage.mjs "$RUNNER_TEMP/episode-feed-coverage.json"
+          node --experimental-strip-types scripts/monitor-episode-feed-coverage.mjs "$RUNNER_TEMP/episode-feed-coverage.json" --verify-active-sources
           node --experimental-strip-types scripts/test-episode-feed-post-import.mjs
           node --experimental-strip-types scripts/episode-feed-post-import.mjs \
             --pending-file "$RUNNER_TEMP/episode-feed-pending.json" \
@@ -233,15 +235,24 @@ jobs:
             const fingerprint = crypto.createHash("sha256")
               .update(JSON.stringify(report.findings)).digest("hex").slice(0, 20);
             const marker = "<!-- feed-coverage:" + fingerprint + " -->";
-            const escaped = value => String(value || "").replace(/@/g, "＠").replace(/[<>]/g, "");
+            const escaped = value => String(value || "").slice(0, 500).replace(/@/g, "＠")
+              .replace(/[<>\[\]()*_\x60!]/g, "");
             const lines = report.findings.slice(0, 80).map(x =>
               "- " + escaped(x.podcast_key) + " — " + escaped(x.cause) +
-                (x.title && x.title !== x.podcast_key ? " (" + escaped(x.title) + ")" : ""));
+                (x.title && x.title !== x.podcast_key ? " (" + escaped(x.title) + ")" : "") +
+                "\n  source: " + escaped(x.source) +
+                "\n  feed: " + escaped(x.feed_url) +
+                "\n  blocking: " + escaped(x.blocking) +
+                "\n  required approval: " + escaped(x.required_approval));
             const body = marker + "\n## Episode-feeds requiring review\n\n" +
               report.findings.length + " of " + report.catalogue_rows_with_feed +
               " catalogued Feed entries lack a safely active adapter or have an identity mismatch.\n\n" +
+              (report.live_source_verification
+                ? "Live automatic RSS identity check: " + report.live_source_verification.checked_source_count + " of " +
+                  report.live_source_verification.active_source_count + " sources checked; " +
+                  report.live_source_verification.deferred_source_count + " deferred to later daily runs.\n\n" : "") +
               "Read-only configuration check. Some entries may be archived. Confirm show, lifecycle, source GUIDs and historical rating identities before changing routing.\n" +
-              "Do **not** auto-import, remap or delete episodes. The adapter check makes zero Supabase calls.\n\n" + lines.join("\n") +
+              "Do **not** auto-import, remap or delete episodes. Live source checks use bounded public HTTPS requests and make zero Supabase calls or writes.\n\n" + lines.join("\n") +
               (report.findings.length > 80 ? "\n\n(Additional items omitted.)" : "") + "\n\nSee #256 for production follow-up.\n";
             if (!alert) {
               await github.rest.issues.create({ ...context.repo, title, body });

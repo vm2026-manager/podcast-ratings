@@ -5,7 +5,7 @@ export type FeedResolution = {
   podcast_key: string;
   sheet_feed: string;
   active_feed_urls: string[];
-  origin: "static" | "sheet_override" | "review_required";
+  origin: "static" | "sheet_override" | "auto_verified" | "review_required";
   differs_from_sheet: boolean;
   reason: string;
 };
