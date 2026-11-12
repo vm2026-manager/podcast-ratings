@@ -1,0 +1,62 @@
+name: Instagramautomatik
+
+on:
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: dry-run inspects; draft saves a Buffer draft; queue schedules a public post
+        type: choice
+        options: [dry-run, draft, queue]
+        default: dry-run
+        required: true
+      queue_acknowledgement:
+        description: Required exact acknowledgement for queue mode
+        type: string
+        required: false
+  schedule:
+    - cron: "0 8 * * *"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: instagram-automation-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  instagram:
+    if: github.ref == 'refs/heads/main' && (github.event_name == 'workflow_dispatch' || vars.INSTAGRAM_DAILY_ENABLED == 'true')
+    runs-on: ubuntu-24.04
+    env:
+      BUFFER_API_KEY: ${{ secrets.BUFFER_API_KEY }}
+      BUFFER_MODE: ${{ github.event_name == 'schedule' && 'queue' || inputs.mode || 'dry-run' }}
+      BUFFER_QUEUE_ENABLED: ${{ vars.BUFFER_QUEUE_ENABLED }}
+      BUFFER_QUEUE_ACK: ${{ github.event_name == 'schedule' && vars.BUFFER_SCHEDULE_ACK || inputs.queue_acknowledgement }}
+      INSTAGRAM_HISTORY_FILE: ${{ github.workspace }}/.instagram/used-podcast-ids.json
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - name: Restore duplicate-prevention history
+        id: history
+        uses: actions/cache/restore@v4
+        with:
+          path: .instagram/used-podcast-ids.json
+          key: instagram-history-${{ github.run_id }}-${{ github.run_attempt }}
+          restore-keys: instagram-history-
+      - name: Fail closed when durable history has not been initialized
+        if: github.event_name == 'schedule' && steps.history.outputs.cache-hit != 'true'
+        run: |
+          if [ ! -f .instagram/used-podcast-ids.json ]; then
+            echo "No history cache found; refusing scheduled publication until manually reviewed." >&2
+            exit 1
+          fi
+      - name: Run Instagram automation
+        run: node scripts/run-instagram-automation.mjs
+      - name: Save duplicate-prevention history after a Buffer write
+        if: success() && (env.BUFFER_MODE == 'draft' || env.BUFFER_MODE == 'queue')
+        uses: actions/cache/save@v4
+        with:
+          path: .instagram/used-podcast-ids.json
+          key: instagram-history-${{ github.run_id }}-${{ github.run_attempt }}
