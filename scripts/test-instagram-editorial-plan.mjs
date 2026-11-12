@@ -13,6 +13,13 @@ import {
 import { createReadOnlyInstagramGraphql, scanInstagramChannelHistory } from "./run-instagram-editorial-plan.mjs";
 
 const root = process.cwd();
+const planWorkflow = await readFile(path.join(root, ".github/workflows/instagram-editorial-plan.yml"), "utf8");
+assert.match(planWorkflow, /^on:\r?\n  workflow_dispatch:\r?\n/m, "editorial planning remains manually triggered only");
+assert.doesNotMatch(planWorkflow, /^\s+schedule:/m, "no daily or other automatic schedule is enabled");
+assert.doesNotMatch(planWorkflow, /^\s{6}INSTAGRAM_PLAN_OUTPUT_DIR:.*runner\.temp/m,
+  "runner.temp is not referenced from the job-level environment");
+assert.match(planWorkflow, /^\s{10}INSTAGRAM_PLAN_OUTPUT_DIR: \$\{\{ runner\.temp \}\}\/instagram-editorial-plan/m,
+  "artifact output uses runner.temp from the step-level environment where the context is available");
 const inputs = await loadEditorialInputs(root);
 const now = new Date("2026-11-12T12:00:00.000Z");
 const channel = { id: "ig-channel", organizationId: "org-1", service: "instagram", name: "podcastlisten.dk",
