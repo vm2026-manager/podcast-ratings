@@ -105,10 +105,15 @@ export async function prepareInstagramEditorialPlan({ rootPath = root, graphql, 
 export function reviewInstructions(plan) {
   return `# Instagram: redaktionel gennemgang\n\n` +
     `Planen indeholder ${plan.posts.length} forslag til @podcastlisten.dk. Datoerne er kun forslag (mandag, onsdag og fredag over fem uger); ingen dato er sendt til Buffer. Buffer-historikken blev læst uden mutation ${plan.bufferHistory.scannedAt}; ${plan.bufferHistory.postCount} opslag blev gennemgået.\n\n` +
+    `## Status for alle 15 kandidater\n\n` +
+    `| # | Podcast-ID | Score | Hovedserie | Billedkontrol | Coverret | Adgangskilde | Lyttelink | Take | Godkendelse |\n|---:|---|---:|---|---|---|---|---|---|---|\n` +
+    plan.posts.map((slot) => `| ${slot.position} | \`${slot.podcastId}\` | ${slot.score.display} | ${slot.mainSeries || "—"} | ${slot.reviewStatus.imageQuality} | ${slot.reviewStatus.coverRights} | ${slot.currentAccessReview.status} (${slot.currentAccessReview.checkedAt || "udateret"}) | ${slot.caption.targetLinkResearchStatus} | ${slot.reviewStatus.personalTake} | ${slot.reviewStatus.approval} |`).join("\n") +
     `## Gennemgang pr. opslag\n\n` +
     `- Skriv ejerens personlige take i JSON-feltet \`caption.ownerTake\` eller CSV-kolonnen \`ownerTake\` (10–240 tegn). Det skal være ejerens egne ord; feltet starter tomt.\n` +
-    `- Verificér det konkrete første fulde episode- eller serie-link samt publisherens Instagram-handle og dokumentation. Ukendte handles er tomme; ingen nævnes automatisk.\n` +
+    `- Aktuelle kildechecks er registreret i \`data/instagram-editorial-review-research.json\`. Udgåede links, tredjepartssider og prolog-links er markeret; research-status er ikke ejerens godkendelse. Kun handles med præcist link fra udgiverens eget website vises. Publisher-hashtags er ikke verificeret og derfor udeladt; radioetiketter normaliseres ikke.\n` +
     `- Coverrettigheder er kontrolleret mod den versionsstyrede rettighedsliste. En manglende rettighed blokerer billedgenerering og alle Buffer-handlinger; der er ingen genrekort-fallback.\n` +
+    `- Delte SHA-256-værdier på tværs af Podcast-ID'er er listet i \`sharedArtworkGroups\`. De dokumenterer byte-identisk artwork, ikke unik underserieidentitet; hver identitet kræver separat manuel kontrol.\n` +
+    `- De 10 covers med manuel kvalitetskontrol vises særskilt med faktisk målt format, dimensioner, byteantal og SHA-256 i JSON/CSV. Originalfiler ændres ikke.\n` +
     `- Gennemgå coveret, vælg placering og kontrast manuelt. Placering skal bindes til samme eksakte Podcast-ID og kilde-SHA-256.\n` +
     `- Godkend billedet og caption separat pr. opslag. Hashes skal svare til den præcise caption, coverkilde og færdige billedfil. Enhver ændring kræver ny godkendelse.\n` +
     `- Importér CSV-ændringer uden at give godkendelse med \`node scripts/instagram-editorial-plan.mjs --apply-csv <plan.json> <review.csv> <output-plan.json>\`. Validér derefter med \`node scripts/instagram-editorial-plan.mjs --validate <output-plan.json>\`. Validator og import foretager ingen Buffer-kald.\n` +

@@ -3,6 +3,7 @@ import { readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { slugFromPodcastId } from "./generate-seo-podcast-pages.mjs";
+import { extractDrArtworkId, inspectOriginalCoverFile, reviewReadiness, sharedArtworkIdentity } from "./instagram-editorial-review.mjs";
 
 export const PLAN_SIZE = 15;
 export const OWNER_TAKE_MAX_LENGTH = 240;
@@ -35,8 +36,10 @@ export function normalizePublisherHashtag(value) {
 }
 
 export function buildSuggestedHashtags(title, publisher) {
-  const publisherParts = clean(publisher).split(/\s*(?:\/|&|\+|,|\bog\b)\s*/iu).filter(Boolean);
-  const candidates = ["#podcastlisten", "#podcast", normalizePublisherHashtag(title), ...publisherParts.map(normalizePublisherHashtag)];
+  // Publisher spelling is not a verified social hashtag. In particular, never normalize
+  // the visually ambiguous catalogue labels Radio llll / Radio IIII into a guessed tag.
+  void publisher;
+  const candidates = ["#podcastlisten", "#podcast", normalizePublisherHashtag(title)];
   return [...new Set(candidates.filter(Boolean))];
 }
 
@@ -140,23 +143,33 @@ export function nextSuggestedDays(today = new Date(), count = PLAN_SIZE) {
   return dates;
 }
 
-function makeCaptionFields(row, profileUrl, hashtags) {
+function makeCaptionFields(row, profileUrl, hashtags, research = {}, publisherProfile = null) {
   const factLines = clean(row["Kort beskrivelse"]);
+  const verifiedTarget = String(research.linkStatus ?? "").startsWith("verified-") && urlIsHttps(research.finalUrl)
+    ? research.finalUrl : clean(row.Link);
   return {
     factualLines: factLines,
     ownerTake: "",
     score: `${String(row["Vuring (1-10)"]).trim()}/10`,
     publisher: clean(row.Udgiver),
-    publisherMentions: [],
-    publisherMentionEvidence: [],
+    publisherMentions: publisherProfile?.status === "verified-official-site-link" ? [publisherProfile.handle] : [],
+    publisherMentionEvidence: publisherProfile?.status === "verified-official-site-link"
+      ? [{ handle: publisherProfile.handle, evidenceUrl: publisherProfile.evidenceUrl, checkedAt: publisherProfile.checkedAt }] : [],
+    publisherHandleStatus: publisherProfile?.status ?? "no-exact-official-handle-verified",
+    publisherHashtagStatus: "not-verified-and-omitted",
     mainSeries: clean(row.Hovedserie),
-    accessType: row.accessType,
+    accessType: ["verified-free", "verified-paid"].includes(research.accessStatus)
+      ? research.accessStatus.slice("verified-".length) : "",
     accessEvidenceUrl: row.accessEvidenceUrl,
-    targetLinkCandidate: clean(row.Link),
+    targetLinkCandidate: verifiedTarget,
     targetLinkEvidenceUrl: "",
     targetLinkVerifiedBy: "",
     targetLinkVerifiedAt: "",
     targetLinkStatus: "needs-owner-verification-as-first-full-episode-or-series",
+    targetLinkResearchStatus: research.linkStatus ?? "no-current-link-review",
+    targetLinkResearchEvidenceUrl: research.finalUrl || research.sourceUrl || "",
+    targetLinkResearchCheckedAt: research.checkedAt ?? "",
+    targetLinkHttpStatus: research.httpStatus ?? null,
     canonicalProfileUrl: profileUrl,
     hashtags,
   };
@@ -212,14 +225,13 @@ export async function verifyOriginalCoverFiles({ podcasts, coverManifest, root =
     const cover = verifiedOriginal(row, coverManifest?.podcasts, root);
     if (!cover) continue;
     try {
-      const bytes = await readFile(cover.localPath);
-      if (bytes.length === cover.sourceBytes && sha256(bytes) === cover.sourceChecksum) verifiedIds.add(id);
+      if (inspectOriginalCoverFile(root, cover).verified) verifiedIds.add(id);
     } catch { /* Missing originals remain ineligible; never substitute another image. */ }
   }
   return verifiedIds;
 }
 
-export function buildEditorialPlan({ podcasts, coverManifest, rights, verifiedCoverIds = new Set(), publishedPodcastIds = [], bufferScan, today = new Date(), root = process.cwd() } = {}) {
+export function buildEditorialPlan({ podcasts, coverManifest, rights, research, verifiedCoverIds = new Set(), publishedPodcastIds = [], bufferScan, today = new Date(), root = process.cwd() } = {}) {
   if (!Array.isArray(podcasts) || !Array.isArray(coverManifest?.podcasts)) throw new Error("Catalogue and cover manifest are required");
   if (!bufferScan?.complete || bufferScan.account !== `@${INSTAGRAM_ACCOUNT}` || !bufferScan.scannedAt || !Number.isInteger(bufferScan.postCount)) {
     throw new Error("A completed read-only Buffer history scan for @podcastlisten.dk is required to prepare candidates");
@@ -256,7 +268,32 @@ export function buildEditorialPlan({ podcasts, coverManifest, rights, verifiedCo
       cover: cover.sourceChecksum,
       catalogueIdentity: sha256(JSON.stringify({ id, title: row.Titel, publisher: row.Udgiver, genre: row.Genre })),
     };
-    const caption = makeCaptionFields(row, profileUrl, hashtags);
+    const postResearch = (research?.posts ?? []).filter((entry) => entry?.podcastId === id);
+    if (postResearch.length > 1) throw new Error(`Instagram research evidence must be unique for exact Podcast-ID ${id}`);
+    const publisherMatches = (research?.publisherProfiles ?? []).filter((entry) => entry?.publisher === row.Udgiver &&
+      entry?.status === "verified-official-site-link" && /^@[A-Za-z0-9._]+$/.test(entry.handle ?? "") && urlIsHttps(entry.evidenceUrl));
+    if (publisherMatches.length > 1) throw new Error(`Instagram publisher evidence is ambiguous for exact publisher ${row.Udgiver}`);
+    const caption = makeCaptionFields(row, profileUrl, hashtags, postResearch[0] ?? {}, publisherMatches[0] ?? null);
+    const fileVerification = inspectOriginalCoverFile(root, cover);
+    const artworkIdentity = sharedArtworkIdentity(cover, coverManifest);
+    const artworkResearchMatches = (research?.sharedArtworkReviews ?? []).filter((entry) =>
+      String(entry?.sourceChecksum ?? "").toLowerCase() === cover.sourceChecksum);
+    if (artworkResearchMatches.length > 1) throw new Error(`Shared artwork research must be unique for exact source checksum ${cover.sourceChecksum}`);
+    const artworkEvidence = artworkResearchMatches[0] ?? null;
+    const artworkEvidenceMatches = artworkEvidence?.sourceImageId === extractDrArtworkId(cover.sourceUrl) &&
+      artworkEvidence?.sourceUrl === cover.sourceUrl && artworkEvidence?.manifestDistinctPodcastIdCount === artworkIdentity.podcastIds.length;
+    const sharedArtworkReview = artworkIdentity.shared ? {
+      required: true,
+      status: "shared-source-checksum-needs-exact-artwork-review",
+      sourceChecksum: cover.sourceChecksum,
+      distinctPodcastIdCount: artworkIdentity.podcastIds.length,
+      artworkId: extractDrArtworkId(cover.sourceUrl),
+      evidence: artworkEvidence ? { ...artworkEvidence, verifiedAgainstCurrentManifest: artworkEvidenceMatches,
+        status: artworkEvidenceMatches ? artworkEvidence.status : "stale-research-or-manifest-mismatch-review-required" } : null,
+      identityReview: null,
+      uniqueSubseriesArtworkVerified: false,
+    } : { required: false, status: "no-shared-source-checksum-detected", sourceChecksum: cover.sourceChecksum,
+      distinctPodcastIdCount: 1, artworkId: extractDrArtworkId(cover.sourceUrl), uniqueSubseriesArtworkVerified: false };
     const slot = {
       position: 0,
       suggestedDate: "",
@@ -271,18 +308,26 @@ export function buildEditorialPlan({ podcasts, coverManifest, rights, verifiedCo
       sourceDescription: clean(row["Kort beskrivelse"]),
       catalogueLink: clean(row.Link),
       access: { type: row.accessType, evidenceUrl: row.accessEvidenceUrl, checkedAt: row.accessCheckedAt },
+      currentAccessReview: postResearch[0] ? {
+        status: postResearch[0].accessStatus,
+        evidenceUrl: postResearch[0].accessEvidenceUrl,
+        checkedAt: postResearch[0].checkedAt,
+        sourceHttpStatus: postResearch[0].httpStatus,
+      } : { status: "no-current-source-review", evidenceUrl: "", checkedAt: "", sourceHttpStatus: null },
       canonicalProfileUrl: profileUrl,
       factualSources: { source: "catalogue-master", fields: ["Titel", "Udgiver", "Genre", "Kort beskrivelse", "Hovedserie"] },
       cover: {
         sourcePath: cover.sourcePath,
         sourceUrl: cover.sourceUrl,
         sourceChecksum: cover.sourceChecksum,
+        sharedArtwork: sharedArtworkReview,
         sourceBytes: cover.sourceBytes,
         width: cover.width,
         height: cover.height,
         format: cover.format,
         qualityCategory: cover.qualityCategory,
         qualityStatus: ["A", "B"].includes(cover.qualityCategory) ? "manifest-quality-checked" : "manual-quality-review-required",
+        fileVerification,
         qualityReview: { podcastId: id, sourceChecksum: cover.sourceChecksum, approved: false, approvedBy: "", approvedAt: "", notes: "" },
         rightsStatus: rightsStatus(id, cover, rights),
         previewPath: null,
@@ -306,7 +351,7 @@ export function buildEditorialPlan({ podcasts, coverManifest, rights, verifiedCo
         status: PLAN_STATUSES.editorial,
         missing: [
           "ownerTake",
-          "verifiedPublisherInstagramMentions",
+          ...(caption.publisherMentions.length ? [] : ["verifiedPublisherInstagramMentions-or-documented-none"]),
           "firstFullEpisodeOrSeriesLinkVerification",
           "coverRightsApproval",
           "manualOverlayPlacementAndContrastApproval",
@@ -317,6 +362,7 @@ export function buildEditorialPlan({ podcasts, coverManifest, rights, verifiedCo
         ],
       },
     };
+    slot.reviewStatus = reviewReadiness(slot, today);
     options.push(slot);
   }
 
@@ -342,13 +388,19 @@ export function buildEditorialPlan({ podcasts, coverManifest, rights, verifiedCo
       excludedPodcastIds: [...extractPodcastIdsFromBufferPosts(posts, podcasts)].sort((a, b) => a.localeCompare(b, "da")),
       historicalUsedIds: [...publishedPodcastIds].sort((a, b) => a.localeCompare(b, "da")) },
     rights: { approvalCount: rights?.approvals?.length ?? 0, missingRightsBlockPosting: true, automaticGenreFallback: false },
+    sharedArtworkGroups: [...new Map(selected.filter((slot) => slot.cover.sharedArtwork.required)
+      .map((slot) => [slot.cover.sourceChecksum, {
+        ...slot.cover.sharedArtwork,
+        podcastIds: sharedArtworkIdentity(slot.cover, coverManifest).podcastIds,
+        selectedPodcastIds: selected.filter((candidate) => candidate.cover.sourceChecksum === slot.cover.sourceChecksum).map((candidate) => candidate.podcastId),
+      }])).values()],
     excluded,
     posts: selected,
     safety: { bufferMutations: 0, workflowMode: "read-only-plan", queueEnabled: false, schedulingEnabled: false, publicationEnabled: false },
   };
 }
 
-export function validateOwnerApproval(slot) {
+export function validateOwnerApproval(slot, context = {}) {
   if (!slot || !clean(slot.podcastId)) return { approved: false, errors: ["Exact Podcast-ID is required"] };
   const errors = [];
   const take = clean(slot.caption?.ownerTake);
@@ -366,6 +418,35 @@ export function validateOwnerApproval(slot) {
   const placementHash = coverPlacementFingerprint(slot.cover?.placement);
   if (slot.approval?.placementSha256 !== placementHash) errors.push("Manual overlay placement changed since owner approval");
   if (slot.cover?.rightsStatus !== "documented-cover-right-present") errors.push("Documented cover reuse rights are missing");
+  if (!Array.isArray(context.coverManifest?.podcasts)) errors.push("Complete cover manifest context is required to validate shared artwork identity");
+  else {
+    const shared = sharedArtworkIdentity({ sourceChecksum: slot.cover?.sourceChecksum }, context.coverManifest).shared;
+    const exactReview = slot.cover?.sharedArtwork?.identityReview;
+    if (shared && (slot.cover?.sharedArtwork?.required !== true || slot.cover.sharedArtwork.uniqueSubseriesArtworkVerified !== true ||
+        slot.cover.sharedArtwork.status !== "owner-verified-exact-artwork" || slot.cover.sharedArtwork.podcastId !== slot.podcastId ||
+        slot.cover.sharedArtwork.sourceChecksum !== slot.cover.sourceChecksum || !urlIsHttps(slot.cover.sharedArtwork.evidenceUrl) ||
+        !clean(slot.cover.sharedArtwork.reviewedBy) || !clean(slot.cover.sharedArtwork.reviewedAt) ||
+        exactReview?.podcastId !== slot.podcastId || exactReview?.title !== slot.title || exactReview?.publisher !== slot.publisher ||
+        exactReview?.mainSeries !== slot.mainSeries || exactReview?.sourceChecksum !== slot.cover.sourceChecksum ||
+        exactReview?.artworkId !== slot.cover.sharedArtwork.artworkId || !urlIsHttps(exactReview?.episodeUrl) ||
+        exactReview?.evidenceUrl !== slot.cover.sharedArtwork.evidenceUrl || exactReview?.reviewedBy !== slot.cover.sharedArtwork.reviewedBy ||
+        exactReview?.reviewedAt !== slot.cover.sharedArtwork.reviewedAt)) {
+      errors.push("Shared cover checksum needs exact Podcast-ID, artwork, and subseries review before approval");
+    }
+    if (!shared && slot.cover?.sharedArtwork?.required === true) errors.push("Shared-cover review marker does not match the complete exact-checksum manifest scan");
+  }
+  if (!Array.isArray(context.research?.publisherProfiles)) errors.push("Current exact-publisher research context is required to validate Instagram mentions");
+  else {
+    const publisherProfiles = context.research.publisherProfiles.filter((entry) => entry?.publisher === slot.caption?.publisher &&
+      entry?.status === "verified-official-site-link" && /^@[A-Za-z0-9._]+$/.test(entry.handle ?? "") && urlIsHttps(entry.evidenceUrl));
+    const mentions = Array.isArray(slot.caption?.publisherMentions) ? slot.caption.publisherMentions : [];
+    const evidence = Array.isArray(slot.caption?.publisherMentionEvidence) ? slot.caption.publisherMentionEvidence : [];
+    if (publisherProfiles.length > 1 || (publisherProfiles.length === 0 && mentions.length > 0) ||
+        (publisherProfiles.length === 1 && (mentions.length !== 1 || mentions[0] !== publisherProfiles[0].handle || evidence.length !== 1 ||
+          evidence[0]?.handle !== publisherProfiles[0].handle || evidence[0]?.evidenceUrl !== publisherProfiles[0].evidenceUrl))) {
+      errors.push("Publisher Instagram mention is missing, ambiguous, or not tied to the exact official publisher source");
+    }
+  }
   if (!["A", "B"].includes(slot.cover?.qualityCategory) &&
       (slot.cover?.qualityReview?.approved !== true || slot.cover.qualityReview.podcastId !== slot.podcastId ||
         slot.cover.qualityReview.sourceChecksum !== slot.cover.sourceChecksum || !clean(slot.cover.qualityReview.approvedBy) ||
@@ -378,10 +459,6 @@ export function validateOwnerApproval(slot) {
       !urlIsHttps(slot.caption?.targetLinkEvidenceUrl) || !clean(slot.caption?.targetLinkVerifiedBy) || !clean(slot.caption?.targetLinkVerifiedAt)) {
     errors.push("First full episode or series link is not verified with owner evidence");
   }
-  if (!Array.isArray(slot.caption?.publisherMentions) || !slot.caption.publisherMentions.length ||
-      !Array.isArray(slot.caption?.publisherMentionEvidence) || slot.caption.publisherMentionEvidence.length !== slot.caption.publisherMentions.length ||
-      slot.caption.publisherMentionEvidence.some((entry) => !urlIsHttps(entry?.evidenceUrl) || !clean(entry?.handle) ||
-        !slot.caption.publisherMentions.includes(entry.handle))) errors.push("Publisher Instagram mentions lack exact owner-verified evidence");
   if (!slot.publicationHistory?.verifiedAgainstBuffer || !slot.publicationHistory?.checkedAt) errors.push("Buffer publication history has not been verified");
   return { approved: errors.length === 0, errors, captionSha256: captionHash, placementSha256: placementHash,
     coverSourceChecksum: slot.cover?.sourceChecksum ?? null, coverOutputChecksum: slot.cover?.outputChecksum ?? null };
@@ -389,13 +466,13 @@ export function validateOwnerApproval(slot) {
 
 export async function loadEditorialInputs(root) {
   const read = async (name) => JSON.parse(await readFile(path.join(root, name), "utf8"));
-  const [catalog, covers, rights, episodes, groups] = await Promise.all([
+  const [catalog, covers, rights, episodes, groups, research] = await Promise.all([
     read("data/podcasts.json"), read("data/podcast-cover-manifest.json"), read("config/instagram-cover-rights.json"),
-    read("data/podcast-episodes.json"), read("data/podcast-display-groups.json"),
+    read("data/podcast-episodes.json"), read("data/podcast-display-groups.json"), read("data/instagram-editorial-review-research.json"),
   ]);
   const podcasts = catalog.rows;
   const verifiedCoverIds = await verifyOriginalCoverFiles({ podcasts, coverManifest: covers, root });
-  return { podcasts, coverManifest: covers, rights, episodes, groups, verifiedCoverIds };
+  return { podcasts, coverManifest: covers, rights, episodes, groups, research, verifiedCoverIds };
 }
 
 export function serializeReviewCsv(plan) {
@@ -403,8 +480,12 @@ export function serializeReviewCsv(plan) {
     "position", "suggestedDate", "podcastId", "title", "score", "underratedPearl", "publisher", "genre", "mainSeries",
     "sourceDescription", "ownerTake", "publisherInstagramMentions", "publisherMentionEvidenceJson", "targetLinkCandidate",
     "targetLinkEvidenceUrl", "targetLinkVerifiedBy", "targetLinkVerifiedAt", "captionDraft (read-only preview)",
-    "targetLinkStatus", "accessType", "accessEvidenceUrl", "canonicalProfileUrl", "hashtags", "coverSourcePath",
-    "coverSourceChecksum", "coverRightsStatus", "overlayPlacement (manual)", "captionSha256", "approvedBy", "approvedAt", "approved",
+    "targetLinkStatus", "linkResearchStatus", "linkResearchEvidenceUrl", "linkResearchCheckedAt", "linkHttpStatus",
+    "accessType", "accessEvidenceUrl", "accessCheckedAt", "currentAccessStatus", "currentAccessEvidenceUrl", "currentAccessCheckedAt", "accessFreshness", "canonicalProfileUrl", "hashtags",
+    "verifiedPublisherMentions", "coverSourcePath", "coverSourceUrl", "coverArtworkId", "coverSourceChecksum",
+    "sharedChecksumPodcastIds", "sharedCoverReview", "coverExpectedBytes", "coverExpectedDimensions", "coverExpectedFormat",
+    "coverMeasuredSha256", "coverMeasuredBytes", "coverMeasuredFormat", "coverMeasuredDimensions", "imageQualityStatus",
+    "coverRightsStatus", "ownerTakeStatus", "approvalStatus", "overlayPlacement (manual)", "captionSha256", "approvedBy", "approvedAt", "approved",
   ];
   const csvCell = (value) => {
     let text = String(value ?? "");
@@ -417,8 +498,19 @@ export function serializeReviewCsv(plan) {
       slot.publisher, slot.genre, slot.mainSeries, slot.caption.factualLines, slot.caption.ownerTake, slot.caption.publisherMentions.join("; "),
       JSON.stringify(slot.caption.publisherMentionEvidence), slot.caption.targetLinkCandidate, slot.caption.targetLinkEvidenceUrl,
       slot.caption.targetLinkVerifiedBy, slot.caption.targetLinkVerifiedAt, slot.captionDraft, slot.caption.targetLinkStatus,
-      slot.access.type, slot.access.evidenceUrl, slot.canonicalProfileUrl, slot.caption.hashtags.join(" "),
-      slot.cover.sourcePath, slot.cover.sourceChecksum, slot.cover.rightsStatus, "", "", "", "", "false"];
+      slot.caption.targetLinkResearchStatus, slot.caption.targetLinkResearchEvidenceUrl, slot.caption.targetLinkResearchCheckedAt,
+      slot.caption.targetLinkHttpStatus, slot.access.type, slot.access.evidenceUrl, slot.access.checkedAt,
+      slot.currentAccessReview.status, slot.currentAccessReview.evidenceUrl, slot.currentAccessReview.checkedAt, slot.reviewStatus.access,
+      slot.canonicalProfileUrl, slot.caption.hashtags.join(" "), slot.caption.publisherMentions.join("; "),
+      slot.cover.sourcePath, slot.cover.sourceUrl, slot.cover.sharedArtwork?.artworkId ?? "", slot.cover.sourceChecksum,
+      slot.cover.sharedArtwork?.required
+        ? (plan.sharedArtworkGroups.find((group) => group.sourceChecksum === slot.cover.sourceChecksum)?.podcastIds ?? []).join("; ") : "",
+      slot.cover.sharedArtwork?.required ? "manual-shared-artwork-review-required" : "no-shared-checksum-detected",
+      slot.cover.sourceBytes, `${slot.cover.width}x${slot.cover.height}`, slot.cover.format,
+      slot.cover.fileVerification?.sourceChecksum ?? "", slot.cover.fileVerification?.bytes ?? "",
+      slot.cover.fileVerification?.format ?? "", `${slot.cover.fileVerification?.width ?? ""}x${slot.cover.fileVerification?.height ?? ""}`,
+      slot.reviewStatus.imageQuality, slot.cover.rightsStatus, slot.reviewStatus.personalTake, slot.reviewStatus.approval,
+      "", "", "", "", "false"];
     lines.push(values.map(csvCell).join(","));
   }
   return `${lines.join("\r\n")}\r\n`;
@@ -445,6 +537,7 @@ export function parseReviewCsv(csv) {
   if (rows.length < 2) throw new Error("Review CSV must contain a header and 15 review rows");
   const headers = rows[0];
   if (new Set(headers).size !== headers.length || !headers.includes("podcastId")) throw new Error("Review CSV header is missing podcastId or contains duplicates");
+  if (rows.slice(1).some((values) => values.length !== headers.length)) throw new Error("Review CSV rows do not match the exact header width");
   return rows.slice(1).filter((values) => values.some((value) => value.trim())).map((values) =>
     Object.fromEntries(headers.map((header, index) => [header, values[index] ?? ""])));
 }
@@ -480,6 +573,7 @@ export function applyReviewCsv(plan, csv) {
     slot.caption.targetLinkVerifiedAt = clean(row.targetLinkVerifiedAt);
     slot.caption.targetLinkStatus = clean(row.targetLinkStatus) || "needs-owner-verification-as-first-full-episode-or-series";
     slot.captionDraft = composeCaption(slot);
+    slot.reviewStatus = reviewReadiness(slot, new Date());
   }
   return updated;
 }
@@ -512,12 +606,16 @@ export function validateEditorialPlan(plan, context = {}) {
             slot.score?.source !== "Vuring (1-10)" || slot.score?.value !== parseEditorialScore(row["Vuring (1-10)"]) ||
             slot.score?.display !== String(row["Vuring (1-10)"]).trim() || slot.underratedPearl !== isX(row["Undervurderet perle"]) ||
             slot.caption?.publisher !== row.Udgiver || slot.caption?.mainSeries !== clean(row.Hovedserie) ||
-            slot.caption?.accessType !== row.accessType || slot.caption?.accessEvidenceUrl !== row.accessEvidenceUrl ||
+            slot.caption?.accessType !== "" || slot.caption?.accessEvidenceUrl !== row.accessEvidenceUrl ||
             slot.caption?.canonicalProfileUrl !== canonical || slot.canonicalProfileUrl !== canonical) {
           slotErrors.push("Catalogue identity, score, series, access metadata or canonical URL changed");
         }
         const requiredTags = buildSuggestedHashtags(row.Titel, row.Udgiver);
-        if (requiredTags.some((tag) => !slot.caption?.hashtags?.includes(tag))) slotErrors.push("Required podcast and publisher hashtags are missing");
+        if (requiredTags.some((tag) => !slot.caption?.hashtags?.includes(tag))) slotErrors.push("Required Podcastlisten and exact-title hashtags are missing");
+        const researchMatches = (context.research?.posts ?? []).filter((entry) => entry?.podcastId === slot.podcastId);
+        const expectedTargetLink = researchMatches.length === 1 && String(researchMatches[0].linkStatus ?? "").startsWith("verified-") &&
+          urlIsHttps(researchMatches[0].finalUrl) ? researchMatches[0].finalUrl : clean(row.Link);
+        if (slot.caption?.targetLinkCandidate !== expectedTargetLink) slotErrors.push("Candidate listening link differs from exact-ID current source review");
         const coverMatches = (context.coverManifest?.podcasts ?? []).filter((cover) => cover.appPodcastKey === slot.podcastId && cover.title === row.Titel);
         if (coverMatches.length !== 1 || coverMatches[0].sourceChecksum !== slot.cover?.sourceChecksum ||
             coverMatches[0].original?.checksum !== slot.cover?.sourceChecksum) slotErrors.push("Original cover identity or source checksum changed");
@@ -536,7 +634,7 @@ export function validateEditorialPlan(plan, context = {}) {
         slot.publicationHistory?.verifiedAgainstBuffer !== true) {
       slotErrors.push("Read-only Buffer history scan is missing, inconsistent or older than 24 hours");
     }
-    const approval = validateOwnerApproval(slot);
+    const approval = validateOwnerApproval(slot, { coverManifest: context.coverManifest, research: context.research });
     return { podcastId: slot.podcastId, ...approval, errors: [...slotErrors, ...approval.errors], approved: slotErrors.length === 0 && approval.approved };
   });
   return { ready: errors.length === 0 && slots.every((slot) => slot.approved), errors, slots };
