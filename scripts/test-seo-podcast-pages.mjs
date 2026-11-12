@@ -85,5 +85,12 @@ const appPilotIds = [...pilotIdBlock[1].matchAll(/"([^"]+)"/g)].map((match) => m
 assert.deepEqual(appPilotIds, PILOT_PODCAST_IDS);
 assert.match(app, /titleLink\.href = seoPilotRoute/);
 assert.match(app, /event\.preventDefault\(\);[\s\S]*?openPodcastDetailSheet\(podcast, article, \{ allowDesktop: true \}\)/);
+const desktopTitleMarkup = app.match(/function getDesktopRankingTitleMarkup\(podcast, variant\) \{[\s\S]*?(?=\nfunction createRankingHostCreditElement)/)?.[0];
+assert(desktopTitleMarkup, "desktop ranking titles must have a dedicated SEO link renderer");
+assert.match(desktopTitleMarkup, /const seoRoute = getSeoPilotRoute\(podcast\)/);
+assert.match(desktopTitleMarkup, /href="\$\{escapeHtml\(seoRoute\)\}" data-action="open-details"/);
+assert.match(app, /if \(action === "open-details"\) \{\s+if \(actionTarget\.tagName === "A"\) event\.preventDefault\(\);/);
+const desktopCss = await readFile(new URL("../desktop-home-mockup.css", import.meta.url), "utf8");
+assert.match(desktopCss, /\.desktop-ranking-title-link\s*\{\s*text-decoration:\s*none !important;/);
 assert.match(app, /button\.href = "\/genre\/true-crime\/"/);
 console.log("SEO pilot generator tests passed");
