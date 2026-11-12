@@ -1,0 +1,40 @@
+name: Prepare Instagram editorial plan (read-only)
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: instagram-editorial-plan-read-only
+  cancel-in-progress: false
+
+jobs:
+  prepare-plan:
+    if: github.ref == 'refs/heads/main' && github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-24.04
+    env:
+      BUFFER_API_KEY: ${{ secrets.BUFFER_API_KEY }}
+      INSTAGRAM_PLAN_MODE: read-only
+      INSTAGRAM_HISTORY_FILE: ${{ github.workspace }}/.instagram/used-podcast-ids.json
+      INSTAGRAM_PLAN_OUTPUT_DIR: ${{ runner.temp }}/instagram-editorial-plan
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - name: Restore existing Instagram publication history without saving a new cache
+        uses: actions/cache/restore@v4
+        with:
+          path: .instagram/used-podcast-ids.json
+          key: instagram-history-editorial-read-${{ github.run_id }}
+          restore-keys: instagram-history-
+      - name: Prepare 15 unapproved owner-review candidates
+        run: node scripts/run-instagram-editorial-plan.mjs
+      - uses: actions/upload-artifact@v4
+        with:
+          name: instagram-editorial-review-${{ github.run_id }}
+          path: ${{ runner.temp }}/instagram-editorial-plan/
+          if-no-files-found: error
+          retention-days: 30

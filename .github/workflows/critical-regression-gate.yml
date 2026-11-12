@@ -43,5 +43,7 @@ jobs:
         run: |
           python scripts/generate-instagram-smoke-test.py --check
           node scripts/test-instagram-smoke-draft.mjs
+          node scripts/test-instagram-editorial-plan.mjs
+          python -B scripts/test-instagram-opskaler-cover.py
       - run: python scripts/test_manual_cover_intake.py
       - run: python scripts/intake_manual_podcast_covers.py
