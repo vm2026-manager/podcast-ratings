@@ -39,5 +39,9 @@ jobs:
         with:
           python-version: '3.12'
       - run: python -m pip install Pillow==12.2.0
+      - name: Verify isolated Instagram smoke-draft safeguards
+        run: |
+          python scripts/generate-instagram-smoke-test.py --check
+          node scripts/test-instagram-smoke-draft.mjs
       - run: python scripts/test_manual_cover_intake.py
       - run: python scripts/intake_manual_podcast_covers.py
