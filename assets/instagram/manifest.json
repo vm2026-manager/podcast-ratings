@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "generator": "scripts/generate-instagram-cards.py",
-  "generatorSha256": "f7b9b54fa10a3ef96a17fd2dfabce421ee88adaeea8c93ea6e5b1259476b9b49",
+  "generatorSha256": "e396072cf587e52c627ced220c9bcfe12cd20d4c01fe187487b918b99adee9e0",
   "paletteSource": {
     "file": "style.css",
     "variables": [
@@ -29,7 +29,7 @@
     "file": "canonical-genres.js",
     "count": 10
   },
-  "renderer": "Pillow 12.2.0 ImageFont.load_default(); no external fonts or images",
+  "renderer": "Pillow 12.2.0 ImageFont.load_default(); 16-color indexed PNG with deterministic stored DEFLATE; no external fonts or images",
   "width": 1080,
   "height": 1080,
   "format": "PNG",
@@ -42,10 +42,10 @@
       "contentType": "image/png",
       "width": 1080,
       "height": 1080,
-      "bytes": 43172,
-      "sha256": "ff41db4c75adfd8bf91dc30f1f2d27613c15cdeed31b135d4393955bfe548396",
+      "bytes": 584448,
+      "sha256": "255f57ef6661181ba7aed7e577dbead4ce628cfc230214c4c753936a98731446",
       "sourceKind": "original_podcastlisten_graphic",
-      "sourceSha256": "a700759af1fd94936c6ed348ed20e20b89656c147559f7c1e907d3de36a5d84b",
+      "sourceSha256": "8f4030b299f743c74c1239b5662419e7256b16f602e0b7e00db8f96bab9cb203",
       "thirdPartyMaterials": false
     },
     {
@@ -55,10 +55,10 @@
       "contentType": "image/png",
       "width": 1080,
       "height": 1080,
-      "bytes": 43003,
-      "sha256": "5db5210129ef23ae5e4120acbce1344a9c35bd97fc84b1c65180fb7d5ad170b3",
+      "bytes": 584448,
+      "sha256": "8c3509fae79d7866e0e9c4d0ef846fed7643206651990a173ac110090b373b81",
       "sourceKind": "original_podcastlisten_graphic",
-      "sourceSha256": "a700759af1fd94936c6ed348ed20e20b89656c147559f7c1e907d3de36a5d84b",
+      "sourceSha256": "8f4030b299f743c74c1239b5662419e7256b16f602e0b7e00db8f96bab9cb203",
       "thirdPartyMaterials": false
     },
     {
@@ -68,10 +68,10 @@
       "contentType": "image/png",
       "width": 1080,
       "height": 1080,
-      "bytes": 42360,
-      "sha256": "bd0fddbe4eb98e4c40bdc64e0b233c206049e4aaf60b939d3ba17bbe17970a8a",
+      "bytes": 584448,
+      "sha256": "f3dbbb95bd7c840f5716b390723ce4aa91a5de7815ff4bd949df1e296399fed3",
       "sourceKind": "original_podcastlisten_graphic",
-      "sourceSha256": "a700759af1fd94936c6ed348ed20e20b89656c147559f7c1e907d3de36a5d84b",
+      "sourceSha256": "8f4030b299f743c74c1239b5662419e7256b16f602e0b7e00db8f96bab9cb203",
       "thirdPartyMaterials": false
     },
     {
@@ -81,10 +81,10 @@
       "contentType": "image/png",
       "width": 1080,
       "height": 1080,
-      "bytes": 42450,
-      "sha256": "c046eba3123fc8e6c8215ff0d7a980633c02e3bd6197e5521e594f0cf68a6cd3",
+      "bytes": 584448,
+      "sha256": "37941542a3a6067d9cdb67b0a08249315aade272b58c02fe13e7660b4af53ab3",
       "sourceKind": "original_podcastlisten_graphic",
-      "sourceSha256": "a700759af1fd94936c6ed348ed20e20b89656c147559f7c1e907d3de36a5d84b",
+      "sourceSha256": "8f4030b299f743c74c1239b5662419e7256b16f602e0b7e00db8f96bab9cb203",
       "thirdPartyMaterials": false
     },
     {
@@ -94,10 +94,10 @@
       "contentType": "image/png",
       "width": 1080,
       "height": 1080,
-      "bytes": 42460,
-      "sha256": "e4484585ee4b18cba51a1bce0fa19f011f2e1828d2a71150825e04813ee9250b",
+      "bytes": 584448,
+      "sha256": "43562b9cad0aad536be9c4c5b0186ee4d099801780845a6a035afc4b602d1e3a",
       "sourceKind": "original_podcastlisten_graphic",
-      "sourceSha256": "a700759af1fd94936c6ed348ed20e20b89656c147559f7c1e907d3de36a5d84b",
+      "sourceSha256": "8f4030b299f743c74c1239b5662419e7256b16f602e0b7e00db8f96bab9cb203",
       "thirdPartyMaterials": false
     },
     {
@@ -107,10 +107,10 @@
       "contentType": "image/png",
       "width": 1080,
       "height": 1080,
-      "bytes": 43796,
-      "sha256": "e39bb28dfce84bb0202845ee7996105db23d7facbb101b6234cc7181cb260669",
+      "bytes": 584448,
+      "sha256": "0ed6db2d6350487bb5b7f5ff861510b639fa777a3c58ad66f725935c2c34133d",
       "sourceKind": "original_podcastlisten_graphic",
-      "sourceSha256": "a700759af1fd94936c6ed348ed20e20b89656c147559f7c1e907d3de36a5d84b",
+      "sourceSha256": "8f4030b299f743c74c1239b5662419e7256b16f602e0b7e00db8f96bab9cb203",
       "thirdPartyMaterials": false
     },
     {
@@ -120,10 +120,10 @@
       "contentType": "image/png",
       "width": 1080,
       "height": 1080,
-      "bytes": 43052,
-      "sha256": "cd89cd9e4dc754580460e473399f690c67700be782576e796b22cc40670cbc2c",
+      "bytes": 584448,
+      "sha256": "176da38ea5d3245db1f3224d70265941d1bc98a98695d1661c83897461296b29",
       "sourceKind": "original_podcastlisten_graphic",
-      "sourceSha256": "a700759af1fd94936c6ed348ed20e20b89656c147559f7c1e907d3de36a5d84b",
+      "sourceSha256": "8f4030b299f743c74c1239b5662419e7256b16f602e0b7e00db8f96bab9cb203",
       "thirdPartyMaterials": false
     },
     {
@@ -133,10 +133,10 @@
       "contentType": "image/png",
       "width": 1080,
       "height": 1080,
-      "bytes": 44538,
-      "sha256": "840a060ad16e98c57669e8a8caaf36bf4465a6518ab27be33c7d231a2b50baf0",
+      "bytes": 584448,
+      "sha256": "56a0841371bc2a3e0d6a08ea5e12ba45786ccc74b4e0d549bae4c0437cea2254",
       "sourceKind": "original_podcastlisten_graphic",
-      "sourceSha256": "a700759af1fd94936c6ed348ed20e20b89656c147559f7c1e907d3de36a5d84b",
+      "sourceSha256": "8f4030b299f743c74c1239b5662419e7256b16f602e0b7e00db8f96bab9cb203",
       "thirdPartyMaterials": false
     },
     {
@@ -146,10 +146,10 @@
       "contentType": "image/png",
       "width": 1080,
       "height": 1080,
-      "bytes": 42902,
-      "sha256": "b3993d2f4b396bc01b1722c1bb8840e129463b7c60445721182ce49ef83fccca",
+      "bytes": 584448,
+      "sha256": "5ccd9984da2f44f671a8dbabc7129cf4146d13c80023a8ab0703e0c76863524f",
       "sourceKind": "original_podcastlisten_graphic",
-      "sourceSha256": "a700759af1fd94936c6ed348ed20e20b89656c147559f7c1e907d3de36a5d84b",
+      "sourceSha256": "8f4030b299f743c74c1239b5662419e7256b16f602e0b7e00db8f96bab9cb203",
       "thirdPartyMaterials": false
     },
     {
@@ -159,10 +159,10 @@
       "contentType": "image/png",
       "width": 1080,
       "height": 1080,
-      "bytes": 43997,
-      "sha256": "4ac2eb4e11b629cde4c15877b04ae6bc376449dd5aa44dbf6f6d3067c048a014",
+      "bytes": 584448,
+      "sha256": "6385ee743f95abc90a560a553b713f24a710ac3faf2fff9792099b1bee5e35ce",
       "sourceKind": "original_podcastlisten_graphic",
-      "sourceSha256": "a700759af1fd94936c6ed348ed20e20b89656c147559f7c1e907d3de36a5d84b",
+      "sourceSha256": "8f4030b299f743c74c1239b5662419e7256b16f602e0b7e00db8f96bab9cb203",
       "thirdPartyMaterials": false
     }
   ]

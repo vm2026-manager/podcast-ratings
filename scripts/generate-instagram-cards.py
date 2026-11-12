@@ -6,7 +6,9 @@ import argparse
 import hashlib
 import json
 import re
+import struct
 import sys
+import zlib
 from pathlib import Path
 
 from PIL import Image, ImageDraw, ImageFont
@@ -22,6 +24,47 @@ PALETTE_KEYS = ("--bg", "--panel", "--text", "--muted", "--line", "--accent", "-
 
 def sha256(data: bytes) -> str:
     return hashlib.sha256(data).hexdigest()
+
+
+def png_chunk(kind: bytes, payload: bytes) -> bytes:
+    return struct.pack(">I", len(payload)) + kind + payload + struct.pack(">I", zlib.crc32(kind + payload) & 0xFFFFFFFF)
+
+
+def encode_indexed_png(image: Image.Image) -> bytes:
+    """Encode a 16-color PNG with stored DEFLATE blocks for cross-platform bytes."""
+    indexed = image.quantize(colors=16, method=Image.Quantize.MEDIANCUT, dither=Image.Dither.NONE)
+    width, height = indexed.size
+    palette = indexed.getpalette()[:48]
+    palette += [0] * (48 - len(palette))
+    pixels = indexed.load()
+    rows = bytearray()
+    for y in range(height):
+        rows.append(0)  # PNG filter: None
+        for x in range(0, width, 2):
+            left = pixels[x, y]
+            right = pixels[x + 1, y] if x + 1 < width else 0
+            if left > 15 or right > 15:
+                raise ValueError("Indexed card exceeded the 16-color palette")
+            rows.append((left << 4) | right)
+
+    # RFC 1950 zlib stream wrapping RFC 1951 stored blocks. This avoids
+    # compressor-version-dependent PNG bytes while keeping indexed files small.
+    deflate = bytearray(b"\x78\x01")
+    for offset in range(0, len(rows), 65535):
+        block = rows[offset:offset + 65535]
+        deflate.append(1 if offset + len(block) == len(rows) else 0)
+        deflate.extend(struct.pack("<HH", len(block), 0xFFFF ^ len(block)))
+        deflate.extend(block)
+    deflate.extend(struct.pack(">I", zlib.adler32(rows) & 0xFFFFFFFF))
+
+    header = struct.pack(">IIBBBBB", width, height, 4, 3, 0, 0, 0)
+    return (
+        b"\x89PNG\r\n\x1a\n"
+        + png_chunk(b"IHDR", header)
+        + png_chunk(b"PLTE", bytes(palette))
+        + png_chunk(b"IDAT", bytes(deflate))
+        + png_chunk(b"IEND", b"")
+    )
 
 
 def canonical_genres() -> list[str]:
@@ -92,10 +135,7 @@ def render_card(genre: str, colors: dict[str, str]) -> bytes:
     draw.line((891, 946, 913, 946), fill=colors["--panel"], width=4)
     draw.line((902, 935, 902, 957), fill=colors["--panel"], width=4)
 
-    import io
-    output = io.BytesIO()
-    image.save(output, format=FORMAT, optimize=False, compress_level=9)
-    return output.getvalue()
+    return encode_indexed_png(image)
 
 
 def expected_artifacts() -> tuple[dict[str, bytes], dict]:
@@ -129,7 +169,7 @@ def expected_artifacts() -> tuple[dict[str, bytes], dict]:
         "generatorSha256": sha256(generator_bytes),
         "paletteSource": {"file": "style.css", "variables": list(PALETTE_KEYS), "values": colors},
         "genreSource": {"file": "canonical-genres.js", "count": len(genres)},
-        "renderer": "Pillow 12.2.0 ImageFont.load_default(); no external fonts or images",
+        "renderer": "Pillow 12.2.0 ImageFont.load_default(); 16-color indexed PNG with deterministic stored DEFLATE; no external fonts or images",
         "width": SIZE[0],
         "height": SIZE[1],
         "format": FORMAT,
