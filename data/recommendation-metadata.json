@@ -2,8 +2,8 @@
   "version": 1,
   "source": {
     "path": "data/podcasts.json",
-    "generatedAt": "2026-11-11T10:32:04.136Z",
-    "count": 1373,
+    "generatedAt": "2026-11-12T17:51:09.495Z",
+    "count": 1378,
     "topicAliases": "config/recommendation-topic-aliases.json",
     "topicAliasVersion": 1,
     "genreMapping": "config/recommendation-genre-mapping.json",
@@ -11,16 +11,16 @@
     "stableIdMethod": "frontend-normalized-title",
     "recommendationIdMethod": "metadata-fingerprint-sha256-128-v1"
   },
-  "count": 1373,
+  "count": 1378,
   "summary": {
-    "podcasts": 1373,
-    "validPrimaryGenres": 1351,
+    "podcasts": 1378,
+    "validPrimaryGenres": 1356,
     "invalidPrimaryGenres": 22,
-    "genreEligibleBeforeMapping": 1120,
-    "genreEligibleAfterMapping": 1351,
-    "recommendationMetadataEligibleBeforeMapping": 1117,
-    "recommendationMetadataEligibleAfterMapping": 1348,
-    "primaryGenreMappingNative": 1120,
+    "genreEligibleBeforeMapping": 1125,
+    "genreEligibleAfterMapping": 1356,
+    "recommendationMetadataEligibleBeforeMapping": 1122,
+    "recommendationMetadataEligibleAfterMapping": 1353,
+    "primaryGenreMappingNative": 1125,
     "primaryGenreMappingCapitalization": 101,
     "primaryGenreMappingSpelling": 0,
     "primaryGenreMappingDirect": 130,
@@ -28,37 +28,37 @@
     "primaryGenreMappingUnmapped": 22,
     "uniqueUnmappedPrimaryGenres": 13,
     "conditionalGenreReviews": 0,
-    "withSecondaryGenre": 1130,
+    "withSecondaryGenre": 1135,
     "withTertiaryGenre": 0,
-    "withRawTopics": 1370,
-    "withCanonicalTopics": 1370,
-    "topicEligible": 1370,
-    "genreEligible": 1351,
-    "recommendationMetadataEligible": 1348,
+    "withRawTopics": 1375,
+    "withCanonicalTopics": 1375,
+    "topicEligible": 1375,
+    "genreEligible": 1356,
+    "recommendationMetadataEligible": 1353,
     "approvedAliases": 17,
     "podcastsWithAliasApplied": 101,
-    "rawTopicOccurrences": 5158,
-    "rawUniqueTopicForms": 3119,
-    "canonicalTopicOccurrences": 5158,
-    "canonicalUniqueTopics": 2860,
-    "normalizedTopicIdentities": 2860,
+    "rawTopicOccurrences": 5195,
+    "rawUniqueTopicForms": 3136,
+    "canonicalTopicOccurrences": 5195,
+    "canonicalUniqueTopics": 2877,
+    "normalizedTopicIdentities": 2877,
     "topicVariantGroups": 259,
     "topicCollisionGroups": 242,
     "approvedAliasTopicGroups": 17,
     "safeTopicCollisionGroups": 242,
     "unsafeTopicCollisionGroups": 0,
-    "podcastsAffectedByTopicNormalization": 393,
+    "podcastsAffectedByTopicNormalization": 394,
     "withinPodcastTopicDuplicatesRemoved": 0,
-    "canonicalTopicsUsedOnce": 2089,
-    "canonicalTopicsAtLeastThree": 389,
+    "canonicalTopicsUsedOnce": 2101,
+    "canonicalTopicsAtLeastThree": 392,
     "canonicalTopicsAtLeastFive": 172,
     "canonicalTopicsAtLeastTen": 55,
-    "possibleStandaloneRows": 360,
+    "possibleStandaloneRows": 363,
     "topicKeyCollisions": 0,
-    "uniqueExistingIds": 1365,
+    "uniqueExistingIds": 1370,
     "duplicateStableIdValues": 8,
     "podcastsSharingStableId": 16,
-    "uniqueRecommendationIds": 1373,
+    "uniqueRecommendationIds": 1378,
     "recommendationIdCollisions": 0,
     "exactDuplicateGroups": 1,
     "likelyDuplicateGroups": 2,
@@ -3147,42 +3147,6 @@
       "metadataIssues": []
     },
     {
-      "id": "nattens dronning",
-      "recommendationId": "rec-nattens-dronning-3cdfd3b0f7d40613a9412d00d80e48a8",
-      "recommendationIdentityBasis": "title+link",
-      "identityDuplicateGroup": "",
-      "title": "Nattens dronning",
-      "mainSeries": "",
-      "primaryGenreRaw": "Dokumentar",
-      "primaryGenre": "Dokumentar",
-      "primaryGenreValid": true,
-      "primaryGenreMappingType": "native",
-      "primaryGenreMappingSource": "Dokumentar",
-      "primaryGenreNeedsReview": false,
-      "primaryGenreReviewReason": "",
-      "secondaryGenre": "Underholdning",
-      "secondaryGenreValid": true,
-      "topicsRaw": [
-        "Telefonchikane",
-        "anonyme opkald",
-        "klassisk musikmiljø"
-      ],
-      "topicsCanonical": [
-        "Telefonchikane",
-        "anonyme opkald",
-        "klassisk musikmiljø"
-      ],
-      "topicKeys": [
-        "telefonchikane",
-        "anonyme-opkald",
-        "klassisk-musikmiljoe"
-      ],
-      "topicEligible": true,
-      "genreEligible": true,
-      "recommendationMetadataEligible": true,
-      "metadataIssues": []
-    },
-    {
       "id": "narkobetjenten og den kriminelle underverden sæson 1",
       "recommendationId": "rec-narkobetjenten-og-den-kriminelle-underverden-saeson-1-281d1fc87079733572fcd973b7db9264",
       "recommendationIdentityBasis": "title+link",
@@ -3371,6 +3335,54 @@
       "metadataIssues": [
         "topic_alias_applied"
       ]
+    },
+    {
+      "id": "krigen i bosnien",
+      "recommendationId": "rec-krigen-i-bosnien-f37a678fb426ada0e53cd8ef4ea4a08c",
+      "recommendationIdentityBasis": "title+link",
+      "identityDuplicateGroup": "",
+      "title": "Krigen i Bosnien",
+      "mainSeries": "Flashback",
+      "primaryGenreRaw": "Historie",
+      "primaryGenre": "Historie",
+      "primaryGenreValid": true,
+      "primaryGenreMappingType": "native",
+      "primaryGenreMappingSource": "Historie",
+      "primaryGenreNeedsReview": false,
+      "primaryGenreReviewReason": "",
+      "secondaryGenre": "Dokumentar",
+      "secondaryGenreValid": true,
+      "topicsRaw": [
+        "Bosnienkrigen",
+        "Sarajevo",
+        "Jugoslavien",
+        "Nils Thorsen",
+        "krigsjournalistik",
+        "FN-soldater",
+        "krigsforbrydelser"
+      ],
+      "topicsCanonical": [
+        "Bosnienkrigen",
+        "Sarajevo",
+        "Jugoslavien",
+        "Nils Thorsen",
+        "krigsjournalistik",
+        "FN-soldater",
+        "krigsforbrydelser"
+      ],
+      "topicKeys": [
+        "bosnienkrigen",
+        "sarajevo",
+        "jugoslavien",
+        "nils-thorsen",
+        "krigsjournalistik",
+        "fn-soldater",
+        "krigsforbrydelser"
+      ],
+      "topicEligible": true,
+      "genreEligible": true,
+      "recommendationMetadataEligible": true,
+      "metadataIssues": []
     },
     {
       "id": "guld og grønne skove",
@@ -4262,6 +4274,42 @@
         "beslutningsprocesser",
         "magtudoevelse",
         "politisk-ansvar"
+      ],
+      "topicEligible": true,
+      "genreEligible": true,
+      "recommendationMetadataEligible": true,
+      "metadataIssues": []
+    },
+    {
+      "id": "em i 1992",
+      "recommendationId": "rec-em-i-1992-60381254fc0a75784e107379525b5571",
+      "recommendationIdentityBasis": "title+link",
+      "identityDuplicateGroup": "",
+      "title": "EM i 1992",
+      "mainSeries": "Flashback",
+      "primaryGenreRaw": "Sport",
+      "primaryGenre": "Sport",
+      "primaryGenreValid": true,
+      "primaryGenreMappingType": "native",
+      "primaryGenreMappingSource": "Sport",
+      "primaryGenreNeedsReview": false,
+      "primaryGenreReviewReason": "",
+      "secondaryGenre": "Historie",
+      "secondaryGenreValid": true,
+      "topicsRaw": [
+        "EM 1992",
+        "Danmarks herrelandshold",
+        "dansk fodboldhistorie"
+      ],
+      "topicsCanonical": [
+        "EM 1992",
+        "Danmarks herrelandshold",
+        "dansk fodboldhistorie"
+      ],
+      "topicKeys": [
+        "em-1992",
+        "danmarks-herrelandshold",
+        "dansk-fodboldhistorie"
       ],
       "topicEligible": true,
       "genreEligible": true,
@@ -6166,6 +6214,42 @@
       "metadataIssues": [
         "missing_topics"
       ]
+    },
+    {
+      "id": "nattens dronning",
+      "recommendationId": "rec-nattens-dronning-3cdfd3b0f7d40613a9412d00d80e48a8",
+      "recommendationIdentityBasis": "title+link",
+      "identityDuplicateGroup": "",
+      "title": "Nattens dronning",
+      "mainSeries": "",
+      "primaryGenreRaw": "Dokumentar",
+      "primaryGenre": "Dokumentar",
+      "primaryGenreValid": true,
+      "primaryGenreMappingType": "native",
+      "primaryGenreMappingSource": "Dokumentar",
+      "primaryGenreNeedsReview": false,
+      "primaryGenreReviewReason": "",
+      "secondaryGenre": "Underholdning",
+      "secondaryGenreValid": true,
+      "topicsRaw": [
+        "Telefonchikane",
+        "anonyme opkald",
+        "klassisk musikmiljø"
+      ],
+      "topicsCanonical": [
+        "Telefonchikane",
+        "anonyme opkald",
+        "klassisk musikmiljø"
+      ],
+      "topicKeys": [
+        "telefonchikane",
+        "anonyme-opkald",
+        "klassisk-musikmiljoe"
+      ],
+      "topicEligible": true,
+      "genreEligible": true,
+      "recommendationMetadataEligible": true,
+      "metadataIssues": []
     },
     {
       "id": "livet ifølge emil og thomas",
@@ -35047,7 +35131,7 @@
         "gæstesamtaler"
       ],
       "topicsCanonical": [
-        "Komikere",
+        "komikere",
         "underholdningsbranchen",
         "kreative karrierer",
         "gæstesamtaler"
@@ -48686,42 +48770,6 @@
       "metadataIssues": []
     },
     {
-      "id": "em i 1992",
-      "recommendationId": "rec-em-i-1992-60381254fc0a75784e107379525b5571",
-      "recommendationIdentityBasis": "title+link",
-      "identityDuplicateGroup": "",
-      "title": "EM i 1992",
-      "mainSeries": "Flashback",
-      "primaryGenreRaw": "Sport",
-      "primaryGenre": "Sport",
-      "primaryGenreValid": true,
-      "primaryGenreMappingType": "native",
-      "primaryGenreMappingSource": "Sport",
-      "primaryGenreNeedsReview": false,
-      "primaryGenreReviewReason": "",
-      "secondaryGenre": "Historie",
-      "secondaryGenreValid": true,
-      "topicsRaw": [
-        "EM 1992",
-        "Danmarks herrelandshold",
-        "dansk fodboldhistorie"
-      ],
-      "topicsCanonical": [
-        "EM 1992",
-        "Danmarks herrelandshold",
-        "dansk fodboldhistorie"
-      ],
-      "topicKeys": [
-        "em-1992",
-        "danmarks-herrelandshold",
-        "dansk-fodboldhistorie"
-      ],
-      "topicEligible": true,
-      "genreEligible": true,
-      "recommendationMetadataEligible": true,
-      "metadataIssues": []
-    },
-    {
       "id": "geopol",
       "recommendationId": "rec-geopol-b532b14c2f8fcc9d0a370fa4009ba527",
       "recommendationIdentityBasis": "title+link",
@@ -52173,6 +52221,53 @@
       ]
     },
     {
+      "id": "sid ned podcast",
+      "recommendationId": "rec-sid-ned-podcast-bdd24a91b6bff1ba4d01949746bc9a4e",
+      "recommendationIdentityBasis": "title+link",
+      "identityDuplicateGroup": "",
+      "title": "Sid Ned Podcast",
+      "mainSeries": "",
+      "primaryGenreRaw": "Underholdning",
+      "primaryGenre": "Underholdning",
+      "primaryGenreValid": true,
+      "primaryGenreMappingType": "native",
+      "primaryGenreMappingSource": "Underholdning",
+      "primaryGenreNeedsReview": false,
+      "primaryGenreReviewReason": "",
+      "secondaryGenre": "Interviews",
+      "secondaryGenreValid": false,
+      "topicsRaw": [
+        "Standup",
+        "karriere",
+        "komikere",
+        "interviews",
+        "iværksætteri",
+        "personlige historier"
+      ],
+      "topicsCanonical": [
+        "Standup",
+        "karriere",
+        "komikere",
+        "interviews",
+        "iværksætteri",
+        "personlige historier"
+      ],
+      "topicKeys": [
+        "standup",
+        "karriere",
+        "komikere",
+        "interviews",
+        "ivaerksaetteri",
+        "personlige-historier"
+      ],
+      "topicEligible": true,
+      "genreEligible": true,
+      "recommendationMetadataEligible": true,
+      "metadataIssues": [
+        "invalid_secondary_genre"
+      ]
+    },
+    {
       "id": "pøj pøj",
       "recommendationId": "rec-poej-poej-062716f1ae1fb2ae4868d5d1c1fb70a8",
       "recommendationIdentityBasis": "title+link",
@@ -52199,7 +52294,7 @@
       "topicsCanonical": [
         "Standup",
         "turnéliv",
-        "Komikere",
+        "komikere",
         "backstage",
         "shows",
         "humor"
@@ -52555,6 +52650,161 @@
         "tro",
         "alternativ-verdensforstaaelse",
         "danske-miljoeer"
+      ],
+      "topicEligible": true,
+      "genreEligible": true,
+      "recommendationMetadataEligible": true,
+      "metadataIssues": []
+    },
+    {
+      "id": "han og hun",
+      "recommendationId": "rec-han-og-hun-d15992e21f5eacb2c2e5b94c87e48dfb",
+      "recommendationIdentityBasis": "title+link",
+      "identityDuplicateGroup": "",
+      "title": "Han & Hun",
+      "mainSeries": "",
+      "primaryGenreRaw": "Underholdning",
+      "primaryGenre": "Underholdning",
+      "primaryGenreValid": true,
+      "primaryGenreMappingType": "native",
+      "primaryGenreMappingSource": "Underholdning",
+      "primaryGenreNeedsReview": false,
+      "primaryGenreReviewReason": "",
+      "secondaryGenre": "Snakke",
+      "secondaryGenreValid": false,
+      "topicsRaw": [
+        "Kærlighed",
+        "dating",
+        "parforhold",
+        "kønsforskelle",
+        "jalousi",
+        "seksualitet",
+        "personlige relationer",
+        "datingdilemmaer"
+      ],
+      "topicsCanonical": [
+        "kærlighed",
+        "dating",
+        "parforhold",
+        "kønsforskelle",
+        "jalousi",
+        "seksualitet",
+        "personlige relationer",
+        "datingdilemmaer"
+      ],
+      "topicKeys": [
+        "kaerlighed",
+        "dating",
+        "parforhold",
+        "koensforskelle",
+        "jalousi",
+        "seksualitet",
+        "personlige-relationer",
+        "datingdilemmaer"
+      ],
+      "topicEligible": true,
+      "genreEligible": true,
+      "recommendationMetadataEligible": true,
+      "metadataIssues": [
+        "invalid_secondary_genre"
+      ]
+    },
+    {
+      "id": "balkans knuste hjerte",
+      "recommendationId": "rec-balkans-knuste-hjerte-d2ef922394ed1f813760b6f555fe7118",
+      "recommendationIdentityBasis": "title+link",
+      "identityDuplicateGroup": "",
+      "title": "Balkans knuste hjerte",
+      "mainSeries": "",
+      "primaryGenreRaw": "Dokumentar",
+      "primaryGenre": "Dokumentar",
+      "primaryGenreValid": true,
+      "primaryGenreMappingType": "native",
+      "primaryGenreMappingSource": "Dokumentar",
+      "primaryGenreNeedsReview": false,
+      "primaryGenreReviewReason": "",
+      "secondaryGenre": "Historie",
+      "secondaryGenreValid": true,
+      "topicsRaw": [
+        "Bosnienkrigen",
+        "Kroatien",
+        "Vukovar",
+        "Mostar",
+        "Jugoslavien",
+        "etniske konflikter",
+        "forsoning",
+        "krigens konsekvenser"
+      ],
+      "topicsCanonical": [
+        "Bosnienkrigen",
+        "Kroatien",
+        "Vukovar",
+        "Mostar",
+        "Jugoslavien",
+        "etniske konflikter",
+        "forsoning",
+        "krigens konsekvenser"
+      ],
+      "topicKeys": [
+        "bosnienkrigen",
+        "kroatien",
+        "vukovar",
+        "mostar",
+        "jugoslavien",
+        "etniske-konflikter",
+        "forsoning",
+        "krigens-konsekvenser"
+      ],
+      "topicEligible": true,
+      "genreEligible": true,
+      "recommendationMetadataEligible": true,
+      "metadataIssues": []
+    },
+    {
+      "id": "hvem er saveus",
+      "recommendationId": "rec-hvem-er-saveus-560e39b56dba35415d72c62b03811ddf",
+      "recommendationIdentityBasis": "title+link",
+      "identityDuplicateGroup": "",
+      "title": "Hvem er Saveus?",
+      "mainSeries": "Hvem er...",
+      "primaryGenreRaw": "Dokumentar",
+      "primaryGenre": "Dokumentar",
+      "primaryGenreValid": true,
+      "primaryGenreMappingType": "native",
+      "primaryGenreMappingSource": "Dokumentar",
+      "primaryGenreNeedsReview": false,
+      "primaryGenreReviewReason": "",
+      "secondaryGenre": "Underholdning",
+      "secondaryGenreValid": true,
+      "topicsRaw": [
+        "Saveus",
+        "Martin Hedegaard",
+        "X Factor",
+        "dansk popmusik",
+        "berømmelse",
+        "identitet",
+        "musikbranchen",
+        "personlig udvikling"
+      ],
+      "topicsCanonical": [
+        "Saveus",
+        "Martin Hedegaard",
+        "X Factor",
+        "dansk popmusik",
+        "berømmelse",
+        "identitet",
+        "musikbranchen",
+        "personlig udvikling"
+      ],
+      "topicKeys": [
+        "saveus",
+        "martin-hedegaard",
+        "x-factor",
+        "dansk-popmusik",
+        "beroemmelse",
+        "identitet",
+        "musikbranchen",
+        "personlig-udvikling"
       ],
       "topicEligible": true,
       "genreEligible": true,
