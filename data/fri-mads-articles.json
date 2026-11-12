@@ -1,0 +1,49 @@
+{
+  "schemaVersion": 1,
+  "podcastId": "fri mads",
+  "catalogueId": "catalogue-v1-d94fc39e",
+  "sourceOverview": "https://frihedsbrevet.dk/nyhedsbrev/fri-mads/",
+  "accessType": "paid",
+  "contentKind": "article",
+  "metadataOnly": true,
+  "playable": false,
+  "rateable": false,
+  "audioUrl": null,
+  "items": [
+    {
+      "releaseId": "fri-mads:172:https://frihedsbrevet.dk/fri-mads-172-alle-elsker-mette/",
+      "releaseNumber": 172,
+      "title": "Fri Mads #172: Alle elsker Mette",
+      "publishedDate": "2026-11-08",
+      "canonicalUrl": "https://frihedsbrevet.dk/fri-mads-172-alle-elsker-mette/"
+    },
+    {
+      "releaseId": "fri-mads:171:https://frihedsbrevet.dk/fri-mads-171-et-humrkort-til-formanden-for-esbjerg-havn/",
+      "releaseNumber": 171,
+      "title": "Fri Mads #171: Et humørkort til formanden for Esbjerg Havn",
+      "publishedDate": "2026-10-27",
+      "canonicalUrl": "https://frihedsbrevet.dk/fri-mads-171-et-humrkort-til-formanden-for-esbjerg-havn/"
+    },
+    {
+      "releaseId": "fri-mads:170:https://frihedsbrevet.dk/fri-mads-170-ordet-p-gaden/",
+      "releaseNumber": 170,
+      "title": "Fri Mads #170: Ordet på Gaden",
+      "publishedDate": "2026-10-09",
+      "canonicalUrl": "https://frihedsbrevet.dk/fri-mads-170-ordet-p-gaden/"
+    },
+    {
+      "releaseId": "fri-mads:169:https://frihedsbrevet.dk/fri-mads-169-byrdssekretr-godtfred-lunds-genkomst/",
+      "releaseNumber": 169,
+      "title": "Fri Mads #169: Byrådssekretær Godtfred Lunds genkomst",
+      "publishedDate": "2026-10-02",
+      "canonicalUrl": "https://frihedsbrevet.dk/fri-mads-169-byrdssekretr-godtfred-lunds-genkomst/"
+    },
+    {
+      "releaseId": "fri-mads:168:https://frihedsbrevet.dk/fri-mads-168-dette-er-en-attribueringsvelse/",
+      "releaseNumber": 168,
+      "title": "Fri Mads #168: Dette er en attribueringsøvelse",
+      "publishedDate": "2026-06-25",
+      "canonicalUrl": "https://frihedsbrevet.dk/fri-mads-168-dette-er-en-attribueringsvelse/"
+    }
+  ]
+}

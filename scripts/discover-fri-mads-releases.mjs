@@ -1,4 +1,5 @@
 import path from "node:path";
+import { writeFile } from "node:fs/promises";
 import { pathToFileURL } from "node:url";
 
 export const FRI_MADS_OVERVIEW_URL = "https://frihedsbrevet.dk/nyhedsbrev/fri-mads/";
@@ -12,6 +13,7 @@ export const FRI_MADS_BASELINE_NUMBER = 172;
 export const FRI_MADS_MAX_RESPONSE_BYTES = 524288;
 export const FRI_MADS_REQUEST_TIMEOUT_MS = 8000;
 export const FRI_MADS_MAX_NEW_RELEASES = 27;
+export const FRI_MADS_SIDECAR_ITEM_LIMIT = 5;
 
 const SERIES_TITLE = /^Fri Mads #([1-9]\d*):\s*(.+)$/u;
 const PERMALINK = /^\/fri-mads-(\d+)-[a-z0-9-]+\/$/u;
@@ -48,7 +50,29 @@ function baseReport(afterNumber) {
     overviewItemCount: 0,
     candidateCount: 0,
     pagesRequested: [],
+    latestOverviewReleases: [],
     releases: []
+  };
+}
+
+function toArticleMetadata(record) {
+  return {
+    releaseId: `fri-mads:${record.number}:${record.url}`,
+    podcastId: FRI_MADS_PODCAST_ID,
+    catalogueId: FRI_MADS_CATALOGUE_ID,
+    releaseNumber: record.number,
+    title: record.title,
+    publishedDate: record.publishedDate,
+    canonicalUrl: record.url,
+    author: record.author,
+    sourceGuid: null,
+    sourceGuidStatus: "official_overview_has_no_guid",
+    accessType: FRI_MADS_ACCESS_TYPE,
+    contentKind: "article",
+    metadataOnly: true,
+    playable: false,
+    rateable: false,
+    audioUrl: null
   };
 }
 
@@ -253,6 +277,10 @@ function buildDiscovery(firstPageHtml, { afterNumber = FRI_MADS_BASELINE_NUMBER,
     firstPage = combined;
   }
 
+  report.latestOverviewReleases = firstPage
+    .slice(0, FRI_MADS_SIDECAR_ITEM_LIMIT)
+    .map(toArticleMetadata);
+
   const newRecords = firstPage.filter((record) => record.number > afterNumber).sort((left, right) => left.number - right.number);
   if (newRecords.length > FRI_MADS_MAX_NEW_RELEASES) {
     return { ...report, status: "identity_conflict", reasonCodes: ["incremental_window_exceeded"], candidateCount: firstPage.length };
@@ -263,24 +291,7 @@ function buildDiscovery(firstPageHtml, { afterNumber = FRI_MADS_BASELINE_NUMBER,
     }
   }
 
-  const releases = newRecords.map((record) => ({
-    releaseId: `fri-mads:${record.number}:${record.url}`,
-    podcastId: FRI_MADS_PODCAST_ID,
-    catalogueId: FRI_MADS_CATALOGUE_ID,
-    releaseNumber: record.number,
-    title: record.title,
-    publishedDate: record.publishedDate,
-    canonicalUrl: record.url,
-    author: record.author,
-    sourceGuid: null,
-    sourceGuidStatus: "official_overview_has_no_guid",
-    accessType: FRI_MADS_ACCESS_TYPE,
-    contentKind: "article",
-    metadataOnly: true,
-    playable: false,
-    rateable: false,
-    audioUrl: null
-  }));
+  const releases = newRecords.map(toArticleMetadata);
 
   return {
     ...report,
@@ -364,6 +375,7 @@ export async function runFriMadsDiscovery({ fetchImpl = fetch, afterNumber = FRI
 async function main() {
   const args = process.argv.slice(2);
   let afterNumber = FRI_MADS_BASELINE_NUMBER;
+  let reportFile = null;
   for (let index = 0; index < args.length; index += 1) {
     if (args[index] === "--dry-run") continue;
     if (args[index] === "--after-number" && /^\d+$/u.test(args[index + 1] || "")) {
@@ -371,9 +383,23 @@ async function main() {
       index += 1;
       continue;
     }
+    if (args[index] === "--report-file" && args[index + 1]) {
+      reportFile = args[index + 1];
+      index += 1;
+      continue;
+    }
     throw new Error("Unsupported discovery argument");
   }
   const report = await runFriMadsDiscovery({ afterNumber });
+  if (reportFile) {
+    const runnerTemp = process.env.RUNNER_TEMP;
+    if (!runnerTemp || !path.isAbsolute(reportFile)) throw new Error("Report output is restricted to the runner temporary directory");
+    const relative = path.relative(path.resolve(runnerTemp), path.resolve(reportFile));
+    if (relative === ".." || relative.startsWith(`..${path.sep}`) || path.isAbsolute(relative)) {
+      throw new Error("Report output is restricted to the runner temporary directory");
+    }
+    await writeFile(reportFile, `${JSON.stringify(report, null, 2)}\n`, { encoding: "utf8", flag: "w" });
+  }
   console.log(JSON.stringify(report, null, 2));
   if (report.status !== "new_metadata_discovered" && report.status !== "no_new_releases") {
     console.log("::warning::Fri Mads discovery did not produce a verified result: " + report.reasonCodes.join(", "));
