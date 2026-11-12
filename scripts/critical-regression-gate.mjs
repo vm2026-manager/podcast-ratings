@@ -15,6 +15,7 @@ const checks = [
   ["homepage community momentum", ["scripts/test-homepage-community-momentum.mjs"]],
   ["Static podcast recommendation landing page", ["scripts/test-seo-podcast-anbefalinger.mjs"]],
   ["SEO podcast rendering and existing URLs", ["scripts/test-seo-podcast-pages.mjs"]],
+  ["SEO podcast landing responsive layout, navigation and keyboard focus", ["scripts/test-seo-podcast-responsive.mjs"]],
   ["SEO generator safety", ["scripts/test-seo-podcast-safety.mjs"]],
   ["Krop til salg identity-preserving Podimo sync", ["--experimental-strip-types", "scripts/test-krop-podimo-migration.mjs"]],
   ["Podimo pagination and existing sources", ["--experimental-strip-types", "scripts/test-podimo-grebet-routing.mjs"]],

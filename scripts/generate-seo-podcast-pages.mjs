@@ -6,7 +6,7 @@ import { prepareSeoPlan, publishSeoPlan, validateCatalogue, validateSitemap } fr
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 export const TRUE_CRIME_CANONICAL = "https://podcastlisten.dk/genre/true-crime/";
 
-export const PILOT_PODCAST_IDS = [
+export const EXISTING_PILOT_PODCAST_IDS = [
   "mørkeland", "genstart", "millionærklubben", "sagen genabnet",
   "borgerlig tabloid", "det vi taler om", "langt fra løgnen", "mads og a holdet",
   "vanvittig verdenshistorie", "afhørt",
@@ -16,6 +16,19 @@ export const PILOT_PODCAST_IDS = [
   "transferguru", "grebet af gvfb", "opskriften pa kærlighed", "bomben",
   "mathias helts talkshow", "tiden", "nationens mareridt", "kvart i bold"
 ];
+
+export const ADDITIONAL_PILOT_PODCAST_IDS = [
+  "kapret", "operation pellegrino", "fire patroner pa lommen", "den forunderlige dr kavousi",
+  "kvinden med den tunge kuffert det sidste kapitel", "menneskedyret", "mors afskedsbrev",
+  "robert og thetanerne", "tsunamien i 2004", "agent storm", "marathonmanden",
+  "hammer og bruchmann", "krigen pa isen", "kvinden pa første", "bedraget", "falske minder",
+  "huset færch sæson 1", "hvem er phlake", "den korte podcast", "ringbindsattentatet",
+  "i skyggen af den gule trøje", "barn med den forkerte sæson 1", "general butt naked",
+  "detektor", "24 spørgsmal til professoren", "boraghi og pengedoktoren", "store penge",
+  "dato", "peter og profeterne", "brinkmanns briks"
+];
+
+export const PILOT_PODCAST_IDS = [...EXISTING_PILOT_PODCAST_IDS, ...ADDITIONAL_PILOT_PODCAST_IDS];
 
 export function slugFromPodcastId(id) {
   return String(id ?? "").trim().toLowerCase()
@@ -137,9 +150,13 @@ export function renderPage(data) {
   const details = [["Vært", data.host], ["Udgiver", data.publisher], ["Genre", data.genre], ["Sekundær genre", data.secondaryGenre]]
     .filter(([, value]) => value).map(([label, value]) => `<div><dt>${label}</dt><dd>${escapeHtml(value)}</dd></div>`).join("\n        ");
   const image = data.cover ? `<img class="cover" src="${escapeHtml(data.cover)}" alt="Cover til ${escapeHtml(data.title)}" />` : "";
+  const imageBlock = image ? `\n    <div>${image}</div>` : "";
   const ogImage = data.cover ? `\n    <meta property="og:image" content="${escapeHtml(data.cover)}" />` : "";
   const rating = data.rating ? `<section aria-labelledby="rating"><h2 id="rating">Podcastlistens vurdering</h2><p><strong>${escapeHtml(data.rating)} / 10</strong></p></section>` : "";
   const facts = details ? `<section aria-labelledby="facts"><h2 id="facts">Fakta</h2><dl>${details}</dl></section>` : "";
+  const related = (data.relatedPages || []).length
+    ? `<section aria-labelledby="related"><h2 id="related">Flere podcasts i ${escapeHtml(data.genre || "Podcastlistens katalog")}</h2><ul>${data.relatedPages.map((page) => `<li><a href="/podcast/${page.slug}/">${escapeHtml(page.title)}</a></li>`).join("")}</ul></section>`
+    : `<section aria-labelledby="related"><h2 id="related">Udforsk flere podcasts</h2><p><a href="/#udforsk">Find flere podcasts i Podcastlisten</a></p></section>`;
   return `<!DOCTYPE html>
 <html lang="da">
   <head>
@@ -157,12 +174,11 @@ export function renderPage(data) {
   </head>
   <body><main class="page">
     <a class="brand" href="/">Podcastlisten</a>
-    <h1>${escapeHtml(data.title)}</h1>
-    ${image ? `<div>${image}</div>` : ""}
+    <h1>${escapeHtml(data.title)}</h1>${imageBlock}
     <section aria-labelledby="about"><h2 id="about">Om podcasten</h2>
       <p>${escapeHtml(data.description)}</p>
     </section>
-    ${rating}${facts}
+    ${rating}${facts}${related}
     <p><a class="cta" href="/?podcast=${encodeURIComponent(data.id)}">Åbn ${escapeHtml(data.title)} i Podcastlisten</a></p>
     <p><a href="/">Tilbage til Podcastlisten</a></p>
   </main></body>
@@ -209,9 +225,13 @@ export function renderTrueCrimePage(entries) {
 
 export function renderSitemap(pages, existingXml) {
   if (existingXml !== undefined) {
-    validateSitemap(existingXml, { requiredUrls: ["https://podcastlisten.dk/", ...pages.map((page) => page.canonical), TRUE_CRIME_CANONICAL] });
-    // Phase 1 preserves every existing entry, including metadata and manual URLs.
-    return existingXml;
+    const existingUrls = validateSitemap(existingXml);
+    const additions = [...new Set(pages.map((page) => page.canonical))].filter((url) => !existingUrls.has(url));
+    const withAdditions = additions.length
+      ? existingXml.replace(/<\/urlset>\s*$/, `${additions.map((url) => `  <url><loc>${url}</loc></url>`).join("\n")}\n</urlset>`)
+      : existingXml;
+    validateSitemap(withAdditions, { requiredUrls: [...existingUrls, "https://podcastlisten.dk/", TRUE_CRIME_CANONICAL, ...pages.map((page) => page.canonical)], minimumUrls: existingUrls.size });
+    return withAdditions;
   }
   return `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${["https://podcastlisten.dk/", ...pages.map((page) => page.canonical), TRUE_CRIME_CANONICAL].map((url) => `  <url><loc>${url}</loc></url>`).join("\n")}\n</urlset>\n`;
 }
@@ -233,13 +253,28 @@ export async function generateSeoPodcastPages({ write = false, root = repoRoot }
   const source = JSON.parse(sourceText);
   validateCatalogue(source, baseline, slugFromPodcastId);
   validateCatalogue(source, state, slugFromPodcastId);
-  const pages = resolvePilotPodcasts(source.rows).map(pageData);
+  const resolvedRows = resolvePilotPodcasts(source.rows);
+  for (const id of ADDITIONAL_PILOT_PODCAST_IDS) {
+    const row = resolvedRows.find((candidate) => candidate["Podcast-ID"] === id);
+    const longDescription = pick(row, ["Lang beskrivelse"]);
+    if (longDescription.length < 180 || !pick(row, ["Genre"])) throw new Error(`New pilot podcast lacks a documented long description or genre: ${id}`);
+  }
+  const pages = resolvedRows.map(pageData);
+  const tags = (page) => [page.genre, page.secondaryGenre].map((value) => String(value || "").trim().toLocaleLowerCase("da")).filter(Boolean);
+  for (const page of pages) {
+    const pageTags = new Set(tags(page));
+    page.relatedPages = pages.filter((candidate) => candidate.id !== page.id && tags(candidate).some((tag) => pageTags.has(tag)))
+      .slice(0, 6).map(({ id, title, slug }) => ({ id, title, slug }));
+  }
   const trueCrimeEntries = trueCrimeData(source.rows);
   const existingSitemap = await readFile(path.join(root, "sitemap.xml"), "utf8");
-  const sitemapUrls = [...validateSitemap(existingSitemap, { requiredUrls: state.sitemapUrls, minimumUrls: state.sitemapUrls.length })];
-  const outputs = pages.map((page) => ({ relative: `podcast/${page.slug}/index.html`, canonical: page.canonical, id: page.id, content: renderPage(page) }));
+  validateSitemap(existingSitemap, { requiredUrls: state.sitemapUrls, minimumUrls: state.sitemapUrls.length });
+  const sitemapContent = renderSitemap(pages, existingSitemap);
+  const sitemapUrls = [...validateSitemap(sitemapContent)];
+  const additionalIds = new Set(ADDITIONAL_PILOT_PODCAST_IDS);
+  const outputs = pages.map((page) => ({ relative: `podcast/${page.slug}/index.html`, canonical: page.canonical, id: page.id, allowCreate: additionalIds.has(page.id), content: renderPage(page) }));
   outputs.push({ relative: "genre/true-crime/index.html", canonical: TRUE_CRIME_CANONICAL, content: renderTrueCrimePage(trueCrimeEntries) });
-  outputs.push({ relative: "sitemap.xml", content: renderSitemap(pages, existingSitemap) });
+  outputs.push({ relative: "sitemap.xml", content: sitemapContent });
   outputs.push({ relative: stateRelative, kind: "state", content: JSON.stringify({ catalogueCount: source.rows.length, trueCrimeCount: trueCrimeEntries.length, sitemapUrls }, null, 2) + "\n" });
   const plan = await prepareSeoPlan({ root, sourceText, existingSitemap, pages, outputs, baseline });
   if (plan.snapshots.get(stateRelative) !== stateText) throw new Error("SEO safety state changed during generation");

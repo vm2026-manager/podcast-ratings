@@ -197,8 +197,8 @@ async function snapshots(base, files) {
 }
 const before = await snapshots(root, protectedFiles);
 const pages = await generateSeoPodcastPages({ write: false });
-assert.equal(pages.length, 30);
-assert.equal(renderSitemap(pages, sitemap), sitemap, "phase 1 must preserve the expanded sitemap exactly");
+assert.equal(pages.length, baseline.podcasts.length);
+assert.equal(renderSitemap(pages, sitemap), sitemap, "generation must preserve the completed sitemap exactly");
 assert.deepEqual(await snapshots(root, protectedFiles), before, "SEO validation must leave repository files unchanged");
 
 const fixture = await mkdtemp(path.join(tmpdir(), "seo-landing-preservation-"));
@@ -209,6 +209,6 @@ try {
   const files = [landingRelative, "podcast-anbefalinger/style.css", "sitemap.xml"];
   const original = await snapshots(fixture, files);
   await generateSeoPodcastPages({ root: fixture, write: true });
-  assert.deepEqual(await snapshots(fixture, files), original, "phase 1 publication must preserve the landing page and all sitemap URLs");
+  assert.deepEqual(await snapshots(fixture, files), original, "generation must preserve the landing page and all sitemap URLs");
 } finally { await rm(fixture, { recursive: true, force: true }); }
 console.log(`Podcast recommendation landing SEO checks passed: ${seen.size} verified Danish podcasts, 9 sections, ${urls.size} preserved sitemap URLs, zero repository writes.`);
