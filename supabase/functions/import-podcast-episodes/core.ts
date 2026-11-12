@@ -4,6 +4,8 @@ import { matchesExplicitTitlePrefix, MEDIANO_SITE_RSS_URL } from "./mediano-rout
 import { syncManualPodimoEpisodes } from "./manual-podimo.ts";
 
 export const FEED_TIMEOUT_MS = 15000;
+const AUTO_RSS_TIMEOUT_MS = 7000;
+const AUTO_RSS_BODY_LIMIT = 512 * 1024;
 export const BATCH_SIZE = 200;
 export const MINIMUM_RATEABLE_EPISODE_COUNT = 2;
 
@@ -242,6 +244,7 @@ export type ImportRepository = {
     started_at: string;
   }): Promise<{ id: string }>;
   loadExistingEpisodes(source: string, externalGuids: string[], episodeUrls?: string[], additionalSources?: string[], podcastKeys?: string[]): Promise<PodcastEpisodeRow[]>;
+  loadAutoFeedGuidOwners?(externalGuids: string[]): Promise<PodcastEpisodeRow[]>;
   upsertEpisodes(rows: PodcastEpisodeRow[]): Promise<void>;
   loadPodcastEpisodes?(podcastKey: string): Promise<PodcastEpisodeRow[]>;
   updateEpisodeMetadata?(current: PodcastEpisodeRow, next: PodcastEpisodeRow): Promise<void>;
@@ -437,6 +440,9 @@ export function parseFeed(xml: string) {
   if (!channelBlock) throw new Error("Invalid XML: missing channel");
   const channelImageBlock = xmlTagBlock(channelBlock, "image");
   const channelHeader = channelBlock.replace(/<item\b[\s\S]*$/i, "");
+  const ownerBlock = xmlTagBlock(channelHeader, "owner");
+  const selfTag = [...channelHeader.matchAll(/<(?:[\w.-]+:)?link\b[^>]*>/gi)]
+    .map((match) => match[0]).find((value) => /\brel\s*=\s*(["'])self\1/i.test(value));
   const items = [...channelBlock.matchAll(/<item\b[^>]*>[\s\S]*?<\/item>/gi)].map((match) => match[0]);
   if (!items.length) throw new Error("Feed contains no items");
 
@@ -444,6 +450,8 @@ export function parseFeed(xml: string) {
     channel: {
       title: xmlTag(channelHeader, "title"),
       link: xmlTag(channelHeader, "link"),
+      self_url: selfTag ? xmlAttr(selfTag, "href") : null,
+      publisher: ownerBlock ? xmlTag(ownerBlock, "name") : xmlTag(channelHeader, "copyright") || xmlTag(channelHeader, "author"),
       image_url: channelImageBlock ? xmlTag(channelImageBlock, "url") : null
     },
     items: items.map((itemBlock) => {
@@ -471,6 +479,15 @@ export function parseFeed(xml: string) {
 export function validateExpectedRssIdentity(feed: ReturnType<typeof parseFeed>, config: FeedConfig): void {
   if (config.expected_rss_channel_title && feed.channel.title !== config.expected_rss_channel_title) {
     throw new Error(`RSS channel identity mismatch: expected ${config.expected_rss_channel_title}`);
+  }
+  if (config.expected_rss_channel_link && feed.channel.link !== config.expected_rss_channel_link) {
+    throw new Error("RSS channel official URL identity mismatch");
+  }
+  if (config.expected_rss_self_url && feed.channel.self_url !== config.expected_rss_self_url) {
+    throw new Error("RSS self URL identity mismatch");
+  }
+  if (config.expected_rss_publisher && normalizeText(feed.channel.publisher).toLocaleLowerCase("da-DK") !== config.expected_rss_publisher.toLocaleLowerCase("da-DK")) {
+    throw new Error("RSS publisher identity mismatch");
   }
   if (config.expected_rss_unique_guids) {
     const seen = new Set<string>();
@@ -599,7 +616,10 @@ export function mapEpisodes(feed: ReturnType<typeof parseFeed>, config: FeedConf
     for (const [guid, count] of counts) if (count > 1) duplicateGuids.add(guid);
   }
 
-  feed.items.forEach((item, index) => {
+  const sourceItems = config.auto_verified_rss
+    ? [...feed.items].sort((a, b) => Date.parse(b.pubDate || "") - Date.parse(a.pubDate || "")).slice(0, 50)
+    : feed.items;
+  sourceItems.forEach((item, index) => {
     const guid = normalizeText(item.guid);
     const title = normalizeText(item.title);
     const duration = parseDuration(item.duration);
@@ -987,6 +1007,87 @@ export function chunk<T>(items: T[], size = BATCH_SIZE): T[][] {
   return chunks;
 }
 
+function isPublicFeedAddress(address: string): boolean {
+  if (/^\d{1,3}(?:\.\d{1,3}){3}$/u.test(address)) {
+    const octets = address.split(".").map(Number);
+    const [a, b] = octets;
+    return !(a === 0 || a === 10 || a === 127 || a >= 224 ||
+      (a === 100 && b >= 64 && b <= 127) || (a === 169 && b === 254) ||
+      (a === 172 && b >= 16 && b <= 31) || (a === 192 && (b === 0 || b === 168)) ||
+      (a === 198 && (b === 18 || b === 19)));
+  }
+  if (address.includes(":")) {
+    const parts = address.toLowerCase().split(":");
+    const first = Number.parseInt(parts[0] || "0", 16);
+    const second = Number.parseInt(parts[1] || "0", 16);
+    return first >= 0x2000 && first <= 0x3fff && !address.toLowerCase().startsWith("2001:db8:") &&
+      !(first === 0x2001 && second <= 0x01ff) && first !== 0x2002;
+  }
+  return false;
+}
+
+export async function fetchAutoVerifiedRssText(url: string, timeoutMs = AUTO_RSS_TIMEOUT_MS): Promise<string> {
+  let parsed: URL;
+  try { parsed = new URL(url); } catch { throw new Error("Automatic RSS source URL invalid"); }
+  const host = parsed.hostname.replace(/^\[|\]$/gu, "").toLowerCase();
+  if (parsed.protocol !== "https:" || parsed.username || parsed.password || parsed.hash ||
+      (parsed.port && parsed.port !== "443") || /(^|\.)(localhost|local|internal)$/u.test(host) ||
+      /^\d+(?:\.\d+){3}$/u.test(host) || host.includes(":")) {
+    throw new Error("Automatic RSS source URL is unsafe");
+  }
+  const deno = (globalThis as unknown as { Deno?: { resolveDns?: (hostname: string, recordType: "A" | "AAAA") => Promise<string[]> } }).Deno;
+  if (!deno?.resolveDns) throw new Error("Automatic RSS public DNS verification unavailable");
+  let dnsTimer: ReturnType<typeof setTimeout>;
+  const resolved = await Promise.race([
+    Promise.all(["A", "AAAA"].map(async type => {
+      try { return await deno.resolveDns!(host, type as "A" | "AAAA"); }
+      catch { return []; }
+    })),
+    new Promise<string[][]>((_, reject) => {
+      dnsTimer = setTimeout(() => reject(new Error("Automatic RSS DNS lookup timed out")), 3000);
+    })
+  ]).finally(() => clearTimeout(dnsTimer!));
+  const addresses = resolved.flat();
+  if (!addresses.length || addresses.some(address => !isPublicFeedAddress(address))) {
+    throw new Error("Automatic RSS source resolves to a private or unverified network");
+  }
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    const response = await fetch(url, { signal: controller.signal, redirect: "manual",
+      headers: { accept: "application/rss+xml, application/xml, text/xml" } });
+    if (response.status >= 300 && response.status < 400) throw new Error("Automatic RSS redirect refused");
+    if (!response.ok) throw new Error(`Automatic RSS fetch failed: ${response.status}`);
+    const contentType = response.headers.get("content-type")?.toLowerCase() || "";
+    if (!/(application\/(?:rss\+xml|xml)|text\/xml)/u.test(contentType)) throw new Error("Automatic RSS response has an untrusted content type");
+    const length = Number(response.headers.get("content-length"));
+    if (Number.isFinite(length) && length > AUTO_RSS_BODY_LIMIT) throw new Error("Automatic RSS response too large");
+    if (!response.body) throw new Error("Automatic RSS response body missing");
+    const reader = response.body.getReader();
+    const chunks: Uint8Array[] = [];
+    let size = 0;
+    for (;;) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      size += value.byteLength;
+      if (size > AUTO_RSS_BODY_LIMIT) {
+        await reader.cancel();
+        throw new Error("Automatic RSS response too large");
+      }
+      chunks.push(value);
+    }
+    const result = new Uint8Array(size);
+    let offset = 0;
+    for (const chunk of chunks) { result.set(chunk, offset); offset += chunk.byteLength; }
+    return new TextDecoder().decode(result);
+  } catch (error) {
+    if (error instanceof DOMException && error.name === "AbortError") throw new Error("Automatic RSS fetch timed out");
+    throw error;
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
 export async function fetchFeedText(url: string, timeoutMs = FEED_TIMEOUT_MS): Promise<string> {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
@@ -1080,12 +1181,13 @@ export async function runEpisodeImport(options: {
         now()
       );
     } else {
-      const content = await (options.fetchText || fetchFeedText)(config.feed_url);
+      const fetcher = options.fetchText || (config.auto_verified_rss ? fetchAutoVerifiedRssText : fetchFeedText);
+      const content = await fetcher(config.feed_url);
       if (config.format === "apple_podcasts_html") {
         mapped = await mapApplePodcastHtmlEpisodes({
           showHtml: content,
           config,
-          fetchText: options.fetchText || fetchFeedText,
+          fetchText: options.fetchText || (config.auto_verified_rss ? fetchAutoVerifiedRssText : fetchFeedText),
           now: now()
         });
       } else if (config.format === "radio4_json") {
@@ -1112,6 +1214,17 @@ export async function runEpisodeImport(options: {
       return summary;
     }
     const routing = routeEpisodes(mapped.episodes, config);
+    if (config.auto_verified_rss) {
+      if (!options.repository.loadAutoFeedGuidOwners) {
+        throw new Error("Automatic RSS identity preflight unavailable; no episodes imported");
+      }
+      const owners = await options.repository.loadAutoFeedGuidOwners(routing.episodes.map(episode => episode.external_guid));
+      const conflicts = owners.filter(episode => episode.source !== config.source || episode.podcast_key !== config.podcast_key);
+      if (conflicts.length) {
+        const examples = [...new Set(conflicts.map(episode => `${episode.source}:${episode.podcast_key}`))].slice(0, 3);
+        throw new Error(`Automatic RSS historical GUID collision; no episodes imported (${examples.join(", ")})`);
+      }
+    }
     const existing = await options.repository.loadExistingEpisodes(
       config.source,
       routing.episodes.map((episode) => episode.external_guid),
