@@ -163,19 +163,22 @@ try {
   const heroPrevious = page.locator('[data-home-hero-scroll="previous"]');
   assert.equal(await heroRail.getAttribute("tabindex"), "0", "The desktop hero rail remains keyboard focusable");
   assert.equal(await heroNext.isEnabled(), true, "The desktop carousel exposes a working next control");
+  await heroNext.focus();
+  assert.equal(await heroNext.evaluate((element) => document.activeElement === element), true, "The enabled next control remains keyboard focusable");
+  await heroNext.press("Enter");
+  await page.waitForFunction(() => document.querySelector("[data-home-hero-rail]")?.scrollLeft > 0);
+  const scrollAfterKeyboard = await heroRail.evaluate((element) => element.scrollLeft);
   const nextBounds = await heroNext.evaluate((element) => {
     const rect = element.getBoundingClientRect();
     return { x: rect.x + rect.width / 2, y: rect.y + rect.height / 2 };
   });
   await page.touchscreen.tap(nextBounds.x, nextBounds.y);
-  await page.waitForFunction(() => document.querySelector("[data-home-hero-rail]")?.scrollLeft > 0);
+  await page.waitForFunction((minimumScroll) => document.querySelector("[data-home-hero-rail]")?.scrollLeft > minimumScroll, scrollAfterKeyboard);
   await page.waitForFunction(() => !document.querySelector('[data-home-hero-scroll="previous"]')?.disabled);
   assert.equal(await heroPrevious.isEnabled(), true, "Touch navigation enables the previous carousel control");
   await heroRail.focus();
   assert.equal(await heroRail.evaluate((element) => document.activeElement === element), true, "The hero rail accepts keyboard focus");
-  await heroPrevious.focus();
   assert.equal(await heroPrevious.getAttribute("type"), "button", "The previous control keeps native keyboard activation");
-  assert.equal(await heroPrevious.evaluate((element) => document.activeElement === element), true, "The carousel control remains keyboard focusable");
 
   await page.setViewportSize({ width: 1280, height: 1000 });
   await page.goto(`http://127.0.0.1:${server.address().port}/#forside`, { waitUntil: "domcontentloaded" });
