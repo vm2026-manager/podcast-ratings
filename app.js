@@ -18336,6 +18336,10 @@ function setHomeHeroCover(container, selector, item) {
   if (genre) genre.textContent = item.genre || item.publisher || "Podcast";
   if (rating) rating.textContent = ratingLabel;
 
+  const prioritizeImage = isHomeHeroCoverInitiallyVisible(cover);
+  image.loading = prioritizeImage ? "eager" : "lazy";
+  image.fetchPriority = prioritizeImage && cover.dataset.homeHeroSlot === "0" ? "high" : "auto";
+
   loadImageWithFallback(image, imageSources, podcastTitle, {
     onLoad() {
       cover.classList.remove("is-hidden");
@@ -18346,6 +18350,20 @@ function setHomeHeroCover(container, selector, item) {
       cover.disabled = true;
     }
   });
+}
+
+function isHomeHeroCoverInitiallyVisible(cover) {
+  if (!cover?.getBoundingClientRect) return false;
+
+  const rect = cover.getBoundingClientRect();
+  return (
+    rect.width > 0 &&
+    rect.height > 0 &&
+    rect.right > 0 &&
+    rect.left < window.innerWidth &&
+    rect.bottom > 0 &&
+    rect.top < window.innerHeight
+  );
 }
 
 function createRecentCardElement(podcast) {
@@ -24439,11 +24457,22 @@ function getHomeCommunityPopularSelection(
   return { selected, candidates, weightedCandidates };
 }
 
+let cachedHomeHeroPodcasts = null;
+
 function getHomeHeroPodcasts(
   hourBucket = getExploreHourBucket(),
   limit = HOME_HERO_COVER_COUNT
 ) {
-  return selectRotatingItems(
+  const cacheMatches =
+    cachedHomeHeroPodcasts?.podcasts === state.podcasts &&
+    cachedHomeHeroPodcasts?.displayGroups === state.podcastDisplayGroups &&
+    cachedHomeHeroPodcasts?.publicItems === state.podcastDetailPublicItemByPodcastKey &&
+    cachedHomeHeroPodcasts?.displayGroupById === state.podcastDisplayGroupById &&
+    cachedHomeHeroPodcasts?.hourBucket === hourBucket &&
+    cachedHomeHeroPodcasts?.limit === limit;
+  if (cacheMatches) return cachedHomeHeroPodcasts.items;
+
+  const items = selectRotatingItems(
     getPodcastlistenTopPodcasts(HOME_HERO_POOL_LIMIT),
     limit,
     {
@@ -24453,6 +24482,17 @@ function getHomeHeroPodcasts(
       circular: true
     }
   );
+
+  cachedHomeHeroPodcasts = {
+    podcasts: state.podcasts,
+    displayGroups: state.podcastDisplayGroups,
+    publicItems: state.podcastDetailPublicItemByPodcastKey,
+    displayGroupById: state.podcastDisplayGroupById,
+    hourBucket,
+    limit,
+    items
+  };
+  return items;
 }
 
 
@@ -27788,7 +27828,9 @@ async function loadCriticalJsonSnapshot({ url, cacheKey, label, validate }) {
     const data = await response.json();
     if (!validate(data)) throw new Error(`${label} bestod ikke sikkerhedsvalideringen.`);
 
-    await writeCriticalJsonSnapshot(cacheKey, data);
+    // The fetched and validated catalogue can render immediately. Cache.put is
+    // only a last-known-good convenience and reports its own storage failures.
+    void writeCriticalJsonSnapshot(cacheKey, data);
     return data;
   } catch (error) {
     networkError = error;

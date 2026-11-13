@@ -32,12 +32,12 @@ const server = createServer(async (request, response) => {
 
 await new Promise((resolve) => server.listen(0, "127.0.0.1", resolve));
 const browser = await chromium.launch({ headless: true });
-const page = await browser.newPage({ viewport: { width: 1280, height: 1000 } });
+const page = await browser.newPage({ viewport: { width: 1280, height: 1000 }, hasTouch: true });
 try {
-  for (const width of [320, 375, 390, 430, 768, 1024, 1101, 1280, 1440, 1920, 2560]) {
+  for (const width of [320, 375, 390, 430, 768, 1024, 1101, 1280, 1440, 1649, 1920, 2560]) {
     await page.setViewportSize({ width, height: 1000 });
     await page.goto(`http://127.0.0.1:${server.address().port}/#forside`, { waitUntil: "domcontentloaded" });
-    await page.waitForFunction(() => state.podcasts.length > 0 && document.querySelectorAll("#pageIntroPanel .home-genres__grid .home-genres-card").length === 5);
+    await page.waitForFunction(() => state.podcasts.length > 0 && document.querySelectorAll("#pageIntroPanel .home-genres__grid .home-genres-card").length === 5 && [...document.querySelectorAll("[data-home-hero-slot] .home-hero__card-title")].some((title) => title.textContent.trim()));
     const layout = await page.evaluate(() => {
       const root = document.querySelector("#pageIntroPanel");
       const genres = root.querySelector(".home-genres");
@@ -74,6 +74,15 @@ try {
         return clippedBy;
       };
       const quick = [...root.querySelectorAll(".home-quick-card")];
+      const heroSlots = [...root.querySelectorAll("[data-home-hero-slot]")].map((cover) => {
+        const bounds = cover.getBoundingClientRect();
+        const image = cover.querySelector("img");
+        return {
+          visible: bounds.width > 0 && bounds.height > 0 && bounds.right > 0 && bounds.left < innerWidth && bounds.bottom > 0 && bounds.top < innerHeight,
+          loading: image?.loading || "",
+          fetchPriority: image?.fetchPriority || ""
+        };
+      });
       return {
         pageWidth: document.documentElement.scrollWidth,
         columns: getComputedStyle(grid).gridTemplateColumns.split(" ").length,
@@ -84,6 +93,7 @@ try {
         genreOverflowY: getComputedStyle(genres).overflowY,
         grid: rect(grid),
         gridScrollHeight: grid.scrollHeight,
+        heroSlots,
         shortcut: shortcut ? {
           visible: getComputedStyle(shortcut).display !== "none",
           isGenre: shortcut.matches(".home-genres-card") || shortcut.hasAttribute("data-genre"),
@@ -117,6 +127,15 @@ try {
     assert.ok(layout.cards.every((card) => card.labelWidth > 0 && card.labelScrollWidth <= card.labelWidth + 1), `A genre label is clipped at ${width}px: ${JSON.stringify(layout.cards.filter((card) => card.labelScrollWidth > card.labelWidth + 1))}`);
     assert.ok(layout.cards.every((card) => card.labelHeight > 0 && card.labelScrollHeight <= card.labelHeight + 2), `A genre label is clipped vertically at ${width}px: ${JSON.stringify(layout.cards.filter((card) => card.labelScrollHeight > card.labelHeight + 2))}`);
     assert.ok(layout.quick.length === 2 && layout.quick.every((card) => card.width > 0 && card.height > 0 && card.clippedBy.length === 0), `Quick cards are clipped or missing at ${width}px`);
+    assert.equal(layout.heroSlots.length, 12, `The home hero retains all 12 carousel slots at ${width}px`);
+    const visibleHeroSlots = layout.heroSlots.filter((slot) => slot.visible);
+    if (visibleHeroSlots.length > 0) {
+      assert.ok(visibleHeroSlots.every((slot) => slot.loading === "eager"), `Visible desktop hero covers are prioritized at ${width}px`);
+      assert.equal(layout.heroSlots[0].fetchPriority, "high", `The first desktop hero cover receives high fetch priority at ${width}px`);
+      assert.ok(layout.heroSlots.filter((slot) => !slot.visible).every((slot) => slot.loading === "lazy"), `Off-screen desktop carousel covers remain lazy at ${width}px`);
+    } else {
+      assert.ok(layout.heroSlots.every((slot) => slot.loading === "lazy"), `The hidden carousel remains lazy at ${width}px`);
+    }
     assert.ok(Math.abs(layout.quick[0].top - layout.quick[1].top) <= 1 && Math.abs(layout.quick[0].bottom - layout.quick[1].bottom) <= 1, `Top podcasts and Mine gemte are misaligned at ${width}px`);
     if (width >= 1101) {
       assert.ok(Math.abs(layout.genres.top - layout.quick[0].top) <= 1, `Top i genrer is not aligned with the quick cards at ${width}px`);
@@ -135,6 +154,28 @@ try {
     }
     console.log(`${width}px: ${layout.cards.length} selected genres in ${layout.columns} columns`);
   }
+
+  await page.setViewportSize({ width: 1280, height: 1000 });
+  await page.goto(`http://127.0.0.1:${server.address().port}/#forside`, { waitUntil: "domcontentloaded" });
+  await page.waitForFunction(() => state.podcasts.length > 0 && [...document.querySelectorAll("[data-home-hero-slot] .home-hero__card-title")].some((title) => title.textContent.trim()));
+  const heroRail = page.locator("[data-home-hero-rail]");
+  const heroNext = page.locator('[data-home-hero-scroll="next"]');
+  const heroPrevious = page.locator('[data-home-hero-scroll="previous"]');
+  assert.equal(await heroRail.getAttribute("tabindex"), "0", "The desktop hero rail remains keyboard focusable");
+  assert.equal(await heroNext.isEnabled(), true, "The desktop carousel exposes a working next control");
+  const nextBounds = await heroNext.evaluate((element) => {
+    const rect = element.getBoundingClientRect();
+    return { x: rect.x + rect.width / 2, y: rect.y + rect.height / 2 };
+  });
+  await page.touchscreen.tap(nextBounds.x, nextBounds.y);
+  await page.waitForFunction(() => document.querySelector("[data-home-hero-rail]")?.scrollLeft > 0);
+  await page.waitForFunction(() => !document.querySelector('[data-home-hero-scroll="previous"]')?.disabled);
+  assert.equal(await heroPrevious.isEnabled(), true, "Touch navigation enables the previous carousel control");
+  await heroRail.focus();
+  assert.equal(await heroRail.evaluate((element) => document.activeElement === element), true, "The hero rail accepts keyboard focus");
+  await heroPrevious.focus();
+  assert.equal(await heroPrevious.getAttribute("type"), "button", "The previous control keeps native keyboard activation");
+  assert.equal(await heroPrevious.evaluate((element) => document.activeElement === element), true, "The carousel control remains keyboard focusable");
 
   await page.setViewportSize({ width: 1280, height: 1000 });
   await page.goto(`http://127.0.0.1:${server.address().port}/#forside`, { waitUntil: "domcontentloaded" });

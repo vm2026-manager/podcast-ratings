@@ -15,6 +15,7 @@ const checks = [
   ["Sheet feed override safety and audit", ["--experimental-strip-types", "scripts/test-sheet-feed-overrides.mjs"]],
   ["RSS source verification and safe automatic activation", ["scripts/test-rss-feed-verification.mjs"]],
   ["homepage community momentum", ["scripts/test-homepage-community-momentum.mjs"]],
+  ["homepage startup cache fallback, hero selection, and visible-cover priority", ["scripts/test-homepage-startup-performance.mjs"]],
   ["Static podcast recommendation landing page", ["scripts/test-seo-podcast-anbefalinger.mjs"]],
   ["SEO podcast rendering and existing URLs", ["scripts/test-seo-podcast-pages.mjs"]],
   ["SEO podcast landing responsive layout, navigation and keyboard focus", ["scripts/test-seo-podcast-responsive.mjs"]],
