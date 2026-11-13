@@ -44,14 +44,22 @@ const getCandidates = limit => {
   calls.push({ poolLimit: limit });
   return candidates;
 };
+const heroState = {
+  podcasts: [],
+  podcastDisplayGroups: [],
+  podcastDetailPublicItemByPodcastKey: {},
+  podcastDisplayGroupById: {}
+};
 const getHomeHeroPodcasts = new Function(
+  "state",
   "getExploreHourBucket",
   "HOME_HERO_COVER_COUNT",
   "HOME_HERO_POOL_LIMIT",
   "getPodcastlistenTopPodcasts",
   "selectRotatingItems",
-  `${heroSource}\nreturn getHomeHeroPodcasts;`
+  `let cachedHomeHeroPodcasts = null;\n${heroSource}\nreturn getHomeHeroPodcasts;`
 )(
+  heroState,
   () => "fallback-hour",
   12,
   150,
@@ -65,7 +73,8 @@ const second = getHomeHeroPodcasts("2026-09-21T10");
 assert.equal(calls[0].poolLimit, 150);
 assert.equal(calls[1].count, 12);
 assert.equal(first.length, 12);
-assert.deepEqual(first, second);
+assert.strictEqual(first, second, "unchanged catalogue and hour reuse the exact selected hero items");
+assert.equal(calls.length, 2, "unchanged hero data does not repeat candidate sorting and rotation");
 assert.equal(calls[1].options.sectionKey, "home-editorial-hero");
 assert.equal(calls[1].options.hourKey, "2026-09-21T10");
 assert.equal(calls[1].options.avoidAdjacentMainSeries, true);
