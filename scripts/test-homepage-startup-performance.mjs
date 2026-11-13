@@ -6,6 +6,16 @@ const app = await readFile(
   fileURLToPath(new URL("../app.js", import.meta.url)),
   "utf8"
 );
+const html = await readFile(
+  fileURLToPath(new URL("../index.html", import.meta.url)),
+  "utf8"
+);
+
+assert.match(
+  html,
+  /app\.js\?[^"]*issue93-homepage-startup-v1=1/u,
+  "the homepage app script cache key changes with the startup performance release"
+);
 
 function extractFunction(name) {
   const start = app.search(new RegExp(`(?:async\\s+)?function ${name}\\(`));
