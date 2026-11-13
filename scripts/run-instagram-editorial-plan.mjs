@@ -108,12 +108,18 @@ export function reviewInstructions(plan) {
     `## Status for alle 15 kandidater\n\n` +
     `| # | Podcast-ID | Score | Hovedserie | Billedkontrol | Coverret | Adgangskilde | Lyttelink | Take | Godkendelse |\n|---:|---|---:|---|---|---|---|---|---|---|\n` +
     plan.posts.map((slot) => `| ${slot.position} | \`${slot.podcastId}\` | ${slot.score.display} | ${slot.mainSeries || "—"} | ${slot.reviewStatus.imageQuality} | ${slot.reviewStatus.coverRights} | ${slot.currentAccessReview.status} (${slot.currentAccessReview.checkedAt || "udateret"}) | ${slot.caption.targetLinkResearchStatus} | ${slot.reviewStatus.personalTake} | ${slot.reviewStatus.approval} |`).join("\n") +
+    `\n\n## Kandidater på HOLD\n\n` +
+    (plan.heldCandidates.length
+      ? `| Podcast-ID | Titel | Score | Udgiver | Linkstatus | Kilde | Årsag |\n|---|---|---:|---|---|---|---|\n` +
+        plan.heldCandidates.map((item) => `| \`${item.podcastId}\` | ${item.title} | ${String(item.score ?? "—").replace(".", ",")} | ${item.publisher} | ${item.linkResearchStatus} | ${item.linkResearchEvidenceUrl || "—"} | ${item.reason} |`).join("\n") + `\n\n`
+      : "Ingen kandidater på HOLD.\n\n") +
+    `Hold-poster er ikke blandt de 15 slots; pladserne udfyldes af næste kandidater, der består de eksisterende score/perle-, eksakt-ID-, cover- og historikregler. Datoerne forbliver mandag, onsdag og fredag. HOLD ændrer ikke kataloget.\n\n` +
     `## Gennemgang pr. opslag\n\n` +
     `- Skriv ejerens personlige take i JSON-feltet \`caption.ownerTake\` eller CSV-kolonnen \`ownerTake\` (10–240 tegn). Det skal være ejerens egne ord; feltet starter tomt.\n` +
-    `- Aktuelle kildechecks er registreret i \`data/instagram-editorial-review-research.json\`. Udgåede links, tredjepartssider og prolog-links er markeret; research-status er ikke ejerens godkendelse. Kun handles med præcist link fra udgiverens eget website vises. Publisher-hashtags er ikke verificeret og derfor udeladt; radioetiketter normaliseres ikke.\n` +
+    `- Aktuelle kildechecks er registreret i \`data/instagram-editorial-review-research.json\`. Hvert verificeret lyttelink har eksakt Podcast-ID, udgiver, sidetitel/episodeinterval, URL, HTTP-status og kontroldato i JSON og CSV. Udgåede links, tredjepartssider og prolog-links er markeret; research-status er ikke ejerens godkendelse. Kun handles med præcist link fra udgiverens eget website vises. Publisher-hashtags er ikke verificeret og derfor udeladt; radioetiketter normaliseres ikke.\n` +
     `- Coverrettigheder er kontrolleret mod den versionsstyrede rettighedsliste. En manglende rettighed blokerer billedgenerering og alle Buffer-handlinger; der er ingen genrekort-fallback.\n` +
     `- Delte SHA-256-værdier på tværs af Podcast-ID'er er listet i \`sharedArtworkGroups\`. De dokumenterer byte-identisk artwork, ikke unik underserieidentitet; hver identitet kræver separat manuel kontrol.\n` +
-    `- De 10 covers med manuel kvalitetskontrol vises særskilt med faktisk målt format, dimensioner, byteantal og SHA-256 i JSON/CSV. Originalfiler ændres ikke.\n` +
+    `- De ${plan.posts.filter((slot) => slot.cover.qualityStatus === "manual-quality-review-required").length} covers med manuel kvalitetskontrol vises særskilt med faktisk målt format, dimensioner, byteantal og SHA-256 i JSON/CSV. Originalfiler ændres ikke.\n` +
     `- Gennemgå coveret, vælg placering og kontrast manuelt. Placering skal bindes til samme eksakte Podcast-ID og kilde-SHA-256.\n` +
     `- Godkend billedet og caption separat pr. opslag. Hashes skal svare til den præcise caption, coverkilde og færdige billedfil. Enhver ændring kræver ny godkendelse.\n` +
     `- Importér CSV-ændringer uden at give godkendelse med \`node scripts/instagram-editorial-plan.mjs --apply-csv <plan.json> <review.csv> <output-plan.json>\`. Validér derefter med \`node scripts/instagram-editorial-plan.mjs --validate <output-plan.json>\`. Validator og import foretager ingen Buffer-kald.\n` +
@@ -137,6 +143,8 @@ if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.me
     postCount: plan.posts.length,
     bufferPostCount: plan.bufferHistory.postCount,
     excludedAlreadyPublishedOrExisting: plan.excluded.alreadyInBufferOrHistory,
+    heldCandidateCount: plan.heldCandidates.length,
+    excludedUnverifiedListeningSource: plan.excluded.unverifiedListeningSource,
     rightsApproved: plan.rights.approvalCount,
     mutations: plan.safety.bufferMutations,
     outputFiles: ["instagram-editorial-plan.json", "instagram-editorial-review.csv", "README.md"],
