@@ -1,6 +1,6 @@
 name: Instagram Kapret one-shot
 
-on:
+"on":
   workflow_dispatch:
     inputs:
       action:
