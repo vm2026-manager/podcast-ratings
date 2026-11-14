@@ -16,6 +16,125 @@ function ownedKeys(config) {
     ...(config.routes || []).map(route => route.podcast_key).filter(Boolean)];
 }
 
+function configOwnersForPodcastId(podcastId, configs) {
+  return Object.entries(configs).filter(([, config]) => ownedKeys(config)
+    .some(owned => normalizeKey(owned) === normalizeKey(podcastId)));
+}
+
+/**
+ * Read-only per-exact-Podcast-ID view of the importer lifecycle.
+ * This process can see catalogue evidence and code-owned adapters, but it has
+ * no Management API credential and deliberately does not infer deployment,
+ * cron execution, database writes, or frontend visibility from those stages.
+ */
+export function buildEpisodeImportLifecycle(payload, staticConfigs = FEED_CONFIGS) {
+  const rows = Array.isArray(payload) ? payload : Array.isArray(payload?.rows) ? payload.rows : [];
+  const { configs, audit } = mergeSheetFeedConfigs(payload, staticConfigs);
+  const byId = new Map();
+  for (const row of rows) {
+    const id = String(row?.["Podcast-ID"] ?? row?.["Podcast ID"] ?? row?.PodcastID ?? "").trim();
+    if (!id) continue;
+    const exact = byId.get(id) || [];
+    exact.push(row);
+    byId.set(id, exact);
+  }
+  const normalizedIds = new Map();
+  for (const id of byId.keys()) {
+    const key = normalizeKey(id);
+    normalizedIds.set(key, [...(normalizedIds.get(key) || []), id]);
+  }
+
+  const lifecycle = [];
+  for (const [podcastId, exactRows] of byId) {
+    const row = exactRows[0];
+    const feed = String(row?.Feed ?? row?.feed ?? "").trim();
+    const owners = configOwnersForPodcastId(podcastId, configs);
+    const activeOwners = owners.filter(([, config]) => config.enabled !== false && config.metadata_only !== true);
+    const verification = row?.episodeFeedVerification;
+    const verificationMatchesRow = verification?.version === 1 && verification?.podcast_id === podcastId &&
+      verification?.catalogue_id === String(row?.catalogue_id ?? "").trim() &&
+      (verification.feed_url === feed || verification.catalogue_feed_url === feed) &&
+      verification.official_url === String(row?.Link ?? "").trim() &&
+      verification.publisher === String(row?.Udgiver ?? "").trim();
+    const verificationStatus = verification?.status === "verified" && verificationMatchesRow
+      ? "verified" : verification?.status === "review_required" ? "review_required" : "not_recorded";
+    const resolution = audit.feed_warnings.find(entry => normalizeKey(entry.podcast_key) === normalizeKey(podcastId));
+    const manualEpisodes = Array.isArray(row?.manualEpisodes) ? row.manualEpisodes.length > 0 :
+      String(row?.manualEpisodes ?? "").split(";").some(value => value.trim());
+    const formatOf = config => config.format || "rss";
+    const adapterOwners = owners.map(([feedKey, config]) => ({
+      feed_key: feedKey,
+      source: config.source || null,
+      format: formatOf(config),
+      enabled: config.enabled !== false && config.metadata_only !== true,
+      metadata_only: config.metadata_only === true,
+      feed_url: config.feed_url || null,
+      identity: config.format === "podimo_graphql" ? { podimo_show_uuid: config.podcast_id || null } :
+        config.podimo_public_rss_identity_required === true ? {
+          podimo_show_uuid: config.podimo_show_id || null,
+          apple_collection_id: config.apple_collection_id || null,
+          public_rss_url: config.feed_url || null
+        } : config.apple_show_id ? { apple_show_id: config.apple_show_id } : null
+    }));
+    const normalizedCollision = (normalizedIds.get(normalizeKey(podcastId)) || []).length > 1;
+    const blockers = [];
+    const evidenceGaps = [];
+    if (exactRows.length !== 1) blockers.push({ stage: "catalogue", code: "duplicate_exact_podcast_id",
+      reason: `Expected one exact Podcast-ID row; found ${exactRows.length}.` });
+    if (normalizedCollision) blockers.push({ stage: "catalogue", code: "normalized_podcast_id_collision",
+      reason: "Another Podcast-ID collides after catalogue identity normalization." });
+    if (resolution) blockers.push({ stage: "adapter", code: resolution.reason,
+      reason: `Sheet feed resolution requires review: ${resolution.reason}.` });
+    if (verification?.status === "review_required") blockers.push({ stage: "source_verification",
+      code: String(verification.reason || "source_identity_review_required"),
+      reason: `Source verification is review_required: ${String(verification.reason || "identity evidence missing")}.` });
+    if (verification?.status === "verified" && !verificationMatchesRow) blockers.push({ stage: "source_verification",
+      code: "source_verification_evidence_mismatch",
+      reason: "Published verified evidence does not exactly match the current Podcast-ID, catalogue ID, feed URL, official link and publisher." });
+    if (owners.length > 1) blockers.push({ stage: "adapter", code: "multiple_adapter_owners",
+      reason: `Found ${owners.length} code-owned adapter configurations for this Podcast-ID.` });
+    if (owners.length === 1 && !activeOwners.length) blockers.push({ stage: "adapter", code: "adapter_disabled",
+      reason: `Adapter ${owners[0][0]} (${owners[0][1].source || "source unset"}) is disabled or metadata-only.` });
+    if (!owners.length && !manualEpisodes) blockers.push({ stage: "adapter", code: "adapter_not_configured",
+      reason: "No enabled code-owned import adapter or manual episode list matches this exact Podcast-ID." });
+    if (owners.length && !verificationMatchesRow && !verification &&
+        activeOwners.every(([, config]) => config.format === "rss" && config.auto_verified_rss === true)) {
+      evidenceGaps.push({ stage: "source_verification", code: "source_verification_not_recorded",
+        reason: "This RSS adapter requires published exact source-verification evidence." });
+    }
+    evidenceGaps.push({ stage: "deployed_edge", code: "deployment_status_unavailable_to_coverage_job",
+      reason: "Coverage has no Supabase Management API credential; main code cannot prove the deployed Edge Function version." });
+    evidenceGaps.push({ stage: "scheduled_import", code: "per_podcast_scheduled_run_not_observable",
+      reason: "Coverage runs as an audit and cannot attribute an external Supabase cron invocation to this Podcast-ID." });
+    evidenceGaps.push({ stage: "database", code: "production_episode_state_not_checked_by_coverage",
+      reason: "The coverage pass does not query Supabase episode/import tables; the bounded post-import monitor checks only changed IDs." });
+    evidenceGaps.push({ stage: "frontend", code: "live_episode_visibility_not_observed",
+      reason: "Catalogue and adapter checks do not prove an active rateable episode was fetched and rendered by the live frontend." });
+
+    const adapterStatus = blockers.some(item => item.stage === "adapter") ? "blocked" :
+      activeOwners.length ? "enabled_in_main_code" : manualEpisodes ? "manual_catalogue" : "missing";
+    lifecycle.push({
+      podcast_id: podcastId,
+      catalogue: { status: exactRows.length === 1 && !normalizedCollision ? "unique" : "identity_conflict",
+        exact_row_count: exactRows.length, catalogue_id: row?.catalogue_id || null, feed_url: feed || null },
+      source_verification: { status: verificationStatus,
+        reason: verificationStatus === "review_required" ? verification?.reason || "identity_evidence_missing" : null,
+        evidence_matches_current_row: verificationStatus === "verified" },
+      adapter: { status: adapterStatus, owners: adapterOwners },
+      deployment: { status: "unknown" },
+      scheduled_import: { status: "not_observed_by_coverage" },
+      database: { status: "not_checked_by_coverage" },
+      frontend: { status: "not_live_verified" },
+      lifecycle_status: blockers.length ? "blocked" : "awaiting_production_evidence",
+      blocking_reason: blockers[0]?.reason || null,
+      next_unverified_stage: evidenceGaps[0]?.reason || null,
+      blockers,
+      evidence_gaps: evidenceGaps
+    });
+  }
+  return lifecycle.sort((a, b) => a.podcast_id.localeCompare(b.podcast_id, "da"));
+}
+
 export function checkEpisodeFeedCoverage(payload, staticConfigs = FEED_CONFIGS) {
   const rows = Array.isArray(payload) ? payload : Array.isArray(payload?.rows) ? payload.rows : [];
   const { configs, audit } = mergeSheetFeedConfigs(payload, staticConfigs);
@@ -94,7 +213,8 @@ export function checkEpisodeFeedCoverage(payload, staticConfigs = FEED_CONFIGS) 
     catalogue_rows_with_feed: rowsWithFeeds,
     active_config_count: audit.total_enabled_feeds,
     review_warning_count: audit.feed_warnings.length,
-    findings
+    findings,
+    lifecycle_by_podcast_id: buildEpisodeImportLifecycle(payload, staticConfigs)
   };
 }
 
