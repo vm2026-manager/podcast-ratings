@@ -160,6 +160,7 @@ test("publish issues one exact automatic shareNow mutation and verifies sent con
   assert.equal(calls.input.saveToDraft, false);
   assert.equal(calls.input.needsApproval, false);
   assert.deepEqual(calls.input.assets, [{ image: { url: IMAGE_URL } }]);
+  assert.deepEqual(calls.input.metadata, { instagram: { type: "post", shouldShareToFeed: true } });
   assert.equal(result.postId, "buffer-post-id");
   assert.equal(result.status, "sent");
   assert.equal(result.sentAt, sentAt);
