@@ -18,6 +18,17 @@ html body #podcastDetailSheet .podcast-detail-sheet__episode-mobile-column-heade
 }
 
 @media (max-width: 768px) {
+  html body #podcastDetailSheet.is-episode-workspace .podcast-detail-sheet__episode-table tr.podcast-detail-sheet__episode-table-state-row {
+    display: block !important;
+  }
+  html body #podcastDetailSheet.is-episode-workspace .podcast-detail-sheet__episode-table tr.podcast-detail-sheet__episode-table-state-row td.podcast-detail-sheet__episode-table-state {
+    display: block !important;
+    width: 100% !important;
+    grid-column: 1 / -1 !important;
+  }
+}
+
+@media (max-width: 768px) {
   html body.page-profil .profile-panel__toggle {
     min-height: 34px;
     padding: 0 11px;
