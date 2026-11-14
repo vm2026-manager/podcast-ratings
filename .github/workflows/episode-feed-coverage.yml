@@ -16,6 +16,8 @@ on:
       - "scripts/monitor-episode-feed-coverage.mjs"
       - "scripts/episode-feed-post-import.mjs"
       - "scripts/test-episode-feed-post-import.mjs"
+      - "scripts/test-episode-import-lifecycle.mjs"
+      - "docs/episode-import-lifecycle.md"
       - "scripts/audit-frihedsbrevet-sources.mjs"
       - "scripts/discover-fri-mads-releases.mjs"
       - "scripts/test-fri-mads-discovery.mjs"
@@ -211,6 +213,15 @@ jobs:
           node --experimental-strip-types scripts/episode-feed-post-import.mjs \
             --pending-file "$RUNNER_TEMP/episode-feed-pending.json" \
             --output "$RUNNER_TEMP/episode-feed-post-import.json"
+      - name: Publish read-only per-Podcast-ID lifecycle reports
+        uses: actions/upload-artifact@v4
+        with:
+          name: episode-import-lifecycle-${{ github.run_id }}
+          path: |
+            ${{ runner.temp }}/episode-feed-coverage.json
+            ${{ runner.temp }}/episode-feed-post-import.json
+          if-no-files-found: error
+          retention-days: 30
       - name: Maintain deduplicated adapter review alert
         uses: actions/github-script@v7
         env:
@@ -232,9 +243,17 @@ jobs:
               core.info("Every catalogue Feed has a registered active adapter.");
               return;
             }
+            const lifecycleFingerprint = (report.lifecycle_by_podcast_id || []).map(entry => [
+              entry.podcast_id, entry.catalogue?.status, entry.source_verification?.status,
+              entry.adapter?.status, entry.lifecycle_status,
+              entry.blockers?.map(item => item.code)
+            ]);
             const fingerprint = crypto.createHash("sha256")
-              .update(JSON.stringify(report.findings)).digest("hex").slice(0, 20);
+              .update(JSON.stringify({ findings: report.findings, lifecycle: lifecycleFingerprint })).digest("hex").slice(0, 20);
             const marker = "<!-- feed-coverage:" + fingerprint + " -->";
+            const lifecycle = report.lifecycle_by_podcast_id || [];
+            const lifecycleBlocked = lifecycle.filter(entry => entry.lifecycle_status === "blocked").length;
+            const lifecycleAwaitingEvidence = lifecycle.filter(entry => entry.lifecycle_status === "awaiting_production_evidence").length;
             const escaped = value => String(value || "").slice(0, 500).replace(/@/g, "＠")
               .replace(/[<>\[\]()*_\x60!]/g, "");
             const lines = report.findings.slice(0, 80).map(x =>
@@ -251,6 +270,11 @@ jobs:
                 ? "Live automatic RSS identity check: " + report.live_source_verification.checked_source_count + " of " +
                   report.live_source_verification.active_source_count + " sources checked; " +
                   report.live_source_verification.deferred_source_count + " deferred to later daily runs.\n\n" : "") +
+              "Per-ID lifecycle: " + lifecycle.length + " exact Podcast-ID rows; " + lifecycleBlocked +
+              " have a known catalogue/source/adapter blocker, " + lifecycleAwaitingEvidence +
+              " are awaiting separate deployment, scheduled-run, database and frontend evidence. Full read-only report artifact: " +
+              "[episode-import-lifecycle-" + context.runId + "](https://github.com/" + context.repo.owner + "/" +
+              context.repo.repo + "/actions/runs/" + context.runId + ").\n\n" +
               "Read-only configuration check. Some entries may be archived. Confirm show, lifecycle, source GUIDs and historical rating identities before changing routing.\n" +
               "Do **not** auto-import, remap or delete episodes. Live source checks use bounded public HTTPS requests and make zero Supabase calls or writes.\n\n" + lines.join("\n") +
               (report.findings.length > 80 ? "\n\n(Additional items omitted.)" : "") + "\n\nSee #256 for production follow-up.\n";

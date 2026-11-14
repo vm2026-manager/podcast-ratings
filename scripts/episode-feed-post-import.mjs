@@ -3,7 +3,7 @@ import { execFileSync } from "node:child_process";
 import { pathToFileURL } from "node:url";
 import { FEED_CONFIGS } from "../supabase/functions/import-podcast-episodes/feed-config.ts";
 import { mergeSheetFeedConfigs } from "../supabase/functions/import-podcast-episodes/runtime-feed-config.ts";
-import { checkEpisodeFeedCoverage } from "./monitor-episode-feed-coverage.mjs";
+import { buildEpisodeImportLifecycle, checkEpisodeFeedCoverage } from "./monitor-episode-feed-coverage.mjs";
 
 export const MAX_EPISODES_PER_RUN = 10;
 export const MAX_API_REQUESTS_PER_RUN = MAX_EPISODES_PER_RUN * 2;
@@ -351,6 +351,37 @@ export async function monitorEpisodeFeedDelta({
     "active_episodes_preexisting_import_unverified", "authorization_missing", "authorization_denied", "api_error",
     "deferred_by_daily_budget", "post_change_episodes_observed"].includes(entry.status) &&
     nowMs - Date.parse(entry.last_checked_at || entry.observed_at || 0) <= 36 * 60 * 60 * 1000);
+  const lifecycleById = new Map(buildEpisodeImportLifecycle(payload, staticConfigs)
+    .map(entry => [entry.podcast_id, entry]));
+  for (const entry of results) {
+    const lifecycle = lifecycleById.get(entry.podcast_key);
+    if (!lifecycle) continue;
+    const databaseStatus = entry.status === "post_change_episodes_observed" ? "post_change_episode_observed" :
+      entry.status === "active_episodes_preexisting_import_unverified" ? "active_episode_import_time_unverified" :
+        entry.status === "zero_active_episodes" || entry.status === "awaiting_existing_import_window" ? "zero_active_episodes" :
+          entry.status === "ready_for_production_count" || entry.status === "deferred_by_daily_budget" ? "not_checked_in_this_run" :
+            entry.production_status === "unknown" ? "unknown_api_result" : "blocked_before_database_check";
+    lifecycle.database = {
+      status: databaseStatus,
+      active_episode_count: entry.active_episode_count ?? null,
+      post_change_active_episode_count: entry.post_change_active_episode_count ?? null,
+      checked_at: entry.last_checked_at || null,
+      blocker: databaseStatus === "zero_active_episodes" ? "zero_active_episodes" :
+        databaseStatus === "active_episode_import_time_unverified" ? "active_episode_predates_observed_change" :
+          databaseStatus === "not_checked_in_this_run" ? "outside_bounded_daily_check_scope" : null
+    };
+    lifecycle.frontend = {
+      status: Number(entry.active_episode_count) > 0 ? "query_possible_not_live_verified" : "not_live_verified",
+      blocker: "live_episode_fetch_and_render_not_observed_by_anon_count_check"
+    };
+    lifecycle.lifecycle_status = lifecycle.blockers.length ? "blocked" :
+      databaseStatus === "post_change_episode_observed" ? "post_change_episode_observed" :
+        databaseStatus === "active_episode_import_time_unverified" ? "active_episode_import_time_unverified" :
+          databaseStatus === "zero_active_episodes" ? "waiting_for_episode_import" : "awaiting_production_evidence";
+    lifecycle.blocking_reason = lifecycle.blockers[0]?.reason || lifecycle.database.blocker || null;
+    lifecycle.next_unverified_stage = lifecycle.blocking_reason ? null : lifecycle.evidence_gaps[0]?.reason || null;
+    entry.lifecycle = lifecycle;
+  }
   return {
     generated_at: timestamp,
     production_access: baseUrl && anonKey ? "anon_active_episodes_only" : "authorization_missing",
@@ -360,6 +391,7 @@ export async function monitorEpisodeFeedDelta({
     candidate_count: byId.size,
     scope_limit_exceeded: byId.size > maxPerRun,
     candidates: results.sort((a, b) => a.podcast_key.localeCompare(b.podcast_key, "da")),
+    lifecycle_by_podcast_id: [...lifecycleById.values()],
     pending: carry.map(({ podcast_key, title, feed, change_type, observed_at, previous_feed, config_key,
       status, last_checked_at, api_http_status, api_error, active_episode_count,
       post_change_active_episode_count }) => ({ podcast_key, title, feed, change_type, observed_at, previous_feed,
@@ -377,7 +409,12 @@ export function renderProductionMonitorComment(report) {
     const failure = entry.api_http_status ? `; HTTP=${entry.api_http_status}` : "";
     const error = entry.api_error ? `; fejl=${esc(entry.api_error)}` : "";
     const checked = entry.last_checked_at ? `; kontrolleret=${esc(entry.last_checked_at)}` : "";
-    return `- \`${esc(entry.podcast_key)}\` — **${esc(entry.status)}**; katalog=${esc(entry.catalogue_status)}; adapter=${esc(entry.adapter_status)}; aktiv=${count}; aktiv efter ændring=${since}${failure}${error}${checked}; sidste importsucces/-fejl/deploy=ikke tilgængelig via anon API`;
+    const lifecycle = entry.lifecycle;
+    const adapter = lifecycle?.adapter?.owners?.[0];
+    const adapterDetails = adapter ? `; feed_key=${esc(adapter.feed_key)}; source=${esc(adapter.source)}; format=${esc(adapter.format)}` : "";
+    const blocker = lifecycle?.blocking_reason ? `; blocker=${esc(lifecycle.blocking_reason)}` : "";
+    const next = lifecycle?.next_unverified_stage ? `; næste ikke-verificerede led=${esc(lifecycle.next_unverified_stage)}` : "";
+    return `- \`${esc(entry.podcast_key)}\` — **${esc(entry.status)}**; lifecycle=${esc(lifecycle?.lifecycle_status || "unknown")}; katalog=${esc(entry.catalogue_status)}; adapter=${esc(entry.adapter_status)}${adapterDetails}; aktiv=${count}; aktiv efter ændring=${since}${failure}${error}${checked}${blocker}${next}; deploy- og cron-attribution kræver privileged statusadgang`;
   });
   const state = JSON.stringify({ pending: report.pending });
   return `${POST_IMPORT_STATE_MARKER}\n\n## Afgrænset post-import kontrol\n\nKontrollerede kun nye/ændrede Podcast-ID'er. ` +
