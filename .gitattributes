@@ -1,0 +1,1 @@
+supabase/migration-history/production/*.sql -text
