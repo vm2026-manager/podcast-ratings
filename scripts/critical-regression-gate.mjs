@@ -54,6 +54,7 @@ const checks = [
   ["catalogue pipeline freshness and stuck PR checks", ["scripts/test-catalogue-pipeline-watch.mjs"]],
   ["rate-limited recovery for verified catalogue drift", ["scripts/test-catalogue-sync-recovery.mjs"]],
   ["production catalogue health", ["scripts/test-production-catalogue-health.mjs"]],
+  ["catalogue health reports keep source, live and automation checks separate", ["scripts/test-catalogue-health-report.mjs"]],
   ["critical catalogue HTTP-cache revalidation and last-known-good fallback", ["scripts/test-critical-catalogue-http-cache.mjs"]],
   ["display-group catalogue", ["scripts/validate-podcast-display-groups.mjs"]],
   ["Kirsten season parsing and episode routing", ["--experimental-strip-types", "scripts/test-kirsten-apple-season-numbering.mjs"]],
