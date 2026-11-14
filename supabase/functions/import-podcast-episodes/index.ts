@@ -22,7 +22,14 @@ Deno.serve(async (request) => {
       if (dryRunError || !config) return jsonResponse({ status: "failed", error: dryRunError || "Unknown feed config" }, 400);
       const result = config.format === "podimo_graphql"
         ? await runPodimoDryRun({ config })
-        : config.format === "rss" ? await runRssDryRun(config) : await runAppleDryRun(config);
+        : config.format === "rss" ? await runRssDryRun(config, undefined, undefined, {
+          ...(config.auto_verified_rss ? {
+            repository: createSupabaseImportRepository(createClient(env("SUPABASE_URL"), env("SUPABASE_SERVICE_ROLE_KEY"), {
+              auth: { persistSession: false }
+            }))
+          } : {}),
+          feedConfigs: runtimeFeeds.configs
+        }) : await runAppleDryRun(config);
       return jsonResponse({ ...result, feed_config_audit: runtimeFeeds.audit }, result.status === "partial" ? 207 : 200);
     }
     const client = createClient(env("SUPABASE_URL"), env("SUPABASE_SERVICE_ROLE_KEY"), {

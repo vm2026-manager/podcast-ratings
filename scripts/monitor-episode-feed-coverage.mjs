@@ -3,7 +3,7 @@ import { pathToFileURL } from "node:url";
 import { FEED_CONFIGS } from "../supabase/functions/import-podcast-episodes/feed-config.ts";
 import { mergeSheetFeedConfigs } from "../supabase/functions/import-podcast-episodes/runtime-feed-config.ts";
 import { parsePodimoShowFeed } from "../supabase/functions/import-podcast-episodes/feed-syntax.mjs";
-import { fetchPublicHttpsText, verifyRssEvidence } from "./rss-feed-verification.mjs";
+import { fetchPublicHttpsText, verifyRssEvidence, verifyPodimoPublicRssEvidence } from "./rss-feed-verification.mjs";
 
 // Read-only catalogue-to-adapter audit. No feed fetch, database, secrets, cron
 // changes or production writes. Safe for Supabase Free.
@@ -40,7 +40,8 @@ export function checkEpisodeFeedCoverage(payload, staticConfigs = FEED_CONFIGS) 
     const resolution = audit.feed_warnings.find(entry =>
       normalizeKey(entry.podcast_key) === key && entry.sheet_feed === feed);
     const verification = row.episodeFeedVerification;
-    const verificationReason = verification?.status === "review_required" && verification.feed_url === feed
+    const verificationReason = verification?.status === "review_required" &&
+      (verification.feed_url === feed || verification.catalogue_feed_url === feed)
       ? String(verification.reason || "identity_evidence_missing") : null;
     const blocking = resolution?.reason || (verificationReason ? `source_verification_${verificationReason}` : null);
     const transientVerification = ["dns_lookup_failed", "request_timeout", "network_unavailable"].includes(verificationReason || "") ||
@@ -61,14 +62,24 @@ export function checkEpisodeFeedCoverage(payload, staticConfigs = FEED_CONFIGS) 
         config.format === "rss" && config.expected_rss_channel_title && config.expected_external_guid_prefix);
       const showId = podimo.showId;
       const podimoAdapters = enabled.filter(config => config.format === "podimo_graphql");
+      const verifiedPodimoRss = enabled.some(config => config.format === "rss" &&
+        config.podimo_public_rss_identity_required === true && config.podcast_key === podcastKey &&
+        config.podimo_show_id === showId && config.podimo_show_url === String(row.Link ?? "").trim() &&
+        config.podimo_catalogue_id === String(row.catalogue_id ?? "").trim());
       if (podimoAdapters.length && !podimoAdapters.some(config => String(config.podcast_id || "").toLowerCase() === showId)) {
         findings.push({ podcast_key: podcastKey, title, cause: "podimo_show_id_mismatch", ...approvalFields,
           blocking: "podimo_show_id_mismatch", required_approval: "exact_podimo_show_uuid_review", podimo_show_id: showId });
         continue;
       }
-      if (!podimoAdapters.length && !reviewedRssOverride) {
-        findings.push({ podcast_key: podcastKey, title, cause: "podimo_adapter_review_required", ...approvalFields,
-          blocking: resolution?.reason || "podimo_adapter_review_required", required_approval: "exact_podimo_show_uuid_and_adapter_review", podimo_show_id: showId });
+      if (!podimoAdapters.length && !reviewedRssOverride && !verifiedPodimoRss) {
+        const blockingReason = verificationReason
+          ? `source_verification_${String(verificationReason).replace(/[^a-zA-Z0-9_-]/gu, "_").slice(0, 100)}`
+          : blocking || resolution?.reason || "podimo_adapter_review_required";
+        findings.push({ podcast_key: podcastKey, title,
+          cause: verificationReason ? `podimo_public_rss_${verificationReason}` : "podimo_adapter_review_required",
+          ...approvalFields, blocking: blockingReason,
+          required_approval: verificationReason ? approvalFields.required_approval : "exact_podimo_show_uuid_and_adapter_review",
+          podimo_show_id: showId });
         continue;
       }
     }
@@ -98,7 +109,9 @@ export async function verifyActiveRssSources(payload, { fetchText = fetchPublicH
   const findings = [];
   for (const config of checked) {
     const row = rows.find(item => String(item?.["Podcast-ID"] ?? item?.["Podcast ID"] ?? item?.PodcastID ?? "").trim() === config.podcast_key &&
-      String(item?.Feed ?? "").trim() === config.feed_url);
+      (String(item?.Feed ?? "").trim() === config.feed_url ||
+        config.podimo_public_rss_identity_required === true &&
+          parsePodimoShowFeed(item?.Feed)?.showId === config.podimo_show_id));
     if (!row) {
       findings.push({ podcast_key: config.podcast_key, cause: "active_rss_catalogue_identity_missing",
         source: config.source, feed_url: config.feed_url, blocking: "active_rss_catalogue_identity_missing",
@@ -107,8 +120,21 @@ export async function verifyActiveRssSources(payload, { fetchText = fetchPublicH
     }
     let verification;
     try {
-      const [feed, page] = await Promise.all([fetchText(config.feed_url), fetchText(String(row.Link ?? "").trim())]);
-      verification = verifyRssEvidence(row, feed, page);
+      if (config.podimo_public_rss_identity_required === true) {
+        const lookupUrl = new URL("https://itunes.apple.com/lookup");
+        lookupUrl.searchParams.set("id", String(config.apple_collection_id)); lookupUrl.searchParams.set("entity", "podcast");
+        const [feed, page, lookupText] = await Promise.all([
+          fetchText(config.feed_url), fetchText(String(row.Link ?? "").trim()), fetchText(lookupUrl.href)
+        ]);
+        const lookup = JSON.parse(lookupText);
+        verification = await verifyPodimoPublicRssEvidence(row, feed, page, lookup, lookup);
+        if (verification.status === "verified" && verification.apple_collection_id !== config.apple_collection_id) {
+          verification = { status: "review_required", reason: "apple_collection_id_mismatch" };
+        }
+      } else {
+        const [feed, page] = await Promise.all([fetchText(config.feed_url), fetchText(String(row.Link ?? "").trim())]);
+        verification = verifyRssEvidence(row, feed, page);
+      }
     } catch (error) {
       const message = error instanceof Error ? error.message : "verification_failed";
       const reason = /timeout/iu.test(message) ? "request_timeout" :
