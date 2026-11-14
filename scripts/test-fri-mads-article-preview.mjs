@@ -39,6 +39,7 @@ const fetchSource = extractFunction("getFriMadsArticleSidecar");
 const detailSource = extractFunction("renderPodcastDetailSheetContent");
 const overviewContentSource = extractFunction("renderPodcastEpisodeOverviewContent");
 const overviewSource = extractFunction("renderPodcastEpisodeOverview");
+const overviewEventsSource = extractFunction("bindPodcastEpisodeOverviewEvents");
 const rateabilitySource = extractFunction("isRateablePodcastEpisode");
 const podcast = {
   podcastId: "fri mads",
@@ -47,6 +48,7 @@ const podcast = {
 };
 const render = new Function("podcast", "data", "episodes", `${escapeHtmlSource}\n${identitySource}\n${validationSource}\n${episodeIdentityFieldsSource}\n${duplicateSource}\n${renderSource}\nreturn renderFriMadsEpisodeOverview(podcast, data, episodes);`);
 const renderWithStatus = new Function("podcast", "data", "episodes", "loading", `${escapeHtmlSource}\n${identitySource}\n${validationSource}\n${episodeIdentityFieldsSource}\n${duplicateSource}\n${renderSource}\nreturn renderFriMadsEpisodeOverview(podcast, data, episodes, { loading });`);
+const bindOverviewEvents = new Function("window", "dialog", "podcast", `${overviewEventsSource}\nreturn bindPodcastEpisodeOverviewEvents(dialog, podcast);`);
 const unavailableFor = (mutate) => {
   const changed = structuredClone(sidecar);
   mutate(changed);
@@ -105,6 +107,27 @@ assert.equal(render({ ...podcast, link: "https://example.org/" }, sidecar, []), 
 assert.match(render(podcast, null, []), /Udgivelserne kunne ikke hentes/u, "invalid source renders a fail-closed workspace state");
 assert.match(renderWithStatus(podcast, null, [], true), /Henter verificerede udgivelser/u);
 assert.match(renderWithStatus(podcast, null, [], false), /Udgivelserne kunne ikke hentes/u);
+
+for (const mobile of [true, false]) {
+  const detailContent = { dataset: {}, addEventListener() {} };
+  const tableWrap = { dataset: {}, addEventListener() {} };
+  const overview = {
+    querySelector(selector) {
+      if (selector === ".podcast-detail-sheet__episode-table-wrap") return tableWrap;
+      return null;
+    },
+    querySelectorAll() { return []; }
+  };
+  const dialog = {
+    querySelector(selector) {
+      if (selector === "[data-podcast-episode-overview]") return overview;
+      if (selector === "[data-podcast-detail-content]") return detailContent;
+      return null;
+    }
+  };
+  assert.doesNotThrow(() => bindOverviewEvents({ matchMedia: () => ({ matches: mobile }) }, dialog, podcast),
+    `${mobile ? "mobile" : "desktop"} metadata-only overview binds safely without optional search and back controls`);
+}
 
 for (const [label, candidate] of [
   ["wrong podcast identity", unavailableFor((data) => { data.podcastId = "friis diplomatpost"; })],

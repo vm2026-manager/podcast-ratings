@@ -14728,14 +14728,14 @@ function bindPodcastEpisodeOverviewEvents(dialog, podcast) {
     ? dialog.querySelector("[data-podcast-detail-content]")
     : tableWrap;
   const searchInput = overview.querySelector("[data-episode-workspace-search]");
-  if (searchInput?.dataset.episodeWorkspaceBound !== "true") {
+  if (searchInput && searchInput.dataset.episodeWorkspaceBound !== "true") {
     searchInput.dataset.episodeWorkspaceBound = "true";
     searchInput.addEventListener("input", (event) => {
       scheduleEpisodeWorkspaceSearch(podcast, event.currentTarget.value);
     });
   }
 
-  if (scrollContainer?.dataset.episodeWorkspaceScrollBound !== "true") {
+  if (scrollContainer && scrollContainer.dataset.episodeWorkspaceScrollBound !== "true") {
     scrollContainer.dataset.episodeWorkspaceScrollBound = "true";
     scrollContainer.addEventListener("scroll", async (event) => {
       const currentOverview = dialog.querySelector("[data-podcast-episode-overview]");
@@ -14776,7 +14776,7 @@ function bindPodcastEpisodeOverviewEvents(dialog, podcast) {
   }
 
   const backButton = overview.querySelector("[data-podcast-episode-overview-back]");
-  if (backButton?.dataset.episodeWorkspaceBound !== "true") {
+  if (backButton && backButton.dataset.episodeWorkspaceBound !== "true") {
     backButton.dataset.episodeWorkspaceBound = "true";
     backButton.addEventListener("click", () => {
       renderPodcastDetailSheetContent(dialog, podcast);
