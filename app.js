@@ -14584,15 +14584,12 @@ function renderPodcastEpisodeOverview(podcast) {
 }
 
 let friMadsArticleSidecarPromise = null;
+let friMadsArticleSidecarData = null;
 
-function getFriMadsArticlePreviewPlaceholder(podcast) {
-  if (
-    podcast?.podcastId !== "fri mads" ||
-    podcast?.catalogueId !== "catalogue-v1-d94fc39e" ||
-    podcast?.link !== "https://frihedsbrevet.dk/nyhedsbrev/fri-mads/"
-  ) return "";
-
-  return `<section class="fri-mads-article-preview" data-fri-mads-article-preview hidden aria-label="Fri Mads-artikler"></section>`;
+function isFriMadsMetadataPodcast(podcast) {
+  return podcast?.podcastId === "fri mads" &&
+    podcast?.catalogueId === "catalogue-v1-d94fc39e" &&
+    podcast?.link === "https://frihedsbrevet.dk/nyhedsbrev/fri-mads/";
 }
 
 function isValidFriMadsArticleSidecar(sidecar) {
@@ -14643,41 +14640,56 @@ function isValidFriMadsArticleSidecar(sidecar) {
   return valid;
 }
 
-function renderFriMadsArticleMetadataPreview(podcast, sidecar) {
-  if (
-    podcast?.podcastId !== "fri mads" ||
-    podcast?.catalogueId !== "catalogue-v1-d94fc39e" ||
-    podcast?.link !== "https://frihedsbrevet.dk/nyhedsbrev/fri-mads/" ||
-    !isValidFriMadsArticleSidecar(sidecar)
-  ) return "";
+function getFriMadsEpisodeIdentityFields(episode) {
+  return [episode?.episode_url, episode?.episodeUrl, episode?.external_guid,
+    episode?.externalGuid, episode?.external_episode_id, episode?.externalEpisodeId]
+    .filter((value) => typeof value === "string" && value.length > 0);
+}
 
-  const articleCards = [...sidecar.items]
-    .sort((left, right) => Number(right.releaseNumber) - Number(left.releaseNumber))
-    .map((release) => {
-      const date = new Intl.DateTimeFormat("da-DK", {
-        day: "numeric", month: "long", year: "numeric", timeZone: "UTC"
-      }).format(new Date(`${release.publishedDate}T00:00:00Z`));
-      return `
-        <article class="fri-mads-article-preview__card" data-fri-mads-release-id="${escapeHtml(release.releaseId)}">
-          <div class="fri-mads-article-preview__meta">
-            <span class="fri-mads-article-preview__kind">Artikel · nyhedsbrev</span>
-            <time datetime="${escapeHtml(release.publishedDate)}">${escapeHtml(date)}</time>
-          </div>
-          <h3>${escapeHtml(release.title)}</h3>
-          <p class="fri-mads-article-preview__access">Betalt artikel · læseadgang kan kræve abonnement</p>
-          <a href="${escapeHtml(release.canonicalUrl)}" target="_blank" rel="noopener noreferrer">Læs hos Frihedsbrevet</a>
-        </article>`;
-    })
-    .join("");
+function isFriMadsReleaseAlreadyEpisode(release, episodes = []) {
+  return episodes.some((episode) => getFriMadsEpisodeIdentityFields(episode)
+    .some((identity) => identity === release.canonicalUrl || identity === release.releaseId));
+}
 
-  return `
-    <section class="fri-mads-article-preview" data-fri-mads-article-preview aria-labelledby="friMadsArticlePreviewTitle">
-      <div class="fri-mads-article-preview__heading">
-        <h2 id="friMadsArticlePreviewTitle">Fri Mads-artikler</h2>
-        <span>Artikel/nyhedsbrev · betalt adgang</span>
-      </div>
-      <div class="fri-mads-article-preview__list">${articleCards}</div>
-    </section>`;
+function renderFriMadsEpisodeOverview(podcast, sidecar, existingEpisodes = [], { loading = false } = {}) {
+  if (!isFriMadsMetadataPodcast(podcast)) return "";
+  const validSidecar = isValidFriMadsArticleSidecar(sidecar);
+  const releases = validSidecar
+    ? sidecar.items.filter((release) => !isFriMadsReleaseAlreadyEpisode(release, existingEpisodes))
+    : [];
+  const rows = releases.length
+    ? releases.map((release) => {
+        const date = new Intl.DateTimeFormat("da-DK", {
+          day: "numeric", month: "long", year: "numeric", timeZone: "UTC"
+        }).format(new Date(`${release.publishedDate}T00:00:00Z`));
+        return `<tr data-fri-mads-release-id="${escapeHtml(release.releaseId)}">
+          <td class="episode-publication-date-cell" data-label="Udgivelsesdato" aria-label="Udgivelsesdato ${escapeHtml(date)}">${escapeHtml(date)}</td>
+          <td data-label="Episode" data-published-date="${escapeHtml(date)}">
+            <strong class="episode-title">${escapeHtml(release.title)}</strong>
+            <span class="fri-mads-episode-access">Betalt adgang · abonnement kan kræves</span>
+            <a class="podcast-detail-sheet__episode-source" href="${escapeHtml(release.canonicalUrl)}" target="_blank" rel="noopener noreferrer">Lyt hos Frihedsbrevet</a>
+          </td>
+        </tr>`;
+      }).join("")
+    : `<tr><td class="episode-publication-date-cell" aria-hidden="true"></td><td data-label="Episode" class="podcast-detail-sheet__episode-table-state">${loading
+      ? "Henter verificerede udgivelser &hellip;"
+      : validSidecar
+      ? "Der er ingen nye verificerede udgivelser at vise."
+      : "Udgivelserne kunne ikke hentes. Prøv igen senere."}${loading ? "" : ` <a class="podcast-detail-sheet__episode-source" href="https://frihedsbrevet.dk/nyhedsbrev/fri-mads/" target="_blank" rel="noopener noreferrer">Fri Mads hos Frihedsbrevet</a>`}</td></tr>`;
+
+  return `<section class="podcast-detail-sheet__episode-overview podcast-detail-sheet__episode-overview--metadata" data-podcast-episode-overview aria-labelledby="podcastEpisodeOverviewTitle">
+    <div class="podcast-detail-sheet__episode-overview-toolbar">
+      <button class="podcast-detail-sheet__episode-back" type="button" data-podcast-episode-overview-back><span aria-hidden="true">&larr;</span><span>Tilbage til podcasten</span></button>
+      <h2 class="podcast-detail-sheet__episode-workspace-title">Episoder</h2>
+    </div>
+    <div class="podcast-detail-sheet__episode-mobile-column-header"><p class="podcast-detail-sheet__episode-workspace-summary">Indtalte Fri Mads-udgivelser</p><span aria-hidden="true"></span></div>
+    <div class="podcast-detail-sheet__episode-table-wrap"><table class="podcast-detail-sheet__episode-table podcast-detail-sheet__episode-table--publication-date podcast-detail-sheet__episode-table--fri-mads-metadata">
+      <caption class="sr-only" id="podcastEpisodeOverviewTitle">Fri Mads-afsnit</caption>
+      <colgroup><col /><col /></colgroup>
+      <thead><tr><th scope="col" class="episode-publication-date-header">Udgivelsesdato</th><th scope="col">Episode</th></tr></thead>
+      <tbody data-episode-workspace-rows>${rows}</tbody>
+    </table></div>
+  </section>`;
 }
 
 async function getFriMadsArticleSidecar() {
@@ -14699,22 +14711,12 @@ async function getFriMadsArticleSidecar() {
       if (!response.ok || !String(response.headers.get("content-type") || "").toLowerCase().includes("application/json")) return null;
       return response.json();
     })
+    .then((sidecar) => {
+      friMadsArticleSidecarData = isValidFriMadsArticleSidecar(sidecar) ? sidecar : null;
+      return friMadsArticleSidecarData;
+    })
     .catch(() => null);
   return friMadsArticleSidecarPromise;
-}
-
-async function hydrateFriMadsArticleMetadataPreview(podcast, target) {
-  if (
-    podcast?.podcastId !== "fri mads" ||
-    podcast?.catalogueId !== "catalogue-v1-d94fc39e" ||
-    podcast?.link !== "https://frihedsbrevet.dk/nyhedsbrev/fri-mads/" ||
-    !target?.isConnected
-  ) return;
-  const sidecar = await getFriMadsArticleSidecar();
-  if (!target.isConnected) return;
-  const markup = renderFriMadsArticleMetadataPreview(podcast, sidecar);
-  if (!markup) return;
-  target.outerHTML = markup;
 }
 
 function bindPodcastEpisodeOverviewEvents(dialog, podcast) {
@@ -14810,6 +14812,16 @@ function updatePodcastEpisodeOverview(dialog = document.getElementById("podcastD
   const overview = dialog.querySelector("[data-podcast-episode-overview]");
   if (!podcast || !overview) return;
 
+  if (isFriMadsMetadataPodcast(podcast)) {
+    overview.outerHTML = renderFriMadsEpisodeOverview(
+      podcast,
+      friMadsArticleSidecarData,
+      getPodcastEpisodeState(podcast).items
+    );
+    bindPodcastEpisodeOverviewEvents(dialog, podcast);
+    return;
+  }
+
   const searchInput = overview.querySelector("[data-episode-workspace-search]");
   const searchWasFocused = document.activeElement === searchInput;
   const searchCursor = searchWasFocused ? searchInput.selectionStart : null;
@@ -14838,6 +14850,26 @@ function renderPodcastEpisodeOverviewContent(dialog, podcast) {
 
   const content = dialog.querySelector("[data-podcast-detail-content]");
   if (!content) return;
+
+  if (isFriMadsMetadataPodcast(podcast)) {
+    content.innerHTML = renderFriMadsEpisodeOverview(podcast, null, [], { loading: true });
+    content.classList.add("podcast-detail-sheet__content--episode-overview");
+    bindPodcastEpisodeOverviewEvents(dialog, podcast);
+    void getFriMadsArticleSidecar().then((sidecar) => {
+      if (!dialog.isConnected || dialog.classList.contains("is-hidden") ||
+          state.podcastDetailView !== "episodes" ||
+          state.activePodcastDetailKey !== getPodcastKey(podcast)) return;
+      const overview = dialog.querySelector("[data-podcast-episode-overview]");
+      if (!overview) return;
+      overview.outerHTML = renderFriMadsEpisodeOverview(
+        podcast,
+        sidecar,
+        getPodcastEpisodeState(podcast).items
+      );
+      bindPodcastEpisodeOverviewEvents(dialog, podcast);
+    });
+    return;
+  }
 
   content.innerHTML = renderPodcastEpisodeOverview(podcast);
   content.classList.add("podcast-detail-sheet__content--episode-overview");
@@ -16346,7 +16378,8 @@ function renderPodcastDetailSheetContent(
   state.podcastDetailView = "detail";
   state.activePodcastDetailKey = getPodcastKey(podcast);
   const supportsEpisodes = podcastSupportsEpisodes(podcast);
-  content.classList.toggle("podcast-detail-sheet__content--episodes", supportsEpisodes);
+  const hasFriMadsPublications = isFriMadsMetadataPodcast(podcast);
+  content.classList.toggle("podcast-detail-sheet__content--episodes", supportsEpisodes || hasFriMadsPublications);
   content.classList.remove(
     "podcast-detail-sheet__content--episode-overview",
     "podcast-detail-sheet__content--display-group"
@@ -16437,14 +16470,14 @@ function renderPodcastDetailSheetContent(
       `
       : "";
   setPodcastDetailPlacementControl(dialog, placementText);
-  const episodeEntryMarkup = supportsEpisodes
+  const episodeEntryMarkup = supportsEpisodes || hasFriMadsPublications
     ? `<span class="podcast-detail-sheet__episode-entry">
         <button class="podcast-detail-sheet__episode-entry-button" type="button" data-podcast-episodes-open aria-describedby="podcastEpisodeEntryTooltip">
           <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="3" width="14" height="18" rx="2"></rect><path d="M9 8h6M9 12h6M9 16h4"></path></svg>
-          <span>Vurder episoder</span>
+          <span>${hasFriMadsPublications ? "Se afsnit" : "Vurder episoder"}</span>
         </button>
         <span class="podcast-detail-sheet__episode-entry-tooltip" id="podcastEpisodeEntryTooltip" role="tooltip">
-          Se alle episoder og bed&oslash;m dem &eacute;n for &eacute;n.
+          ${hasFriMadsPublications ? "Se de indtalte Fri Mads-udgivelser." : "Se alle episoder og bed&oslash;m dem &eacute;n for &eacute;n."}
         </span>
       </span>`
     : "";
@@ -16509,7 +16542,6 @@ function renderPodcastDetailSheetContent(
       </div>
     </section>
     ${getDrEditorialReviewMarkup(podcast)}
-    ${getFriMadsArticlePreviewPlaceholder(podcast)}
     ${getHistoricalMedianoEditorialEpisodeReviewMarkup(podcast)}
     <section class="podcast-detail-sheet__episode-rating-mobile-help" data-podcast-detail-episode-rating-mobile-help${mobileEpisodeRatingLockHelpMarkup ? "" : " hidden"} aria-live="polite">${mobileEpisodeRatingLockHelpMarkup}</section>
     ${episodesMarkup}
@@ -16556,9 +16588,6 @@ function renderPodcastDetailSheetContent(
       }
     </template>
   `;
-
-  const friMadsArticlePreviewTarget = content.querySelector("[data-fri-mads-article-preview]");
-  if (friMadsArticlePreviewTarget) void hydrateFriMadsArticleMetadataPreview(podcast, friMadsArticlePreviewTarget);
 
   const hostMeta = content.querySelector(".podcast-detail-sheet__meta");
   if (hostMeta && podcast.host) {
