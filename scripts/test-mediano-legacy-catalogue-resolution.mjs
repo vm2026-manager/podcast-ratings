@@ -1,9 +1,10 @@
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 
-const [app, payload] = await Promise.all([
+const [app, payload, countDoc] = await Promise.all([
   readFile(new URL("../app.js", import.meta.url), "utf8"),
-  readFile(new URL("../data/podcasts.json", import.meta.url), "utf8")
+  readFile(new URL("../data/podcasts.json", import.meta.url), "utf8"),
+  readFile(new URL("../docs/catalogue-runtime-count.md", import.meta.url), "utf8")
 ]);
 const rows = (JSON.parse(payload).rows || []).map((row) => ({
   id: String(row["Podcast-ID"] || "").trim(),
@@ -38,6 +39,8 @@ const localCanonicalIds = new Set([
   "kampen om historien dr"
 ]);
 const canonicalIds = new Set(rows.map((row) => row.id));
+assert.ok(rows.every((row) => row.id), "every source row has an exact Podcast-ID");
+assert.equal(canonicalIds.size, rows.length, "raw catalogue Podcast-IDs stay unique");
 const allCurrentIds = new Set([...canonicalIds, ...localCanonicalIds]);
 const suppressedRows = rows.filter((row) => aliases[row.id] && allCurrentIds.has(aliases[row.id]));
 const suppressedIds = suppressedRows.map((row) => row.id).sort();
@@ -102,9 +105,13 @@ assert.equal(
   rows.length + localAdditions.length - suppressedRows.length,
   "runtime count is raw unique IDs + missing reviewed local canonicals - exact legacy episode IDs"
 );
-assert.equal(rows.length, new Set(rows.map((row) => row.id)).size, "raw catalogue Podcast-IDs stay unique");
-assert.equal(localCanonicalIds.size, 6, "all six reviewed local canonical IDs stay enumerated");
-assert.equal(suppressedRows.length, 27, "27 exact legacy episode rows currently resolve to present canonical series");
+const formatCount = (value) => new Intl.NumberFormat("en-US").format(value);
+const currentFormula = `${formatCount(rows.length)} raw rows + ${formatCount(localAdditions.length)} local canonical rows - ${formatCount(suppressedRows.length)} legacy episode rows = ${formatCount(visibleIds.size)}`;
+assert.ok(
+  countDoc.includes(`For the 14 November 2026 catalogue, the published JSON contains ${formatCount(rows.length)} unique`) &&
+    countDoc.includes(currentFormula),
+  "the dated runtime-count documentation matches the data-derived catalogue/runtime calculation"
+);
 assert.ok(visibleIds.has("balkans knuste hjerte"), "Balkans remains a direct current podcast ID");
 assert.ok(visibleIds.has("hvem er saveus"), "Saveus remains a direct current podcast ID");
 
