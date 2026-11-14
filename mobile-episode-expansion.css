@@ -8,6 +8,16 @@ html body #podcastDetailSheet .podcast-detail-sheet__episode-mobile-column-heade
 }
 
 @media (max-width: 768px) {
+  html body #podcastDetailSheet.is-episode-workspace .podcast-detail-sheet__episode-overview--metadata .podcast-detail-sheet__episode-mobile-column-header > span {
+    display: none !important;
+  }
+
+  html body #podcastDetailSheet.is-episode-workspace .podcast-detail-sheet__episode-table--fri-mads-metadata td:nth-child(2) {
+    grid-column: 1 / -1 !important;
+  }
+}
+
+@media (max-width: 768px) {
   html body.page-profil .profile-panel__toggle {
     min-height: 34px;
     padding: 0 11px;

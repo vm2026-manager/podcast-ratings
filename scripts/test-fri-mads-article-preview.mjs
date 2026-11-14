@@ -30,12 +30,14 @@ function extractFunction(name) {
 }
 
 const escapeHtmlSource = extractFunction("escapeHtml");
-const placeholderSource = extractFunction("getFriMadsArticlePreviewPlaceholder");
+const identitySource = extractFunction("isFriMadsMetadataPodcast");
 const validationSource = extractFunction("isValidFriMadsArticleSidecar");
-const renderSource = extractFunction("renderFriMadsArticleMetadataPreview");
+const episodeIdentityFieldsSource = extractFunction("getFriMadsEpisodeIdentityFields");
+const duplicateSource = extractFunction("isFriMadsReleaseAlreadyEpisode");
+const renderSource = extractFunction("renderFriMadsEpisodeOverview");
 const fetchSource = extractFunction("getFriMadsArticleSidecar");
-const hydrateSource = extractFunction("hydrateFriMadsArticleMetadataPreview");
 const detailSource = extractFunction("renderPodcastDetailSheetContent");
+const overviewContentSource = extractFunction("renderPodcastEpisodeOverviewContent");
 const overviewSource = extractFunction("renderPodcastEpisodeOverview");
 const rateabilitySource = extractFunction("isRateablePodcastEpisode");
 const podcast = {
@@ -43,8 +45,8 @@ const podcast = {
   catalogueId: "catalogue-v1-d94fc39e",
   link: "https://frihedsbrevet.dk/nyhedsbrev/fri-mads/"
 };
-const render = new Function("podcast", "data", `${escapeHtmlSource}\n${validationSource}\n${renderSource}\nreturn renderFriMadsArticleMetadataPreview(podcast, data);`);
-const placeholder = new Function("podcast", placeholderSource + "\nreturn getFriMadsArticlePreviewPlaceholder(podcast);");
+const render = new Function("podcast", "data", "episodes", `${escapeHtmlSource}\n${identitySource}\n${validationSource}\n${episodeIdentityFieldsSource}\n${duplicateSource}\n${renderSource}\nreturn renderFriMadsEpisodeOverview(podcast, data, episodes);`);
+const renderWithStatus = new Function("podcast", "data", "episodes", "loading", `${escapeHtmlSource}\n${identitySource}\n${validationSource}\n${episodeIdentityFieldsSource}\n${duplicateSource}\n${renderSource}\nreturn renderFriMadsEpisodeOverview(podcast, data, episodes, { loading });`);
 const unavailableFor = (mutate) => {
   const changed = structuredClone(sidecar);
   mutate(changed);
@@ -65,11 +67,11 @@ assert.deepEqual(sidecar.items.map((item) => item.releaseNumber), [172, 171, 170
 assert.equal(sidecar.items[0].title, "Fri Mads #172: Alle elsker Mette");
 assert.equal(sidecar.items[0].publishedDate, "2026-11-08");
 assert.equal(sidecar.items[0].canonicalUrl, "https://frihedsbrevet.dk/fri-mads-172-alle-elsker-mette/");
-assert.equal(sidecar.items.some((item) => item.releaseNumber === 173), false, "synthetic #173 never appears in live sidecar data");
+assert.equal(sidecar.items.some((item) => item.releaseNumber === 173), false, "synthetic #173 never appears in public sidecar data");
 assert.ok(sidecar.items.every((item) => item.fixtureOnly !== true && !("articleText" in item)));
 
 assert.equal(FRIHEDSBREVET_SOURCE_REGISTRY.length, 36);
-assert.ok(catalog.rows.length >= 1376, "the catalogue retains at least the previous 1,376-row baseline while allowing verified growth");
+assert.ok(catalog.rows.length >= 1376, "the catalogue retains the minimum baseline while allowing verified growth");
 assert.equal(FRIHEDSBREVET_SOURCE_REGISTRY.filter((identity) => catalog.rows.some((row) =>
   row["Podcast-ID"] === identity.podcastId && row.catalogue_id === identity.catalogueId)).length, 36,
 "all exact Frihedsbrevet Podcast-ID/catalogue_id pairs still exist in latest main");
@@ -80,25 +82,29 @@ assert.deepEqual(catalog.rows.filter((row) => row["Podcast-ID"] === "fri mads").
   podcastId: "fri mads", catalogueId: "catalogue-v1-d94fc39e",
   link: "https://frihedsbrevet.dk/nyhedsbrev/fri-mads/",
   accessEvidenceUrl: "https://frihedsbrevet.dk/fri-mads-140-verden-af-i-gaar/", accessType: "paid"
-}], "Fri Mads catalogue identity, link, historical #140 provenance, and paid classification stay unchanged");
+}], "Fri Mads canonical identity, profile link, #140 provenance and paid classification stay unchanged");
 
 const originalRows = catalog.rows.map((row) => ({ id: row["Podcast-ID"], catalogueId: row.catalogue_id }));
-const firstRender = render(podcast, sidecar);
-assert.equal(firstRender, render(podcast, structuredClone(sidecar)), "the same verified sidecar renders identically on repeat");
-assert.match(firstRender, /Fri Mads #172: Alle elsker Mette/u);
+const firstRender = render(podcast, sidecar, []);
+assert.equal(firstRender, render(podcast, structuredClone(sidecar), []), "the same sidecar renders identically on repeat");
+assert.equal((firstRender.match(/data-fri-mads-release-id=/gu) || []).length, 5);
+for (const release of sidecar.items) {
+  assert.ok(firstRender.includes(release.title), `normal episode list includes ${release.releaseId}`);
+  assert.ok(firstRender.includes(release.canonicalUrl), `official per-release link is retained for ${release.releaseId}`);
+}
+assert.match(firstRender, /class="podcast-detail-sheet__episode-overview/u);
+assert.match(firstRender, /podcast-detail-sheet__episode-table--fri-mads-metadata/u);
+assert.match(firstRender, /Lyt hos Frihedsbrevet/u);
+assert.match(firstRender, /Betalt adgang/u);
 assert.match(firstRender, /8\. november 2026/u);
-assert.match(firstRender, /Artikel · nyhedsbrev/u);
-assert.match(firstRender, /Betalt artikel · læseadgang kan kræve abonnement/u);
-assert.match(firstRender, /href="https:\/\/frihedsbrevet\.dk\/fri-mads-172-alle-elsker-mette\/"/u);
-assert.doesNotMatch(firstRender, /#173|fri-mads-173-|<audio\b|<video\b|duration|varighed|data-episode-rating|data-episode-overview-rating-id|<button\b/iu,
-  "article cards contain no synthetic #173, media player, duration, or rating controls");
-assert.equal(placeholder(podcast).includes("data-fri-mads-article-preview"), true);
-assert.equal(placeholder({ ...podcast, podcastId: "friis diplomatpost" }), "");
-assert.equal(placeholder({ ...podcast, catalogueId: "catalogue-v1-wrong" }), "");
-assert.equal(placeholder({ ...podcast, link: "https://example.org/" }), "");
-assert.equal(render({ ...podcast, podcastId: "friis diplomatpost" }, sidecar), "");
-assert.equal(render({ ...podcast, catalogueId: "catalogue-v1-wrong" }, sidecar), "");
-assert.equal(render({ ...podcast, link: "https://example.org/" }, sidecar), "");
+assert.doesNotMatch(firstRender, /Fri Mads-artikler|fri-mads-article-preview|#173|fri-mads-173-|<audio\b|<video\b|duration|varighed|data-episode-rating|data-episode-overview-rating-id|Din vurdering|Brugernes vurdering|<button\b[^>]*data-episode-overview-rating-id/iu,
+  "episode cards contain no separate article block, synthetic release, audio controls, duration or rating controls");
+assert.equal(render({ ...podcast, podcastId: "friis diplomatpost" }, sidecar, []), "", "the exact Fri Mads identity is required");
+assert.equal(render({ ...podcast, catalogueId: "catalogue-v1-wrong" }, sidecar, []), "", "the exact catalogue identity is required");
+assert.equal(render({ ...podcast, link: "https://example.org/" }, sidecar, []), "", "the approved canonical profile link is required");
+assert.match(render(podcast, null, []), /Udgivelserne kunne ikke hentes/u, "invalid source renders a fail-closed workspace state");
+assert.match(renderWithStatus(podcast, null, [], true), /Henter verificerede udgivelser/u);
+assert.match(renderWithStatus(podcast, null, [], false), /Udgivelserne kunne ikke hentes/u);
 
 for (const [label, candidate] of [
   ["wrong podcast identity", unavailableFor((data) => { data.podcastId = "friis diplomatpost"; })],
@@ -117,33 +123,50 @@ for (const [label, candidate] of [
   ["invalid date", unavailableFor((data) => { data.items[0].publishedDate = "2026-02-31"; })]
 ]) {
   assert.equal(isValidFriMadsArticleSidecar(candidate), false, `${label} fails closed`);
-  assert.equal(render(podcast, candidate), "", `${label} is not rendered`);
+  assert.match(renderWithStatus(podcast, candidate, [], false), /Udgivelserne kunne ikke hentes/u, `${label} is not shown`);
 }
 
-assert.match(detailSource, /\$\{getFriMadsArticlePreviewPlaceholder\(podcast\)\}/u,
-  "the list is mounted on the podcast profile, independently of the episode table");
-assert.ok(detailSource.indexOf("getFriMadsArticlePreviewPlaceholder") > detailSource.indexOf('class="podcast-detail-sheet__ratings"'),
-  "the list follows the existing profile ratings block");
-assert.match(detailSource, /hydrateFriMadsArticleMetadataPreview\(podcast, friMadsArticlePreviewTarget\)/u,
-  "the profile hydrates the static sidecar after rendering its own content");
-assert.doesNotMatch(overviewSource, /renderFriMadsArticleMetadataPreview|friMadsArticlePreviewItems/u,
-  "articles never enter the rateable episode overview");
+const matchingExistingEpisode = { external_guid: sidecar.items[0].canonicalUrl };
+const titleOnlyCollision = { title: sidecar.items[0].title, external_guid: "different-guid" };
+const withoutExactDuplicate = render(podcast, sidecar, [titleOnlyCollision]);
+assert.equal((withoutExactDuplicate.match(/data-fri-mads-release-id=/gu) || []).length, 5,
+  "title-only matching cannot suppress a distinct future podcast identity");
+const withExactDuplicate = render(podcast, sidecar, [matchingExistingEpisode]);
+assert.equal((withExactDuplicate.match(/data-fri-mads-release-id=/gu) || []).length, 4,
+  "an exact canonical URL already present as an episode is not shown twice");
+assert.doesNotMatch(withExactDuplicate, /Fri Mads #172: Alle elsker Mette/u);
+
+assert.match(detailSource, /isFriMadsMetadataPodcast\(podcast\)/u);
+assert.match(detailSource, /hasFriMadsPublications \? "Se afsnit"/u, "profile entry exposes a neutral episode-list action");
+assert.doesNotMatch(detailSource, /getFriMadsArticlePreviewPlaceholder|fri-mads-article-preview|hydrateFriMadsArticleMetadataPreview/u,
+  "there is no separate Fri Mads article section or eager sidecar hydration");
+assert.match(overviewContentSource, /renderFriMadsEpisodeOverview\(podcast, null, \[\], \{ loading: true \}\)/u,
+  "Fri Mads uses the existing episode workspace route and starts in a loading state");
+assert.match(overviewContentSource, /getFriMadsArticleSidecar\(\)/u, "sidecar is loaded on the same-origin profile flow");
 assert.match(fetchSource, /data\/fri-mads-articles\.json/u);
 assert.match(fetchSource, /sidecarUrl\.origin !== window\.location\.origin/u, "sidecar requests are same-origin only");
 assert.match(fetchSource, /credentials:\s*"same-origin"/u);
 assert.match(fetchSource, /redirect:\s*"error"/u);
 assert.match(rateabilitySource, /metadata\.rateable !== false/u, "the existing episode rating eligibility rule remains intact");
-assert.equal(JSON.stringify({ sidecar, catalog, fixture }), before, "rendering does not mutate sidecar, fixture, or catalogue data");
+assert.doesNotMatch(overviewSource, /FriMads|Fri Mads/u, "metadata publications never enter the normal rateable episode renderer");
+assert.deepEqual(catalog.rows.map((row) => ({ id: row["Podcast-ID"], catalogueId: row.catalogue_id })), originalRows);
+assert.equal(JSON.stringify({ sidecar, catalog, fixture }), before, "rendering does not mutate sidecar, fixture or catalogue data");
 
-const helperScript = `let friMadsArticleSidecarPromise = null;\n${escapeHtmlSource}\n${validationSource}\n${renderSource}\n${fetchSource}\n${hydrateSource}\nwindow.hydrateFriMadsPreviewForTest = hydrateFriMadsArticleMetadataPreview;`;
+const helperScript = `let friMadsArticleSidecarPromise = null; let friMadsArticleSidecarData = null;\n${escapeHtmlSource}\n${identitySource}\n${validationSource}\n${episodeIdentityFieldsSource}\n${duplicateSource}\n${renderSource}\n${fetchSource}
+window.loadFriMadsEpisodes = async (podcast, target) => {
+  target.innerHTML = renderFriMadsEpisodeOverview(podcast, null, [], { loading: true });
+  const data = await getFriMadsArticleSidecar();
+  if (target.isConnected) target.innerHTML = renderFriMadsEpisodeOverview(podcast, data, []);
+};
+document.querySelector('[data-podcast-episodes-open]').addEventListener('click', () => window.loadFriMadsEpisodes(${JSON.stringify(podcast)}, document.querySelector('[data-podcast-detail-content]')));`;
 let mode = "valid";
 let dataRequests = 0;
 const html = `<!doctype html><html lang="da"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><style>${siteCss}\n${mobileCss}\n${desktopCss}</style></head><body class="page-podcast">
-<main class="podcast-detail-sheet__content" data-podcast-detail-content style="box-sizing:border-box;width:100%;height:600px;max-height:80vh;overflow-y:auto;">
+<div id="podcastDetailSheet" class="is-episode-workspace"><main class="podcast-detail-sheet__content" data-podcast-detail-content style="box-sizing:border-box;width:100%;height:600px;max-height:80vh;overflow-y:auto;">
 <a class="podcast-detail-sheet__header-link" href="https://frihedsbrevet.dk/nyhedsbrev/fri-mads/" target="_blank" rel="noopener noreferrer">Fri Mads hos Frihedsbrevet</a>
 <h2>Fri Mads</h2><div class="podcast-detail-sheet__ratings">Vurderinger</div>
-<section class="fri-mads-article-preview" data-fri-mads-article-preview hidden aria-label="Fri Mads-artikler"></section></main>
-<script>${helperScript}\nwindow.hydrateFriMadsPreviewForTest(${JSON.stringify(podcast)},document.querySelector('[data-fri-mads-article-preview]'));</script></body></html>`;
+<button type="button" class="podcast-detail-sheet__episode-entry-button" data-podcast-episodes-open>Se afsnit</button></main></div>
+<script>${helperScript}</script></body></html>`;
 
 const server = createServer((request, response) => {
   const url = new URL(request.url, "http://127.0.0.1");
@@ -163,7 +186,7 @@ const address = server.address();
 const origin = `http://127.0.0.1:${address.port}`;
 const browser = await chromium.launch({ headless: true });
 try {
-  const context = await browser.newContext({ viewport: { width: 390, height: 600 }, hasTouch: true, isMobile: true });
+  const context = await browser.newContext({ viewport: { width: 390, height: 700 }, hasTouch: true, isMobile: true });
   const page = await context.newPage();
   const pageErrors = [];
   page.on("pageerror", (error) => pageErrors.push(error.message));
@@ -171,72 +194,122 @@ try {
     status: 200, contentType: "text/html", body: "<!doctype html><title>Official source link intercepted for test</title>"
   }));
   await page.goto(`${origin}/profile`, { waitUntil: "domcontentloaded" });
-  try {
-    await page.waitForSelector("[data-fri-mads-article-preview]:not([hidden])", { timeout: 5000 });
-  } catch {
-    assert.fail(`valid sidecar did not render; requests=${dataRequests}; pageErrors=${pageErrors.join(" | ") || "none"}; panel=${await page.locator("[data-fri-mads-article-preview]").evaluate((element) => element.outerHTML)}`);
-  }
-  assert.equal(dataRequests, 1, "the profile retrieves the same-origin static sidecar exactly once");
-  assert.equal(await page.locator(".fri-mads-article-preview__card").count(), 5);
-  assert.equal(await page.locator("audio, video, [data-episode-rating], [data-episode-overview-rating-id]").count(), 0);
+  assert.equal(await page.locator(".fri-mads-article-preview, [data-fri-mads-article-preview]").count(), 0,
+    "profile has no detached article block");
+  assert.equal(dataRequests, 0, "the sidecar loads only when the standard episode-list entry is activated");
+  await page.keyboard.press("Tab");
+  assert.equal(await page.evaluate(() => document.activeElement?.getAttribute("href")), "https://frihedsbrevet.dk/nyhedsbrev/fri-mads/",
+    "the official series link remains keyboard reachable on the profile");
+  await page.keyboard.press("Tab");
+  assert.equal(await page.evaluate(() => document.activeElement?.dataset.podcastEpisodesOpen), "",
+    "the episode-list action is keyboard reachable on the profile");
+  await page.keyboard.press("Enter");
+  await page.waitForSelector("[data-podcast-episode-overview] [data-fri-mads-release-id]", { timeout: 5000 });
+  assert.equal(dataRequests, 1, "the profile retrieves the same-origin sidecar once");
+  assert.equal(await page.locator(".podcast-detail-sheet__episode-overview").count(), 1);
+  assert.equal(await page.locator(".podcast-detail-sheet__episode-table--fri-mads-metadata tr[data-fri-mads-release-id]").count(), 5);
+  assert.equal(await page.locator("audio, video, [data-episode-rating], [data-episode-overview-rating-id], button[data-episode-overview-rating-id]").count(), 0);
+  assert.equal(await page.locator(".podcast-detail-sheet__episode-table th").count(), 2,
+    "metadata-only rows omit the episode rating columns");
 
   for (const width of [320, 375, 390, 768, 1280, 1440]) {
-    await page.setViewportSize({ width, height: width < 769 ? 600 : 900 });
+    await page.setViewportSize({ width, height: width < 769 ? 700 : 900 });
     const dimensions = await page.evaluate(() => ({
       viewport: document.documentElement.clientWidth,
       document: document.documentElement.scrollWidth,
       body: document.body.scrollWidth,
       pane: document.querySelector("[data-podcast-detail-content]").scrollWidth,
       paneClient: document.querySelector("[data-podcast-detail-content]").clientWidth,
-      headings: [...document.querySelectorAll(".fri-mads-article-preview__card h3")].every((element) => element.scrollWidth <= element.clientWidth + 1),
-      links: [...document.querySelectorAll(".fri-mads-article-preview__card a")].every((element) => element.scrollWidth <= element.clientWidth + 1)
+      titles: [...document.querySelectorAll(".podcast-detail-sheet__episode-table .episode-title")].every((element) => element.scrollWidth <= element.clientWidth + 1),
+      links: [...document.querySelectorAll(".podcast-detail-sheet__episode-table a")].every((element) => element.scrollWidth <= element.clientWidth + 1),
+      cardCount: document.querySelectorAll(".podcast-detail-sheet__episode-table tr[data-fri-mads-release-id]").length
     }));
-    assert.ok(dimensions.document <= dimensions.viewport, `${width}px has no horizontal document overflow: ${JSON.stringify(dimensions)}`);
-    assert.ok(dimensions.body <= dimensions.viewport, `${width}px has no horizontal body overflow: ${JSON.stringify(dimensions)}`);
+    assert.ok(dimensions.document <= dimensions.viewport, `${width}px document has no horizontal overflow: ${JSON.stringify(dimensions)}`);
+    assert.ok(dimensions.body <= dimensions.viewport, `${width}px body has no horizontal overflow: ${JSON.stringify(dimensions)}`);
     assert.ok(dimensions.pane <= dimensions.paneClient + 1, `${width}px profile pane has no horizontal overflow: ${JSON.stringify(dimensions)}`);
-    assert.equal(dimensions.headings, true, `${width}px article titles wrap within their cards`);
-    assert.equal(dimensions.links, true, `${width}px article links wrap within their cards`);
+    assert.equal(dimensions.titles, true, `${width}px episode titles wrap inside the existing cards`);
+    assert.equal(dimensions.links, true, `${width}px external links wrap inside the existing cards`);
+    assert.equal(dimensions.cardCount, 5, `${width}px renders all five verified releases`);
   }
 
-  await page.setViewportSize({ width: 390, height: 600 });
+  await page.setViewportSize({ width: 390, height: 700 });
   await page.keyboard.press("Tab");
-  assert.equal(await page.evaluate(() => document.activeElement?.getAttribute("href")), "https://frihedsbrevet.dk/nyhedsbrev/fri-mads/",
-    "the official series link remains keyboard reachable before article links");
   await page.keyboard.press("Tab");
-  const focus = await page.evaluate(() => ({
+  await page.waitForSelector(".podcast-detail-sheet__episode-table a", { timeout: 5000 });
+  await page.keyboard.press("Tab");
+  await page.keyboard.press("Tab");
+  const linkFocus = await page.evaluate(() => ({
     href: document.activeElement?.getAttribute("href"), outline: getComputedStyle(document.activeElement).outlineStyle
   }));
-  assert.match(focus.href || "", /^https:\/\/frihedsbrevet\.dk\/fri-mads-/u);
-  assert.notEqual(focus.outline, "none", "article link keyboard focus remains visible");
-  const pane = page.locator("[data-podcast-detail-content]");
-  await pane.evaluate((element) => element.scrollTo(0, element.scrollHeight));
-  assert.ok(await pane.evaluate((element) => element.scrollTop > 0), "the article list scrolls within the existing profile pane");
-  const firstLink = page.locator(".fri-mads-article-preview__card a").first();
+  assert.match(linkFocus.href || "", /^https:\/\/frihedsbrevet\.dk\/fri-mads-/u);
+  assert.notEqual(linkFocus.outline, "none", "the official release link retains visible keyboard focus");
+  const firstLink = page.locator(".podcast-detail-sheet__episode-table a").first();
   assert.equal(await firstLink.getAttribute("target"), "_blank");
+  assert.match(await firstLink.getAttribute("rel"), /noopener/u);
   const expectedUrl = await firstLink.getAttribute("href");
   const popupPromise = page.waitForEvent("popup");
   await firstLink.tap();
   const popup = await popupPromise;
   await popup.waitForLoadState("domcontentloaded");
-  assert.equal(popup.url(), expectedUrl, "touch activation opens the verified canonical article link");
+  assert.equal(popup.url(), expectedUrl, "touch activation opens the exact verified release permalink");
+  const pane = page.locator("[data-podcast-detail-content]");
+  await pane.evaluate((element) => element.scrollTo(0, element.scrollHeight));
+  assert.ok(await pane.evaluate((element) => element.scrollTop > 0), "the standard episode workspace scrolls on mobile");
   await context.close();
+
+  const desktopContext = await browser.newContext({ viewport: { width: 1280, height: 900 } });
+  const desktopPage = await desktopContext.newPage();
+  await desktopContext.route("https://frihedsbrevet.dk/**", (route) => route.fulfill({
+    status: 200, contentType: "text/html", body: "<!doctype html><title>Official source link intercepted for test</title>"
+  }));
+  await desktopPage.goto(`${origin}/desktop`, { waitUntil: "domcontentloaded" });
+  await desktopPage.locator("[data-podcast-episodes-open]").click();
+  await desktopPage.waitForSelector(".podcast-detail-sheet__episode-table a", { timeout: 5000 });
+  for (const width of [1280, 1440]) {
+    await desktopPage.setViewportSize({ width, height: 900 });
+    const desktopDimensions = await desktopPage.evaluate(() => ({
+      viewport: document.documentElement.clientWidth,
+      document: document.documentElement.scrollWidth,
+      body: document.body.scrollWidth
+    }));
+    assert.ok(desktopDimensions.document <= width && desktopDimensions.body <= width,
+      `${width}px desktop has no horizontal overflow: ${JSON.stringify(desktopDimensions)}`);
+  }
+  await desktopPage.keyboard.press("Tab");
+  await desktopPage.keyboard.press("Tab");
+  const desktopFocus = await desktopPage.evaluate(() => ({
+    href: document.activeElement?.getAttribute("href"),
+    outline: getComputedStyle(document.activeElement).outlineStyle
+  }));
+  assert.match(desktopFocus.href || "", /^https:\/\/frihedsbrevet\.dk\/fri-mads-/u);
+  assert.notEqual(desktopFocus.outline, "none", "desktop keyboard focus is visible on the source link");
+  const desktopLink = desktopPage.locator(".podcast-detail-sheet__episode-table a").first();
+  const desktopUrl = await desktopLink.getAttribute("href");
+  const desktopPopupPromise = desktopPage.waitForEvent("popup");
+  await desktopLink.click();
+  const desktopPopup = await desktopPopupPromise;
+  await desktopPopup.waitForLoadState("domcontentloaded");
+  assert.equal(desktopPopup.url(), desktopUrl, "desktop click opens the exact verified source permalink");
+  await desktopContext.close();
 
   for (const invalidMode of ["missing", "wrong-type", "invalid-json", "invalid-sidecar"]) {
     mode = invalidMode;
     const failClosedContext = await browser.newContext({ viewport: { width: 390, height: 844 } });
     const failClosedPage = await failClosedContext.newPage();
     await failClosedPage.goto(`${origin}/profile?mode=${invalidMode}`, { waitUntil: "domcontentloaded" });
-    await failClosedPage.waitForTimeout(50);
-    assert.equal(await failClosedPage.locator("[data-fri-mads-article-preview]:not([hidden])").count(), 0,
-      `${invalidMode} source hides the article list`);
-    assert.equal(await failClosedPage.locator('a[href="https://frihedsbrevet.dk/nyhedsbrev/fri-mads/"]').count(), 1,
-      `${invalidMode} source preserves the official series link`);
+    await failClosedPage.locator("[data-podcast-episodes-open]").click();
+    await failClosedPage.waitForSelector("text=Udgivelserne kunne ikke hentes", { timeout: 5000 });
+    assert.equal(await failClosedPage.locator("[data-fri-mads-release-id]").count(), 0, `${invalidMode} source hides unverified releases`);
+    const fallbackLink = failClosedPage.locator('a[href="https://frihedsbrevet.dk/nyhedsbrev/fri-mads/"]');
+    assert.equal(await fallbackLink.count(), 1, `${invalidMode} source preserves the official series link`);
+    assert.equal(await fallbackLink.textContent(), "Fri Mads hos Frihedsbrevet");
     await failClosedContext.close();
   }
+  assert.deepEqual(pageErrors, [], `browser harness has no page errors: ${pageErrors.join(" | ")}`);
 } finally {
   await browser.close();
   await new Promise((resolve, reject) => server.close((error) => error ? reject(error) : resolve()));
 }
 
-assert.equal(JSON.stringify({ sidecar, catalog, fixture }), before, "the UI preview performs no source, catalogue, or fixture mutation");
-console.log("Fri Mads sidecar profile view, access lock, same-origin loading, fail-closed, identity and responsive browser checks passed.");
+assert.equal(JSON.stringify({ sidecar, catalog, fixture }), before, "the UI view performs no source, catalogue, episode or rating mutation");
+console.log("Fri Mads episode-list rendering, paid access, identity, duplicate suppression, no-rating behavior, same-origin loading and 320–1440px interaction checks passed.");
