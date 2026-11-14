@@ -2,6 +2,14 @@ import { fileURLToPath } from "node:url";
 
 const TWO_HOURS_MS = 2 * 60 * 60 * 1000;
 
+export function mergeCatalogueRunHistory(recentRuns, scheduledRuns) {
+  const runsById = new Map();
+  for (const run of [...(recentRuns || []), ...(scheduledRuns || [])]) {
+    runsById.set(run.id, run);
+  }
+  return [...runsById.values()];
+}
+
 export function evaluateCataloguePipeline({ runs, pullRequests, now = Date.now(), staleAfterMs = TWO_HOURS_MS }) {
   const errors = [];
   const newestFirst = [...(runs || [])].sort((a, b) => Date.parse(b.created_at) - Date.parse(a.created_at));
@@ -50,11 +58,13 @@ async function githubJson(path) {
 }
 
 async function main() {
-  const [runData, pulls] = await Promise.all([
+  const [runData, scheduledRunData, pulls] = await Promise.all([
     githubJson("actions/workflows/sync-sheet-data.yml/runs?per_page=10"),
+    githubJson("actions/workflows/sync-sheet-data.yml/runs?event=schedule&per_page=10"),
     githubJson(`pulls?state=open&base=main&head=${encodeURIComponent(`${process.env.GITHUB_REPOSITORY.split("/")[0]}:automation/catalogue-sync`)}&per_page=100`)
   ]);
-  const result = evaluateCataloguePipeline({ runs: runData.workflow_runs, pullRequests: pulls });
+  const runs = mergeCatalogueRunHistory(runData.workflow_runs, scheduledRunData.workflow_runs);
+  const result = evaluateCataloguePipeline({ runs, pullRequests: pulls });
   if (!result.ok) {
     console.error(`CRITICAL CATALOGUE PIPELINE FAILURE\n- ${result.errors.join("\n- ")}`);
     process.exitCode = 1;

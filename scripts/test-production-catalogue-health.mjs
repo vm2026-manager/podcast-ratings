@@ -159,6 +159,10 @@ assert.match(
 );
 assert.match(workflow, /Alert on production catalogue failure/u);
 assert.match(workflow, /Resolve production catalogue alert/u);
+assert.match(workflow, /Summarize catalogue health areas\r?\n        if: always\(\)/u);
+assert.match(workflow, /SHEET_SOURCE_OUTCOME: \$\{\{ steps\.sheet-source-check\.outcome \}\}/u);
+assert.match(workflow, /PIPELINE_WATCH_OUTCOME: \$\{\{ steps\.pipeline-watch\.outcome \}\}/u);
+assert.match(workflow, /PRODUCTION_CATALOGUE_OUTCOME: \$\{\{ steps\.health-check\.outcome \}\}/u);
 
 assert.equal(PRODUCTION_CATALOGUE_ALERT_TITLE, "Catalogue sync blocked: unattended publication");
 const excerpt = productionHealthExcerpt(
@@ -167,6 +171,10 @@ const excerpt = productionHealthExcerpt(
 assert.match(excerpt, /CRITICAL PRODUCTION CATALOGUE HEALTH FAILURE/u);
 assert.match(excerpt, /catalogue row count 0/u);
 assert.doesNotMatch(excerpt, /secret=x/u);
+const scheduledExcerpt = productionHealthExcerpt(
+  "CRITICAL CATALOGUE PIPELINE FAILURE\n- No scheduled catalogue sync run has started for 262 minutes; the scheduled Sheet import may be stalled"
+);
+assert.match(scheduledExcerpt, /No scheduled catalogue sync run has started for 262 minutes/u);
 
 const alertCalls = [];
 const existingSyncAlert = {
@@ -190,13 +198,18 @@ await updateProductionCatalogueAlert({
   context: { repo: { owner: "owner", repo: "repo" }, serverUrl: "https://github.com", runId: 42, sha: "abc123" },
   core: { error() {} },
   outcome: "failure",
-  readLog: async () => "Error: CRITICAL CATALOGUE PIPELINE FAILURE\n- Google Sheet changes are not present in main: data/podcasts.json",
+  checks: { sheetSource: "success", pipelineWatch: "failure", productionCatalogue: "success" },
+  readLog: async () => "Error: CRITICAL CATALOGUE PIPELINE FAILURE\n- No scheduled catalogue sync run has started for 262 minutes: https://github.com/example/repo/actions/runs/19",
   now: () => "2026-10-22T10:00:00.000Z"
 });
 assert.deepEqual(alertCalls.map(([name]) => name), ["update"], "health monitoring updates the one shared sync issue instead of creating a second issue or adding repeated comments");
 assert.equal(alertCalls[0][1].issue_number, 289);
 assert.equal(alertCalls[0][1].title, undefined, "the existing shared issue keeps its deduplicated title");
-assert.equal(alertCalls[0][1].body.includes("Google Sheet changes"), true);
+assert.equal(alertCalls[0][1].body.includes("Google Sheets-afstemning: PASS"), true);
+assert.equal(alertCalls[0][1].body.includes("produktionskatalog og hjemmeside: PASS"), true);
+assert.equal(alertCalls[0][1].body.includes("Planlagte syncs og ventende katalog-PR'er: FAIL"), true);
+assert.equal(alertCalls[0][1].body.includes("does not mean the production catalogue or Google Sheets comparison failed"), true);
+assert.equal(alertCalls[0][1].body.includes("No scheduled catalogue sync run has started for 262 minutes"), true);
 assert.equal(alertCalls[0][1].body.includes("CATALOGUE_SYNC_PR_TOKEN is missing"), true, "health updates preserve the token setup instructions");
 
 const successCalls = [];

@@ -72,10 +72,30 @@ jobs:
       - name: Alert on production catalogue failure
         if: failure() && (steps.sheet-source-check.outcome == 'failure' || steps.pipeline-watch.outcome == 'failure' || steps.health-check.outcome == 'failure')
         uses: actions/github-script@v7
+        env:
+          SHEET_SOURCE_OUTCOME: ${{ steps.sheet-source-check.outcome }}
+          PIPELINE_WATCH_OUTCOME: ${{ steps.pipeline-watch.outcome }}
+          PRODUCTION_CATALOGUE_OUTCOME: ${{ steps.health-check.outcome }}
         with:
           script: |
             const { updateProductionCatalogueAlert } = await import(`${process.env.GITHUB_WORKSPACE}/scripts/production-catalogue-alert.mjs`);
-            await updateProductionCatalogueAlert({ github, context, core, outcome: "failure" });
+            await updateProductionCatalogueAlert({
+              github, context, core, outcome: "failure",
+              checks: {
+                sheetSource: process.env.SHEET_SOURCE_OUTCOME,
+                pipelineWatch: process.env.PIPELINE_WATCH_OUTCOME,
+                productionCatalogue: process.env.PRODUCTION_CATALOGUE_OUTCOME
+              }
+            });
+
+      - name: Summarize catalogue health areas
+        if: always()
+        env:
+          SHEET_SOURCE_OUTCOME: ${{ steps.sheet-source-check.outcome }}
+          PIPELINE_WATCH_OUTCOME: ${{ steps.pipeline-watch.outcome }}
+          PRODUCTION_CATALOGUE_OUTCOME: ${{ steps.health-check.outcome }}
+          GITHUB_STEP_SUMMARY: ${{ github.step_summary }}
+        run: node scripts/catalogue-health-report.mjs
 
       - name: Resolve production catalogue alert
         if: github.event_name == 'workflow_dispatch' && inputs.resolve_incident == true && success() && steps.sheet-source-check.outcome == 'success' && steps.pipeline-watch.outcome == 'success' && steps.health-check.outcome == 'success' && steps.health-check.outputs.pendingDeployment != 'true'

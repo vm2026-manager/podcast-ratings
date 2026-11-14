@@ -1,4 +1,5 @@
 import { readFile } from "node:fs/promises";
+import { formatCatalogueHealthReport } from "./catalogue-health-report.mjs";
 
 // Share the same open issue with the Sheet sync workflow so one stalled
 // publication cannot fan out into separate, competing alerts.
@@ -17,7 +18,7 @@ export function productionHealthExcerpt(log) {
     .split(/\r?\n/u)
     .filter((line) =>
       /^(?:Error: )?CRITICAL (?:PRODUCTION CATALOGUE HEALTH|CATALOGUE PIPELINE) FAILURE\b/u.test(line) ||
-      /^- (?:catalogue row count |blank Podcast-ID |duplicate Podcast-ID |podcast-display-groups\.json |production app\.js |production data\/|Google Sheet changes |Changed Podcast-ID|The scheduled catalogue sync|No catalogue sync run|Latest catalogue sync run|Catalogue PR #|https:\/\/podcastlisten\.dk\/)/u.test(line)
+      /^- (?:catalogue row count |blank Podcast-ID |duplicate Podcast-ID |podcast-display-groups\.json |production app\.js |production data\/|Google Sheet changes |Changed Podcast-ID|The scheduled catalogue sync|No (?:scheduled )?catalogue sync run|Latest (?:scheduled |non-scheduled )?catalogue sync run|Catalogue PR #|https:\/\/podcastlisten\.dk\/)/u.test(line)
     );
 
   return (relevant.slice(-80).join("\n") || "No recognized production catalogue diagnostic was captured.")
@@ -31,6 +32,7 @@ export async function updateProductionCatalogueAlert({
   context,
   core,
   outcome,
+  checks,
   resolveIncident = false,
   readLog = () => readFile(".production-catalogue-health.log", "utf8"),
   now = () => new Date().toISOString()
@@ -50,11 +52,12 @@ export async function updateProductionCatalogueAlert({
   );
 
   if (outcome === "failure") {
-    core.error("Production catalogue health check FAILED. Production may show an empty or stale catalogue.");
+    core.error("Catalogue health reported a failure; inspect the independent check results below.");
     const log = await readLog().catch(() => "");
-    const body = `## Production catalogue health check FAILED
+    const checkReport = checks ? `${formatCatalogueHealthReport(checks)}\n\n` : "";
+    const body = `## Catalogue health monitoring reported a failure
 
-The production catalogue could not be fetched or did not pass the minimum integrity checks after retries. Deployment/catalogue changes must not be treated as healthy until this alert recovers.
+${checkReport}The workflow fails if a required check fails. A pipeline-freshness failure alone does not mean the production catalogue or Google Sheets comparison failed.
 
 This check does **not** delete or modify ratings, profiles, authentication data, or other user data.
 

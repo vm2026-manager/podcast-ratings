@@ -1,8 +1,9 @@
 import assert from "node:assert/strict";
-import { evaluateCataloguePipeline } from "./catalogue-pipeline-watch.mjs";
+import { evaluateCataloguePipeline, mergeCatalogueRunHistory } from "./catalogue-pipeline-watch.mjs";
 
 const now = Date.parse("2026-10-22T18:00:00Z");
 const recentScheduledSuccess = {
+  id: 19,
   run_number: 19,
   event: "schedule",
   created_at: "2026-10-22T17:30:00Z",
@@ -11,6 +12,7 @@ const recentScheduledSuccess = {
   html_url: "https://github.com/example/repo/actions/runs/19"
 };
 const recentDispatchSuccess = {
+  id: 20,
   run_number: 20,
   event: "workflow_dispatch",
   created_at: "2026-10-22T17:55:00Z",
@@ -40,6 +42,19 @@ const staleScheduleCannotBeHiddenByDispatch = evaluateCataloguePipeline({
 });
 assert.equal(staleScheduleCannotBeHiddenByDispatch.ok, false);
 assert.match(staleScheduleCannotBeHiddenByDispatch.errors.join("\n"), /No scheduled catalogue sync run has started for 150 minutes/u);
+
+const scheduledRunOutsideRecentMixedPage = { ...recentScheduledSuccess, id: 10, created_at: "2026-10-22T15:30:00Z" };
+const manyRecentManualRuns = Array.from({ length: 12 }, (_, index) => ({
+  ...recentDispatchSuccess,
+  id: 100 + index,
+  run_number: 100 + index,
+  created_at: new Date(Date.parse("2026-10-22T17:50:00Z") + index * 1000).toISOString()
+}));
+const mergedHistory = mergeCatalogueRunHistory(manyRecentManualRuns, [scheduledRunOutsideRecentMixedPage]);
+assert.equal(mergedHistory.length, 13, "the scheduled-only API page supplements a busy mixed-event page");
+const staleScheduleOutsideMixedPage = evaluateCataloguePipeline({ runs: mergedHistory, pullRequests: [], now });
+assert.equal(staleScheduleOutsideMixedPage.ok, false);
+assert.match(staleScheduleOutsideMixedPage.errors.join("\n"), /No scheduled catalogue sync run has started for 150 minutes/u);
 
 const staleScheduledFailure = evaluateCataloguePipeline({
   runs: [{ ...recentScheduledSuccess, created_at: "2026-10-22T15:30:00Z", conclusion: "failure" }],
