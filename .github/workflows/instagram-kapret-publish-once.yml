@@ -1,0 +1,88 @@
+name: Instagram Kapret one-shot
+
+"on":
+  workflow_dispatch:
+    inputs:
+      action:
+        description: Run the read-only check first; publish is one-time and immediate.
+        type: choice
+        options: [dry-run, publish]
+        default: dry-run
+        required: true
+      publish_acknowledgement:
+        description: "Required for publish: I_APPROVE_ONE_KAPRET_SHARE_NOW"
+        type: string
+        required: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: instagram-kapret-share-now
+  cancel-in-progress: false
+
+jobs:
+  kapret:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-24.04
+    env:
+      BUFFER_API_KEY: ${{ secrets.BUFFER_API_KEY }}
+      KAPRET_PUBLISH_ACTION: ${{ inputs.action }}
+      KAPRET_PUBLISH_ACK: ${{ inputs.publish_acknowledgement }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+
+      - name: Check secret and exact publish acknowledgement
+        if: inputs.action == 'publish'
+        shell: bash
+        run: |
+          test -n "$BUFFER_API_KEY"
+          test "$KAPRET_PUBLISH_ACK" = "I_APPROVE_ONE_KAPRET_SHARE_NOW"
+
+      - name: Restore the immutable one-shot lock
+        id: one-shot-lock
+        if: inputs.action == 'publish'
+        uses: actions/cache/restore@v4
+        with:
+          path: .kapret-one-shot/attempt.json
+          key: kapret-share-now-${{ github.repository_id }}
+
+      - name: Refuse a second shareNow attempt
+        if: inputs.action == 'publish'
+        env:
+          LOCK_HIT: ${{ steps.one-shot-lock.outputs.cache-hit }}
+        shell: bash
+        run: |
+          if [ "$LOCK_HIT" = "true" ]; then
+            echo "A shareNow attempt was already reserved. Inspect Buffer; never retry automatically." >&2
+            exit 1
+          fi
+
+      - name: Run read-only dry-run or immediate preflight
+        env:
+          KAPRET_PUBLISH_ACTION: ${{ inputs.action == 'publish' && 'preflight' || 'dry-run' }}
+        run: node scripts/publish-kapret-once.mjs
+
+      - name: Reserve the only shareNow attempt before mutation
+        if: inputs.action == 'publish'
+        shell: bash
+        run: |
+          mkdir -p .kapret-one-shot
+          printf '{"purpose":"one Kapret shareNow attempt","runId":"%s","sha":"%s"}\n' "$GITHUB_RUN_ID" "$GITHUB_SHA" > .kapret-one-shot/attempt.json
+
+      - name: Persist the one-shot lock
+        if: inputs.action == 'publish'
+        uses: actions/cache/save@v4
+        with:
+          path: .kapret-one-shot/attempt.json
+          key: kapret-share-now-${{ github.repository_id }}
+
+      - name: Create exactly one Buffer shareNow post
+        if: inputs.action == 'publish'
+        env:
+          KAPRET_PUBLISH_ACTION: publish
+        run: node scripts/publish-kapret-once.mjs
