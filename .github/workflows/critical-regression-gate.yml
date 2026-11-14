@@ -11,6 +11,60 @@ on:
       - automation/catalogue-sync
 
 jobs:
+  episode-monitor-postgres-integration:
+    name: Episode Monitor PostgreSQL 17 and PostgREST
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_DB: episode_monitor_test
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d episode_monitor_test"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 20
+    env:
+      EPISODE_MONITOR_DATABASE_URL: postgresql://postgres@127.0.0.1:5432/episode_monitor_test
+      EPISODE_MONITOR_TEST_DB_PASSWORD: postgres
+      EPISODE_MONITOR_TEST_JWT_SECRET: episode-monitor-ci-only-secret-0123456789abcdef0123456789abcdef
+      EPISODE_MONITOR_POSTGREST_URL: http://127.0.0.1:3000
+      EPISODE_MONITOR_PGRST_DATABASE_URL: postgresql://authenticator:episode-monitor-ci-db-password@127.0.0.1:5432/episode_monitor_test
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - name: Test optional alarm state, deduplication and recovery logic
+        run: |
+          node scripts/test-episode-import-status-monitor.mjs
+          node scripts/test-episode-import-monitor-migration-static.mjs
+      - name: Install PostgreSQL client for the ephemeral service
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes postgresql-client
+      - name: Apply the draft migration and seed synthetic data in PostgreSQL 17
+        run: node scripts/test-episode-import-monitor-postgres.mjs --prepare-only
+      - name: Start isolated PostgREST with test-only JWT key
+        run: |
+          docker run --detach --rm --network host --name episode-monitor-postgrest \
+            --env PGRST_DB_URI="$EPISODE_MONITOR_PGRST_DATABASE_URL" \
+            --env PGRST_DB_SCHEMAS=public \
+            --env PGRST_DB_ANON_ROLE=anon \
+            --env PGRST_JWT_SECRET="$EPISODE_MONITOR_TEST_JWT_SECRET" \
+            --env PGRST_DB_USE_LEGACY_GUCS=false \
+            postgrest/postgrest:v12.2.3
+      - name: Test PostgreSQL grants, RLS, PostgREST JWT and indexed query budget
+        run: node scripts/test-episode-import-monitor-postgres.mjs --skip-prepare
+      - name: Stop the ephemeral PostgREST container
+        if: always()
+        run: docker stop episode-monitor-postgrest || true
+
   critical-regression-gate:
     name: Critical Regression Gate
     runs-on: ubuntu-24.04

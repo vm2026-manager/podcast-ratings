@@ -30,6 +30,8 @@ const checks = [
   ["Fri Mads metadata-only discovery and exact URL identity", ["scripts/test-fri-mads-discovery.mjs"]],
   ["Dobbeltliv and 112 For Parforhold exact-source imports", ["--experimental-strip-types", "scripts/test-dobbeltliv-112-for-parforhold-import.mjs"]],
   ["Bounded production episode post-import monitoring", ["--experimental-strip-types", "scripts/test-episode-feed-post-import.mjs"]],
+  ["Protected episode import status alarms, deduplication and recovery", ["scripts/test-episode-import-status-monitor.mjs"]],
+  ["Protected episode monitor migration security contract", ["scripts/test-episode-import-monitor-migration-static.mjs"]],
   ["Sig noget klogt bounded RSS identity and single-episode visibility", ["--experimental-strip-types", "scripts/test-sig-noget-klogt-feed-boundary.mjs"]],
   ["sheet access source isolation", ["scripts/test-sync-sheet-access.mjs"]],
   ["Flashback parent identity preservation", ["scripts/test-flashback-parent-preservation.mjs"]],

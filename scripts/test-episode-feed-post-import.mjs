@@ -1,9 +1,12 @@
 import assert from "node:assert/strict";
+import { createHash } from "node:crypto";
 import { readFile } from "node:fs/promises";
 import { APPROVED_SHEET_FEED_BASELINE } from "../supabase/functions/import-podcast-episodes/sheet-feed-approval-baseline.ts";
 import {
   classifyCandidate, countActiveEpisodes, diffFeedCandidates, extractChangedConfigPodcastKeys,
-  monitorEpisodeFeedDelta, renderProductionMonitorComment, MAX_EPISODES_PER_RUN
+  getPendingQueueHealth, monitorEpisodeFeedDelta, parsePostImportState, renderProductionMonitorComment,
+  serializePostImportState, MAX_EPISODES_PER_RUN,
+  PENDING_QUEUE_WARNING_THRESHOLD, PENDING_QUEUE_CAPACITY
 } from "./episode-feed-post-import.mjs";
 
 const [podcastKey, feed] = APPROVED_SHEET_FEED_BASELINE[0];
@@ -103,10 +106,21 @@ const recoveredReport = await monitorEpisodeFeedDelta({ candidates: [], pending:
 fetchImpl: recovered.fetch, now: () => fixedNow });
 assert.equal(recoveredReport.candidates[0].status, "post_change_episodes_observed", "pending zero recovers when usable post-change episodes appear");
 
+const collisionCalls = { count: 0 };
+const collisionPending = await monitorEpisodeFeedDelta({ candidates: [candidate],
+  payload: { rows: [row, { ...row, Titel: "duplicate exact ID" }] }, baseUrl: "https://db.example", anonKey: "anon",
+  fetchImpl: async () => { collisionCalls.count++; throw new Error("identity collision must never query the API"); },
+  now: () => fixedNow });
+assert.equal(collisionPending.candidates[0].status, "identity_collision");
+assert.equal(collisionPending.api_request_count, 0);
+assert.equal(collisionCalls.count, 0, "identity collisions stay out of the pending production-query queue");
+
 const repeatedFailure = await monitorEpisodeFeedDelta({ candidates: [], pending: [{ ...candidate, status: "api_error",
-  last_checked_at: "2026-11-03T10:00:00.000Z" }], payload, baseUrl: "https://db.example", anonKey: "anon",
+  last_checked_at: "2026-11-01T10:00:00.000Z" }], payload, baseUrl: "https://db.example", anonKey: "anon",
   fetchImpl: fetchWith(response(500, null)).fetch, now: () => fixedNow });
 assert.equal(repeatedFailure.candidates[0].status, "api_error");
+assert.ok(repeatedFailure.pending.some(item => item.podcast_key === podcastKey),
+  "API failures remain queued beyond the 36-hour episode alarm grace until rechecked");
 const notYetDue = await monitorEpisodeFeedDelta({ candidates: [], pending: [{ ...candidate, status: "api_error",
   last_checked_at: "2026-11-04T01:00:00.000Z" }], payload, baseUrl: "https://db.example", anonKey: "anon",
   fetchImpl: noCalls.fetch, now: () => fixedNow });
@@ -119,5 +133,104 @@ assert.equal(bounded.api_request_count, 0, "IDs absent from exact catalogue scop
 assert.equal(bounded.candidate_count, MAX_EPISODES_PER_RUN + 3);
 assert.equal(bounded.scope_limit_exceeded, true);
 assert.match(renderProductionMonitorComment(positiveReport), /ikke synlige med anon-adgang/u);
+
+const backlogIds = Array.from({ length: 31 }, (_, index) => `queue-test-${String(index).padStart(2, "0")}`);
+const backlogPayload = { rows: backlogIds.map(id => ({ "Podcast-ID": id, Titel: id,
+  Feed: `https://example.test/${id}.xml` })) };
+const backlogCandidates = backlogPayload.rows.map(item => ({ podcast_key: item["Podcast-ID"], title: item.Titel,
+  feed: item.Feed, change_type: "catalogue_feed_added", observed_at: fixedNow.toISOString() }));
+const backlogConfigs = Object.fromEntries(backlogIds.map(id => [id, { podcast_key: id,
+  source: `synthetic-${id}`, feed_url: `https://example.test/${id}.xml`, enabled: true }]));
+let backlogPending = [];
+const backlogDailyReports = [];
+for (let day = 0; day < 4; day++) {
+  const dayNow = new Date(fixedNow.getTime() + day * 24 * 60 * 60 * 1000);
+  let requests = 0;
+  const checkedIds = new Set();
+  const daily = await monitorEpisodeFeedDelta({
+    candidates: day === 0 ? backlogCandidates : [],
+    pending: backlogPending,
+    payload: backlogPayload,
+    staticConfigs: backlogConfigs,
+    baseUrl: "https://db.example",
+    anonKey: "anon",
+    now: () => dayNow,
+    fetchImpl: async url => {
+      requests++;
+      checkedIds.add(new URL(url).searchParams.get("podcast_key")?.replace(/^eq\./u, ""));
+      return response(200, "*/0");
+    }
+  });
+  assert.ok(daily.api_request_count <= 20, `day ${day + 1} exceeded the 20-HEAD-call budget`);
+  assert.ok(checkedIds.size <= 10,
+    `day ${day + 1} checked more than 10 Podcast-IDs`);
+  backlogPending = daily.pending;
+  backlogDailyReports.push({ daily, requests, checkedIds: [...checkedIds] });
+}
+assert.equal(backlogDailyReports[0].daily.pending.length, 31, "the initial 31-ID backlog is retained");
+assert.equal(backlogDailyReports[2].daily.pending.length, 31,
+  "all 31 exact IDs must remain queued after the third daily run");
+assert.equal(backlogDailyReports[3].daily.pending.length, 31,
+  "the fourth run must still see every delayed exact ID after the change delta expires");
+assert.ok(backlogDailyReports.slice(0, 3).some(({ daily }) => daily.pending.some(item =>
+  item.status === "deferred_by_daily_budget")), "the reproduction must exercise deferred_by_daily_budget");
+assert.ok(backlogDailyReports.every(({ requests }) => requests <= 20), "daily queue must preserve the request budget");
+assert.deepEqual(new Set(backlogDailyReports.flatMap(({ checkedIds }) => checkedIds)), new Set(backlogIds),
+  "31 simultaneous approved changes are all checked within four daily runs");
+assert.ok(backlogDailyReports.every(({ checkedIds }) => checkedIds.length <= MAX_EPISODES_PER_RUN),
+  "the queue never checks more than ten exact IDs per daily run");
+assert.ok(backlogDailyReports[0].daily.backlog_warning, "large pending queue is explicitly flagged on day one");
+assert.match(renderProductionMonitorComment(backlogDailyReports[0].daily), /Backlog-advarsel/u);
+assert.equal(PENDING_QUEUE_WARNING_THRESHOLD, 20);
+assert.equal(PENDING_QUEUE_CAPACITY, 400);
+
+const overCapacityPending = Array.from({ length: PENDING_QUEUE_CAPACITY + 1 }, (_, index) => ({
+  ...backlogDailyReports[0].daily.pending[index % backlogDailyReports[0].daily.pending.length],
+  podcast_key: `capacity-${index}`,
+  feed: `https://example.test/${createHash("sha256").update(String(index)).digest("hex")}.xml`
+}));
+const capacityHealth = getPendingQueueHealth(overCapacityPending);
+assert.equal(capacityHealth.backlog_count, PENDING_QUEUE_CAPACITY + 1);
+assert.equal(capacityHealth.queue_capacity_exceeded, true, "capacity crossing is an explicit owner-review condition");
+assert.equal(overCapacityPending.length, PENDING_QUEUE_CAPACITY + 1,
+  "crossing the warning capacity never discards exact IDs from durable state");
+assert.ok(serializePostImportState({ pending: overCapacityPending }).startsWith("zlib-base64:"),
+  "the synthetic over-capacity payload exercises compressed state storage");
+const overCapacityComment = renderProductionMonitorComment({ ...backlogDailyReports[0].daily, ...capacityHealth,
+  pending: overCapacityPending });
+assert.match(overCapacityComment, /Køkapaciteten er overskredet/u);
+assert.ok(Buffer.byteLength(overCapacityComment, "utf8") < 65_536,
+  "bounded GitHub comment state stays below the issue-comment payload limit at queue capacity");
+const compressedStateMatch = overCapacityComment.match(/<!-- episode-feed-post-import-state-begin -->([\s\S]*?)<!-- episode-feed-post-import-state-end -->/u);
+const compressedState = compressedStateMatch?.[1].trim();
+assert.ok(compressedState?.startsWith("zlib-base64:"), "large durable state is compressed before GitHub comment storage");
+assert.deepEqual(parsePostImportState(compressedStateMatch[1]), JSON.parse(JSON.stringify({ pending: overCapacityPending })),
+  "compressed GitHub queue state round-trips every exact deferred Podcast-ID");
+assert.deepEqual(parsePostImportState(JSON.stringify({ pending: [{ podcast_key: "legacy-state" }] })),
+  { pending: [{ podcast_key: "legacy-state" }] }, "legacy plain JSON state remains readable");
+assert.ok(serializePostImportState({ pending: overCapacityPending }).startsWith("zlib-base64:"));
+
+let recoveryPending = backlogPending;
+let recoveryReports = [];
+for (let day = 4; day < 10; day++) {
+  const dayNow = new Date(fixedNow.getTime() + day * 24 * 60 * 60 * 1000);
+  const checkedIds = new Set();
+  const recovered = await monitorEpisodeFeedDelta({ candidates: [], pending: recoveryPending,
+    payload: backlogPayload, staticConfigs: backlogConfigs, baseUrl: "https://db.example", anonKey: "anon",
+    now: () => dayNow,
+    fetchImpl: async url => {
+      const parsed = new URL(url);
+      checkedIds.add(parsed.searchParams.get("podcast_key")?.replace(/^eq\./u, ""));
+      return parsed.searchParams.has("imported_at") ? response(200, "0-0/1") : response(200, "0-0/2");
+    } });
+  assert.ok(recovered.api_request_count <= 20, `recovery day ${day + 1} exceeded the 20-HEAD-call budget`);
+  assert.ok(checkedIds.size <= 10,
+    `recovery day ${day + 1} exceeded the ten-ID work budget`);
+  recoveryPending = recovered.pending;
+  recoveryReports.push(recovered);
+}
+assert.ok(recoveryReports.some(report => report.backlog_count < 31),
+  "verified post-change episodes drain the durable queue after the separate 36-hour handoff window");
+assert.equal(recoveryReports.at(-1).backlog_count, 0, "the queue recovers to empty once every source verifies usable new episodes");
 
 console.log("Bounded production post-import monitor regression: PASS");

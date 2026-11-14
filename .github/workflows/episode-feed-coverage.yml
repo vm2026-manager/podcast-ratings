@@ -183,20 +183,35 @@ jobs:
         uses: actions/github-script@v7
         env:
           STATE_FILE: ${{ runner.temp }}/episode-feed-pending.json
+          IMPORT_STATE_FILE: ${{ runner.temp }}/episode-import-status-state.json
         with:
           script: |
             const fs = require("node:fs");
+            const zlib = require("node:zlib");
+            const parseState = value => {
+              const serialized = String(value || "").trim();
+              if (serialized.startsWith("zlib-base64:")) return JSON.parse(zlib.inflateRawSync(Buffer.from(serialized.slice(12), "base64")).toString("utf8"));
+              return JSON.parse(serialized);
+            };
             const comments = await github.paginate(github.rest.issues.listComments, {
               ...context.repo, issue_number: 256, per_page: 100
             });
             const stateComment = comments.find(x => String(x.body || "").includes("<!-- episode-feed-post-import-state-begin -->"));
             const match = String(stateComment?.body || "").match(/<!-- episode-feed-post-import-state-begin -->([\s\S]*?)<!-- episode-feed-post-import-state-end -->/);
-            let pending = [];
+            let state = { pending: [], import_alarms: [], import_recoveries: [], import_access_status: null };
             if (match) {
-              try { pending = JSON.parse(match[1]).pending || []; }
-              catch { core.warning("Ignoring malformed #256 monitor state; production queries remain change-scoped."); }
+              try {
+                const parsed = parseState(match[1]);
+                state = {
+                  pending: Array.isArray(parsed.pending) ? parsed.pending : [],
+                  import_alarms: Array.isArray(parsed.import_alarms) ? parsed.import_alarms : [],
+                  import_recoveries: Array.isArray(parsed.import_recoveries) ? parsed.import_recoveries : [],
+                  import_access_status: typeof parsed.import_access_status === "string" ? parsed.import_access_status : null
+                };
+              } catch { core.warning("Ignoring malformed #256 monitor state; production queries remain change-scoped."); }
             }
-            fs.writeFileSync(process.env.STATE_FILE, JSON.stringify(pending));
+            fs.writeFileSync(process.env.STATE_FILE, JSON.stringify(state.pending));
+            fs.writeFileSync(process.env.IMPORT_STATE_FILE, JSON.stringify(state));
       - name: Test and run bounded production episode checks
         env:
           PODCAST_SUPABASE_URL: ${{ vars.PODCAST_SUPABASE_URL }}
@@ -270,6 +285,16 @@ jobs:
         with:
           script: |
             const fs = require("node:fs");
+            const zlib = require("node:zlib");
+            const parseState = value => {
+              const serialized = String(value || "").trim();
+              if (serialized.startsWith("zlib-base64:")) return JSON.parse(zlib.inflateRawSync(Buffer.from(serialized.slice(12), "base64")).toString("utf8"));
+              return JSON.parse(serialized);
+            };
+            const serializeState = state => {
+              const json = JSON.stringify(state);
+              return Buffer.byteLength(json, "utf8") <= 12000 ? json : "zlib-base64:" + zlib.deflateRawSync(Buffer.from(json, "utf8")).toString("base64");
+            };
             const report = JSON.parse(fs.readFileSync(process.env.REPORT_FILE, "utf8"));
             const comments = await github.paginate(github.rest.issues.listComments, {
               ...context.repo, issue_number: 256, per_page: 100
@@ -277,7 +302,19 @@ jobs:
             const marker = "<!-- episode-feed-post-import-state -->";
             const existing = comments.find(x => String(x.body || "").includes(marker));
             const runUrl = context.serverUrl + "/" + context.repo.owner + "/" + context.repo.repo + "/actions/runs/" + context.runId;
-            const body = report.comment_body + "\n\nKontrolkørsel: " + runUrl +
+            let priorState = {};
+            const priorMatch = String(existing?.body || "").match(/<!-- episode-feed-post-import-state-begin -->([\s\S]*?)<!-- episode-feed-post-import-state-end -->/);
+            if (priorMatch) { try { priorState = parseState(priorMatch[1]); } catch { core.warning("Preserving no unreadable alarm fields from malformed monitor state."); } }
+            const monitorState = {
+              pending: report.pending,
+              import_alarms: Array.isArray(priorState.import_alarms) ? priorState.import_alarms : [],
+              import_recoveries: Array.isArray(priorState.import_recoveries) ? priorState.import_recoveries : [],
+              import_access_status: priorState.import_access_status || null
+            };
+            const stateBlock = "<!-- episode-feed-post-import-state-begin -->" + serializeState(monitorState) + "<!-- episode-feed-post-import-state-end -->";
+            const bodyWithState = report.comment_body.replace(/<!-- episode-feed-post-import-state-begin -->[\s\S]*?<!-- episode-feed-post-import-state-end -->/,
+              stateBlock);
+            const body = bodyWithState + "\n\nKontrolkørsel: " + runUrl +
               ". Adapterreview: #288. Importhistorik/deploystatus kræver særskilt læseadgang; se #256.";
             if (!existing) {
               await github.rest.issues.createComment({ ...context.repo, issue_number: 256, body });
@@ -288,3 +325,128 @@ jobs:
             } else {
               core.info("Post-import status is unchanged.");
             }
+            if (report.backlog_warning) {
+              core.warning(`The durable post-import queue contains ${report.backlog_count} IDs; review threshold is ${report.backlog_warning_threshold}.`);
+            }
+            if (report.queue_capacity_exceeded) {
+              core.setFailed(`Post-import queue review limit exceeded (${report.backlog_count}/${report.pending_queue_capacity}); exact IDs remain in #256 state and require owner prioritization.`);
+            }
+      - name: Publish bounded report artifact for optional import-status job
+        uses: actions/upload-artifact@v4
+        with:
+          name: episode-feed-monitor-${{ github.run_id }}
+          path: ${{ runner.temp }}/episode-feed-post-import.json
+          retention-days: 1
+
+  protected-import-status:
+    name: Optional protected import status and alarms
+    needs: coverage
+    if: ${{ vars.PODCAST_EPISODE_IMPORT_STATUS_MONITOR_ENABLED == 'true' && github.ref == 'refs/heads/main' && github.event_name != 'pull_request' }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      issues: write
+    environment:
+      name: episode-import-monitor-readonly
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+      - uses: actions/download-artifact@v4
+        with:
+          name: episode-feed-monitor-${{ github.run_id }}
+          path: ${{ runner.temp }}/episode-feed-monitor
+      - name: Load existing deduplicated alarm state from #256
+        uses: actions/github-script@v7
+        env:
+          STATE_FILE: ${{ runner.temp }}/episode-import-status-state.json
+        with:
+          script: |
+            const fs = require("node:fs");
+            const zlib = require("node:zlib");
+            const parseState = value => {
+              const serialized = String(value || "").trim();
+              if (serialized.startsWith("zlib-base64:")) return JSON.parse(zlib.inflateRawSync(Buffer.from(serialized.slice(12), "base64")).toString("utf8"));
+              return JSON.parse(serialized);
+            };
+            const comments = await github.paginate(github.rest.issues.listComments, {
+              ...context.repo, issue_number: 256, per_page: 100
+            });
+            const existing = comments.find(x => String(x.body || "").includes("<!-- episode-feed-post-import-state-begin -->"));
+            const match = String(existing?.body || "").match(/<!-- episode-feed-post-import-state-begin -->([\s\S]*?)<!-- episode-feed-post-import-state-end -->/);
+            let state = { pending: [], import_alarms: [], import_recoveries: [], import_access_status: null };
+            if (match) {
+              try {
+                const parsed = parseState(match[1]);
+                state = {
+                  pending: Array.isArray(parsed.pending) ? parsed.pending : [],
+                  import_alarms: Array.isArray(parsed.import_alarms) ? parsed.import_alarms : [],
+                  import_recoveries: Array.isArray(parsed.import_recoveries) ? parsed.import_recoveries : [],
+                  import_access_status: typeof parsed.import_access_status === "string" ? parsed.import_access_status : null
+                };
+              } catch { core.setFailed("#256 monitor state is malformed; refusing protected status queries."); }
+            }
+            fs.writeFileSync(process.env.STATE_FILE, JSON.stringify(state));
+      - name: Run bounded protected import-status check (no import or writes)
+        env:
+          PODCAST_SUPABASE_URL: ${{ vars.PODCAST_SUPABASE_URL }}
+          PODCAST_SUPABASE_ANON_KEY: ${{ secrets.PODCAST_SUPABASE_ANON_KEY }}
+          PODCAST_EPISODE_MONITOR_PROJECT_REF: ${{ vars.PODCAST_EPISODE_MONITOR_PROJECT_REF }}
+          PODCAST_EPISODE_MONITOR_EMAIL: ${{ secrets.PODCAST_EPISODE_MONITOR_EMAIL }}
+          PODCAST_EPISODE_MONITOR_PASSWORD: ${{ secrets.PODCAST_EPISODE_MONITOR_PASSWORD }}
+          GITHUB_RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          node scripts/test-episode-import-status-monitor.mjs
+          node scripts/episode-import-status-monitor.mjs \
+            --feed-report "$RUNNER_TEMP/episode-feed-monitor/episode-feed-post-import.json" \
+            --state-file "$RUNNER_TEMP/episode-import-status-state.json" \
+            --output "$RUNNER_TEMP/episode-import-status-report.json"
+      - name: Maintain deduplicated import-status alarms and recovery on #256
+        uses: actions/github-script@v7
+        env:
+          REPORT_FILE: ${{ runner.temp }}/episode-import-status-report.json
+        with:
+          script: |
+            const fs = require("node:fs");
+            const zlib = require("node:zlib");
+            const parseState = value => {
+              const serialized = String(value || "").trim();
+              if (serialized.startsWith("zlib-base64:")) return JSON.parse(zlib.inflateRawSync(Buffer.from(serialized.slice(12), "base64")).toString("utf8"));
+              return JSON.parse(serialized);
+            };
+            const serializeState = state => {
+              const json = JSON.stringify(state);
+              return Buffer.byteLength(json, "utf8") <= 12000 ? json : "zlib-base64:" + zlib.deflateRawSync(Buffer.from(json, "utf8")).toString("base64");
+            };
+            const report = JSON.parse(fs.readFileSync(process.env.REPORT_FILE, "utf8"));
+            const comments = await github.paginate(github.rest.issues.listComments, {
+              ...context.repo, issue_number: 256, per_page: 100
+            });
+            const marker = "<!-- episode-feed-post-import-state -->";
+            const existing = comments.find(x => String(x.body || "").includes(marker));
+            if (report.unchanged && existing) {
+              core.info("Import alarm state is unchanged; no daily issue edit.");
+              return;
+            }
+            const runUrl = context.serverUrl + "/" + context.repo.owner + "/" + context.repo.repo + "/actions/runs/" + context.runId;
+            let priorState = { pending: [] };
+            const priorMatch = String(existing?.body || "").match(/<!-- episode-feed-post-import-state-begin -->([\s\S]*?)<!-- episode-feed-post-import-state-end -->/);
+            if (priorMatch) { try { priorState = parseState(priorMatch[1]); } catch { core.setFailed("Refusing to replace malformed #256 monitor state."); return; } }
+            const state = {
+              pending: Array.isArray(priorState.pending) ? priorState.pending : [],
+              import_alarms: report.alarms,
+              import_recoveries: report.recoveries,
+              import_access_status: report.access_status
+            };
+            const stateBlock = "<!-- episode-feed-post-import-state-begin -->" + serializeState(state) + "<!-- episode-feed-post-import-state-end -->";
+            let body = String(existing?.body || "");
+            if (!body) body = "<!-- episode-feed-post-import-state -->\n\n## Afgrænset post-import kontrol\n\nTrin 1 kører fortsat uafhængigt.\n";
+            body = body.replace(/<!-- episode-import-status-begin -->[\s\S]*?<!-- episode-import-status-end -->/, report.issue_section);
+            if (!body.includes("<!-- episode-import-status-begin -->")) body += "\n\n" + report.issue_section;
+            if (priorMatch) body = body.replace(/<!-- episode-feed-post-import-state-begin -->[\s\S]*?<!-- episode-feed-post-import-state-end -->/, stateBlock);
+            else body += "\n\n" + stateBlock;
+            body = body.replace(/\n\nKontrolkørsel: https?:\/\/[^\n]+/u, "\n\nKontrolkørsel: " + runUrl + ". Adapterreview: #288.");
+            if (!existing) await github.rest.issues.createComment({ ...context.repo, issue_number: 256, body });
+            else await github.rest.issues.updateComment({ ...context.repo, comment_id: existing.id, body });
+            core.info("Updated the single deduplicated import alarm/recovery state on #256.");
