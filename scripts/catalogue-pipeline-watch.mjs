@@ -4,16 +4,28 @@ const TWO_HOURS_MS = 2 * 60 * 60 * 1000;
 
 export function evaluateCataloguePipeline({ runs, pullRequests, now = Date.now(), staleAfterMs = TWO_HOURS_MS }) {
   const errors = [];
-  const latestRun = [...(runs || [])].sort((a, b) => Date.parse(b.created_at) - Date.parse(a.created_at))[0];
-  if (!latestRun) {
-    errors.push("No Sync Podcastlisten catalogue run is recorded.");
+  const newestFirst = [...(runs || [])].sort((a, b) => Date.parse(b.created_at) - Date.parse(a.created_at));
+  const latestRun = newestFirst[0];
+  const latestScheduledRun = newestFirst.find((run) => run.event === "schedule");
+
+  if (!latestScheduledRun) {
+    errors.push("No scheduled Sync Podcastlisten catalogue run is recorded.");
   } else {
+    const age = now - Date.parse(latestScheduledRun.created_at);
+    if (age >= staleAfterMs && (latestScheduledRun.status !== "completed" || latestScheduledRun.conclusion !== "success")) {
+      errors.push(`Latest scheduled catalogue sync run #${latestScheduledRun.run_number} is ${latestScheduledRun.status}/${latestScheduledRun.conclusion || "pending"} and is ${Math.floor(age / 60000)} minutes old: ${latestScheduledRun.html_url}`);
+    }
+    if (age >= staleAfterMs && latestScheduledRun.status === "completed" && latestScheduledRun.conclusion === "success") {
+      errors.push(`No scheduled catalogue sync run has started for ${Math.floor(age / 60000)} minutes; the scheduled Sheet import may be stalled: ${latestScheduledRun.html_url}`);
+    }
+  }
+
+  // Manual and push runs can recover a failed import, but they cannot prove
+  // that GitHub delivered the repository's scheduled event.
+  if (latestRun && latestRun.event !== "schedule") {
     const age = now - Date.parse(latestRun.created_at);
     if (age >= staleAfterMs && (latestRun.status !== "completed" || latestRun.conclusion !== "success")) {
-      errors.push(`Latest catalogue sync run #${latestRun.run_number} is ${latestRun.status}/${latestRun.conclusion || "pending"} and is ${Math.floor(age / 60000)} minutes old: ${latestRun.html_url}`);
-    }
-    if (age >= staleAfterMs && latestRun.status === "completed" && latestRun.conclusion === "success") {
-      errors.push(`No catalogue sync run has started for ${Math.floor(age / 60000)} minutes; the scheduled Sheet import may be stalled: ${latestRun.html_url}`);
+      errors.push(`Latest non-scheduled catalogue sync run #${latestRun.run_number} (${latestRun.event}) is ${latestRun.status}/${latestRun.conclusion || "pending"} and is ${Math.floor(age / 60000)} minutes old: ${latestRun.html_url}`);
     }
   }
 
