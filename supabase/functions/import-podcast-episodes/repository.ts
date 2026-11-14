@@ -122,6 +122,31 @@ export function createSupabaseImportRepository(client: any): ImportRepository {
       return rows;
     },
 
+    async loadAutoFeedIdentityInventory(podcastKey: string) {
+      const episodes: PodcastEpisodeRow[] = [];
+      for (let offset = 0; ; offset += BATCH_SIZE) {
+        const { data, error } = await client.from("podcast_episodes").select(SELECT_FIELDS)
+          .eq("podcast_key", podcastKey).order("id").range(offset, offset + BATCH_SIZE - 1);
+        if (error || !Array.isArray(data)) throw new Error("Automatic RSS podcast identity inventory failed");
+        episodes.push(...data);
+        if (data.length < BATCH_SIZE) break;
+      }
+      const episodeIds = episodes.map(episode => episode.id).filter((id): id is string => Boolean(id));
+      const ratedIds = new Set<string>();
+      const manualIds = new Set<string>();
+      for (const idBatch of chunk(episodeIds, BATCH_SIZE)) {
+        if (!idBatch.length) continue;
+        const [{ data: ratings, error: ratingError }, { data: mappings, error: mappingError }] = await Promise.all([
+          client.from("episode_ratings").select("episode_id").in("episode_id", idBatch),
+          client.from("manual_catalogue_episode_map").select("episode_id").in("episode_id", idBatch).eq("is_active", true)
+        ]);
+        if (ratingError || mappingError) throw new Error("Automatic RSS rating and manual identity inventory failed");
+        (ratings || []).forEach((row: { episode_id?: string | null }) => { if (row.episode_id) ratedIds.add(row.episode_id); });
+        (mappings || []).forEach((row: { episode_id?: string | null }) => { if (row.episode_id) manualIds.add(row.episode_id); });
+      }
+      return { episodes, rated_episode_ids: [...ratedIds], manual_episode_ids: [...manualIds] };
+    },
+
     async upsertEpisodes(rows: PodcastEpisodeRow[]) {
       if (!rows.length) return;
       const { error } = await client

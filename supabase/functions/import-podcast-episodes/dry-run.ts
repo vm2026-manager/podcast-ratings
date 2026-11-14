@@ -1,6 +1,6 @@
 import { mapApplePodcastHtmlEpisodes } from "./apple-podcasts.ts";
-import { fetchFeedText, fetchPodimoEpisodes, mapEpisodes, mapPodimoEpisodes, parseFeed, parsePodimoEpisodes, routeEpisodes, validateExpectedRssIdentity } from "./core.ts";
-import type { FeedConfig } from "./feed-config.ts";
+import { fetchFeedText, fetchPodimoEpisodes, mapEpisodes, mapPodimoEpisodes, parseFeed, parsePodimoEpisodes, preflightAutoFeedIdentity, routeEpisodes, validateExpectedRssIdentity, type ImportRepository } from "./core.ts";
+import type { FeedConfig, FeedConfigMap } from "./feed-config.ts";
 
 const SAMPLE_SIZE = 5;
 
@@ -15,28 +15,50 @@ export function dryRunConfigError(feedKey: string, config: FeedConfig | undefine
 export async function runRssDryRun(
   config: FeedConfig,
   fetchText: (url: string) => Promise<string> = fetchFeedText,
-  now = new Date().toISOString()
+  now = new Date().toISOString(),
+  options: { repository?: ImportRepository; feedConfigs?: FeedConfigMap } = {}
 ) {
   const feed = parseFeed(await fetchText(config.feed_url));
   validateExpectedRssIdentity(feed, config);
   const mapped = mapEpisodes(feed, config, now);
+  const configOwners = Object.values(options.feedConfigs || {}).filter(owner => owner.enabled !== false && owner !== config &&
+    (owner.source === config.source || owner.feed_url.toLowerCase() === config.feed_url.toLowerCase()));
+  let identityPreflight = {
+    status: config.auto_verified_rss ? "blocked" : "not_required",
+    reason: config.auto_verified_rss ? "automatic_rss_preflight_repository_unavailable" : null,
+    guid_owner_conflict_count: 0, existing_other_source_count: 0, existing_source_guid_count: 0,
+    rating_locked_episode_count: 0, historical_rated_episode_count: 0, preserved_historical_episode_count: 0,
+    manual_mapping_count: 0, source_config_collision_count: configOwners.length
+  } as Record<string, unknown>;
+  const errors = [...mapped.errors];
+  if (configOwners.length) {
+    identityPreflight = { ...identityPreflight, status: "blocked", reason: "source_or_feed_url_has_multiple_active_owners" };
+  } else if (config.auto_verified_rss && options.repository) {
+    try {
+      identityPreflight = { ...await preflightAutoFeedIdentity(config, mapped.episodes, options.repository), source_config_collision_count: 0 };
+    } catch (error) {
+      identityPreflight = { ...identityPreflight, reason: error instanceof Error ? error.message : "automatic_rss_preflight_failed" };
+    }
+  }
+  if (identityPreflight.status === "blocked") errors.push({ index: null, errors: [String(identityPreflight.reason)] });
   const dates = mapped.episodes.map((episode) => episode.published_at).filter((date): date is string => Boolean(date)).sort();
   const duplicateGuidCount = mapped.errors.filter((error) => (error.errors as string[] | undefined)?.includes("Duplicate GUID in feed")).length;
   return {
-    status: mapped.errors.length || mapped.warnings.length ? "partial" : "success",
+    status: errors.length || mapped.warnings.length ? "partial" : "success",
     source: config.source,
     podcast_key: config.podcast_key,
     format: "rss",
     channel_title: feed.channel.title,
     fetched_count: mapped.fetched_count,
     valid_count: mapped.episodes.length,
-    error_count: mapped.errors.length,
+    error_count: errors.length,
     warning_count: mapped.warnings.length,
     duplicate_guid_count: duplicateGuidCount,
     earliest_published_at: dates[0] || null,
     latest_published_at: dates.at(-1) || null,
-    errors: mapped.errors,
+    errors,
     warnings: mapped.warnings,
+    identity_preflight: identityPreflight,
     episodes: mapped.episodes.map((episode) => ({
       external_guid: episode.external_guid,
       title: episode.title,

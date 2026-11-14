@@ -56,6 +56,7 @@ export type FeedConfig = {
   generated_from_sheet?: boolean;
   apple_show_id?: string;
   podcast_id?: string;
+  podimo_show_id?: string;
   // Canonical public show URL used to build the episode page URL. This must be
   // configured per show; adapters must not infer a show slug from a title.
   podimo_show_url?: string;
@@ -97,6 +98,9 @@ export type FeedConfig = {
   // Exact, code-approved Podcast-ID + Podimo UUID pair must be present in the
   // current Sheet before this otherwise-disabled adapter can be scheduled.
   sheet_podimo_identity_required?: boolean;
+  podimo_public_rss_identity_required?: boolean;
+  podimo_catalogue_id?: string;
+  apple_collection_id?: string;
   // Narrow ART19-to-Podimo transition. Cross-source identities are pinned by
   // immutable GUIDs; unresolved historical IDs are held out; unseen future
   // episodes must have a season/episode title and publication after the cutover.
@@ -140,6 +144,23 @@ export const FEED_CONFIGS: FeedConfigMap = {
     // The show UUID has not been positively verified; keep this route inert.
     sheet_podimo_identity_required: true,
     enabled: false
+  },
+  podimo_public_rss_politik_for_viderekomne_med_sos_og_huxi: {
+    podcast_key: "politik for viderekomne med søs og huxi",
+    source: "podimo_rss_politik_for_viderekomne_med_sos_og_huxi",
+    feed_url: "https://feeds.simplecast.com/JE_rplcf",
+    format: "rss",
+    podimo_show_url: "https://podimo.com/dk/shows/politik-for-viderekomne-med-sos-huxi",
+    podimo_show_id: "3520dd9b-1787-4183-b091-aaa5ebd74a5b",
+    podimo_catalogue_id: "catalogue-v1-047662a4",
+    apple_collection_id: "6833021858",
+    podimo_public_rss_identity_required: true,
+    expected_rss_channel_title: "Politik for viderekomne - med Søs & Huxi",
+    expected_rss_channel_link: "https://politik-for-viderekomne-med-sos-huxi.simplecast.com",
+    expected_rss_self_url: "https://feeds.simplecast.com/JE_rplcf",
+    expected_rss_publisher: "Podimo Studios",
+    expected_rss_unique_guids: true,
+    auto_verified_rss: true
   },
   sig_noget_klogt_omny: {
     podcast_key: "sig noget klogt",

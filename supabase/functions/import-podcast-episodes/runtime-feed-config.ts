@@ -58,6 +58,33 @@ function getPodcastId(row: Record<string, unknown>): string {
   return String(row["Podcast-ID"] ?? row["Podcast ID"] ?? row.PodcastID ?? "").trim();
 }
 
+function verifiedPodimoRssEvidence(row: Record<string, unknown>, rows: Array<Record<string, unknown>>) {
+  const verification = row.episodeFeedVerification as Record<string, unknown> | undefined;
+  const id = getPodcastId(row);
+  const rawFeed = String(row.Feed ?? row.feed ?? "").trim();
+  const show = parsePodimoShowFeed(rawFeed);
+  const catalogueId = String(row.catalogue_id ?? "").trim();
+  const rssUrl = String(verification?.feed_url ?? "").trim();
+  const exactRows = rows.filter(candidate => getPodcastId(candidate) === id);
+  const normalizedRows = rows.filter(candidate => normalizePodcastKey(getPodcastId(candidate)) === normalizePodcastKey(id));
+  const catalogueRows = rows.filter(candidate => String(candidate.catalogue_id ?? "").trim() === catalogueId);
+  const rssOwners = rows.filter(candidate => String((candidate.episodeFeedVerification as Record<string, unknown> | undefined)?.feed_url ?? "").toLowerCase() === rssUrl.toLowerCase());
+  const valid = verification?.version === 1 && verification.status === "verified" &&
+    verification.verification_kind === "apple_podimo_public_rss" &&
+    verification.podcast_id === id && verification.catalogue_id === catalogueId &&
+    verification.catalogue_feed_url === rawFeed && verification.official_url === String(row.Link ?? "").trim() &&
+    verification.publisher === String(row.Udgiver ?? "").trim() && verification.podimo_show_id === show?.showId &&
+    typeof verification.apple_collection_id === "string" && /^\d+$/u.test(verification.apple_collection_id) &&
+    typeof verification.apple_collection_url === "string" && verification.channel_title === String(row.Titel ?? "").trim() &&
+    typeof verification.channel_link === "string" && verification.channel_link.startsWith("https://") &&
+    verification.self_url === rssUrl && /^podimo(?:\s+studios)?$/iu.test(String(verification.channel_owner ?? "")) &&
+    Number.isInteger(verification.unique_guid_count) && Number(verification.unique_guid_count) > 0 &&
+    Number.isInteger(verification.full_episode_count) && Number(verification.full_episode_count) > 0 &&
+    exactRows.length === 1 && normalizedRows.length === 1 && catalogueId !== "" && catalogueRows.length === 1 &&
+    rssOwners.length === 1 && isOrdinaryRssUrl(rssUrl);
+  return valid ? { verification, rssUrl, showId: show!.showId, catalogueId } : null;
+}
+
 function getPodcastRows(payload: unknown): Array<Record<string, unknown>> {
   if (Array.isArray(payload)) return payload.filter((row) => row && typeof row === "object");
   if (payload && typeof payload === "object" && Array.isArray((payload as { rows?: unknown }).rows)) {
@@ -160,6 +187,25 @@ export function mergeSheetFeedConfigs(
       parsePodimoShowFeed(matchingRows[0].Feed ?? matchingRows[0].feed)?.showId === config.podcast_id?.toLowerCase();
     configs[feedKey] = { ...config, enabled: exactShow };
   }
+  for (const [feedKey, config] of Object.entries(configs)) {
+    if (config.podimo_public_rss_identity_required !== true) continue;
+    const matchingRows = rows.filter(row => getPodcastId(row) === config.podcast_key);
+    const hasNormalizedCollision = rows.some(row => getPodcastId(row) !== config.podcast_key &&
+      normalizePodcastKey(getPodcastId(row)) === normalizePodcastKey(config.podcast_key));
+    const row = matchingRows[0];
+    const show = row ? parsePodimoShowFeed(row.Feed ?? row.feed) : null;
+    const catalogueMatches = rows.filter(candidate => String(candidate.catalogue_id ?? "").trim() === config.podimo_catalogue_id);
+    const competingFeedOwner = Object.entries(configs).some(([otherKey, other]) => otherKey !== feedKey &&
+      parseHttpFeed(other.feed_url)?.toLowerCase() === config.feed_url.toLowerCase());
+    const exactIdentity = matchingRows.length === 1 && !hasNormalizedCollision &&
+      show?.showId === config.podimo_show_id && row?.catalogue_id === config.podimo_catalogue_id &&
+      catalogueMatches.length === 1 && !competingFeedOwner &&
+      String(row?.Link ?? "").trim() === config.podimo_show_url &&
+      String(row?.Titel ?? "").trim() === config.expected_rss_channel_title &&
+      String(row?.Udgiver ?? "").trim() === "Podimo" &&
+      isOrdinaryRssUrl(config.feed_url) && config.expected_rss_self_url === config.feed_url;
+    configs[feedKey] = { ...config, enabled: exactIdentity };
+  }
   // Keep every previously approved ordinary Sheet feed active even if its
   // editable metadata is temporarily changed, blank, or absent. A replacement
   // URL is reviewed below and cannot displace this code-owned source.
@@ -213,6 +259,50 @@ export function mergeSheetFeedConfigs(
       podimo_show_url: podimo.url,
       podimo_history_overlap_minimum: 3,
       generated_from_sheet: true
+    };
+  }
+  const normalizedOwners = new Map<string, number>();
+  const catalogueOwners = new Map<string, number>();
+  for (const row of rows) {
+    const id = getPodcastId(row);
+    const catalogueId = String(row.catalogue_id ?? "").trim();
+    if (id) normalizedOwners.set(normalizePodcastKey(id), (normalizedOwners.get(normalizePodcastKey(id)) || 0) + 1);
+    if (catalogueId) catalogueOwners.set(catalogueId, (catalogueOwners.get(catalogueId) || 0) + 1);
+  }
+  const discoveredRssOwners = new Map<string, number>();
+  for (const row of rows) {
+    const evidence = row.episodeFeedVerification as Record<string, unknown> | undefined;
+    const url = String(evidence?.feed_url ?? "").toLowerCase();
+    if (url) discoveredRssOwners.set(url, (discoveredRssOwners.get(url) || 0) + 1);
+  }
+  for (const row of rows) {
+    const attested = verifiedPodimoRssEvidence(row, rows);
+    if (!attested || normalizedOwners.get(normalizePodcastKey(getPodcastId(row))) !== 1 ||
+        catalogueOwners.get(attested.catalogueId) !== 1 || discoveredRssOwners.get(attested.rssUrl.toLowerCase()) !== 1) continue;
+    const podcastKey = getPodcastId(row);
+    const feedKey = `podimo_public_rss_${toFeedKey(podcastKey)}`;
+    const source = `podimo_public_rss_${toFeedKey(podcastKey)}`;
+    if (configs[feedKey] || Object.values(configs).some(config => config.source === source ||
+        normalizePodcastKey(config.podcast_key) === normalizePodcastKey(podcastKey) ||
+        parseHttpFeed(config.feed_url)?.toLowerCase() === attested.rssUrl.toLowerCase())) continue;
+    configs[feedKey] = {
+      podcast_key: podcastKey,
+      source,
+      feed_url: attested.rssUrl,
+      format: "rss",
+      enabled: true,
+      generated_from_sheet: true,
+      auto_verified_rss: true,
+      podimo_public_rss_identity_required: true,
+      podimo_show_id: attested.showId,
+      podimo_show_url: String(row.Link ?? "").trim(),
+      podimo_catalogue_id: attested.catalogueId,
+      apple_collection_id: String(attested.verification.apple_collection_id),
+      expected_rss_channel_title: String(attested.verification.channel_title),
+      expected_rss_channel_link: String(attested.verification.channel_link),
+      expected_rss_self_url: String(attested.verification.self_url),
+      expected_rss_publisher: String(attested.verification.channel_owner),
+      expected_rss_unique_guids: true
     };
   }
   const policy = applySheetFeedPolicy(rows, configs, getPodcastId, normalizePodcastKey);

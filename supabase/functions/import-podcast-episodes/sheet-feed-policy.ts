@@ -66,6 +66,15 @@ export function applySheetFeedPolicy(
     };
     if (!id) { report("missing_podcast_id"); continue; }
     if (podimo) {
+      if (matches.length === 1 && matches[0][1].format === "rss" &&
+          matches[0][1].podimo_public_rss_identity_required === true &&
+          matches[0][1].enabled !== false && matches[0][1].podimo_show_id === podimo.showId &&
+          matches[0][1].podimo_show_url === String(row.Link ?? "").trim() &&
+          matches[0][1].podimo_catalogue_id === String(row.catalogue_id ?? "").trim() &&
+          normalizeId(matches[0][1].podcast_key) === normalizeId(id)) {
+        report("verified_apple_podimo_public_rss_mapping", "auto_verified");
+        continue;
+      }
       if (matches.length === 1 && matches[0][1].format === "podimo_graphql" &&
           matches[0][1].podcast_id?.toLowerCase() === podimo.showId &&
           normalizeId(matches[0][1].podcast_key) === normalizeId(id)) {

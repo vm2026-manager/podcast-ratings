@@ -245,11 +245,58 @@ export type ImportRepository = {
   }): Promise<{ id: string }>;
   loadExistingEpisodes(source: string, externalGuids: string[], episodeUrls?: string[], additionalSources?: string[], podcastKeys?: string[]): Promise<PodcastEpisodeRow[]>;
   loadAutoFeedGuidOwners?(externalGuids: string[]): Promise<PodcastEpisodeRow[]>;
+  loadAutoFeedIdentityInventory?(podcastKey: string): Promise<{
+    episodes: PodcastEpisodeRow[];
+    rated_episode_ids: string[];
+    manual_episode_ids: string[];
+  }>;
   upsertEpisodes(rows: PodcastEpisodeRow[]): Promise<void>;
   loadPodcastEpisodes?(podcastKey: string): Promise<PodcastEpisodeRow[]>;
   updateEpisodeMetadata?(current: PodcastEpisodeRow, next: PodcastEpisodeRow): Promise<void>;
   updateImportRun(id: string, input: Record<string, unknown>): Promise<void>;
 };
+
+export async function preflightAutoFeedIdentity(
+  config: FeedConfig,
+  episodes: PodcastEpisodeRow[],
+  repository: ImportRepository
+) {
+  if (config.auto_verified_rss !== true) return {
+    status: "not_required", reason: null, guid_owner_conflict_count: 0, existing_other_source_count: 0,
+    existing_source_guid_count: 0, rating_locked_episode_count: 0, historical_rated_episode_count: 0,
+    preserved_historical_episode_count: 0, manual_mapping_count: 0
+  };
+  if (!repository.loadAutoFeedGuidOwners || !repository.loadAutoFeedIdentityInventory) {
+    throw new Error("Automatic RSS identity preflight unavailable; no episodes imported");
+  }
+  const uniqueGuids = [...new Set(episodes.map(episode => episode.external_guid))];
+  const [owners, inventory] = await Promise.all([
+    repository.loadAutoFeedGuidOwners(uniqueGuids),
+    repository.loadAutoFeedIdentityInventory(config.podcast_key)
+  ]);
+  const ownerConflicts = owners.filter(episode => episode.source !== config.source || episode.podcast_key !== config.podcast_key);
+  const otherSources = inventory.episodes.filter(episode => episode.source !== config.source);
+  const candidateGuids = new Set(uniqueGuids);
+  const sourceIdentityEpisodes = inventory.episodes.filter(episode => episode.source === config.source &&
+    episode.podcast_key === config.podcast_key && candidateGuids.has(episode.external_guid));
+  const sourceIdentityIds = new Set(sourceIdentityEpisodes.map(episode => episode.id).filter((id): id is string => Boolean(id)));
+  const unmappedManualIds = inventory.manual_episode_ids.filter(id => !sourceIdentityIds.has(id));
+  const lockedRatedIds = new Set(inventory.rated_episode_ids.filter(id => sourceIdentityIds.has(id)));
+  const blocked = ownerConflicts.length > 0 || otherSources.length > 0 || unmappedManualIds.length > 0;
+  return {
+    status: blocked ? "blocked" : "safe",
+    reason: ownerConflicts.length ? "historical_guid_collision" :
+      otherSources.length ? "existing_podcast_episode_source_requires_review" :
+        unmappedManualIds.length ? "existing_manual_episode_identity_requires_review" : null,
+    guid_owner_conflict_count: ownerConflicts.length,
+    existing_other_source_count: otherSources.length,
+    existing_source_guid_count: sourceIdentityEpisodes.length,
+    rating_locked_episode_count: lockedRatedIds.size,
+    historical_rated_episode_count: inventory.rated_episode_ids.length,
+    preserved_historical_episode_count: inventory.episodes.length,
+    manual_mapping_count: inventory.manual_episode_ids.length
+  };
+}
 
 export function jsonResponse(body: unknown, status = 200): Response {
   return new Response(JSON.stringify(body), {
@@ -462,6 +509,7 @@ export function parseFeed(xml: string) {
         guid: xmlTag(itemBlock, "guid"),
         title: xmlTag(itemBlock, "title"),
         description: descriptionRaw ? stripHtml(descriptionRaw) : null,
+        episode_type: (xmlTag(itemBlock, "episodeType") || "").toLowerCase() || null,
         pubDate: xmlTag(itemBlock, "pubDate"),
         duration: xmlTag(itemBlock, "duration"),
         link: xmlTag(itemBlock, "link"),
@@ -662,7 +710,8 @@ export function mapEpisodes(feed: ReturnType<typeof parseFeed>, config: FeedConf
     }
 
     seen.add(guid);
-    const exclusionReason = isTeaserOrTrailerTitle(title) ? "teaser_or_trailer" : null;
+    const episodeType = normalizeText(item.episode_type).toLowerCase();
+    const exclusionReason = episodeType === "trailer" || isTeaserOrTrailerTitle(title) ? "teaser_or_trailer" : null;
     episodes.push({
       podcast_key: config.podcast_key,
       source: config.source,
@@ -684,6 +733,7 @@ export function mapEpisodes(feed: ReturnType<typeof parseFeed>, config: FeedConf
         ...(boundary ? { rss_publication_boundary: boundary.not_before } : {}),
         enclosure_type: item.enclosure_type || null,
         original_pub_date: item.pubDate || null,
+        ...(episodeType ? { episode_type: episodeType } : {}),
         ...(config.source === "mediano_site_rss" && config.feed_url === MEDIANO_SITE_RSS_URL && item.categories.length
           ? { rss_categories: item.categories }
           : {}),
@@ -1215,14 +1265,9 @@ export async function runEpisodeImport(options: {
     }
     const routing = routeEpisodes(mapped.episodes, config);
     if (config.auto_verified_rss) {
-      if (!options.repository.loadAutoFeedGuidOwners) {
-        throw new Error("Automatic RSS identity preflight unavailable; no episodes imported");
-      }
-      const owners = await options.repository.loadAutoFeedGuidOwners(routing.episodes.map(episode => episode.external_guid));
-      const conflicts = owners.filter(episode => episode.source !== config.source || episode.podcast_key !== config.podcast_key);
-      if (conflicts.length) {
-        const examples = [...new Set(conflicts.map(episode => `${episode.source}:${episode.podcast_key}`))].slice(0, 3);
-        throw new Error(`Automatic RSS historical GUID collision; no episodes imported (${examples.join(", ")})`);
+      const preflight = await preflightAutoFeedIdentity(config, routing.episodes, options.repository);
+      if (preflight.status === "blocked") {
+        throw new Error(`Automatic RSS identity preflight blocked: ${preflight.reason}; no episodes imported`);
       }
     }
     const existing = await options.repository.loadExistingEpisodes(
