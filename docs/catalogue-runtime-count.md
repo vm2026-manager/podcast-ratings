@@ -13,12 +13,25 @@ episode IDs to existing canonical series, yielding:
 1,378 raw rows + 5 local canonical rows - 27 legacy episode rows = 1,356
 ```
 
-Current `main` adds the verified local canonical Podcast-ID
-`kampen om historien dr`, so the same catalogue now yields:
+After `kampen om historien dr` was added, the same 1,378-row catalogue then
+yielded:
 
 ```text
 1,378 raw rows + 6 local canonical rows - 27 legacy episode rows = 1,357
 ```
+
+For the 14 November 2026 catalogue, the published JSON contains 1,379 unique
+Podcast-IDs. The runtime still adds the six reviewed local canonical Mediano
+rows absent from the JSON and routes the same 27 exact legacy episode IDs to
+existing canonical series:
+
+```text
+1,379 raw rows + 6 local canonical rows - 27 legacy episode rows = 1,358
+```
+
+The regression test derives this dated example from the current catalogue
+JSON and runtime identity rules, so catalogue updates that change the result
+must update this documented observation.
 
 The 27 omitted IDs are explicit entries in
 `MEDIANO_LEGACY_CATALOGUE_CANONICAL_IDS`; they are not removed from the source
