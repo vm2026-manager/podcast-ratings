@@ -10,7 +10,7 @@ name: Instagram Kapret one-shot
         default: dry-run
         required: true
       publish_acknowledgement:
-        description: Required for publish: I_APPROVE_ONE_KAPRET_SHARE_NOW
+        description: "Required for publish: I_APPROVE_ONE_KAPRET_SHARE_NOW"
         type: string
         required: false
 
