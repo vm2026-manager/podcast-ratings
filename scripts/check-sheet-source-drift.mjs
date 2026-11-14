@@ -12,15 +12,23 @@ function comparable(value) {
   if (Array.isArray(value)) return value.map(comparable);
   if (!value || typeof value !== "object") return value;
   return Object.fromEntries(Object.entries(value)
-    .filter(([key]) => key !== "generatedAt")
+    .filter(([key]) => key !== "generatedAt" && key !== "episodeFeedVerification")
     .map(([key, entry]) => [key, comparable(entry)]));
 }
 
 function catalogueChanges(published, candidate) {
-  const existing = new Map((published?.rows || []).map((row) => [row["Podcast-ID"], row]));
-  const current = new Map((candidate?.rows || []).map((row) => [row["Podcast-ID"], row]));
+  const groupByPodcastId = (payload) => {
+    const groups = new Map();
+    for (const row of payload?.rows || []) {
+      const id = row?.["Podcast-ID"];
+      groups.set(id, [...(groups.get(id) || []), row]);
+    }
+    return groups;
+  };
+  const existing = groupByPodcastId(published);
+  const current = groupByPodcastId(candidate);
   return [...new Set([...existing.keys(), ...current.keys()])]
-    .filter((id) => JSON.stringify(existing.get(id)) !== JSON.stringify(current.get(id)))
+    .filter((id) => JSON.stringify(comparable(existing.get(id))) !== JSON.stringify(comparable(current.get(id))))
     .filter(Boolean)
     .sort();
 }
