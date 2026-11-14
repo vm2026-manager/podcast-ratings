@@ -49,7 +49,7 @@ jobs:
         uses: actions/cache/restore@v4
         with:
           path: .kapret-one-shot/attempt.json
-          key: kapret-share-now-${{ github.repository_id }}
+          key: kapret-share-now-${{ github.repository_id }}-attempt-2
 
       - name: Refuse a second shareNow attempt
         if: inputs.action == 'publish'
@@ -79,7 +79,7 @@ jobs:
         uses: actions/cache/save@v4
         with:
           path: .kapret-one-shot/attempt.json
-          key: kapret-share-now-${{ github.repository_id }}
+          key: kapret-share-now-${{ github.repository_id }}-attempt-2
 
       - name: Create exactly one Buffer shareNow post
         if: inputs.action == 'publish'
