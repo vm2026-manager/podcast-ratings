@@ -268,6 +268,7 @@ export async function runKapretOnce({
       saveToDraft: false,
       needsApproval: false,
       assets: [{ image: { url: IMAGE_URL } }],
+      metadata: { instagram: { type: "post", shouldShareToFeed: true } },
     },
   });
   const payload = createResult.createPost;
