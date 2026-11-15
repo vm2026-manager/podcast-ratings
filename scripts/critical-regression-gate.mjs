@@ -27,6 +27,7 @@ const checks = [
   ["Sidste nedtælling exact Podimo identity, health and idempotency", ["--experimental-strip-types", "scripts/test-sidste-nedtaelling-podimo.mjs"]],
   ["Bounded cross-source episode URL lookup preserves existing IDs", ["--experimental-strip-types", "scripts/test-cross-source-episode-url-batching.mjs"]],
   ["Episode feed configuration coverage", ["--experimental-strip-types", "scripts/test-episode-feed-coverage.mjs"]],
+  ["Production-sized runtime feed-config CPU and duplicate-identity guard", ["--experimental-strip-types", "scripts/test-runtime-feed-config-performance.mjs"]],
   ["Episode import lifecycle and one-episode frontend eligibility", ["scripts/test-episode-import-lifecycle.mjs"]],
   ["Fri Mads metadata-only discovery and exact URL identity", ["scripts/test-fri-mads-discovery.mjs"]],
   ["Dobbeltliv and 112 For Parforhold exact-source imports", ["--experimental-strip-types", "scripts/test-dobbeltliv-112-for-parforhold-import.mjs"]],
