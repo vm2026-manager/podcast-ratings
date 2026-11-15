@@ -46,6 +46,18 @@ function normalizePodcastKey(value: unknown): string {
     .trim();
 }
 
+function createPodcastKeyNormalizer(): (value: unknown) => string {
+  const cache = new Map<string, string>();
+  return value => {
+    const input = String(value ?? "");
+    const cached = cache.get(input);
+    if (cached !== undefined) return cached;
+    const normalized = normalizePodcastKey(input);
+    cache.set(input, normalized);
+    return normalized;
+  };
+}
+
 function toFeedKey(podcastId: unknown): string {
   return normalizePodcastKey(podcastId).replace(/\s+/g, "_");
 }
@@ -58,30 +70,67 @@ function getPodcastId(row: Record<string, unknown>): string {
   return String(row["Podcast-ID"] ?? row["Podcast ID"] ?? row.PodcastID ?? "").trim();
 }
 
-function verifiedPodimoRssEvidence(row: Record<string, unknown>, rows: Array<Record<string, unknown>>) {
+type CountedCatalogueRow = { count: number; first: Record<string, unknown> };
+type CatalogueRowIndexes = {
+  exactPodcastIds: Map<string, CountedCatalogueRow>;
+  normalizedPodcastIds: Map<string, number>;
+  catalogueIds: Map<string, number>;
+  verifiedRssUrls: Map<string, number>;
+};
+
+function incrementCount(map: Map<string, number>, key: string): void {
+  map.set(key, (map.get(key) || 0) + 1);
+}
+
+function addCatalogueRow(map: Map<string, CountedCatalogueRow>, key: string, row: Record<string, unknown>): void {
+  const current = map.get(key);
+  if (current) current.count += 1;
+  else map.set(key, { count: 1, first: row });
+}
+
+function indexCatalogueRows(rows: Array<Record<string, unknown>>, normalizeKey: (value: unknown) => string): CatalogueRowIndexes {
+  const exactPodcastIds = new Map<string, CountedCatalogueRow>();
+  const normalizedPodcastIds = new Map<string, number>();
+  const catalogueIds = new Map<string, number>();
+  const verifiedRssUrls = new Map<string, number>();
+  for (const row of rows) {
+    const podcastId = getPodcastId(row);
+    addCatalogueRow(exactPodcastIds, podcastId, row);
+    incrementCount(normalizedPodcastIds, normalizeKey(podcastId));
+    incrementCount(catalogueIds, String(row.catalogue_id ?? "").trim());
+    const verification = row.episodeFeedVerification as Record<string, unknown> | undefined;
+    incrementCount(verifiedRssUrls, String(verification?.feed_url ?? "").toLowerCase());
+  }
+  return { exactPodcastIds, normalizedPodcastIds, catalogueIds, verifiedRssUrls };
+}
+
+function verifiedPodimoRssEvidence(
+  row: Record<string, unknown>, indexes: CatalogueRowIndexes, normalizeKey: (value: unknown) => string
+) {
   const verification = row.episodeFeedVerification as Record<string, unknown> | undefined;
   const id = getPodcastId(row);
   const rawFeed = String(row.Feed ?? row.feed ?? "").trim();
   const show = parsePodimoShowFeed(rawFeed);
+  if (!show) return null;
   const catalogueId = String(row.catalogue_id ?? "").trim();
   const rssUrl = String(verification?.feed_url ?? "").trim();
-  const exactRows = rows.filter(candidate => getPodcastId(candidate) === id);
-  const normalizedRows = rows.filter(candidate => normalizePodcastKey(getPodcastId(candidate)) === normalizePodcastKey(id));
-  const catalogueRows = rows.filter(candidate => String(candidate.catalogue_id ?? "").trim() === catalogueId);
-  const rssOwners = rows.filter(candidate => String((candidate.episodeFeedVerification as Record<string, unknown> | undefined)?.feed_url ?? "").toLowerCase() === rssUrl.toLowerCase());
+  const exactRowCount = indexes.exactPodcastIds.get(id)?.count || 0;
+  const normalizedRowCount = indexes.normalizedPodcastIds.get(normalizeKey(id)) || 0;
+  const catalogueRowCount = indexes.catalogueIds.get(catalogueId) || 0;
+  const rssOwnerCount = indexes.verifiedRssUrls.get(rssUrl.toLowerCase()) || 0;
   const valid = verification?.version === 1 && verification.status === "verified" &&
     verification.verification_kind === "apple_podimo_public_rss" &&
     verification.podcast_id === id && verification.catalogue_id === catalogueId &&
     verification.catalogue_feed_url === rawFeed && verification.official_url === String(row.Link ?? "").trim() &&
-    verification.publisher === String(row.Udgiver ?? "").trim() && verification.podimo_show_id === show?.showId &&
+    verification.publisher === String(row.Udgiver ?? "").trim() && verification.podimo_show_id === show.showId &&
     typeof verification.apple_collection_id === "string" && /^\d+$/u.test(verification.apple_collection_id) &&
     typeof verification.apple_collection_url === "string" && verification.channel_title === String(row.Titel ?? "").trim() &&
     typeof verification.channel_link === "string" && verification.channel_link.startsWith("https://") &&
     verification.self_url === rssUrl && /^podimo(?:\s+studios)?$/iu.test(String(verification.channel_owner ?? "")) &&
     Number.isInteger(verification.unique_guid_count) && Number(verification.unique_guid_count) > 0 &&
     Number.isInteger(verification.full_episode_count) && Number(verification.full_episode_count) > 0 &&
-    exactRows.length === 1 && normalizedRows.length === 1 && catalogueId !== "" && catalogueRows.length === 1 &&
-    rssOwners.length === 1 && isOrdinaryRssUrl(rssUrl);
+    exactRowCount === 1 && normalizedRowCount === 1 && catalogueId !== "" && catalogueRowCount === 1 &&
+    rssOwnerCount === 1 && isOrdinaryRssUrl(rssUrl);
   return valid ? { verification, rssUrl, showId: show!.showId, catalogueId } : null;
 }
 
@@ -106,11 +155,11 @@ function hasVerifiedStotMedianoIdentity(rows: Array<Record<string, unknown>>): b
     String(candidates[0].Titel ?? "").trim().normalize("NFC") === expectedTitle;
 }
 
-function getStaticPodcastKeys(configs: FeedConfigMap): Set<string> {
+function getStaticPodcastKeys(configs: FeedConfigMap, normalizeKey: (value: unknown) => string): Set<string> {
   return new Set(
     Object.values(configs)
       .flatMap((config) => [config.podcast_key, ...(config.owned_podcast_keys || [])])
-      .map((key) => normalizePodcastKey(key))
+      .map((key) => normalizeKey(key))
       .filter(Boolean)
   );
 }
@@ -137,6 +186,7 @@ export function mergeSheetFeedConfigs(
   sheetPayload: unknown,
   staticConfigs: FeedConfigMap = FEED_CONFIGS
 ): { configs: FeedConfigMap; audit: Omit<FeedConfigAudit, "podcasts_json_url_configured" | "dynamic_feed_load_error"> } {
+  const normalizeKey = createPodcastKeyNormalizer();
   const approvedFeeds = staticConfigs === FEED_CONFIGS ? approvedSheetFeeds : [];
   const approvedFeedsByPodcast = new Map(approvedFeeds.map(entry => [entry.podcast_key, entry]));
   const approvedFeedsByUrl = new Map(approvedFeeds.map(entry => [entry.feed_url.toLowerCase(), entry]));
@@ -144,6 +194,7 @@ export function mergeSheetFeedConfigs(
     `${entry.podcast_key}\u0000${entry.feed_key}\u0000${entry.source}\u0000${entry.feed_url}`));
   const manualStaticConfigs = getManualStaticConfigs(staticConfigs);
   const rows = getPodcastRows(sheetPayload);
+  const rowIndexes = indexCatalogueRows(rows, normalizeKey);
   const djaevlen = buildDjaevlenRoutes(rows);
   const djaevlenOwner = manualStaticConfigs[DJAEVLEN_FEED_KEY];
   const bakspejl = buildBakspejlRoutes(rows);
@@ -180,26 +231,23 @@ export function mergeSheetFeedConfigs(
   // Either drift or ambiguity must fail closed before an import can be scheduled.
   for (const [feedKey, config] of Object.entries(configs)) {
     if (config.sheet_podimo_identity_required !== true) continue;
-    const matchingRows = rows.filter(row => getPodcastId(row) === config.podcast_key);
-    const hasNormalizedCollision = rows.some(row => getPodcastId(row) !== config.podcast_key &&
-      normalizePodcastKey(getPodcastId(row)) === normalizePodcastKey(config.podcast_key));
-    const exactShow = matchingRows.length === 1 && !hasNormalizedCollision &&
-      parsePodimoShowFeed(matchingRows[0].Feed ?? matchingRows[0].feed)?.showId === config.podcast_id?.toLowerCase();
+    const matching = rowIndexes.exactPodcastIds.get(config.podcast_key);
+    const exactShow = matching?.count === 1 &&
+      rowIndexes.normalizedPodcastIds.get(normalizeKey(config.podcast_key)) === 1 &&
+      parsePodimoShowFeed(matching.first.Feed ?? matching.first.feed)?.showId === config.podcast_id?.toLowerCase();
     configs[feedKey] = { ...config, enabled: exactShow };
   }
   for (const [feedKey, config] of Object.entries(configs)) {
     if (config.podimo_public_rss_identity_required !== true) continue;
-    const matchingRows = rows.filter(row => getPodcastId(row) === config.podcast_key);
-    const hasNormalizedCollision = rows.some(row => getPodcastId(row) !== config.podcast_key &&
-      normalizePodcastKey(getPodcastId(row)) === normalizePodcastKey(config.podcast_key));
-    const row = matchingRows[0];
+    const matching = rowIndexes.exactPodcastIds.get(config.podcast_key);
+    const row = matching?.first;
     const show = row ? parsePodimoShowFeed(row.Feed ?? row.feed) : null;
-    const catalogueMatches = rows.filter(candidate => String(candidate.catalogue_id ?? "").trim() === config.podimo_catalogue_id);
     const competingFeedOwner = Object.entries(configs).some(([otherKey, other]) => otherKey !== feedKey &&
       parseHttpFeed(other.feed_url)?.toLowerCase() === config.feed_url.toLowerCase());
-    const exactIdentity = matchingRows.length === 1 && !hasNormalizedCollision &&
+    const exactIdentity = matching?.count === 1 &&
+      rowIndexes.normalizedPodcastIds.get(normalizeKey(config.podcast_key)) === 1 &&
       show?.showId === config.podimo_show_id && row?.catalogue_id === config.podimo_catalogue_id &&
-      catalogueMatches.length === 1 && !competingFeedOwner &&
+      rowIndexes.catalogueIds.get(config.podimo_catalogue_id) === 1 && !competingFeedOwner &&
       String(row?.Link ?? "").trim() === config.podimo_show_url &&
       String(row?.Titel ?? "").trim() === config.expected_rss_channel_title &&
       String(row?.Udgiver ?? "").trim() === "Podimo" &&
@@ -246,10 +294,10 @@ export function mergeSheetFeedConfigs(
     const podcastId = getPodcastId(row);
     if (!podimo || !podcastId) continue;
     const historical = PODIMO_ONGOING_HISTORICAL_SOURCES.find(entry =>
-      normalizePodcastKey(entry.podcast_key) === normalizePodcastKey(podcastId) &&
+      normalizeKey(entry.podcast_key) === normalizeKey(podcastId) &&
       entry.podcast_id === podimo.showId);
     if (!historical || configs[historical.source]) continue;
-    if (Object.values(configs).some(config => normalizePodcastKey(config.podcast_key) === normalizePodcastKey(podcastId))) continue;
+    if (Object.values(configs).some(config => normalizeKey(config.podcast_key) === normalizeKey(podcastId))) continue;
     configs[historical.source] = {
       podcast_key: historical.podcast_key,
       source: historical.source,
@@ -261,29 +309,16 @@ export function mergeSheetFeedConfigs(
       generated_from_sheet: true
     };
   }
-  const normalizedOwners = new Map<string, number>();
-  const catalogueOwners = new Map<string, number>();
   for (const row of rows) {
-    const id = getPodcastId(row);
-    const catalogueId = String(row.catalogue_id ?? "").trim();
-    if (id) normalizedOwners.set(normalizePodcastKey(id), (normalizedOwners.get(normalizePodcastKey(id)) || 0) + 1);
-    if (catalogueId) catalogueOwners.set(catalogueId, (catalogueOwners.get(catalogueId) || 0) + 1);
-  }
-  const discoveredRssOwners = new Map<string, number>();
-  for (const row of rows) {
-    const evidence = row.episodeFeedVerification as Record<string, unknown> | undefined;
-    const url = String(evidence?.feed_url ?? "").toLowerCase();
-    if (url) discoveredRssOwners.set(url, (discoveredRssOwners.get(url) || 0) + 1);
-  }
-  for (const row of rows) {
-    const attested = verifiedPodimoRssEvidence(row, rows);
-    if (!attested || normalizedOwners.get(normalizePodcastKey(getPodcastId(row))) !== 1 ||
-        catalogueOwners.get(attested.catalogueId) !== 1 || discoveredRssOwners.get(attested.rssUrl.toLowerCase()) !== 1) continue;
+    const attested = verifiedPodimoRssEvidence(row, rowIndexes, normalizeKey);
+    if (!attested || rowIndexes.normalizedPodcastIds.get(normalizeKey(getPodcastId(row))) !== 1 ||
+        rowIndexes.catalogueIds.get(attested.catalogueId) !== 1 ||
+        rowIndexes.verifiedRssUrls.get(attested.rssUrl.toLowerCase()) !== 1) continue;
     const podcastKey = getPodcastId(row);
     const feedKey = `podimo_public_rss_${toFeedKey(podcastKey)}`;
     const source = `podimo_public_rss_${toFeedKey(podcastKey)}`;
     if (configs[feedKey] || Object.values(configs).some(config => config.source === source ||
-        normalizePodcastKey(config.podcast_key) === normalizePodcastKey(podcastKey) ||
+        normalizeKey(config.podcast_key) === normalizeKey(podcastKey) ||
         parseHttpFeed(config.feed_url)?.toLowerCase() === attested.rssUrl.toLowerCase())) continue;
     configs[feedKey] = {
       podcast_key: podcastKey,
@@ -305,9 +340,9 @@ export function mergeSheetFeedConfigs(
       expected_rss_unique_guids: true
     };
   }
-  const policy = applySheetFeedPolicy(rows, configs, getPodcastId, normalizePodcastKey);
+  const policy = applySheetFeedPolicy(rows, configs, getPodcastId, normalizeKey);
   const staticKeys = new Set(Object.keys(manualStaticConfigs));
-  const staticPodcastKeys = getStaticPodcastKeys(manualStaticConfigs);
+  const staticPodcastKeys = getStaticPodcastKeys(manualStaticConfigs, normalizeKey);
   const seenSources = new Set(Object.values(configs).map((config) => config.source));
   const seenFeedUrls = new Set(
     Object.values(configs)
@@ -375,10 +410,10 @@ export function mergeSheetFeedConfigs(
       // baseline. The candidate is recorded for review, never as an importer.
       if (!previous) {
         const verification = row.episodeFeedVerification as Record<string, unknown> | undefined;
-        const exactIdRows = rows.filter(candidate => getPodcastId(candidate) === podcastId);
-        const normalizedIdRows = rows.filter(candidate => normalizePodcastKey(getPodcastId(candidate)) === normalizePodcastKey(podcastId));
+        const exactIdRows = rowIndexes.exactPodcastIds.get(podcastId);
+        const normalizedIdCount = rowIndexes.normalizedPodcastIds.get(normalizeKey(podcastId)) || 0;
         const catalogueId = String(row.catalogue_id ?? "").trim();
-        const catalogueIdRows = catalogueId ? rows.filter(candidate => String(candidate.catalogue_id ?? "").trim() === catalogueId) : [];
+        const catalogueIdCount = catalogueId ? rowIndexes.catalogueIds.get(catalogueId) || 0 : 0;
         const attested = verification?.version === 1 && verification.status === "verified" &&
           verification.podcast_id === podcastId && verification.catalogue_id === catalogueId &&
           verification.feed_url === feedUrl && verification.official_url === String(row.Link ?? "").trim() &&
@@ -388,7 +423,7 @@ export function mergeSheetFeedConfigs(
           typeof verification.self_url === "string" && verification.self_url === feedUrl &&
           typeof verification.channel_owner === "string" && verification.channel_owner === String(row.Udgiver ?? "").trim() &&
           Number.isInteger(verification.unique_guid_count) && Number(verification.unique_guid_count) > 0 &&
-          exactIdRows.length === 1 && normalizedIdRows.length === 1 && catalogueIdRows.length === 1 &&
+          exactIdRows?.count === 1 && normalizedIdCount === 1 && catalogueIdCount === 1 &&
           isOrdinaryRssUrl(feedUrl) && !parsePodimoShowFeed(rawFeed);
         configs[feedKey] = {
           podcast_key: podcastKey,
