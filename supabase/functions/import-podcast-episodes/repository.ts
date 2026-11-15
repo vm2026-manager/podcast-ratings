@@ -4,6 +4,7 @@ import { BATCH_SIZE, chunk, type ImportRepository, type PodcastEpisodeRow } from
 // for a 200-item PostgREST filter to exceed the gateway request-target limit.
 // Preserve every URL and every historical identity check; only chunk size changes.
 const CROSS_SOURCE_EPISODE_URL_BATCH_SIZE = 20;
+const AUTO_FEED_IDENTITY_PGRST303_RETRIES = 1;
 
 const SELECT_FIELDS = [
   "id",
@@ -125,8 +126,16 @@ export function createSupabaseImportRepository(client: any): ImportRepository {
     async loadAutoFeedIdentityInventory(podcastKey: string) {
       const episodes: PodcastEpisodeRow[] = [];
       for (let offset = 0; ; offset += BATCH_SIZE) {
-        const { data, error } = await client.from("podcast_episodes").select(SELECT_FIELDS)
-          .eq("podcast_key", podcastKey).order("id").range(offset, offset + BATCH_SIZE - 1);
+        let result: { data: PodcastEpisodeRow[] | null; error: { code?: string } | null } | null = null;
+        for (let attempt = 0; attempt <= AUTO_FEED_IDENTITY_PGRST303_RETRIES; attempt += 1) {
+          result = await client.from("podcast_episodes").select(SELECT_FIELDS)
+            .eq("podcast_key", podcastKey).order("id").range(offset, offset + BATCH_SIZE - 1);
+          // PGRST303 is JWT claims validation/parsing at the PostgREST
+          // boundary. Retry only this exact read-only identity inventory once;
+          // any second failure, other error, or all writes still fail closed.
+          if (result?.error?.code !== "PGRST303" || attempt === AUTO_FEED_IDENTITY_PGRST303_RETRIES) break;
+        }
+        const { data, error } = result || { data: null, error: { code: "unknown" } };
         if (error || !Array.isArray(data)) throw new Error("Automatic RSS podcast identity inventory failed");
         episodes.push(...data);
         if (data.length < BATCH_SIZE) break;

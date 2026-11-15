@@ -26,6 +26,7 @@ const checks = [
   ["Historien om alt exact Podimo transition and cross-source identity", ["--experimental-strip-types", "scripts/test-historien-om-alt-podimo-transition.mjs"]],
   ["Sidste nedtælling exact Podimo identity, health and idempotency", ["--experimental-strip-types", "scripts/test-sidste-nedtaelling-podimo.mjs"]],
   ["Bounded cross-source episode URL lookup preserves existing IDs", ["--experimental-strip-types", "scripts/test-cross-source-episode-url-batching.mjs"]],
+  ["Bounded PGRST303 retry for read-only RSS identity inventory", ["--experimental-strip-types", "scripts/test-postgrest-303-readonly-retry.mjs"]],
   ["Episode feed configuration coverage", ["--experimental-strip-types", "scripts/test-episode-feed-coverage.mjs"]],
   ["Production-sized runtime feed-config CPU and duplicate-identity guard", ["--experimental-strip-types", "scripts/test-runtime-feed-config-performance.mjs"]],
   ["Episode import lifecycle and one-episode frontend eligibility", ["scripts/test-episode-import-lifecycle.mjs"]],
