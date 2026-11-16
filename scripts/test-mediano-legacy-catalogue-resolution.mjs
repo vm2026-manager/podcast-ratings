@@ -3,7 +3,7 @@ import { readFile } from "node:fs/promises";
 
 const [app, payload, countDoc] = await Promise.all([
   readFile(new URL("../app.js", import.meta.url), "utf8"),
-  readFile(new URL("../data/podcasts.json", import.meta.url), "utf8"),
+  readFile(process.env.MEDIANO_TEST_CATALOGUE_PATH || new URL("../data/podcasts.json", import.meta.url), "utf8"),
   readFile(new URL("../docs/catalogue-runtime-count.md", import.meta.url), "utf8")
 ]);
 const rows = (JSON.parse(payload).rows || []).map((row) => ({
@@ -38,12 +38,37 @@ const localCanonicalIds = new Set([
   "der var engang et mal",
   "kampen om historien dr"
 ]);
-const canonicalIds = new Set(rows.map((row) => row.id));
-assert.ok(rows.every((row) => row.id), "every source row has an exact Podcast-ID");
-assert.equal(canonicalIds.size, rows.length, "raw catalogue Podcast-IDs stay unique");
-const allCurrentIds = new Set([...canonicalIds, ...localCanonicalIds]);
-const suppressedRows = rows.filter((row) => aliases[row.id] && allCurrentIds.has(aliases[row.id]));
-const suppressedIds = suppressedRows.map((row) => row.id).sort();
+function projectRuntimeCatalogue(podcastRows, aliasMap = aliases, localIds = localCanonicalIds) {
+  const canonicalIds = new Set(podcastRows.map((row) => row.id));
+  assert.ok(podcastRows.every((row) => row.id), "every source row has an exact Podcast-ID");
+  assert.equal(canonicalIds.size, podcastRows.length, "raw catalogue Podcast-IDs stay unique");
+  const allCurrentIds = new Set([...canonicalIds, ...localIds]);
+  const suppressedRows = podcastRows.filter((row) => aliasMap[row.id] && allCurrentIds.has(aliasMap[row.id]));
+  const visibleIds = new Set([
+    ...localIds,
+    ...podcastRows
+      .filter((row) => !aliasMap[row.id] || !allCurrentIds.has(aliasMap[row.id]))
+      .map((row) => row.id)
+  ]);
+  return {
+    canonicalIds,
+    allCurrentIds,
+    suppressedRows,
+    suppressedIds: suppressedRows.map((row) => row.id).sort(),
+    localAdditions: [...localIds].filter((id) => !canonicalIds.has(id)),
+    visibleIds,
+    retainedRawIds: podcastRows.map((row) => row.id).filter((id) => visibleIds.has(id)).sort()
+  };
+}
+const {
+  canonicalIds,
+  allCurrentIds,
+  suppressedRows,
+  suppressedIds,
+  localAdditions,
+  visibleIds,
+  retainedRawIds
+} = projectRuntimeCatalogue(rows);
 const expectedSuppressedIds = [
   "ciao gianni",
   "den store talentserie",
@@ -75,7 +100,6 @@ const expectedSuppressedIds = [
 ].sort();
 assert.deepEqual(suppressedIds, expectedSuppressedIds, "only exact reviewed Mediano episode IDs with present canonical targets are suppressed");
 assert.ok(rows.every((row) => row.title), "every source row survives the runtime's title-presence check");
-const localAdditions = [...localCanonicalIds].filter((id) => !canonicalIds.has(id));
 for (const id of localAdditions) {
   assert.match(app, new RegExp(`"Podcast-ID": "${id}"`, "u"), `${id} must be an exact local canonical Podcast-ID`);
 }
@@ -87,13 +111,6 @@ for (const row of suppressedRows) {
     `${row.id} must use its reviewed exact-ID mapping to ${aliases[row.id]}`
   );
 }
-const visibleIds = new Set([
-  ...localCanonicalIds,
-  ...rows
-    .filter((row) => !aliases[row.id] || !allCurrentIds.has(aliases[row.id]))
-    .map((row) => row.id)
-]);
-const retainedRawIds = rows.map((row) => row.id).filter((id) => visibleIds.has(id)).sort();
 assert.ok(suppressedIds.every((id) => !visibleIds.has(id)), "suppressed episode IDs are not also emitted as podcasts");
 assert.deepEqual(
   [...retainedRawIds, ...suppressedIds].sort(),
@@ -106,12 +123,49 @@ assert.equal(
   "runtime count is raw unique IDs + missing reviewed local canonicals - exact legacy episode IDs"
 );
 const formatCount = (value) => new Intl.NumberFormat("en-US").format(value);
-const currentFormula = `${formatCount(rows.length)} raw rows + ${formatCount(localAdditions.length)} local canonical rows - ${formatCount(suppressedRows.length)} legacy episode rows = ${formatCount(visibleIds.size)}`;
 assert.ok(
-  countDoc.includes(`For the 14 November 2026 catalogue, the published JSON contains ${formatCount(rows.length)} unique`) &&
-    countDoc.includes(currentFormula),
-  "the dated runtime-count documentation matches the data-derived catalogue/runtime calculation"
+  countDoc.includes("For the 14 November 2026 catalogue, the published JSON contains 1,379 unique") &&
+    countDoc.includes("1,379 raw rows + 6 local canonical rows - 27 legacy episode rows = 1,358"),
+  "the dated 14 November runtime-count observation remains preserved as historical documentation"
 );
+
+const candidatePodcastId = "von teller-mysteriet";
+const existingCandidateRow = rows.find((row) => row.id === candidatePodcastId);
+const candidateBaseRows = existingCandidateRow ? rows.filter((row) => row.id !== candidatePodcastId) : rows;
+const candidateRows = existingCandidateRow
+  ? rows
+  : [...rows, { id: candidatePodcastId, title: "Von Teller-mysteriet" }];
+const candidateBaseProjection = projectRuntimeCatalogue(candidateBaseRows);
+const candidateProjection = projectRuntimeCatalogue(candidateRows);
+assert.equal(candidateRows.length, candidateBaseRows.length + 1, "the verified candidate adds one unique exact Podcast-ID");
+assert.equal(candidateProjection.visibleIds.size, candidateBaseProjection.visibleIds.size + 1, "one new valid exact Podcast-ID adds one runtime podcast");
+assert.deepEqual(candidateProjection.suppressedIds, candidateBaseProjection.suppressedIds, "an ordinary new row leaves all reviewed legacy suppressions unchanged");
+assert.ok(candidateProjection.canonicalIds.has(candidatePodcastId), "the candidate row remains in the raw identity set");
+assert.ok(candidateProjection.visibleIds.has(candidatePodcastId), "the candidate row remains visible under its exact Podcast-ID");
+assert.throws(
+  () => projectRuntimeCatalogue([...candidateRows, candidateRows.find((row) => row.id === candidatePodcastId)]),
+  /raw catalogue Podcast-IDs stay unique/u,
+  "a duplicate exact Podcast-ID blocks catalogue projection"
+);
+
+const missingTargetId = "synthetic legacy row with missing canonical target";
+const missingTargetProjection = projectRuntimeCatalogue(
+  [{ id: missingTargetId, title: "Synthetic legacy row" }],
+  { [missingTargetId]: "canonical target absent from catalogue" },
+  new Set()
+);
+assert.deepEqual(missingTargetProjection.suppressedIds, [], "a missing canonical target never suppresses a raw identity");
+assert.ok(missingTargetProjection.visibleIds.has(missingTargetId), "a legacy row remains visible while its canonical target is absent");
+
+const unreviewedAliasId = "unreviewed mediano legacy alias";
+const unreviewedAliasProjection = projectRuntimeCatalogue(
+  [{ id: unreviewedAliasId, title: "Unreviewed legacy alias" }],
+  aliases,
+  new Set()
+);
+assert.equal(aliases[unreviewedAliasId], undefined, "an unreviewed alias is absent from the explicit allowlist");
+assert.deepEqual(unreviewedAliasProjection.suppressedIds, [], "unreviewed aliases cannot suppress catalogue rows");
+assert.ok(unreviewedAliasProjection.visibleIds.has(unreviewedAliasId), "unreviewed identities remain visible verbatim");
 assert.ok(visibleIds.has("balkans knuste hjerte"), "Balkans remains a direct current podcast ID");
 assert.ok(visibleIds.has("hvem er saveus"), "Saveus remains a direct current podcast ID");
 
@@ -182,7 +236,9 @@ console.log(JSON.stringify({
   rankingDisplayGroups: displayGroups.length,
   rankingDeltaFromGrouping: groupedMemberIds.length - displayGroups.length,
   "balkans knuste hjerte": visibleIds.has("balkans knuste hjerte"),
-  "hvem er saveus": visibleIds.has("hvem er saveus")
+  "hvem er saveus": visibleIds.has("hvem er saveus"),
+  candidatePodcastId,
+  candidateRuntimeCount: candidateProjection.visibleIds.size
 }, null, 2));
 
 console.log("Mediano legacy catalogue resolution regression checks passed.");
