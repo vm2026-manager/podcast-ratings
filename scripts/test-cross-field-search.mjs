@@ -202,6 +202,17 @@ try {
       radio4: matchesRankingEnhancedSearch({ title: "Radio IIII" }, "Radio 4"),
       danish: matchesRankingEnhancedSearch({ title: "Rådet om ÆØÅ" }, "raadet aeoeaa")
     };
+    const secondWarQueries = ["2. ve", "2. verd", "2. verdenskri", "2. verdenskrig"];
+    const secondWarResults = Object.fromEntries(secondWarQueries.map((query) => [query,
+      getRankingCandidates().filter((podcast) => matchesRankingEnhancedSearch(podcast, query))
+        .map((podcast) => getPodcastId(podcast)).sort()
+    ]));
+    const secondWarRatings = Object.fromEntries(getRankingCandidates()
+      .filter((podcast) => secondWarResults["2. verdenskrig"].includes(getPodcastId(podcast)))
+      .map((podcast) => [getPodcastId(podcast), podcast.ratingValue]));
+    const firstWarQuery = getRankingCandidates()
+      .filter((podcast) => matchesRankingEnhancedSearch(podcast, "1. verd"))
+      .map((podcast) => getPodcastId(podcast)).sort();
     state.searchTerm = "tamm krig";
     setActiveFilter("genre", "Dokumentar");
     const matchingGenreFilter = getFilteredPodcasts().some((podcast) => getPodcastId(podcast) === "krig");
@@ -210,7 +221,7 @@ try {
     clearActiveFilter();
     state.searchTerm = "";
     const afterFilterRating = getRankingCandidates().find((podcast) => getPodcastId(podcast) === "krig").ratingValue;
-    return { bakspejlTitles, bakspejl: bakspejl.map(({ title, host, mainSeries }) => ({ title, host, mainSeries })), bakspejlRanking, bakspejlQueryTitles, bakspejlHeader, queries, header, ranking, shortTitleSearch, shortTwoLetterTitleSearch, sigTarget: sigTarget && { id: getPodcastId(sigTarget), title: sigTarget.title }, numberSearch, specialCharacterSearch, sigTypeaheadQueries, sigTypeahead, shortMiddleTitleSequences, negative, aliases, matchingGenreFilter, nonmatchingGenreFilter, rating, afterFilterRating };
+    return { bakspejlTitles, bakspejl: bakspejl.map(({ title, host, mainSeries }) => ({ title, host, mainSeries })), bakspejlRanking, bakspejlQueryTitles, bakspejlHeader, queries, header, ranking, shortTitleSearch, shortTwoLetterTitleSearch, sigTarget: sigTarget && { id: getPodcastId(sigTarget), title: sigTarget.title }, numberSearch, specialCharacterSearch, sigTypeaheadQueries, sigTypeahead, shortMiddleTitleSequences, negative, aliases, secondWarQueries, secondWarResults, secondWarRatings, firstWarQuery, matchingGenreFilter, nonmatchingGenreFilter, rating, afterFilterRating };
   });
   assert.ok(results.bakspejl.length > 0, `catalogue must contain verified Bakspejl titles and Martin Grønne: ${JSON.stringify(results.bakspejl)}`);
   assert.deepEqual(results.bakspejl.map(({ title }) => title).sort(), results.bakspejlTitles.slice().sort(), "both current Bakspejl title rows retain Martin Grønne as the verified host");
@@ -276,6 +287,13 @@ try {
   assert.equal(new Set(results.shortMiddleTitleSequences.map(({ id }) => id)).size, results.shortMiddleTitleSequences.length, "typeahead examples use distinct canonical podcast identities");
   assert.deepEqual(results.negative, { ranking: false, header: false, noFuzzyIdentity: false, noSubstringAcrossFields: false, noShortPrefixCollision: false, noMidWordTitleMatch: false, noShortHostOnlyMatch: false, noTwoLetterHostPrefixCollision: false, noTwoLetterSubstring: false, noShortQuery: false, noOneLetterPrefix: false, noTwoLetterMultiwordPrefix: false, noStopWordCrossFieldCombination: false, noUnrelatedSigTitle: false, noRomanPrefixInTitleSequence: false, noNumericPrefixInTitleSequence: false, noShortStopWord: false, noShortNumericOrRoman: false });
   assert.deepEqual(results.aliases, { radio24: true, radio4: true, danish: true });
+  assert.ok(results.secondWarQueries.every((query) => results.secondWarResults[query].length > 0), "all WWII partial and complete queries find actual catalogue entries");
+  for (const query of results.secondWarQueries.slice(1)) {
+    assert.deepEqual(results.secondWarResults[query], results.secondWarResults["2. ve"], `partial WWII query ${query} preserves the exact relevant podcast ID set`);
+  }
+  assert.equal(results.secondWarResults["2. ve"].length, 10, "partial WWII search retains all ten existing topic results");
+  assert.equal(results.firstWarQuery.some((id) => results.secondWarResults["2. ve"].includes(id)), false, "first-world-war partial query never returns second-world-war IDs");
+  assert.ok(Object.values(results.secondWarRatings).some((rating) => Number.isFinite(Number(rating))), "search results retain their catalogue ratings");
   assert.equal(results.matchingGenreFilter, true, "active matching genre filters still apply alongside search");
   assert.equal(results.nonmatchingGenreFilter, false, "active nonmatching genre filters still exclude the podcast");
   assert.equal(results.afterFilterRating, results.rating, "search and filters do not alter the rating shown");
@@ -331,6 +349,13 @@ try {
   await page.waitForFunction(() => !headerSearchState.matches.some(({ podcast }) => getPodcastId(podcast) === "112 for knuste hjerter"));
   await desktopSearchInput.fill("112 fo");
   await page.waitForFunction(() => headerSearchState.matches.some(({ podcast }) => getPodcastId(podcast) === "112 for knuste hjerter"));
+  await desktopSearchInput.fill("2. ve");
+  await page.waitForFunction(() => headerSearchState.matches.some(({ podcast }) => getPodcastId(podcast) === "granatmysteriet tv2 ost"));
+  await desktopSearchInput.fill("2. verdenskri");
+  await page.waitForFunction(() => headerSearchState.matches.some(({ podcast }) => getPodcastId(podcast) === "granatmysteriet tv2 ost"));
+  assert.ok(await page.locator("[data-header-search-index]").count() > 0, "desktop header visibly refreshes suggestions while typing a partial synonym");
+  await desktopSearchInput.fill("");
+  await page.waitForFunction(() => headerSearchState.matches.length === 0);
 
   await desktopSearchInput.fill("");
   let desktopTypedQuery = "";
@@ -362,6 +387,15 @@ try {
   await rankingPage.evaluate(() => handleRankingSourceChange("mads"));
   await rankingPage.waitForFunction(() => state.rankingSource === "mads");
   const rankingSearch = rankingPage.locator("#searchInput");
+  await rankingSearch.click();
+  await rankingSearch.fill("2. ve");
+  await rankingPage.waitForFunction(() => state.searchTerm === "2. ve" && getFilteredPodcasts().some((podcast) => getPodcastId(podcast) === "granatmysteriet tv2 ost"));
+  const rankingWarResult = rankingPage.locator('#podcastGrid [data-key="granatmysteriet tv2 ost"]').first();
+  await rankingWarResult.waitFor({ state: "visible" });
+  await rankingSearch.fill("2. verdenskri");
+  await rankingPage.waitForFunction(() => state.searchTerm === "2. verdenskri" && getFilteredPodcasts().some((podcast) => getPodcastId(podcast) === "granatmysteriet tv2 ost"));
+  await rankingWarResult.waitFor({ state: "visible" });
+  await rankingSearch.fill("");
   await rankingSearch.click();
   await rankingSearch.fill("ho");
   await rankingPage.waitForFunction(() => state.searchTerm === "ho" && getFilteredPodcasts().some((podcast) => getPodcastId(podcast) === "enver hoxha"));
@@ -443,6 +477,12 @@ try {
   await page.waitForFunction(() => !mobileHomeSearchOverlayState.matches.some(({ podcast }) => getPodcastId(podcast) === "112 for knuste hjerter"));
   await page.locator("#mobileHomeSearchOverlayInput").fill("112 fo");
   await page.waitForFunction(() => mobileHomeSearchOverlayState.matches.some(({ podcast }) => getPodcastId(podcast) === "112 for knuste hjerter"));
+  await page.locator("#mobileHomeSearchOverlayInput").fill("2. ve");
+  await page.waitForFunction(() => mobileHomeSearchOverlayState.matches.some(({ podcast }) => getPodcastId(podcast) === "granatmysteriet tv2 ost"));
+  await page.locator("#mobileHomeSearchOverlayInput").fill("2. verdenskri");
+  await page.waitForFunction(() => mobileHomeSearchOverlayState.matches.some(({ podcast }) => getPodcastId(podcast) === "granatmysteriet tv2 ost"));
+  assert.ok(await page.locator("#mobileHomeSearchOverlayResults [data-mobile-home-search-index]").count() > 0, "mobile overlay updates visible suggestions during partial synonym typing");
+  await page.locator("#mobileHomeSearchOverlayInput").fill("112 fo");
   await page.locator("#mobileHomeSearchOverlayResults [data-mobile-home-search-index]").first().tap();
   await page.locator("#podcastDetailSheet:not(.is-hidden)").waitFor({ state: "visible" });
   assert.ok((await page.locator("#podcastDetailSheet").innerText()).includes("112 for knuste hjerter"), "mobile touch opens the numeric search result");
