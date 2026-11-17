@@ -13381,13 +13381,59 @@ async function fetchManualCanonicalEpisodeMappings(episodes) {
   return manualEpisodes.every(isManualEpisodeMappingResolved);
 }
 
-async function refreshManualEpisodeRatingData(podcastKey, episodes, { force = false } = {}) {
+function getVerifiedHistoricalMedianoEpisodeBridges(podcastKey, manualEpisodes, existingEpisodes) {
+  const expectedPodcastKey = "troels bech i en samtale";
+  const expectedTitle = "Landsholdets analytiker: Mounir Akhiat";
+  const expectedEpisodeId = "59389cfb-aa8c-40a3-94b4-9e2b04e832cc";
+  const legacyEpisodeKey = "landsholdets analytiker mounir akhiat";
+  if (
+    normalizeText(podcastKey) !== expectedPodcastKey ||
+    MEDIANO_LEGACY_CATALOGUE_CANONICAL_IDS[legacyEpisodeKey] !== expectedPodcastKey ||
+    MEDIANO_HISTORICAL_CATALOGUE_CANONICAL_EPISODE_IDS[legacyEpisodeKey] !== expectedEpisodeId
+  ) return [];
+
+  const hasExistingMedianoEpisode = (existingEpisodes || []).some((episode) =>
+    normalizeText(episode?.id) === expectedEpisodeId &&
+    normalizeText(episode?.podcast_key) === expectedPodcastKey &&
+    normalizeText(episode?.source) === "mediano_public_rss" &&
+    normalizeText(episode?.title) === expectedTitle
+  );
+  if (!hasExistingMedianoEpisode) return [];
+
+  return (manualEpisodes || []).filter((episode) =>
+    episode?.dataSource === "manual" &&
+    normalizeText(episode?.source) === MANUAL_CATALOGUE_SOURCE &&
+    normalizeText(episode?.id) === expectedEpisodeId &&
+    normalizeText(episode?.manual_episode_key) === `manual-catalogue-v1:${expectedEpisodeId}` &&
+    normalizeText(episode?.podcast_key) === expectedPodcastKey &&
+    normalizeText(episode?.title) === expectedTitle
+  );
+}
+
+function getMappedManualEpisodesForDisplay(podcastKey, manualEpisodes, existingEpisodes) {
+  const verifiedBridges = new Set(getVerifiedHistoricalMedianoEpisodeBridges(
+    podcastKey,
+    manualEpisodes,
+    existingEpisodes
+  ));
+  return (manualEpisodes || []).filter((episode) =>
+    verifiedBridges.has(episode) || isManualEpisodeMappingResolved(episode)
+  );
+}
+
+async function refreshManualEpisodeRatingData(podcastKey, episodes, { force = false, existingEpisodes = [] } = {}) {
   if (state.authUser && !state.supabase) {
     throw new Error("Episodevurderingerne kunne ikke hentes lige nu.");
   }
-  await fetchManualCanonicalEpisodeMappings(episodes);
-  const canonical = (episodes || []).filter(isManualEpisodeMappingResolved);
-  const unresolved = (episodes || []).filter((episode) => !isManualEpisodeMappingResolved(episode));
+  const bridgeIds = new Set(getVerifiedHistoricalMedianoEpisodeBridges(
+    podcastKey,
+    episodes,
+    existingEpisodes
+  ));
+  const ratingEpisodes = (episodes || []).filter((episode) => !bridgeIds.has(episode));
+  await fetchManualCanonicalEpisodeMappings(ratingEpisodes);
+  const canonical = ratingEpisodes.filter(isManualEpisodeMappingResolved);
+  const unresolved = ratingEpisodes.filter((episode) => !isManualEpisodeMappingResolved(episode));
   if (unresolved.length) hydrateLocalEpisodeRatingState(podcastKey, unresolved);
   if (canonical.length) await fetchEpisodeRatingMetaForEpisodes(canonical, { force, update: false });
 }
@@ -13951,6 +13997,7 @@ async function fetchGenstartEpisodes({ append = false } = {}) {
       ? { ...episode, _displayGroupEpisodeStateKey: config.stateKey }
       : episode);
     const manualEpisodes = getConfiguredManualEpisodes(config);
+    let displayManualEpisodes = manualEpisodes;
     if (manualEpisodes.length) {
       if (config.manualEpisodeRatingPersistence === "local") {
         const canonicalIds = new Set(Object.values(config.manualEpisodeCanonicalIds || {}).map(normalizeText));
@@ -13959,18 +14006,25 @@ async function fetchGenstartEpisodes({ append = false } = {}) {
           manualEpisodes.filter((episode) => !canonicalIds.has(normalizeText(episode.id)))
         );
       } else {
-        await refreshManualEpisodeRatingData(config.podcastKey, manualEpisodes);
+        try {
+          await refreshManualEpisodeRatingData(config.podcastKey, manualEpisodes, { existingEpisodes: rows });
+        } catch (error) {
+          // Catalogue rating mappings are secondary to rendering successfully
+          // fetched public-feed episodes. Their own identities stay fail-closed.
+          console.error("Kunne ikke opdatere manuelle episodevurderinger.", error);
+        }
+        displayManualEpisodes = getMappedManualEpisodesForDisplay(config.podcastKey, manualEpisodes, rows);
       }
     }
     const mergedItems = append
       ? mergeEpisodes(episodeState.items, rows)
-      : mergeEpisodes(rows, manualEpisodes);
+      : mergeEpisodes(rows, displayManualEpisodes);
     episodeState.items = mergedItems;
     episodeState.remoteLoadedCount = append
       ? episodeState.remoteLoadedCount + fetchedRows.length
       : fetchedRows.length;
     const uniqueManualEpisodeCount = append
-      ? manualEpisodes.length
+      ? displayManualEpisodes.length
       : Math.max(0, mergedItems.length - rows.length);
     episodeState.totalCount = Number.isFinite(count) ? count + uniqueManualEpisodeCount : null;
     episodeState.hasMore = fetchedRows.length === pageSize && (
@@ -14338,6 +14392,7 @@ function getEpisodeWorkspaceSummary(podcast) {
   const loaded = getEpisodeWorkspaceEpisodes(podcast).length;
   const hasMore = hasSearch ? episodeState.searchHasMore : episodeState.hasMore;
   const visible = Math.min(loaded, episodeState.workspaceVisibleCount || EPISODE_WORKSPACE_PAGE_SIZE);
+  if (!loaded && episodeState.error) return episodeState.error;
   if (!loaded && hasSearch) return "Ingen episoder matcher din s\u00f8gning.";
   if (!loaded) return "Der er endnu ingen episoder at vise.";
   if (config?.seasonNumber) {

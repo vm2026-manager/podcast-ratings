@@ -182,7 +182,7 @@ assert.deepEqual(
 
 const browser = await chromium.launch({ headless: true });
 try {
-  for (const width of [1440, 390, 375, 320]) {
+  for (const width of [1440, 1280, 768, 390, 375, 320]) {
     const page = await browser.newPage({
       viewport: { width, height: 720 },
       isMobile: width <= 768,
@@ -264,10 +264,10 @@ const fodboldministeriet = context.getEpisodePodcastConfig({
 assert.equal(fodboldministeriet.databasePodcastKey, "fodboldministeriet", "Fodboldministeriet retains its dedicated canonical key");
 assert.equal(context.MEDIANO_EPISODE_PODCAST_CONFIG.fodboldministeriet, undefined, "Fodboldministeriet is not added to the Mediano umbrella config");
 
-assert.match(app, /mergeEpisodes\(rows, manualEpisodes\)/u, "Superliga for voksne uses the existing identity de-duplication merge");
+assert.match(app, /mergeEpisodes\(rows, displayManualEpisodes\)/u, "Superliga for voksne uses the existing identity de-duplication merge");
 assert.match(app, /manualEpisodeKey: "den-store-talentserie"/u, "Den store talentserie uses an immutable manual episode key");
 assert.match(app, /manualEpisodeKey: "mediano-special-hvad-siger-data-om-superligaen"/u, "Mediano Special historical episode uses an immutable manual episode key");
-assert.match(app, /refreshManualEpisodeRatingData\(config\.podcastKey, manualEpisodes\)/u, "manual rating/mapping hydration remains active");
+assert.match(app, /refreshManualEpisodeRatingData\(config\.podcastKey, manualEpisodes, \{ existingEpisodes: rows \}\)/u, "manual rating/mapping hydration remains active and receives loaded canonical episodes");
 assert.match(app, /function getEpisodeRatingPersistenceConfig[\s\S]*?if \(config\) return config;/u, "existing episode-rating persistence resolution remains unchanged");
 
 console.log("Mediano episode workspace configuration regression checks passed.");
