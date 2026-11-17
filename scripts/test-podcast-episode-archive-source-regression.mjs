@@ -27,7 +27,8 @@ for (const [name, body] of [["loader", loader], ["search", search]]) {
 assert.match(loader, /const pageSize = Number\(config\.pageSize \|\| EPISODE_PAGE_SIZE\)[\s\S]*?\.range\(offset, offset \+ pageSize - 1\)/u, "loader keeps configurable Vis flere pagination");
 assert.match(search, /const pageSize = Number\(config\.pageSize \|\| EPISODE_PAGE_SIZE\)[\s\S]*?\.range\(offset, offset \+ pageSize - 1\)/u, "search keeps configurable result pagination");
 assert.match(search, /title\.ilike\.\$\{pattern\},description\.ilike\.\$\{pattern\}/u, "search still searches title and description");
-assert.match(loader, /mergeEpisodes\(rows, manualEpisodes\)/u, "manual catalogue episodes remain merged through their existing separation path");
+assert.match(loader, /mergeEpisodes\(rows, displayManualEpisodes\)/u, "only safely mapped or explicitly bridged catalogue episodes enter the archive merge");
+assert.match(loader, /getMappedManualEpisodesForDisplay\(config\.podcastKey, manualEpisodes, rows\)/u, "unresolved manual identities stay out of the displayed archive");
 assert.match(search, /mergeEpisodes\(rows, manualEpisodes\)/u, "manual catalogue search remains separated and merged");
 assert.match(app, /episode\?\.dataSource === "manual"[\s\S]*?manualCanonicalEpisodeMappings/u, "manual rating persistence remains distinct");
 assert.match(app, /select\("id,podcast_key,title/u, "episode IDs remain selected for rating identity");
