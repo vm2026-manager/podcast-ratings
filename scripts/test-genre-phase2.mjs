@@ -17,7 +17,8 @@ const appSource = await readFile(path.join(root, "app.js"), "utf8");
 const indexSource = await readFile(path.join(root, "index.html"), "utf8");
 const styleSource = await readFile(path.join(root, "style.css"), "utf8");
 assert.equal(catalogue.rows.length, catalogue.count, "The catalogue wrapper count matches its source rows");
-assert.match(indexSource, /app\.js\?v=20261111-issue87-leopold-cover-fallback/u);
+assert.match(indexSource, /app\.js\?v=20261117-issue97-renere-populaerliste/u,
+  "the JavaScript asset cache version includes the popular-now status cleanup");
 assert.match(appSource, /const CANONICAL_GENRES = window\.PODCAST_CANONICAL_GENRES;/u);
 assert.match(indexSource, /canonical-genres\.js\?v=/u);
 assert.ok(indexSource.indexOf("canonical-genres.js") < indexSource.indexOf("app.js"), "shared genre definition loads before the app");
