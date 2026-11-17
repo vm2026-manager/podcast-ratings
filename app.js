@@ -2671,11 +2671,21 @@ const rankingSearchSynonymAliases = RANKING_SEARCH_SYNONYM_GROUPS
     token: `rankingsynonym${group.id.replace(/-/g, "")}`
   })))
   .sort((left, right) => right.alias.length - left.alias.length);
+const RANKING_SEARCH_PREFIX_MIN_LENGTH = 4;
 const rankingSearchSynonymsByFirstToken = new Map();
+const rankingSearchSynonymPrefixAliasesByFirstToken = new Map();
+const rankingSearchSingleWordSynonymsByFourCharPrefix = new Map();
 let rankingSearchSynonymMaxTokenCount = 1;
 for (const synonym of rankingSearchSynonymAliases) {
   const tokens = synonym.alias.split(" ");
   rankingSearchSynonymMaxTokenCount = Math.max(rankingSearchSynonymMaxTokenCount, tokens.length);
+  if (!rankingSearchSynonymPrefixAliasesByFirstToken.has(tokens[0])) rankingSearchSynonymPrefixAliasesByFirstToken.set(tokens[0], []);
+  rankingSearchSynonymPrefixAliasesByFirstToken.get(tokens[0]).push(synonym);
+  if (tokens.length === 1) {
+    const prefix = tokens[0].slice(0, RANKING_SEARCH_PREFIX_MIN_LENGTH);
+    if (!rankingSearchSingleWordSynonymsByFourCharPrefix.has(prefix)) rankingSearchSingleWordSynonymsByFourCharPrefix.set(prefix, []);
+    rankingSearchSingleWordSynonymsByFourCharPrefix.get(prefix).push(synonym);
+  }
   if (!rankingSearchSynonymsByFirstToken.has(tokens[0])) rankingSearchSynonymsByFirstToken.set(tokens[0], new Map());
   const aliases = rankingSearchSynonymsByFirstToken.get(tokens[0]);
   if (!aliases.has(synonym.alias)) aliases.set(synonym.alias, synonym.token);
@@ -2684,7 +2694,6 @@ const rankingSearchStopWords = new Set([
   "a", "af", "at", "da", "de", "den", "det", "en", "et", "for", "fra",
   "i", "med", "og", "om", "på", "til", "the", "and", "of", "in", "to"
 ]);
-const RANKING_SEARCH_PREFIX_MIN_LENGTH = 4;
 const rankingSearchFieldCache = new WeakMap();
 const rankingSearchTitleTokenSequenceCache = new WeakMap();
 const rankingSearchQueryCache = new Map();
@@ -2717,6 +2726,68 @@ function canonicalizeNormalizedRankingSearchText(normalized) {
   return canonicalTokens.join(" ");
 }
 
+function canonicalizeNormalizedRankingSearchQuery(normalized) {
+  const tokens = normalized.split(" ").filter(Boolean);
+  const mayContainPartialSynonym = tokens.some((token) =>
+    rankingSearchSynonymPrefixAliasesByFirstToken.has(token) ||
+    rankingSearchSingleWordSynonymsByFourCharPrefix.has(token.slice(0, RANKING_SEARCH_PREFIX_MIN_LENGTH))
+  );
+  if (!mayContainPartialSynonym) return canonicalizeNormalizedRankingSearchText(normalized);
+
+  const canonicalTokens = [];
+  for (let index = 0; index < tokens.length;) {
+    const aliases = rankingSearchSynonymsByFirstToken.get(tokens[index]);
+    let matchedToken = null;
+    let matchedLength = 0;
+    if (aliases) {
+      const maxLength = Math.min(rankingSearchSynonymMaxTokenCount, tokens.length - index);
+      for (let length = maxLength; length > 0; length -= 1) {
+        const aliasToken = aliases.get(tokens.slice(index, index + length).join(" "));
+        if (aliasToken) {
+          matchedToken = aliasToken;
+          matchedLength = length;
+          break;
+        }
+      }
+    }
+
+    if (!matchedToken) {
+      const prefixAliases = [
+        ...(rankingSearchSynonymPrefixAliasesByFirstToken.get(tokens[index]) || []),
+        ...(rankingSearchSingleWordSynonymsByFourCharPrefix.get(tokens[index].slice(0, RANKING_SEARCH_PREFIX_MIN_LENGTH)) || [])
+      ];
+      const matchingGroups = new Map();
+      for (const synonym of prefixAliases) {
+        const aliasTokens = synonym.alias.split(" ");
+        const queryLastIndex = index + aliasTokens.length - 1;
+        if (queryLastIndex >= tokens.length) continue;
+        const queryLastToken = tokens[queryLastIndex];
+        const lastToken = aliasTokens.at(-1);
+        const isTextPrefix = /^[\p{L}]+$/u.test(queryLastToken) && !/^[ivxlcdm]+$/u.test(queryLastToken);
+        if (!isTextPrefix || !/^[\p{L}]+$/u.test(lastToken)) continue;
+        const prefixLength = aliasTokens.length === 1 ? RANKING_SEARCH_PREFIX_MIN_LENGTH : 2;
+        if (queryLastToken.length < prefixLength || queryLastToken.length >= lastToken.length) continue;
+        if (!lastToken.startsWith(queryLastToken)) continue;
+        let precedingWordsMatch = true;
+        for (let offset = 0; offset < aliasTokens.length - 1; offset += 1) {
+          if (tokens[index + offset] !== aliasTokens[offset]) {
+            precedingWordsMatch = false;
+            break;
+          }
+        }
+        if (precedingWordsMatch) matchingGroups.set(synonym.group, { token: synonym.token, length: aliasTokens.length });
+      }
+      if (matchingGroups.size === 1) {
+        ({ token: matchedToken, length: matchedLength } = matchingGroups.values().next().value);
+      }
+    }
+
+    canonicalTokens.push(matchedToken || tokens[index]);
+    index += matchedLength || 1;
+  }
+  return canonicalTokens.join(" ");
+}
+
 function canonicalizeRankingSearchText(value) {
   return canonicalizeNormalizedRankingSearchText(normalizeRankingSearchValue(value));
 }
@@ -2733,7 +2804,7 @@ function getRankingSearchQuery(searchTerm) {
   if (!normalized) return null;
   if (rankingSearchQueryCache.has(normalized)) return rankingSearchQueryCache.get(normalized);
 
-  const canonical = canonicalizeNormalizedRankingSearchText(normalized);
+  const canonical = canonicalizeNormalizedRankingSearchQuery(normalized);
   const query = {
     normalized,
     canonicalTokens: canonical.split(" ").filter(Boolean),
