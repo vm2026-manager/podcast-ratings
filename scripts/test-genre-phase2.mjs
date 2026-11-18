@@ -17,10 +17,7 @@ const appSource = await readFile(path.join(root, "app.js"), "utf8");
 const indexSource = await readFile(path.join(root, "index.html"), "utf8");
 const styleSource = await readFile(path.join(root, "style.css"), "utf8");
 assert.equal(catalogue.rows.length, catalogue.count, "The catalogue wrapper count matches its source rows");
-assert.match(indexSource, /app\.js\?v=20261117-issue97-renere-populaerliste/u,
-  "the JavaScript asset cache version includes the popular-now status cleanup");
-assert.match(indexSource, /app\.js\?v=20261117-issue97-renere-populaerliste[^"]*issue96-live-search-v1=1/u,
-  "the current asset preserves the issue 96 live-search flag");
+assert.match(indexSource, /app\.js\?v=20261118-issue98-topic-search[^"]*issue96-live-search-v1=1/u);
 assert.match(appSource, /const CANONICAL_GENRES = window\.PODCAST_CANONICAL_GENRES;/u);
 assert.match(indexSource, /canonical-genres\.js\?v=/u);
 assert.ok(indexSource.indexOf("canonical-genres.js") < indexSource.indexOf("app.js"), "shared genre definition loads before the app");
@@ -147,9 +144,12 @@ try {
     const fixture = (title, topics) => ({ title, searchTopics: topics });
     const secondWar = fixture("Krigen på isen", ["Anden Verdenskrig", "Grønland"]);
     const synonyms = [
-      ["2. verdenskrig", secondWar], ["2 verdenskrig", secondWar],
+      ["2. verdenskrig", secondWar], ["2 verdenskrig", secondWar], ["world war ll", secondWar],
       ["anden verdenskrig", secondWar], ["WW2", secondWar], ["WWII", secondWar],
       ["world war 2", secondWar], ["world war ii", secondWar],
+      ["den kolde krig", fixture("Kold krig", ["Den kolde krig"])],
+      ["kolde krig", fixture("Kold krig", ["Den kolde krig"])],
+      ["cold war", fixture("Cold War", ["Den kolde krig"])],
       ["1. verdenskrig", fixture("Den store krig", ["Første Verdenskrig"])],
       ["WWI", fixture("Den store krig", ["Første Verdenskrig"])],
       ["WW1", fixture("Den store krig", ["Første Verdenskrig"])],
@@ -174,6 +174,12 @@ try {
         artificialIntelligence: matchesRankingEnhancedSearch(fixture("Teknologi", ["Kunstig intelligens"]), "kunstig intelli"),
         climateChange: matchesRankingEnhancedSearch(fixture("Klima", ["Klimaændringer"]), "klimaforandring"),
         football: matchesRankingEnhancedSearch(fixture("Sport", ["Fodbold"]), "fodb"),
+        coldWar: ["den kolde kr", "kolde kr", "cold wa"].map((query) => matchesRankingEnhancedSearch(fixture("Kold krig", ["Den kolde krig"]), query)),
+        koldRemainsOpenText: canonicalizeRankingSearchText("kold") === "kold",
+        relatedBerlinWall: matchesRankingEnhancedSearch(fixture("Grænsevagten", ["Berlinmurens fald"]), "murens fald"),
+        relatedDoesNotBecomeSynonym: canonicalizeRankingSearchText("murens fald") === "murens fald",
+        relatedRequiresEvidence: matchesRankingEnhancedSearch(fixture("Kold krig", ["Den kolde krig"]), "murens fald"),
+        relatedDoesNotUseTitleAsEvidence: matchesRankingEnhancedSearch(fixture("Berlinmurens fald", []), "murens fald"),
         metadataIsNotPrefixCanonicalized: canonicalizeRankingSearchText("kunstig intelli") === "kunstig intelli",
         ambiguousWorldWarDoesNotExpand: [
           matchesRankingEnhancedSearch(fixture("Krigshistorie", ["Første Verdenskrig"]), "world war"),
@@ -224,6 +230,12 @@ try {
     artificialIntelligence: true,
     climateChange: true,
     football: true,
+    coldWar: [true, true, true],
+    koldRemainsOpenText: true,
+    relatedBerlinWall: true,
+    relatedDoesNotBecomeSynonym: true,
+    relatedRequiresEvidence: false,
+    relatedDoesNotUseTitleAsEvidence: false,
     metadataIsNotPrefixCanonicalized: true,
     ambiguousWorldWarDoesNotExpand: [false, false]
   });
