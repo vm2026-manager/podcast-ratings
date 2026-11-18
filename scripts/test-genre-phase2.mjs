@@ -17,7 +17,7 @@ const appSource = await readFile(path.join(root, "app.js"), "utf8");
 const indexSource = await readFile(path.join(root, "index.html"), "utf8");
 const styleSource = await readFile(path.join(root, "style.css"), "utf8");
 assert.equal(catalogue.rows.length, catalogue.count, "The catalogue wrapper count matches its source rows");
-assert.match(indexSource, /app\.js\?v=20261118-issue98-topic-search[^"]*issue96-live-search-v1=1/u);
+assert.match(indexSource, /app\.js\?v=20261118-issue97-ranking-status-cleanup[^"]*issue96-live-search-v1=1/u);
 assert.match(appSource, /const CANONICAL_GENRES = window\.PODCAST_CANONICAL_GENRES;/u);
 assert.match(indexSource, /canonical-genres\.js\?v=/u);
 assert.ok(indexSource.indexOf("canonical-genres.js") < indexSource.indexOf("app.js"), "shared genre definition loads before the app");
@@ -677,11 +677,13 @@ try {
   const forcedDesktop = await page.evaluate(() => ({
     results: document.querySelector(".ranking-toolbar__results").getBoundingClientRect().toJSON(),
     position: getComputedStyle(document.querySelector(".ranking-toolbar__results")).position,
+    text: document.querySelector("#resultsText").textContent,
     gridWidth: document.querySelector("#podcastGrid").getBoundingClientRect().width,
     sortToggleDisplay: getComputedStyle(document.querySelector("#mobileSortToggle")).display
   }));
-  assert.ok(forcedDesktop.results.width > 1 && forcedDesktop.position !== "absolute",
-    `force-desktop-view retains visible ranking summary: ${JSON.stringify(forcedDesktop)}`);
+  assert.equal(forcedDesktop.text, "", `force-desktop-view hides ranking status after loading: ${JSON.stringify(forcedDesktop)}`);
+  assert.equal(forcedDesktop.results.width, 0, `force-desktop-view leaves no blank status row: ${JSON.stringify(forcedDesktop)}`);
+  assert.equal(forcedDesktop.results.height, 0, `force-desktop-view leaves no empty vertical gap: ${JSON.stringify(forcedDesktop)}`);
   assert.ok(forcedDesktop.gridWidth >= 800, `force-desktop-view keeps desktop ranking canvas: ${JSON.stringify(forcedDesktop)}`);
 
   for (const width of [320, 375, 390, 430, 768, 1101, 1280, 1440]) {

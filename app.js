@@ -6093,14 +6093,7 @@ function refreshVisibleRankingMovement() {
 
 function setRankingResultsText(text) {
   if (!elements.resultsText) return;
-  const canSummarize = state.rankingMovementSnapshotValid && state.rankingMovementPeriodLabel && isRankingMovementEligible();
-  const movedCount = canSummarize ? getGenuineRankingMovementCount() : 0;
-  const movementStatus = !canSummarize
-    ? ""
-    : movedCount === 0
-      ? `Ingen placeringsændringer ${state.rankingMovementPeriodLabel}`
-      : `${movedCount} ${movedCount === 1 ? "podcast har" : "podcasts har"} ændret placering ${state.rankingMovementPeriodLabel}`;
-  elements.resultsText.textContent = [text, movementStatus].filter(Boolean).join(" · ");
+  elements.resultsText.textContent = text;
 }
 
 function isRankingMovementDataReady() {
@@ -6499,16 +6492,8 @@ function handleRankingSourceToggleEvent(event) {
 }
 
 function getResultsText(filteredCount, visibleCount) {
-  const isMobileRanking =
-    typeof window !== "undefined" &&
-    window.matchMedia?.("(max-width: 768px)").matches;
-  const baseText = state.popularNowActive
-    ? ""
-    : isMobileRanking
-    ? visibleCount < filteredCount
-      ? `Viser ${visibleCount} af ${filteredCount} podcasts`
-      : `Viser ${filteredCount} podcasts`
-    : `Viser ${filteredCount} podcasts.`;
+  // Keep this row only for actionable filter and error messages, not counts.
+  const baseText = "";
 
   const suffixes = [];
 
@@ -8808,7 +8793,7 @@ function updateDesktopRankingSourceContext() {
   const searchStrip = document.querySelector(".ranking-search-strip");
   if (!toolbar) return;
 
-  let note = toolbar.querySelector(".desktop-ranking-source-note");
+  const note = toolbar.querySelector(".desktop-ranking-source-note");
   let layoutToggle = toolbar.querySelector(".desktop-ranking-layout-toggle");
   const filterPanelHeader = document.querySelector(".ranking-filter-panel__header");
   let activeFilters = filterPanelHeader?.querySelector(".desktop-ranking-active-filters");
@@ -8822,20 +8807,7 @@ function updateDesktopRankingSourceContext() {
     return;
   }
 
-  if (state.popularNowActive) {
-    note?.remove();
-    note = null;
-  } else {
-    if (!note) {
-      note = document.createElement("p");
-      note.className = "desktop-ranking-source-note";
-      toolbar.appendChild(note);
-    }
-    const sourceText = state.rankingSource === "users"
-      ? "\u2605 Baseret p\u00e5 brugernes vurderinger"
-      : "\u2605 Baseret p\u00e5 Podcastlistens vurderinger";
-    note.textContent = sourceText;
-  }
+  note?.remove();
 
   if (!layoutToggle) {
     layoutToggle = document.createElement("button");

@@ -270,9 +270,11 @@ try {
     assert.equal(await page.evaluate(() => scrollY), scrollY, `${width}px does not jump the scroll position when expanding`);
   }
 
-  await page.setViewportSize({ width: 1280, height: 844 });
   const normalRankingCycles = [];
-  for (let cycle = 0; cycle < 3; cycle += 1) {
+  const normalRankingWidths = [320, 375, 390, 430, 768, 1280, 1440];
+  for (let cycle = 0; cycle < normalRankingWidths.length; cycle += 1) {
+    const width = normalRankingWidths[cycle];
+    await page.setViewportSize({ width, height: 844 });
     await popularNowButton.focus();
     await popularNowButton.press("Enter");
     const normalRanking = await page.evaluate(() => {
@@ -281,7 +283,7 @@ try {
       const sourceNotes = ["users", "mads"].map((rankingSource) => {
         state.rankingSource = rankingSource;
         updateDesktopRankingSourceContext();
-        return document.querySelector(".desktop-ranking-source-note")?.textContent;
+        return document.querySelector(".desktop-ranking-source-note")?.textContent ?? null;
       });
       state.rankingSource = source;
       updateDesktopRankingSourceContext();
@@ -298,16 +300,13 @@ try {
       };
     });
     assert.equal(normalRanking.active, false, `cycle ${cycle + 1} returns to the regular ranking`);
-    assert.match(normalRanking.text, /^Viser \d+ podcasts\./u, "regular ranking keeps its result count");
+    assert.doesNotMatch(normalRanking.text, /Viser \d+|podcasts? har ændret placering|Ingen placeringsændringer/u,
+      "regular ranking hides the result count and movement summary");
     assert.match(normalRanking.filterText, /Filtreret på genren Dokumentar\./u,
       "regular ranking keeps its filter explanation");
-    assert.deepEqual(normalRanking.sourceNotes, [
-      "★ Baseret på brugernes vurderinger",
-      "★ Baseret på Podcastlistens vurderinger"
-    ], "both regular ranking sources keep their explanations");
-    assert.equal(normalRanking.note, normalRanking.source === "users"
-      ? "★ Baseret på brugernes vurderinger"
-      : "★ Baseret på Podcastlistens vurderinger", "regular ranking restores its source explanation");
+    assert.deepEqual(normalRanking.sourceNotes, [null, null],
+      "desktop source notes stay hidden for both regular ranking sources");
+    assert.equal(normalRanking.note, undefined, "regular ranking has no desktop source note");
 
     await popularNowButton.press("Enter");
     const popularRanking = await page.evaluate(() => {
@@ -323,9 +322,10 @@ try {
     assert.equal(popularRanking.text, "", "popular ranking has no count or status line");
     assert.equal(popularRanking.note, undefined, "popular ranking has no desktop source note");
     assert.deepEqual(popularRanking.keys, firstSnapshot.keys, "repeated mode switches preserve the snapshot order");
-    normalRankingCycles.push(normalRanking.note);
+    normalRankingCycles.push({ text: normalRanking.text, note: normalRanking.note });
   }
-  assert.equal(new Set(normalRankingCycles).size, 1, "repeated switches consistently restore the regular source note");
+  assert.equal(new Set(normalRankingCycles.map(({ text, note }) => `${text}|${note}`)).size, 1,
+    "repeated switches keep the regular ranking status row hidden");
 
   const staleRefreshMessage = await page.evaluate(() => {
     const previousStatus = state.communityStatsStatus;
