@@ -55,6 +55,9 @@ try {
 
     const guideResponse = await page.goto(`${origin}/podcast-anbefalinger/`, { waitUntil: "domcontentloaded" });
     assert.equal(guideResponse.status(), 200, `recommendation guide should return HTTP 200 at ${width}px`);
+    await page.waitForFunction(() => [...document.styleSheets].some((sheet) =>
+      sheet.href === new URL("/podcast-anbefalinger/style.css", location.href).href && sheet.cssRules.length > 0
+    ));
     const guide = await page.evaluate(() => ({
       documentWidth: document.documentElement.scrollWidth,
       bodyWidth: document.body.scrollWidth,

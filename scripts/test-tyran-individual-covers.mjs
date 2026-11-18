@@ -37,7 +37,7 @@ const protectedCatalogueIdentities = {
 assert.equal(records.length, 24, "The 22 reviewed Tyran identities plus Marcos and Macias must remain in the catalogue");
 assert.deepEqual(Object.fromEntries(records.map((row) => [row["Podcast-ID"], row.catalogue_id]).sort(([left], [right]) => left.localeCompare(right))),
   protectedCatalogueIdentities, "Every Tyran Podcast-ID must retain its exact catalogue_id");
-assert.match(index, /app\.js\?v=20261111-issue87-leopold-cover-fallback/u, "The app script cache key must change with the fallback code");
+assert.match(index, /app\.js\?v=20261118-issue98-topic-search/u, "The app script cache key must change with the latest frontend search update");
 
 const mapStart = app.indexOf("const TYRAN_OFFICIAL_SQUARE_IMAGE_IDS = Object.freeze({");
 const mapEnd = app.indexOf("});", mapStart);
