@@ -151,6 +151,21 @@ try {
   assert.match(initialLoading.status, /katalog, hovedserier og aktivitetsdata/u);
   assert.equal(initialLoading.cards, 0, "no provisional podcast placements are rendered while data is pending");
 
+  const failedActivityLoad = await page.evaluate(() => {
+    state.communityStatsStatus = "error";
+    renderPodcastGrid();
+    const failure = {
+      title: elements.resultsText.textContent,
+      message: elements.podcastGrid.querySelector(".popular-now-data-state--error")?.textContent
+    };
+    state.communityStatsStatus = "loading";
+    renderPodcastGrid();
+    return failure;
+  });
+  assert.equal(failedActivityLoad.title, "Brugeraktivitet kunne ikke indlæses");
+  assert.match(failedActivityLoad.message, /vises ikke uden komplette aktivitetsdata/u,
+    "popular mode keeps its actionable first-load failure message");
+
   await page.evaluate(() => {
     window.__popularStatsRequests = [fetchCommunityStats(), fetchCommunityStats()];
   });
@@ -175,7 +190,7 @@ try {
   assert.ok(firstSnapshot.keys.length > 100, "the validated full candidate cohort is captured once");
   assert.deepEqual(firstSnapshot.filteredKeys, firstSnapshot.keys, "the first visible result uses the completed snapshot order");
   assert.equal(firstSnapshot.busy, "false");
-  assert.match(firstSnapshot.intervalMessage, /hver 6\. time/u, "the ranking interval is visible in the results status");
+  assert.equal(firstSnapshot.intervalMessage, "", "popular mode hides the result count and both explanatory status lines");
   const persistedSnapshot = JSON.parse(firstSnapshot.cache);
   assert.deepEqual(persistedSnapshot.orderedKeys, firstSnapshot.keys);
   assert.equal(persistedSnapshot.version, 2);
@@ -207,7 +222,7 @@ try {
   assert.equal(await page.locator("#podcastGrid .podcast-card").first().evaluate((element) => element === window.__popularNowFirstNode), true,
     "a repeated activity response leaves the first mobile card node intact");
 
-  const mobileDesktopViewports = [320, 375, 390, 768, 1280, 1440];
+  const mobileDesktopViewports = [320, 375, 390, 430, 768, 1280, 1440];
   for (const width of mobileDesktopViewports) {
     await page.setViewportSize({ width, height: 844 });
     const batchSize = width >= 1101 ? 24 : 20;
@@ -228,6 +243,16 @@ try {
     assert.equal(initialKeys.length, batchSize, `${width}px renders one complete batch`);
     assert.deepEqual(initialKeys, firstSnapshot.keys.slice(0, batchSize), `${width}px starts with the same snapshot ranks`);
     assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true, `${width}px has no horizontal overflow`);
+    assert.equal(await page.locator(".desktop-ranking-source-note").count(), 0,
+      `${width}px omits the desktop ranking source note while popular mode is active`);
+    assert.doesNotMatch(await page.locator("#resultsText").innerText(), /Viser|Sorteret efter aktivitet|hver 6\. time/u,
+      `${width}px hides popular-mode result and activity status text`);
+    assert.equal(await page.locator("#resultsText").evaluate((element) => element.getBoundingClientRect().height), 0,
+      `${width}px leaves no blank result-status line`);
+    const searchFocus = page.locator("#searchInput");
+    await searchFocus.focus();
+    assert.equal(await searchFocus.evaluate((element) => document.activeElement === element), true,
+      `${width}px search retains keyboard focus`);
 
     const firstNode = await page.locator(`#podcastGrid ${selector}`).first().evaluateHandle((element) => element);
     const scrollY = await page.evaluate(() => scrollY);
@@ -244,6 +269,78 @@ try {
       `${width}px preserves the first DOM node while adding results`);
     assert.equal(await page.evaluate(() => scrollY), scrollY, `${width}px does not jump the scroll position when expanding`);
   }
+
+  await page.setViewportSize({ width: 1280, height: 844 });
+  const normalRankingCycles = [];
+  for (let cycle = 0; cycle < 3; cycle += 1) {
+    await popularNowButton.focus();
+    await popularNowButton.press("Enter");
+    const normalRanking = await page.evaluate(() => {
+      renderPodcastGrid();
+      const source = state.rankingSource;
+      const sourceNotes = ["users", "mads"].map((rankingSource) => {
+        state.rankingSource = rankingSource;
+        updateDesktopRankingSourceContext();
+        return document.querySelector(".desktop-ranking-source-note")?.textContent;
+      });
+      state.rankingSource = source;
+      updateDesktopRankingSourceContext();
+      state.activeFilter = { type: "genre", value: "Dokumentar" };
+      const filterText = getResultsText(7, 7);
+      state.activeFilter = null;
+      return {
+        active: state.popularNowActive,
+        source,
+        sourceNotes,
+        filterText,
+        text: elements.resultsText.textContent,
+        note: document.querySelector(".desktop-ranking-source-note")?.textContent
+      };
+    });
+    assert.equal(normalRanking.active, false, `cycle ${cycle + 1} returns to the regular ranking`);
+    assert.match(normalRanking.text, /^Viser \d+ podcasts\./u, "regular ranking keeps its result count");
+    assert.match(normalRanking.filterText, /Filtreret på genren Dokumentar\./u,
+      "regular ranking keeps its filter explanation");
+    assert.deepEqual(normalRanking.sourceNotes, [
+      "★ Baseret på brugernes vurderinger",
+      "★ Baseret på Podcastlistens vurderinger"
+    ], "both regular ranking sources keep their explanations");
+    assert.equal(normalRanking.note, normalRanking.source === "users"
+      ? "★ Baseret på brugernes vurderinger"
+      : "★ Baseret på Podcastlistens vurderinger", "regular ranking restores its source explanation");
+
+    await popularNowButton.press("Enter");
+    const popularRanking = await page.evaluate(() => {
+      renderPodcastGrid();
+      return {
+        active: state.popularNowActive,
+        text: elements.resultsText.textContent,
+        note: document.querySelector(".desktop-ranking-source-note")?.textContent,
+        keys: getFilteredPodcasts().map(getPodcastKey)
+      };
+    });
+    assert.equal(popularRanking.active, true, `cycle ${cycle + 1} re-enters popular mode`);
+    assert.equal(popularRanking.text, "", "popular ranking has no count or status line");
+    assert.equal(popularRanking.note, undefined, "popular ranking has no desktop source note");
+    assert.deepEqual(popularRanking.keys, firstSnapshot.keys, "repeated mode switches preserve the snapshot order");
+    normalRankingCycles.push(normalRanking.note);
+  }
+  assert.equal(new Set(normalRankingCycles).size, 1, "repeated switches consistently restore the regular source note");
+
+  const staleRefreshMessage = await page.evaluate(() => {
+    const previousStatus = state.communityStatsStatus;
+    const previousSuccessfulLoad = state.communityStatsHasSuccessfulLoad;
+    state.communityStatsStatus = "error";
+    state.communityStatsHasSuccessfulLoad = true;
+    const text = getResultsText(123, 20);
+    state.communityStatsStatus = previousStatus;
+    state.communityStatsHasSuccessfulLoad = previousSuccessfulLoad;
+    return text;
+  });
+  assert.match(staleRefreshMessage, /Opdatering mislykkedes; viser senest indlæste data\./u,
+    "popular mode retains a relevant stale-data warning");
+  assert.doesNotMatch(staleRefreshMessage, /Viser \d+|Sorteret efter aktivitet|hver 6\. time/u,
+    "the stale-data warning does not restore the removed status lines");
 
   await page.setViewportSize({ width: 390, height: 844 });
   await page.evaluate(() => {
@@ -273,6 +370,23 @@ try {
   assert.equal(filteredCases.preservesSearch, true, "search retains the original relative rank order");
   assert.equal(filteredCases.preservesGenre, true, "genre filtering retains the original relative rank order");
   assert.deepEqual(filteredCases.allKeys, firstSnapshot.keys, "clearing filters restores the same complete snapshot");
+
+  const emptySearch = await page.evaluate(() => {
+    state.searchTerm = "no-podcast-can-match-this-search";
+    invalidateRankingListCache();
+    renderPodcastGrid();
+    const result = {
+      empty: elements.podcastGrid.querySelector(":scope > .empty-state")?.textContent,
+      results: elements.resultsText.textContent
+    };
+    state.searchTerm = "";
+    invalidateRankingListCache();
+    renderPodcastGrid();
+    return result;
+  });
+  assert.equal(emptySearch.empty, "Ingen podcasts har dokumenteret vurderingsaktivitet de seneste 30 dage, der matcher filtrene.",
+    "the established empty state remains visible when no popular podcasts match");
+  assert.equal(emptySearch.results, "", "an empty popular result does not show a result count");
 
   const beforeCatalogueRefresh = await page.locator("#podcastGrid .podcast-card").first().evaluateHandle((element) => element);
   const refreshResult = await page.evaluate(async () => {

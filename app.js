@@ -6423,7 +6423,9 @@ function getResultsText(filteredCount, visibleCount) {
   const isMobileRanking =
     typeof window !== "undefined" &&
     window.matchMedia?.("(max-width: 768px)").matches;
-  const baseText = isMobileRanking
+  const baseText = state.popularNowActive
+    ? ""
+    : isMobileRanking
     ? visibleCount < filteredCount
       ? `Viser ${visibleCount} af ${filteredCount} podcasts`
       : `Viser ${filteredCount} podcasts`
@@ -6432,8 +6434,6 @@ function getResultsText(filteredCount, visibleCount) {
   const suffixes = [];
 
   if (state.popularNowActive) {
-    suffixes.push("Sorteret efter aktivitet de seneste 30 dage.");
-    suffixes.push("Listen opdateres hver 6. time.");
     if (state.communityStatsStatus === "error" && state.communityStatsHasSuccessfulLoad) {
       suffixes.push("Opdatering mislykkedes; viser senest indlæste data.");
     }
@@ -6469,7 +6469,7 @@ function getResultsText(filteredCount, visibleCount) {
     suffixes.push("Sprog: Engelsk.");
   }
 
-  return suffixes.length ? `${baseText} ${suffixes.join(" ")}` : baseText;
+  return suffixes.length ? [baseText, suffixes.join(" ")].filter(Boolean).join(" ") : baseText;
 }
 
 function toggleSavedFilter() {
@@ -8743,18 +8743,20 @@ function updateDesktopRankingSourceContext() {
     return;
   }
 
-  if (!note) {
-    note = document.createElement("p");
-    note.className = "desktop-ranking-source-note";
-    toolbar.appendChild(note);
-  }
-  const sourceText =
-    state.popularNowActive
-      ? "\u2605 Sorteret efter brugernes vurderingsaktivitet"
-      : state.rankingSource === "users"
+  if (state.popularNowActive) {
+    note?.remove();
+    note = null;
+  } else {
+    if (!note) {
+      note = document.createElement("p");
+      note.className = "desktop-ranking-source-note";
+      toolbar.appendChild(note);
+    }
+    const sourceText = state.rankingSource === "users"
       ? "\u2605 Baseret p\u00e5 brugernes vurderinger"
       : "\u2605 Baseret p\u00e5 Podcastlistens vurderinger";
-  note.textContent = sourceText;
+    note.textContent = sourceText;
+  }
 
   if (!layoutToggle) {
     layoutToggle = document.createElement("button");
