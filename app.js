@@ -2650,9 +2650,10 @@ const RANKING_SEARCH_SYNONYM_GROUPS = Object.freeze([
     id: "world-war-two",
     aliases: [
       "2 verdenskrig", "anden verdenskrig", "andre verdenskrig",
-      "ww2", "wwii", "world war 2", "world war ii", "second world war"
+      "ww2", "wwii", "world war 2", "world war ii", "world war ll", "second world war"
     ]
   },
+  { id: "cold-war", aliases: ["den kolde krig", "kolde krig", "cold war"] },
   { id: "gross-domestic-product", aliases: ["bruttonationalprodukt", "bnp", "gross domestic product", "gdp"] },
   { id: "parliamentary-election", aliases: ["folketingsvalg", "parlamentsvalg", "parliamentary election"] },
   { id: "football", aliases: ["fodbold", "football", "soccer"] },
@@ -2663,6 +2664,27 @@ const RANKING_SEARCH_SYNONYM_GROUPS = Object.freeze([
   { id: "research", aliases: ["forskning", "research"] },
   { id: "serial-killer", aliases: ["seriemorder", "serial killer"] }
 ]);
+
+// These are directional, evidence-backed query shortcuts, not equivalence groups.
+// A shortcut only matches a podcast whose existing indexed field has the exact evidence topic.
+const RANKING_SEARCH_RELATED_TOPIC_GROUPS = Object.freeze([
+  {
+    id: "berlin-wall-fall",
+    queryAliases: ["murens fald"],
+    evidenceTopics: ["berlinmurens fald"]
+  }
+]);
+const rankingSearchRelatedTopicAliases = RANKING_SEARCH_RELATED_TOPIC_GROUPS.flatMap((group) =>
+  group.queryAliases.map((alias) => ({
+    group: group.id,
+    alias: normalizeSearchValue(alias),
+    token: `rankingrelatedtopic${group.id.replace(/-/g, "")}`
+  }))
+);
+const rankingSearchRelatedTopicEvidence = RANKING_SEARCH_RELATED_TOPIC_GROUPS.map((group) => ({
+  token: `rankingrelatedtopic${group.id.replace(/-/g, "")}`,
+  topics: new Set(group.evidenceTopics.map((topic) => normalizeRankingSearchValue(topic)))
+}));
 
 const rankingSearchSynonymAliases = RANKING_SEARCH_SYNONYM_GROUPS
   .flatMap((group) => group.aliases.map((alias) => ({
@@ -2697,6 +2719,7 @@ const rankingSearchStopWords = new Set([
 const rankingSearchFieldCache = new WeakMap();
 const rankingSearchTitleTokenSequenceCache = new WeakMap();
 const rankingSearchQueryCache = new Map();
+const RANKING_SEARCH_EMPTY_TOPIC_TOKEN_SET = new Set();
 
 function normalizeRankingSearchValue(value) {
   return canonicalizeRadioSearchAliases(String(value || "").normalize("NFC"));
@@ -2788,6 +2811,45 @@ function canonicalizeNormalizedRankingSearchQuery(normalized) {
   return canonicalTokens.join(" ");
 }
 
+function canonicalizeNormalizedRankingSearchRelatedTopics(normalized) {
+  const tokens = normalized.split(" ").filter(Boolean);
+  const canonicalTokens = [];
+  for (let index = 0; index < tokens.length;) {
+    let matchedToken = null;
+    let matchedLength = 0;
+    for (const relatedAlias of rankingSearchRelatedTopicAliases) {
+      const aliasTokens = relatedAlias.alias.split(" ");
+      const lastIndex = index + aliasTokens.length - 1;
+      if (lastIndex >= tokens.length) continue;
+      const completeAlias = tokens.slice(index, index + aliasTokens.length).join(" ");
+      if (completeAlias === relatedAlias.alias) {
+        matchedToken = relatedAlias.token;
+        matchedLength = aliasTokens.length;
+        break;
+      }
+
+      const queryLastToken = tokens[lastIndex];
+      const aliasLastToken = aliasTokens.at(-1);
+      if (
+        aliasTokens.length < 2 ||
+        !/^[\p{L}]+$/u.test(queryLastToken) ||
+        /^[ivxlcdm]+$/iu.test(queryLastToken) ||
+        !/^[\p{L}]+$/u.test(aliasLastToken) ||
+        queryLastToken.length < 2 ||
+        queryLastToken.length >= aliasLastToken.length ||
+        !aliasLastToken.startsWith(queryLastToken)
+      ) continue;
+      if (!aliasTokens.slice(0, -1).every((word, offset) => tokens[index + offset] === word)) continue;
+      matchedToken = relatedAlias.token;
+      matchedLength = aliasTokens.length;
+      break;
+    }
+    canonicalTokens.push(matchedToken || tokens[index]);
+    index += matchedLength || 1;
+  }
+  return canonicalTokens.join(" ");
+}
+
 function canonicalizeRankingSearchText(value) {
   return canonicalizeNormalizedRankingSearchText(normalizeRankingSearchValue(value));
 }
@@ -2804,7 +2866,8 @@ function getRankingSearchQuery(searchTerm) {
   if (!normalized) return null;
   if (rankingSearchQueryCache.has(normalized)) return rankingSearchQueryCache.get(normalized);
 
-  const canonical = canonicalizeNormalizedRankingSearchQuery(normalized);
+  const synonymCanonical = canonicalizeNormalizedRankingSearchQuery(normalized);
+  const canonical = canonicalizeNormalizedRankingSearchRelatedTopics(synonymCanonical);
   const query = {
     normalized,
     canonicalTokens: canonical.split(" ").filter(Boolean),
@@ -2842,8 +2905,17 @@ function getRankingSearchFields(podcast) {
 
   const fields = [];
   const prefixTokenBuckets = new Map();
+  let relatedTopicTokenSet = null;
   const titlePrefixTokens = new Set();
   const titleTokenSequences = getRankingSearchTitleTokenSequences(podcast);
+  const exactTopicValues = new Set((Array.isArray(podcast?.searchTopics) ? podcast.searchTopics : [])
+    .map(normalizeRankingSearchValue));
+  for (const relatedEvidence of rankingSearchRelatedTopicEvidence) {
+    if ([...relatedEvidence.topics].some((topic) => exactTopicValues.has(topic))) {
+      relatedTopicTokenSet ||= new Set();
+      relatedTopicTokenSet.add(relatedEvidence.token);
+    }
+  }
   for (const titleTokens of titleTokenSequences) titleTokens.forEach((token) => titlePrefixTokens.add(token));
   for (const { value, fuzzyAllowed } of getPodcastSearchFieldEntries(podcast)) {
     const normalized = normalizeRankingSearchValue(value);
@@ -2876,6 +2948,7 @@ function getRankingSearchFields(podcast) {
     if (field.fuzzyAllowed) fuzzyFields.push(field);
   }
   fields.canonicalTokenSet = canonicalTokenSet;
+  fields.relatedTopicTokenSet = relatedTopicTokenSet || RANKING_SEARCH_EMPTY_TOPIC_TOKEN_SET;
   fields.prefixTokenBuckets = prefixTokenBuckets;
   fields.titlePrefixTokens = titlePrefixTokens;
   fields.titleTokenSequences = titleTokenSequences;
@@ -3001,8 +3074,10 @@ function rankingSearchTokenMatchesFieldVariants(queryToken, fieldVariants) {
 function rankingSearchQueryHasPrefixMatches(query, fields) {
   let fuzzyTokenUsed = false;
   return query.canonicalTokens.every((canonicalToken, index) => {
-    if (fields.canonicalTokenSet.has(canonicalToken)) return true;
-    const queryToken = query.rawTokens[index] || canonicalToken;
+    if (rankingSearchFieldsHaveCanonicalToken(fields, canonicalToken)) return true;
+    const queryToken = /^(?:rankingsynonym|rankingrelatedtopic)/u.test(canonicalToken)
+      ? canonicalToken
+      : query.rawTokens[index] || canonicalToken;
     if (rankingSearchTokenHasPrefixMatch(queryToken, fields.prefixTokenBuckets)) return true;
     if (queryToken.length < 7 || rankingSearchStopWords.has(queryToken) || fuzzyTokenUsed) return false;
     const fuzzyMatch = fields.fuzzyFields.some((field) => field.rawTokens.some((fieldToken) =>
@@ -3012,6 +3087,10 @@ function rankingSearchQueryHasPrefixMatches(query, fields) {
     fuzzyTokenUsed = true;
     return true;
   });
+}
+
+function rankingSearchFieldsHaveCanonicalToken(fields, token) {
+  return fields.canonicalTokenSet.has(token) || fields.relatedTopicTokenSet.has(token);
 }
 
 function rankingSearchHasExactTokenInAnyField(podcast, canonicalToken) {
@@ -3084,7 +3163,7 @@ function matchesRankingEnhancedSearch(podcast, searchTerm) {
   if (query.rawTokens.length === 1 && query.canonicalTokens.length === 1) {
     const [queryToken] = query.rawTokens;
     const [canonicalToken] = query.canonicalTokens;
-    if (fields.canonicalTokenSet.has(canonicalToken)) return true;
+    if (rankingSearchFieldsHaveCanonicalToken(fields, canonicalToken)) return true;
     if (canonicalToken.length >= 5 && fields.some((field) =>
       field.compact.some((compact) => compact.includes(canonicalToken))
     )) return true;
@@ -3099,7 +3178,7 @@ function matchesRankingEnhancedSearch(podcast, searchTerm) {
 
   if (rankingSearchQueryHasOrderedTitlePrefixMatch(query, fields.titleTokenSequences)) return true;
 
-  if (query.canonicalTokens.length > 1 && query.canonicalTokens.every((token) => fields.canonicalTokenSet.has(token))) return true;
+  if (query.canonicalTokens.length > 1 && query.canonicalTokens.every((token) => rankingSearchFieldsHaveCanonicalToken(fields, token))) return true;
   // Exact tokens, safe prefixes and at most one existing fuzzy token may combine
   // across the same podcast's fields.
   return rankingSearchQueryHasPrefixMatches(query, fields);

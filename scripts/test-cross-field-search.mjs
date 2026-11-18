@@ -202,7 +202,7 @@ try {
       radio4: matchesRankingEnhancedSearch({ title: "Radio IIII" }, "Radio 4"),
       danish: matchesRankingEnhancedSearch({ title: "Rådet om ÆØÅ" }, "raadet aeoeaa")
     };
-    const secondWarQueries = ["2. ve", "2. verd", "2. verdenskri", "2. verdenskrig"];
+    const secondWarQueries = ["2. ve", "2. verd", "2. verdenskri", "2. verdenskrig", "2 verdenskrig", "anden verdenskrig", "world war ii", "world war ll", "ww2", "wwii"];
     const secondWarResults = Object.fromEntries(secondWarQueries.map((query) => [query,
       getRankingCandidates().filter((podcast) => matchesRankingEnhancedSearch(podcast, query))
         .map((podcast) => getPodcastId(podcast)).sort()
@@ -213,6 +213,19 @@ try {
     const firstWarQuery = getRankingCandidates()
       .filter((podcast) => matchesRankingEnhancedSearch(podcast, "1. verd"))
       .map((podcast) => getPodcastId(podcast)).sort();
+    const topicSearchIds = (query) => getRankingCandidates()
+      .filter((podcast) => matchesRankingEnhancedSearch(podcast, query))
+      .map((podcast) => getPodcastId(podcast)).sort();
+    const coldWarQueries = ["den kolde krig", "kolde krig", "cold war", "den kolde kr", "kolde kr", "cold wa"];
+    const coldWarResults = Object.fromEntries(coldWarQueries.map((query) => [query, topicSearchIds(query)]));
+    const sovietIds = topicSearchIds("sovjetunionen");
+    const berlinWallResults = Object.fromEntries(["murens fald", "murens fal", "Berlinmurens fald"].map((query) => [query, topicSearchIds(query)]));
+    const broadKoldResults = topicSearchIds("kold");
+    const worldWarAmbiguity = {
+      first: topicSearchIds("world war i"),
+      ambiguous: topicSearchIds("world war"),
+      loneRomanPrefix: topicSearchIds("world war l")
+    };
     state.searchTerm = "tamm krig";
     setActiveFilter("genre", "Dokumentar");
     const matchingGenreFilter = getFilteredPodcasts().some((podcast) => getPodcastId(podcast) === "krig");
@@ -221,7 +234,7 @@ try {
     clearActiveFilter();
     state.searchTerm = "";
     const afterFilterRating = getRankingCandidates().find((podcast) => getPodcastId(podcast) === "krig").ratingValue;
-    return { bakspejlTitles, bakspejl: bakspejl.map(({ title, host, mainSeries }) => ({ title, host, mainSeries })), bakspejlRanking, bakspejlQueryTitles, bakspejlHeader, queries, header, ranking, shortTitleSearch, shortTwoLetterTitleSearch, sigTarget: sigTarget && { id: getPodcastId(sigTarget), title: sigTarget.title }, numberSearch, specialCharacterSearch, sigTypeaheadQueries, sigTypeahead, shortMiddleTitleSequences, negative, aliases, secondWarQueries, secondWarResults, secondWarRatings, firstWarQuery, matchingGenreFilter, nonmatchingGenreFilter, rating, afterFilterRating };
+    return { bakspejlTitles, bakspejl: bakspejl.map(({ title, host, mainSeries }) => ({ title, host, mainSeries })), bakspejlRanking, bakspejlQueryTitles, bakspejlHeader, queries, header, ranking, shortTitleSearch, shortTwoLetterTitleSearch, sigTarget: sigTarget && { id: getPodcastId(sigTarget), title: sigTarget.title }, numberSearch, specialCharacterSearch, sigTypeaheadQueries, sigTypeahead, shortMiddleTitleSequences, negative, aliases, secondWarQueries, secondWarResults, secondWarRatings, firstWarQuery, coldWarQueries, coldWarResults, sovietIds, berlinWallResults, broadKoldResults, worldWarAmbiguity, matchingGenreFilter, nonmatchingGenreFilter, rating, afterFilterRating };
   });
   assert.ok(results.bakspejl.length > 0, `catalogue must contain verified Bakspejl titles and Martin Grønne: ${JSON.stringify(results.bakspejl)}`);
   assert.deepEqual(results.bakspejl.map(({ title }) => title).sort(), results.bakspejlTitles.slice().sort(), "both current Bakspejl title rows retain Martin Grønne as the verified host");
@@ -293,6 +306,24 @@ try {
   }
   assert.equal(results.secondWarResults["2. ve"].length, 10, "partial WWII search retains all ten existing topic results");
   assert.equal(results.firstWarQuery.some((id) => results.secondWarResults["2. ve"].includes(id)), false, "first-world-war partial query never returns second-world-war IDs");
+  for (const query of results.coldWarQueries.slice(1)) {
+    assert.deepEqual(results.coldWarResults[query], results.coldWarResults["den kolde krig"], `Cold War synonym and partial query ${query} retain the curated result IDs`);
+  }
+  assert.ok(results.coldWarResults["den kolde krig"].includes("rust i jerntæppet"), "Cold War query includes the actual Rust i jerntæppet catalogue ID");
+  assert.ok(results.coldWarResults["den kolde krig"].includes("operation romeo"), "Cold War query includes the actual Operation Romeo catalogue ID");
+  assert.ok(results.coldWarResults["den kolde krig"].includes("manden bag glasset"), "Cold War query includes the actual Manden bag glasset catalogue ID");
+  assert.equal(results.coldWarResults["den kolde krig"].includes("katynskovens hemmelighed"), false, "Katyn is not automatically classified as a Cold War result");
+  assert.equal(results.coldWarResults["den kolde krig"].includes("sovjetunionen lenin og stalins danske agent"), false, "the Lenin podcast is not automatically classified as a Cold War result");
+  assert.deepEqual(results.berlinWallResults["murens fald"], ["grænsevagten der væltede berlinmuren"], "Berlin Wall relation is limited to exact, catalogue-backed topic evidence");
+  assert.deepEqual(results.berlinWallResults["murens fal"], results.berlinWallResults["murens fald"], "related topic query safely updates while typing its final word");
+  assert.deepEqual(results.berlinWallResults["Berlinmurens fald"], results.berlinWallResults["murens fald"], "direct topic search and its documented relation reach the same actual ID");
+  for (const id of ["katynskovens hemmelighed", "manden bag glasset", "monsteret i tjernobyl", "eksplosionen der maske ændrede verden", "lenin"]) {
+    assert.ok(results.sovietIds.includes(id), `Soviet Union search includes existing direct catalogue evidence: ${id}`);
+  }
+  assert.ok(results.broadKoldResults.length > 0, "short kold query still searches ordinary existing word prefixes");
+  assert.equal(results.worldWarAmbiguity.first.some((id) => results.secondWarResults["2. ve"].includes(id)), false, "World War I remains distinct from World War II");
+  assert.deepEqual(results.worldWarAmbiguity.ambiguous, [], "ambiguous world war query does not expand into either war group");
+  assert.deepEqual(results.worldWarAmbiguity.loneRomanPrefix, [], "single-letter Roman numeral does not prefix-expand to World War II");
   assert.ok(Object.values(results.secondWarRatings).some((rating) => Number.isFinite(Number(rating))), "search results retain their catalogue ratings");
   assert.equal(results.matchingGenreFilter, true, "active matching genre filters still apply alongside search");
   assert.equal(results.nonmatchingGenreFilter, false, "active nonmatching genre filters still exclude the podcast");
@@ -354,6 +385,17 @@ try {
   await desktopSearchInput.fill("2. verdenskri");
   await page.waitForFunction(() => headerSearchState.matches.some(({ podcast }) => getPodcastId(podcast) === "granatmysteriet tv2 ost"));
   assert.ok(await page.locator("[data-header-search-index]").count() > 0, "desktop header visibly refreshes suggestions while typing a partial synonym");
+  for (const query of ["cold war", "murens fal"]) {
+    await desktopSearchInput.fill(query);
+    if (query === "cold war") {
+      await page.waitForFunction(() => headerSearchState.matches.length > 0);
+      const headerDebug = await page.evaluate(() => ({ value: elements.desktopHeaderSearchInput.value, matches: headerSearchState.matches.map(({ podcast }) => [getPodcastId(podcast), podcast.title]) }));
+      assert.ok(headerDebug.matches.some(([id]) => results.coldWarResults["cold war"].includes(id)), `desktop Cold War suggestions must include catalogue-backed results: ${JSON.stringify(headerDebug)}`);
+    } else {
+      await page.waitForFunction(() => headerSearchState.matches.some(({ podcast }) => getPodcastId(podcast) === "grænsevagten der væltede berlinmuren"));
+    }
+    assert.ok(await page.locator("[data-header-search-index]").count() > 0, `desktop header renders curated topic results for ${query}`);
+  }
   await desktopSearchInput.fill("");
   await page.waitForFunction(() => headerSearchState.matches.length === 0);
 
@@ -447,6 +489,15 @@ try {
   await rankingPage.locator("#podcastDetailSheet.is-hidden").waitFor({ state: "attached" });
 
   await rankingSearch.fill("");
+  for (const query of ["2. ve", "2. verd", "2. verdenskri"]) {
+    await rankingSearch.fill(query);
+    await rankingPage.waitForFunction(() => state.searchTerm && getFilteredPodcasts().some((podcast) => getPodcastId(podcast) === "granatmysteriet tv2 ost"));
+    await rankingPage.locator('#podcastGrid [data-key="granatmysteriet tv2 ost"]').first().waitFor({ state: "visible" });
+  }
+  await rankingSearch.fill("murens fal");
+  await rankingPage.waitForFunction(() => getFilteredPodcasts().some((podcast) => getPodcastId(podcast) === "grænsevagten der væltede berlinmuren"));
+  await rankingPage.locator('#podcastGrid [data-key="grænsevagten der væltede berlinmuren"]').first().waitFor({ state: "visible" });
+  await rankingSearch.fill("");
   let rankingTypedQuery = "";
   for (const character of Array.from("sig det' løgn")) {
     await rankingSearch.pressSequentially(character);
@@ -482,6 +533,11 @@ try {
   await page.locator("#mobileHomeSearchOverlayInput").fill("2. verdenskri");
   await page.waitForFunction(() => mobileHomeSearchOverlayState.matches.some(({ podcast }) => getPodcastId(podcast) === "granatmysteriet tv2 ost"));
   assert.ok(await page.locator("#mobileHomeSearchOverlayResults [data-mobile-home-search-index]").count() > 0, "mobile overlay updates visible suggestions during partial synonym typing");
+  await page.locator("#mobileHomeSearchOverlayInput").fill("cold war");
+  await page.waitForFunction(() => mobileHomeSearchOverlayState.matches.length > 0);
+  assert.ok(await page.locator("#mobileHomeSearchOverlayResults [data-mobile-home-search-index]").count() > 0, "mobile overlay renders Cold War suggestions from the same enhanced matcher");
+  await page.locator("#mobileHomeSearchOverlayInput").fill("murens fal");
+  await page.waitForFunction(() => mobileHomeSearchOverlayState.matches.some(({ podcast }) => getPodcastId(podcast) === "grænsevagten der væltede berlinmuren"));
   await page.locator("#mobileHomeSearchOverlayInput").fill("112 fo");
   await page.locator("#mobileHomeSearchOverlayResults [data-mobile-home-search-index]").first().tap();
   await page.locator("#podcastDetailSheet:not(.is-hidden)").waitFor({ state: "visible" });
