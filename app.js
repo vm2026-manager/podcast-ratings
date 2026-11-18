@@ -14588,7 +14588,7 @@ function renderPodcastEpisodeOverviewRows(podcast) {
           }
           <td data-label="Episode" data-published-date="${escapeHtml(publicationDate)}">
             <strong class="episode-title${titleLengthClass}">${escapeHtml(title)}</strong>
-            ${metadataOnlyArticle ? `<span class="fri-mads-episode-access">Betalt adgang &middot; abonnement kan kr&aelig;ves</span><a class="podcast-detail-sheet__episode-source" href="${escapeHtml(episode.canonicalUrl)}" target="_blank" rel="noopener noreferrer">Lyt hos Frihedsbrevet</a>` : ""}
+            ${metadataOnlyArticle ? `<a class="podcast-detail-sheet__episode-source" href="${escapeHtml(episode.canonicalUrl)}" target="_blank" rel="noopener noreferrer">Lyt hos Frihedsbrevet</a>` : ""}
             ${getOfficialMedianoEpisodeSourceUrl(episode.episode_url) ? `<a class="podcast-detail-sheet__episode-source" href="${escapeHtml(getOfficialMedianoEpisodeSourceUrl(episode.episode_url))}" target="_blank" rel="noopener noreferrer">Officiel kilde</a>` : ""}
             ${editorialScore === null ? "" : `<span class="podcast-detail-sheet__episode-editorial-score">Podcastlistens vurdering: <strong>${escapeHtml(formatCompactRating(editorialScore))}/10</strong></span>`}
           </td>
@@ -14927,7 +14927,20 @@ function bindPodcastEpisodeOverviewEvents(dialog, podcast) {
   });
 }
 
-function updatePodcastEpisodeOverview(dialog = document.getElementById("podcastDetailSheet")) {
+function resetPodcastEpisodeOverviewScroll(dialog) {
+  const content = dialog?.querySelector("[data-podcast-detail-content]");
+  const tableWrap = dialog?.querySelector("[data-podcast-episode-overview] .podcast-detail-sheet__episode-table-wrap");
+  // Reset both workspace scrollers at entry and after the first metadata
+  // hydration. The overview has a sticky table header; stale scroll offsets
+  // would otherwise hide the first row at initial open.
+  content?.scrollTo?.({ top: 0, left: 0, behavior: "auto" });
+  tableWrap?.scrollTo?.({ top: 0, left: 0, behavior: "auto" });
+}
+
+function updatePodcastEpisodeOverview(
+  dialog = document.getElementById("podcastDetailSheet"),
+  { resetScroll = false } = {}
+) {
   if (!dialog || dialog.classList.contains("is-hidden")) return;
   if (state.podcastDetailView !== "episodes") return;
 
@@ -14938,12 +14951,15 @@ function updatePodcastEpisodeOverview(dialog = document.getElementById("podcastD
   const searchInput = overview.querySelector("[data-episode-workspace-search]");
   const searchWasFocused = document.activeElement === searchInput;
   const searchCursor = searchWasFocused ? searchInput.selectionStart : null;
-  const tableScrollTop = overview.querySelector(".podcast-detail-sheet__episode-table-wrap")?.scrollTop || 0;
+  const tableScrollTop = resetScroll
+    ? 0
+    : overview.querySelector(".podcast-detail-sheet__episode-table-wrap")?.scrollTop || 0;
   overview.outerHTML = renderPodcastEpisodeOverview(podcast);
   bindPodcastEpisodeOverviewEvents(dialog, podcast);
   const nextOverview = dialog.querySelector("[data-podcast-episode-overview]");
   const nextTableWrap = nextOverview?.querySelector(".podcast-detail-sheet__episode-table-wrap");
   if (nextTableWrap) nextTableWrap.scrollTop = tableScrollTop;
+  if (resetScroll) resetPodcastEpisodeOverviewScroll(dialog);
   if (searchWasFocused) {
     const nextInput = nextOverview?.querySelector("[data-episode-workspace-search]");
     nextInput?.focus?.({ preventScroll: true });
@@ -14974,6 +14990,7 @@ function renderPodcastEpisodeOverviewContent(dialog, podcast) {
 
   content.innerHTML = renderPodcastEpisodeOverview(podcast);
   content.classList.add("podcast-detail-sheet__content--episode-overview");
+  resetPodcastEpisodeOverviewScroll(dialog);
   bindPodcastEpisodeOverviewEvents(dialog, podcast);
 
   if (friMadsWorkspace) {
@@ -14997,7 +15014,7 @@ function renderPodcastEpisodeOverviewContent(dialog, podcast) {
         rateable: false,
         accessType: "paid"
       })) : [];
-      updatePodcastEpisodeOverview(dialog);
+      updatePodcastEpisodeOverview(dialog, { resetScroll: true });
     });
     return;
   }
@@ -16600,7 +16617,7 @@ function renderPodcastDetailSheetContent(
     ? `<span class="podcast-detail-sheet__episode-entry">
         <button class="podcast-detail-sheet__episode-entry-button" type="button" data-podcast-episodes-open aria-describedby="podcastEpisodeEntryTooltip">
           <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="3" width="14" height="18" rx="2"></rect><path d="M9 8h6M9 12h6M9 16h4"></path></svg>
-          <span>${hasFriMadsPublications ? "Se afsnit" : "Vurder episoder"}</span>
+          <span>${hasFriMadsPublications ? "Se udgivelser" : "Vurder episoder"}</span>
         </button>
         <span class="podcast-detail-sheet__episode-entry-tooltip" id="podcastEpisodeEntryTooltip" role="tooltip">
           ${hasFriMadsPublications ? "Se de indtalte Fri Mads-udgivelser." : "Se alle episoder og bed&oslash;m dem &eacute;n for &eacute;n."}
