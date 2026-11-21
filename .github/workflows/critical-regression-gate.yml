@@ -31,6 +31,16 @@ jobs:
           node scripts/test-fri-mads-article-sidecar.mjs
           node scripts/test-fri-mads-article-sidecar-workflow.mjs
           node scripts/test-fri-mads-article-preview.mjs
+      - name: Verify Fri Mads first-row geometry in the full application
+        env:
+          FRI_MADS_ARTIFACT_DIR: ${{ runner.temp }}/fri-mads-workspace-e2e
+        run: node scripts/test-fri-mads-workspace-e2e.mjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: fri-mads-live-ui-screenshots
+          path: ${{ runner.temp }}/fri-mads-workspace-e2e/
+          if-no-files-found: ignore
       - name: Verify regression tests leave the checkout unchanged
         run: |
           git diff --exit-code

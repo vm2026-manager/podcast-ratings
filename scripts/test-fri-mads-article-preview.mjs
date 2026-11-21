@@ -34,7 +34,7 @@ const functionNames = [
   "getFriMadsEpisodeIdentityFields", "isFriMadsReleaseAlreadyEpisode",
   "getEpisodeWorkspaceEpisodes", "getEpisodeWorkspaceSummary",
   "renderPodcastEpisodeOverviewRows", "renderPodcastEpisodeOverview",
-  "bindPodcastEpisodeOverviewEvents", "scheduleEpisodeWorkspaceSearch",
+  "bindPodcastEpisodeOverviewEvents", "scheduleEpisodeWorkspaceSearch", "resetPodcastEpisodeOverviewScroll",
   "updatePodcastEpisodeOverview", "getFriMadsArticleSidecar",
   "renderPodcastDetailSheetContent", "renderPodcastEpisodeOverviewContent",
   "isRateablePodcastEpisode"
@@ -166,6 +166,8 @@ for (const release of sidecar.items) {
 }
 assert.equal((friMarkup.match(/class="podcast-detail-sheet__episode-rating-unavailable"/gu) || []).length, 10,
   "both rating columns show unavailable state for all five metadata-only rows");
+assert.doesNotMatch(friMarkup, /Betalt adgang\s*&middot;\s*abonnement kan kr&aelig;ves/u,
+  "Fri Mads rows omit the redundant payment warning while paid access remains in the sidecar");
 assert.doesNotMatch(friMarkup, /data-episode-overview-rating-id|class="podcast-detail-sheet__episode-own-score/u,
   "metadata-only publications have no rating controls or identity attributes");
 assert.match(borgenuMarkup, /data-episode-overview-rating-id="borgen-episode-uuid-1"/u,
@@ -203,6 +205,8 @@ const overviewContentSource = sources.renderPodcastEpisodeOverviewContent;
 const overviewSource = sources.renderPodcastEpisodeOverview;
 const fetchSource = sources.getFriMadsArticleSidecar;
 assert.match(detailSource, /isFriMadsMetadataPodcast\(podcast\)/u);
+assert.match(detailSource, /hasFriMadsPublications \? "Se episoder"/u,
+  "only the exact Fri Mads profile uses the publication label");
 assert.doesNotMatch(detailSource, /fri-mads-article-preview|hydrateFriMadsArticleMetadataPreview/u, "no separate article block remains");
 assert.match(overviewContentSource, /content\.innerHTML = renderPodcastEpisodeOverview\(podcast\)/u,
   "Fri Mads enters the same episode workspace renderer as other podcasts");
@@ -233,6 +237,7 @@ const browserSources = [
   sources.renderPodcastEpisodeOverview,
   sources.scheduleEpisodeWorkspaceSearch,
   sources.bindPodcastEpisodeOverviewEvents,
+  sources.resetPodcastEpisodeOverviewScroll,
   sources.updatePodcastEpisodeOverview,
   sources.getFriMadsArticleSidecar
 ].join("\n");
@@ -278,11 +283,12 @@ window.openEpisodes=async()=>{
   episodeState.friMadsMetadataLoading=true; episodeState.friMadsMetadataError=false; episodeState.friMadsArticleItems=[];
   document.querySelector('[data-podcast-detail-content]').innerHTML=renderPodcastEpisodeOverview(podcast);
   document.querySelector('#podcastDetailSheet').classList.add('is-episode-workspace');
+  resetPodcastEpisodeOverviewScroll(document.querySelector('#podcastDetailSheet'));
   bindPodcastEpisodeOverviewEvents(document.querySelector('#podcastDetailSheet'),podcast);
   const data=await getFriMadsArticleSidecar();
   episodeState.friMadsMetadataLoading=false;episodeState.friMadsMetadataError=!data;
   episodeState.friMadsArticleItems=episodeState.friMadsMetadataError?[]:data.items.map(release=>({...release,published_at:release.publishedDate,contentKind:'article',metadataOnly:true,playable:false,rateable:false,accessType:'paid'}));
-  updatePodcastEpisodeOverview(document.querySelector('#podcastDetailSheet'));
+  updatePodcastEpisodeOverview(document.querySelector('#podcastDetailSheet'),{resetScroll:true});
 };
 document.querySelector('[data-podcast-episodes-open]').addEventListener('click',window.openEpisodes);
 `;
@@ -290,7 +296,7 @@ const markup = runtime.renderPodcastEpisodeOverview(podcast);
 const html = `<!doctype html><html lang="da"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><style>${siteCss}\n${mobileCss}\n${desktopCss}</style></head><body class="page-podcast">
 <div id="podcastDetailSheet"><main class="podcast-detail-sheet__content" data-podcast-detail-content style="box-sizing:border-box;width:100%;height:600px;max-height:80vh;overflow-y:auto;">
 <a class="podcast-detail-sheet__header-link" href="https://frihedsbrevet.dk/nyhedsbrev/fri-mads/" target="_blank" rel="noopener noreferrer">Fri Mads hos Frihedsbrevet</a><h2>Fri Mads</h2>
-<button type="button" class="podcast-detail-sheet__episode-entry-button" data-podcast-episodes-open>Se afsnit</button></main></div>
+<button type="button" class="podcast-detail-sheet__episode-entry-button" data-podcast-episodes-open>Se episoder</button></main></div>
 <script>${browserScript}</script></body></html>`;
 const server = createServer(async (request, response) => {
   const url = new URL(request.url, "http://127.0.0.1");
@@ -324,7 +330,8 @@ try {
   assert.equal(await page.locator("tr[data-fri-mads-release-id] [role=status]").count(), 10);
   assert.equal(await page.locator("tr[data-fri-mads-release-id] [data-episode-overview-rating-id],tr[data-fri-mads-release-id] button").count(), 0);
   assert.equal(await page.locator("audio,video").count(), 0);
-  assert.equal(await page.locator(".fri-mads-episode-access").count(), 5);
+  assert.equal(await page.locator(".fri-mads-episode-access").count(), 0);
+  assert.equal(await page.getByText("Betalt adgang · abonnement kan kræves").count(), 0);
   assert.equal(await page.locator('a:has-text("Lyt hos Frihedsbrevet")').count(), 5);
 
   const search = page.locator("[data-episode-workspace-search]");

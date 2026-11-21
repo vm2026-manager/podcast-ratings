@@ -23025,6 +23025,12 @@ html body #podcastDetailSheet .podcast-detail-sheet__episode-table--fri-mads-met
   touch-action: manipulation;
 }
 
+html body #podcastDetailSheet.is-episode-workspace tr[data-fri-mads-release-id] .podcast-detail-sheet__episode-source:focus-visible {
+  outline: 2px solid rgba(255, 92, 22, .56);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
 .podcast-detail-sheet__episode-row {
   width: 100%;
   min-width: 0;
