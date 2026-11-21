@@ -31,6 +31,7 @@ const checks = [
   ["Production-sized runtime feed-config CPU and duplicate-identity guard", ["--experimental-strip-types", "scripts/test-runtime-feed-config-performance.mjs"]],
   ["Episode import lifecycle and one-episode frontend eligibility", ["scripts/test-episode-import-lifecycle.mjs"]],
   ["Fri Mads metadata-only discovery and exact URL identity", ["scripts/test-fri-mads-discovery.mjs"]],
+  ["Fri Mads rateable article episode identity and idempotent import", ["--experimental-strip-types", "scripts/test-fri-mads-episode-rating.mjs"]],
   ["Dobbeltliv and 112 For Parforhold exact-source imports", ["--experimental-strip-types", "scripts/test-dobbeltliv-112-for-parforhold-import.mjs"]],
   ["Bounded production episode post-import monitoring", ["--experimental-strip-types", "scripts/test-episode-feed-post-import.mjs"]],
   ["Sig noget klogt bounded RSS identity and single-episode visibility", ["--experimental-strip-types", "scripts/test-sig-noget-klogt-feed-boundary.mjs"]],

@@ -1,15 +1,46 @@
 import { mapApplePodcastHtmlEpisodes } from "./apple-podcasts.ts";
 import { fetchFeedText, fetchPodimoEpisodes, mapEpisodes, mapPodimoEpisodes, parseFeed, parsePodimoEpisodes, preflightAutoFeedIdentity, routeEpisodes, validateExpectedRssIdentity, type ImportRepository } from "./core.ts";
 import type { FeedConfig, FeedConfigMap } from "./feed-config.ts";
+import { parseFriMadsArticleSidecar } from "./fri-mads-articles.ts";
 
 const SAMPLE_SIZE = 5;
 
 export function dryRunConfigError(feedKey: string, config: FeedConfig | undefined): string | null {
   if (feedKey === "all" || feedKey === "apple_all") return "Dry run requires a single feed";
-  if (!config || (config.format !== "apple_podcasts_html" && config.format !== "podimo_graphql" && config.format !== "rss")) {
-    return "Dry run is available only for Apple Podcasts HTML, Podimo, and RSS feeds";
+  if (!config || (config.format !== "apple_podcasts_html" && config.format !== "podimo_graphql" && config.format !== "rss" && config.format !== "fri_mads_article_json")) {
+    return "Dry run is not available for this feed format";
   }
   return null;
+}
+
+export async function runFriMadsArticleDryRun(
+  config: FeedConfig,
+  fetchText: (url: string) => Promise<string> = fetchFeedText,
+  now = new Date().toISOString()
+) {
+  const mapped = parseFriMadsArticleSidecar(await fetchText(config.feed_url), config, now);
+  return {
+    status: "success",
+    source: config.source,
+    podcast_key: config.podcast_key,
+    format: config.format,
+    fetched_count: mapped.fetched_count,
+    valid_count: mapped.episodes.length,
+    error_count: 0,
+    warning_count: 0,
+    database_writes: 0,
+    episode_imports: 0,
+    episodes: mapped.episodes.map((episode) => ({
+      external_guid: episode.external_guid,
+      title: episode.title,
+      published_at: episode.published_at,
+      episode_url: episode.episode_url,
+      audio_url: episode.audio_url,
+      duration_seconds: episode.duration_seconds,
+      rateable: episode.metadata.rateable,
+      access_type: episode.metadata.access_type
+    }))
+  };
 }
 
 export async function runRssDryRun(

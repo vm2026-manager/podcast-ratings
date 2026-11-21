@@ -2,6 +2,7 @@ import { FEED_CONFIGS, type FeedConfig, type FeedConfigMap, type FeedRouteMatche
 import { mapApplePodcastHtmlEpisodes } from "./apple-podcasts.ts";
 import { matchesExplicitTitlePrefix, MEDIANO_SITE_RSS_URL } from "./mediano-routing.mjs";
 import { syncManualPodimoEpisodes } from "./manual-podimo.ts";
+import { parseFriMadsArticleSidecar } from "./fri-mads-articles.ts";
 
 export const FEED_TIMEOUT_MS = 15000;
 const AUTO_RSS_TIMEOUT_MS = 7000;
@@ -243,7 +244,7 @@ export type ImportRepository = {
     status: "running";
     started_at: string;
   }): Promise<{ id: string }>;
-  loadExistingEpisodes(source: string, externalGuids: string[], episodeUrls?: string[], additionalSources?: string[], podcastKeys?: string[]): Promise<PodcastEpisodeRow[]>;
+  loadExistingEpisodes(source: string, externalGuids: string[], episodeUrls?: string[], additionalSources?: string[], podcastKeys?: string[], globalUrlLookup?: boolean): Promise<PodcastEpisodeRow[]>;
   loadAutoFeedGuidOwners?(externalGuids: string[]): Promise<PodcastEpisodeRow[]>;
   loadAutoFeedIdentityInventory?(podcastKey: string): Promise<{
     episodes: PodcastEpisodeRow[];
@@ -1233,7 +1234,9 @@ export async function runEpisodeImport(options: {
     } else {
       const fetcher = options.fetchText || (config.auto_verified_rss ? fetchAutoVerifiedRssText : fetchFeedText);
       const content = await fetcher(config.feed_url);
-      if (config.format === "apple_podcasts_html") {
+      if (config.format === "fri_mads_article_json") {
+        mapped = parseFriMadsArticleSidecar(content, config, now());
+      } else if (config.format === "apple_podcasts_html") {
         mapped = await mapApplePodcastHtmlEpisodes({
           showHtml: content,
           config,
@@ -1275,7 +1278,8 @@ export async function runEpisodeImport(options: {
       routing.episodes.map((episode) => episode.external_guid),
       routing.episodes.map((episode) => episode.episode_url).filter((url): url is string => Boolean(url)),
       config.dedupe_by_episode_url_with_sources,
-      [...new Set(routing.episodes.map((episode) => episode.podcast_key))]
+      [...new Set(routing.episodes.map((episode) => episode.podcast_key))],
+      config.dedupe_by_episode_url_globally === true
     );
     if (config.sheet_feed_change || config.podimo_history_overlap_minimum) {
       const guids = new Set(routing.episodes.map(episode => episode.external_guid));
@@ -1367,6 +1371,12 @@ export async function runEpisodeImport(options: {
       const current = episode.episode_url ? existingByEpisodeUrl.get(episode.episode_url) : null;
       return current && current.podcast_key !== episode.podcast_key;
     });
+    const sameSourceUrlIdentityConflicts = config.dedupe_by_episode_url_globally
+      ? episodesForClassification.filter((episode) => episode.episode_url && existing.some((current) =>
+          current.source === config.source && current.episode_url === episode.episode_url &&
+          (current.podcast_key !== episode.podcast_key || current.external_guid !== episode.external_guid)
+        ))
+      : [];
     const crossSourceIdentityDuplicates = episodesForClassification.filter((episode) =>
       existingCrossSourceEpisodes.some((current) => hasExactCrossSourceEpisodeIdentity(episode, current))
     );
@@ -1447,7 +1457,7 @@ export async function runEpisodeImport(options: {
       : [];
     const manualDuplicateGuids = new Set(manualIdentityDuplicates.map(({ episode }) => episode.external_guid));
     const manualConflictGuids = new Set(manualIdentityConflicts.map(({ episode }) => episode.external_guid));
-    const unsafeEpisodes = routingConflicts.concat(crossSourceUrlConflicts);
+    const unsafeEpisodes = routingConflicts.concat(crossSourceUrlConflicts, sameSourceUrlIdentityConflicts);
     const safeEpisodesForClassification = unsafeEpisodes.length || crossSourceUrlDuplicates.length || crossSourceIdentityDuplicates.length || manualDuplicateGuids.size || manualConflictGuids.size || transitionCrossSourceDuplicates.size || transitionUnresolvedEpisodes.size
       ? episodesForClassification.filter((episode) =>
           !unsafeEpisodes.some((conflict) => conflict.external_guid === episode.external_guid) &&
@@ -1500,7 +1510,8 @@ export async function runEpisodeImport(options: {
     const unmatchedCount = routing.report?.unmatched.length || 0;
     const ambiguousCount = routing.report?.ambiguous.length || 0;
     const transitionReviewCount = transitionUnresolvedEpisodes.size;
-    const routingIssueCount = unmatchedCount + ambiguousCount + routingConflictCount + manualIdentityConflicts.length + transitionReviewCount;
+    const routingIssueCount = unmatchedCount + ambiguousCount + routingConflictCount +
+      sameSourceUrlIdentityConflicts.length + manualIdentityConflicts.length + transitionReviewCount;
     const error_count = itemErrors + batchErrors + routingIssueCount + manualMergeErrors;
     const hasWarnings = mapped.warnings.length > 0;
     const activeRateableEpisodeCount = config.routes?.length
@@ -1535,6 +1546,7 @@ export async function runEpisodeImport(options: {
         podimo_transition_cross_source_duplicate_count: transitionCrossSourceDuplicates.size,
         podimo_transition_unresolved_identity_count: transitionUnresolvedEpisodes.size,
         podimo_transition_identity_review_required: transitionReviewCount > 0,
+        same_source_episode_url_identity_conflict_count: sameSourceUrlIdentityConflicts.length,
         manual_catalogue_merge_count: manualMergedCount,
         manual_catalogue_merge_error_count: manualMergeErrors,
         manual_catalogue_conflict_count: manualIdentityConflicts.length,

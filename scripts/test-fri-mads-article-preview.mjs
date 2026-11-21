@@ -32,6 +32,7 @@ function extractFunction(name) {
 const functionNames = [
   "escapeHtml", "isFriMadsMetadataPodcast", "isValidFriMadsArticleSidecar",
   "getFriMadsEpisodeIdentityFields", "isFriMadsReleaseAlreadyEpisode",
+  "isFriMadsRateableArticleEpisode",
   "getEpisodeWorkspaceEpisodes", "getEpisodeWorkspaceSummary",
   "renderPodcastEpisodeOverviewRows", "renderPodcastEpisodeOverview",
   "bindPodcastEpisodeOverviewEvents", "scheduleEpisodeWorkspaceSearch", "resetPodcastEpisodeOverviewScroll",
@@ -101,7 +102,13 @@ const context = {
   searchGenstartEpisodes: async () => {},
   fetchGenstartEpisodes: async () => {}
 };
-const runtimeFactory = new Function("context", `${Object.values(sources).slice(1, 9).join("\n")}\nconst {${Object.keys(context).join(",")}} = context; return { getEpisodeWorkspaceEpisodes, getEpisodeWorkspaceSummary, renderPodcastEpisodeOverviewRows, renderPodcastEpisodeOverview, isFriMadsReleaseAlreadyEpisode };`);
+const runtimeFactory = new Function("context", `${[
+  sources.isFriMadsMetadataPodcast, sources.isValidFriMadsArticleSidecar,
+  sources.getFriMadsEpisodeIdentityFields, sources.isFriMadsReleaseAlreadyEpisode,
+  sources.isFriMadsRateableArticleEpisode, sources.getEpisodeWorkspaceEpisodes,
+  sources.getEpisodeWorkspaceSummary, sources.renderPodcastEpisodeOverviewRows,
+  sources.renderPodcastEpisodeOverview
+].join("\n")}\nconst {${Object.keys(context).join(",")}} = context; return { getEpisodeWorkspaceEpisodes, getEpisodeWorkspaceSummary, renderPodcastEpisodeOverviewRows, renderPodcastEpisodeOverview, isFriMadsReleaseAlreadyEpisode, isFriMadsRateableArticleEpisode };`);
 const runtime = runtimeFactory(context);
 
 function setFriMadsItems(items) {
@@ -198,6 +205,46 @@ assert.equal(exactMatchWorkspace.filter((item) => item.contentKind === "article"
   "the exact official permalink is suppressed from metadata articles");
 episodeState.items = [];
 
+const rateableRelease = sidecar.items[0];
+const importedArticle = {
+  id: "550e8400-e29b-41d4-a716-446655440000", podcast_key: "fri mads",
+  source: "fri_mads_official_article", external_guid: rateableRelease.canonicalUrl,
+  external_episode_id: null, title: rateableRelease.title, description: null,
+  published_at: `${rateableRelease.publishedDate}T00:00:00.000Z`, duration_seconds: null,
+  episode_url: rateableRelease.canonicalUrl, audio_url: null, image_url: null, is_active: true,
+  metadata: {
+    format: "fri_mads_article_json", catalogue_id: "catalogue-v1-d94fc39e",
+    source_overview: sidecar.sourceOverview, release_id: rateableRelease.releaseId,
+    release_number: rateableRelease.releaseNumber, canonical_url: rateableRelease.canonicalUrl,
+    content_kind: "article", metadata_only: true, playable: false, rateable: true,
+    access_type: "paid"
+  }
+};
+episodeState.items = [importedArticle];
+setFriMadsItems(sidecar.items);
+assert.equal(runtime.isFriMadsRateableArticleEpisode(podcast, importedArticle), true,
+  "only an exact imported URL identity with a database UUID is eligible for episode ratings");
+const importedRowsMarkup = runtime.renderPodcastEpisodeOverviewRows(podcast);
+assert.match(importedRowsMarkup, /data-episode-overview-rating-id="550e8400-e29b-41d4-a716-446655440000"/u,
+  "verified imported articles use the normal episode rating control");
+assert.match(importedRowsMarkup, /Lyt hos Frihedsbrevet/u);
+assert.match(importedRowsMarkup, /Fri Mads #172: Alle elsker Mette/u);
+assert.equal((importedRowsMarkup.match(/data-episode-overview-rating-id=/gu) || []).length, 1,
+  "sidecar-only releases remain unrated until an imported UUID exists");
+
+const invalidImportedArticle = {
+  ...importedArticle,
+  metadata: { ...importedArticle.metadata, catalogue_id: "wrong-catalogue" }
+};
+episodeState.items = [invalidImportedArticle];
+assert.equal(runtime.isFriMadsRateableArticleEpisode(podcast, invalidImportedArticle), false,
+  "a row with mismatched catalogue identity fails closed");
+const invalidRowsMarkup = runtime.renderPodcastEpisodeOverviewRows(podcast);
+assert.doesNotMatch(invalidRowsMarkup, /data-episode-overview-rating-id=/u,
+  "invalid source identity never gets a rating action");
+assert.match(invalidRowsMarkup, /episode-rating-unavailable/u);
+episodeState.items = [];
+
 const wrongIdentity = { ...podcast, podcastId: "friis diplomatpost" };
 assert.equal(context.isFriMadsMetadataPodcast?.(wrongIdentity) ?? new Function(`${sources.isFriMadsMetadataPodcast}; return isFriMadsMetadataPodcast`)()(wrongIdentity), false);
 const detailSource = sources.renderPodcastDetailSheetContent;
@@ -231,6 +278,7 @@ const browserSources = [
   sources.isValidFriMadsArticleSidecar,
   sources.getFriMadsEpisodeIdentityFields,
   sources.isFriMadsReleaseAlreadyEpisode,
+  sources.isFriMadsRateableArticleEpisode,
   sources.getEpisodeWorkspaceEpisodes,
   sources.getEpisodeWorkspaceSummary,
   sources.renderPodcastEpisodeOverviewRows,
@@ -273,12 +321,13 @@ function podcastHasManualEpisodeList(){return false;}
 function scheduleGenstartEpisodeSearch(){}
 function renderPodcastDetailSheetContent(){window.__profileRestored=true;}
 function getPodcastKey(item){return item.podcastId;}
-function getGenstartEpisodeById(){return null;}
+function getGenstartEpisodeById(id){return episodeState.items.find(item=>item.id===id)||null;}
 function getPodcastManualEpisodes(){return [];}
 function openEpisodeRatingDialog(){window.__ratingDialogOpened=true;}
 function getEpisodeWorkspaceSummary(p){const n=getEpisodeWorkspaceEpisodes(p).length;return n+' episoder';}
 ${browserSources}
 window.__episodeState=episodeState;window.__podcast=podcast;
+window.__loadImportedArticle=()=>{episodeState.items=[${JSON.stringify(importedArticle)}];updatePodcastEpisodeOverview(document.querySelector('#podcastDetailSheet'),{resetScroll:true});};
 window.openEpisodes=async()=>{
   episodeState.friMadsMetadataLoading=true; episodeState.friMadsMetadataError=false; episodeState.friMadsArticleItems=[];
   document.querySelector('[data-podcast-detail-content]').innerHTML=renderPodcastEpisodeOverview(podcast);
@@ -348,6 +397,18 @@ try {
   await page.waitForFunction(() => document.querySelectorAll("tr[data-fri-mads-release-id]").length === 5);
   assert.equal(await page.evaluate(() => document.activeElement?.matches("[data-episode-workspace-search]")), true);
 
+  await page.evaluate(() => window.__loadImportedArticle());
+  const rateableRow = page.locator('tr[data-fri-mads-release-id="fri-mads:172:https://frihedsbrevet.dk/fri-mads-172-alle-elsker-mette/"]');
+  assert.equal(await rateableRow.locator("[data-episode-overview-rating-id]").count(), 1,
+    "an exact imported episode UUID enables the standard rating action");
+  assert.equal(await rateableRow.locator("[role=status]").count(), 0);
+  assert.equal(await page.locator("tr[data-fri-mads-release-id] [data-episode-overview-rating-id]").count(), 1,
+    "the four sidecar-only releases remain non-rateable");
+  await rateableRow.locator("[data-episode-overview-rating-id]").click();
+  assert.equal(await page.evaluate(() => window.__ratingDialogOpened), true,
+    "the episode rating action invokes the existing rating dialog");
+  await page.evaluate(() => { window.__ratingDialogOpened = false; window.__episodeState.items = []; updatePodcastEpisodeOverview(document.querySelector('#podcastDetailSheet'),{resetScroll:true}); });
+
   for (const width of [320, 375, 390, 768, 1280, 1440]) {
     await page.setViewportSize({ width, height: width < 769 ? 760 : 900 });
     const sizes = await page.evaluate(() => ({
@@ -370,6 +431,7 @@ try {
   await mobilePane.evaluate((node) => node.scrollTo(0, node.scrollHeight));
   assert.ok(await mobilePane.evaluate((node) => node.scrollTop > 0), "the shared mobile detail workspace scrolls");
   const link = page.locator('a:has-text("Lyt hos Frihedsbrevet")').first();
+  await page.keyboard.press("Tab");
   await link.focus();
   assert.notEqual(await link.evaluate((node) => getComputedStyle(node).outlineStyle), "none", "release link keeps visible keyboard focus");
   const expectedHref = await link.getAttribute("href");
