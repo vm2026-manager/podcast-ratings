@@ -14550,7 +14550,7 @@ function getEpisodeWorkspaceEpisodes(podcast) {
   };
   let episodes;
   if (!searchTerm) episodes = filterSeason(workspaceItems);
-  else if (config?.dataSource !== "local" && config) episodes = filterSeason(getVisibleGenstartEpisodes());
+  else if (config?.dataSource !== "local" && config && !friMadsWorkspace) episodes = filterSeason(getVisibleGenstartEpisodes());
   else {
     const comparableSearch = normalizeComparable(searchTerm);
     episodes = filterSeason(workspaceItems.filter((episode) =>
@@ -14625,7 +14625,7 @@ function scheduleEpisodeWorkspaceSearch(podcast, term) {
     .querySelector("#podcastDetailSheet .podcast-detail-sheet__episode-table-wrap")
     ?.scrollTo({ top: 0, left: 0, behavior: "auto" });
   episodeState.workspaceVisibleCount = EPISODE_WORKSPACE_PAGE_SIZE;
-  if (config && config.dataSource !== "local") {
+  if (config && config.dataSource !== "local" && !isFriMadsMetadataPodcast(podcast)) {
     scheduleGenstartEpisodeSearch(term);
     updatePodcastEpisodeOverview();
     return;
@@ -15032,7 +15032,7 @@ function bindPodcastEpisodeOverviewEvents(dialog, podcast) {
       }
 
       const config = getEpisodePodcastConfig(podcast);
-      if (!config || config.dataSource === "local") return;
+      if (!config || config.dataSource === "local" || isFriMadsMetadataPodcast(podcast)) return;
       const hasSearch = normalizeText(episodeState.searchTerm).length > 0;
       const canLoadMore = hasSearch ? episodeState.searchHasMore : episodeState.hasMore;
       const loadingMore = hasSearch ? episodeState.searchLoadingMore : episodeState.loadingMore;
