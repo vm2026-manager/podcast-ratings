@@ -161,17 +161,17 @@ const setResults = new Function(
 )(state, { resultsText: resultsElement }, () => true,
   () => [...state.rankingMovementByKey.values()].filter((delta) => Number.isFinite(delta) && delta !== 0).length);
 setResults("Viser 18 af 263 podcasts");
-assert.equal(resultsElement.textContent, "Viser 18 af 263 podcasts · Ingen placeringsændringer siden 20. oktober");
+assert.equal(resultsElement.textContent, "Viser 18 af 263 podcasts", "movement calculation is not appended to the ranking status row");
 state.rankingMovementByKey = new Map([["a", 1], ["b", 0], ["c", -11]]);
 setResults("Viser 18 af 263 podcasts");
-assert.equal(resultsElement.textContent, "Viser 18 af 263 podcasts · 2 podcasts har ændret placering siden 20. oktober");
+assert.equal(resultsElement.textContent, "Viser 18 af 263 podcasts");
 state.rankingMovementByKey = new Map();
 setResults("Viser 18 af 263 podcasts");
-assert.equal(resultsElement.textContent, "Viser 18 af 263 podcasts · Ingen placeringsændringer siden 20. oktober", "a valid empty cohort is a genuine zero-movement result");
+assert.equal(resultsElement.textContent, "Viser 18 af 263 podcasts", "a valid empty cohort does not create a ranking status line");
 state.rankingMovementPeriodLabel = "de seneste 7 dage";
 state.rankingMovementByKey = new Map([["a", 2]]);
 setResults("Viser 18 af 263 podcasts");
-assert.equal(resultsElement.textContent, "Viser 18 af 263 podcasts · 1 podcast har ændret placering de seneste 7 dage");
+assert.equal(resultsElement.textContent, "Viser 18 af 263 podcasts");
 state.rankingMovementPeriodLabel = "siden 20. oktober";
 state.rankingMovementByKey = new Map();
 const ineligibleResults = new Function(
@@ -179,7 +179,7 @@ const ineligibleResults = new Function(
   `${setRankingResultsText}; return setRankingResultsText;`
 )(state, { resultsText: resultsElement }, () => false, () => 0);
 ineligibleResults("Viser 18 af 263 podcasts");
-assert.equal(resultsElement.textContent, "Viser 18 af 263 podcasts", "editorial or filtered rankings do not show the user-ranking status");
+assert.equal(resultsElement.textContent, "Viser 18 af 263 podcasts", "movement is never appended to the ranking status row");
 state.rankingMovementByKey = new Map([["a", 1]]);
 state.rankingMovementSnapshotValid = false;
 setResults("Viser 18 af 263 podcasts");
