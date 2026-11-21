@@ -35,7 +35,7 @@ export function createSupabaseImportRepository(client: any): ImportRepository {
       return { id: data.id };
     },
 
-    async loadExistingEpisodes(source: string, externalGuids: string[], episodeUrls: string[] = [], additionalSources: string[] = [], podcastKeys: string[] = []) {
+    async loadExistingEpisodes(source: string, externalGuids: string[], episodeUrls: string[] = [], additionalSources: string[] = [], podcastKeys: string[] = [], globalUrlLookup = false) {
       const rows: PodcastEpisodeRow[] = [];
       for (const guidBatch of chunk(externalGuids, BATCH_SIZE)) {
         const { data, error } = await client
@@ -56,6 +56,18 @@ export function createSupabaseImportRepository(client: any): ImportRepository {
             .in("source", additionalSources)
             .in("episode_url", urlBatch);
           if (error) throw new Error("Cross-source episode select failed");
+          rows.push(...(data || []));
+        }
+      }
+      // Canonical permalink sources can opt into an exact, bounded cross-source
+      // check without enumerating or guessing provider identities.
+      if (episodeUrls.length && globalUrlLookup) {
+        for (const urlBatch of chunk(episodeUrls, CROSS_SOURCE_EPISODE_URL_BATCH_SIZE)) {
+          const { data, error } = await client
+            .from("podcast_episodes")
+            .select(SELECT_FIELDS)
+            .in("episode_url", urlBatch);
+          if (error) throw new Error("Global canonical episode URL identity check failed");
           rows.push(...(data || []));
         }
       }

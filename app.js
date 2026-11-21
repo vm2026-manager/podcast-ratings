@@ -347,6 +347,16 @@ const MEDIANO_EPISODE_PODCAST_CONFIG = Object.freeze(
 
 const EPISODE_PODCAST_CONFIG = {
   ...MEDIANO_EPISODE_PODCAST_CONFIG,
+  "fri mads": {
+    podcastKey: "fri mads",
+    databasePodcastKey: "fri mads",
+    enabled: true,
+    displayName: "Fri Mads",
+    searchPlaceholder: "Søg i Fri Mads-udgivelser",
+    source: "fri_mads_official_article",
+    episodeSources: ["fri_mads_official_article"],
+    persistence: "supabase"
+  },
   "stot mediano": {
     podcastKey: "stot mediano",
     databasePodcastKey: "stot mediano",
@@ -14640,7 +14650,7 @@ function renderPodcastEpisodeOverviewRows(podcast) {
     return `<tr class="podcast-detail-sheet__episode-table-state-row"><td colspan="4" class="podcast-detail-sheet__episode-table-state" role="status">Henter verificerede udgivelser &hellip;</td></tr>`;
   }
 
-  if (friMadsWorkspace && episodeState.friMadsMetadataError) {
+  if (friMadsWorkspace && episodeState.friMadsMetadataError && !episodeState.items.length) {
     return `<tr class="podcast-detail-sheet__episode-table-state-row"><td colspan="4" class="podcast-detail-sheet__episode-table-state" role="alert">Udgivelserne kunne ikke hentes. <a class="podcast-detail-sheet__episode-source" href="https://frihedsbrevet.dk/nyhedsbrev/fri-mads/" target="_blank" rel="noopener noreferrer">Fri Mads hos Frihedsbrevet</a></td></tr>`;
   }
 
@@ -14648,7 +14658,8 @@ function renderPodcastEpisodeOverviewRows(podcast) {
     return `<tr><td colspan="4" class="podcast-detail-sheet__episode-table-state">Henter episoder &hellip;</td></tr>`;
   }
 
-  if (episodeState.error && !episodeState.items.length) {
+  if (episodeState.error && !episodeState.items.length &&
+      !(friMadsWorkspace && episodeState.friMadsArticleItems?.length)) {
     return `<tr><td colspan="4" class="podcast-detail-sheet__episode-table-state">${escapeHtml(
       episodeState.error
     )}</td></tr>`;
@@ -14668,21 +14679,24 @@ function renderPodcastEpisodeOverviewRows(podcast) {
   return allEpisodes
     .slice(0, episodeState.workspaceVisibleCount || EPISODE_WORKSPACE_PAGE_SIZE)
     .map((episode, index) => {
+      const rateableFriMadsArticle = friMadsWorkspace && isFriMadsRateableArticleEpisode(podcast, episode);
       const metadataOnlyArticle = friMadsWorkspace && episode?.contentKind === "article" &&
         episode?.metadataOnly === true && episode?.rateable === false && episode?.playable === false;
-      const episodeId = metadataOnlyArticle ? "" : getEpisodeKey(episode);
-      const episodeNumber = Number(episode.releaseNumber || episode.episode_number || getAppleSeasonEpisodeNumber(episode)?.episode || index + 1);
+      const unavailableFriMadsEpisode = friMadsWorkspace && !metadataOnlyArticle && !rateableFriMadsArticle;
+      const episodeId = metadataOnlyArticle || unavailableFriMadsEpisode ? "" : getEpisodeKey(episode);
+      const episodeNumber = Number(episode.releaseNumber || episode.metadata?.release_number || episode.episode_number || getAppleSeasonEpisodeNumber(episode)?.episode || index + 1);
       // The Der var engang overview may overlay its verified catalogue date;
       // all other configured episodes use only their upstream publication date.
       const publicationDate = showPublicationDate
         ? formatEpisodeDate(episode._episodeOverviewPublishedAt || episode.published_at || episode.publishedDate)
         : "";
-      const stat = metadataOnlyArticle ? null : getEpisodeStat(episodeId);
-      const userRating = metadataOnlyArticle ? null : getEpisodeUserRating(episodeId);
-      const sourceScore = metadataOnlyArticle ? null : parseNumber(stat?.averageRating);
-      const ratingCount = metadataOnlyArticle ? 0 : Number(stat?.ratingCount || 0);
+      const ratingUnavailable = metadataOnlyArticle || unavailableFriMadsEpisode;
+      const stat = ratingUnavailable ? null : getEpisodeStat(episodeId);
+      const userRating = ratingUnavailable ? null : getEpisodeUserRating(episodeId);
+      const sourceScore = ratingUnavailable ? null : parseNumber(stat?.averageRating);
+      const ratingCount = ratingUnavailable ? 0 : Number(stat?.ratingCount || 0);
       const editorialScore = parseNumber(episode.editorial_rating);
-      const ratingAvailable = !metadataOnlyArticle && isManualEpisodeRatingAvailable(episode);
+      const ratingAvailable = !ratingUnavailable && isManualEpisodeRatingAvailable(episode);
       const title = episode.title || `Episode ${episodeNumber}`;
       const titleLengthClass = title.length > 115
         ? " episode-title--very-long"
@@ -14695,7 +14709,7 @@ function renderPodcastEpisodeOverviewRows(podcast) {
       ].filter(Boolean).join(" ");
 
       return `
-        <tr class="${rowStateClasses}"${metadataOnlyArticle ? ` data-fri-mads-release-id="${escapeHtml(episode.releaseId)}"` : ""}>
+        <tr class="${rowStateClasses}"${metadataOnlyArticle || rateableFriMadsArticle ? ` data-fri-mads-release-id="${escapeHtml(episode.releaseId || episode.metadata?.release_id || "")}"` : ""}>
           ${
             showPublicationDate
               ? `<td class="episode-publication-date-cell" data-label="Udgivelsesdato" aria-label="Udgivelsesdato ${escapeHtml(
@@ -14705,12 +14719,12 @@ function renderPodcastEpisodeOverviewRows(podcast) {
           }
           <td data-label="Episode" data-published-date="${escapeHtml(publicationDate)}">
             <strong class="episode-title${titleLengthClass}">${escapeHtml(title)}</strong>
-            ${metadataOnlyArticle ? `<a class="podcast-detail-sheet__episode-source" href="${escapeHtml(episode.canonicalUrl)}" target="_blank" rel="noopener noreferrer">Lyt hos Frihedsbrevet</a>` : ""}
+            ${metadataOnlyArticle || rateableFriMadsArticle ? `<a class="podcast-detail-sheet__episode-source" href="${escapeHtml(episode.canonicalUrl || episode.episode_url)}" target="_blank" rel="noopener noreferrer">Lyt hos Frihedsbrevet</a>` : ""}
             ${getOfficialMedianoEpisodeSourceUrl(episode.episode_url) ? `<a class="podcast-detail-sheet__episode-source" href="${escapeHtml(getOfficialMedianoEpisodeSourceUrl(episode.episode_url))}" target="_blank" rel="noopener noreferrer">Officiel kilde</a>` : ""}
             ${editorialScore === null ? "" : `<span class="podcast-detail-sheet__episode-editorial-score">Podcastlistens vurdering: <strong>${escapeHtml(formatCompactRating(editorialScore))}/10</strong></span>`}
           </td>
           <td data-label="Brugernes vurdering">
-            ${metadataOnlyArticle
+            ${ratingUnavailable
               ? `<span class="podcast-detail-sheet__episode-rating-unavailable" role="status" aria-label="Ikke tilg&aelig;ngelig: episodeidentitet mangler">Ikke tilg&aelig;ngelig</span>`
               : `
             <span class="podcast-detail-sheet__episode-source-score">
@@ -14720,7 +14734,7 @@ function renderPodcastEpisodeOverviewRows(podcast) {
             `}
           </td>
           <td data-label="Din vurdering">
-            ${metadataOnlyArticle
+            ${ratingUnavailable
               ? `<span class="podcast-detail-sheet__episode-rating-unavailable" role="status" aria-label="Ikke tilg&aelig;ngelig: episodeidentitet mangler">Ikke tilg&aelig;ngelig</span>`
               : `<button
               class="podcast-detail-sheet__episode-own-score${userRating === null ? " is-empty" : ""}${ratingAvailable ? "" : " is-mapping-pending"}"
@@ -14921,6 +14935,27 @@ function isValidFriMadsArticleSidecar(sidecar) {
   return valid;
 }
 
+function isFriMadsRateableArticleEpisode(podcast, episode) {
+  if (!isFriMadsMetadataPodcast(podcast) || !episode || episode.podcast_key !== "fri mads" || episode.source !== "fri_mads_official_article" ||
+      episode.is_active !== true || !/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/iu.test(String(episode.id || ""))) return false;
+  const metadata = episode.metadata && typeof episode.metadata === "object" ? episode.metadata : {};
+  if (metadata.format !== "fri_mads_article_json" || metadata.content_kind !== "article" ||
+      metadata.metadata_only !== true || metadata.playable !== false || metadata.rateable !== true ||
+      metadata.access_type !== "paid" || metadata.catalogue_id !== "catalogue-v1-d94fc39e" ||
+      metadata.source_overview !== "https://frihedsbrevet.dk/nyhedsbrev/fri-mads/") return false;
+  const number = Number(metadata.release_number);
+  let articleUrl;
+  try { articleUrl = new URL(String(episode.episode_url || "")); } catch { return false; }
+  const permalinkMatch = articleUrl.pathname.match(/^\/fri-mads-(\d+)-[a-z0-9-]+\/$/u);
+  const titleMatch = String(episode.title || "").match(/^Fri Mads #(\d+):\s+\S/u);
+  return Number.isSafeInteger(number) && number > 0 && Boolean(permalinkMatch && titleMatch) &&
+    Number(permalinkMatch[1]) === number && Number(titleMatch[1]) === number &&
+    articleUrl.protocol === "https:" && articleUrl.origin === "https://frihedsbrevet.dk" &&
+    articleUrl.href === episode.episode_url && episode.external_guid === episode.episode_url &&
+    metadata.canonical_url === episode.episode_url && metadata.release_id === `fri-mads:${number}:${episode.episode_url}` &&
+    episode.external_episode_id === null && episode.audio_url === null && episode.duration_seconds === null;
+}
+
 function getFriMadsEpisodeIdentityFields(episode) {
   return [episode?.episode_url, episode?.episodeUrl, episode?.external_guid,
     episode?.externalGuid, episode?.external_episode_id, episode?.externalEpisodeId]
@@ -15111,7 +15146,14 @@ function renderPodcastEpisodeOverviewContent(dialog, podcast) {
   bindPodcastEpisodeOverviewEvents(dialog, podcast);
 
   if (friMadsWorkspace) {
-    void getFriMadsArticleSidecar().then((sidecar) => {
+    const episodeLoad = (!isGenstartEpisodeCacheFresh() ||
+      episodeState.items.length < MINIMUM_RATEABLE_EPISODE_COUNT) && !episodeState.loading
+      ? fetchGenstartEpisodes()
+      : Promise.resolve();
+    void Promise.all([
+      getFriMadsArticleSidecar(),
+      episodeLoad
+    ]).then(([sidecar]) => {
       if (!dialog.isConnected || dialog.classList.contains("is-hidden") ||
           state.podcastDetailView !== "episodes" ||
           state.activePodcastDetailKey !== getPodcastKey(podcast)) return;
