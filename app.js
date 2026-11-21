@@ -1287,6 +1287,9 @@ const elements = {
   desktopUserMeta: document.getElementById("desktopUserMeta"),
   searchInput: document.getElementById("searchInput"),
   searchClearButton: document.getElementById("searchClearButton"),
+  rankingSearchInspiration: document.getElementById("rankingSearchInspiration"),
+  rankingSearchInspirationItems: document.getElementById("rankingSearchInspirationItems"),
+  rankingSearchInspirationNext: document.getElementById("rankingSearchInspirationNext"),
   sortToggle: document.getElementById("sortToggle"),
   mobileSortToggle: document.getElementById("mobileSortToggle"),
   popularNowToggle: document.getElementById("popularNowToggle"),
@@ -2674,6 +2677,32 @@ const RANKING_SEARCH_RELATED_TOPIC_GROUPS = Object.freeze([
     evidenceTopics: ["berlinmurens fald"]
   }
 ]);
+
+// A small editorial rotation of useful, non-genre ranking searches. Keep these
+// as ordinary queries so the existing ranking matcher and URL behavior apply.
+const RANKING_SEARCH_INSPIRATION = Object.freeze([
+  { label: "Svindel", query: "svindel" },
+  { label: "Den kolde krig", query: "den kolde krig" },
+  { label: "Terrorangreb i København", query: "terrorangreb i København" },
+  { label: "Anden verdenskrig", query: "anden verdenskrig" },
+  { label: "Sekter", query: "sekter" },
+  { label: "Spionage", query: "spionage" },
+  { label: "Forsvindinger", query: "forsvindinger" },
+  { label: "Familiehemmeligheder", query: "familiehemmeligheder" },
+  { label: "Stalking", query: "stalking" },
+  { label: "Christiansborg", query: "Christiansborg" },
+  { label: "Krigen i Ukraine", query: "krigen i Ukraine" },
+  { label: "Kunstig intelligens", query: "kunstig intelligens" },
+  { label: "Sovjetunionen", query: "Sovjetunionen" },
+  { label: "Klimakrisen", query: "klimakrisen" },
+  { label: "Dating", query: "dating" },
+  { label: "Bander", query: "bander" },
+  { label: "Magtmisbrug", query: "magtmisbrug" },
+  { label: "Terror", query: "terror" }
+]);
+const RANKING_SEARCH_INSPIRATION_PAGE_SIZE = 3;
+let rankingSearchInspirationOffset = 0;
+
 const rankingSearchRelatedTopicAliases = RANKING_SEARCH_RELATED_TOPIC_GROUPS.flatMap((group) =>
   group.queryAliases.map((alias) => ({
     group: group.id,
@@ -4876,6 +4905,41 @@ function updateSearchClearButton() {
   if (!elements.searchClearButton || !elements.searchInput) return;
 
   elements.searchClearButton.hidden = !elements.searchInput.value;
+}
+
+function updateRankingSearchInspirationUi() {
+  const container = elements.rankingSearchInspiration;
+  const items = elements.rankingSearchInspirationItems;
+  if (!container || !items) return;
+
+  const hasGenreFilter = state.activeFilter?.type === "genre";
+  const hasSearchQuery = Boolean((elements.searchInput?.value || state.searchTerm || "").trim());
+  const shouldShow =
+    document.body.classList.contains("page-ranglister") &&
+    !hasGenreFilter &&
+    !hasSearchQuery;
+
+  container.hidden = !shouldShow;
+  if (!shouldShow) return;
+
+  const suggestions = Array.from({ length: RANKING_SEARCH_INSPIRATION_PAGE_SIZE }, (_, index) => {
+    const suggestionIndex = (rankingSearchInspirationOffset + index) % RANKING_SEARCH_INSPIRATION.length;
+    return RANKING_SEARCH_INSPIRATION[suggestionIndex];
+  });
+
+  items.replaceChildren(...suggestions.map(({ label, query }) => {
+    const button = document.createElement("button");
+    button.className = "ranking-search-inspiration__item";
+    button.type = "button";
+    button.textContent = label;
+    button.addEventListener("click", () => {
+      if (!elements.searchInput) return;
+      elements.searchInput.value = query;
+      elements.searchInput.dispatchEvent(new Event("input", { bubbles: true }));
+      elements.searchInput.focus({ preventScroll: true });
+    });
+    return button;
+  }));
 }
 
 function isMobileViewport() {
@@ -19389,6 +19453,7 @@ function reconcileMobileRankingCards(nextCards, podcasts = []) {
 function renderPodcastGrid() {
   if (!elements.podcastGrid) return;
 
+  updateRankingSearchInspirationUi();
   syncDesktopRankingSearchPlacement();
   updateDesktopRankingSourceContext();
 
@@ -27778,6 +27843,11 @@ function setupEvents() {
   }
 
   elements.popularNowToggle?.addEventListener("click", togglePopularNow);
+  elements.rankingSearchInspirationNext?.addEventListener("click", () => {
+    rankingSearchInspirationOffset =
+      (rankingSearchInspirationOffset + RANKING_SEARCH_INSPIRATION_PAGE_SIZE) % RANKING_SEARCH_INSPIRATION.length;
+    updateRankingSearchInspirationUi();
+  });
 
   if (elements.activeFilterPill) {
     elements.activeFilterPill.addEventListener("click", clearActiveFilter);

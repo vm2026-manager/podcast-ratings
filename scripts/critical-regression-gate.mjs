@@ -86,6 +86,7 @@ const checks = [
   ["mobile ranking toolbar alignment, visibility, accessibility and navigation", ["scripts/test-mobile-ranking-toolbar.mjs"]],
   ["mobile ranking filter chips, independent removal and responsive layout", ["scripts/test-mobile-ranking-filter-chips.mjs"]],
   ["mobile ranking search, filter and popular controls share the intended rows", ["scripts/test-ranking-search-controls-layout.mjs"]],
+  ["ranking search inspiration uses verified catalogue queries and responsive rotation", ["scripts/test-ranking-search-inspiration.mjs"]],
   ["desktop ranking rank grid geometry in Chromium", ["scripts/test-desktop-ranking-column.mjs"]],
   ["popular-now activity, filters, responsive layout and safe fallback", ["scripts/test-popular-now-ranking.mjs"]],
   ["popular-now verified main-series season grouping and conservative activity", ["scripts/test-popular-now-display-groups.mjs"]],

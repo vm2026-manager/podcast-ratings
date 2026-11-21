@@ -757,3 +757,165 @@ html body .mobile-home-search-overlay { display: none; }
     outline-offset: 2px;
   }
 }
+
+/* Editorial search inspiration stays beside the ranking controls on desktop,
+   then gets its own wrap-safe row on mobile. */
+body.page-ranglister .ranking-search-actions {
+  display: flex !important;
+  min-width: 0;
+  max-width: 100%;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+body.page-ranglister .ranking-search-inspiration {
+  display: flex;
+  min-width: 0;
+  max-width: 100%;
+  flex: 0 1 auto;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+
+body.page-ranglister .ranking-search-inspiration[hidden] {
+  display: none !important;
+}
+
+body.page-ranglister .ranking-search-inspiration__items {
+  display: flex;
+  min-width: 0;
+  max-width: 100%;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+
+body.page-ranglister .ranking-search-inspiration__item,
+body.page-ranglister .ranking-search-inspiration__next {
+  min-height: 38px;
+  border: 1px solid rgba(142, 85, 49, 0.2);
+  color: #70513e;
+  background: rgba(255, 255, 255, 0.72);
+  font: 800 0.74rem/1.2 Manrope, Inter, system-ui, sans-serif;
+  cursor: pointer;
+  transition: border-color 150ms ease, color 150ms ease, background-color 150ms ease;
+}
+
+body.page-ranglister .ranking-search-inspiration__item {
+  max-width: 100%;
+  padding: 7px 12px;
+  border-radius: 999px;
+  text-align: center;
+  overflow-wrap: anywhere;
+}
+
+body.page-ranglister .ranking-search-inspiration__next {
+  width: 38px;
+  min-width: 38px;
+  padding: 8px;
+  display: inline-grid;
+  place-items: center;
+  border-radius: 50%;
+}
+
+body.page-ranglister .ranking-search-inspiration__next svg {
+  width: 18px;
+  height: 18px;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.8;
+}
+
+body.page-ranglister .ranking-search-inspiration__item:hover,
+body.page-ranglister .ranking-search-inspiration__next:hover,
+body.page-ranglister .ranking-search-inspiration__item:focus-visible,
+body.page-ranglister .ranking-search-inspiration__next:focus-visible {
+  border-color: rgba(255, 92, 22, 0.52);
+  color: #a83d0c;
+  background: #fff5ed;
+}
+
+body.page-ranglister .ranking-search-inspiration__item:focus-visible,
+body.page-ranglister .ranking-search-inspiration__next:focus-visible {
+  outline: 3px solid rgba(255, 92, 22, 0.28);
+  outline-offset: 2px;
+}
+
+@media (min-width: 901px) {
+  html body.page-ranglister .ranking-search-strip {
+    width: min(100%, 1120px) !important;
+    display: flex !important;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: flex-start !important;
+    gap: 10px 12px;
+  }
+
+  body.page-ranglister .ranking-search-strip > .search-field {
+    flex: 0 1 420px;
+    width: min(100%, 420px) !important;
+    min-width: 0;
+  }
+
+  body.page-ranglister .ranking-search-strip > .ranking-search-actions {
+    flex: 1 1 560px;
+  }
+
+  body.page-ranglister .ranking-search-strip > .desktop-ranking-search-filter-summary {
+    flex: 1 1 100%;
+    min-width: 0;
+    flex-wrap: wrap;
+  }
+
+  html body.page-ranglister .ranking-search-strip.has-desktop-ranking-filters {
+    width: min(100%, 1120px) !important;
+    flex-wrap: wrap !important;
+  }
+
+  html body.page-ranglister .ranking-search-strip.has-desktop-ranking-filters .search-field {
+    flex: 0 1 420px !important;
+    width: min(100%, 420px) !important;
+  }
+
+  html body.page-ranglister .ranking-search-strip.has-desktop-ranking-filters .ranking-search-actions {
+    flex: 1 1 560px;
+  }
+
+  html body.page-ranglister .ranking-search-strip.has-desktop-ranking-filters .desktop-ranking-search-filter-summary {
+    flex: 1 1 100% !important;
+    min-width: 0 !important;
+  }
+}
+
+@media (max-width: 768px) {
+  html body.page-ranglister:not(.force-desktop-view) .ranking-search-strip {
+    grid-template-rows: auto auto auto !important;
+  }
+
+  html body.page-ranglister:not(.force-desktop-view) .ranking-search-strip > .ranking-search-actions {
+    display: contents !important;
+  }
+
+  html body.page-ranglister:not(.force-desktop-view) .ranking-search-strip #rankingSearchInspiration {
+    grid-column: 1 / -1 !important;
+    grid-row: 3 !important;
+    justify-self: stretch !important;
+    width: 100% !important;
+  }
+
+  html body.page-ranglister:not(.force-desktop-view) #rankingSearchInspirationItems {
+    flex: 1 1 220px;
+    width: calc(100% - 44px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body.page-ranglister .ranking-search-inspiration__item,
+  body.page-ranglister .ranking-search-inspiration__next {
+    transition: none;
+  }
+}
