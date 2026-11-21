@@ -671,6 +671,14 @@ try {
 
   await page.setViewportSize({ width: 390, height: 844 });
   await page.evaluate(() => {
+    // This layout assertion covers the post-load desktop state. The isolated
+    // browser test blocks Supabase requests, so seed the completed empty public
+    // statistics state instead of depending on a remote/auth event.
+    state.communityStatsStatus = "ready";
+    state.communityStatsHasSuccessfulLoad = true;
+    renderPodcastGrid();
+  });
+  await page.evaluate(() => {
     document.documentElement.classList.add("force-desktop-view");
     document.body.classList.add("force-desktop-view");
   });

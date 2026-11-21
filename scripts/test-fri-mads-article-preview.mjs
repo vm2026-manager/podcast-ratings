@@ -205,7 +205,7 @@ const overviewContentSource = sources.renderPodcastEpisodeOverviewContent;
 const overviewSource = sources.renderPodcastEpisodeOverview;
 const fetchSource = sources.getFriMadsArticleSidecar;
 assert.match(detailSource, /isFriMadsMetadataPodcast\(podcast\)/u);
-assert.match(detailSource, /hasFriMadsPublications \? "Se udgivelser"/u,
+assert.match(detailSource, /hasFriMadsPublications \? "Se episoder"/u,
   "only the exact Fri Mads profile uses the publication label");
 assert.doesNotMatch(detailSource, /fri-mads-article-preview|hydrateFriMadsArticleMetadataPreview/u, "no separate article block remains");
 assert.match(overviewContentSource, /content\.innerHTML = renderPodcastEpisodeOverview\(podcast\)/u,
@@ -296,7 +296,7 @@ const markup = runtime.renderPodcastEpisodeOverview(podcast);
 const html = `<!doctype html><html lang="da"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><style>${siteCss}\n${mobileCss}\n${desktopCss}</style></head><body class="page-podcast">
 <div id="podcastDetailSheet"><main class="podcast-detail-sheet__content" data-podcast-detail-content style="box-sizing:border-box;width:100%;height:600px;max-height:80vh;overflow-y:auto;">
 <a class="podcast-detail-sheet__header-link" href="https://frihedsbrevet.dk/nyhedsbrev/fri-mads/" target="_blank" rel="noopener noreferrer">Fri Mads hos Frihedsbrevet</a><h2>Fri Mads</h2>
-<button type="button" class="podcast-detail-sheet__episode-entry-button" data-podcast-episodes-open>Se udgivelser</button></main></div>
+<button type="button" class="podcast-detail-sheet__episode-entry-button" data-podcast-episodes-open>Se episoder</button></main></div>
 <script>${browserScript}</script></body></html>`;
 const server = createServer(async (request, response) => {
   const url = new URL(request.url, "http://127.0.0.1");

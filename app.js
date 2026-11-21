@@ -16670,7 +16670,7 @@ function renderPodcastDetailSheetContent(
     ? `<span class="podcast-detail-sheet__episode-entry">
         <button class="podcast-detail-sheet__episode-entry-button" type="button" data-podcast-episodes-open aria-describedby="podcastEpisodeEntryTooltip">
           <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="3" width="14" height="18" rx="2"></rect><path d="M9 8h6M9 12h6M9 16h4"></path></svg>
-          <span>${hasFriMadsPublications ? "Se udgivelser" : "Vurder episoder"}</span>
+          <span>${hasFriMadsPublications ? "Se episoder" : "Vurder episoder"}</span>
         </button>
         <span class="podcast-detail-sheet__episode-entry-tooltip" id="podcastEpisodeEntryTooltip" role="tooltip">
           ${hasFriMadsPublications ? "Se de indtalte Fri Mads-udgivelser." : "Se alle episoder og bed&oslash;m dem &eacute;n for &eacute;n."}

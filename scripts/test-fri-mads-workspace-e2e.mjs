@@ -105,7 +105,7 @@ try {
 
   const profileButton = page.locator("[data-podcast-episodes-open]");
   await profileButton.waitFor({ state: "visible" });
-  assert.equal((await profileButton.innerText()).trim(), "Se udgivelser", "Fri Mads profile action is publication-specific");
+  assert.equal((await profileButton.innerText()).trim(), "Se episoder", "Fri Mads profile action matches the shared episode workspace");
   await context.route("**/data/fri-mads-articles.json", async (route) => {
     await new Promise((resolveDelay) => setTimeout(resolveDelay, 300));
     await route.continue();
