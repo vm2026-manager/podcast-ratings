@@ -16,6 +16,14 @@ const contentTypes = {
   ".webp": "image/webp"
 };
 const evidenceQueries = [
+  { query: "parforhold", ids: ["opskriften pa kærlighed", "hjerteflimmer for voksne"] },
+  { query: "investering", ids: ["millionærklubben", "børsen investor"] },
+  { query: "graviditet", ids: ["momkind podcast", "plus en"] },
+  { query: "sociale medier", ids: ["del og like", "hard fork"] },
+  { query: "fodboldøkonomi", ids: ["superzoom", "mediano moneyball"] },
+  { query: "familieliv", ids: ["momkind podcast", "hr og fru fuhlendorff bare mellem os"] },
+  { query: "iværksætteri", ids: ["saas købmænd", "thorborgs dagbog"] },
+  { query: "psykologi", ids: ["brinkmanns briks", "verdens navle"] },
   { query: "svindel", ids: ["kvinden med den tunge kuffert", "den forunderlige dr kavousi"] },
   { query: "den kolde krig", ids: ["konspirativ kærlighed", "operation romeo"] },
   { query: "terrorangreb i København", ids: ["døgnet der rystede danmark", "danmarks første terrorangreb"] },
@@ -98,7 +106,7 @@ try {
   }, evidenceQueries);
 
   assert.equal(verifiedSearches.suggestions.length, 3, "three suggestions are shown at a time");
-  assert.deepEqual(verifiedSearches.suggestions, ["Svindel", "Den kolde krig", "Terrorangreb i København"]);
+  assert.deepEqual(verifiedSearches.suggestions, ["Kunstig intelligens", "Parforhold", "Investering"]);
   assert.ok(verifiedSearches.anonymous, "search suggestions are available without a signed-in user");
   assert.ok(["mads", "users"].includes(verifiedSearches.source), "the existing ranking source remains selected");
   assert.ok(verifiedSearches.suggestions.every((label) => !verifiedSearches.genreLabels.includes(label)), "suggestions are topics, not genres");
@@ -118,24 +126,24 @@ try {
   await desktop.keyboard.press("Enter");
   assert.deepEqual(
     await desktop.locator("#rankingSearchInspirationItems button").allTextContents(),
-    ["Anden verdenskrig", "Sekter", "Spionage"],
+    ["Graviditet", "Sociale medier", "Fodboldøkonomi"],
     "keyboard activation rotates to the next three suggestions"
   );
   await next.focus();
   await desktop.keyboard.press("Space");
   assert.deepEqual(
     await desktop.locator("#rankingSearchInspirationItems button").allTextContents(),
-    ["Forsvindinger", "Familiehemmeligheder", "Stalking"],
+    ["Familieliv", "Iværksætteri", "Psykologi"],
     "Space also rotates suggestions"
   );
 
   await desktop.locator("#rankingSearchInspirationItems button").first().click();
   assert.equal(await desktop.evaluate(() => state.rankingSource), verifiedSearches.source, "using a suggestion preserves the selected ranking source");
-  assert.equal(await desktop.locator("#searchInput").inputValue(), "forsvindinger", "a suggestion fills the ranking search");
-  assert.equal(await desktop.evaluate(() => state.searchTerm), "forsvindinger", "a suggestion uses the ranking search state");
-  assert.equal(await desktop.evaluate(() => new URL(location.href).searchParams.get("s")), "forsvindinger", "a suggestion creates the canonical ranking search URL");
+  assert.equal(await desktop.locator("#searchInput").inputValue(), "familieliv", "a suggestion fills the ranking search");
+  assert.equal(await desktop.evaluate(() => state.searchTerm), "familieliv", "a suggestion uses the ranking search state");
+  assert.equal(await desktop.evaluate(() => new URL(location.href).searchParams.get("s")), "familieliv", "a suggestion creates the canonical ranking search URL");
   assert.equal(await desktop.locator("#rankingSearchInspiration").isVisible(), false, "suggestions hide while a query is active");
-  assert.ok(await desktop.evaluate(() => getFilteredPodcasts().some((podcast) => podcast.podcastId === "historien om lukas")), "selected suggestion filters the ranking to matching podcasts");
+  assert.ok(await desktop.evaluate(() => getFilteredPodcasts().some((podcast) => podcast.podcastId === "momkind podcast")), "selected suggestion filters the ranking to matching podcasts");
   await desktop.locator("#searchClearButton").click();
   assert.equal(await desktop.evaluate(() => new URL(location.href).searchParams.has("s")), false, "clearing search removes the query parameter");
   assert.equal(await desktop.locator("#rankingSearchInspiration").isVisible(), true, "suggestions return after clearing the query");

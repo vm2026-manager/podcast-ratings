@@ -31,6 +31,7 @@ function extractFunction(name) {
 
 const functionNames = [
   "escapeHtml", "isFriMadsMetadataPodcast", "isValidFriMadsArticleSidecar",
+  "getFriMadsPermalinkNumber", "isVerifiedFriMadsPermalink", "getVerifiedFriMadsReleaseNumber",
   "getFriMadsEpisodeIdentityFields", "isFriMadsReleaseAlreadyEpisode",
   "isFriMadsRateableArticleEpisode",
   "getEpisodeWorkspaceEpisodes", "getEpisodeWorkspaceSummary",
@@ -52,7 +53,7 @@ const borgenu = {
 
 const episodeState = {
   items: [], friMadsArticleItems: [], searchTerm: "", loading: false, error: "",
-  workspaceVisibleCount: 100, totalCount: 5, hasMore: false,
+  workspaceVisibleCount: 20, totalCount: null, hasMore: false,
   searchHasMore: false, searchTotalCount: null
 };
 const episodesByKey = new Map([
@@ -104,6 +105,7 @@ const context = {
 };
 const runtimeFactory = new Function("context", `${[
   sources.isFriMadsMetadataPodcast, sources.isValidFriMadsArticleSidecar,
+  sources.getFriMadsPermalinkNumber, sources.isVerifiedFriMadsPermalink, sources.getVerifiedFriMadsReleaseNumber,
   sources.getFriMadsEpisodeIdentityFields, sources.isFriMadsReleaseAlreadyEpisode,
   sources.isFriMadsRateableArticleEpisode, sources.getEpisodeWorkspaceEpisodes,
   sources.getEpisodeWorkspaceSummary, sources.renderPodcastEpisodeOverviewRows,
@@ -129,12 +131,14 @@ assert.equal(sidecar.metadataOnly, true);
 assert.equal(sidecar.playable, false);
 assert.equal(sidecar.rateable, false);
 assert.equal(sidecar.audioUrl, null);
-assert.deepEqual(sidecar.items.map((item) => item.releaseNumber), [172, 171, 170, 169, 168]);
+assert.ok(sidecar.items.length >= 5, "the verified listing may include the full public archive");
+assert.deepEqual(sidecar.items.slice(0, 5).map((item) => item.releaseNumber), [172, 171, 170, 169, 168]);
 assert.equal(sidecar.items[0].title, "Fri Mads #172: Alle elsker Mette");
 assert.equal(sidecar.items[0].publishedDate, "2026-11-08");
 assert.equal(sidecar.items[0].canonicalUrl, "https://frihedsbrevet.dk/fri-mads-172-alle-elsker-mette/");
 assert.equal(sidecar.items.some((item) => item.releaseNumber === 173), false, "synthetic #173 never appears");
 assert.ok(sidecar.items.every((item) => item.fixtureOnly !== true && !("articleText" in item)));
+const previewItems = sidecar.items.slice(0, 5);
 
 assert.equal(FRIHEDSBREVET_SOURCE_REGISTRY.length, 36);
 assert.ok(catalog.rows.length >= 1376, "catalogue growth remains allowed above the verified minimum baseline");
@@ -151,7 +155,13 @@ assert.deepEqual(catalog.rows.filter((row) => row["Podcast-ID"] === "fri mads").
 }], "Fri Mads identity, approved profile link, historical #140 and paid access stay unchanged");
 
 const originalRows = catalog.rows.map((row) => ({ id: row["Podcast-ID"], catalogueId: row.catalogue_id }));
+setFriMadsItems(previewItems);
 setFriMadsItems(sidecar.items);
+assert.equal(runtime.getEpisodeWorkspaceEpisodes(podcast).length, 171,
+  "the common workspace preserves every one of the 171 verified releases");
+assert.match(runtime.getEpisodeWorkspaceSummary(podcast), /171 episoder/u,
+  "the total uses the merged archive instead of a stale/empty database count");
+setFriMadsItems(previewItems);
 const friMarkup = runtime.renderPodcastEpisodeOverview(podcast);
 const borgenuMarkup = runtime.renderPodcastEpisodeOverview(borgenu);
 for (const [label, markup] of [["Fri Mads", friMarkup], ["BorgenUdenFilter", borgenuMarkup]]) {
@@ -167,7 +177,7 @@ assert.match(friMarkup, /Din vurdering/u);
 assert.match(friMarkup, /Søg i Fri Mads-udgivelser/u);
 assert.doesNotMatch(friMarkup, /episode-table--fri-mads-metadata|Fri Mads-artikler|fri-mads-article-preview|#173|fri-mads-173-|<audio\b|<video\b|duration|varighed/iu);
 assert.equal((friMarkup.match(/data-fri-mads-release-id=/gu) || []).length, 5);
-for (const release of sidecar.items) {
+for (const release of previewItems) {
   assert.ok(friMarkup.includes(release.title), `common episode list includes ${release.releaseId}`);
   assert.ok(friMarkup.includes(release.canonicalUrl), `verified permalink retained for ${release.releaseId}`);
 }
@@ -193,19 +203,24 @@ assert.match(failedSourceRows, /Udgivelserne kunne ikke hentes/u, "source failur
 assert.doesNotMatch(failedSourceRows, /data-fri-mads-release-id/u, "source failures never retain stale article rows");
 episodeState.friMadsMetadataError = false;
 
-const matchingExistingEpisode = { external_guid: sidecar.items[0].canonicalUrl };
-const titleOnlyCollision = { title: sidecar.items[0].title, external_guid: "different-guid" };
+const matchingExistingEpisode = { external_guid: previewItems[0].canonicalUrl };
+const titleOnlyCollision = { title: previewItems[0].title, external_guid: "different-guid" };
 episodeState.items = [titleOnlyCollision];
 assert.equal(runtime.getEpisodeWorkspaceEpisodes(podcast).length, 6, "title-only similarity does not suppress a distinct source identity");
 episodeState.items = [matchingExistingEpisode];
-assert.equal(runtime.isFriMadsReleaseAlreadyEpisode(sidecar.items[0], episodeState.items), true, "duplicate detection uses exact source identity");
+assert.equal(runtime.isFriMadsReleaseAlreadyEpisode(previewItems[0], episodeState.items), true, "duplicate detection uses exact source identity");
 const exactMatchWorkspace = runtime.getEpisodeWorkspaceEpisodes(podcast);
 assert.equal(exactMatchWorkspace.length, 5, "the existing episode remains alongside four non-duplicate article records");
 assert.equal(exactMatchWorkspace.filter((item) => item.contentKind === "article").length, 4,
   "the exact official permalink is suppressed from metadata articles");
 episodeState.items = [];
 
-const rateableRelease = sidecar.items[0];
+const rateableRelease = previewItems[0];
+const episodeQueryProjections = [...app.matchAll(/\.select\("(id,podcast_key,title,description,published_at,[^"]+)", \{ count: "exact" \}\)/gu)]
+  .map((match) => match[1]);
+assert.ok(episodeQueryProjections.length >= 2, "episode list and search queries are covered");
+assert.ok(episodeQueryProjections.every((projection) => projection.split(",").includes("external_episode_id")),
+  "the episode queries include the null identity field required by Fri Mads' fail-closed rating check");
 const importedArticle = {
   id: "550e8400-e29b-41d4-a716-446655440000", podcast_key: "fri mads",
   source: "fri_mads_official_article", external_guid: rateableRelease.canonicalUrl,
@@ -221,9 +236,13 @@ const importedArticle = {
   }
 };
 episodeState.items = [importedArticle];
-setFriMadsItems(sidecar.items);
+setFriMadsItems(previewItems);
 assert.equal(runtime.isFriMadsRateableArticleEpisode(podcast, importedArticle), true,
   "only an exact imported URL identity with a database UUID is eligible for episode ratings");
+const incompleteProjectionArticle = { ...importedArticle };
+delete incompleteProjectionArticle.external_episode_id;
+assert.equal(runtime.isFriMadsRateableArticleEpisode(podcast, incompleteProjectionArticle), false,
+  "an omitted external episode identity remains fail-closed instead of enabling a potentially conflicting rating");
 const importedRowsMarkup = runtime.renderPodcastEpisodeOverviewRows(podcast);
 assert.match(importedRowsMarkup, /data-episode-overview-rating-id="550e8400-e29b-41d4-a716-446655440000"/u,
   "verified imported articles use the normal episode rating control");
@@ -231,6 +250,20 @@ assert.match(importedRowsMarkup, /Lyt hos Frihedsbrevet/u);
 assert.match(importedRowsMarkup, /Fri Mads #172: Alle elsker Mette/u);
 assert.equal((importedRowsMarkup.match(/data-episode-overview-rating-id=/gu) || []).length, 1,
   "sidecar-only releases remain unrated until an imported UUID exists");
+for (const legacyNumber of [6, 3]) {
+  const release = sidecar.items.find((item) => item.releaseNumber === legacyNumber);
+  assert.ok(release, `the public archive includes verified legacy release #${legacyNumber}`);
+  const legacyEpisode = {
+    ...importedArticle,
+    id: legacyNumber === 6 ? "550e8400-e29b-41d4-a716-446655440006" : "550e8400-e29b-41d4-a716-446655440003",
+    external_guid: release.canonicalUrl, title: release.title,
+    episode_url: release.canonicalUrl, published_at: `${release.publishedDate}T00:00:00.000Z`,
+    metadata: { ...importedArticle.metadata, release_id: release.releaseId,
+      release_number: release.releaseNumber, canonical_url: release.canonicalUrl }
+  };
+  assert.equal(runtime.isFriMadsRateableArticleEpisode(podcast, legacyEpisode), true,
+    `only the exact observed legacy permalink for #${legacyNumber} is accepted for rating`);
+}
 
 const invalidImportedArticle = {
   ...importedArticle,
@@ -276,6 +309,9 @@ const browserSources = [
   sources.escapeHtml,
   "function isFriMadsMetadataPodcast(podcast){return podcast?.podcastId === 'fri mads' && podcast?.catalogueId === 'catalogue-v1-d94fc39e' && podcast?.link === 'https://frihedsbrevet.dk/nyhedsbrev/fri-mads/';}",
   sources.isValidFriMadsArticleSidecar,
+  sources.getFriMadsPermalinkNumber,
+  sources.isVerifiedFriMadsPermalink,
+  sources.getVerifiedFriMadsReleaseNumber,
   sources.getFriMadsEpisodeIdentityFields,
   sources.isFriMadsReleaseAlreadyEpisode,
   sources.isFriMadsRateableArticleEpisode,
@@ -297,7 +333,7 @@ const browserScript = `
 const EPISODE_WORKSPACE_PAGE_SIZE=20;
 const state={podcastDetailView:'episodes',activePodcastDetailKey:'fri mads',podcastByKey:{'fri mads':${JSON.stringify(podcast)}}};
 const podcast=state.podcastByKey['fri mads'];
-const episodeState={items:[],friMadsArticleItems:[],searchTerm:'',loading:false,error:'',workspaceVisibleCount:20,totalCount:5,hasMore:false,searchHasMore:false,searchTotalCount:null};
+const episodeState={items:[],friMadsArticleItems:[],searchTerm:'',loading:false,error:'',workspaceVisibleCount:20,totalCount:null,hasMore:false,searchHasMore:false,searchTotalCount:null};
 const configs={'fri mads':null};
 function getPodcastEpisodeState(){return episodeState;}
 function getEpisodePodcastConfig(item){return configs[item.podcastId]||null;}
@@ -375,13 +411,14 @@ try {
   assert.equal(sidecarRequests, 1);
   assert.deepEqual(await page.locator("[data-podcast-episode-overview] thead th").allTextContents(), ["Udgivelsesdato", "Episode", "Brugernes vurdering", "Din vurdering"]);
   assert.equal(await page.locator("[data-podcast-episode-overview] colgroup col").count(), 4);
-  assert.equal(await page.locator("tr[data-fri-mads-release-id]").count(), 5);
-  assert.equal(await page.locator("tr[data-fri-mads-release-id] [role=status]").count(), 10);
+  assert.equal(await page.locator("tr[data-fri-mads-release-id]").count(), 20,
+    "the standard workspace page size displays 20 rows from the full archive");
+  assert.equal(await page.locator("tr[data-fri-mads-release-id] [role=status]").count(), 40);
   assert.equal(await page.locator("tr[data-fri-mads-release-id] [data-episode-overview-rating-id],tr[data-fri-mads-release-id] button").count(), 0);
   assert.equal(await page.locator("audio,video").count(), 0);
   assert.equal(await page.locator(".fri-mads-episode-access").count(), 0);
   assert.equal(await page.getByText("Betalt adgang · abonnement kan kræves").count(), 0);
-  assert.equal(await page.locator('a:has-text("Lyt hos Frihedsbrevet")').count(), 5);
+  assert.equal(await page.locator('a:has-text("Lyt hos Frihedsbrevet")').count(), 20);
 
   const search = page.locator("[data-episode-workspace-search]");
   await search.focus();
@@ -394,7 +431,7 @@ try {
   await page.waitForSelector("text=Ingen udgivelser matcher din søgning");
   assert.equal(await page.locator("tr[data-fri-mads-release-id]").count(), 0);
   await search.fill("");
-  await page.waitForFunction(() => document.querySelectorAll("tr[data-fri-mads-release-id]").length === 5);
+  await page.waitForFunction(() => document.querySelectorAll("tr[data-fri-mads-release-id]").length === 20);
   assert.equal(await page.evaluate(() => document.activeElement?.matches("[data-episode-workspace-search]")), true);
 
   await page.evaluate(() => window.__loadImportedArticle());
@@ -422,7 +459,7 @@ try {
     }));
     assert.ok(sizes.doc <= sizes.viewport && sizes.body <= sizes.viewport, `${width}px has no horizontal document overflow: ${JSON.stringify(sizes)}`);
     assert.ok(sizes.content <= sizes.contentClient + 1, `${width}px detail pane has no horizontal overflow: ${JSON.stringify(sizes)}`);
-    assert.equal(sizes.count, 5);
+    assert.equal(sizes.count, 20, "the standard first page remains bounded while the full archive stays searchable");
     assert.equal(sizes.titlesFit, true, `${width}px titles fit or wrap`);
   }
 

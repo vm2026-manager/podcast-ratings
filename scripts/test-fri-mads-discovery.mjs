@@ -4,13 +4,15 @@ import {
   FRI_MADS_BASELINE_NUMBER,
   FRI_MADS_CATALOGUE_ID,
   FRI_MADS_HISTORICAL_SOURCE_URL,
+  FRI_MADS_MAX_ARCHIVE_ITEMS,
   FRI_MADS_MAX_NEW_RELEASES,
   FRI_MADS_OVERVIEW_URL,
   FRI_MADS_PODCAST_ID,
   FRI_MADS_SECOND_PAGE_URL,
   discoverFriMadsArticles,
   parseFriMadsOverview,
-  runFriMadsDiscovery
+  runFriMadsDiscovery,
+  runFriMadsArchiveDiscovery
 } from "./discover-fri-mads-releases.mjs";
 import { FRIHEDSBREVET_SOURCE_REGISTRY } from "./audit-frihedsbrevet-sources.mjs";
 import {
@@ -63,6 +65,20 @@ const secondPage = parseFriMadsOverview(FRI_MADS_OVERVIEW_145_TO_119_HTML);
 assert.equal(secondPage.length, 27);
 assert.deepEqual([secondPage[0].number, secondPage.at(-1).number], [145, 119]);
 assert.deepEqual(secondPage.map((item) => item.number), Array.from({ length: 27 }, (_, index) => 145 - index));
+assert.equal(secondPage.find((item) => item.number === 121)?.url,
+  "https://frihedsbrevet.dk/fri-mads-121-%d1%84%d0%b0%d0%bb%d0%b0%d1%84%d0%b5%d0%bb%d0%bb%d0%b0%d0%bd%d0%b4%d0%b8%d1%8f/",
+  "the official Cyrillic permalink is preserved exactly");
+
+for (const [number, title, url] of [
+  [6, "Fri Mads #6: Manden fra Cypern", "https://frihedsbrevet.dk/fri-mads-manden-fra-cypern/"],
+  [3, "Fri Mads #3: Lyd over land", "https://frihedsbrevet.dk/lyd-over-land/"],
+  [28, "Fri Mads #28 Hr. Krabbes mismods vinter", "https://frihedsbrevet.dk/fri-mads-28-hr-krabbes-mismods-vinter/"],
+  [63, "Fri Mads #63 – Jeg holder af hverdagen", "https://frihedsbrevet.dk/fri-mads-63-jeg-holder-af-hverdagen/"]
+]) {
+  const parsed = parseFriMadsOverview(makeFriMadsOverview([number], { [number]: { title, url } }));
+  assert.equal(parsed[0].number, number, `official legacy/title variant for #${number} retains its exact number`);
+  assert.equal(parsed[0].url, url, `official legacy/title variant for #${number} retains its exact permalink`);
+}
 
 const unchanged = discoverFriMadsArticles(FRI_MADS_OVERVIEW_172_TO_146_HTML);
 assert.equal(unchanged.status, "no_new_releases", "the established #172 baseline is not historically backfilled");
@@ -180,6 +196,53 @@ assert.equal(tooOldCursor.status, "identity_conflict");
 assert.deepEqual(tooOldCursor.reasonCodes, ["incremental_window_exceeded"]);
 assert.equal(tooOldCursor.releases.length, 0, "bounded discovery refuses a broad historical backfill");
 assert.equal(FRI_MADS_MAX_NEW_RELEASES, 27);
+
+const archivePageOne = FRI_MADS_OVERVIEW_172_TO_146_HTML;
+const archivePageTwo = FRI_MADS_OVERVIEW_145_TO_119_HTML;
+const archivePageThree = makeFriMadsOverview(Array.from({ length: 14 }, (_, index) => 118 - index));
+const archivePages = new Map([
+  [FRI_MADS_OVERVIEW_URL, archivePageOne],
+  [FRI_MADS_SECOND_PAGE_URL, archivePageTwo],
+  ["https://frihedsbrevet.dk/nyhedsbrev/fri-mads/?paginate=3", archivePageThree]
+]);
+const archiveRequests = [];
+const archiveReport = await runFriMadsArchiveDiscovery({ fetchImpl: async (url, options) => {
+  archiveRequests.push({ url, options });
+  return new Response(archivePages.get(url), { status: 200, headers: { "content-type": "text/html; charset=UTF-8" } });
+} });
+assert.equal(archiveReport.status, "archive_verified");
+assert.deepEqual(archiveReport.reasonCodes, []);
+assert.equal(archiveReport.discoveryMode, "full_archive");
+assert.deepEqual(archiveReport.pagesRequested, [...archivePages.keys()]);
+assert.equal(archiveReport.archiveReleases.length, 68);
+assert.deepEqual([archiveReport.archiveReleases[0].releaseNumber, archiveReport.archiveReleases.at(-1).releaseNumber], [172, 105]);
+assert.equal(archiveReport.latestOverviewReleases.length, 5);
+assert.equal(archiveReport.archiveReleases.find((item) => item.releaseNumber === 121)?.canonicalUrl,
+  "https://frihedsbrevet.dk/fri-mads-121-%d1%84%d0%b0%d0%bb%d0%b0%d1%84%d0%b5%d0%bb%d0%bb%d0%b0%d0%bd%d0%b4%d0%b8%d1%8f/");
+assert.ok(archiveRequests.every(({ options }) => options.method === "GET" && options.redirect === "error"));
+assert.equal(archiveRequests.length, 3, "archive discovery follows only the three official overview pages in this fixture");
+assert.equal(archiveReport.articleRequests, 0, "full archive discovery never requests individual articles");
+assert.equal(archiveReport.supabaseCalls + archiveReport.episodeImports + archiveReport.sheetWrites, 0);
+assert.equal(FRI_MADS_MAX_ARCHIVE_ITEMS, 324, "pagination has a strict archive-record ceiling");
+
+const missingArchivePageLink = await runFriMadsArchiveDiscovery({ fetchImpl: async () => new Response(
+  archivePageOne.replace('<a href="https://frihedsbrevet.dk/nyhedsbrev/fri-mads/?paginate=2">Næste</a>', ""),
+  { status: 200, headers: { "content-type": "text/html" } }
+) });
+assert.equal(missingArchivePageLink.status, "source_invalid");
+assert.deepEqual(missingArchivePageLink.reasonCodes, ["pagination_terminal_page_ambiguous"]);
+assert.equal(missingArchivePageLink.archiveReleases.length, 0, "a missing next-page link cannot silently truncate the archive");
+
+let archiveCall = 0;
+const archivePageFailure = await runFriMadsArchiveDiscovery({ fetchImpl: async () => {
+  archiveCall += 1;
+  return archiveCall === 1
+    ? new Response(archivePageOne, { status: 200, headers: { "content-type": "text/html" } })
+    : new Response("unavailable", { status: 403, headers: { "content-type": "text/html" } });
+} });
+assert.equal(archivePageFailure.status, "source_unavailable");
+assert.deepEqual(archivePageFailure.reasonCodes, ["source_http_403"]);
+assert.equal(archivePageFailure.archiveReleases.length, 0, "a later page failure discards partial archive results");
 
 let requests = [];
 const onePageRun = await runFriMadsDiscovery({ fetchImpl: async (url, options) => {

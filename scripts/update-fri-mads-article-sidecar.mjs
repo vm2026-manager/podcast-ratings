@@ -5,14 +5,29 @@ import {
   FRI_MADS_ACCESS_TYPE,
   FRI_MADS_CATALOGUE_ID,
   FRI_MADS_HISTORICAL_SOURCE_URL,
+  FRI_MADS_MAX_ARCHIVE_ITEMS,
   FRI_MADS_OVERVIEW_URL,
   FRI_MADS_PODCAST_ID,
   FRI_MADS_SIDECAR_ITEM_LIMIT
 } from "./discover-fri-mads-releases.mjs";
 
 const DATE = /^\d{4}-\d{2}-\d{2}$/u;
-const TITLE = /^Fri Mads #([1-9]\d*):\s+\S/u;
-const PERMALINK = /^\/fri-mads-(\d+)-[a-z0-9-]+\/$/u;
+const TITLE = /^Fri Mads #([1-9]\d*)(?::\s+|\s+–\s+|\s+)\S/u;
+const LEGACY_ARTICLE_NUMBERS = new Map([
+  ["https://frihedsbrevet.dk/fri-mads-manden-fra-cypern/", 6],
+  ["https://frihedsbrevet.dk/lyd-over-land/", 3]
+]);
+function articlePathNumber(pathname) {
+  const match = String(pathname || "").match(/^\/fri-mads-(\d+)-([^/]+)\/$/u);
+  if (!match) return null;
+  try {
+    const slug = decodeURIComponent(match[2]);
+    if (!slug || !/^[\p{L}\p{M}\p{N}\p{S}\p{P}\u200d\ufe0f]+$/u.test(slug) ||
+        /[\\/?#%]/u.test(slug) || slug === "." || slug === "..") return null;
+  }
+  catch { return null; }
+  return Number(match[1]);
+}
 const ARTICLE_FIELDS = ["releaseId", "releaseNumber", "title", "publishedDate", "canonicalUrl"];
 const DISCOVERY_FIELDS = ["releaseId", "podcastId", "catalogueId", "releaseNumber", "title", "publishedDate", "canonicalUrl", "author", "sourceGuid", "sourceGuidStatus", "accessType", "contentKind", "metadataOnly", "playable", "rateable", "audioUrl"];
 
@@ -28,11 +43,12 @@ function validateArticle(article) {
     : null;
   let url;
   try { url = new URL(String(article.canonicalUrl || "")); } catch { fail("invalid_article_permalink"); }
-  const permalinkMatch = url.pathname.match(PERMALINK);
+  const permalinkNumber = articlePathNumber(url.pathname);
   if (!Number.isSafeInteger(number) || number < 1 || !titleMatch || Number(titleMatch[1]) !== number ||
       !date || !Number.isFinite(date.getTime()) || date.toISOString().slice(0, 10) !== article.publishedDate ||
       url.protocol !== "https:" || url.origin !== "https://frihedsbrevet.dk" || url.port || url.username || url.password ||
-      url.search || url.hash || url.href !== article.canonicalUrl || !permalinkMatch || Number(permalinkMatch[1]) !== number ||
+      url.search || url.hash || url.href !== article.canonicalUrl ||
+      (permalinkNumber !== number && LEGACY_ARTICLE_NUMBERS.get(article.canonicalUrl) !== number) ||
       article.releaseId !== `fri-mads:${number}:${article.canonicalUrl}` ||
       (number === 140 && article.canonicalUrl !== FRI_MADS_HISTORICAL_SOURCE_URL)) {
     fail("article_identity_or_metadata_conflict");
@@ -42,7 +58,7 @@ function validateArticle(article) {
 }
 
 function validateItems(items) {
-  if (!Array.isArray(items) || items.length < 1 || items.length > FRI_MADS_SIDECAR_ITEM_LIMIT) fail("invalid_sidecar_item_count");
+  if (!Array.isArray(items) || items.length < 1 || items.length > FRI_MADS_MAX_ARCHIVE_ITEMS) fail("invalid_sidecar_item_count");
   const seenNumbers = new Set();
   const seenUrls = new Set();
   const normalized = items.map(validateArticle);
@@ -81,23 +97,56 @@ export function createFriMadsArticleSidecar(report, previous = null) {
       report.supabaseCalls !== 0 || report.sheetWrites !== 0 || report.catalogueWrites !== 0 ||
       report.episodeImports !== 0 || report.articleRequests !== 0 ||
       report.sourceOverview !== FRI_MADS_OVERVIEW_URL ||
-      !["new_metadata_discovered", "no_new_releases"].includes(report.status) ||
-      !Array.isArray(report.pagesRequested) || report.pagesRequested.length < 1 || report.pagesRequested.length > 2 ||
+      !["new_metadata_discovered", "no_new_releases", "archive_verified"].includes(report.status) ||
+      !Array.isArray(report.pagesRequested) || report.pagesRequested.length < 1 || report.pagesRequested.length > 12 ||
       report.pagesRequested[0] !== FRI_MADS_OVERVIEW_URL ||
-      report.pagesRequested.some((url) => ![FRI_MADS_OVERVIEW_URL, "https://frihedsbrevet.dk/nyhedsbrev/fri-mads/?paginate=2"].includes(url))) {
+      report.pagesRequested.some((url, index) => url !== (index === 0 ? FRI_MADS_OVERVIEW_URL : `${FRI_MADS_OVERVIEW_URL}?paginate=${index + 1}`))) {
     fail("unverified_or_unsafe_discovery_report");
   }
 
   if (!Array.isArray(report.latestOverviewReleases) || report.latestOverviewReleases.length < 1 || report.latestOverviewReleases.length > FRI_MADS_SIDECAR_ITEM_LIMIT) fail("sidecar_item_limit_exceeded");
-  const items = validateItems(report.latestOverviewReleases.map(projectVerifiedDiscoveryArticle));
-  if (previous !== null) {
-    if (!isValidFriMadsArticleSidecar(previous)) fail("existing_sidecar_invalid");
-    const previousByNumber = new Map(previous.items.map((item) => [item.releaseNumber, item]));
-    for (const item of items) {
-      const old = previousByNumber.get(item.releaseNumber);
-      if (old && old.canonicalUrl !== item.canonicalUrl) fail("existing_article_permalink_changed");
+  const latest = validateItems(report.latestOverviewReleases.map(projectVerifiedDiscoveryArticle));
+  let discovered = [];
+  const archiveMode = report.status === "archive_verified";
+  if (archiveMode) {
+    if (report.discoveryMode !== "full_archive" || !Array.isArray(report.archiveReleases) ||
+        report.archiveReleases.length < 1 || report.archiveReleases.length > FRI_MADS_MAX_ARCHIVE_ITEMS) fail("archive_metadata_invalid");
+    discovered = validateItems(report.archiveReleases.map(projectVerifiedDiscoveryArticle));
+    if (JSON.stringify(discovered.slice(0, FRI_MADS_SIDECAR_ITEM_LIMIT)) !== JSON.stringify(latest)) fail("archive_latest_items_mismatch");
+  } else if (!Array.isArray(report.archiveReleases) || report.archiveReleases.length !== 0) {
+    fail("unexpected_archive_metadata");
+  } else {
+    if (!Array.isArray(report.releases)) fail("incremental_release_metadata_invalid");
+    discovered = report.releases.length
+      ? validateItems(report.releases.map(projectVerifiedDiscoveryArticle))
+      : [];
+    if (report.status === "no_new_releases" && discovered.length !== 0) fail("unexpected_incremental_releases");
+    if (report.status === "new_metadata_discovered" && discovered.length === 0) fail("missing_incremental_releases");
+    for (let index = 0; index < discovered.length; index += 1) {
+      if (discovered[index].releaseNumber !== report.afterNumber + discovered.length - index) fail("incremental_release_window_invalid");
     }
   }
+
+  if (previous !== null && !isValidFriMadsArticleSidecar(previous)) fail("existing_sidecar_invalid");
+  if (archiveMode && previous) {
+    const archiveByNumber = new Map(discovered.map((item) => [item.releaseNumber, item]));
+    for (const old of previous.items) {
+      const current = archiveByNumber.get(old.releaseNumber);
+      if (!current || current.canonicalUrl !== old.canonicalUrl) fail("existing_article_removed_or_permalink_changed");
+    }
+  }
+  const candidates = [
+    ...(previous?.items || []).map(validateArticle),
+    ...discovered,
+    ...latest
+  ];
+  const mergedByNumber = new Map();
+  for (const item of candidates) {
+    const old = mergedByNumber.get(item.releaseNumber);
+    if (old && old.canonicalUrl !== item.canonicalUrl) fail("existing_article_permalink_changed");
+    mergedByNumber.set(item.releaseNumber, item);
+  }
+  const items = validateItems([...mergedByNumber.values()].sort((left, right) => right.releaseNumber - left.releaseNumber));
 
   return {
     schemaVersion: 1,

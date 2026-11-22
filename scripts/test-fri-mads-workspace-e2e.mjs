@@ -9,6 +9,8 @@ import { chromium } from "playwright";
 const root = resolve(fileURLToPath(new URL("..", import.meta.url)));
 const artifactDir = resolve(process.env.FRI_MADS_ARTIFACT_DIR || `${tmpdir()}/fri-mads-workspace-e2e`);
 await mkdir(artifactDir, { recursive: true });
+const checkedInSidecar = JSON.parse(await readFile(resolve(root, "data/fri-mads-articles.json"), "utf8"));
+const previewSidecar = checkedInSidecar;
 
 const mimeTypes = {
   ".css": "text/css; charset=utf-8", ".html": "text/html; charset=utf-8",
@@ -108,25 +110,24 @@ try {
   assert.equal((await profileButton.innerText()).trim(), "Se episoder", "Fri Mads profile action matches the shared episode workspace");
   await context.route("**/data/fri-mads-articles.json", async (route) => {
     await new Promise((resolveDelay) => setTimeout(resolveDelay, 300));
-    await route.continue();
+    await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify(previewSidecar) });
   });
   await profileButton.click();
   await page.locator("[data-podcast-episode-overview]").waitFor({ state: "visible" });
   const initialScroll = await page.evaluate(() => ({ windowY: window.scrollY, contentTop: document.querySelector("[data-podcast-detail-content]")?.scrollTop, tableTop: document.querySelector(".podcast-detail-sheet__episode-table-wrap")?.scrollTop }));
   assert.deepEqual(initialScroll, { windowY: 0, contentTop: 0, tableTop: 0 }, "workspace opens at the top before sidecar hydration");
   await page.locator("tr[data-fri-mads-release-id]").first().waitFor({ state: "visible", timeout: 15000 });
-  assert.equal(await page.locator("tr[data-fri-mads-release-id]").count(), 5);
-  assert.deepEqual(await page.locator("tr[data-fri-mads-release-id] .podcast-detail-sheet__episode-source").evaluateAll((nodes) => nodes.map((node) => node.href)), [
-    "https://frihedsbrevet.dk/fri-mads-172-alle-elsker-mette/",
-    "https://frihedsbrevet.dk/fri-mads-171-et-humrkort-til-formanden-for-esbjerg-havn/",
-    "https://frihedsbrevet.dk/fri-mads-170-ordet-p-gaden/",
-    "https://frihedsbrevet.dk/fri-mads-169-byrdssekretr-godtfred-lunds-genkomst/",
-    "https://frihedsbrevet.dk/fri-mads-168-dette-er-en-attribueringsvelse/"
-  ], "all five exact official links remain attached to their release rows");
+  assert.equal(await page.locator("tr[data-fri-mads-release-id]").count(), 16,
+    "the shared workspace initially renders its normal page size from the full 171-release sidecar");
+  assert.match(await page.locator("[data-episode-workspace-summary]").innerText(), /171 episoder/u,
+    "the complete verified archive count is exposed by the normal episode workspace");
+  assert.deepEqual(await page.locator("tr[data-fri-mads-release-id] .podcast-detail-sheet__episode-source").evaluateAll((nodes) => nodes.map((node) => node.href)),
+    checkedInSidecar.items.slice(0, 16).map((release) => release.canonicalUrl),
+    "every first-page official permalink remains attached to its release row");
   assert.equal(await page.getByText("Betalt adgang · abonnement kan kræves").count(), 0);
   assert.equal(await page.locator("tr[data-fri-mads-release-id] [data-episode-overview-rating-id], tr[data-fri-mads-release-id] button, audio, video").count(), 0,
     "metadata-only releases expose no rating action or player");
-  assert.equal(await page.locator("tr[data-fri-mads-release-id] [role=status]").count(), 10,
+  assert.equal(await page.locator("tr[data-fri-mads-release-id] [role=status]").count(), 32,
     "both rating columns explain that the missing episode identity prevents ratings");
 
   const assertFirstReleaseGeometry = async (targetPage, width) => {
@@ -205,8 +206,11 @@ try {
   await search.fill("ingen udgivelse med dette navn");
   await page.getByText("Ingen udgivelser matcher din søgning.").waitFor({ state: "visible" });
   assert.equal(await page.locator("tr[data-fri-mads-release-id]").count(), 0);
+  await search.fill("140");
+  await page.waitForFunction(() => document.querySelectorAll("tr[data-fri-mads-release-id]").length === 1);
+  assert.match(await page.locator("tr[data-fri-mads-release-id]").innerText(), /#140/u);
   await search.fill("");
-  await page.waitForFunction(() => document.querySelectorAll("tr[data-fri-mads-release-id]").length === 5);
+  await page.waitForFunction(() => document.querySelectorAll("tr[data-fri-mads-release-id]").length === 16);
   await assertFirstReleaseGeometry(page, 390);
   await page.locator("[data-podcast-episode-overview-back]").tap();
   await profileButton.waitFor({ state: "visible" });
@@ -214,7 +218,14 @@ try {
   await page.locator("tr[data-fri-mads-release-id]").first().waitFor({ state: "visible" });
   await assertFirstReleaseGeometry(page, 390);
   const mobileContent = page.locator("[data-podcast-detail-content]");
-  await mobileContent.evaluate((node) => node.scrollTo({ top: node.scrollHeight, behavior: "auto" }));
+  let loadedRows = await page.locator("tr[data-fri-mads-release-id]").count();
+  for (let pageNumber = 0; pageNumber < 10 && loadedRows < checkedInSidecar.items.length; pageNumber += 1) {
+    await mobileContent.evaluate((node) => node.scrollTo({ top: node.scrollHeight, behavior: "auto" }));
+    await page.waitForFunction((previous) => document.querySelectorAll("tr[data-fri-mads-release-id]").length > previous, loadedRows);
+    loadedRows = await page.locator("tr[data-fri-mads-release-id]").count();
+  }
+  assert.equal(loadedRows, 171, "scroll pagination exposes every verified historical release through the ordinary episode list");
+  assert.equal(await page.locator("tr[data-fri-mads-release-id]").last().getAttribute("data-fri-mads-release-id"), checkedInSidecar.items.at(-1).releaseId);
   assert.ok(await mobileContent.evaluate((node) => node.scrollTop > 0), "mobile episode workspace can be scrolled by touch gesture");
   await mobileContent.evaluate((node) => node.scrollTo({ top: 0, behavior: "auto" }));
   const link = page.locator("tr[data-fri-mads-release-id] .podcast-detail-sheet__episode-source").first();

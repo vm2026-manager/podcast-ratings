@@ -28,6 +28,9 @@ function overview(numbers, { pagination = "" } = {}) {
     ...(number === 172 ? {
       title: "Fri Mads #172: Alle elsker Mette",
       url: "https://frihedsbrevet.dk/fri-mads-172-alle-elsker-mette/"
+    } : number === 121 ? {
+      title: "Fri Mads #121: Falafellandiya",
+      url: "https://frihedsbrevet.dk/fri-mads-121-%d1%84%d0%b0%d0%bb%d0%b0%d1%84%d0%b5%d0%bb%d0%bb%d0%b0%d0%bd%d0%b4%d0%b8%d1%8f/"
     } : {})
   })).join("\n");
   return `<!doctype html><html><head><title>Fri Mads</title></head><body><main>${cards}${pagination}</main></body></html>`;
@@ -43,6 +46,6 @@ export const FRI_MADS_OVERVIEW_145_TO_119_HTML = overview(Array.from({ length: 2
 
 export const FRI_MADS_OVERVIEW_173_TO_147_HTML = overview(Array.from({ length: 27 }, (_, index) => 173 - index));
 
-export function makeFriMadsOverview(numbers, overrides = {}) {
-  return `<!doctype html><html><head><title>Fri Mads</title></head><body><main>${numbers.map((number) => card(number, overrides[number] || {})).join("\n")}</main></body></html>`;
+export function makeFriMadsOverview(numbers, overrides = {}, pagination = "") {
+  return `<!doctype html><html><head><title>Fri Mads</title></head><body><main>${numbers.map((number) => card(number, overrides[number] || {})).join("\n")}${pagination}</main></body></html>`;
 }

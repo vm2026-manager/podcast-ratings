@@ -2691,6 +2691,15 @@ const RANKING_SEARCH_RELATED_TOPIC_GROUPS = Object.freeze([
 // A small editorial rotation of useful, non-genre ranking searches. Keep these
 // as ordinary queries so the existing ranking matcher and URL behavior apply.
 const RANKING_SEARCH_INSPIRATION = Object.freeze([
+  { label: "Kunstig intelligens", query: "kunstig intelligens" },
+  { label: "Parforhold", query: "parforhold" },
+  { label: "Investering", query: "investering" },
+  { label: "Graviditet", query: "graviditet" },
+  { label: "Sociale medier", query: "sociale medier" },
+  { label: "Fodboldøkonomi", query: "fodboldøkonomi" },
+  { label: "Familieliv", query: "familieliv" },
+  { label: "Iværksætteri", query: "iværksætteri" },
+  { label: "Psykologi", query: "psykologi" },
   { label: "Svindel", query: "svindel" },
   { label: "Den kolde krig", query: "den kolde krig" },
   { label: "Terrorangreb i København", query: "terrorangreb i København" },
@@ -2702,7 +2711,6 @@ const RANKING_SEARCH_INSPIRATION = Object.freeze([
   { label: "Stalking", query: "stalking" },
   { label: "Christiansborg", query: "Christiansborg" },
   { label: "Krigen i Ukraine", query: "krigen i Ukraine" },
-  { label: "Kunstig intelligens", query: "kunstig intelligens" },
   { label: "Sovjetunionen", query: "Sovjetunionen" },
   { label: "Klimakrisen", query: "klimakrisen" },
   { label: "Dating", query: "dating" },
@@ -14181,7 +14189,7 @@ async function fetchGenstartEpisodes({ append = false } = {}) {
   try {
     const query = state.supabase
       .from("podcast_episodes")
-      .select("id,podcast_key,title,description,published_at,duration_seconds,episode_url,audio_url,image_url,external_guid,is_active,metadata,source", { count: "exact" })
+      .select("id,podcast_key,title,description,published_at,duration_seconds,episode_url,audio_url,image_url,external_guid,external_episode_id,is_active,metadata,source", { count: "exact" })
       .eq("podcast_key", getEpisodeDatabasePodcastKey(config))
       .eq("is_active", true);
     const pageSize = Number(config.pageSize || EPISODE_PAGE_SIZE);
@@ -14262,7 +14270,7 @@ async function searchGenstartEpisodes(term, token, { append = false } = {}) {
     const pattern = `%${getSupabaseLikePattern(cleanTerm)}%`;
     const query = state.supabase
       .from("podcast_episodes")
-      .select("id,podcast_key,title,description,published_at,duration_seconds,episode_url,audio_url,image_url,external_guid,is_active,metadata,source", { count: "exact" })
+      .select("id,podcast_key,title,description,published_at,duration_seconds,episode_url,audio_url,image_url,external_guid,external_episode_id,is_active,metadata,source", { count: "exact" })
       .eq("podcast_key", getEpisodeDatabasePodcastKey(config))
       .eq("is_active", true);
     const pageSize = Number(config.pageSize || EPISODE_PAGE_SIZE);
@@ -14586,6 +14594,9 @@ function filterEpisodesToConfigSeason(episodes, config) {
 function getEpisodeWorkspaceSummary(podcast) {
   const episodeState = getPodcastEpisodeState(podcast);
   const config = getEpisodePodcastConfig(podcast);
+  const friMadsWorkspace = podcast?.podcastId === "fri mads" &&
+    podcast?.catalogueId === "catalogue-v1-d94fc39e" &&
+    podcast?.link === "https://frihedsbrevet.dk/nyhedsbrev/fri-mads/";
   const hasSearch = normalizeText(episodeState.searchTerm).length > 0;
   const loaded = getEpisodeWorkspaceEpisodes(podcast).length;
   const hasMore = hasSearch ? episodeState.searchHasMore : episodeState.hasMore;
@@ -14597,7 +14608,8 @@ function getEpisodeWorkspaceSummary(podcast) {
     if (hasMore) return visible < loaded ? `Viser ${visible} af ${loaded} episoder` : `Viser ${loaded} episoder`;
     return visible < loaded ? `Viser ${visible} af ${loaded} episoder` : `${loaded} episoder`;
   }
-  const total = hasSearch ? (episodeState.searchTotalCount ?? loaded) : (episodeState.totalCount ?? loaded);
+  const total = hasSearch ? (episodeState.searchTotalCount ?? loaded) :
+    (friMadsWorkspace ? loaded : (episodeState.totalCount ?? loaded));
   return visible < total ? `Viser ${visible} af ${total} episoder` : `${total} episoder`;
 }
 
@@ -14887,6 +14899,32 @@ function isFriMadsMetadataPodcast(podcast) {
     podcast?.link === "https://frihedsbrevet.dk/nyhedsbrev/fri-mads/";
 }
 
+function getFriMadsPermalinkNumber(pathname) {
+  const match = String(pathname || "").match(/^\/fri-mads-(\d+)-([^/]+)\/$/u);
+  if (!match) return null;
+  try {
+    const slug = decodeURIComponent(match[2]);
+    if (!slug || !/^[\p{L}\p{M}\p{N}\p{S}\p{P}\u200d\ufe0f]+$/u.test(slug) ||
+        /[\\/?#%]/u.test(slug) || slug === "." || slug === "..") return null;
+  }
+  catch { return null; }
+  return Number(match[1]);
+}
+
+function isVerifiedFriMadsPermalink(url, releaseNumber) {
+  return getFriMadsPermalinkNumber(url.pathname) === releaseNumber ||
+    (releaseNumber === 6 && url.href === "https://frihedsbrevet.dk/fri-mads-manden-fra-cypern/") ||
+    (releaseNumber === 3 && url.href === "https://frihedsbrevet.dk/lyd-over-land/");
+}
+
+function getVerifiedFriMadsReleaseNumber(url) {
+  const numberedPath = getFriMadsPermalinkNumber(url.pathname);
+  if (numberedPath) return numberedPath;
+  if (url.href === "https://frihedsbrevet.dk/fri-mads-manden-fra-cypern/") return 6;
+  if (url.href === "https://frihedsbrevet.dk/lyd-over-land/") return 3;
+  return null;
+}
+
 function isValidFriMadsArticleSidecar(sidecar) {
   const sidecarFields = ["schemaVersion", "podcastId", "catalogueId", "sourceOverview", "accessType", "contentKind", "metadataOnly", "playable", "rateable", "audioUrl", "items"];
   if (!sidecar || typeof sidecar !== "object" || Array.isArray(sidecar) ||
@@ -14897,7 +14935,7 @@ function isValidFriMadsArticleSidecar(sidecar) {
       sidecar.accessType !== "paid" || sidecar.contentKind !== "article" ||
       sidecar.metadataOnly !== true || sidecar.playable !== false || sidecar.rateable !== false ||
       sidecar.audioUrl !== null || !Array.isArray(sidecar.items) ||
-      sidecar.items.length < 1 || sidecar.items.length > 5) return false;
+      sidecar.items.length < 1 || sidecar.items.length > 324) return false;
 
   const ids = new Set();
   const numbers = new Set();
@@ -14909,17 +14947,18 @@ function isValidFriMadsArticleSidecar(sidecar) {
         typeof release.releaseId !== "string" || typeof release.title !== "string" ||
         typeof release.publishedDate !== "string" || typeof release.canonicalUrl !== "string") return false;
     const number = Number(release.releaseNumber);
-    const titleMatch = String(release.title || "").match(/^Fri Mads #(\d+):\s+\S/u);
+    const titleMatch = String(release.title || "").match(/^Fri Mads #(\d+)(?::\s+|\s+–\s+|\s+)\S/u);
     const dateMatch = String(release.publishedDate || "").match(/^(\d{4})-(\d{2})-(\d{2})$/u);
     let articleUrl;
     try { articleUrl = new URL(release.canonicalUrl); } catch { return false; }
-    const permalinkMatch = articleUrl.pathname.match(/^\/fri-mads-(\d+)-[a-z0-9-]+\/$/u);
+    const permalinkNumber = getVerifiedFriMadsReleaseNumber(articleUrl);
     if (
       !Number.isSafeInteger(number) || number < 1 ||
       !titleMatch || Number(titleMatch[1]) !== number ||
       !dateMatch || articleUrl.protocol !== "https:" || articleUrl.hostname !== "frihedsbrevet.dk" ||
       articleUrl.port || articleUrl.username || articleUrl.password || articleUrl.search || articleUrl.hash ||
-      articleUrl.href !== release.canonicalUrl || !permalinkMatch || Number(permalinkMatch[1]) !== number ||
+      articleUrl.href !== release.canonicalUrl ||
+      (permalinkNumber !== number && !isVerifiedFriMadsPermalink(articleUrl, number)) ||
       release.releaseId !== `fri-mads:${number}:${release.canonicalUrl}`
     ) return false;
 
@@ -14946,10 +14985,10 @@ function isFriMadsRateableArticleEpisode(podcast, episode) {
   const number = Number(metadata.release_number);
   let articleUrl;
   try { articleUrl = new URL(String(episode.episode_url || "")); } catch { return false; }
-  const permalinkMatch = articleUrl.pathname.match(/^\/fri-mads-(\d+)-[a-z0-9-]+\/$/u);
-  const titleMatch = String(episode.title || "").match(/^Fri Mads #(\d+):\s+\S/u);
-  return Number.isSafeInteger(number) && number > 0 && Boolean(permalinkMatch && titleMatch) &&
-    Number(permalinkMatch[1]) === number && Number(titleMatch[1]) === number &&
+  const permalinkNumber = getVerifiedFriMadsReleaseNumber(articleUrl);
+  const titleMatch = String(episode.title || "").match(/^Fri Mads #(\d+)(?::\s+|\s+–\s+|\s+)\S/u);
+  return Number.isSafeInteger(number) && number > 0 && Boolean(permalinkNumber && titleMatch) &&
+    permalinkNumber === number && Number(titleMatch[1]) === number &&
     articleUrl.protocol === "https:" && articleUrl.origin === "https://frihedsbrevet.dk" &&
     articleUrl.href === episode.episode_url && episode.external_guid === episode.episode_url &&
     metadata.canonical_url === episode.episode_url && metadata.release_id === `fri-mads:${number}:${episode.episode_url}` &&
