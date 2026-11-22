@@ -8,9 +8,24 @@ export const FRI_MADS_ARTICLES_OVERVIEW_URL = "https://frihedsbrevet.dk/nyhedsbr
 export const FRI_MADS_ARTICLES_CATALOGUE_ID = "catalogue-v1-d94fc39e";
 export const FRI_MADS_ARTICLES_PODCAST_ID = "fri mads";
 export const FRI_MADS_ARTICLES_FEED_URL = "https://podcastlisten.dk/data/fri-mads-articles.json";
-const MAX_ARTICLES = 5;
-const ARTICLE_TITLE = /^Fri Mads #([1-9]\d*):\s+\S/u;
-const ARTICLE_PATH = /^\/fri-mads-(\d+)-[a-z0-9-]+\/$/u;
+const MAX_ARTICLES = 324;
+const ARTICLE_TITLE = /^Fri Mads #([1-9]\d*)(?::\s+|\s+–\s+|\s+)\S/u;
+const LEGACY_ARTICLE_NUMBERS = new Map<string, number>([
+  ["https://frihedsbrevet.dk/fri-mads-manden-fra-cypern/", 6],
+  ["https://frihedsbrevet.dk/lyd-over-land/", 3]
+]);
+
+function articlePathNumber(pathname: string): number | null {
+  const match = String(pathname || "").match(/^\/fri-mads-(\d+)-([^/]+)\/$/u);
+  if (!match) return null;
+  try {
+    const slug = decodeURIComponent(match[2]);
+    if (!slug || !/^[\p{L}\p{M}\p{N}\p{S}\p{P}\u200d\ufe0f]+$/u.test(slug) ||
+        /[\\/?#%]/u.test(slug) || slug === "." || slug === "..") return null;
+  }
+  catch { return null; }
+  return Number(match[1]);
+}
 
 export function parseFriMadsArticleSidecar(content: string, config: FeedConfig, _now: string): {
   fetched_count: number;
@@ -51,13 +66,14 @@ export function parseFriMadsArticleSidecar(content: string, config: FeedConfig, 
     const titleMatch = typeof item.title === "string" ? item.title.match(ARTICLE_TITLE) : null;
     let url: URL;
     try { url = new URL(String(item.canonicalUrl || "")); } catch { return fail("Fri Mads article permalink is invalid"); }
-    const pathMatch = url.pathname.match(ARTICLE_PATH);
+    const pathNumber = articlePathNumber(url.pathname);
     const date = typeof item.publishedDate === "string" && /^\d{4}-\d{2}-\d{2}$/u.test(item.publishedDate)
       ? new Date(`${item.publishedDate}T00:00:00.000Z`) : null;
     if (!Number.isSafeInteger(number) || number < 1 || !titleMatch || Number(titleMatch[1]) !== number ||
         !date || !Number.isFinite(date.getTime()) || date.toISOString().slice(0, 10) !== item.publishedDate ||
         url.protocol !== "https:" || url.origin !== "https://frihedsbrevet.dk" || url.port || url.username || url.password ||
-        url.search || url.hash || url.href !== item.canonicalUrl || !pathMatch || Number(pathMatch[1]) !== number ||
+        url.search || url.hash || url.href !== item.canonicalUrl ||
+        (pathNumber !== number && LEGACY_ARTICLE_NUMBERS.get(item.canonicalUrl) !== number) ||
         item.releaseId !== `fri-mads:${number}:${item.canonicalUrl}` || seenNumbers.has(number) || seenUrls.has(item.canonicalUrl)) {
       return fail("Fri Mads article identity, title, date, or permalink conflicts");
     }

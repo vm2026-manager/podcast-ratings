@@ -13,8 +13,9 @@ const fixedNow = () => "2026-11-21T00:00:00.000Z";
 assert.ok(selectNormalFeedKeys(FEED_CONFIGS).includes("fri_mads_official_articles"),
   "Fri Mads uses the existing normal episode-import cadence");
 const mapped = parseFriMadsArticleSidecar(sidecarText, config, fixedNow());
-assert.equal(mapped.episodes.length, 5);
-assert.deepEqual(mapped.episodes.map((episode) => episode.metadata.release_number), [172, 171, 170, 169, 168]);
+assert.equal(mapped.episodes.length, 171, "the verified public archive contains 171 releases, #172 through #2");
+assert.deepEqual(mapped.episodes.map((episode) => episode.metadata.release_number), Array.from({ length: 171 }, (_, index) => 172 - index));
+assert.equal(mapped.episodes.at(-1).metadata.release_number, 2, "no unlisted #1 is invented");
 assert.ok(mapped.episodes.every((episode) => episode.podcast_key === "fri mads" &&
   episode.source === "fri_mads_official_article" && episode.external_guid === episode.episode_url &&
   episode.external_episode_id === null && episode.audio_url === null && episode.duration_seconds === null &&
@@ -22,6 +23,26 @@ assert.ok(mapped.episodes.every((episode) => episode.podcast_key === "fri mads" 
   episode.metadata.rateable === true && episode.metadata.access_type === "paid"));
 assert.equal(mapped.episodes[0].title, "Fri Mads #172: Alle elsker Mette");
 assert.equal(mapped.episodes[0].episode_url, "https://frihedsbrevet.dk/fri-mads-172-alle-elsker-mette/");
+const fullArchiveWithNextRelease = {
+  ...sidecar,
+  items: [{
+    releaseId: "fri-mads:173:https://frihedsbrevet.dk/fri-mads-173-testpost-173/",
+    releaseNumber: 173, title: "Fri Mads #173: Testpost 173", publishedDate: "2026-11-21",
+    canonicalUrl: "https://frihedsbrevet.dk/fri-mads-173-testpost-173/"
+  }, ...sidecar.items]
+};
+assert.equal(parseFriMadsArticleSidecar(JSON.stringify(fullArchiveWithNextRelease), config, fixedNow()).episodes.length, 172,
+  "the bounded importer accepts the verified archive plus a contiguous newly published release");
+const legacyReleaseSidecar = {
+  ...sidecar,
+  items: [{
+    releaseId: "fri-mads:6:https://frihedsbrevet.dk/fri-mads-manden-fra-cypern/",
+    releaseNumber: 6, title: "Fri Mads #6: Manden fra Cypern", publishedDate: "2021-07-05",
+    canonicalUrl: "https://frihedsbrevet.dk/fri-mads-manden-fra-cypern/"
+  }]
+};
+assert.equal(parseFriMadsArticleSidecar(JSON.stringify(legacyReleaseSidecar), config, fixedNow()).episodes[0].metadata.release_number, 6,
+  "an exact verified legacy permalink without an embedded number remains importable");
 
 const invalidSamples = [
   (value) => { value.items[0].canonicalUrl = "https://example.org/fri-mads-172-alle-elsker-mette/"; },
@@ -42,7 +63,7 @@ assert.throws(() => parseFriMadsArticleSidecar("", config, fixedNow()), /not val
 assert.throws(() => parseFriMadsArticleSidecar(JSON.stringify({ ...sidecar, items: [] }), config, fixedNow()),
   /item count/u);
 assert.throws(() => parseFriMadsArticleSidecar(JSON.stringify({ ...sidecar, items: [...sidecar.items, sidecar.items.at(-1)] }), config, fixedNow()),
-  /item count/u, "the adapter cannot turn a larger sidecar into a historical backfill");
+  /identity|sequence/u, "duplicate historical release identity is rejected");
 assert.throws(() => parseFriMadsArticleSidecar(sidecarText, { ...config, podcast_key: "fri mads wrong" }, fixedNow()),
   /identity/u);
 
@@ -53,7 +74,7 @@ const dryRun = await runFriMadsArticleDryRun(config, async (url) => {
 }, fixedNow());
 assert.equal(dryRun.database_writes, 0);
 assert.equal(dryRun.episode_imports, 0);
-assert.equal(dryRun.valid_count, 5);
+assert.equal(dryRun.valid_count, 171);
 assert.equal(dryRun.episodes.every((episode) => episode.audio_url === null && episode.duration_seconds === null), true);
 assert.equal(dryRunWriteCount, 0);
 
@@ -92,16 +113,16 @@ const importOptions = {
 };
 const first = await runEpisodeImport(importOptions);
 assert.equal(first.status, "success");
-assert.equal(first.inserted_count, 5);
-assert.equal(db.rows.length, 5);
-assert.equal(db.upserts.length, 5);
+assert.equal(first.inserted_count, 171);
+assert.equal(db.rows.length, 171);
+assert.equal(db.upserts.length, 171);
 const identitiesBeforeRepeat = db.rows.map(({ id, source, external_guid, podcast_key }) => ({ id, source, external_guid, podcast_key }));
 const second = await runEpisodeImport(importOptions);
 assert.equal(second.status, "success");
 assert.equal(second.inserted_count, 0);
 assert.equal(second.updated_count, 0);
-assert.equal(second.skipped_count, 5);
-assert.equal(db.upserts.length, 5, "second run performs no episode upsert");
+assert.equal(second.skipped_count, 171);
+assert.equal(db.upserts.length, 171, "second run performs no episode upsert");
 assert.deepEqual(db.rows.map(({ id, source, external_guid, podcast_key }) => ({ id, source, external_guid, podcast_key })), identitiesBeforeRepeat,
   "repeat discovery preserves UUIDs, source, URL identity and podcast ID");
 assert.equal(db.rows.some((row) => row.audio_url || row.duration_seconds), false,
@@ -115,7 +136,7 @@ const foreignCollision = memoryRepository([{
 }]);
 const blocked = await runEpisodeImport({ ...importOptions, repository: foreignCollision.repository });
 assert.equal(blocked.status, "partial");
-assert.equal(blocked.inserted_count, 4);
+assert.equal(blocked.inserted_count, 170);
 assert.equal(foreignCollision.upserts.some((row) => row.episode_url === sidecar.items[0].canonicalUrl), false,
   "an exact canonical URL already owned by another podcast is blocked");
 

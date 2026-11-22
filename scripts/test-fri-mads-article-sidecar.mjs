@@ -3,7 +3,8 @@ import {
   FRI_MADS_CATALOGUE_ID,
   FRI_MADS_OVERVIEW_URL,
   FRI_MADS_PODCAST_ID,
-  discoverFriMadsArticles
+  discoverFriMadsArticles,
+  runFriMadsArchiveDiscovery
 } from "./discover-fri-mads-releases.mjs";
 import {
   createFriMadsArticleSidecar,
@@ -12,7 +13,8 @@ import {
 import {
   FRI_MADS_OVERVIEW_172_TO_146_HTML,
   FRI_MADS_OVERVIEW_173_TO_147_HTML,
-  makeFriMadsOverview
+  makeFriMadsOverview,
+  FRI_MADS_OVERVIEW_145_TO_119_HTML
 } from "./fixtures/fri-mads-overview-snapshot.mjs";
 
 const simulatedRead = (html, afterNumber = 172) => ({
@@ -39,11 +41,37 @@ assert.equal(sidecar.items[0].canonicalUrl, "https://frihedsbrevet.dk/fri-mads-1
 assert.deepEqual(Object.keys(sidecar.items[0]).sort(), ["canonicalUrl", "publishedDate", "releaseId", "releaseNumber", "title"]);
 assert.equal(isValidFriMadsArticleSidecar(sidecar), true);
 
+const archivePages = new Map([
+  [FRI_MADS_OVERVIEW_URL, FRI_MADS_OVERVIEW_172_TO_146_HTML],
+  ["https://frihedsbrevet.dk/nyhedsbrev/fri-mads/?paginate=2", FRI_MADS_OVERVIEW_145_TO_119_HTML],
+  ["https://frihedsbrevet.dk/nyhedsbrev/fri-mads/?paginate=3", makeFriMadsOverview(Array.from({ length: 14 }, (_, index) => 118 - index))]
+]);
+const archiveReport = await runFriMadsArchiveDiscovery({ fetchImpl: async (url) => new Response(archivePages.get(url), {
+  status: 200, headers: { "content-type": "text/html" }
+}) });
+assert.equal(archiveReport.status, "archive_verified");
+const archiveSidecar = createFriMadsArticleSidecar(archiveReport);
+assert.equal(archiveSidecar.items.length, 68, "a verified archive snapshot contains all releases from all linked pages");
+assert.deepEqual(archiveSidecar.items.map((item) => item.releaseNumber), Array.from({ length: 68 }, (_, index) => 172 - index));
+assert.equal(archiveSidecar.items[0].releaseNumber, 172);
+assert.equal(archiveSidecar.items.at(-1).releaseNumber, 105);
+assert.equal(isValidFriMadsArticleSidecar(archiveSidecar), true);
+assert.deepEqual(createFriMadsArticleSidecar(archiveReport, archiveSidecar), archiveSidecar,
+  "repeat full-archive sidecar generation is idempotent");
+const truncatedArchive = { ...archiveReport, archiveReleases: archiveReport.archiveReleases.slice(0, -1) };
+assert.throws(() => createFriMadsArticleSidecar(truncatedArchive, archiveSidecar), /existing_article_removed/u,
+  "a shorter or truncated archive cannot silently drop previously known releases");
+
 const repeated = createFriMadsArticleSidecar(report, sidecar);
 assert.equal(JSON.stringify(repeated), JSON.stringify(sidecar), "an identical daily report is byte-stable and makes no sidecar change");
 
 const syntheticUpdateReport = simulatedRead(FRI_MADS_OVERVIEW_173_TO_147_HTML);
-const syntheticUpdate = createFriMadsArticleSidecar(syntheticUpdateReport, sidecar);
+const incrementalAfterArchive = createFriMadsArticleSidecar(syntheticUpdateReport, archiveSidecar);
+assert.equal(incrementalAfterArchive.items.length, 69, "the normal one-page daily update adds a new release without dropping archive history");
+assert.deepEqual(incrementalAfterArchive.items.map((item) => item.releaseNumber), Array.from({ length: 69 }, (_, index) => 173 - index));
+assert.equal(createFriMadsArticleSidecar(syntheticUpdateReport, incrementalAfterArchive).items.length, 69,
+  "the normal daily update remains idempotent and avoids historical backfill");
+const syntheticUpdate = createFriMadsArticleSidecar(syntheticUpdateReport);
 assert.deepEqual(syntheticUpdate.items.map((item) => item.releaseNumber), [173, 172, 171, 170, 169]);
 assert.equal(syntheticUpdate.items[0].title, "Fri Mads #173: Testpost 173", "#173 is test-only parser data, never part of the checked-in live sidecar");
 assert.equal(sidecar.items.some((item) => item.releaseNumber === 173), false);
@@ -78,11 +106,22 @@ const reportWithItems = (items, extras = {}) => ({
 const mustReject = (candidate, message) => assert.throws(() => createFriMadsArticleSidecar(candidate), undefined, message);
 
 const validFive = [172, 171, 170, 169, 168].map((number) => updateItem(number));
+for (const [number, title, canonicalUrl] of [
+  [6, "Fri Mads #6: Manden fra Cypern", "https://frihedsbrevet.dk/fri-mads-manden-fra-cypern/"],
+  [3, "Fri Mads #3: Lyd over land", "https://frihedsbrevet.dk/lyd-over-land/"],
+  [121, "Fri Mads #121: Falafellandiya", "https://frihedsbrevet.dk/fri-mads-121-%d1%84%d0%b0%d0%bb%d0%b0%d1%84%d0%b5%d0%bb%d0%bb%d0%b0%d0%bd%d0%b4%d0%b8%d1%8f/"],
+  [63, "Fri Mads #63 – Jeg holder af hverdagen", "https://frihedsbrevet.dk/fri-mads-63-jeg-holder-af-hverdagen/"]
+]) {
+  const validVariant = createFriMadsArticleSidecar(reportWithItems([updateItem(number, { title, canonicalUrl })]));
+  assert.equal(validVariant.items[0].canonicalUrl, canonicalUrl, `verified official variant #${number} remains canonical`);
+}
 mustReject(reportWithItems([validFive[0], { ...validFive[0] }]), "duplicate release numbers are rejected");
 mustReject(reportWithItems([validFive[0], updateItem(170), ...validFive.slice(2)]), "number gaps are rejected");
 mustReject(reportWithItems([validFive[0], updateItem(171, { canonicalUrl: "https://example.org/fri-mads-171-testpost-171/" }), ...validFive.slice(2)]), "foreign article domains are rejected");
 mustReject(reportWithItems([validFive[0], updateItem(171, { canonicalUrl: "http://frihedsbrevet.dk/fri-mads-171-testpost-171/" }), ...validFive.slice(2)]), "non-HTTPS article URLs are rejected");
 mustReject(reportWithItems([validFive[0], updateItem(171, { canonicalUrl: "https://frihedsbrevet.dk/fri-mads-171-testpost-171/?example=not-public" }), ...validFive.slice(2)]), "query-bearing article URLs are rejected");
+mustReject(reportWithItems([updateItem(121, { canonicalUrl: "https://frihedsbrevet.dk/fri-mads-121-%2fother/" })]),
+  "encoded path separators remain rejected even for Unicode slug support");
 mustReject(reportWithItems([validFive[0], updateItem(171, { title: "Fri Mads #170: Wrong number" }), ...validFive.slice(2)]), "title/number conflicts are rejected");
 mustReject(reportWithItems([validFive[0], updateItem(171, { publishedDate: "2026-02-31" }), ...validFive.slice(2)]), "invalid publication dates are rejected");
 mustReject(reportWithItems([validFive[0], updateItem(171, { rateable: true }), ...validFive.slice(2)]), "rateable article metadata is rejected");
