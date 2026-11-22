@@ -6061,6 +6061,10 @@ body.page-ranglister a.genre-chip {
   padding: 4px 0;
 }
 
+body.page-ranglister #clearFilterButton[hidden] {
+  display: none !important;
+}
+
 .ranking-mobile-filter-remove {
   width: 34px;
   min-width: 34px;
@@ -14445,6 +14449,10 @@ body:not(.page-ranglister) .site-footer {
 
 /* Ranglister-only mobile collapsed filters. */
 @media (max-width: 768px) {
+  body.page-ranglister .ranking-search-inspiration {
+    display: none !important;
+  }
+
   body.page-ranglister .ranking-filter-panel {
     gap: 7px !important;
   }
@@ -14480,6 +14488,21 @@ body:not(.page-ranglister) .site-footer {
     font-weight: 750;
     line-height: 1.2;
     white-space: normal;
+  }
+
+  body.page-ranglister .ranking-mobile-clear-filters {
+    flex: 0 0 auto;
+    min-height: 30px;
+    padding: 0 10px;
+    display: inline-flex !important;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid rgba(255, 92, 22, 0.24);
+    border-radius: 999px;
+    background: rgba(255, 244, 237, 0.94);
+    color: #8c3a14;
+    font: 800 0.72rem/1.1 Manrope, Inter, system-ui, sans-serif;
+    white-space: nowrap;
   }
 
   body.page-ranglister .ranking-mobile-active-filter-chip {
