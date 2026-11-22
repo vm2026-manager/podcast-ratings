@@ -14,9 +14,15 @@ export const FRI_MADS_MAX_RESPONSE_BYTES = 524288;
 export const FRI_MADS_REQUEST_TIMEOUT_MS = 8000;
 export const FRI_MADS_MAX_NEW_RELEASES = 27;
 export const FRI_MADS_SIDECAR_ITEM_LIMIT = 5;
+export const FRI_MADS_OVERVIEW_PAGE_SIZE = 27;
+export const FRI_MADS_MAX_OVERVIEW_PAGES = 12;
+export const FRI_MADS_MAX_ARCHIVE_ITEMS = FRI_MADS_OVERVIEW_PAGE_SIZE * FRI_MADS_MAX_OVERVIEW_PAGES;
 
-const SERIES_TITLE = /^Fri Mads #([1-9]\d*):\s*(.+)$/u;
-const PERMALINK = /^\/fri-mads-(\d+)-[a-z0-9-]+\/$/u;
+const SERIES_TITLE = /^Fri Mads #([1-9]\d*)(?::\s*|\s+–\s+|\s+)(.+)$/u;
+const LEGACY_ARTICLE_NUMBERS = new Map([
+  ["https://frihedsbrevet.dk/fri-mads-manden-fra-cypern/", 6],
+  ["https://frihedsbrevet.dk/lyd-over-land/", 3]
+]);
 const TEASER = /(?:^|\b)(?:teaser|trailer|smagsprøve|uddrag)(?:\b|$)/iu;
 const JWT_LIKE = /\beyJ[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}\b/u;
 const SENSITIVE_QUERY = /(?:^|[?&])(?:token|access_token|auth_token|api_key|api-key|key|signature|sig)=/iu;
@@ -45,12 +51,14 @@ function baseReport(afterNumber) {
     catalogueId: FRI_MADS_CATALOGUE_ID,
     accessType: FRI_MADS_ACCESS_TYPE,
     afterNumber,
+    discoveryMode: "incremental",
     status: "unavailable",
     reasonCodes: [],
     overviewItemCount: 0,
     candidateCount: 0,
     pagesRequested: [],
     latestOverviewReleases: [],
+    archiveReleases: [],
     releases: []
   };
 }
@@ -127,7 +135,14 @@ function exactCanonicalArticleUrl(value) {
   catch { return null; }
   if (url.protocol !== "https:" || url.origin !== "https://frihedsbrevet.dk" ||
       url.username || url.password || url.search || url.hash || url.port) return null;
-  const match = url.pathname.match(PERMALINK);
+  const match = url.pathname.match(/^\/fri-mads-(\d+)-([^/]+)\/$/u);
+  if (!match && LEGACY_ARTICLE_NUMBERS.has(url.href)) {
+    return { url: url.href, number: LEGACY_ARTICLE_NUMBERS.get(url.href) };
+  }
+  let slug = "";
+  try { slug = match ? decodeURIComponent(match[2]) : ""; } catch { return null; }
+  if (match && (!slug || !/^[\p{L}\p{M}\p{N}\p{S}\p{P}\u200d\ufe0f]+$/u.test(slug) ||
+      /[\\/?#%]/u.test(slug) || slug === "." || slug === "..")) return null;
   if (!match || url.href !== url.origin + url.pathname) return null;
   return { url: url.href, number: Number(match[1]) };
 }
@@ -210,7 +225,8 @@ export function parseFriMadsOverview(html) {
     const href = attrs.get("href") || "";
     let pathname = "";
     try { pathname = new URL(href, FRI_MADS_OVERVIEW_URL).pathname; } catch { /* non-series links are ignored */ }
-    if (!/fri-mads-/iu.test(pathname)) continue;
+    const hasNumberedSeriesTitle = /<h3\b[^>]*>[\s\S]*?Fri Mads #\d+/iu.test(match[2]);
+    if (!/fri-mads-/iu.test(pathname) && !hasNumberedSeriesTitle) continue;
     records.push(extractCard(`<a ${match[1]}>`, match[2]));
   }
   if (records.length > 50) throw new OverviewParseError("overview_item_limit_exceeded");
@@ -229,6 +245,31 @@ export function parseFriMadsOverview(html) {
     if (descending[index - 1].number - descending[index].number !== 1) throw new OverviewParseError("release_number_gap");
   }
   return descending;
+}
+
+function getNextOverviewPage(html, pageNumber) {
+  const nextPages = new Map();
+  const anchorPattern = /<a\b([^>]*)>/giu;
+  for (const match of html.matchAll(anchorPattern)) {
+    const href = attributes(`<a ${match[1]}>`).get("href");
+    if (!href || !/[?&]paginate=/iu.test(href)) continue;
+    let url;
+    try { url = new URL(href, FRI_MADS_OVERVIEW_URL); } catch { throw new OverviewParseError("pagination_link_invalid"); }
+    if (url.origin !== "https://frihedsbrevet.dk" || url.pathname !== "/nyhedsbrev/fri-mads/" ||
+        url.username || url.password || url.port || url.hash ||
+        [...url.searchParams.keys()].some((key) => key !== "paginate") || url.searchParams.getAll("paginate").length !== 1) {
+      continue;
+    }
+    const linkedPage = Number(url.searchParams.get("paginate"));
+    if (!Number.isSafeInteger(linkedPage) || linkedPage < 1) throw new OverviewParseError("pagination_link_invalid");
+    if (linkedPage > pageNumber) nextPages.set(linkedPage, url.href);
+  }
+  const candidates = [...nextPages].map(([page, url]) => ({ page, url }));
+  const next = candidates.filter((entry) => entry.page === pageNumber + 1);
+  if (candidates.some((entry) => entry.page > pageNumber + 1) || next.length > 1) {
+    throw new OverviewParseError("pagination_sequence_invalid");
+  }
+  return next[0]?.url || null;
 }
 
 function failure(afterNumber, status, code, extra = {}) {
@@ -372,12 +413,70 @@ export async function runFriMadsDiscovery({ fetchImpl = fetch, afterNumber = FRI
   return result;
 }
 
+export async function runFriMadsArchiveDiscovery({ fetchImpl = fetch } = {}) {
+  const report = { ...baseReport(0), discoveryMode: "full_archive" };
+  const records = [];
+  let url = FRI_MADS_OVERVIEW_URL;
+  let pageNumber = 1;
+  while (pageNumber <= FRI_MADS_MAX_OVERVIEW_PAGES) {
+    const page = await fetchOverview(url, fetchImpl);
+    if (page.error) return { ...report, status: "source_unavailable", reasonCodes: [page.error], pagesRequested: [...report.pagesRequested, url] };
+    let pageRecords;
+    try { pageRecords = parseFriMadsOverview(page.html); }
+    catch (error) {
+      const code = error instanceof OverviewParseError ? error.code : "overview_markup_changed";
+      return { ...report, status: "source_invalid", reasonCodes: [code], pagesRequested: [...report.pagesRequested, url] };
+    }
+    report.pagesRequested.push(url);
+    const prior = records.at(-1);
+    const first = pageRecords[0];
+    if (prior && prior.number - first.number !== 1) {
+      return { ...report, status: "identity_conflict", reasonCodes: ["pagination_boundary_gap"], candidateCount: records.length + pageRecords.length };
+    }
+    records.push(...pageRecords);
+    if (records.length > FRI_MADS_MAX_ARCHIVE_ITEMS) {
+      return { ...report, status: "identity_conflict", reasonCodes: ["archive_item_limit_exceeded"], candidateCount: records.length };
+    }
+    let nextUrl;
+    try { nextUrl = getNextOverviewPage(page.html, pageNumber); }
+    catch (error) {
+      const code = error instanceof OverviewParseError ? error.code : "pagination_link_invalid";
+      return { ...report, status: "source_invalid", reasonCodes: [code], candidateCount: records.length };
+    }
+    if (!nextUrl) {
+      if (pageRecords.length >= FRI_MADS_OVERVIEW_PAGE_SIZE) {
+        return { ...report, status: "source_invalid", reasonCodes: ["pagination_terminal_page_ambiguous"], candidateCount: records.length };
+      }
+      for (let index = 1; index < records.length; index += 1) {
+        if (records[index - 1].number - records[index].number !== 1) {
+          return { ...report, status: "identity_conflict", reasonCodes: ["release_number_gap"], candidateCount: records.length };
+        }
+      }
+      const metadata = records.map(toArticleMetadata);
+      return {
+        ...report,
+        status: "archive_verified",
+        reasonCodes: [],
+        overviewItemCount: records.length,
+        candidateCount: records.length,
+        latestOverviewReleases: metadata.slice(0, FRI_MADS_SIDECAR_ITEM_LIMIT),
+        archiveReleases: metadata
+      };
+    }
+    url = nextUrl;
+    pageNumber += 1;
+  }
+  return { ...report, status: "source_invalid", reasonCodes: ["overview_page_limit_exceeded"], candidateCount: records.length };
+}
+
 async function main() {
   const args = process.argv.slice(2);
   let afterNumber = FRI_MADS_BASELINE_NUMBER;
   let reportFile = null;
+  let fullArchive = false;
   for (let index = 0; index < args.length; index += 1) {
     if (args[index] === "--dry-run") continue;
+    if (args[index] === "--full-archive") { fullArchive = true; continue; }
     if (args[index] === "--after-number" && /^\d+$/u.test(args[index + 1] || "")) {
       afterNumber = Number(args[index + 1]);
       index += 1;
@@ -390,7 +489,9 @@ async function main() {
     }
     throw new Error("Unsupported discovery argument");
   }
-  const report = await runFriMadsDiscovery({ afterNumber });
+  const report = fullArchive
+    ? await runFriMadsArchiveDiscovery()
+    : await runFriMadsDiscovery({ afterNumber });
   if (reportFile) {
     const runnerTemp = process.env.RUNNER_TEMP;
     if (!runnerTemp || !path.isAbsolute(reportFile)) throw new Error("Report output is restricted to the runner temporary directory");
@@ -401,7 +502,7 @@ async function main() {
     await writeFile(reportFile, `${JSON.stringify(report, null, 2)}\n`, { encoding: "utf8", flag: "w" });
   }
   console.log(JSON.stringify(report, null, 2));
-  if (report.status !== "new_metadata_discovered" && report.status !== "no_new_releases") {
+  if (report.status !== "new_metadata_discovered" && report.status !== "no_new_releases" && report.status !== "archive_verified") {
     console.log("::warning::Fri Mads discovery did not produce a verified result: " + report.reasonCodes.join(", "));
   }
 }
