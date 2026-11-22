@@ -5,7 +5,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { chromium } from "playwright";
 import { FEED_CONFIGS } from "../supabase/functions/import-podcast-episodes/feed-config.ts";
-import { mapEpisodes, parseFeed, runEpisodeImport, validateExpectedRssIdentity } from "../supabase/functions/import-podcast-episodes/core.ts";
+import { mapEpisodes, mapPodimoEpisodes, parseFeed, runEpisodeImport, validateExpectedRssIdentity } from "../supabase/functions/import-podcast-episodes/core.ts";
 import { mergeSheetFeedConfigs } from "../supabase/functions/import-podcast-episodes/runtime-feed-config.ts";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
@@ -67,10 +67,21 @@ assert.equal(drConfig.expected_rss_channel_title, "Kampen om historien");
 assert.equal(drConfig.expected_rss_unique_guids, true, "the feed identity check rejects any duplicate episode GUID before import");
 assert.equal(drConfig.enabled, false, "DR feed import remains disabled pending owner approval");
 const podimoConfig = FEED_CONFIGS.podimo_styr_pa_historien;
-assert.equal(podimoConfig.podcast_key, "kampen om historien");
-assert.equal(podimoConfig.enabled, false, "Podimo feed import remains disabled");
+assert.equal(podimoConfig.podcast_key, "styr på historien");
+assert.equal(podimoConfig.enabled, false, "the code-owned base config remains inert without runtime Sheet identity verification");
 assert.equal(podimoConfig.sheet_podimo_identity_required, true);
-assert.equal(Object.hasOwn(podimoConfig, "podcast_id"), false, "no unverified Podimo show UUID is guessed");
+assert.equal(podimoConfig.podcast_id, "3717c2b0-c85f-43bb-8a28-a992018f14de",
+  "the exact Styr på historien show UUID is pinned in code");
+const mappedPodimoSample = mapPodimoEpisodes([{
+  id: "podimo-episode-guid",
+  title: "Et verificeret Styr på historien-afsnit",
+  publishedOn: "2026-11-21T03:00:04.265Z",
+  duration: 3932
+}], podimoConfig, "2026-11-22T00:00:00.000Z");
+assert.equal(mappedPodimoSample.episodes[0].podcast_key, "styr på historien",
+  "Podimo episode records use the newly separated Styr på historien ID");
+assert.equal(mappedPodimoSample.episodes[0].episode_url,
+  "https://podimo.com/dk/shows/styr-pa-historien/episode/podimo-episode-guid");
 
 // #90 can automatically activate only newly added, attested ordinary RSS feeds.
 // Both #89 identities already have protected code-owned feed entries; exercise
@@ -113,18 +124,28 @@ assert.notEqual(drCandidateRuntime.audit.feed_resolutions.find((entry) =>
 
 const fakePodimoShowUrl = "https://open.podimo.com/podcast/00000000-0000-4000-8000-000000000001";
 const podimoRuntime = mergeSheetFeedConfigs([verifiedSheetRow({
-  podcastId: "kampen om historien", title: "Styr på historien", publisher: "Podimo",
+  podcastId: "styr på historien", title: "Styr på historien", publisher: "Podimo",
   feedUrl: fakePodimoShowUrl, officialUrl: "https://podimo.com/dk/shows/styr-pa-historien",
   catalogueId: "podimo-styr-pa-historien"
 })]);
 assert.equal(podimoRuntime.configs.podimo_styr_pa_historien.enabled, false,
-  "#90 cannot turn on Podimo from a Sheet UUID, even when its metadata looks attested");
+  "a mismatched Sheet UUID cannot activate the code-pinned Podimo importer");
 assert.equal(podimoRuntime.configs.podimo_styr_pa_historien.feed_url, podimoConfig.feed_url);
-assert.equal(Object.hasOwn(podimoRuntime.configs.podimo_styr_pa_historien, "podcast_id"), false,
-  "a Sheet-provided Podimo UUID is never copied into the protected importer");
+assert.equal(podimoRuntime.configs.podimo_styr_pa_historien.podcast_id, podimoConfig.podcast_id,
+  "the Podimo UUID remains code-pinned when the Sheet feed mismatches");
 assert.equal(podimoRuntime.audit.feed_resolutions.some((entry) =>
-  entry.podcast_key === "kampen om historien" && entry.origin === "auto_verified"), false,
+  entry.podcast_key === "styr på historien" && entry.origin === "auto_verified"), false,
 "Podimo remains outside #90's ordinary-RSS activation path");
+const exactPodimoRuntime = mergeSheetFeedConfigs([verifiedSheetRow({
+  podcastId: "styr på historien", title: "Styr på historien", publisher: "Podimo",
+  feedUrl: "https://open.podimo.com/podcast/3717c2b0-c85f-43bb-8a28-a992018f14de",
+  officialUrl: "https://podimo.com/dk/shows/styr-pa-historien",
+  catalogueId: "catalogue-v1-4a74e834"
+})]);
+assert.equal(exactPodimoRuntime.configs.podimo_styr_pa_historien.enabled, true,
+  "the exact published Styr på historien ID and show UUID activate the adapter");
+assert.equal(exactPodimoRuntime.configs.podimo_styr_pa_historien.podcast_key, "styr på historien");
+assert.equal(exactPodimoRuntime.configs.podimo_styr_pa_historien.podcast_id, "3717c2b0-c85f-43bb-8a28-a992018f14de");
 const sampleRss = `<rss version="2.0"><channel><title>Kampen om historien</title><item><guid>dr-guid-001</guid><title>Historisk afsnit</title><pubDate>Tue, 10 Nov 2026 08:00:00 GMT</pubDate><itunes:duration>01:00:00</itunes:duration><enclosure url="https://dr.example/episode.mp3" type="audio/mpeg" /></item><item><guid>dr-guid-001</guid><title>Dublet</title><pubDate>Tue, 10 Nov 2026 08:00:00 GMT</pubDate></item><item><guid>dr-guid-002</guid><title>Trailer: Kampen om historien</title><pubDate>Tue, 10 Nov 2026 08:00:00 GMT</pubDate></item></channel></rss>`;
 const parsedFeed = parseFeed(sampleRss);
 const uniqueFeed = { ...parsedFeed, items: parsedFeed.items.filter((_, index) => index !== 1) };

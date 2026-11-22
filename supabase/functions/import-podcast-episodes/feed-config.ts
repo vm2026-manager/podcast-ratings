@@ -148,12 +148,15 @@ export const FEED_CONFIGS: FeedConfigMap = {
     enabled: false
   },
   podimo_styr_pa_historien: {
-    podcast_key: "kampen om historien",
+    podcast_key: "styr på historien",
     source: "podimo_styr_pa_historien",
     feed_url: "https://graphql.podimo.com/graphql",
     format: "podimo_graphql",
+    podcast_id: "3717c2b0-c85f-43bb-8a28-a992018f14de",
     podimo_show_url: "https://podimo.com/dk/shows/styr-pa-historien",
-    // The show UUID has not been positively verified; keep this route inert.
+    podimo_catalogue_id: "catalogue-v1-4a74e834",
+    // Runtime activation requires an exact Podcast-ID + open.podimo show-ID
+    // match in the current catalogue sheet.
     sheet_podimo_identity_required: true,
     enabled: false
   },

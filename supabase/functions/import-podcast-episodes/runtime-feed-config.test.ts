@@ -20,6 +20,52 @@ Deno.test("runtime Feed parser rejects ambiguous Apple show identities", () => {
   assertEquals(Object.entries(result.configs).filter(([, config]) => config.enabled !== false).map(([key]) => key), ["genstart"]);
 });
 
+Deno.test("Styr på historien activates only for its exact Sheet Podcast-ID and Podimo UUID", () => {
+  const feed = "https://open.podimo.com/podcast/3717c2b0-c85f-43bb-8a28-a992018f14de";
+  const exact = mergeSheetFeedConfigs({ rows: [{
+    Titel: "Styr på historien",
+    "Podcast-ID": "styr på historien",
+    Udgiver: "Podimo",
+    Feed: feed,
+    Link: "https://podimo.com/dk/shows/styr-pa-historien",
+    catalogue_id: "catalogue-v1-4a74e834"
+  }] });
+  assertEquals(exact.configs.podimo_styr_pa_historien?.enabled, true);
+  assertEquals(exact.configs.podimo_styr_pa_historien?.podcast_key, "styr på historien");
+  assertEquals(exact.configs.podimo_styr_pa_historien?.podcast_id, "3717c2b0-c85f-43bb-8a28-a992018f14de");
+  assertEquals(exact.configs.styr_pa_historien, undefined);
+
+  const mismatched = mergeSheetFeedConfigs({ rows: [{
+    Titel: "Styr på historien",
+    "Podcast-ID": "styr på historien",
+    Udgiver: "Podimo",
+    Feed: "https://open.podimo.com/podcast/00000000-0000-4000-8000-000000000000",
+    Link: "https://podimo.com/dk/shows/styr-pa-historien",
+    catalogue_id: "catalogue-v1-4a74e834"
+  }] });
+  assertEquals(mismatched.configs.podimo_styr_pa_historien?.enabled, false);
+
+  const mismatchedCatalogue = mergeSheetFeedConfigs({ rows: [{
+    Titel: "Styr på historien",
+    "Podcast-ID": "styr på historien",
+    Udgiver: "Podimo",
+    Feed: feed,
+    Link: "https://podimo.com/dk/shows/styr-pa-historien",
+    catalogue_id: "catalogue-v1-wrong"
+  }] });
+  assertEquals(mismatchedCatalogue.configs.podimo_styr_pa_historien?.enabled, false);
+
+  const mismatchedOfficialUrl = mergeSheetFeedConfigs({ rows: [{
+    Titel: "Styr på historien",
+    "Podcast-ID": "styr på historien",
+    Udgiver: "Podimo",
+    Feed: feed,
+    Link: "https://podimo.com/dk/shows/a-different-show",
+    catalogue_id: "catalogue-v1-4a74e834"
+  }] });
+  assertEquals(mismatchedOfficialUrl.configs.podimo_styr_pa_historien?.enabled, false);
+});
+
 Deno.test("a unique Apple show is retained as a disabled HTML feed", () => {
   const result = mergeSheetFeedConfigs({ rows: [
     { Titel: "Apple", "Podcast-ID": "apple permanent", Feed: " APPLE:1843557403 " }
