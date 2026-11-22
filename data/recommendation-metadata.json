@@ -2,7 +2,7 @@
   "version": 1,
   "source": {
     "path": "data/podcasts.json",
-    "generatedAt": "2026-11-22T05:57:07.873Z",
+    "generatedAt": "2026-11-22T08:48:05.771Z",
     "count": 1383,
     "topicAliases": "config/recommendation-topic-aliases.json",
     "topicAliasVersion": 1,
@@ -16662,7 +16662,7 @@
     {
       "id": "kampen om historien",
       "recommendationId": "rec-kampen-om-historien-599c58298aabdb868207d3824dfb120f",
-      "recommendationIdentityBasis": "title+mainSeries+publisher+hosts+year+episodes",
+      "recommendationIdentityBasis": "title+link",
       "identityDuplicateGroup": "",
       "title": "Kampen om historien",
       "mainSeries": "",
