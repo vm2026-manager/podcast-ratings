@@ -2691,6 +2691,15 @@ const RANKING_SEARCH_RELATED_TOPIC_GROUPS = Object.freeze([
 // A small editorial rotation of useful, non-genre ranking searches. Keep these
 // as ordinary queries so the existing ranking matcher and URL behavior apply.
 const RANKING_SEARCH_INSPIRATION = Object.freeze([
+  { label: "Kunstig intelligens", query: "kunstig intelligens" },
+  { label: "Parforhold", query: "parforhold" },
+  { label: "Investering", query: "investering" },
+  { label: "Graviditet", query: "graviditet" },
+  { label: "Sociale medier", query: "sociale medier" },
+  { label: "Fodboldøkonomi", query: "fodboldøkonomi" },
+  { label: "Familieliv", query: "familieliv" },
+  { label: "Iværksætteri", query: "iværksætteri" },
+  { label: "Psykologi", query: "psykologi" },
   { label: "Svindel", query: "svindel" },
   { label: "Den kolde krig", query: "den kolde krig" },
   { label: "Terrorangreb i København", query: "terrorangreb i København" },
@@ -2702,7 +2711,6 @@ const RANKING_SEARCH_INSPIRATION = Object.freeze([
   { label: "Stalking", query: "stalking" },
   { label: "Christiansborg", query: "Christiansborg" },
   { label: "Krigen i Ukraine", query: "krigen i Ukraine" },
-  { label: "Kunstig intelligens", query: "kunstig intelligens" },
   { label: "Sovjetunionen", query: "Sovjetunionen" },
   { label: "Klimakrisen", query: "klimakrisen" },
   { label: "Dating", query: "dating" },
