@@ -23,6 +23,10 @@ The coverage JSON now includes `lifecycle_by_podcast_id`, one record for each ex
 
 The production cron inventory read on 2026-11-14 contained six enabled `all-episode-feeds-hourly-shard-N` jobs at `20/25/30/35/40/45 */12 * * *` UTC, plus the three Genstart jobs. Despite “hourly” in the shard names, these are 12-hourly. Successful `cron.job_run_details` rows prove the scheduled function invocation completed; only exact `episode_import_runs` and `podcast_episodes` reads prove a particular podcast's import result. The GitHub `episode-feed-coverage` workflow (`37 6 * * *`) is a separate daily audit and never calls the importer.
 
+### Styr på historien (Podimo)
+
+The exact Podimo GraphQL config uses `Podcast-ID=styr på historien`, Podimo show UUID `3717c2b0-c85f-43bb-8a28-a992018f14de`, catalogue ID `catalogue-v1-4a74e834`, and official show URL `https://podimo.com/dk/shows/styr-pa-historien`. Runtime activation requires the current catalogue to contain one row matching all four identities, including the `open.podimo.com/podcast/<UUID>` feed. A different `kampen om historien` row cannot receive these episodes. The adapter imports episode metadata only; audio URLs are null. The regular 12-hour shard schedule is the existing run path. Edge deployment and the first production import remain separate approval steps.
+
 ## Why `verified` can still mean “not imported”
 
 1. Catalogue verification records identity evidence and is published through the normal Sheets-to-GitHub PR. It does not deploy Edge code.

@@ -234,7 +234,12 @@ export function mergeSheetFeedConfigs(
     const matching = rowIndexes.exactPodcastIds.get(config.podcast_key);
     const exactShow = matching?.count === 1 &&
       rowIndexes.normalizedPodcastIds.get(normalizeKey(config.podcast_key)) === 1 &&
-      parsePodimoShowFeed(matching.first.Feed ?? matching.first.feed)?.showId === config.podcast_id?.toLowerCase();
+      parsePodimoShowFeed(matching.first.Feed ?? matching.first.feed)?.showId === config.podcast_id?.toLowerCase() &&
+      (!config.podimo_catalogue_id || (
+        matching.first.catalogue_id === config.podimo_catalogue_id &&
+        rowIndexes.catalogueIds.get(config.podimo_catalogue_id) === 1 &&
+        String(matching.first.Link ?? "").trim() === config.podimo_show_url
+      ));
     configs[feedKey] = { ...config, enabled: exactShow };
   }
   for (const [feedKey, config] of Object.entries(configs)) {
