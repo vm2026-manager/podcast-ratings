@@ -12487,6 +12487,99 @@ function initPodcastDetailSheetDrag(dialog) {
 
   panel.addEventListener("pointerup", finishDrag);
   panel.addEventListener("pointercancel", finishDrag);
+
+  let contentTouchState = null;
+
+  // On phones, let a deliberate downward swipe from the detail text close the
+  // sheet too. Wait until the sheet is at its scroll origin so normal reading
+  // and scrolling through the detail remain unaffected.
+  panel.addEventListener("touchstart", (event) => {
+    if (!window.matchMedia("(max-width: 768px)").matches || event.touches.length !== 1) {
+      contentTouchState = null;
+      return;
+    }
+
+    const target = event.target;
+    if (
+      !target.closest("[data-podcast-detail-content]") ||
+      target.closest("button, a, input, select, textarea, [data-action]") ||
+      panel.scrollTop > 0
+    ) {
+      contentTouchState = null;
+      return;
+    }
+
+    const touch = event.touches[0];
+    contentTouchState = {
+      startY: touch.clientY,
+      startX: touch.clientX,
+      lastY: touch.clientY,
+      lastTime: event.timeStamp,
+      velocity: 0,
+      dragging: false
+    };
+  }, { passive: true });
+
+  panel.addEventListener("touchmove", (event) => {
+    if (!contentTouchState || event.touches.length !== 1 || panel.scrollTop > 0) return;
+
+    const touch = event.touches[0];
+    const deltaY = touch.clientY - contentTouchState.startY;
+    const deltaX = touch.clientX - contentTouchState.startX;
+    if (Math.abs(deltaX) > Math.abs(deltaY)) {
+      contentTouchState = null;
+      return;
+    }
+    if (deltaY <= 0) {
+      contentTouchState = null;
+      return;
+    }
+
+    // Ignore small finger movement and sideways swipes instead of competing
+    // with native content scrolling.
+    if (!contentTouchState.dragging) {
+      if (deltaY < 16) return;
+      contentTouchState.dragging = true;
+    }
+
+    event.preventDefault();
+    const elapsed = Math.max(1, event.timeStamp - contentTouchState.lastTime);
+    contentTouchState.velocity = (touch.clientY - contentTouchState.lastY) / elapsed;
+    contentTouchState.lastY = touch.clientY;
+    contentTouchState.lastTime = event.timeStamp;
+    panel.style.transition = "none";
+    panel.style.transform = `translateY(${deltaY}px)`;
+    if (backdrop) backdrop.style.opacity = String(Math.max(0.25, 1 - deltaY / 420));
+  }, { passive: false });
+
+  const finishContentTouch = (event) => {
+    if (!contentTouchState) return;
+    const touch = event.changedTouches[0];
+    const deltaY = touch ? Math.max(0, touch.clientY - contentTouchState.startY) : 0;
+    const shouldClose = contentTouchState.dragging &&
+      (deltaY > 136 || (deltaY > 92 && contentTouchState.velocity > 0.7));
+
+    if (contentTouchState.dragging) {
+      panel.style.transition = "transform 180ms ease";
+      if (shouldClose) {
+        panel.style.transform = "translateY(105%)";
+        if (backdrop) backdrop.style.opacity = "0";
+        window.setTimeout(() => {
+          closePodcastDetailSheet();
+          resetPodcastDetailDragStyles(dialog);
+        }, 160);
+      } else {
+        panel.style.transform = "translateY(0)";
+        if (backdrop) backdrop.style.opacity = "";
+        window.setTimeout(() => resetPodcastDetailDragStyles(dialog), 180);
+      }
+    }
+
+    contentTouchState = null;
+  };
+
+  panel.addEventListener("touchend", finishContentTouch, { passive: true });
+  panel.addEventListener("touchcancel", finishContentTouch, { passive: true });
 }
 
 function initPodcastDetailRankingSwipe(dialog) {

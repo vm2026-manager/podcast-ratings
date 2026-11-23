@@ -7911,6 +7911,7 @@ body.page-ranglister .popular-now-data-state--loading {
   display: flex;
   justify-content: center;
   margin: 22px 0 0;
+  overflow-anchor: none;
 }
 
 .load-more-wrap.is-hidden {
