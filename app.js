@@ -27634,13 +27634,67 @@ function setupEvents() {
     clearSearchInput({ updateUrl: false });
     restoreRankingSearchFromUrl();
 
+    let mobileRankingSearchViewportHeight = 0;
+    let mobileRankingSearchBlurTimer = null;
+    const updateMobileRankingSearchViewport = () => {
+      const isFocused = document.body.classList.contains("ranking-search-focused");
+      if (!isFocused) {
+        document.body.classList.remove("ranking-keyboard-open");
+        return;
+      }
+
+      const viewportHeight = window.visualViewport?.height || window.innerHeight;
+      document.body.classList.toggle(
+        "ranking-keyboard-open",
+        mobileRankingSearchViewportHeight - viewportHeight > 120
+      );
+    };
+
+    const mobileRankingSearchMedia = window.matchMedia("(max-width: 768px)");
+    window.visualViewport?.addEventListener("resize", updateMobileRankingSearchViewport);
+    window.addEventListener("resize", updateMobileRankingSearchViewport, { passive: true });
+    mobileRankingSearchMedia.addEventListener?.("change", (event) => {
+      if (!event.matches) {
+        document.body.classList.remove("ranking-search-focused", "ranking-keyboard-open");
+      }
+    });
+
     elements.searchInput.addEventListener("pointerdown", enableSearchInput, { once: true });
 
     elements.searchInput.addEventListener("focus", () => {
       enableSearchInput();
+      window.clearTimeout(mobileRankingSearchBlurTimer);
+
+      if (mobileRankingSearchMedia.matches && document.body.classList.contains("page-ranglister")) {
+        mobileRankingSearchViewportHeight = window.visualViewport?.height || window.innerHeight;
+        document.body.classList.add("ranking-search-focused");
+        updateMobileRankingSearchViewport();
+
+        window.requestAnimationFrame(() => {
+          const searchStrip = elements.rankingSearchStrip;
+          if (!searchStrip || !document.body.classList.contains("ranking-search-focused")) return;
+          const top = Math.max(0, window.scrollY + searchStrip.getBoundingClientRect().top - 8);
+          window.scrollTo(0, top);
+        });
+      }
 
       if (elements.searchInput?.value && elements.searchInput.value.includes("@")) {
         clearSearchInput({ rerender: true });
+      }
+    });
+
+    elements.searchInput.addEventListener("blur", () => {
+      window.clearTimeout(mobileRankingSearchBlurTimer);
+      mobileRankingSearchBlurTimer = window.setTimeout(() => {
+        if (document.activeElement === elements.searchInput) return;
+        document.body.classList.remove("ranking-search-focused", "ranking-keyboard-open");
+        mobileRankingSearchBlurTimer = null;
+      }, 160);
+    });
+
+    elements.rankingMobileFilterSummary?.addEventListener("pointerdown", (event) => {
+      if (mobileRankingSearchMedia.matches && event.target.closest("button")) {
+        event.preventDefault();
       }
     });
 
