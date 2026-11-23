@@ -38,9 +38,9 @@ assert.match(app, /"Lang beskrivelse": "Kampen om historien er DR’s historiske
 assert.match(app, /DR_EDITORIAL_REVIEW_PARENT_BY_PODCAST_ID\s*=\s*Object\.freeze\(\{[\s\S]*?"rwanda verdens hurtigste folkemord": "kampen om historien dr"[\s\S]*?"sovjetunionen lenin og stalins danske agent": "kampen om historien dr"/u);
 assert.match(app, /function isDrEditorialReviewPodcast\(podcast\)[\s\S]*?state\.podcastById\[parentId\]/u,
   "routing depends on exact IDs and an available parent record");
-assert.match(app, /function getRankingCandidates\(\)[\s\S]*?!isDrEditorialReviewPodcast\(podcast\)/u,
+assert.match(app, /function getRankingCandidates\(\)[\s\S]*?getOrdinaryPodcastRows\(\)/u,
   "review records are suppressed from regular ranking candidates");
-assert.match(app, /function getOrdinaryPodcastRows\(source = state\.podcasts\)[\s\S]*?return source\.filter\(\(podcast\) => !isDrEditorialReviewPodcast\(podcast\)\)/u,
+assert.match(app, /function getOrdinaryPodcastRows\([\s\S]*?return source\.filter\(\(podcast\) =>\s*!isDrEditorialReviewPodcast\(podcast\)/u,
   "review records are suppressed from other public catalogue lists");
 assert.match(app, /data-dr-editorial-review-target=/u, "review links retain an explicit exact-ID target");
 assert.match(app, /openPodcastDetailFromModal\(target, editorialReviewButton\)/u,

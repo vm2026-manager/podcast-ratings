@@ -439,8 +439,8 @@ const EPISODE_PODCAST_CONFIG = {
     podcastKey: "borgen unplugged 2 0",
     databasePodcastKey: "borgen unplugged 2 0",
     enabled: true,
-    displayName: "Borgen Unplugged 2.0",
-    searchPlaceholder: "Søg i Borgen Unplugged 2.0-episoder",
+    displayName: "Borgen Unplugged",
+    searchPlaceholder: "Søg i Borgen Unplugged-episoder",
     source: "soundcloud",
     persistence: "supabase"
   },
@@ -4302,6 +4302,8 @@ function isDisplayGroupRatingKey(key) {
 function getEpisodePodcastKey(podcastOrKey) {
   if (typeof podcastOrKey === "object") return normalizeText(podcastOrKey?._displayGroupEpisodeStateKey) || normalizeText(podcastOrKey?.podcast_key) || getPodcastId(podcastOrKey) || getLegacyPodcastKey(podcastOrKey);
   const resolved = resolvePodcastByStoredKey(podcastOrKey);
+  // Borgen's imported episode identity stays fixed when the catalogue title changes.
+  if (getPodcastId(resolved) === "borgen unplugged 2 0") return getPodcastId(resolved);
   return resolved ? getLegacyPodcastKey(resolved) : normalizeMatchKey(podcastOrKey);
 }
 
@@ -5778,9 +5780,8 @@ function getRankingCandidates() {
   const memberKeys = new Set(
     activeGroups.flatMap((group) => group.memberLegacyKeys.map(normalizeMatchKey))
   );
-  const ordinary = state.podcasts.filter(
-    (podcast) => !memberKeys.has(getLegacyPodcastKey(podcast)) &&
-      !isDrEditorialReviewPodcast(podcast)
+  const ordinary = getOrdinaryPodcastRows().filter(
+    (podcast) => !memberKeys.has(getLegacyPodcastKey(podcast))
   );
   return activeGroups
     .map(createRankingDisplayGroup)
@@ -5788,8 +5789,11 @@ function getRankingCandidates() {
     .concat(ordinary);
 }
 
-function getOrdinaryPodcastRows(source = state.podcasts) {
-  return source.filter((podcast) => !isDrEditorialReviewPodcast(podcast));
+function getOrdinaryPodcastRows(source = state.podcasts, { includeArchived = false } = {}) {
+  return source.filter((podcast) =>
+    !isDrEditorialReviewPodcast(podcast) &&
+    (includeArchived || getPodcastId(podcast) !== "borgen unplugged" || !isOutdatedPodcast(podcast))
+  );
 }
 
 function isDrEditorialReviewPodcast(podcast) {
@@ -11064,7 +11068,8 @@ function buildPodcastSimilarityProductLookups(metadataPayload, productPayload) {
   const podcastByRecommendationId = {};
   state.podcasts.forEach((podcast) => {
     const podcastId = getPodcastId(podcast);
-    const matches = metadataByExistingId.get(getLegacyPodcastKey(podcast)) || [];
+    const metadataKey = podcastId === "borgen unplugged 2 0" ? podcastId : getLegacyPodcastKey(podcast);
+    const matches = metadataByExistingId.get(metadataKey) || [];
     let resolved = matches.length === 1 ? matches[0] : null;
 
     if (matches.length > 1) {
@@ -11336,7 +11341,7 @@ function getPodcastDetailFallbackRecommendations(podcast, seenPodcastKeys, seenP
   const currentGenre = normalizeComparable(podcast?.genre);
   const currentSeries = normalizeComparable(podcast?.mainSeries);
   const currentRating = Number(podcast?.ratingValue) || 0;
-  const candidates = getOrdinaryPodcastRows()
+  const candidates = getOrdinaryPodcastRows(state.podcasts, { includeArchived: true })
     .filter((candidatePodcast) => {
       const candidateKey = getPodcastKey(candidatePodcast);
       const candidateTitle = normalizeComparable(candidatePodcast?.title);
@@ -11481,9 +11486,14 @@ function getPodcastDetailDynamicRecommendations(podcast, validated) {
   const manualCandidateKeys = new Set(
     manualSupplementaryPodcasts.map(getPodcastKey)
   );
-  const resolveCandidate = (candidate) =>
-    state.podcastSimilarityPodcastByRecommendationId[candidate?.recommendationId] ||
-    state.podcasts.find((entry) => normalizeComparable(entry.title) === normalizeComparable(candidate?.title));
+  const resolveCandidate = (candidate) => {
+    const mapped = state.podcastSimilarityPodcastByRecommendationId[candidate?.recommendationId];
+    if (mapped) return mapped;
+    const title = normalizeComparable(candidate?.title);
+    if (!title) return null;
+    const matches = state.podcasts.filter((entry) => normalizeComparable(entry.title) === title);
+    return matches.length === 1 ? matches[0] : null;
+  };
 
   [
     ...(validated?.product?.automaticSimilarResults || []),
@@ -11497,11 +11507,13 @@ function getPodcastDetailDynamicRecommendations(podcast, validated) {
   });
 
   const seenTitles = new Set([currentTitle]);
-  const scoredCandidates = getOrdinaryPodcastRows()
+  const scoredCandidates = getOrdinaryPodcastRows(state.podcasts, { includeArchived: true })
     .filter((candidatePodcast) => {
       const candidateKey = getPodcastKey(candidatePodcast);
       const candidateTitle = normalizeComparable(candidatePodcast?.title);
-      if (!candidateKey || candidateKey === currentKey || seenTitles.has(candidateTitle)) return false;
+      if (!candidateKey || candidateKey === currentKey) return false;
+      if (manualCandidateKeys.has(candidateKey)) return true;
+      if (seenTitles.has(candidateTitle)) return false;
       seenTitles.add(candidateTitle);
       return true;
     })
@@ -11579,7 +11591,7 @@ function getPodcastDetailDynamicRecommendations(podcast, validated) {
       const candidateKey = getPodcastKey(candidatePodcast);
       const candidateTitle = normalizeComparable(candidatePodcast?.title);
       if (!candidateKey || selectedKeys.has(candidateKey)) return;
-      if (candidateTitle && selectedTitles.has(candidateTitle)) return;
+      if (candidateTitle && selectedTitles.has(candidateTitle) && !manualCandidateKeys.has(candidateKey)) return;
       candidatePool.push(candidate);
       selectedKeys.add(candidateKey);
       if (candidateTitle) selectedTitles.add(candidateTitle);
@@ -20825,7 +20837,7 @@ function bindModeratorSuggestionActions(container) {
     if (!card || !results) return;
     const query = normalizeSearchValue(field.value);
     const queryVariants = normalizeSearchVariants(query);
-    const matches = query.length < 2 ? [] : getOrdinaryPodcastRows()
+    const matches = query.length < 2 ? [] : getOrdinaryPodcastRows(state.podcasts, { includeArchived: true })
       .filter((podcast) => searchVariantsMatch(queryVariants, normalizeSearchVariants([podcast.title, podcast.host, podcast.publisher, podcast.mainSeries].join(" "))))
       .slice(0, 6);
     results.innerHTML = matches.map((podcast) => `<button type="button" data-admin-suggestion-select-match="${escapeHtml(podcast.catalogueId)}"><img src="${escapeHtml(getPodcastImageSources(podcast)[0] || "")}" alt="" /><span><strong>${escapeHtml(podcast.title)}</strong><small>${escapeHtml([podcast.host, podcast.publisher, podcast.mainSeries].filter(Boolean).join(" · "))}</small></span></button>`).join("");
