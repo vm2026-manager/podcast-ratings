@@ -324,7 +324,7 @@ export const FEED_CONFIGS: FeedConfigMap = {
     format: "apple_podcasts_html",
     feed_url: "https://podcasts.apple.com/dk/podcast/id1575533784",
     apple_show_id: "1575533784",
-    enabled: false
+    enabled: true
   },
   "genstart": {
     podcast_key: "genstart",

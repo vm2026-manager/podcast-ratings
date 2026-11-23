@@ -1,6 +1,32 @@
 import { FEED_CONFIGS, DJAEVLEN_LYD_FULL_FEED_KEY, BAKSPEJL_LYD_FULL_FEED_KEY, type FeedConfig, type FeedConfigMap } from "./feed-config.ts";
 import { APPROVED_SHEET_FEED_BASELINE } from "./sheet-feed-approval-baseline.ts";
 import { appleShowUrl, parseAppleFeed, parseHttpFeed, parsePodimoShowFeed } from "./feed-syntax.mjs";
+
+// Explicitly retain the Apple HTML sources that already have episode history.
+// Both identifiers must match the live catalogue row; this does not approve a
+// new Apple ID or let a changed show claim another podcast's episode history.
+const APPROVED_LEGACY_APPLE_SHEET_FEEDS = new Map<string, string>([
+  ["1868403164", "arnesen og lerby"], ["1843832125", "bedraget af en svindler"],
+  ["1896612889", "bøvlede mænd"], ["1694478208", "casper elsker dig"],
+  ["1472183999", "danske drabssager"], ["1743434255", "data i sport kristoffer just"],
+  ["1519774517", "den yderste grænse"], ["6818511364", "eksterne affaerer r8dio frihedsbrevet"],
+  ["1782097164", "en anden tid"], ["6801169655", "espn laliga espn dk"],
+  ["1681480800", "fuhlendorff i fængsel"], ["1642886329", "geggo og cengiz helt ærligt"],
+  ["1737734007", "hærfører"], ["1609960523", "hav og kamal"],
+  ["1584822502", "hvor er mit ansigt"], ["1491016826", "hypnotisøren"],
+  ["1853366115", "kaere chantal"], ["1885473282", "kendte korer syge biler med joachim stender"],
+  ["1715936714", "kirsten ringer til rasmus sæson 4"], ["6805489064", "kobenhavneriet"],
+  ["1575533784", "mads og a holdet"], ["1754133240", "mit livs sexferie"],
+  ["1770359151", "narkobetjenten pa gaden sæson 1"], ["1893329271", "om sider"],
+  ["1727543781", "øverste hylde"], ["1634003610", "partners in crime"],
+  ["1564898615", "pilestræde"], ["1728853305", "ren ondskab ally"],
+  ["1896684988", "revolver"], ["1646639024", "sadan er politik"],
+  ["1740537993", "skyggesiden"], ["1605795064", "spionchefens hemmelighed"],
+  ["1810234189", "spotlight"], ["1653138467", "stolpe ind"],
+  ["6801138720", "styr pa verden"], ["1843557403", "transferguru"],
+  ["1896933613", "under tøjet"], ["1632594695", "vesth mysteriet om scandinavian star"],
+  ["1649708700", "voxen"]
+]);
 import { applySheetFeedPolicy, isOrdinaryRssUrl, type FeedResolution } from "./sheet-feed-policy.ts";
 import { buildDjaevlenRoutes, DJAEVLEN_FEED_KEY } from "./djaevlen-routing.mjs";
 import { buildBakspejlRoutes, BAKSPEJL_FEED_KEY } from "./bakspejl-routing.mjs";
@@ -471,7 +497,10 @@ export function mergeSheetFeedConfigs(
       source,
       feed_url: apple ? appleShowUrl(apple.appleShowId) : feedUrl,
       format: apple ? "apple_podcasts_html" : "rss",
-      ...(apple ? { apple_show_id: apple.appleShowId, enabled: false } : { enabled: true })
+      ...(apple ? {
+        apple_show_id: apple.appleShowId,
+        enabled: APPROVED_LEGACY_APPLE_SHEET_FEEDS.get(apple.appleShowId) === podcastKey
+      } : { enabled: true })
     };
     seenPodcastKeys.add(podcastKey);
     seenSources.add(source);

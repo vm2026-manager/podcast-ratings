@@ -1,6 +1,7 @@
 import { assertEquals } from "https://deno.land/std@0.224.0/assert/mod.ts";
 import { mergeSheetFeedConfigs } from "./runtime-feed-config.ts";
-import { selectAppleFeedKeys } from "./core.ts";
+import { selectAppleFeedKeys, selectNormalFeedKeys } from "./core.ts";
+import { FEED_CONFIGS } from "./feed-config.ts";
 
 Deno.test("runtime Feed parser rejects ambiguous Apple show identities", () => {
   const staticConfigs = {
@@ -66,7 +67,27 @@ Deno.test("Styr på historien activates only for its exact Sheet Podcast-ID and 
   assertEquals(mismatchedOfficialUrl.configs.podimo_styr_pa_historien?.enabled, false);
 });
 
-Deno.test("a unique Apple show is retained as a disabled HTML feed", () => {
+Deno.test("only exact, previously imported Apple identities are activated", () => {
+  const exact = mergeSheetFeedConfigs({ rows: [
+    { Titel: "Eksterne affærer", "Podcast-ID": "eksterne affaerer r8dio frihedsbrevet", Feed: "apple:6818511364" },
+    { Titel: "House Guest", "Podcast-ID": "house guest", Feed: "apple:1896920078" }
+  ] });
+  assertEquals(exact.configs.apple_6818511364?.enabled, true);
+  assertEquals(exact.configs.apple_1896920078?.enabled, false);
+  assertEquals(selectAppleFeedKeys(exact.configs), ["apple_6818511364"]);
+
+  const wrongOwner = mergeSheetFeedConfigs({ rows: [
+    { Titel: "Changed owner", "Podcast-ID": "different podcast", Feed: "apple:6818511364" }
+  ] });
+  assertEquals(wrongOwner.configs.apple_6818511364?.enabled, false);
+  assertEquals(selectAppleFeedKeys(wrongOwner.configs), []);
+
+  assertEquals(FEED_CONFIGS.apple_1575533784?.enabled, true);
+  assertEquals(selectAppleFeedKeys(FEED_CONFIGS).includes("apple_1575533784"), true);
+  assertEquals(selectNormalFeedKeys(FEED_CONFIGS).includes("apple_1575533784"), false);
+});
+
+Deno.test("a new Apple show is retained as a disabled HTML feed", () => {
   const result = mergeSheetFeedConfigs({ rows: [
     { Titel: "Apple", "Podcast-ID": "apple permanent", Feed: " APPLE:1843557403 " }
   ] }, {
@@ -77,7 +98,7 @@ Deno.test("a unique Apple show is retained as a disabled HTML feed", () => {
     feed_url: "https://podcasts.apple.com/dk/podcast/id1843557403",
     format: "apple_podcasts_html", apple_show_id: "1843557403", enabled: false
   });
-  assertEquals(selectAppleFeedKeys(result.configs), ["apple_1843557403"]);
+  assertEquals(selectAppleFeedKeys(result.configs), []);
   assertEquals(Object.entries(result.configs).filter(([, config]) => config.enabled !== false).map(([key]) => key), ["genstart"]);
 });
 
@@ -128,9 +149,7 @@ Deno.test("unapproved Valley Heat stays disabled while static adapters and Apple
       Feed: "APPLE:1530344328"
     }
   ] }, staticConfigs);
-  const normalAllFeedKeys = Object.entries(result.configs)
-    .filter(([, config]) => config.enabled !== false)
-    .map(([feedKey]) => feedKey);
+  const normalAllFeedKeys = selectNormalFeedKeys(result.configs);
 
   assertEquals(result.configs.genstart, staticConfigs.genstart);
   assertEquals(result.configs.valley_heat, {
@@ -142,4 +161,5 @@ Deno.test("unapproved Valley Heat stays disabled while static adapters and Apple
   });
   assertEquals(result.configs.apple_1530344328?.enabled, false);
   assertEquals(normalAllFeedKeys, ["genstart"]);
+  assertEquals(selectAppleFeedKeys(result.configs), []);
 });

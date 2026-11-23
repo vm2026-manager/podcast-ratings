@@ -1737,7 +1737,7 @@ export async function runEpisodeImports(options: {
 
 export function selectAppleFeedKeys(feedConfigs: FeedConfigMap): string[] {
   return Object.entries(feedConfigs)
-    .filter(([, config]) => config.format === "apple_podcasts_html")
+    .filter(([, config]) => config.enabled !== false && config.format === "apple_podcasts_html")
     .map(([feedKey]) => feedKey);
 }
 
