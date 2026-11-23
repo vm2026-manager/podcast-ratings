@@ -30,7 +30,7 @@ const context = vm.createContext({ state, normalizeText: norm, normalizeComparab
   getUserRating: key => rated.get(key) ?? null, escapeHtml: String, formatUserRatingCount: String,
   openRatingDialog: podcast => { opened = podcast; }
 });
-for (const name of ['parseNumber','formatCompactRating','getPodcastId','getPodcastKey','getLegacyPodcastKey','resolvePodcastByStoredKey','resolveCanonicalPodcastId','canonicalizeCommunityStats','getDisplayGroupSeasonIdentities','getDisplayGroupMemberPodcasts','getDisplayGroupUserStats','createRankingDisplayGroup','getRankingCandidates','getCommunityStat','hasCommunityRating','getDisplayGroupSeasonNumber','getDisplayGroupSeasonLabel','getDisplayGroupOwnRatingStats','renderPodcastDisplayGroupSeasonWorkspace']) vm.runInContext(extract(name),context);
+for (const name of ['parseNumber','formatCompactRating','getPodcastId','getPodcastKey','getLegacyPodcastKey','resolvePodcastByStoredKey','resolveCanonicalPodcastId','canonicalizeCommunityStats','getDisplayGroupSeasonIdentities','getDisplayGroupMemberPodcasts','getDisplayGroupUserStats','createRankingDisplayGroup','isOutdatedPodcast','getOrdinaryPodcastRows','getRankingCandidates','getCommunityStat','hasCommunityRating','getDisplayGroupSeasonNumber','getDisplayGroupSeasonLabel','getDisplayGroupOwnRatingStats','renderPodcastDisplayGroupSeasonWorkspace']) vm.runInContext(extract(name),context);
 const snapshot = JSON.stringify(state.podcasts);
 const identities = context.getDisplayGroupSeasonIdentities(group);
 assert.deepEqual(Array.from(identities, p=>p.podcastId), [4,5,8,16,17,18,19,20,21,22,23,24].map(n=>`display-season:narkobetjenten:${n}`));

@@ -68,6 +68,7 @@ const checks = [
   ["Narkobetjenten seasons", ["scripts/test-narkobetjenten-seasons.mjs"]],
   ["Narkobetjenten public display and community season eligibility", ["scripts/test-narkobetjenten-public-display.mjs"]],
   ["app.js syntax", ["--check", "app.js"]],
+  ["Borgen Unplugged archived catalogue, links, episodes and recommendations", ["scripts/test-borgen-unplugged-identity.mjs"]],
   ["Bakspejl local cover availability", ["scripts/test-bakspejl-cover-availability.mjs"]],
   ["cover identity resolution", ["scripts/test-cover-identity-resolution.mjs"]],
   ["De efterladte supplied cover identity and responsive source", ["scripts/test-de-efterladte-cover.mjs"]],
