@@ -19381,3 +19381,28 @@ html body.page-forside.page-forside #pageIntroPanel .home-genres-card[data-genre
     width: min(100%, 250px) !important;
   }
 }
+
+/* Mobile ordering label for fixed manual episode lists. */
+@media (max-width: 768px) {
+  html body #podcastDetailSheet .podcast-detail-sheet__episode-table.podcast-detail-sheet__episode-table--manual tr {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+
+  html body #podcastDetailSheet .podcast-detail-sheet__episode-table.podcast-detail-sheet__episode-table--manual td:nth-child(1) {
+    display: none !important;
+  }
+
+  html body #podcastDetailSheet .podcast-detail-sheet__episode-table.podcast-detail-sheet__episode-table--manual td:nth-child(2),
+  html body #podcastDetailSheet .podcast-detail-sheet__episode-table.podcast-detail-sheet__episode-table--manual td:nth-child(3),
+  html body #podcastDetailSheet .podcast-detail-sheet__episode-table.podcast-detail-sheet__episode-table--manual td:nth-child(4) {
+    grid-column: 1 !important;
+  }
+
+  html body #podcastDetailSheet .podcast-detail-sheet__episode-table.podcast-detail-sheet__episode-table--manual td:nth-child(2)::before {
+    display: block !important;
+    margin-bottom: 4px !important;
+    color: #a64118 !important;
+    content: attr(data-mobile-episode-label) !important;
+    font: 800 0.7rem/1.1 "Manrope", sans-serif !important;
+  }
+}
