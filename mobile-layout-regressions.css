@@ -919,3 +919,63 @@ body.page-ranglister .ranking-search-inspiration__next:focus-visible {
     transition: none;
   }
 }
+
+/* Focus mode gives the mobile ranking search room above the on-screen keyboard. */
+@media (max-width: 768px) {
+  html body.page-ranglister.ranking-search-focused .ranking-mobile-page-header,
+  html body.page-ranglister.ranking-search-focused .recent-section,
+  html body.page-ranglister.ranking-search-focused .ranking-filter-panel,
+  html body.page-ranglister.ranking-search-focused .ranking-mobile-filter-bar,
+  html body.page-ranglister.ranking-search-focused .ranking-search-actions,
+  html body.page-ranglister.ranking-search-focused .ranking-toolbar h2,
+  html body.page-ranglister.ranking-search-focused .mobile-sort-toggle {
+    display: none !important;
+  }
+
+  html body.page-ranglister.ranking-search-focused .ranking-search-strip {
+    position: sticky !important;
+    top: 0 !important;
+    z-index: 1100 !important;
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 8px 12px !important;
+    justify-items: stretch !important;
+    align-items: center !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    background: rgba(255, 250, 244, 0.98) !important;
+    box-shadow: 0 5px 14px rgba(66, 41, 20, 0.08) !important;
+    backdrop-filter: blur(12px);
+  }
+
+  html body.page-ranglister.ranking-search-focused .ranking-search-strip > .ranking-search-actions {
+    display: none !important;
+  }
+
+  html body.page-ranglister.ranking-search-focused .ranking-search-strip .search-field,
+  html body.page-ranglister.ranking-search-focused .ranking-search-strip #searchInput {
+    width: 100% !important;
+    min-height: 48px !important;
+    margin: 0 !important;
+  }
+
+  html body.page-ranglister.ranking-search-focused .ranking-list-panel {
+    margin-top: 6px !important;
+  }
+
+  html body.page-ranglister.ranking-search-focused .ranking-toolbar {
+    min-height: 0 !important;
+    margin: 0 0 6px !important;
+    padding: 0 2px !important;
+    border: 0 !important;
+  }
+
+  html body.page-ranglister.ranking-search-focused .ranking-toolbar p {
+    margin: 0 !important;
+    font-size: 0.76rem !important;
+  }
+
+  html body.page-ranglister.ranking-keyboard-open .site-nav {
+    display: none !important;
+  }
+}
