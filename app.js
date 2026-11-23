@@ -1324,7 +1324,6 @@ const elements = {
   rankingFreeOnly: document.getElementById("rankingFreeOnly"),
   rankingLanguageButtons: document.querySelectorAll("[data-ranking-language]"),
   rankingMobileFilterSummary: document.getElementById("rankingMobileFilterSummary"),
-  rankingMobileActiveFilterRemove: document.getElementById("rankingMobileActiveFilterRemove"),
   rankingMobileFilterToggle: document.getElementById("rankingMobileFilterToggle"),
   rankingMobileFilterCount: document.getElementById("rankingMobileFilterCount"),
   rankingFilterPanel: document.getElementById("rankingFilterPanel"),
@@ -5371,6 +5370,16 @@ function getActiveCategoryFilters() {
   return filters;
 }
 
+function hasActiveRankingFilters() {
+  return Boolean(
+    getActiveCategoryFilters().length ||
+    state.activeFilter?.type === "saved" ||
+    state.minimumRating > 0 ||
+    state.languageFilter !== "all" ||
+    state.freeOnly
+  );
+}
+
 function clearCategoryFilter(type) {
   if (type === "host") {
     clearRankingHostFilter();
@@ -5505,23 +5514,10 @@ function clearRankingFilters() {
   state.activeHostFilter = null;
   state.activePublisherFilter = "";
   state.activeMainSeriesFilter = "";
-  state.searchTerm = "";
   state.minimumRating = 0;
   state.freeOnly = false;
   state.languageFilter = "all";
-  state.sortTouched = false;
-  state.sort = state.profilePreferences.defaultSort;
-  if (state.rankingSource === "users") {
-    state.userRankingSort = "rating";
-    state.userRankingDirection = "desc";
-  }
-  state.desktopOwnRatingSortActive = false;
-  state.ownRatingDirection = "desc";
   if (hadHostFilter) syncRankingHostUrl({ person: null });
-  if (elements.searchInput) {
-    elements.searchInput.value = "";
-  }
-  updateSearchClearButton();
   resetVisibleCount();
   createGenreChips();
   updateRatingFilterUi();
@@ -6382,14 +6378,15 @@ function updateMobileRankingFilterUi() {
     ? '<button class="ranking-mobile-active-filter-chip" type="button" data-clear-category-filter="saved" aria-label="Fjern filteret Gemte podcasts">Gemte podcasts <span aria-hidden="true">\u00d7</span></button>'
     : "";
   if (elements.rankingMobileFilterSummary) {
+    const hasFilters = hasActiveRankingFilters();
     elements.rankingMobileFilterSummary.innerHTML = `
       ${categoryMarkup}
       ${languageMarkup}
       ${freeOnlyMarkup}
       ${savedMarkup}
+      ${hasFilters ? '<button id="rankingMobileActiveFilterRemove" class="ranking-mobile-clear-filters" type="button" data-clear-ranking-filters aria-label="Ryd alle aktive filtre">Ryd filtre</button>' : ""}
     `;
-    elements.rankingMobileFilterSummary.hidden =
-      !categoryFilters.length && !languageMarkup && !freeOnlyMarkup && !savedMarkup;
+    elements.rankingMobileFilterSummary.hidden = !hasFilters;
   }
 
   if (elements.rankingMobileFilterCount) {
@@ -6398,22 +6395,6 @@ function updateMobileRankingFilterUi() {
     elements.rankingMobileFilterCount.textContent = count ? String(count) : "";
   }
 
-  if (elements.rankingMobileActiveFilterRemove) {
-    const hasRemovableFilter =
-      isSavedFilter ||
-      categoryFilters.length > 0 ||
-      state.minimumRating > 0 ||
-      state.freeOnly ||
-      state.languageFilter !== "all" ||
-      Boolean(state.searchTerm);
-    elements.rankingMobileActiveFilterRemove.textContent = "Nulstil";
-    elements.rankingMobileActiveFilterRemove.setAttribute(
-      "aria-label",
-      "Nulstil alle filtre"
-    );
-    elements.rankingMobileActiveFilterRemove.classList.toggle("is-hidden", !hasRemovableFilter);
-    elements.rankingMobileActiveFilterRemove.disabled = !hasRemovableFilter;
-  }
 }
 
 function normalizeRankingSource(source) {
@@ -8354,10 +8335,8 @@ function syncDesktopRankingSearchPlacement() {
   if (!searchStrip || !mainColumn || !listPanel || !podcastGrid) return;
 
   if (elements.clearFilterButton) {
-    elements.clearFilterButton.textContent =
-      isDesktopRankingViewport() && document.body.classList.contains("page-ranglister")
-      ? "Nulstil alle filtre"
-      : "Ryd alle";
+    elements.clearFilterButton.textContent = "Ryd filtre";
+    elements.clearFilterButton.hidden = !hasActiveRankingFilters();
   }
 
   const useDesktopRanking =
@@ -27840,8 +27819,14 @@ function setupEvents() {
     updateRankingSourceUi();
   });
 
-  elements.rankingMobileActiveFilterRemove?.addEventListener("click", clearRankingFilters);
   elements.rankingMobileFilterSummary?.addEventListener("click", (event) => {
+    const clearFiltersButton = event.target.closest("[data-clear-ranking-filters]");
+    if (clearFiltersButton) {
+      event.preventDefault();
+      event.stopPropagation();
+      clearRankingFilters();
+      return;
+    }
     const mobileFilterButton = event.target.closest("[data-clear-mobile-filter]");
     if (mobileFilterButton) {
       event.preventDefault();

@@ -85,6 +85,7 @@ async function openRankingPage(context) {
 try {
   const desktopContext = await browser.newContext({ viewport: { width: 1280, height: 900 } });
   const desktop = await openRankingPage(desktopContext);
+  assert.equal(await desktop.locator("#clearFilterButton").isVisible(), false, "desktop clear button is hidden without active filters");
 
   const verifiedSearches = await desktop.evaluate((queries) => {
     const catalogueIds = getRankingCandidates().map((podcast) => podcast.podcastId);
@@ -150,6 +151,7 @@ try {
 
   await desktop.evaluate(() => setMinimumRating(8));
   assert.equal(await desktop.locator("#rankingSearchInspiration").isVisible(), true, "suggestions remain when a non-genre rating filter is active");
+  assert.equal(await desktop.locator("#clearFilterButton").isVisible(), true, "desktop Ryd filtre appears for an active rating filter");
   assert.equal(await desktop.locator(".desktop-ranking-search-filter-summary").isVisible(), true, "active non-genre filters remain visible beside suggestions");
   const desktopFilterLayout = await desktop.evaluate(() => {
     const strip = document.querySelector(".ranking-search-strip");
@@ -189,6 +191,13 @@ try {
     }
   }
   await desktop.evaluate(() => setMinimumRating(0));
+  assert.equal(await desktop.locator("#clearFilterButton").isVisible(), false, "desktop Ryd filtre hides when the last filter is cleared");
+
+  await desktop.evaluate(() => setActiveFilter("genre", "True Crime"));
+  assert.equal(await desktop.locator("#clearFilterButton").isVisible(), true, "desktop Ryd filtre appears for an active genre");
+  await desktop.locator("#clearFilterButton").click();
+  assert.equal(await desktop.evaluate(() => hasActiveRankingFilters()), false, "desktop clear removes active filters");
+  assert.equal(await desktop.locator("#clearFilterButton").isVisible(), false, "desktop clear button hides after clearing filters");
 
   await desktop.evaluate(() => setActiveFilter("genre", "True Crime"));
   assert.equal(await desktop.locator("#rankingSearchInspiration").isVisible(), false, "suggestions hide when a genre is selected");
@@ -235,34 +244,31 @@ try {
     mobileLayouts.push(await mobile.evaluate(() => {
       const strip = document.querySelector(".ranking-search-strip");
       const suggestion = strip.querySelector("#rankingSearchInspiration");
-      const buttons = [...suggestion.querySelectorAll("button")].map((button) => button.getBoundingClientRect().toJSON());
       return {
         width: document.documentElement.clientWidth,
         scrollWidth: document.documentElement.scrollWidth,
-        strip: strip.getBoundingClientRect().toJSON(),
-        suggestion: suggestion.getBoundingClientRect().toJSON(),
-        buttons
+        suggestionsVisible: getComputedStyle(suggestion).display !== "none" && !suggestion.hidden
       };
     }));
   }
   for (const layout of mobileLayouts) {
     assert.equal(layout.scrollWidth, layout.width, `mobile has no horizontal overflow at ${layout.width}px`);
-    assert.ok(layout.suggestion.left >= 0 && layout.suggestion.right <= layout.width, `suggestions stay inside the mobile viewport at ${layout.width}px`);
-    assert.ok(layout.buttons.every((rect) => rect.left >= 0 && rect.right <= layout.width), `all suggestion buttons fit at ${layout.width}px`);
+    assert.equal(layout.suggestionsVisible, false, `search suggestions are removed from the mobile layout at ${layout.width}px`);
   }
 
   await mobile.setViewportSize({ width: 320, height: 844 });
-  const beforeTouchRotation = await mobile.locator("#rankingSearchInspirationItems button").allTextContents();
-  await mobile.locator("#rankingSearchInspirationNext").tap();
-  assert.notDeepEqual(await mobile.locator("#rankingSearchInspirationItems button").allTextContents(), beforeTouchRotation, "touch rotates suggestions");
-  await mobile.locator("#rankingSearchInspirationItems button").first().tap();
-  assert.ok(await mobile.locator("#searchInput").inputValue(), "touching a topic begins a search");
-  assert.equal(await mobile.locator("#rankingSearchInspiration").isVisible(), false, "mobile suggestions hide after a topic is selected");
-  await mobile.locator("#searchClearButton").tap();
+  await mobile.locator("#searchInput").click();
+  await mobile.locator("#searchInput").fill("svindel");
   await mobile.evaluate(() => setMinimumRating(8));
-  assert.equal(await mobile.locator("#rankingSearchInspiration").isVisible(), true, "mobile suggestions remain with non-genre filters");
   await mobile.evaluate(() => setActiveFilter("genre", "True Crime"));
-  assert.equal(await mobile.locator("#rankingSearchInspiration").isVisible(), false, "mobile suggestions hide for an active genre");
+  const clearMobileFilters = mobile.locator("#rankingMobileActiveFilterRemove");
+  assert.equal(await clearMobileFilters.isVisible(), true, "Ryd filtre appears when mobile filters are active");
+  assert.equal((await clearMobileFilters.textContent()).trim(), "Ryd filtre");
+  await clearMobileFilters.tap();
+  assert.equal(await mobile.evaluate(() => hasActiveRankingFilters()), false, "mobile clear removes all active filters");
+  assert.equal(await mobile.locator("#searchInput").inputValue(), "svindel", "clearing filters preserves the separate search query");
+  assert.equal(await clearMobileFilters.isVisible(), false, "Ryd filtre hides after filters are cleared");
+  assert.equal(await mobile.locator("#rankingSearchInspiration").isVisible(), false, "suggestions stay out of the mobile layout after clearing filters");
 
   assert.deepEqual(errors, [], "no browser runtime errors occur");
   console.log(`[ranking-search-inspiration] PASS (${evidenceQueries.length} evidence-backed searches, desktop and mobile)`);

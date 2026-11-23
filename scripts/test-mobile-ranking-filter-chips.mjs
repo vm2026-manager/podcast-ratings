@@ -68,7 +68,8 @@ try {
   assert.equal(await summary.isHidden(), true);
 
   await setFilters({ genre: genre.trim(), language: "danish", free: true });
-  assert.equal(await summary.getByRole("button").count(), 3, "genre, language and free chips coexist");
+  assert.equal(await summary.locator(".ranking-mobile-active-filter-chip").count(), 3, "genre, language and free chips coexist");
+  assert.equal(await summary.locator("#rankingMobileActiveFilterRemove").textContent(), "Ryd filtre", "the clear button is available with active filters");
   const combinedCount = await filterCount();
   await chip(`Fjern genrefilteret ${genre.trim()}`).click();
   assert.deepEqual(await page.evaluate(() => ({ language: state.languageFilter, free: state.freeOnly })), { language: "danish", free: true });
@@ -90,7 +91,7 @@ try {
   await page.locator("#rankingMobileFilterToggle").click();
   assert.equal(await page.locator("#rankingMobileFilterToggle").getAttribute("aria-expanded"), "false");
   assert.equal(await filterCount(), selectedCount, "closing the filter panel preserves the selection");
-  assert.equal(await summary.getByRole("button").count(), 3);
+  assert.equal(await summary.locator(".ranking-mobile-active-filter-chip").count(), 3);
 
   await page.evaluate(() => {
     state.searchTerm = "podcast";
@@ -116,7 +117,8 @@ try {
       const toolbar = document.querySelector(".ranking-toolbar");
       const sort = document.querySelector("#mobileSortToggle");
       const summary = document.querySelector("#rankingMobileFilterSummary");
-      const chips = [...summary.querySelectorAll("button")];
+      const chips = [...summary.querySelectorAll(".ranking-mobile-active-filter-chip")];
+      const clearButton = summary.querySelector("#rankingMobileActiveFilterRemove");
       const box = (element) => element.getBoundingClientRect();
       return {
         width: document.documentElement.clientWidth,
@@ -125,6 +127,7 @@ try {
         summaryX: box(summary).x,
         toolbarBottom: box(toolbar).bottom,
         chipRects: chips.map((item) => ({ x: box(item).x, right: box(item).right, bottom: box(item).bottom, height: box(item).height })),
+        clearRect: clearButton ? { x: box(clearButton).x, right: box(clearButton).right, bottom: box(clearButton).bottom, height: box(clearButton).height } : null,
         summaryHidden: summary.hidden
       };
     });
@@ -132,6 +135,7 @@ try {
     assert.equal(layout.sortX, await page.locator(".ranking-toolbar").evaluate((el) => el.getBoundingClientRect().x), `sort remains left aligned at ${width}px`);
     assert.ok(layout.summaryX >= layout.sortX, `chips follow the sort control at ${width}px`);
     assert.ok(layout.chipRects.every((rect) => rect.height >= 40 && rect.right <= width), `chips remain touch sized and inside viewport at ${width}px`);
+    assert.ok(layout.clearRect && layout.clearRect.right <= width && layout.clearRect.height >= 30, `Ryd filtre remains visible and inside the viewport at ${width}px`);
 
     await chip("Fjern sprogfiltret Dansk").tap();
     assert.equal(await page.evaluate(() => state.languageFilter), "all", `touch activation removes a chip at ${width}px`);
