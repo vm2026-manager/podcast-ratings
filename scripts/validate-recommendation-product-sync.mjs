@@ -20,16 +20,20 @@ if (metadata.rows.length !== podcasts.length) {
 }
 if (product.sourceCount !== catalogIds.size) fail(`sourceCount ${product.sourceCount} != ${catalogIds.size}`);
 
+const historicalBorgenId = "borgen unplugged";
+const publicSections = ["sameSeriesResults", "manualSupplementaryResults", "automaticSimilarResults", "combinedSimilarResults", "similarResults"];
 const sources = Object.values(product.results || {});
 if (sources.length !== catalogIds.size) fail(`result sources ${sources.length} != ${catalogIds.size}`);
 for (const source of sources) {
   const sourceId = source.existingId;
   if (!catalogIds.has(sourceId)) fail(`stale result source ${sourceId}`);
-  for (const field of ["sameSeriesResults", "manualSupplementaryResults", "automaticSimilarResults", "combinedSimilarResults"]) {
+  for (const field of publicSections) {
+    if (sourceId === historicalBorgenId && source[field]?.length) fail(`historical Borgen source exposes ${field}`);
     const seen = new Set();
     for (const candidate of source[field] || []) {
       const id = candidate.existingId;
       if (!catalogIds.has(id)) fail(`${sourceId} has unknown ${field} reference ${id}`);
+      if (id === historicalBorgenId) fail(`${sourceId} exposes historical Borgen in ${field}`);
       if (id === sourceId) fail(`${sourceId} has self-reference in ${field}`);
       if (seen.has(id)) fail(`${sourceId} has duplicate ${field} reference ${id}`);
       seen.add(id);
@@ -37,7 +41,7 @@ for (const source of sources) {
   }
 }
 
-const borgenIds = ["borgen unplugged", "borgen unplugged 2 0"];
+const borgenIds = [historicalBorgenId, "borgen unplugged 2 0"];
 const previousMetadata = process.argv[2] ? readJson(process.argv[2]) : null;
 const borgenMetadata = borgenIds.map((id) => {
   const matches = metadata.rows.filter((row) => row.id === id);
@@ -57,9 +61,11 @@ const borgenMetadata = borgenIds.map((id) => {
 if (borgenMetadata[0].title === borgenMetadata[1].title) {
   for (const [index, source] of borgenMetadata.entries()) {
     const target = borgenMetadata[1 - index];
-    if (!product.results[source.recommendationId].manualSupplementaryResults.some(
-      (candidate) => candidate.existingId === target.id && candidate.recommendationId === target.recommendationId
-    )) fail(`missing explicit Borgen recommendation from ${source.id} to ${target.id}`);
+    if (!product.manualReferenceAudit.some((reference) =>
+      reference.sourceRecommendationId === source.recommendationId &&
+      reference.resolvedRecommendationId === target.recommendationId &&
+      reference.status === "resolved_podcast_id"
+    )) fail(`missing historical Borgen reference from ${source.id} to ${target.id}`);
   }
 }
 

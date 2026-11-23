@@ -98,10 +98,21 @@ for (const [index, source] of borgenMetadata.rows.entries()) {
   const target = borgenMetadata.rows[1 - index];
   const result = borgenProduct.results[source.recommendationId];
   assert.equal(result.existingId, source.id);
-  assert.deepEqual(
-    result.manualSupplementaryResults.map(({ existingId, recommendationId }) => [existingId, recommendationId]),
-    [[target.id, target.recommendationId]]
-  );
+  assert.deepEqual(result.manualSupplementaryResults, []);
+  assert.ok(borgenProduct.manualReferenceAudit.some((reference) =>
+    reference.sourceRecommendationId === source.recommendationId &&
+    reference.resolvedRecommendationId === target.recommendationId &&
+    reference.status === "resolved_podcast_id"
+  ));
+}
+
+for (const result of Object.values(rebuiltProduct.results)) {
+  for (const section of [
+    "manualSupplementaryResults", "automaticSimilarResults", "sameSeriesResults", "combinedSimilarResults", "similarResults"
+  ]) {
+    if (result.existingId === borgenIds[0]) assert.deepEqual(result[section], []);
+    assert.ok(result[section].every((candidate) => candidate.existingId !== borgenIds[0]), section);
+  }
 }
 
 console.log("Current-catalogue similarity product tests passed.");
