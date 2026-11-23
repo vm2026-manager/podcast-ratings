@@ -2,7 +2,7 @@
   "version": 1,
   "source": {
     "path": "data/podcasts.json",
-    "generatedAt": "2026-11-22T18:50:54.955Z",
+    "generatedAt": "2026-11-23T08:04:49.915Z",
     "count": 1383,
     "topicAliases": "config/recommendation-topic-aliases.json",
     "topicAliasVersion": 1,
@@ -3541,7 +3541,7 @@
       "recommendationId": "rec-borgen-unplugged-2-0-e4490f53c1587112a8c02bcb1c448526",
       "recommendationIdentityBasis": "title+link",
       "identityDuplicateGroup": "",
-      "title": "Borgen unplugged 2.0",
+      "title": "Borgen Unplugged",
       "mainSeries": "",
       "primaryGenreRaw": "Politik",
       "primaryGenre": "Politik",
