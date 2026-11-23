@@ -14669,6 +14669,7 @@ function scheduleEpisodeWorkspaceSearch(podcast, term) {
 
 function renderPodcastEpisodeOverviewRows(podcast) {
   const episodeState = getPodcastEpisodeState(podcast);
+  const isManualEpisodeList = !getEpisodePodcastConfig(podcast) && podcastHasManualEpisodeList(podcast);
   const friMadsWorkspace = podcast?.podcastId === "fri mads" &&
     podcast?.catalogueId === "catalogue-v1-d94fc39e" &&
     podcast?.link === "https://frihedsbrevet.dk/nyhedsbrev/fri-mads/";
@@ -14745,7 +14746,7 @@ function renderPodcastEpisodeOverviewRows(podcast) {
                 )}">${escapeHtml(publicationDate || "—")}</td>`
               : `<td data-label="#">${escapeHtml(String(episodeNumber))}</td>`
           }
-          <td data-label="Episode" data-published-date="${escapeHtml(publicationDate)}">
+          <td data-label="Episode" data-published-date="${escapeHtml(publicationDate)}"${isManualEpisodeList ? ` data-mobile-episode-label="Afsnit ${escapeHtml(String(episodeNumber))}"` : ""}>
             <strong class="episode-title${titleLengthClass}">${escapeHtml(title)}</strong>
             ${metadataOnlyArticle || rateableFriMadsArticle ? `<a class="podcast-detail-sheet__episode-source" href="${escapeHtml(episode.canonicalUrl || episode.episode_url)}" target="_blank" rel="noopener noreferrer">Lyt hos Frihedsbrevet</a>` : ""}
             ${getOfficialMedianoEpisodeSourceUrl(episode.episode_url) ? `<a class="podcast-detail-sheet__episode-source" href="${escapeHtml(getOfficialMedianoEpisodeSourceUrl(episode.episode_url))}" target="_blank" rel="noopener noreferrer">Officiel kilde</a>` : ""}
