@@ -30062,3 +30062,12 @@ body.page-ranglister .popular-now-toggle.is-active {
 .podcast-detail-sheet__dr-review-context button { padding: 0; border: 0; background: none; color: #a63b0a; font: inherit; font-weight: 750; text-align: left; text-decoration: underline; text-underline-offset: 2px; cursor: pointer; }
 .podcast-detail-sheet__dr-editorial-reviews button:focus-visible,
 .podcast-detail-sheet__dr-review-context button:focus-visible { outline: 3px solid #ff8a52; outline-offset: 2px; }
+
+/* Center the desktop ranking search clear button as the field grows on focus. */
+@media (min-width: 901px) {
+  body.page-ranglister .ranking-search-strip .search-field__clear {
+    top: 50% !important;
+    bottom: auto !important;
+    transform: translateY(-50%) !important;
+  }
+}
