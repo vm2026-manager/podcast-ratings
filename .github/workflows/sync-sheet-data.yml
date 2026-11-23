@@ -160,10 +160,11 @@ jobs:
 
       - name: Validate regenerated recommendation product
         if: steps.catalogue.outputs.podcasts_changed == 'true'
+        shell: bash
         run: |
           node scripts/test-recommendation-metadata.mjs
           node scripts/test-current-podcast-similarity-product-v1.3.mjs
-          node scripts/validate-recommendation-product-sync.mjs
+          node scripts/validate-recommendation-product-sync.mjs <(git show HEAD:data/recommendation-metadata.json)
 
       - name: Create or update catalogue-sync pull request
         id: create-pull-request

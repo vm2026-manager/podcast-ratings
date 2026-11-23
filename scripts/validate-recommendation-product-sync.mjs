@@ -37,4 +37,30 @@ for (const source of sources) {
   }
 }
 
+const borgenIds = ["borgen unplugged", "borgen unplugged 2 0"];
+const previousMetadata = process.argv[2] ? readJson(process.argv[2]) : null;
+const borgenMetadata = borgenIds.map((id) => {
+  const matches = metadata.rows.filter((row) => row.id === id);
+  if (matches.length !== 1) fail(`expected one recommendation metadata row for ${id}`);
+  const [row] = matches;
+  if (product.results[row.recommendationId]?.existingId !== id) {
+    fail(`recommendation product points outside ${id}`);
+  }
+  if (previousMetadata) {
+    const previous = previousMetadata.rows.filter((entry) => entry.id === id);
+    if (previous.length !== 1 || previous[0].recommendationId !== row.recommendationId) {
+      fail(`recommendationId changed for ${id}`);
+    }
+  }
+  return row;
+});
+if (borgenMetadata[0].title === borgenMetadata[1].title) {
+  for (const [index, source] of borgenMetadata.entries()) {
+    const target = borgenMetadata[1 - index];
+    if (!product.results[source.recommendationId].manualSupplementaryResults.some(
+      (candidate) => candidate.existingId === target.id && candidate.recommendationId === target.recommendationId
+    )) fail(`missing explicit Borgen recommendation from ${source.id} to ${target.id}`);
+  }
+}
+
 console.log(JSON.stringify({ catalogue: catalogIds.size, metadata: metadata.rows.length, sourceCount: product.sourceCount }));

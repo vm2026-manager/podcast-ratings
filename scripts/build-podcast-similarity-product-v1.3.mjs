@@ -137,6 +137,14 @@ function buildProductCatalog(metadataPayload, podcastPayload, config, displayGro
   }
   const recommendationIds = new Set();
   const podcastIds = new Set();
+  const historicalBorgen = podcastRows.find((row) =>
+    row["Podcast-ID"] === "borgen unplugged" && row.catalogue_id === "catalogue-v1-9db52a31"
+  );
+  const currentBorgen = podcastRows.find((row) =>
+    row["Podcast-ID"] === "borgen unplugged 2 0" && row.catalogue_id === "catalogue-v1-689d27f8"
+  );
+  const borgenTitlesMatch = historicalBorgen && currentBorgen &&
+    normalizeDisplayTitle(historicalBorgen.Titel) === normalizeDisplayTitle(currentBorgen.Titel);
   for (const item of catalog) {
     const sourceRow = podcastRows[item.displayRowIndex];
     const metadataRow = metadataRows[item.displayRowIndex];
@@ -164,6 +172,10 @@ function buildProductCatalog(metadataPayload, podcastPayload, config, displayGro
     }
     podcastIds.add(podcastId);
     item.existingId = podcastId;
+    // The explicit Sheet references must resolve by ID when these editions share a title.
+    if (borgenTitlesMatch && (sourceRow === historicalBorgen || sourceRow === currentBorgen)) {
+      item.podcastId = podcastId;
+    }
     item.displayGroupId = displayGroupByPodcastId.get(
       normalizeStructuralIdentity(podcastId)
     ) || "";

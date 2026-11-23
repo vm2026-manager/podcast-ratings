@@ -941,7 +941,10 @@ function buildRecommendationData(
 
   const rows = sourceRows.map((sourceRow) => {
     const title = normalizeText(sourceRow?.Titel ?? sourceRow?.Title);
-    const id = podcastKey(title);
+    const podcastId = sourceRow?.["Podcast-ID"];
+    const id = podcastId === "borgen unplugged 2 0" && sourceRow.catalogue_id === "catalogue-v1-689d27f8"
+      ? podcastId
+      : podcastKey(title);
     const mappedGenre = mapPrimaryGenre(sourceRow?.Genre, approvedGenreLookup);
     const {
       primaryGenreRaw,
