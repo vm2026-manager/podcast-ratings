@@ -29175,29 +29175,6 @@
           "sharedTopics": [],
           "similarityReason": "",
           "candidateType": "manual_supplementary"
-        },
-        {
-          "recommendationId": "rec-borgen-unplugged-d1cd8cda9eddb13e3793fabcd2acb5fa",
-          "existingId": "borgen unplugged",
-          "title": "Borgen Unplugged",
-          "publisher": "Qvortrup Media",
-          "authoritativeMainSeries": "",
-          "primaryGenre": "Politik",
-          "secondaryGenre": "",
-          "topicsCanonical": [
-            "Dansk politik",
-            "politiske strategier",
-            "meningsmålinger"
-          ],
-          "editorialScore": 8,
-          "image": "https://www.bog-ide.dk/cdn/shop/files/2587302_Cover.jpg?v=1773311890&width=1000",
-          "link": "http://www.borgenunplugged.dk/",
-          "contentSimilarityScore": 0,
-          "topicSimilarityScore": 0,
-          "genreSimilarityScore": 0,
-          "sharedTopics": [],
-          "similarityReason": "",
-          "candidateType": "manual_supplementary"
         }
       ],
       "combinedSimilarResults": [
@@ -29735,7 +29712,7 @@
         }
       ],
       "automaticSimilarResultCount": 7,
-      "manualSupplementaryResultCount": 5,
+      "manualSupplementaryResultCount": 4,
       "combinedSimilarResultCount": 8,
       "similarResultCount": 8,
       "sameSeriesResultCount": 4,
@@ -79751,29 +79728,6 @@
       ],
       "manualSupplementaryResults": [
         {
-          "recommendationId": "rec-borgen-unplugged-d1cd8cda9eddb13e3793fabcd2acb5fa",
-          "existingId": "borgen unplugged",
-          "title": "Borgen Unplugged",
-          "publisher": "Qvortrup Media",
-          "authoritativeMainSeries": "",
-          "primaryGenre": "Politik",
-          "secondaryGenre": "",
-          "topicsCanonical": [
-            "Dansk politik",
-            "politiske strategier",
-            "meningsmålinger"
-          ],
-          "editorialScore": 8,
-          "image": "https://www.bog-ide.dk/cdn/shop/files/2587302_Cover.jpg?v=1773311890&width=1000",
-          "link": "http://www.borgenunplugged.dk/",
-          "contentSimilarityScore": 0,
-          "topicSimilarityScore": 0,
-          "genreSimilarityScore": 0,
-          "sharedTopics": [],
-          "similarityReason": "",
-          "candidateType": "manual_supplementary"
-        },
-        {
           "recommendationId": "rec-slotsholmen-dcd6149e3ddf36cd7bf2dde84c34208d",
           "existingId": "slotsholmen",
           "title": "Slotsholmen",
@@ -80083,21 +80037,21 @@
           "candidateType": "content_similarity"
         },
         {
-          "recommendationId": "rec-borgen-unplugged-d1cd8cda9eddb13e3793fabcd2acb5fa",
-          "existingId": "borgen unplugged",
-          "title": "Borgen Unplugged",
-          "publisher": "Qvortrup Media",
+          "recommendationId": "rec-altinget-ajour-1949caf6fe101a0238e9fb99c67eecc8",
+          "existingId": "altinget ajour",
+          "title": "Altinget Ajour",
+          "publisher": "Altinget",
           "authoritativeMainSeries": "",
           "primaryGenre": "Politik",
           "secondaryGenre": "",
           "topicsCanonical": [
-            "Dansk politik",
-            "politiske strategier",
-            "meningsmålinger"
+            "Christiansborg",
+            "politiske beslutninger",
+            "politiske konflikter"
           ],
-          "editorialScore": 8,
-          "image": "https://www.bog-ide.dk/cdn/shop/files/2587302_Cover.jpg?v=1773311890&width=1000",
-          "link": "http://www.borgenunplugged.dk/",
+          "editorialScore": 7,
+          "image": "https://assets.metacast.app/images/podcast/artwork/l6PP7YGo",
+          "link": "https://www.altinget.dk/podcast/altinget-ajour",
           "contentSimilarityScore": 0,
           "topicSimilarityScore": 0,
           "genreSimilarityScore": 0,
@@ -80299,21 +80253,21 @@
           "candidateType": "content_similarity"
         },
         {
-          "recommendationId": "rec-borgen-unplugged-d1cd8cda9eddb13e3793fabcd2acb5fa",
-          "existingId": "borgen unplugged",
-          "title": "Borgen Unplugged",
-          "publisher": "Qvortrup Media",
+          "recommendationId": "rec-altinget-ajour-1949caf6fe101a0238e9fb99c67eecc8",
+          "existingId": "altinget ajour",
+          "title": "Altinget Ajour",
+          "publisher": "Altinget",
           "authoritativeMainSeries": "",
           "primaryGenre": "Politik",
           "secondaryGenre": "",
           "topicsCanonical": [
-            "Dansk politik",
-            "politiske strategier",
-            "meningsmålinger"
+            "Christiansborg",
+            "politiske beslutninger",
+            "politiske konflikter"
           ],
-          "editorialScore": 8,
-          "image": "https://www.bog-ide.dk/cdn/shop/files/2587302_Cover.jpg?v=1773311890&width=1000",
-          "link": "http://www.borgenunplugged.dk/",
+          "editorialScore": 7,
+          "image": "https://assets.metacast.app/images/podcast/artwork/l6PP7YGo",
+          "link": "https://www.altinget.dk/podcast/altinget-ajour",
           "contentSimilarityScore": 0,
           "topicSimilarityScore": 0,
           "genreSimilarityScore": 0,
@@ -80324,7 +80278,7 @@
       ],
       "sameSeriesResults": [],
       "automaticSimilarResultCount": 7,
-      "manualSupplementaryResultCount": 6,
+      "manualSupplementaryResultCount": 5,
       "combinedSimilarResultCount": 8,
       "similarResultCount": 8,
       "sameSeriesResultCount": 0,
@@ -80339,33 +80293,28 @@
       "title": "Borgen Unplugged",
       "authoritativeMainSeries": "",
       "supplementarySimilaritiesRaw": "borgen unplugged 2 0; slotsholmen; borgenudenfilter; dkpol; de største politiske skandaler; i selskab med q",
+      "automaticSimilarResults": [],
+      "manualSupplementaryResults": [],
+      "combinedSimilarResults": [],
+      "similarResults": [],
+      "sameSeriesResults": [],
+      "automaticSimilarResultCount": 0,
+      "manualSupplementaryResultCount": 0,
+      "combinedSimilarResultCount": 0,
+      "similarResultCount": 0,
+      "sameSeriesResultCount": 0,
+      "showSimilarSection": false,
+      "showSameSeriesSection": false,
+      "warnings": []
+    },
+    "rec-borgenudenfilter-e6073e0ee85fe3cc61c2c183c15f5196": {
+      "recommendationId": "rec-borgenudenfilter-e6073e0ee85fe3cc61c2c183c15f5196",
+      "existingId": "borgenudenfilter",
+      "sourceLink": "https://podcast24.dk/podcasts/borgenudenfilter",
+      "title": "BorgenUdenFilter",
+      "authoritativeMainSeries": "",
+      "supplementarySimilaritiesRaw": "borgen unplugged; borgen unplugged 2 0; slotsholmen; dkpol; de største politiske skandaler; under gulvtæppet",
       "automaticSimilarResults": [
-        {
-          "recommendationId": "rec-borgenudenfilter-e6073e0ee85fe3cc61c2c183c15f5196",
-          "existingId": "borgenudenfilter",
-          "title": "BorgenUdenFilter",
-          "publisher": "Podads",
-          "authoritativeMainSeries": "",
-          "primaryGenre": "Politik",
-          "secondaryGenre": "",
-          "topicsCanonical": [
-            "Dansk politik",
-            "politiske strategier",
-            "magtkampe"
-          ],
-          "editorialScore": 6.8,
-          "image": "https://image.simplecastcdn.com/images/f1c51995-4dfc-450b-a06c-79763c807d81/431c013e-60cd-4536-a36b-4b775fc26142/3000x3000/design-20uden-20navn.jpg?aid=rss_feed",
-          "link": "https://podcast24.dk/podcasts/borgenudenfilter",
-          "contentSimilarityScore": 67.0586,
-          "topicSimilarityScore": 52.0586,
-          "genreSimilarityScore": 15,
-          "sharedTopics": [
-            "Dansk politik",
-            "politiske strategier"
-          ],
-          "similarityReason": "Fælles emner: Dansk politik og politiske strategier",
-          "candidateType": "content_similarity"
-        },
         {
           "recommendationId": "rec-oeverste-hylde-65353acd5fbed77742abf3e29fcce243",
           "existingId": "øverste hylde",
@@ -80416,6 +80365,34 @@
             "politiske strategier"
           ],
           "similarityReason": "Fælles emner: Dansk politik og politiske strategier",
+          "candidateType": "content_similarity"
+        },
+        {
+          "recommendationId": "rec-under-gulvtaeppet-a149ff03a846f6767281b00f51f7454a",
+          "existingId": "under gulvtæppet",
+          "title": "Under gulvtæppet",
+          "publisher": "Jyllands-Posten",
+          "authoritativeMainSeries": "",
+          "primaryGenre": "Samfund",
+          "secondaryGenre": "",
+          "topicsCanonical": [
+            "Dansk politik",
+            "Christiansborg",
+            "politiske strategier",
+            "magtkampe"
+          ],
+          "editorialScore": null,
+          "image": "https://is1-ssl.mzstatic.com/image/thumb/Podcasts221/v4/23/22/6f/23226f84-11c0-904f-7bba-fa41bb0bbd07/mza_14647145236921041846.jpg/1200x1200bf-60.jpg",
+          "link": "https://podcasts.apple.com/dk/podcast/under-gulvt%C3%A6ppet/id1648053405",
+          "contentSimilarityScore": 54.7783,
+          "topicSimilarityScore": 54.7783,
+          "genreSimilarityScore": 0,
+          "sharedTopics": [
+            "Dansk politik",
+            "politiske strategier",
+            "magtkampe"
+          ],
+          "similarityReason": "Fælles emner: Dansk politik, politiske strategier m.fl.",
           "candidateType": "content_similarity"
         },
         {
@@ -80567,29 +80544,6 @@
           "candidateType": "manual_supplementary"
         },
         {
-          "recommendationId": "rec-borgenudenfilter-e6073e0ee85fe3cc61c2c183c15f5196",
-          "existingId": "borgenudenfilter",
-          "title": "BorgenUdenFilter",
-          "publisher": "Podads",
-          "authoritativeMainSeries": "",
-          "primaryGenre": "Politik",
-          "secondaryGenre": "",
-          "topicsCanonical": [
-            "Dansk politik",
-            "politiske strategier",
-            "magtkampe"
-          ],
-          "editorialScore": 6.8,
-          "image": "https://image.simplecastcdn.com/images/f1c51995-4dfc-450b-a06c-79763c807d81/431c013e-60cd-4536-a36b-4b775fc26142/3000x3000/design-20uden-20navn.jpg?aid=rss_feed",
-          "link": "https://podcast24.dk/podcasts/borgenudenfilter",
-          "contentSimilarityScore": 0,
-          "topicSimilarityScore": 0,
-          "genreSimilarityScore": 0,
-          "sharedTopics": [],
-          "similarityReason": "",
-          "candidateType": "manual_supplementary"
-        },
-        {
           "recommendationId": "rec-de-stoerste-politiske-skandaler-9359c1d2741a4bca59fb1d8cb6d25a5b",
           "existingId": "de største politiske skandaler",
           "title": "De største politiske skandaler",
@@ -80613,22 +80567,22 @@
           "candidateType": "manual_supplementary"
         },
         {
-          "recommendationId": "rec-i-selskab-med-q-e4cf875986ea0a2ed9113a947428edd3",
-          "existingId": "i selskab med q",
-          "title": "I selskab med Q",
-          "publisher": "Podimo",
+          "recommendationId": "rec-under-gulvtaeppet-a149ff03a846f6767281b00f51f7454a",
+          "existingId": "under gulvtæppet",
+          "title": "Under gulvtæppet",
+          "publisher": "Jyllands-Posten",
           "authoritativeMainSeries": "",
-          "primaryGenre": "Underholdning",
-          "secondaryGenre": "Samfund",
+          "primaryGenre": "Samfund",
+          "secondaryGenre": "",
           "topicsCanonical": [
             "Dansk politik",
-            "mediemagt",
-            "politiske interviews",
-            "Sladder"
+            "Christiansborg",
+            "politiske strategier",
+            "magtkampe"
           ],
-          "editorialScore": 4.9,
-          "image": "https://img.podimo.com/podcast/6c64326a-3e2f-4119-a960-729934c7fd06?w=400&h=400&s=qMPaEnfGrNdzao1rxdkvBLEMb9Y",
-          "link": "https://podimo.com/dk/shows/i-selskab-med-q",
+          "editorialScore": null,
+          "image": "https://is1-ssl.mzstatic.com/image/thumb/Podcasts221/v4/23/22/6f/23226f84-11c0-904f-7bba-fa41bb0bbd07/mza_14647145236921041846.jpg/1200x1200bf-60.jpg",
+          "link": "https://podcasts.apple.com/dk/podcast/under-gulvt%C3%A6ppet/id1648053405",
           "contentSimilarityScore": 0,
           "topicSimilarityScore": 0,
           "genreSimilarityScore": 0,
@@ -80638,32 +80592,6 @@
         }
       ],
       "combinedSimilarResults": [
-        {
-          "recommendationId": "rec-borgenudenfilter-e6073e0ee85fe3cc61c2c183c15f5196",
-          "existingId": "borgenudenfilter",
-          "title": "BorgenUdenFilter",
-          "publisher": "Podads",
-          "authoritativeMainSeries": "",
-          "primaryGenre": "Politik",
-          "secondaryGenre": "",
-          "topicsCanonical": [
-            "Dansk politik",
-            "politiske strategier",
-            "magtkampe"
-          ],
-          "editorialScore": 6.8,
-          "image": "https://image.simplecastcdn.com/images/f1c51995-4dfc-450b-a06c-79763c807d81/431c013e-60cd-4536-a36b-4b775fc26142/3000x3000/design-20uden-20navn.jpg?aid=rss_feed",
-          "link": "https://podcast24.dk/podcasts/borgenudenfilter",
-          "contentSimilarityScore": 67.0586,
-          "topicSimilarityScore": 52.0586,
-          "genreSimilarityScore": 15,
-          "sharedTopics": [
-            "Dansk politik",
-            "politiske strategier"
-          ],
-          "similarityReason": "Fælles emner: Dansk politik og politiske strategier",
-          "candidateType": "content_similarity"
-        },
         {
           "recommendationId": "rec-oeverste-hylde-65353acd5fbed77742abf3e29fcce243",
           "existingId": "øverste hylde",
@@ -80714,6 +80642,34 @@
             "politiske strategier"
           ],
           "similarityReason": "Fælles emner: Dansk politik og politiske strategier",
+          "candidateType": "content_similarity"
+        },
+        {
+          "recommendationId": "rec-under-gulvtaeppet-a149ff03a846f6767281b00f51f7454a",
+          "existingId": "under gulvtæppet",
+          "title": "Under gulvtæppet",
+          "publisher": "Jyllands-Posten",
+          "authoritativeMainSeries": "",
+          "primaryGenre": "Samfund",
+          "secondaryGenre": "",
+          "topicsCanonical": [
+            "Dansk politik",
+            "Christiansborg",
+            "politiske strategier",
+            "magtkampe"
+          ],
+          "editorialScore": null,
+          "image": "https://is1-ssl.mzstatic.com/image/thumb/Podcasts221/v4/23/22/6f/23226f84-11c0-904f-7bba-fa41bb0bbd07/mza_14647145236921041846.jpg/1200x1200bf-60.jpg",
+          "link": "https://podcasts.apple.com/dk/podcast/under-gulvt%C3%A6ppet/id1648053405",
+          "contentSimilarityScore": 54.7783,
+          "topicSimilarityScore": 54.7783,
+          "genreSimilarityScore": 0,
+          "sharedTopics": [
+            "Dansk politik",
+            "politiske strategier",
+            "magtkampe"
+          ],
+          "similarityReason": "Fælles emner: Dansk politik, politiske strategier m.fl.",
           "candidateType": "content_similarity"
         },
         {
@@ -80842,32 +80798,6 @@
       ],
       "similarResults": [
         {
-          "recommendationId": "rec-borgenudenfilter-e6073e0ee85fe3cc61c2c183c15f5196",
-          "existingId": "borgenudenfilter",
-          "title": "BorgenUdenFilter",
-          "publisher": "Podads",
-          "authoritativeMainSeries": "",
-          "primaryGenre": "Politik",
-          "secondaryGenre": "",
-          "topicsCanonical": [
-            "Dansk politik",
-            "politiske strategier",
-            "magtkampe"
-          ],
-          "editorialScore": 6.8,
-          "image": "https://image.simplecastcdn.com/images/f1c51995-4dfc-450b-a06c-79763c807d81/431c013e-60cd-4536-a36b-4b775fc26142/3000x3000/design-20uden-20navn.jpg?aid=rss_feed",
-          "link": "https://podcast24.dk/podcasts/borgenudenfilter",
-          "contentSimilarityScore": 67.0586,
-          "topicSimilarityScore": 52.0586,
-          "genreSimilarityScore": 15,
-          "sharedTopics": [
-            "Dansk politik",
-            "politiske strategier"
-          ],
-          "similarityReason": "Fælles emner: Dansk politik og politiske strategier",
-          "candidateType": "content_similarity"
-        },
-        {
           "recommendationId": "rec-oeverste-hylde-65353acd5fbed77742abf3e29fcce243",
           "existingId": "øverste hylde",
           "title": "Øverste hylde",
@@ -80917,6 +80847,34 @@
             "politiske strategier"
           ],
           "similarityReason": "Fælles emner: Dansk politik og politiske strategier",
+          "candidateType": "content_similarity"
+        },
+        {
+          "recommendationId": "rec-under-gulvtaeppet-a149ff03a846f6767281b00f51f7454a",
+          "existingId": "under gulvtæppet",
+          "title": "Under gulvtæppet",
+          "publisher": "Jyllands-Posten",
+          "authoritativeMainSeries": "",
+          "primaryGenre": "Samfund",
+          "secondaryGenre": "",
+          "topicsCanonical": [
+            "Dansk politik",
+            "Christiansborg",
+            "politiske strategier",
+            "magtkampe"
+          ],
+          "editorialScore": null,
+          "image": "https://is1-ssl.mzstatic.com/image/thumb/Podcasts221/v4/23/22/6f/23226f84-11c0-904f-7bba-fa41bb0bbd07/mza_14647145236921041846.jpg/1200x1200bf-60.jpg",
+          "link": "https://podcasts.apple.com/dk/podcast/under-gulvt%C3%A6ppet/id1648053405",
+          "contentSimilarityScore": 54.7783,
+          "topicSimilarityScore": 54.7783,
+          "genreSimilarityScore": 0,
+          "sharedTopics": [
+            "Dansk politik",
+            "politiske strategier",
+            "magtkampe"
+          ],
+          "similarityReason": "Fælles emner: Dansk politik, politiske strategier m.fl.",
           "candidateType": "content_similarity"
         },
         {
@@ -81045,766 +81003,7 @@
       ],
       "sameSeriesResults": [],
       "automaticSimilarResultCount": 7,
-      "manualSupplementaryResultCount": 5,
-      "combinedSimilarResultCount": 8,
-      "similarResultCount": 8,
-      "sameSeriesResultCount": 0,
-      "showSimilarSection": true,
-      "showSameSeriesSection": false,
-      "warnings": []
-    },
-    "rec-borgenudenfilter-e6073e0ee85fe3cc61c2c183c15f5196": {
-      "recommendationId": "rec-borgenudenfilter-e6073e0ee85fe3cc61c2c183c15f5196",
-      "existingId": "borgenudenfilter",
-      "sourceLink": "https://podcast24.dk/podcasts/borgenudenfilter",
-      "title": "BorgenUdenFilter",
-      "authoritativeMainSeries": "",
-      "supplementarySimilaritiesRaw": "borgen unplugged; borgen unplugged 2 0; slotsholmen; dkpol; de største politiske skandaler; under gulvtæppet",
-      "automaticSimilarResults": [
-        {
-          "recommendationId": "rec-borgen-unplugged-d1cd8cda9eddb13e3793fabcd2acb5fa",
-          "existingId": "borgen unplugged",
-          "title": "Borgen Unplugged",
-          "publisher": "Qvortrup Media",
-          "authoritativeMainSeries": "",
-          "primaryGenre": "Politik",
-          "secondaryGenre": "",
-          "topicsCanonical": [
-            "Dansk politik",
-            "politiske strategier",
-            "meningsmålinger"
-          ],
-          "editorialScore": 8,
-          "image": "https://www.bog-ide.dk/cdn/shop/files/2587302_Cover.jpg?v=1773311890&width=1000",
-          "link": "http://www.borgenunplugged.dk/",
-          "contentSimilarityScore": 67.0586,
-          "topicSimilarityScore": 52.0586,
-          "genreSimilarityScore": 15,
-          "sharedTopics": [
-            "Dansk politik",
-            "politiske strategier"
-          ],
-          "similarityReason": "Fælles emner: Dansk politik og politiske strategier",
-          "candidateType": "content_similarity"
-        },
-        {
-          "recommendationId": "rec-oeverste-hylde-65353acd5fbed77742abf3e29fcce243",
-          "existingId": "øverste hylde",
-          "title": "Øverste hylde",
-          "publisher": "EB",
-          "authoritativeMainSeries": "",
-          "primaryGenre": "Politik",
-          "secondaryGenre": "",
-          "topicsCanonical": [
-            "Dansk politik",
-            "Christiansborg",
-            "politiske strategier"
-          ],
-          "editorialScore": 7,
-          "image": "https://i.scdn.co/image/ab6765630000ba8a5f419a95a85881cdd9eddf11",
-          "link": "https://open.spotify.com/show/06W9nrTr8mjRJOLl35FCy8",
-          "contentSimilarityScore": 65.6528,
-          "topicSimilarityScore": 50.6528,
-          "genreSimilarityScore": 15,
-          "sharedTopics": [
-            "Dansk politik",
-            "politiske strategier"
-          ],
-          "similarityReason": "Fælles emner: Dansk politik og politiske strategier",
-          "candidateType": "content_similarity"
-        },
-        {
-          "recommendationId": "rec-dkpol-8b770d19e1ad9a20d5047376fbb9f024",
-          "existingId": "dkpol",
-          "title": "#DKpol",
-          "publisher": "Altinget",
-          "authoritativeMainSeries": "",
-          "primaryGenre": "Politik",
-          "secondaryGenre": "",
-          "topicsCanonical": [
-            "Dansk politik",
-            "Christiansborg",
-            "politiske strategier"
-          ],
-          "editorialScore": 6.9,
-          "image": "https://i.scdn.co/image/ab6765630000ba8a2fc5859c846b3ed0245078a3",
-          "link": "https://www.altinget.dk/podcast/dkpol",
-          "contentSimilarityScore": 65.6528,
-          "topicSimilarityScore": 50.6528,
-          "genreSimilarityScore": 15,
-          "sharedTopics": [
-            "Dansk politik",
-            "politiske strategier"
-          ],
-          "similarityReason": "Fælles emner: Dansk politik og politiske strategier",
-          "candidateType": "content_similarity"
-        },
-        {
-          "recommendationId": "rec-under-gulvtaeppet-a149ff03a846f6767281b00f51f7454a",
-          "existingId": "under gulvtæppet",
-          "title": "Under gulvtæppet",
-          "publisher": "Jyllands-Posten",
-          "authoritativeMainSeries": "",
-          "primaryGenre": "Samfund",
-          "secondaryGenre": "",
-          "topicsCanonical": [
-            "Dansk politik",
-            "Christiansborg",
-            "politiske strategier",
-            "magtkampe"
-          ],
-          "editorialScore": null,
-          "image": "https://is1-ssl.mzstatic.com/image/thumb/Podcasts221/v4/23/22/6f/23226f84-11c0-904f-7bba-fa41bb0bbd07/mza_14647145236921041846.jpg/1200x1200bf-60.jpg",
-          "link": "https://podcasts.apple.com/dk/podcast/under-gulvt%C3%A6ppet/id1648053405",
-          "contentSimilarityScore": 54.7783,
-          "topicSimilarityScore": 54.7783,
-          "genreSimilarityScore": 0,
-          "sharedTopics": [
-            "Dansk politik",
-            "politiske strategier",
-            "magtkampe"
-          ],
-          "similarityReason": "Fælles emner: Dansk politik, politiske strategier m.fl.",
-          "candidateType": "content_similarity"
-        },
-        {
-          "recommendationId": "rec-fri-mads-4d58680f479389a4edf476a8259f26c9",
-          "existingId": "fri mads",
-          "title": "Fri Mads",
-          "publisher": "Frihedsbrevet",
-          "authoritativeMainSeries": "",
-          "primaryGenre": "Politik",
-          "secondaryGenre": "Underholdning",
-          "topicsCanonical": [
-            "Dansk politik",
-            "politisk satire",
-            "Mediekritik"
-          ],
-          "editorialScore": 8.1,
-          "image": "https://frihedsbrevet.dk/app/uploads/2021/06/mads_brugger_byline-768x768.png",
-          "link": "https://frihedsbrevet.dk/nyhedsbrev/fri-mads/",
-          "contentSimilarityScore": 54.1803,
-          "topicSimilarityScore": 39.1803,
-          "genreSimilarityScore": 15,
-          "sharedTopics": [
-            "Dansk politik"
-          ],
-          "similarityReason": "Fælles emne: Dansk politik",
-          "candidateType": "content_similarity"
-        },
-        {
-          "recommendationId": "rec-verdens-klogeste-land-2c3eb46403b1b5f38ac1c980865308d4",
-          "existingId": "verdens klogeste land",
-          "title": "Verdens klogeste land",
-          "publisher": "Podimo",
-          "authoritativeMainSeries": "",
-          "primaryGenre": "Politik",
-          "secondaryGenre": "Underholdning",
-          "topicsCanonical": [
-            "Dansk politik",
-            "politisk satire",
-            "samfundsdebat"
-          ],
-          "editorialScore": 8.1,
-          "image": "https://img.podimo.com/podcast/b77e7dca-d2ca-459d-9f40-b0d8964c17df?w=400&h=400&s=0UIL8eAo84z_WzUEqJCROvBCliM",
-          "link": "https://podimo.com/dk/shows/verdensklogesteland",
-          "contentSimilarityScore": 54.1803,
-          "topicSimilarityScore": 39.1803,
-          "genreSimilarityScore": 15,
-          "sharedTopics": [
-            "Dansk politik"
-          ],
-          "similarityReason": "Fælles emne: Dansk politik",
-          "candidateType": "content_similarity"
-        },
-        {
-          "recommendationId": "rec-sig-det-loegn-776f5212d06ca5649c4083f4887862e7",
-          "existingId": "sig det løgn",
-          "title": "Sig det' løgn",
-          "publisher": "Radio llll",
-          "authoritativeMainSeries": "",
-          "primaryGenre": "Politik",
-          "secondaryGenre": "Underholdning",
-          "topicsCanonical": [
-            "Dansk politik",
-            "politisk spin",
-            "politisk satire"
-          ],
-          "editorialScore": 8,
-          "image": "https://radio4data.imgix.net/2025/02/sig_det_loegn_podcastikon.png?width=1000&height=1000&fit=crop",
-          "link": "https://radio4.dk/podcasts/sig-det-er-loegn",
-          "contentSimilarityScore": 54.1803,
-          "topicSimilarityScore": 39.1803,
-          "genreSimilarityScore": 15,
-          "sharedTopics": [
-            "Dansk politik"
-          ],
-          "similarityReason": "Fælles emne: Dansk politik",
-          "candidateType": "content_similarity"
-        },
-        {
-          "recommendationId": "rec-ingen-kommentarer-3f98c59441cacb1efcbc32e81602b64a",
-          "existingId": "ingen kommentarer",
-          "title": "Ingen kommentarer",
-          "publisher": "Ekstrabladet",
-          "authoritativeMainSeries": "",
-          "primaryGenre": "Politik",
-          "secondaryGenre": "Underholdning",
-          "topicsCanonical": [
-            "Dansk politik",
-            "politisk satire",
-            "politisk kommunikation"
-          ],
-          "editorialScore": 7.7,
-          "image": "https://i.scdn.co/image/ab6765630000ba8abf4ddf0c1f2ea83f8b14dc1a",
-          "link": "https://open.spotify.com/show/7v50nl0L0COymS1n7op9yU",
-          "contentSimilarityScore": 54.1803,
-          "topicSimilarityScore": 39.1803,
-          "genreSimilarityScore": 15,
-          "sharedTopics": [
-            "Dansk politik"
-          ],
-          "similarityReason": "Fælles emne: Dansk politik",
-          "candidateType": "content_similarity"
-        }
-      ],
-      "manualSupplementaryResults": [
-        {
-          "recommendationId": "rec-borgen-unplugged-d1cd8cda9eddb13e3793fabcd2acb5fa",
-          "existingId": "borgen unplugged",
-          "title": "Borgen Unplugged",
-          "publisher": "Qvortrup Media",
-          "authoritativeMainSeries": "",
-          "primaryGenre": "Politik",
-          "secondaryGenre": "",
-          "topicsCanonical": [
-            "Dansk politik",
-            "politiske strategier",
-            "meningsmålinger"
-          ],
-          "editorialScore": 8,
-          "image": "https://www.bog-ide.dk/cdn/shop/files/2587302_Cover.jpg?v=1773311890&width=1000",
-          "link": "http://www.borgenunplugged.dk/",
-          "contentSimilarityScore": 0,
-          "topicSimilarityScore": 0,
-          "genreSimilarityScore": 0,
-          "sharedTopics": [],
-          "similarityReason": "",
-          "candidateType": "manual_supplementary"
-        },
-        {
-          "recommendationId": "rec-borgen-unplugged-2-0-e4490f53c1587112a8c02bcb1c448526",
-          "existingId": "borgen unplugged 2 0",
-          "title": "Borgen Unplugged",
-          "publisher": "Qvortrup Media",
-          "authoritativeMainSeries": "",
-          "primaryGenre": "Politik",
-          "secondaryGenre": "",
-          "topicsCanonical": [
-            "Dansk politik",
-            "politiske strategier",
-            "Christiansborg"
-          ],
-          "editorialScore": 7.8,
-          "image": "https://www.bog-ide.dk/cdn/shop/files/2587302_Cover.jpg?v=1773311890&width=1000",
-          "link": "https://www.borgenunplugged.dk/",
-          "contentSimilarityScore": 0,
-          "topicSimilarityScore": 0,
-          "genreSimilarityScore": 0,
-          "sharedTopics": [],
-          "similarityReason": "",
-          "candidateType": "manual_supplementary"
-        },
-        {
-          "recommendationId": "rec-slotsholmen-dcd6149e3ddf36cd7bf2dde84c34208d",
-          "existingId": "slotsholmen",
-          "title": "Slotsholmen",
-          "publisher": "DR",
-          "authoritativeMainSeries": "",
-          "primaryGenre": "Politik",
-          "secondaryGenre": "",
-          "topicsCanonical": [
-            "Dansk politik",
-            "Christiansborg",
-            "politiske forhandlinger"
-          ],
-          "editorialScore": 7.7,
-          "image": "https://api.dr.dk/podcasts/v1/images/urn:dr:podcast:image:66f2b874f0388a679953065a.jpg",
-          "link": "https://www.google.com/search?q=slotsholmen+dr&rlz=1C1GCEB_enDK1041DK1041&oq=slotsholmen+dr&aqs=chrome..69i57.4430j0j4&sourceid=chrome&ie=UTF-8",
-          "contentSimilarityScore": 0,
-          "topicSimilarityScore": 0,
-          "genreSimilarityScore": 0,
-          "sharedTopics": [],
-          "similarityReason": "",
-          "candidateType": "manual_supplementary"
-        },
-        {
-          "recommendationId": "rec-de-stoerste-politiske-skandaler-9359c1d2741a4bca59fb1d8cb6d25a5b",
-          "existingId": "de største politiske skandaler",
-          "title": "De største politiske skandaler",
-          "publisher": "Podimo",
-          "authoritativeMainSeries": "",
-          "primaryGenre": "Politik",
-          "secondaryGenre": "Historie",
-          "topicsCanonical": [
-            "politiske skandaler",
-            "magtspil",
-            "offentlig tillid"
-          ],
-          "editorialScore": 7.2,
-          "image": "https://img.podimo.com/podcast/f017419c-27a3-405b-bc9f-166d27194341?w=400&h=400&s=czojIsanJlk8f1cT5Z8Zjq9NSk8",
-          "link": "https://podimo.com/dk/shows/de-storste-danske-politiske-skandaler",
-          "contentSimilarityScore": 0,
-          "topicSimilarityScore": 0,
-          "genreSimilarityScore": 0,
-          "sharedTopics": [],
-          "similarityReason": "",
-          "candidateType": "manual_supplementary"
-        },
-        {
-          "recommendationId": "rec-under-gulvtaeppet-a149ff03a846f6767281b00f51f7454a",
-          "existingId": "under gulvtæppet",
-          "title": "Under gulvtæppet",
-          "publisher": "Jyllands-Posten",
-          "authoritativeMainSeries": "",
-          "primaryGenre": "Samfund",
-          "secondaryGenre": "",
-          "topicsCanonical": [
-            "Dansk politik",
-            "Christiansborg",
-            "politiske strategier",
-            "magtkampe"
-          ],
-          "editorialScore": null,
-          "image": "https://is1-ssl.mzstatic.com/image/thumb/Podcasts221/v4/23/22/6f/23226f84-11c0-904f-7bba-fa41bb0bbd07/mza_14647145236921041846.jpg/1200x1200bf-60.jpg",
-          "link": "https://podcasts.apple.com/dk/podcast/under-gulvt%C3%A6ppet/id1648053405",
-          "contentSimilarityScore": 0,
-          "topicSimilarityScore": 0,
-          "genreSimilarityScore": 0,
-          "sharedTopics": [],
-          "similarityReason": "",
-          "candidateType": "manual_supplementary"
-        }
-      ],
-      "combinedSimilarResults": [
-        {
-          "recommendationId": "rec-borgen-unplugged-d1cd8cda9eddb13e3793fabcd2acb5fa",
-          "existingId": "borgen unplugged",
-          "title": "Borgen Unplugged",
-          "publisher": "Qvortrup Media",
-          "authoritativeMainSeries": "",
-          "primaryGenre": "Politik",
-          "secondaryGenre": "",
-          "topicsCanonical": [
-            "Dansk politik",
-            "politiske strategier",
-            "meningsmålinger"
-          ],
-          "editorialScore": 8,
-          "image": "https://www.bog-ide.dk/cdn/shop/files/2587302_Cover.jpg?v=1773311890&width=1000",
-          "link": "http://www.borgenunplugged.dk/",
-          "contentSimilarityScore": 67.0586,
-          "topicSimilarityScore": 52.0586,
-          "genreSimilarityScore": 15,
-          "sharedTopics": [
-            "Dansk politik",
-            "politiske strategier"
-          ],
-          "similarityReason": "Fælles emner: Dansk politik og politiske strategier",
-          "candidateType": "content_similarity"
-        },
-        {
-          "recommendationId": "rec-oeverste-hylde-65353acd5fbed77742abf3e29fcce243",
-          "existingId": "øverste hylde",
-          "title": "Øverste hylde",
-          "publisher": "EB",
-          "authoritativeMainSeries": "",
-          "primaryGenre": "Politik",
-          "secondaryGenre": "",
-          "topicsCanonical": [
-            "Dansk politik",
-            "Christiansborg",
-            "politiske strategier"
-          ],
-          "editorialScore": 7,
-          "image": "https://i.scdn.co/image/ab6765630000ba8a5f419a95a85881cdd9eddf11",
-          "link": "https://open.spotify.com/show/06W9nrTr8mjRJOLl35FCy8",
-          "contentSimilarityScore": 65.6528,
-          "topicSimilarityScore": 50.6528,
-          "genreSimilarityScore": 15,
-          "sharedTopics": [
-            "Dansk politik",
-            "politiske strategier"
-          ],
-          "similarityReason": "Fælles emner: Dansk politik og politiske strategier",
-          "candidateType": "content_similarity"
-        },
-        {
-          "recommendationId": "rec-dkpol-8b770d19e1ad9a20d5047376fbb9f024",
-          "existingId": "dkpol",
-          "title": "#DKpol",
-          "publisher": "Altinget",
-          "authoritativeMainSeries": "",
-          "primaryGenre": "Politik",
-          "secondaryGenre": "",
-          "topicsCanonical": [
-            "Dansk politik",
-            "Christiansborg",
-            "politiske strategier"
-          ],
-          "editorialScore": 6.9,
-          "image": "https://i.scdn.co/image/ab6765630000ba8a2fc5859c846b3ed0245078a3",
-          "link": "https://www.altinget.dk/podcast/dkpol",
-          "contentSimilarityScore": 65.6528,
-          "topicSimilarityScore": 50.6528,
-          "genreSimilarityScore": 15,
-          "sharedTopics": [
-            "Dansk politik",
-            "politiske strategier"
-          ],
-          "similarityReason": "Fælles emner: Dansk politik og politiske strategier",
-          "candidateType": "content_similarity"
-        },
-        {
-          "recommendationId": "rec-under-gulvtaeppet-a149ff03a846f6767281b00f51f7454a",
-          "existingId": "under gulvtæppet",
-          "title": "Under gulvtæppet",
-          "publisher": "Jyllands-Posten",
-          "authoritativeMainSeries": "",
-          "primaryGenre": "Samfund",
-          "secondaryGenre": "",
-          "topicsCanonical": [
-            "Dansk politik",
-            "Christiansborg",
-            "politiske strategier",
-            "magtkampe"
-          ],
-          "editorialScore": null,
-          "image": "https://is1-ssl.mzstatic.com/image/thumb/Podcasts221/v4/23/22/6f/23226f84-11c0-904f-7bba-fa41bb0bbd07/mza_14647145236921041846.jpg/1200x1200bf-60.jpg",
-          "link": "https://podcasts.apple.com/dk/podcast/under-gulvt%C3%A6ppet/id1648053405",
-          "contentSimilarityScore": 54.7783,
-          "topicSimilarityScore": 54.7783,
-          "genreSimilarityScore": 0,
-          "sharedTopics": [
-            "Dansk politik",
-            "politiske strategier",
-            "magtkampe"
-          ],
-          "similarityReason": "Fælles emner: Dansk politik, politiske strategier m.fl.",
-          "candidateType": "content_similarity"
-        },
-        {
-          "recommendationId": "rec-fri-mads-4d58680f479389a4edf476a8259f26c9",
-          "existingId": "fri mads",
-          "title": "Fri Mads",
-          "publisher": "Frihedsbrevet",
-          "authoritativeMainSeries": "",
-          "primaryGenre": "Politik",
-          "secondaryGenre": "Underholdning",
-          "topicsCanonical": [
-            "Dansk politik",
-            "politisk satire",
-            "Mediekritik"
-          ],
-          "editorialScore": 8.1,
-          "image": "https://frihedsbrevet.dk/app/uploads/2021/06/mads_brugger_byline-768x768.png",
-          "link": "https://frihedsbrevet.dk/nyhedsbrev/fri-mads/",
-          "contentSimilarityScore": 54.1803,
-          "topicSimilarityScore": 39.1803,
-          "genreSimilarityScore": 15,
-          "sharedTopics": [
-            "Dansk politik"
-          ],
-          "similarityReason": "Fælles emne: Dansk politik",
-          "candidateType": "content_similarity"
-        },
-        {
-          "recommendationId": "rec-verdens-klogeste-land-2c3eb46403b1b5f38ac1c980865308d4",
-          "existingId": "verdens klogeste land",
-          "title": "Verdens klogeste land",
-          "publisher": "Podimo",
-          "authoritativeMainSeries": "",
-          "primaryGenre": "Politik",
-          "secondaryGenre": "Underholdning",
-          "topicsCanonical": [
-            "Dansk politik",
-            "politisk satire",
-            "samfundsdebat"
-          ],
-          "editorialScore": 8.1,
-          "image": "https://img.podimo.com/podcast/b77e7dca-d2ca-459d-9f40-b0d8964c17df?w=400&h=400&s=0UIL8eAo84z_WzUEqJCROvBCliM",
-          "link": "https://podimo.com/dk/shows/verdensklogesteland",
-          "contentSimilarityScore": 54.1803,
-          "topicSimilarityScore": 39.1803,
-          "genreSimilarityScore": 15,
-          "sharedTopics": [
-            "Dansk politik"
-          ],
-          "similarityReason": "Fælles emne: Dansk politik",
-          "candidateType": "content_similarity"
-        },
-        {
-          "recommendationId": "rec-sig-det-loegn-776f5212d06ca5649c4083f4887862e7",
-          "existingId": "sig det løgn",
-          "title": "Sig det' løgn",
-          "publisher": "Radio llll",
-          "authoritativeMainSeries": "",
-          "primaryGenre": "Politik",
-          "secondaryGenre": "Underholdning",
-          "topicsCanonical": [
-            "Dansk politik",
-            "politisk spin",
-            "politisk satire"
-          ],
-          "editorialScore": 8,
-          "image": "https://radio4data.imgix.net/2025/02/sig_det_loegn_podcastikon.png?width=1000&height=1000&fit=crop",
-          "link": "https://radio4.dk/podcasts/sig-det-er-loegn",
-          "contentSimilarityScore": 54.1803,
-          "topicSimilarityScore": 39.1803,
-          "genreSimilarityScore": 15,
-          "sharedTopics": [
-            "Dansk politik"
-          ],
-          "similarityReason": "Fælles emne: Dansk politik",
-          "candidateType": "content_similarity"
-        },
-        {
-          "recommendationId": "rec-ingen-kommentarer-3f98c59441cacb1efcbc32e81602b64a",
-          "existingId": "ingen kommentarer",
-          "title": "Ingen kommentarer",
-          "publisher": "Ekstrabladet",
-          "authoritativeMainSeries": "",
-          "primaryGenre": "Politik",
-          "secondaryGenre": "Underholdning",
-          "topicsCanonical": [
-            "Dansk politik",
-            "politisk satire",
-            "politisk kommunikation"
-          ],
-          "editorialScore": 7.7,
-          "image": "https://i.scdn.co/image/ab6765630000ba8abf4ddf0c1f2ea83f8b14dc1a",
-          "link": "https://open.spotify.com/show/7v50nl0L0COymS1n7op9yU",
-          "contentSimilarityScore": 54.1803,
-          "topicSimilarityScore": 39.1803,
-          "genreSimilarityScore": 15,
-          "sharedTopics": [
-            "Dansk politik"
-          ],
-          "similarityReason": "Fælles emne: Dansk politik",
-          "candidateType": "content_similarity"
-        }
-      ],
-      "similarResults": [
-        {
-          "recommendationId": "rec-borgen-unplugged-d1cd8cda9eddb13e3793fabcd2acb5fa",
-          "existingId": "borgen unplugged",
-          "title": "Borgen Unplugged",
-          "publisher": "Qvortrup Media",
-          "authoritativeMainSeries": "",
-          "primaryGenre": "Politik",
-          "secondaryGenre": "",
-          "topicsCanonical": [
-            "Dansk politik",
-            "politiske strategier",
-            "meningsmålinger"
-          ],
-          "editorialScore": 8,
-          "image": "https://www.bog-ide.dk/cdn/shop/files/2587302_Cover.jpg?v=1773311890&width=1000",
-          "link": "http://www.borgenunplugged.dk/",
-          "contentSimilarityScore": 67.0586,
-          "topicSimilarityScore": 52.0586,
-          "genreSimilarityScore": 15,
-          "sharedTopics": [
-            "Dansk politik",
-            "politiske strategier"
-          ],
-          "similarityReason": "Fælles emner: Dansk politik og politiske strategier",
-          "candidateType": "content_similarity"
-        },
-        {
-          "recommendationId": "rec-oeverste-hylde-65353acd5fbed77742abf3e29fcce243",
-          "existingId": "øverste hylde",
-          "title": "Øverste hylde",
-          "publisher": "EB",
-          "authoritativeMainSeries": "",
-          "primaryGenre": "Politik",
-          "secondaryGenre": "",
-          "topicsCanonical": [
-            "Dansk politik",
-            "Christiansborg",
-            "politiske strategier"
-          ],
-          "editorialScore": 7,
-          "image": "https://i.scdn.co/image/ab6765630000ba8a5f419a95a85881cdd9eddf11",
-          "link": "https://open.spotify.com/show/06W9nrTr8mjRJOLl35FCy8",
-          "contentSimilarityScore": 65.6528,
-          "topicSimilarityScore": 50.6528,
-          "genreSimilarityScore": 15,
-          "sharedTopics": [
-            "Dansk politik",
-            "politiske strategier"
-          ],
-          "similarityReason": "Fælles emner: Dansk politik og politiske strategier",
-          "candidateType": "content_similarity"
-        },
-        {
-          "recommendationId": "rec-dkpol-8b770d19e1ad9a20d5047376fbb9f024",
-          "existingId": "dkpol",
-          "title": "#DKpol",
-          "publisher": "Altinget",
-          "authoritativeMainSeries": "",
-          "primaryGenre": "Politik",
-          "secondaryGenre": "",
-          "topicsCanonical": [
-            "Dansk politik",
-            "Christiansborg",
-            "politiske strategier"
-          ],
-          "editorialScore": 6.9,
-          "image": "https://i.scdn.co/image/ab6765630000ba8a2fc5859c846b3ed0245078a3",
-          "link": "https://www.altinget.dk/podcast/dkpol",
-          "contentSimilarityScore": 65.6528,
-          "topicSimilarityScore": 50.6528,
-          "genreSimilarityScore": 15,
-          "sharedTopics": [
-            "Dansk politik",
-            "politiske strategier"
-          ],
-          "similarityReason": "Fælles emner: Dansk politik og politiske strategier",
-          "candidateType": "content_similarity"
-        },
-        {
-          "recommendationId": "rec-under-gulvtaeppet-a149ff03a846f6767281b00f51f7454a",
-          "existingId": "under gulvtæppet",
-          "title": "Under gulvtæppet",
-          "publisher": "Jyllands-Posten",
-          "authoritativeMainSeries": "",
-          "primaryGenre": "Samfund",
-          "secondaryGenre": "",
-          "topicsCanonical": [
-            "Dansk politik",
-            "Christiansborg",
-            "politiske strategier",
-            "magtkampe"
-          ],
-          "editorialScore": null,
-          "image": "https://is1-ssl.mzstatic.com/image/thumb/Podcasts221/v4/23/22/6f/23226f84-11c0-904f-7bba-fa41bb0bbd07/mza_14647145236921041846.jpg/1200x1200bf-60.jpg",
-          "link": "https://podcasts.apple.com/dk/podcast/under-gulvt%C3%A6ppet/id1648053405",
-          "contentSimilarityScore": 54.7783,
-          "topicSimilarityScore": 54.7783,
-          "genreSimilarityScore": 0,
-          "sharedTopics": [
-            "Dansk politik",
-            "politiske strategier",
-            "magtkampe"
-          ],
-          "similarityReason": "Fælles emner: Dansk politik, politiske strategier m.fl.",
-          "candidateType": "content_similarity"
-        },
-        {
-          "recommendationId": "rec-fri-mads-4d58680f479389a4edf476a8259f26c9",
-          "existingId": "fri mads",
-          "title": "Fri Mads",
-          "publisher": "Frihedsbrevet",
-          "authoritativeMainSeries": "",
-          "primaryGenre": "Politik",
-          "secondaryGenre": "Underholdning",
-          "topicsCanonical": [
-            "Dansk politik",
-            "politisk satire",
-            "Mediekritik"
-          ],
-          "editorialScore": 8.1,
-          "image": "https://frihedsbrevet.dk/app/uploads/2021/06/mads_brugger_byline-768x768.png",
-          "link": "https://frihedsbrevet.dk/nyhedsbrev/fri-mads/",
-          "contentSimilarityScore": 54.1803,
-          "topicSimilarityScore": 39.1803,
-          "genreSimilarityScore": 15,
-          "sharedTopics": [
-            "Dansk politik"
-          ],
-          "similarityReason": "Fælles emne: Dansk politik",
-          "candidateType": "content_similarity"
-        },
-        {
-          "recommendationId": "rec-verdens-klogeste-land-2c3eb46403b1b5f38ac1c980865308d4",
-          "existingId": "verdens klogeste land",
-          "title": "Verdens klogeste land",
-          "publisher": "Podimo",
-          "authoritativeMainSeries": "",
-          "primaryGenre": "Politik",
-          "secondaryGenre": "Underholdning",
-          "topicsCanonical": [
-            "Dansk politik",
-            "politisk satire",
-            "samfundsdebat"
-          ],
-          "editorialScore": 8.1,
-          "image": "https://img.podimo.com/podcast/b77e7dca-d2ca-459d-9f40-b0d8964c17df?w=400&h=400&s=0UIL8eAo84z_WzUEqJCROvBCliM",
-          "link": "https://podimo.com/dk/shows/verdensklogesteland",
-          "contentSimilarityScore": 54.1803,
-          "topicSimilarityScore": 39.1803,
-          "genreSimilarityScore": 15,
-          "sharedTopics": [
-            "Dansk politik"
-          ],
-          "similarityReason": "Fælles emne: Dansk politik",
-          "candidateType": "content_similarity"
-        },
-        {
-          "recommendationId": "rec-sig-det-loegn-776f5212d06ca5649c4083f4887862e7",
-          "existingId": "sig det løgn",
-          "title": "Sig det' løgn",
-          "publisher": "Radio llll",
-          "authoritativeMainSeries": "",
-          "primaryGenre": "Politik",
-          "secondaryGenre": "Underholdning",
-          "topicsCanonical": [
-            "Dansk politik",
-            "politisk spin",
-            "politisk satire"
-          ],
-          "editorialScore": 8,
-          "image": "https://radio4data.imgix.net/2025/02/sig_det_loegn_podcastikon.png?width=1000&height=1000&fit=crop",
-          "link": "https://radio4.dk/podcasts/sig-det-er-loegn",
-          "contentSimilarityScore": 54.1803,
-          "topicSimilarityScore": 39.1803,
-          "genreSimilarityScore": 15,
-          "sharedTopics": [
-            "Dansk politik"
-          ],
-          "similarityReason": "Fælles emne: Dansk politik",
-          "candidateType": "content_similarity"
-        },
-        {
-          "recommendationId": "rec-ingen-kommentarer-3f98c59441cacb1efcbc32e81602b64a",
-          "existingId": "ingen kommentarer",
-          "title": "Ingen kommentarer",
-          "publisher": "Ekstrabladet",
-          "authoritativeMainSeries": "",
-          "primaryGenre": "Politik",
-          "secondaryGenre": "Underholdning",
-          "topicsCanonical": [
-            "Dansk politik",
-            "politisk satire",
-            "politisk kommunikation"
-          ],
-          "editorialScore": 7.7,
-          "image": "https://i.scdn.co/image/ab6765630000ba8abf4ddf0c1f2ea83f8b14dc1a",
-          "link": "https://open.spotify.com/show/7v50nl0L0COymS1n7op9yU",
-          "contentSimilarityScore": 54.1803,
-          "topicSimilarityScore": 39.1803,
-          "genreSimilarityScore": 15,
-          "sharedTopics": [
-            "Dansk politik"
-          ],
-          "similarityReason": "Fælles emne: Dansk politik",
-          "candidateType": "content_similarity"
-        }
-      ],
-      "sameSeriesResults": [],
-      "automaticSimilarResultCount": 8,
-      "manualSupplementaryResultCount": 5,
+      "manualSupplementaryResultCount": 4,
       "combinedSimilarResultCount": 8,
       "similarResultCount": 8,
       "sameSeriesResultCount": 0,
@@ -123192,29 +122391,6 @@
           "candidateType": "manual_supplementary"
         },
         {
-          "recommendationId": "rec-borgen-unplugged-d1cd8cda9eddb13e3793fabcd2acb5fa",
-          "existingId": "borgen unplugged",
-          "title": "Borgen Unplugged",
-          "publisher": "Qvortrup Media",
-          "authoritativeMainSeries": "",
-          "primaryGenre": "Politik",
-          "secondaryGenre": "",
-          "topicsCanonical": [
-            "Dansk politik",
-            "politiske strategier",
-            "meningsmålinger"
-          ],
-          "editorialScore": 8,
-          "image": "https://www.bog-ide.dk/cdn/shop/files/2587302_Cover.jpg?v=1773311890&width=1000",
-          "link": "http://www.borgenunplugged.dk/",
-          "contentSimilarityScore": 0,
-          "topicSimilarityScore": 0,
-          "genreSimilarityScore": 0,
-          "sharedTopics": [],
-          "similarityReason": "",
-          "candidateType": "manual_supplementary"
-        },
-        {
           "recommendationId": "rec-under-gulvtaeppet-a149ff03a846f6767281b00f51f7454a",
           "existingId": "under gulvtæppet",
           "title": "Under gulvtæppet",
@@ -123466,21 +122642,22 @@
           "candidateType": "manual_supplementary"
         },
         {
-          "recommendationId": "rec-borgen-unplugged-d1cd8cda9eddb13e3793fabcd2acb5fa",
-          "existingId": "borgen unplugged",
-          "title": "Borgen Unplugged",
-          "publisher": "Qvortrup Media",
+          "recommendationId": "rec-under-gulvtaeppet-a149ff03a846f6767281b00f51f7454a",
+          "existingId": "under gulvtæppet",
+          "title": "Under gulvtæppet",
+          "publisher": "Jyllands-Posten",
           "authoritativeMainSeries": "",
-          "primaryGenre": "Politik",
+          "primaryGenre": "Samfund",
           "secondaryGenre": "",
           "topicsCanonical": [
             "Dansk politik",
+            "Christiansborg",
             "politiske strategier",
-            "meningsmålinger"
+            "magtkampe"
           ],
-          "editorialScore": 8,
-          "image": "https://www.bog-ide.dk/cdn/shop/files/2587302_Cover.jpg?v=1773311890&width=1000",
-          "link": "http://www.borgenunplugged.dk/",
+          "editorialScore": null,
+          "image": "https://is1-ssl.mzstatic.com/image/thumb/Podcasts221/v4/23/22/6f/23226f84-11c0-904f-7bba-fa41bb0bbd07/mza_14647145236921041846.jpg/1200x1200bf-60.jpg",
+          "link": "https://podcasts.apple.com/dk/podcast/under-gulvt%C3%A6ppet/id1648053405",
           "contentSimilarityScore": 0,
           "topicSimilarityScore": 0,
           "genreSimilarityScore": 0,
@@ -123669,21 +122846,22 @@
           "candidateType": "manual_supplementary"
         },
         {
-          "recommendationId": "rec-borgen-unplugged-d1cd8cda9eddb13e3793fabcd2acb5fa",
-          "existingId": "borgen unplugged",
-          "title": "Borgen Unplugged",
-          "publisher": "Qvortrup Media",
+          "recommendationId": "rec-under-gulvtaeppet-a149ff03a846f6767281b00f51f7454a",
+          "existingId": "under gulvtæppet",
+          "title": "Under gulvtæppet",
+          "publisher": "Jyllands-Posten",
           "authoritativeMainSeries": "",
-          "primaryGenre": "Politik",
+          "primaryGenre": "Samfund",
           "secondaryGenre": "",
           "topicsCanonical": [
             "Dansk politik",
+            "Christiansborg",
             "politiske strategier",
-            "meningsmålinger"
+            "magtkampe"
           ],
-          "editorialScore": 8,
-          "image": "https://www.bog-ide.dk/cdn/shop/files/2587302_Cover.jpg?v=1773311890&width=1000",
-          "link": "http://www.borgenunplugged.dk/",
+          "editorialScore": null,
+          "image": "https://is1-ssl.mzstatic.com/image/thumb/Podcasts221/v4/23/22/6f/23226f84-11c0-904f-7bba-fa41bb0bbd07/mza_14647145236921041846.jpg/1200x1200bf-60.jpg",
+          "link": "https://podcasts.apple.com/dk/podcast/under-gulvt%C3%A6ppet/id1648053405",
           "contentSimilarityScore": 0,
           "topicSimilarityScore": 0,
           "genreSimilarityScore": 0,
@@ -123694,7 +122872,7 @@
       ],
       "sameSeriesResults": [],
       "automaticSimilarResultCount": 6,
-      "manualSupplementaryResultCount": 5,
+      "manualSupplementaryResultCount": 4,
       "combinedSimilarResultCount": 8,
       "similarResultCount": 8,
       "sameSeriesResultCount": 0,
@@ -171454,29 +170632,6 @@
           "candidateType": "manual_supplementary"
         },
         {
-          "recommendationId": "rec-borgen-unplugged-d1cd8cda9eddb13e3793fabcd2acb5fa",
-          "existingId": "borgen unplugged",
-          "title": "Borgen Unplugged",
-          "publisher": "Qvortrup Media",
-          "authoritativeMainSeries": "",
-          "primaryGenre": "Politik",
-          "secondaryGenre": "",
-          "topicsCanonical": [
-            "Dansk politik",
-            "politiske strategier",
-            "meningsmålinger"
-          ],
-          "editorialScore": 8,
-          "image": "https://www.bog-ide.dk/cdn/shop/files/2587302_Cover.jpg?v=1773311890&width=1000",
-          "link": "http://www.borgenunplugged.dk/",
-          "contentSimilarityScore": 0,
-          "topicSimilarityScore": 0,
-          "genreSimilarityScore": 0,
-          "sharedTopics": [],
-          "similarityReason": "",
-          "candidateType": "manual_supplementary"
-        },
-        {
           "recommendationId": "rec-under-gulvtaeppet-a149ff03a846f6767281b00f51f7454a",
           "existingId": "under gulvtæppet",
           "title": "Under gulvtæppet",
@@ -171985,7 +171140,7 @@
       ],
       "sameSeriesResults": [],
       "automaticSimilarResultCount": 8,
-      "manualSupplementaryResultCount": 7,
+      "manualSupplementaryResultCount": 6,
       "combinedSimilarResultCount": 8,
       "similarResultCount": 8,
       "sameSeriesResultCount": 0,
@@ -259395,31 +258550,6 @@
           "candidateType": "content_similarity"
         },
         {
-          "recommendationId": "rec-borgen-unplugged-d1cd8cda9eddb13e3793fabcd2acb5fa",
-          "existingId": "borgen unplugged",
-          "title": "Borgen Unplugged",
-          "publisher": "Qvortrup Media",
-          "authoritativeMainSeries": "",
-          "primaryGenre": "Politik",
-          "secondaryGenre": "",
-          "topicsCanonical": [
-            "Dansk politik",
-            "politiske strategier",
-            "meningsmålinger"
-          ],
-          "editorialScore": 8,
-          "image": "https://www.bog-ide.dk/cdn/shop/files/2587302_Cover.jpg?v=1773311890&width=1000",
-          "link": "http://www.borgenunplugged.dk/",
-          "contentSimilarityScore": 54.1803,
-          "topicSimilarityScore": 39.1803,
-          "genreSimilarityScore": 15,
-          "sharedTopics": [
-            "Dansk politik"
-          ],
-          "similarityReason": "Fælles emne: Dansk politik",
-          "candidateType": "content_similarity"
-        },
-        {
           "recommendationId": "rec-slotsholmen-dcd6149e3ddf36cd7bf2dde84c34208d",
           "existingId": "slotsholmen",
           "title": "Slotsholmen",
@@ -259674,31 +258804,6 @@
           "candidateType": "content_similarity"
         },
         {
-          "recommendationId": "rec-borgen-unplugged-d1cd8cda9eddb13e3793fabcd2acb5fa",
-          "existingId": "borgen unplugged",
-          "title": "Borgen Unplugged",
-          "publisher": "Qvortrup Media",
-          "authoritativeMainSeries": "",
-          "primaryGenre": "Politik",
-          "secondaryGenre": "",
-          "topicsCanonical": [
-            "Dansk politik",
-            "politiske strategier",
-            "meningsmålinger"
-          ],
-          "editorialScore": 8,
-          "image": "https://www.bog-ide.dk/cdn/shop/files/2587302_Cover.jpg?v=1773311890&width=1000",
-          "link": "http://www.borgenunplugged.dk/",
-          "contentSimilarityScore": 54.1803,
-          "topicSimilarityScore": 39.1803,
-          "genreSimilarityScore": 15,
-          "sharedTopics": [
-            "Dansk politik"
-          ],
-          "similarityReason": "Fælles emne: Dansk politik",
-          "candidateType": "content_similarity"
-        },
-        {
           "recommendationId": "rec-slotsholmen-dcd6149e3ddf36cd7bf2dde84c34208d",
           "existingId": "slotsholmen",
           "title": "Slotsholmen",
@@ -259747,6 +258852,29 @@
           ],
           "similarityReason": "Fælles emne: Dansk politik",
           "candidateType": "content_similarity"
+        },
+        {
+          "recommendationId": "rec-borgenudenfilter-e6073e0ee85fe3cc61c2c183c15f5196",
+          "existingId": "borgenudenfilter",
+          "title": "BorgenUdenFilter",
+          "publisher": "Podads",
+          "authoritativeMainSeries": "",
+          "primaryGenre": "Politik",
+          "secondaryGenre": "",
+          "topicsCanonical": [
+            "Dansk politik",
+            "politiske strategier",
+            "magtkampe"
+          ],
+          "editorialScore": 6.8,
+          "image": "https://image.simplecastcdn.com/images/f1c51995-4dfc-450b-a06c-79763c807d81/431c013e-60cd-4536-a36b-4b775fc26142/3000x3000/design-20uden-20navn.jpg?aid=rss_feed",
+          "link": "https://podcast24.dk/podcasts/borgenudenfilter",
+          "contentSimilarityScore": 0,
+          "topicSimilarityScore": 0,
+          "genreSimilarityScore": 0,
+          "sharedTopics": [],
+          "similarityReason": "",
+          "candidateType": "manual_supplementary"
         }
       ],
       "similarResults": [
@@ -259880,31 +259008,6 @@
           "candidateType": "content_similarity"
         },
         {
-          "recommendationId": "rec-borgen-unplugged-d1cd8cda9eddb13e3793fabcd2acb5fa",
-          "existingId": "borgen unplugged",
-          "title": "Borgen Unplugged",
-          "publisher": "Qvortrup Media",
-          "authoritativeMainSeries": "",
-          "primaryGenre": "Politik",
-          "secondaryGenre": "",
-          "topicsCanonical": [
-            "Dansk politik",
-            "politiske strategier",
-            "meningsmålinger"
-          ],
-          "editorialScore": 8,
-          "image": "https://www.bog-ide.dk/cdn/shop/files/2587302_Cover.jpg?v=1773311890&width=1000",
-          "link": "http://www.borgenunplugged.dk/",
-          "contentSimilarityScore": 54.1803,
-          "topicSimilarityScore": 39.1803,
-          "genreSimilarityScore": 15,
-          "sharedTopics": [
-            "Dansk politik"
-          ],
-          "similarityReason": "Fælles emne: Dansk politik",
-          "candidateType": "content_similarity"
-        },
-        {
           "recommendationId": "rec-slotsholmen-dcd6149e3ddf36cd7bf2dde84c34208d",
           "existingId": "slotsholmen",
           "title": "Slotsholmen",
@@ -259953,10 +259056,33 @@
           ],
           "similarityReason": "Fælles emne: Dansk politik",
           "candidateType": "content_similarity"
+        },
+        {
+          "recommendationId": "rec-borgenudenfilter-e6073e0ee85fe3cc61c2c183c15f5196",
+          "existingId": "borgenudenfilter",
+          "title": "BorgenUdenFilter",
+          "publisher": "Podads",
+          "authoritativeMainSeries": "",
+          "primaryGenre": "Politik",
+          "secondaryGenre": "",
+          "topicsCanonical": [
+            "Dansk politik",
+            "politiske strategier",
+            "magtkampe"
+          ],
+          "editorialScore": 6.8,
+          "image": "https://image.simplecastcdn.com/images/f1c51995-4dfc-450b-a06c-79763c807d81/431c013e-60cd-4536-a36b-4b775fc26142/3000x3000/design-20uden-20navn.jpg?aid=rss_feed",
+          "link": "https://podcast24.dk/podcasts/borgenudenfilter",
+          "contentSimilarityScore": 0,
+          "topicSimilarityScore": 0,
+          "genreSimilarityScore": 0,
+          "sharedTopics": [],
+          "similarityReason": "",
+          "candidateType": "manual_supplementary"
         }
       ],
       "sameSeriesResults": [],
-      "automaticSimilarResultCount": 8,
+      "automaticSimilarResultCount": 7,
       "manualSupplementaryResultCount": 3,
       "combinedSimilarResultCount": 8,
       "similarResultCount": 8,
@@ -299803,29 +298929,6 @@
           "candidateType": "manual_supplementary"
         },
         {
-          "recommendationId": "rec-borgen-unplugged-d1cd8cda9eddb13e3793fabcd2acb5fa",
-          "existingId": "borgen unplugged",
-          "title": "Borgen Unplugged",
-          "publisher": "Qvortrup Media",
-          "authoritativeMainSeries": "",
-          "primaryGenre": "Politik",
-          "secondaryGenre": "",
-          "topicsCanonical": [
-            "Dansk politik",
-            "politiske strategier",
-            "meningsmålinger"
-          ],
-          "editorialScore": 8,
-          "image": "https://www.bog-ide.dk/cdn/shop/files/2587302_Cover.jpg?v=1773311890&width=1000",
-          "link": "http://www.borgenunplugged.dk/",
-          "contentSimilarityScore": 0,
-          "topicSimilarityScore": 0,
-          "genreSimilarityScore": 0,
-          "sharedTopics": [],
-          "similarityReason": "",
-          "candidateType": "manual_supplementary"
-        },
-        {
           "recommendationId": "rec-de-stoerste-politiske-skandaler-9359c1d2741a4bca59fb1d8cb6d25a5b",
           "existingId": "de største politiske skandaler",
           "title": "De største politiske skandaler",
@@ -300382,7 +299485,7 @@
         }
       ],
       "automaticSimilarResultCount": 7,
-      "manualSupplementaryResultCount": 6,
+      "manualSupplementaryResultCount": 5,
       "combinedSimilarResultCount": 8,
       "similarResultCount": 8,
       "sameSeriesResultCount": 4,
@@ -341864,29 +340967,6 @@
       ],
       "manualSupplementaryResults": [
         {
-          "recommendationId": "rec-borgen-unplugged-d1cd8cda9eddb13e3793fabcd2acb5fa",
-          "existingId": "borgen unplugged",
-          "title": "Borgen Unplugged",
-          "publisher": "Qvortrup Media",
-          "authoritativeMainSeries": "",
-          "primaryGenre": "Politik",
-          "secondaryGenre": "",
-          "topicsCanonical": [
-            "Dansk politik",
-            "politiske strategier",
-            "meningsmålinger"
-          ],
-          "editorialScore": 8,
-          "image": "https://www.bog-ide.dk/cdn/shop/files/2587302_Cover.jpg?v=1773311890&width=1000",
-          "link": "http://www.borgenunplugged.dk/",
-          "contentSimilarityScore": 0,
-          "topicSimilarityScore": 0,
-          "genreSimilarityScore": 0,
-          "sharedTopics": [],
-          "similarityReason": "",
-          "candidateType": "manual_supplementary"
-        },
-        {
           "recommendationId": "rec-borgenudenfilter-e6073e0ee85fe3cc61c2c183c15f5196",
           "existingId": "borgenudenfilter",
           "title": "BorgenUdenFilter",
@@ -342397,7 +341477,7 @@
       ],
       "sameSeriesResults": [],
       "automaticSimilarResultCount": 8,
-      "manualSupplementaryResultCount": 5,
+      "manualSupplementaryResultCount": 4,
       "combinedSimilarResultCount": 8,
       "similarResultCount": 8,
       "sameSeriesResultCount": 0,
@@ -355585,31 +354665,6 @@
           "candidateType": "content_similarity"
         },
         {
-          "recommendationId": "rec-borgen-unplugged-d1cd8cda9eddb13e3793fabcd2acb5fa",
-          "existingId": "borgen unplugged",
-          "title": "Borgen Unplugged",
-          "publisher": "Qvortrup Media",
-          "authoritativeMainSeries": "",
-          "primaryGenre": "Politik",
-          "secondaryGenre": "",
-          "topicsCanonical": [
-            "Dansk politik",
-            "politiske strategier",
-            "meningsmålinger"
-          ],
-          "editorialScore": 8,
-          "image": "https://www.bog-ide.dk/cdn/shop/files/2587302_Cover.jpg?v=1773311890&width=1000",
-          "link": "http://www.borgenunplugged.dk/",
-          "contentSimilarityScore": 54.1803,
-          "topicSimilarityScore": 39.1803,
-          "genreSimilarityScore": 15,
-          "sharedTopics": [
-            "Dansk politik"
-          ],
-          "similarityReason": "Fælles emne: Dansk politik",
-          "candidateType": "content_similarity"
-        },
-        {
           "recommendationId": "rec-slotsholmen-dcd6149e3ddf36cd7bf2dde84c34208d",
           "existingId": "slotsholmen",
           "title": "Slotsholmen",
@@ -355839,31 +354894,6 @@
           "candidateType": "content_similarity"
         },
         {
-          "recommendationId": "rec-borgen-unplugged-d1cd8cda9eddb13e3793fabcd2acb5fa",
-          "existingId": "borgen unplugged",
-          "title": "Borgen Unplugged",
-          "publisher": "Qvortrup Media",
-          "authoritativeMainSeries": "",
-          "primaryGenre": "Politik",
-          "secondaryGenre": "",
-          "topicsCanonical": [
-            "Dansk politik",
-            "politiske strategier",
-            "meningsmålinger"
-          ],
-          "editorialScore": 8,
-          "image": "https://www.bog-ide.dk/cdn/shop/files/2587302_Cover.jpg?v=1773311890&width=1000",
-          "link": "http://www.borgenunplugged.dk/",
-          "contentSimilarityScore": 54.1803,
-          "topicSimilarityScore": 39.1803,
-          "genreSimilarityScore": 15,
-          "sharedTopics": [
-            "Dansk politik"
-          ],
-          "similarityReason": "Fælles emne: Dansk politik",
-          "candidateType": "content_similarity"
-        },
-        {
           "recommendationId": "rec-slotsholmen-dcd6149e3ddf36cd7bf2dde84c34208d",
           "existingId": "slotsholmen",
           "title": "Slotsholmen",
@@ -355887,6 +354917,28 @@
           ],
           "similarityReason": "Fælles emne: Dansk politik",
           "candidateType": "content_similarity"
+        },
+        {
+          "recommendationId": "rec-den-korte-podcast-c2fed8c6b1f4ffb70d5d47eb447a1e22",
+          "existingId": "den korte podcast",
+          "title": "Den korte podcast",
+          "publisher": "r8dio",
+          "authoritativeMainSeries": "",
+          "primaryGenre": "Samfund",
+          "secondaryGenre": "Snakke",
+          "topicsCanonical": [
+            "politisk satire",
+            "Dansk politik"
+          ],
+          "editorialScore": 8.5,
+          "image": "https://i.scdn.co/image/ab67656300005f1f88a76dc9dc8ca60780ad4ec7",
+          "link": "https://podcasts.apple.com/dk/podcast/den-korte-podcast/id1864497192?l=da",
+          "contentSimilarityScore": 0,
+          "topicSimilarityScore": 0,
+          "genreSimilarityScore": 0,
+          "sharedTopics": [],
+          "similarityReason": "",
+          "candidateType": "manual_supplementary"
         }
       ],
       "similarResults": [
@@ -356046,31 +355098,6 @@
           "candidateType": "content_similarity"
         },
         {
-          "recommendationId": "rec-borgen-unplugged-d1cd8cda9eddb13e3793fabcd2acb5fa",
-          "existingId": "borgen unplugged",
-          "title": "Borgen Unplugged",
-          "publisher": "Qvortrup Media",
-          "authoritativeMainSeries": "",
-          "primaryGenre": "Politik",
-          "secondaryGenre": "",
-          "topicsCanonical": [
-            "Dansk politik",
-            "politiske strategier",
-            "meningsmålinger"
-          ],
-          "editorialScore": 8,
-          "image": "https://www.bog-ide.dk/cdn/shop/files/2587302_Cover.jpg?v=1773311890&width=1000",
-          "link": "http://www.borgenunplugged.dk/",
-          "contentSimilarityScore": 54.1803,
-          "topicSimilarityScore": 39.1803,
-          "genreSimilarityScore": 15,
-          "sharedTopics": [
-            "Dansk politik"
-          ],
-          "similarityReason": "Fælles emne: Dansk politik",
-          "candidateType": "content_similarity"
-        },
-        {
           "recommendationId": "rec-slotsholmen-dcd6149e3ddf36cd7bf2dde84c34208d",
           "existingId": "slotsholmen",
           "title": "Slotsholmen",
@@ -356094,10 +355121,32 @@
           ],
           "similarityReason": "Fælles emne: Dansk politik",
           "candidateType": "content_similarity"
+        },
+        {
+          "recommendationId": "rec-den-korte-podcast-c2fed8c6b1f4ffb70d5d47eb447a1e22",
+          "existingId": "den korte podcast",
+          "title": "Den korte podcast",
+          "publisher": "r8dio",
+          "authoritativeMainSeries": "",
+          "primaryGenre": "Samfund",
+          "secondaryGenre": "Snakke",
+          "topicsCanonical": [
+            "politisk satire",
+            "Dansk politik"
+          ],
+          "editorialScore": 8.5,
+          "image": "https://i.scdn.co/image/ab67656300005f1f88a76dc9dc8ca60780ad4ec7",
+          "link": "https://podcasts.apple.com/dk/podcast/den-korte-podcast/id1864497192?l=da",
+          "contentSimilarityScore": 0,
+          "topicSimilarityScore": 0,
+          "genreSimilarityScore": 0,
+          "sharedTopics": [],
+          "similarityReason": "",
+          "candidateType": "manual_supplementary"
         }
       ],
       "sameSeriesResults": [],
-      "automaticSimilarResultCount": 8,
+      "automaticSimilarResultCount": 7,
       "manualSupplementaryResultCount": 2,
       "combinedSimilarResultCount": 8,
       "similarResultCount": 8,
@@ -362916,31 +361965,6 @@
           "candidateType": "content_similarity"
         },
         {
-          "recommendationId": "rec-borgen-unplugged-d1cd8cda9eddb13e3793fabcd2acb5fa",
-          "existingId": "borgen unplugged",
-          "title": "Borgen Unplugged",
-          "publisher": "Qvortrup Media",
-          "authoritativeMainSeries": "",
-          "primaryGenre": "Politik",
-          "secondaryGenre": "",
-          "topicsCanonical": [
-            "Dansk politik",
-            "politiske strategier",
-            "meningsmålinger"
-          ],
-          "editorialScore": 8,
-          "image": "https://www.bog-ide.dk/cdn/shop/files/2587302_Cover.jpg?v=1773311890&width=1000",
-          "link": "http://www.borgenunplugged.dk/",
-          "contentSimilarityScore": 31.5882,
-          "topicSimilarityScore": 31.5882,
-          "genreSimilarityScore": 0,
-          "sharedTopics": [
-            "Dansk politik"
-          ],
-          "similarityReason": "Fælles emne: Dansk politik",
-          "candidateType": "content_similarity"
-        },
-        {
           "recommendationId": "rec-sig-det-loegn-776f5212d06ca5649c4083f4887862e7",
           "existingId": "sig det løgn",
           "title": "Sig det' løgn",
@@ -363189,31 +362213,6 @@
           "candidateType": "content_similarity"
         },
         {
-          "recommendationId": "rec-borgen-unplugged-d1cd8cda9eddb13e3793fabcd2acb5fa",
-          "existingId": "borgen unplugged",
-          "title": "Borgen Unplugged",
-          "publisher": "Qvortrup Media",
-          "authoritativeMainSeries": "",
-          "primaryGenre": "Politik",
-          "secondaryGenre": "",
-          "topicsCanonical": [
-            "Dansk politik",
-            "politiske strategier",
-            "meningsmålinger"
-          ],
-          "editorialScore": 8,
-          "image": "https://www.bog-ide.dk/cdn/shop/files/2587302_Cover.jpg?v=1773311890&width=1000",
-          "link": "http://www.borgenunplugged.dk/",
-          "contentSimilarityScore": 31.5882,
-          "topicSimilarityScore": 31.5882,
-          "genreSimilarityScore": 0,
-          "sharedTopics": [
-            "Dansk politik"
-          ],
-          "similarityReason": "Fælles emne: Dansk politik",
-          "candidateType": "content_similarity"
-        },
-        {
           "recommendationId": "rec-sig-det-loegn-776f5212d06ca5649c4083f4887862e7",
           "existingId": "sig det løgn",
           "title": "Sig det' løgn",
@@ -363254,6 +362253,30 @@
           "editorialScore": 6.7,
           "image": "https://is1-ssl.mzstatic.com/image/thumb/Podcasts221/v4/e8/73/64/e873645b-23e6-d9b8-2fd8-31970b6d4be8/mza_17260088015441192454.jpg/800x800bb.webp",
           "link": "https://podcasts.apple.com/dk/podcast/borgerlig-tabloid/id1647786104?l=da",
+          "contentSimilarityScore": 0,
+          "topicSimilarityScore": 0,
+          "genreSimilarityScore": 0,
+          "sharedTopics": [],
+          "similarityReason": "",
+          "candidateType": "manual_supplementary"
+        },
+        {
+          "recommendationId": "rec-alliancen-ee2fd20c7e51a4b8ac736f31f00b8888",
+          "existingId": "alliancen",
+          "title": "Alliancen",
+          "publisher": "",
+          "authoritativeMainSeries": "",
+          "primaryGenre": "Politik",
+          "secondaryGenre": "",
+          "topicsCanonical": [
+            "Liberal Alliance",
+            "liberalisme",
+            "økonomisk politik",
+            "statens rolle"
+          ],
+          "editorialScore": 6.4,
+          "image": "https://is1-ssl.mzstatic.com/image/thumb/Podcasts122/v4/ee/78/7c/ee787c19-fe5b-4260-ef34-81a0f15d4842/mza_17173071207295493848.png/250x250bb.jpg",
+          "link": "https://www.liberalalliance.dk/podcast-alliancen/",
           "contentSimilarityScore": 0,
           "topicSimilarityScore": 0,
           "genreSimilarityScore": 0,
@@ -363391,31 +362414,6 @@
           "candidateType": "content_similarity"
         },
         {
-          "recommendationId": "rec-borgen-unplugged-d1cd8cda9eddb13e3793fabcd2acb5fa",
-          "existingId": "borgen unplugged",
-          "title": "Borgen Unplugged",
-          "publisher": "Qvortrup Media",
-          "authoritativeMainSeries": "",
-          "primaryGenre": "Politik",
-          "secondaryGenre": "",
-          "topicsCanonical": [
-            "Dansk politik",
-            "politiske strategier",
-            "meningsmålinger"
-          ],
-          "editorialScore": 8,
-          "image": "https://www.bog-ide.dk/cdn/shop/files/2587302_Cover.jpg?v=1773311890&width=1000",
-          "link": "http://www.borgenunplugged.dk/",
-          "contentSimilarityScore": 31.5882,
-          "topicSimilarityScore": 31.5882,
-          "genreSimilarityScore": 0,
-          "sharedTopics": [
-            "Dansk politik"
-          ],
-          "similarityReason": "Fælles emne: Dansk politik",
-          "candidateType": "content_similarity"
-        },
-        {
           "recommendationId": "rec-sig-det-loegn-776f5212d06ca5649c4083f4887862e7",
           "existingId": "sig det løgn",
           "title": "Sig det' løgn",
@@ -363456,6 +362454,30 @@
           "editorialScore": 6.7,
           "image": "https://is1-ssl.mzstatic.com/image/thumb/Podcasts221/v4/e8/73/64/e873645b-23e6-d9b8-2fd8-31970b6d4be8/mza_17260088015441192454.jpg/800x800bb.webp",
           "link": "https://podcasts.apple.com/dk/podcast/borgerlig-tabloid/id1647786104?l=da",
+          "contentSimilarityScore": 0,
+          "topicSimilarityScore": 0,
+          "genreSimilarityScore": 0,
+          "sharedTopics": [],
+          "similarityReason": "",
+          "candidateType": "manual_supplementary"
+        },
+        {
+          "recommendationId": "rec-alliancen-ee2fd20c7e51a4b8ac736f31f00b8888",
+          "existingId": "alliancen",
+          "title": "Alliancen",
+          "publisher": "",
+          "authoritativeMainSeries": "",
+          "primaryGenre": "Politik",
+          "secondaryGenre": "",
+          "topicsCanonical": [
+            "Liberal Alliance",
+            "liberalisme",
+            "økonomisk politik",
+            "statens rolle"
+          ],
+          "editorialScore": 6.4,
+          "image": "https://is1-ssl.mzstatic.com/image/thumb/Podcasts122/v4/ee/78/7c/ee787c19-fe5b-4260-ef34-81a0f15d4842/mza_17173071207295493848.png/250x250bb.jpg",
+          "link": "https://www.liberalalliance.dk/podcast-alliancen/",
           "contentSimilarityScore": 0,
           "topicSimilarityScore": 0,
           "genreSimilarityScore": 0,
@@ -363570,7 +362592,7 @@
           "candidateType": "same_series"
         }
       ],
-      "automaticSimilarResultCount": 7,
+      "automaticSimilarResultCount": 6,
       "manualSupplementaryResultCount": 4,
       "combinedSimilarResultCount": 8,
       "similarResultCount": 8,
@@ -368922,33 +367944,7 @@
       "title": "Kampagnesporet",
       "authoritativeMainSeries": "",
       "supplementarySimilaritiesRaw": "stjerner og striber; only in america; slottet og sumpen; the ezra klein show; pod save america; b t valgkamp",
-      "automaticSimilarResults": [
-        {
-          "recommendationId": "rec-borgen-unplugged-d1cd8cda9eddb13e3793fabcd2acb5fa",
-          "existingId": "borgen unplugged",
-          "title": "Borgen Unplugged",
-          "publisher": "Qvortrup Media",
-          "authoritativeMainSeries": "",
-          "primaryGenre": "Politik",
-          "secondaryGenre": "",
-          "topicsCanonical": [
-            "Dansk politik",
-            "politiske strategier",
-            "meningsmålinger"
-          ],
-          "editorialScore": 8,
-          "image": "https://www.bog-ide.dk/cdn/shop/files/2587302_Cover.jpg?v=1773311890&width=1000",
-          "link": "http://www.borgenunplugged.dk/",
-          "contentSimilarityScore": 53.3412,
-          "topicSimilarityScore": 38.3412,
-          "genreSimilarityScore": 15,
-          "sharedTopics": [
-            "meningsmålinger"
-          ],
-          "similarityReason": "Fælles emne: meningsmålinger",
-          "candidateType": "content_similarity"
-        }
-      ],
+      "automaticSimilarResults": [],
       "manualSupplementaryResults": [
         {
           "recommendationId": "rec-stjerner-og-striber-38880f3643238450e9ec40730ff3812f",
@@ -369049,31 +368045,6 @@
       ],
       "combinedSimilarResults": [
         {
-          "recommendationId": "rec-borgen-unplugged-d1cd8cda9eddb13e3793fabcd2acb5fa",
-          "existingId": "borgen unplugged",
-          "title": "Borgen Unplugged",
-          "publisher": "Qvortrup Media",
-          "authoritativeMainSeries": "",
-          "primaryGenre": "Politik",
-          "secondaryGenre": "",
-          "topicsCanonical": [
-            "Dansk politik",
-            "politiske strategier",
-            "meningsmålinger"
-          ],
-          "editorialScore": 8,
-          "image": "https://www.bog-ide.dk/cdn/shop/files/2587302_Cover.jpg?v=1773311890&width=1000",
-          "link": "http://www.borgenunplugged.dk/",
-          "contentSimilarityScore": 53.3412,
-          "topicSimilarityScore": 38.3412,
-          "genreSimilarityScore": 15,
-          "sharedTopics": [
-            "meningsmålinger"
-          ],
-          "similarityReason": "Fælles emne: meningsmålinger",
-          "candidateType": "content_similarity"
-        },
-        {
           "recommendationId": "rec-stjerner-og-striber-38880f3643238450e9ec40730ff3812f",
           "existingId": "stjerner og striber",
           "title": "Stjerner og striber",
@@ -369172,31 +368143,6 @@
       ],
       "similarResults": [
         {
-          "recommendationId": "rec-borgen-unplugged-d1cd8cda9eddb13e3793fabcd2acb5fa",
-          "existingId": "borgen unplugged",
-          "title": "Borgen Unplugged",
-          "publisher": "Qvortrup Media",
-          "authoritativeMainSeries": "",
-          "primaryGenre": "Politik",
-          "secondaryGenre": "",
-          "topicsCanonical": [
-            "Dansk politik",
-            "politiske strategier",
-            "meningsmålinger"
-          ],
-          "editorialScore": 8,
-          "image": "https://www.bog-ide.dk/cdn/shop/files/2587302_Cover.jpg?v=1773311890&width=1000",
-          "link": "http://www.borgenunplugged.dk/",
-          "contentSimilarityScore": 53.3412,
-          "topicSimilarityScore": 38.3412,
-          "genreSimilarityScore": 15,
-          "sharedTopics": [
-            "meningsmålinger"
-          ],
-          "similarityReason": "Fælles emne: meningsmålinger",
-          "candidateType": "content_similarity"
-        },
-        {
           "recommendationId": "rec-stjerner-og-striber-38880f3643238450e9ec40730ff3812f",
           "existingId": "stjerner og striber",
           "title": "Stjerner og striber",
@@ -369294,10 +368240,10 @@
         }
       ],
       "sameSeriesResults": [],
-      "automaticSimilarResultCount": 1,
+      "automaticSimilarResultCount": 0,
       "manualSupplementaryResultCount": 4,
-      "combinedSimilarResultCount": 5,
-      "similarResultCount": 5,
+      "combinedSimilarResultCount": 4,
+      "similarResultCount": 4,
       "sameSeriesResultCount": 0,
       "showSimilarSection": true,
       "showSameSeriesSection": false,
@@ -467478,29 +466424,6 @@
           "candidateType": "manual_supplementary"
         },
         {
-          "recommendationId": "rec-borgen-unplugged-d1cd8cda9eddb13e3793fabcd2acb5fa",
-          "existingId": "borgen unplugged",
-          "title": "Borgen Unplugged",
-          "publisher": "Qvortrup Media",
-          "authoritativeMainSeries": "",
-          "primaryGenre": "Politik",
-          "secondaryGenre": "",
-          "topicsCanonical": [
-            "Dansk politik",
-            "politiske strategier",
-            "meningsmålinger"
-          ],
-          "editorialScore": 8,
-          "image": "https://www.bog-ide.dk/cdn/shop/files/2587302_Cover.jpg?v=1773311890&width=1000",
-          "link": "http://www.borgenunplugged.dk/",
-          "contentSimilarityScore": 0,
-          "topicSimilarityScore": 0,
-          "genreSimilarityScore": 0,
-          "sharedTopics": [],
-          "similarityReason": "",
-          "candidateType": "manual_supplementary"
-        },
-        {
           "recommendationId": "rec-i-selskab-med-q-e4cf875986ea0a2ed9113a947428edd3",
           "existingId": "i selskab med q",
           "title": "I selskab med Q",
@@ -467666,29 +466589,6 @@
           "editorialScore": 6.2,
           "image": "https://i.scdn.co/image/ab6765630000ba8a5359bf840495cd338cc69252",
           "link": "https://www.dr.dk/lyd/p1/magten-1644264430000",
-          "contentSimilarityScore": 0,
-          "topicSimilarityScore": 0,
-          "genreSimilarityScore": 0,
-          "sharedTopics": [],
-          "similarityReason": "",
-          "candidateType": "manual_supplementary"
-        },
-        {
-          "recommendationId": "rec-borgen-unplugged-d1cd8cda9eddb13e3793fabcd2acb5fa",
-          "existingId": "borgen unplugged",
-          "title": "Borgen Unplugged",
-          "publisher": "Qvortrup Media",
-          "authoritativeMainSeries": "",
-          "primaryGenre": "Politik",
-          "secondaryGenre": "",
-          "topicsCanonical": [
-            "Dansk politik",
-            "politiske strategier",
-            "meningsmålinger"
-          ],
-          "editorialScore": 8,
-          "image": "https://www.bog-ide.dk/cdn/shop/files/2587302_Cover.jpg?v=1773311890&width=1000",
-          "link": "http://www.borgenunplugged.dk/",
           "contentSimilarityScore": 0,
           "topicSimilarityScore": 0,
           "genreSimilarityScore": 0,
@@ -467870,29 +466770,6 @@
           "candidateType": "manual_supplementary"
         },
         {
-          "recommendationId": "rec-borgen-unplugged-d1cd8cda9eddb13e3793fabcd2acb5fa",
-          "existingId": "borgen unplugged",
-          "title": "Borgen Unplugged",
-          "publisher": "Qvortrup Media",
-          "authoritativeMainSeries": "",
-          "primaryGenre": "Politik",
-          "secondaryGenre": "",
-          "topicsCanonical": [
-            "Dansk politik",
-            "politiske strategier",
-            "meningsmålinger"
-          ],
-          "editorialScore": 8,
-          "image": "https://www.bog-ide.dk/cdn/shop/files/2587302_Cover.jpg?v=1773311890&width=1000",
-          "link": "http://www.borgenunplugged.dk/",
-          "contentSimilarityScore": 0,
-          "topicSimilarityScore": 0,
-          "genreSimilarityScore": 0,
-          "sharedTopics": [],
-          "similarityReason": "",
-          "candidateType": "manual_supplementary"
-        },
-        {
           "recommendationId": "rec-i-selskab-med-q-e4cf875986ea0a2ed9113a947428edd3",
           "existingId": "i selskab med q",
           "title": "I selskab med Q",
@@ -467919,9 +466796,9 @@
       ],
       "sameSeriesResults": [],
       "automaticSimilarResultCount": 2,
-      "manualSupplementaryResultCount": 6,
-      "combinedSimilarResultCount": 8,
-      "similarResultCount": 8,
+      "manualSupplementaryResultCount": 5,
+      "combinedSimilarResultCount": 7,
+      "similarResultCount": 7,
       "sameSeriesResultCount": 0,
       "showSimilarSection": true,
       "showSameSeriesSection": false,
@@ -511177,29 +510054,6 @@
           "sharedTopics": [],
           "similarityReason": "",
           "candidateType": "manual_supplementary"
-        },
-        {
-          "recommendationId": "rec-borgen-unplugged-d1cd8cda9eddb13e3793fabcd2acb5fa",
-          "existingId": "borgen unplugged",
-          "title": "Borgen Unplugged",
-          "publisher": "Qvortrup Media",
-          "authoritativeMainSeries": "",
-          "primaryGenre": "Politik",
-          "secondaryGenre": "",
-          "topicsCanonical": [
-            "Dansk politik",
-            "politiske strategier",
-            "meningsmålinger"
-          ],
-          "editorialScore": 8,
-          "image": "https://www.bog-ide.dk/cdn/shop/files/2587302_Cover.jpg?v=1773311890&width=1000",
-          "link": "http://www.borgenunplugged.dk/",
-          "contentSimilarityScore": 0,
-          "topicSimilarityScore": 0,
-          "genreSimilarityScore": 0,
-          "sharedTopics": [],
-          "similarityReason": "",
-          "candidateType": "manual_supplementary"
         }
       ],
       "combinedSimilarResults": [
@@ -511640,7 +510494,7 @@
       ],
       "sameSeriesResults": [],
       "automaticSimilarResultCount": 8,
-      "manualSupplementaryResultCount": 3,
+      "manualSupplementaryResultCount": 2,
       "combinedSimilarResultCount": 8,
       "similarResultCount": 8,
       "sameSeriesResultCount": 0,
@@ -542887,29 +541741,6 @@
           "sharedTopics": [],
           "similarityReason": "",
           "candidateType": "manual_supplementary"
-        },
-        {
-          "recommendationId": "rec-borgen-unplugged-d1cd8cda9eddb13e3793fabcd2acb5fa",
-          "existingId": "borgen unplugged",
-          "title": "Borgen Unplugged",
-          "publisher": "Qvortrup Media",
-          "authoritativeMainSeries": "",
-          "primaryGenre": "Politik",
-          "secondaryGenre": "",
-          "topicsCanonical": [
-            "Dansk politik",
-            "politiske strategier",
-            "meningsmålinger"
-          ],
-          "editorialScore": 8,
-          "image": "https://www.bog-ide.dk/cdn/shop/files/2587302_Cover.jpg?v=1773311890&width=1000",
-          "link": "http://www.borgenunplugged.dk/",
-          "contentSimilarityScore": 0,
-          "topicSimilarityScore": 0,
-          "genreSimilarityScore": 0,
-          "sharedTopics": [],
-          "similarityReason": "",
-          "candidateType": "manual_supplementary"
         }
       ],
       "combinedSimilarResults": [
@@ -543049,29 +541880,6 @@
           "editorialScore": null,
           "image": "https://is1-ssl.mzstatic.com/image/thumb/Podcasts221/v4/23/22/6f/23226f84-11c0-904f-7bba-fa41bb0bbd07/mza_14647145236921041846.jpg/1200x1200bf-60.jpg",
           "link": "https://podcasts.apple.com/dk/podcast/under-gulvt%C3%A6ppet/id1648053405",
-          "contentSimilarityScore": 0,
-          "topicSimilarityScore": 0,
-          "genreSimilarityScore": 0,
-          "sharedTopics": [],
-          "similarityReason": "",
-          "candidateType": "manual_supplementary"
-        },
-        {
-          "recommendationId": "rec-borgen-unplugged-d1cd8cda9eddb13e3793fabcd2acb5fa",
-          "existingId": "borgen unplugged",
-          "title": "Borgen Unplugged",
-          "publisher": "Qvortrup Media",
-          "authoritativeMainSeries": "",
-          "primaryGenre": "Politik",
-          "secondaryGenre": "",
-          "topicsCanonical": [
-            "Dansk politik",
-            "politiske strategier",
-            "meningsmålinger"
-          ],
-          "editorialScore": 8,
-          "image": "https://www.bog-ide.dk/cdn/shop/files/2587302_Cover.jpg?v=1773311890&width=1000",
-          "link": "http://www.borgenunplugged.dk/",
           "contentSimilarityScore": 0,
           "topicSimilarityScore": 0,
           "genreSimilarityScore": 0,
@@ -543223,36 +542031,13 @@
           "sharedTopics": [],
           "similarityReason": "",
           "candidateType": "manual_supplementary"
-        },
-        {
-          "recommendationId": "rec-borgen-unplugged-d1cd8cda9eddb13e3793fabcd2acb5fa",
-          "existingId": "borgen unplugged",
-          "title": "Borgen Unplugged",
-          "publisher": "Qvortrup Media",
-          "authoritativeMainSeries": "",
-          "primaryGenre": "Politik",
-          "secondaryGenre": "",
-          "topicsCanonical": [
-            "Dansk politik",
-            "politiske strategier",
-            "meningsmålinger"
-          ],
-          "editorialScore": 8,
-          "image": "https://www.bog-ide.dk/cdn/shop/files/2587302_Cover.jpg?v=1773311890&width=1000",
-          "link": "http://www.borgenunplugged.dk/",
-          "contentSimilarityScore": 0,
-          "topicSimilarityScore": 0,
-          "genreSimilarityScore": 0,
-          "sharedTopics": [],
-          "similarityReason": "",
-          "candidateType": "manual_supplementary"
         }
       ],
       "sameSeriesResults": [],
       "automaticSimilarResultCount": 1,
-      "manualSupplementaryResultCount": 6,
-      "combinedSimilarResultCount": 7,
-      "similarResultCount": 7,
+      "manualSupplementaryResultCount": 5,
+      "combinedSimilarResultCount": 6,
+      "similarResultCount": 6,
       "sameSeriesResultCount": 0,
       "showSimilarSection": true,
       "showSameSeriesSection": false,
@@ -562472,29 +561257,6 @@
           "sharedTopics": [],
           "similarityReason": "",
           "candidateType": "manual_supplementary"
-        },
-        {
-          "recommendationId": "rec-borgen-unplugged-d1cd8cda9eddb13e3793fabcd2acb5fa",
-          "existingId": "borgen unplugged",
-          "title": "Borgen Unplugged",
-          "publisher": "Qvortrup Media",
-          "authoritativeMainSeries": "",
-          "primaryGenre": "Politik",
-          "secondaryGenre": "",
-          "topicsCanonical": [
-            "Dansk politik",
-            "politiske strategier",
-            "meningsmålinger"
-          ],
-          "editorialScore": 8,
-          "image": "https://www.bog-ide.dk/cdn/shop/files/2587302_Cover.jpg?v=1773311890&width=1000",
-          "link": "http://www.borgenunplugged.dk/",
-          "contentSimilarityScore": 0,
-          "topicSimilarityScore": 0,
-          "genreSimilarityScore": 0,
-          "sharedTopics": [],
-          "similarityReason": "",
-          "candidateType": "manual_supplementary"
         }
       ],
       "combinedSimilarResults": [
@@ -562933,7 +561695,7 @@
       ],
       "sameSeriesResults": [],
       "automaticSimilarResultCount": 8,
-      "manualSupplementaryResultCount": 4,
+      "manualSupplementaryResultCount": 3,
       "combinedSimilarResultCount": 8,
       "similarResultCount": 8,
       "sameSeriesResultCount": 0,
@@ -563238,29 +562000,6 @@
           "sharedTopics": [],
           "similarityReason": "",
           "candidateType": "manual_supplementary"
-        },
-        {
-          "recommendationId": "rec-borgen-unplugged-d1cd8cda9eddb13e3793fabcd2acb5fa",
-          "existingId": "borgen unplugged",
-          "title": "Borgen Unplugged",
-          "publisher": "Qvortrup Media",
-          "authoritativeMainSeries": "",
-          "primaryGenre": "Politik",
-          "secondaryGenre": "",
-          "topicsCanonical": [
-            "Dansk politik",
-            "politiske strategier",
-            "meningsmålinger"
-          ],
-          "editorialScore": 8,
-          "image": "https://www.bog-ide.dk/cdn/shop/files/2587302_Cover.jpg?v=1773311890&width=1000",
-          "link": "http://www.borgenunplugged.dk/",
-          "contentSimilarityScore": 0,
-          "topicSimilarityScore": 0,
-          "genreSimilarityScore": 0,
-          "sharedTopics": [],
-          "similarityReason": "",
-          "candidateType": "manual_supplementary"
         }
       ],
       "combinedSimilarResults": [
@@ -563703,7 +562442,7 @@
       ],
       "sameSeriesResults": [],
       "automaticSimilarResultCount": 8,
-      "manualSupplementaryResultCount": 4,
+      "manualSupplementaryResultCount": 3,
       "combinedSimilarResultCount": 8,
       "similarResultCount": 8,
       "sameSeriesResultCount": 0,
@@ -596770,31 +595509,6 @@
           "candidateType": "content_similarity"
         },
         {
-          "recommendationId": "rec-borgen-unplugged-d1cd8cda9eddb13e3793fabcd2acb5fa",
-          "existingId": "borgen unplugged",
-          "title": "Borgen Unplugged",
-          "publisher": "Qvortrup Media",
-          "authoritativeMainSeries": "",
-          "primaryGenre": "Politik",
-          "secondaryGenre": "",
-          "topicsCanonical": [
-            "Dansk politik",
-            "politiske strategier",
-            "meningsmålinger"
-          ],
-          "editorialScore": 8,
-          "image": "https://www.bog-ide.dk/cdn/shop/files/2587302_Cover.jpg?v=1773311890&width=1000",
-          "link": "http://www.borgenunplugged.dk/",
-          "contentSimilarityScore": 54.1803,
-          "topicSimilarityScore": 39.1803,
-          "genreSimilarityScore": 15,
-          "sharedTopics": [
-            "Dansk politik"
-          ],
-          "similarityReason": "Fælles emne: Dansk politik",
-          "candidateType": "content_similarity"
-        },
-        {
           "recommendationId": "rec-slotsholmen-dcd6149e3ddf36cd7bf2dde84c34208d",
           "existingId": "slotsholmen",
           "title": "Slotsholmen",
@@ -597046,31 +595760,6 @@
           "candidateType": "content_similarity"
         },
         {
-          "recommendationId": "rec-borgen-unplugged-d1cd8cda9eddb13e3793fabcd2acb5fa",
-          "existingId": "borgen unplugged",
-          "title": "Borgen Unplugged",
-          "publisher": "Qvortrup Media",
-          "authoritativeMainSeries": "",
-          "primaryGenre": "Politik",
-          "secondaryGenre": "",
-          "topicsCanonical": [
-            "Dansk politik",
-            "politiske strategier",
-            "meningsmålinger"
-          ],
-          "editorialScore": 8,
-          "image": "https://www.bog-ide.dk/cdn/shop/files/2587302_Cover.jpg?v=1773311890&width=1000",
-          "link": "http://www.borgenunplugged.dk/",
-          "contentSimilarityScore": 54.1803,
-          "topicSimilarityScore": 39.1803,
-          "genreSimilarityScore": 15,
-          "sharedTopics": [
-            "Dansk politik"
-          ],
-          "similarityReason": "Fælles emne: Dansk politik",
-          "candidateType": "content_similarity"
-        },
-        {
           "recommendationId": "rec-slotsholmen-dcd6149e3ddf36cd7bf2dde84c34208d",
           "existingId": "slotsholmen",
           "title": "Slotsholmen",
@@ -597144,6 +595833,28 @@
           ],
           "similarityReason": "Fælles emne: Dansk politik",
           "candidateType": "content_similarity"
+        },
+        {
+          "recommendationId": "rec-den-korte-podcast-c2fed8c6b1f4ffb70d5d47eb447a1e22",
+          "existingId": "den korte podcast",
+          "title": "Den korte podcast",
+          "publisher": "r8dio",
+          "authoritativeMainSeries": "",
+          "primaryGenre": "Samfund",
+          "secondaryGenre": "Snakke",
+          "topicsCanonical": [
+            "politisk satire",
+            "Dansk politik"
+          ],
+          "editorialScore": 8.5,
+          "image": "https://i.scdn.co/image/ab67656300005f1f88a76dc9dc8ca60780ad4ec7",
+          "link": "https://podcasts.apple.com/dk/podcast/den-korte-podcast/id1864497192?l=da",
+          "contentSimilarityScore": 0,
+          "topicSimilarityScore": 0,
+          "genreSimilarityScore": 0,
+          "sharedTopics": [],
+          "similarityReason": "",
+          "candidateType": "manual_supplementary"
         }
       ],
       "similarResults": [
@@ -597252,31 +595963,6 @@
           "candidateType": "content_similarity"
         },
         {
-          "recommendationId": "rec-borgen-unplugged-d1cd8cda9eddb13e3793fabcd2acb5fa",
-          "existingId": "borgen unplugged",
-          "title": "Borgen Unplugged",
-          "publisher": "Qvortrup Media",
-          "authoritativeMainSeries": "",
-          "primaryGenre": "Politik",
-          "secondaryGenre": "",
-          "topicsCanonical": [
-            "Dansk politik",
-            "politiske strategier",
-            "meningsmålinger"
-          ],
-          "editorialScore": 8,
-          "image": "https://www.bog-ide.dk/cdn/shop/files/2587302_Cover.jpg?v=1773311890&width=1000",
-          "link": "http://www.borgenunplugged.dk/",
-          "contentSimilarityScore": 54.1803,
-          "topicSimilarityScore": 39.1803,
-          "genreSimilarityScore": 15,
-          "sharedTopics": [
-            "Dansk politik"
-          ],
-          "similarityReason": "Fælles emne: Dansk politik",
-          "candidateType": "content_similarity"
-        },
-        {
           "recommendationId": "rec-slotsholmen-dcd6149e3ddf36cd7bf2dde84c34208d",
           "existingId": "slotsholmen",
           "title": "Slotsholmen",
@@ -597350,10 +596036,32 @@
           ],
           "similarityReason": "Fælles emne: Dansk politik",
           "candidateType": "content_similarity"
+        },
+        {
+          "recommendationId": "rec-den-korte-podcast-c2fed8c6b1f4ffb70d5d47eb447a1e22",
+          "existingId": "den korte podcast",
+          "title": "Den korte podcast",
+          "publisher": "r8dio",
+          "authoritativeMainSeries": "",
+          "primaryGenre": "Samfund",
+          "secondaryGenre": "Snakke",
+          "topicsCanonical": [
+            "politisk satire",
+            "Dansk politik"
+          ],
+          "editorialScore": 8.5,
+          "image": "https://i.scdn.co/image/ab67656300005f1f88a76dc9dc8ca60780ad4ec7",
+          "link": "https://podcasts.apple.com/dk/podcast/den-korte-podcast/id1864497192?l=da",
+          "contentSimilarityScore": 0,
+          "topicSimilarityScore": 0,
+          "genreSimilarityScore": 0,
+          "sharedTopics": [],
+          "similarityReason": "",
+          "candidateType": "manual_supplementary"
         }
       ],
       "sameSeriesResults": [],
-      "automaticSimilarResultCount": 8,
+      "automaticSimilarResultCount": 7,
       "manualSupplementaryResultCount": 3,
       "combinedSimilarResultCount": 8,
       "similarResultCount": 8,
@@ -607356,29 +606064,6 @@
       ],
       "manualSupplementaryResults": [
         {
-          "recommendationId": "rec-borgen-unplugged-d1cd8cda9eddb13e3793fabcd2acb5fa",
-          "existingId": "borgen unplugged",
-          "title": "Borgen Unplugged",
-          "publisher": "Qvortrup Media",
-          "authoritativeMainSeries": "",
-          "primaryGenre": "Politik",
-          "secondaryGenre": "",
-          "topicsCanonical": [
-            "Dansk politik",
-            "politiske strategier",
-            "meningsmålinger"
-          ],
-          "editorialScore": 8,
-          "image": "https://www.bog-ide.dk/cdn/shop/files/2587302_Cover.jpg?v=1773311890&width=1000",
-          "link": "http://www.borgenunplugged.dk/",
-          "contentSimilarityScore": 0,
-          "topicSimilarityScore": 0,
-          "genreSimilarityScore": 0,
-          "sharedTopics": [],
-          "similarityReason": "",
-          "candidateType": "manual_supplementary"
-        },
-        {
           "recommendationId": "rec-borgen-unplugged-2-0-e4490f53c1587112a8c02bcb1c448526",
           "existingId": "borgen unplugged 2 0",
           "title": "Borgen Unplugged",
@@ -607898,7 +606583,7 @@
       ],
       "sameSeriesResults": [],
       "automaticSimilarResultCount": 8,
-      "manualSupplementaryResultCount": 5,
+      "manualSupplementaryResultCount": 4,
       "combinedSimilarResultCount": 8,
       "similarResultCount": 8,
       "sameSeriesResultCount": 0,
@@ -670324,29 +669009,6 @@
           "candidateType": "manual_supplementary"
         },
         {
-          "recommendationId": "rec-borgen-unplugged-d1cd8cda9eddb13e3793fabcd2acb5fa",
-          "existingId": "borgen unplugged",
-          "title": "Borgen Unplugged",
-          "publisher": "Qvortrup Media",
-          "authoritativeMainSeries": "",
-          "primaryGenre": "Politik",
-          "secondaryGenre": "",
-          "topicsCanonical": [
-            "Dansk politik",
-            "politiske strategier",
-            "meningsmålinger"
-          ],
-          "editorialScore": 8,
-          "image": "https://www.bog-ide.dk/cdn/shop/files/2587302_Cover.jpg?v=1773311890&width=1000",
-          "link": "http://www.borgenunplugged.dk/",
-          "contentSimilarityScore": 0,
-          "topicSimilarityScore": 0,
-          "genreSimilarityScore": 0,
-          "sharedTopics": [],
-          "similarityReason": "",
-          "candidateType": "manual_supplementary"
-        },
-        {
           "recommendationId": "rec-radio-information-234d1c1091c7fd3990caca50e6a302e7",
           "existingId": "radio information",
           "title": "Radio Information",
@@ -670817,7 +669479,7 @@
       ],
       "sameSeriesResults": [],
       "automaticSimilarResultCount": 8,
-      "manualSupplementaryResultCount": 4,
+      "manualSupplementaryResultCount": 3,
       "combinedSimilarResultCount": 8,
       "similarResultCount": 8,
       "sameSeriesResultCount": 0,
@@ -704777,31 +703439,6 @@
           "candidateType": "content_similarity"
         },
         {
-          "recommendationId": "rec-borgen-unplugged-d1cd8cda9eddb13e3793fabcd2acb5fa",
-          "existingId": "borgen unplugged",
-          "title": "Borgen Unplugged",
-          "publisher": "Qvortrup Media",
-          "authoritativeMainSeries": "",
-          "primaryGenre": "Politik",
-          "secondaryGenre": "",
-          "topicsCanonical": [
-            "Dansk politik",
-            "politiske strategier",
-            "meningsmålinger"
-          ],
-          "editorialScore": 8,
-          "image": "https://www.bog-ide.dk/cdn/shop/files/2587302_Cover.jpg?v=1773311890&width=1000",
-          "link": "http://www.borgenunplugged.dk/",
-          "contentSimilarityScore": 54.1803,
-          "topicSimilarityScore": 39.1803,
-          "genreSimilarityScore": 15,
-          "sharedTopics": [
-            "Dansk politik"
-          ],
-          "similarityReason": "Fælles emne: Dansk politik",
-          "candidateType": "content_similarity"
-        },
-        {
           "recommendationId": "rec-slotsholmen-dcd6149e3ddf36cd7bf2dde84c34208d",
           "existingId": "slotsholmen",
           "title": "Slotsholmen",
@@ -705035,31 +703672,6 @@
           "candidateType": "content_similarity"
         },
         {
-          "recommendationId": "rec-borgen-unplugged-d1cd8cda9eddb13e3793fabcd2acb5fa",
-          "existingId": "borgen unplugged",
-          "title": "Borgen Unplugged",
-          "publisher": "Qvortrup Media",
-          "authoritativeMainSeries": "",
-          "primaryGenre": "Politik",
-          "secondaryGenre": "",
-          "topicsCanonical": [
-            "Dansk politik",
-            "politiske strategier",
-            "meningsmålinger"
-          ],
-          "editorialScore": 8,
-          "image": "https://www.bog-ide.dk/cdn/shop/files/2587302_Cover.jpg?v=1773311890&width=1000",
-          "link": "http://www.borgenunplugged.dk/",
-          "contentSimilarityScore": 54.1803,
-          "topicSimilarityScore": 39.1803,
-          "genreSimilarityScore": 15,
-          "sharedTopics": [
-            "Dansk politik"
-          ],
-          "similarityReason": "Fælles emne: Dansk politik",
-          "candidateType": "content_similarity"
-        },
-        {
           "recommendationId": "rec-slotsholmen-dcd6149e3ddf36cd7bf2dde84c34208d",
           "existingId": "slotsholmen",
           "title": "Slotsholmen",
@@ -705083,6 +703695,28 @@
           ],
           "similarityReason": "Fælles emne: Dansk politik",
           "candidateType": "content_similarity"
+        },
+        {
+          "recommendationId": "rec-den-korte-podcast-c2fed8c6b1f4ffb70d5d47eb447a1e22",
+          "existingId": "den korte podcast",
+          "title": "Den korte podcast",
+          "publisher": "r8dio",
+          "authoritativeMainSeries": "",
+          "primaryGenre": "Samfund",
+          "secondaryGenre": "Snakke",
+          "topicsCanonical": [
+            "politisk satire",
+            "Dansk politik"
+          ],
+          "editorialScore": 8.5,
+          "image": "https://i.scdn.co/image/ab67656300005f1f88a76dc9dc8ca60780ad4ec7",
+          "link": "https://podcasts.apple.com/dk/podcast/den-korte-podcast/id1864497192?l=da",
+          "contentSimilarityScore": 0,
+          "topicSimilarityScore": 0,
+          "genreSimilarityScore": 0,
+          "sharedTopics": [],
+          "similarityReason": "",
+          "candidateType": "manual_supplementary"
         }
       ],
       "similarResults": [
@@ -705246,31 +703880,6 @@
           "candidateType": "content_similarity"
         },
         {
-          "recommendationId": "rec-borgen-unplugged-d1cd8cda9eddb13e3793fabcd2acb5fa",
-          "existingId": "borgen unplugged",
-          "title": "Borgen Unplugged",
-          "publisher": "Qvortrup Media",
-          "authoritativeMainSeries": "",
-          "primaryGenre": "Politik",
-          "secondaryGenre": "",
-          "topicsCanonical": [
-            "Dansk politik",
-            "politiske strategier",
-            "meningsmålinger"
-          ],
-          "editorialScore": 8,
-          "image": "https://www.bog-ide.dk/cdn/shop/files/2587302_Cover.jpg?v=1773311890&width=1000",
-          "link": "http://www.borgenunplugged.dk/",
-          "contentSimilarityScore": 54.1803,
-          "topicSimilarityScore": 39.1803,
-          "genreSimilarityScore": 15,
-          "sharedTopics": [
-            "Dansk politik"
-          ],
-          "similarityReason": "Fælles emne: Dansk politik",
-          "candidateType": "content_similarity"
-        },
-        {
           "recommendationId": "rec-slotsholmen-dcd6149e3ddf36cd7bf2dde84c34208d",
           "existingId": "slotsholmen",
           "title": "Slotsholmen",
@@ -705294,10 +703903,32 @@
           ],
           "similarityReason": "Fælles emne: Dansk politik",
           "candidateType": "content_similarity"
+        },
+        {
+          "recommendationId": "rec-den-korte-podcast-c2fed8c6b1f4ffb70d5d47eb447a1e22",
+          "existingId": "den korte podcast",
+          "title": "Den korte podcast",
+          "publisher": "r8dio",
+          "authoritativeMainSeries": "",
+          "primaryGenre": "Samfund",
+          "secondaryGenre": "Snakke",
+          "topicsCanonical": [
+            "politisk satire",
+            "Dansk politik"
+          ],
+          "editorialScore": 8.5,
+          "image": "https://i.scdn.co/image/ab67656300005f1f88a76dc9dc8ca60780ad4ec7",
+          "link": "https://podcasts.apple.com/dk/podcast/den-korte-podcast/id1864497192?l=da",
+          "contentSimilarityScore": 0,
+          "topicSimilarityScore": 0,
+          "genreSimilarityScore": 0,
+          "sharedTopics": [],
+          "similarityReason": "",
+          "candidateType": "manual_supplementary"
         }
       ],
       "sameSeriesResults": [],
-      "automaticSimilarResultCount": 8,
+      "automaticSimilarResultCount": 7,
       "manualSupplementaryResultCount": 2,
       "combinedSimilarResultCount": 8,
       "similarResultCount": 8,
@@ -736466,7 +735097,7 @@
       "resolvedHost": "Lars Trier Mogensen & Henrik Qvortrup",
       "resolutionMethod": "resolved_unique_title",
       "rejectionReason": "",
-      "presentInAutomatic": true
+      "presentInAutomatic": false
     },
     {
       "sourceRecommendationId": "rec-borgen-unplugged-d1cd8cda9eddb13e3793fabcd2acb5fa",
@@ -736530,7 +735161,7 @@
       "resolvedHost": "Thomas Qvortrup & Henrik Qvortrup",
       "resolutionMethod": "resolved_podcast_id",
       "rejectionReason": "",
-      "presentInAutomatic": true
+      "presentInAutomatic": false
     },
     {
       "sourceRecommendationId": "rec-borgenudenfilter-e6073e0ee85fe3cc61c2c183c15f5196",
@@ -736546,7 +735177,7 @@
       "resolvedHost": "Martin Flink & Anders Langballe",
       "resolutionMethod": "resolved_podcast_id",
       "rejectionReason": "",
-      "presentInAutomatic": true
+      "presentInAutomatic": false
     },
     {
       "sourceRecommendationId": "rec-borgenudenfilter-e6073e0ee85fe3cc61c2c183c15f5196",

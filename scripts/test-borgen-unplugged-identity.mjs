@@ -19,7 +19,8 @@ assert.equal(byId(currentId)?.Feed, "https://feeds.soundcloud.com/users/soundclo
 const stagedCatalogue = {
   ...catalogue,
   rows: catalogue.rows.map((row) => {
-    if (row["Podcast-ID"] === oldId) return { ...row, Uaktuel: "x" };
+    // An older catalogue cache may predate the archive marker.
+    if (row["Podcast-ID"] === oldId) return { ...row, Uaktuel: "" };
     if (row["Podcast-ID"] === currentId) return { ...row, Titel: title };
     return row;
   })
@@ -28,7 +29,7 @@ const clusters = JSON.parse(await readFile(new URL("../data/explore-clusters.jso
 const stagedClusters = {
   ...clusters,
   clusters: clusters.clusters.map((cluster) => cluster.id === "christiansborg-magt-spin"
-    ? { ...cluster, podcastIds: cluster.podcastIds.filter((id) => id !== oldId) }
+    ? { ...cluster, podcastIds: [...new Set([...cluster.podcastIds, oldId])] }
     : cluster)
 };
 assert.ok(stagedClusters.clusters.find((cluster) => cluster.id === "christiansborg-magt-spin")
@@ -96,6 +97,47 @@ try {
         const config = getEpisodePodcastConfig(current);
         const recommendations = (podcast) => getPodcastDetailRecommendations(podcast).map(({ item }) => getPodcastId(item.podcast));
         const ratingKey = getEpisodeParentRatingKey(currentKey);
+        const oldRecommendationId = state.podcastSimilarityRecommendationIdByPodcastKey[oldKey];
+        const currentRecommendationId = state.podcastSimilarityRecommendationIdByPodcastKey[currentKey];
+        const previousProduct = state.podcastSimilarityProductByRecommendationId[currentRecommendationId];
+        const staleCandidate = { existingId: oldKey, recommendationId: oldRecommendationId, title: old.title };
+        state.podcastSimilarityProductByRecommendationId[currentRecommendationId] = {
+          ...previousProduct,
+          similarResults: [staleCandidate, ...previousProduct.similarResults],
+          automaticSimilarResults: [staleCandidate, ...previousProduct.automaticSimilarResults],
+          manualSupplementaryResults: [staleCandidate, ...previousProduct.manualSupplementaryResults]
+        };
+        const staleProductVisible = getValidatedPodcastSimilarityProduct(current).similar
+          .some(({ podcast }) => getPodcastId(podcast) === oldKey);
+        const staleExploreVisible = getExploreProductSimilarityItems({ podcast: current })
+          .some(({ podcast }) => getPodcastId(podcast) === oldKey);
+        const recommendationsWithStaleProduct = recommendations(current);
+        state.podcastSimilarityProductByRecommendationId[currentRecommendationId] = previousProduct;
+
+        const priorRatings = state.userRatingsByKey;
+        const priorSaved = state.savedPodcastKeys;
+        const priorUser = state.authUser;
+        state.userRatingsByKey = { [oldKey]: 10, [currentKey]: 9, dkpol: 9, slotsholmen: 9 };
+        state.savedPodcastKeys = new Set([oldKey]);
+        state.authUser = { id: "borgen-public-discovery-test" };
+        const profile = getExplorePreferenceProfile();
+        const exploreSeeds = selectBorgen(getExploreSeedPodcasts().map(({ podcast }) => podcast));
+        const clusterSections = getExploreClusterSections();
+        const clusterVisible = clusterSections.some((section) =>
+          section.seedPodcastIds.includes(oldKey) || selectBorgen(section.items.map(({ podcast }) => podcast)).includes(oldKey)
+        );
+
+        const snapshotKey = { dayKey: "test", fingerprint: "test" };
+        const publicItems = [state.podcastById.dkpol, state.podcastById.slotsholmen, current]
+          .map((podcast) => ({ podcast }));
+        persistExplorePersonalSnapshot([
+          { title: "Arkivseed", seedPodcastKey: oldKey, items: publicItems },
+          { title: "Gyldig seed", seedPodcastKey: currentKey, items: [{ podcast: old }, ...publicItems] }
+        ], snapshotKey);
+        const snapshot = readExplorePersonalSnapshot(snapshotKey);
+        state.userRatingsByKey = priorRatings;
+        state.savedPodcastKeys = priorSaved;
+        state.authUser = priorUser;
         return {
           titles: [old.title, current.title],
           scores: [old.ratingValue, current.ratingValue],
@@ -118,7 +160,17 @@ try {
           config: [config.podcastKey, config.databasePodcastKey, config.displayName],
           oldHasEpisodes: Boolean(getEpisodePodcastConfig(old)),
           ratings: [resolveCanonicalPodcastId(oldKey), resolveCanonicalPodcastId(currentKey), ratingKey],
-          recommendations: [recommendations(old), recommendations(current), recommendations(state.podcastById.dkpol)]
+          recommendations: [recommendations(old), recommendationsWithStaleProduct, recommendations(state.podcastById.dkpol)],
+          internalManualLinks: getCatalogueManualSupplementaryPodcasts(current).map(getPodcastId),
+          staleProductVisible,
+          staleExploreVisible,
+          fallbackVisible: getPodcastDetailFallbackRecommendations(current, new Set(), new Set())
+            .some(({ item }) => getPodcastId(item.podcast) === oldKey),
+          exploreSeeds,
+          ratingSeeds: selectBorgen(profile.ratingSeeds.map(({ podcast }) => podcast)),
+          savedSeeds: selectBorgen(profile.savedSeeds.map(({ podcast }) => podcast)),
+          clusterVisible,
+          snapshot: snapshot?.map((section) => [section.title, selectBorgen(section.items.map(({ podcast }) => podcast))])
         };
       }, [oldId, currentId]);
       assert.deepEqual(identity.titles, [title, title]);
@@ -130,7 +182,7 @@ try {
       assert.deepEqual(identity.ranking, [currentId]);
       assert.deepEqual(identity.publicCards, [currentId]);
       assert.deepEqual(identity.explore, [false, true]);
-      assert.deepEqual(identity.cluster, [currentId]);
+      assert.deepEqual(identity.cluster, [currentId, oldId], "fixture includes a stale cluster entry");
       assert.deepEqual(identity.productIdentities, [oldId, currentId]);
       assert.equal(identity.unrelatedRankings, true);
       assert.equal(identity.unrelatedCards, true);
@@ -138,9 +190,19 @@ try {
       assert.deepEqual(identity.config, [currentId, currentId, title]);
       assert.equal(identity.oldHasEpisodes, false);
       assert.deepEqual(identity.ratings, [oldId, currentId, currentId]);
-      assert.ok(identity.recommendations[0].includes(currentId));
-      assert.ok(identity.recommendations[1].includes(oldId));
-      assert.ok(identity.recommendations[2].includes(oldId) && identity.recommendations[2].includes(currentId));
+      assert.deepEqual(identity.recommendations[0], []);
+      assert.ok(identity.recommendations[1].length > 0);
+      assert.ok(identity.recommendations[2].includes(currentId));
+      assert.ok(identity.recommendations.every((ids) => !ids.includes(oldId)));
+      assert.ok(identity.internalManualLinks.includes(oldId));
+      assert.equal(identity.staleProductVisible, false);
+      assert.equal(identity.staleExploreVisible, false);
+      assert.equal(identity.fallbackVisible, false);
+      assert.deepEqual(identity.exploreSeeds, [currentId]);
+      assert.deepEqual(identity.ratingSeeds, [currentId]);
+      assert.deepEqual(identity.savedSeeds, []);
+      assert.equal(identity.clusterVisible, false);
+      assert.deepEqual(identity.snapshot, [["Gyldig seed", [currentId]]]);
 
       for (const route of ["ranglister", "udforsk"]) {
         await open(route);
@@ -154,11 +216,15 @@ try {
         assert.equal(await titleHeading.textContent(), title);
         assert.match(await host.first().textContent(), hostPattern);
         await checkWidth(id);
+        if (id === oldId) assert.equal(await page.locator("[data-podcast-similarity-product]").count(), 0);
       }
-      const archivedRecommendation = page.locator('[data-podcast-similarity-podcast-key="borgen unplugged"]');
-      await archivedRecommendation.click();
-      await page.waitForFunction(() => state.activePodcastDetailKey === "borgen unplugged");
-      assert.match(await host.first().textContent(), /Thomas Qvortrup/);
+      const relatedCards = page.locator("[data-podcast-similarity-podcast-key]");
+      await relatedCards.first().waitFor({ state: "visible" });
+      assert.equal(await page.locator('[data-podcast-similarity-podcast-key="borgen unplugged"]').count(), 0);
+      const relatedId = await relatedCards.first().getAttribute("data-podcast-similarity-podcast-key");
+      if (width <= 768) await relatedCards.first().tap();
+      else await relatedCards.first().press("Enter");
+      await page.waitForFunction((id) => state.activePodcastDetailKey === id, relatedId);
       await page.locator("[data-podcast-detail-modal-back]").click();
       await page.waitForFunction(() => state.activePodcastDetailKey === "borgen unplugged 2 0");
       const episodeButton = page.locator("[data-podcast-episodes-open]").first();

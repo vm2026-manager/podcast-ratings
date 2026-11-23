@@ -172,6 +172,7 @@ function buildProductCatalog(metadataPayload, podcastPayload, config, displayGro
     }
     podcastIds.add(podcastId);
     item.existingId = podcastId;
+    item.isHistoricalBorgen = podcastId === "borgen unplugged";
     // The explicit Sheet references must resolve by ID when these editions share a title.
     if (borgenTitlesMatch && (sourceRow === historicalBorgen || sourceRow === currentBorgen)) {
       item.podcastId = podcastId;
@@ -197,6 +198,8 @@ function buildProductCatalog(metadataPayload, podcastPayload, config, displayGro
 function isSafePair(source, candidate) {
   return Boolean(
     candidate &&
+      !source.isHistoricalBorgen &&
+      !candidate.isHistoricalBorgen &&
       source.recommendationId !== candidate.recommendationId &&
       !(
         source.displayGroupId === "narkobetjenten" &&
@@ -357,6 +360,8 @@ function buildProductResultForSource(
 
   const manualSupplementaryResults = manualResolution.resolved
     .filter(({ candidate, audit }) => {
+      // Preserve the resolved editorial link in the audit without publishing a card.
+      if (source.isHistoricalBorgen || candidate.isHistoricalBorgen) return false;
       const sameNarkobetjentenGroup =
         source.displayGroupId === "narkobetjenten" &&
         candidate.displayGroupId === "narkobetjenten";
