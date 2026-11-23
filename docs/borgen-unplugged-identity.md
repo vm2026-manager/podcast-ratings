@@ -7,7 +7,9 @@ The catalogue contains two independent identities with the same display title af
 | `borgen unplugged` | `catalogue-v1-9db52a31` | Historical Qvortrup series, editorial score 8.0 |
 | `borgen unplugged 2 0` | `catalogue-v1-689d27f8` | Current Flink and Langballe series, editorial score 7.8 |
 
-The historical identity leaves ordinary public lists when its Sheet row has `Uaktuel=x`. Both identities remain indexed for exact links and editorial recommendations. Explicit supplementary relations may connect entries with identical titles. The current identity keeps its SoundCloud source and episode database key `borgen unplugged 2 0`. The code test serves the proposed catalogue and cluster changes locally.
+The historical identity remains in the catalogue for exact links, stored ratings and recommendation audit references. Public discovery excludes its exact Podcast-ID, including when an older catalogue copy lacks the archive marker. Ranking and search, home and editorial cards, Explore recommendations and seeds, cached recommendation rows, and podcast detail widgets use that boundary. The historical deep link still opens the original profile without a recommendation widget.
+
+The similarity product retains both source records and recommendation IDs. Its public sections exclude the historical record as both source and target, while the audit preserves exact resolution of the editorial relations. The current identity keeps its SoundCloud source and episode database key `borgen unplugged 2 0`.
 
 ## Read-only production baseline
 

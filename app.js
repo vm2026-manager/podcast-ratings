@@ -817,7 +817,7 @@ const AUTH_PERSISTENCE_STORAGE_KEY = "podcast-ratings-auth-persistence";
 const PROFILE_PREFERENCES_STORAGE_KEY = "podcast-ratings-profile-preferences";
 const EXPLORE_PERSONAL_SEED_HISTORY_STORAGE_KEY =
   "podcast-ratings-explore-personal-seed-history-v1";
-const UDFORSK_RECOMMENDATION_VERSION = 9;
+const UDFORSK_RECOMMENDATION_VERSION = 10;
 const EXPLORE_PERSONAL_SNAPSHOT_STORAGE_KEY =
   "podcast-ratings-explore-personal-snapshots-v2";
 const EXPLORE_PERSONAL_MINIMUM_GROUP_SIZE = 3;
@@ -3886,6 +3886,10 @@ function normalizeEnglishFlag(value) {
   return normalizeText(value).toLocaleLowerCase("da-DK") === "x";
 }
 
+function isHistoricalBorgenPodcast(podcast) {
+  return getPodcastId(podcast) === "borgen unplugged";
+}
+
 function isOutdatedPodcast(podcast) {
   return String(podcast?.uaktuel ?? "").trim().toLowerCase() === "x";
 }
@@ -5792,7 +5796,7 @@ function getRankingCandidates() {
 function getOrdinaryPodcastRows(source = state.podcasts, { includeArchived = false } = {}) {
   return source.filter((podcast) =>
     !isDrEditorialReviewPodcast(podcast) &&
-    (includeArchived || getPodcastId(podcast) !== "borgen unplugged" || !isOutdatedPodcast(podcast))
+    (includeArchived || !isHistoricalBorgenPodcast(podcast))
   );
 }
 
@@ -11197,7 +11201,7 @@ async function loadExploreClusterIntegration() {
 }
 
 function getValidatedPodcastSimilarityProduct(podcast) {
-  if (state.podcastSimilarityProductStatus !== "ready") return null;
+  if (isHistoricalBorgenPodcast(podcast) || state.podcastSimilarityProductStatus !== "ready") return null;
   const podcastKey = getPodcastKey(podcast);
   const recommendationId =
     state.podcastSimilarityRecommendationIdByPodcastKey[podcastKey];
@@ -11213,6 +11217,7 @@ function getValidatedPodcastSimilarityProduct(podcast) {
     for (const candidate of candidates || []) {
       const candidatePodcast =
         state.podcastSimilarityPodcastByRecommendationId[candidate.recommendationId];
+      if (candidate.existingId === "borgen unplugged" || isHistoricalBorgenPodcast(candidatePodcast)) continue;
       if (!candidatePodcast) return null;
       resolved.push({ candidate, podcast: candidatePodcast });
     }
@@ -11337,11 +11342,12 @@ function scorePodcastDetailRecommendation(podcast, item, sectionType) {
 }
 
 function getPodcastDetailFallbackRecommendations(podcast, seenPodcastKeys, seenPodcastTitles) {
+  if (getPodcastKey(podcast) === "borgen unplugged") return [];
   const currentKey = getPodcastKey(podcast);
   const currentGenre = normalizeComparable(podcast?.genre);
   const currentSeries = normalizeComparable(podcast?.mainSeries);
   const currentRating = Number(podcast?.ratingValue) || 0;
-  const candidates = getOrdinaryPodcastRows(state.podcasts, { includeArchived: true })
+  const candidates = getOrdinaryPodcastRows()
     .filter((candidatePodcast) => {
       const candidateKey = getPodcastKey(candidatePodcast);
       const candidateTitle = normalizeComparable(candidatePodcast?.title);
@@ -11363,7 +11369,13 @@ function getPodcastDetailFallbackRecommendations(podcast, seenPodcastKeys, seenP
         (sameGenre ? 100 : 0) +
         Math.max(0, 12 - Math.abs(currentRating - rating) * 2) +
         rating;
-      return { candidatePodcast, candidateKey: getPodcastKey(candidatePodcast), candidateTitle, sameSeries, score };
+      return {
+        candidatePodcast,
+        candidateKey: getPodcastKey(candidatePodcast),
+        candidateTitle: normalizeComparable(candidatePodcast.title),
+        sameSeries,
+        score
+      };
     })
     .sort(
       (left, right) =>
@@ -11475,6 +11487,7 @@ function getCatalogueManualSupplementaryPodcasts(podcast) {
 
 function getPodcastDetailDynamicRecommendations(podcast, validated) {
   const currentKey = getPodcastKey(podcast);
+  if (currentKey === "borgen unplugged") return [];
   const currentTitle = normalizeComparable(podcast?.title);
   const currentGenre = normalizeComparable(podcast?.genre);
   const currentSecondaryGenre = normalizeComparable(podcast?.secondaryGenre);
@@ -11507,7 +11520,7 @@ function getPodcastDetailDynamicRecommendations(podcast, validated) {
   });
 
   const seenTitles = new Set([currentTitle]);
-  const scoredCandidates = getOrdinaryPodcastRows(state.podcasts, { includeArchived: true })
+  const scoredCandidates = getOrdinaryPodcastRows()
     .filter((candidatePodcast) => {
       const candidateKey = getPodcastKey(candidatePodcast);
       const candidateTitle = normalizeComparable(candidatePodcast?.title);
@@ -11723,6 +11736,7 @@ function selectPodcastDetailRecommendations(
 function resolvePublicPodcastDisplayItem(podcast) {
   if (!podcast || podcast.isDisplayGroup) return podcast || null;
   const podcastKey = getPodcastKey(podcast);
+  if (podcastKey === "borgen unplugged") return null;
   // The lookup holds only catalogue identity. Recreate the public item here so
   // its community fields always read the current RPC state rather than a
   // catalogue-time snapshot.
@@ -11796,7 +11810,7 @@ function getPodcastSimilarityProductMarkup(podcast) {
 
 function getPodcastDetailRecommendations(podcast) {
   const podcastKey = getPodcastKey(podcast);
-  if (!podcastKey) return [];
+  if (!podcastKey || isHistoricalBorgenPodcast(podcast)) return [];
   const cached = state.podcastDetailRecommendationCache.get(podcastKey);
   if (cached) return cached;
 
@@ -12252,6 +12266,7 @@ function updatePodcastDetailNavigationHistoryButton(dialog) {
 }
 
 function openPodcastDetailFromModal(podcast, triggerElement = null) {
+  if (isHistoricalBorgenPodcast(podcast)) return false;
   const dialog = document.getElementById("podcastDetailSheet");
   const currentKey = normalizeText(state.activePodcastDetailKey);
   const nextKey = getPodcastKey(podcast);
@@ -12292,7 +12307,7 @@ function navigatePodcastDetailHistoryBack() {
 
 function setPodcastDetailRankingContext(podcast, navigationKeys = null) {
   const suppliedKeys = Array.isArray(navigationKeys)
-    ? navigationKeys.map((key) => normalizeText(key)).filter(Boolean)
+    ? navigationKeys.map((key) => normalizeText(key)).filter((key) => key && key !== "borgen unplugged")
     : [];
   const isRankingRoute = getRouteInfoFromHash().route === "ranglister";
   if (!suppliedKeys.length && !isRankingRoute) {
@@ -16772,7 +16787,7 @@ function renderPodcastDetailSheetContent(
   }
   const episodesMarkup = "";
   const cachedRecommendations = getCachedPodcastDetailRecommendations(podcast);
-  const podcastSimilarityMarkup = cachedRecommendations
+  const podcastSimilarityMarkup = isHistoricalBorgenPodcast(podcast) ? "" : cachedRecommendations
     ? renderPodcastSimilarityProductMarkup(cachedRecommendations)
     : `
       <div class="podcast-detail-sheet__related podcast-detail-sheet__related--loading" data-podcast-similarity-product aria-live="polite">
@@ -17563,7 +17578,7 @@ function renderHomeLatestEditorial(container) {
 
 function getHomeFeaturedReviewQueue() {
   return state.allReviews
-    .filter(isActiveFeatured)
+    .filter((review) => !isHistoricalBorgenPodcast(review) && isActiveFeatured(review))
     .filter((review) => {
       const score = getHomeFeaturedReviewScore(review);
       return score !== null && score >= 7;
@@ -17577,7 +17592,7 @@ function getHomeFeaturedReviewQueue() {
 }
 
 function getPodcastForFeaturedReview(review) {
-  const reviewKey = normalizeMatchKey(review?.matchTitle || review?.title);
+  const reviewKey = normalizeText(review?.podcastId) || normalizeMatchKey(review?.matchTitle || review?.title);
   return reviewKey
     ? resolvePublicPodcastDisplayItem(state.podcastByKey[reviewKey] || null)
     : null;
@@ -18598,9 +18613,10 @@ function renderHomeGenres(container) {
   const fragment = document.createDocumentFragment();
   let renderedCount = 0;
 
+  const publicPodcasts = getOrdinaryPodcastRows();
   getTopHomeGenres().forEach((genre) => {
     let topPodcast = null;
-    state.podcasts.forEach((podcast) => {
+    publicPodcasts.forEach((podcast) => {
       const hasMadsRating =
         podcast.ratingValue !== null && podcast.ratingValue !== undefined;
       if (!hasMadsRating || !podcastHasGenre(podcast, genre)) return;
@@ -23103,6 +23119,7 @@ function getExploreSearchParts(searchTerm) {
 }
 
 function matchesExploreFilters(podcast, searchParts = [], genre = "Alle") {
+  if (isHistoricalBorgenPodcast(podcast)) return false;
   if (isOutdatedPodcast(podcast) || isDrEditorialReviewPodcast(podcast)) {
     return false;
   }
@@ -23123,7 +23140,7 @@ function getExploreSeedPodcasts() {
       rating: parseNumber(rating) ?? 0,
       source: "rating"
     }))
-    .filter((item) => item.podcast && item.rating >= 7)
+    .filter((item) => item.podcast && !isHistoricalBorgenPodcast(item.podcast) && item.rating >= 7)
     .sort((a, b) => {
       if (b.rating !== a.rating) return b.rating - a.rating;
       return normalizeText(a.podcast.title).localeCompare(normalizeText(b.podcast.title), "da", {
@@ -23148,7 +23165,7 @@ function getExploreSeedPodcasts() {
   Array.from(state.savedPodcastKeys).forEach((key) => {
     if (existingKeys.has(key)) return;
     const podcast = state.podcastByKey[key];
-    if (!podcast) return;
+    if (!podcast || isHistoricalBorgenPodcast(podcast)) return;
     seeds.push({ podcast, rating: 0, source: "saved" });
     existingKeys.add(key);
   });
@@ -23190,7 +23207,7 @@ function getExplorePreferenceProfile() {
       rating: parseNumber(rating) ?? 0,
       source: "rating"
     }))
-    .filter((seed) => seed.podcast && seed.rating >= 7)
+    .filter((seed) => seed.podcast && !isHistoricalBorgenPodcast(seed.podcast) && seed.rating >= 7)
     .filter((seed, index, seeds) =>
       seeds.findIndex((candidate) => getPodcastKey(candidate.podcast) === getPodcastKey(seed.podcast)) === index
     )
@@ -23202,7 +23219,7 @@ function getExplorePreferenceProfile() {
       rating: 0,
       source: "saved"
     }))
-    .filter((seed) => seed.podcast);
+    .filter((seed) => seed.podcast && !isHistoricalBorgenPodcast(seed.podcast));
   const uniqueSavedSeeds = savedSeeds.filter((seed, index, seeds) =>
     seeds.findIndex((candidate) => getPodcastKey(candidate.podcast) === getPodcastKey(seed.podcast)) === index
   );
@@ -23300,6 +23317,8 @@ function readExplorePersonalSnapshot({ dayKey, fingerprint }) {
     }
 
     const sections = snapshot.sections
+      .filter((section) => section.seedPodcastKey !== "borgen unplugged" &&
+        !section.seedPodcastIds?.includes("borgen unplugged"))
       .map((section) => ({
         ...section,
         items: (section.items || [])
@@ -24022,7 +24041,7 @@ function getExploreClusterSections({ searchParts = [], genre = "Alle" } = {}) {
   try {
     return state.exploreClusterUiIntegration.buildExploreClusterSections({
       clusters: state.exploreClustersPayload,
-      podcasts: state.podcasts,
+      podcasts: state.podcasts.filter((podcast) => !isHistoricalBorgenPodcast(podcast)),
       ratings: state.userRatingsByKey,
       similarityProduct: state.podcastSimilarityProductByRecommendationId,
       displayGroups: state.podcastDisplayGroups,
@@ -26502,15 +26521,16 @@ function renderRoute() {
     }).join("");
     const homeHourBucket = getExploreHourBucket();
     const heroPodcasts = getHomeHeroPodcasts(homeHourBucket);
+    const publicPodcasts = getOrdinaryPodcastRows();
     const heroPodcastPrimary =
       heroPodcasts[0] ||
-      state.podcasts.find(
+      publicPodcasts.find(
         (podcast) => podcast.image && podcast.title !== featuredReview?.title
       ) ||
       null;
     const heroPodcastSecondary =
       heroPodcasts[1] ||
-      state.podcasts.find(
+      publicPodcasts.find(
         (podcast) =>
           podcast.image &&
           podcast !== heroPodcastPrimary &&
@@ -28536,7 +28556,7 @@ function applyPodcastDataRefresh(podcastRows, featuredRows, coverManifestLookup 
     .filter(isUsableReview);
 
   state.featuredReviews = state.allReviews
-    .filter(isActiveFeatured)
+    .filter((review) => !isHistoricalBorgenPodcast(review) && isActiveFeatured(review))
     .sort((a, b) => {
       const aTime = a.reviewDateObject ? a.reviewDateObject.getTime() : 0;
       const bTime = b.reviewDateObject ? b.reviewDateObject.getTime() : 0;
