@@ -26,7 +26,7 @@ Deno.test("normal all-feed shards are sorted, complete, disjoint, and exclude Ap
   assertEquals([...assigned].sort(), normalKeys);
   assertEquals(new Set(assigned).size, normalKeys.length);
   assertEquals(assigned.includes("valley_heat"), true);
-  assertEquals(selectAppleFeedKeys(feedConfigs), ["apple_disabled", "apple_accidentally_enabled"]);
+  assertEquals(selectAppleFeedKeys(feedConfigs), ["apple_accidentally_enabled"]);
 });
 
 Deno.test("a staged disabled feed stays out of all-feed selection and direct import is rejected", async () => {
