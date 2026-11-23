@@ -11004,6 +11004,14 @@ function podcastDetailDescriptionExceedsClamp(description) {
 
   return expandedHeight > collapsedHeight + 1;
 }
+function updatePodcastDetailDescriptionToggle(dialog) {
+  const description = dialog?.querySelector("[data-podcast-detail-description]");
+  const toggle = dialog?.querySelector("[data-podcast-detail-description-toggle]");
+  if (!toggle) return;
+
+  toggle.hidden = !isMobileViewport() || !podcastDetailDescriptionExceedsClamp(description);
+}
+
 function getPodcastDetailDescription(podcast) {
   return (
     normalizeText(podcast.longDescription) ||
@@ -17283,6 +17291,11 @@ function openPodcastDetailSheet(
 
   dialog.classList.remove("is-hidden");
   dialog.setAttribute("aria-hidden", "false");
+  window.requestAnimationFrame(() => {
+    if (!dialog.classList.contains("is-hidden")) {
+      updatePodcastDetailDescriptionToggle(dialog);
+    }
+  });
   dialog.querySelector("[data-podcast-detail-content]")?.scrollTo?.({ top: 0, left: 0, behavior: "auto" });
   updatePodcastDetailNavigationHistoryButton(dialog);
   document.body.style.setProperty("--podcast-detail-scroll-y", `${state.podcastDetailScrollY}px`);
