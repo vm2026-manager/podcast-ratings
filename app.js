@@ -10994,6 +10994,16 @@ function getPodcastDetailPublisherLabel(podcast) {
   return getPublisherFilterLabel(publisher);
 }
 
+function podcastDetailDescriptionExceedsClamp(description) {
+  if (!description) return false;
+
+  const collapsedHeight = description.getBoundingClientRect().height;
+  description.classList.add("is-expanded");
+  const expandedHeight = description.getBoundingClientRect().height;
+  description.classList.remove("is-expanded");
+
+  return expandedHeight > collapsedHeight + 1;
+}
 function getPodcastDetailDescription(podcast) {
   return (
     normalizeText(podcast.longDescription) ||
@@ -16072,7 +16082,7 @@ function renderPodcastDisplayGroupContent(dialog, displayGroup) {
   }
   const mobileDescription = content.querySelector("[data-podcast-detail-description]");
   const descriptionToggle = content.querySelector("[data-podcast-detail-description-toggle]");
-  if (descriptionToggle) descriptionToggle.hidden = !isMobileViewport() || mobileDescription.textContent.trim().length <= 220;
+  if (descriptionToggle) descriptionToggle.hidden = !isMobileViewport() || !podcastDetailDescriptionExceedsClamp(mobileDescription);
   descriptionToggle?.addEventListener("click", () => {
     const expanded = mobileDescription?.classList.toggle("is-expanded") || false;
     descriptionToggle.setAttribute("aria-expanded", String(expanded));
@@ -17007,7 +17017,7 @@ function renderPodcastDetailSheetContent(
   const descriptionToggle = content.querySelector("[data-podcast-detail-description-toggle]");
   if (description && descriptionToggle) {
     descriptionToggle.hidden =
-      !isMobileViewport() || description.textContent.trim().length <= 220;
+      !isMobileViewport() || !podcastDetailDescriptionExceedsClamp(description);
   }
   descriptionToggle?.addEventListener("click", () => {
     const expanded = description?.classList.toggle("is-expanded") || false;
