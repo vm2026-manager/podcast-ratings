@@ -1115,6 +1115,12 @@ const state = {
   adminUserCountLoadedFor: null,
   adminUserCountLoading: false,
   adminUserCountError: "",
+  adminUserCountHistory: [],
+  adminUserCountHistoryLoadedFor: null,
+  adminUserCountHistoryLoadedPeriod: null,
+  adminUserCountHistoryLoading: false,
+  adminUserCountHistoryError: "",
+  adminUserCountHistoryPeriod: "week",
   adminPodcastSuggestionsFeedback: "",
   adminPodcastSuggestionsFeedbackIsError: false,
   adminPodcastSuggestionFilter: "new",
@@ -20217,6 +20223,12 @@ function clearUserScopedState({ clearUi = false } = {}) {
   state.adminUserCountLoadedFor = null;
   state.adminUserCountLoading = false;
   state.adminUserCountError = "";
+  state.adminUserCountHistory = [];
+  state.adminUserCountHistoryLoadedFor = null;
+  state.adminUserCountHistoryLoadedPeriod = null;
+  state.adminUserCountHistoryLoading = false;
+  state.adminUserCountHistoryError = "";
+  state.adminUserCountHistoryPeriod = "week";
   state.adminPodcastSuggestionsFeedback = "";
   state.adminPodcastSuggestionsFeedbackIsError = false;
   state.adminPodcastSuggestionFilter = "new";
@@ -20906,9 +20918,15 @@ function renderModeratorPage() {
         <a class="moderator-page__back" href="#profil">&larr; Tilbage til profil</a>
       </header>
       <section class="moderator-user-count" aria-labelledby="moderatorUserCountHeading" aria-live="polite">
-        <div><p class="profile-eyebrow">Brugeroversigt</p><h2 id="moderatorUserCountHeading">Brugere i alt</h2>
+        <div class="moderator-user-count__summary"><p class="profile-eyebrow">Brugeroversigt</p><h2 id="moderatorUserCountHeading">Brugere i alt</h2>
           ${state.adminUserCountLoading ? `<p class="moderator-user-count__value">Henter&hellip;</p>` : state.adminUserCountError ? `<p class="moderator-user-count__error">${escapeHtml(state.adminUserCountError)}</p>` : state.adminUserCountLoadedFor === state.authUser?.id ? `<p class="moderator-user-count__value">${new Intl.NumberFormat("da-DK").format(state.adminUserCount)} <span>${state.adminUserCount === 1 ? "bruger" : "brugere"}</span></p>` : `<p class="moderator-user-count__value">&mdash;</p>`}
           <p class="moderator-user-count__note">Registrerede konti p&aring; Podcastlisten.</p>
+        </div>
+        <div class="moderator-user-count__trend">
+          <div class="moderator-user-count__trend-header"><span>Udvikling</span><div role="group" aria-label="Vis udvikling pr. uge eller måned">
+            ${["week", "month"].map((period) => `<button type="button" data-admin-user-count-period="${period}" aria-pressed="${state.adminUserCountHistoryPeriod === period}">${period === "week" ? "Uge" : "Måned"}</button>`).join("")}
+          </div></div>
+          ${renderAdminUserCountTrend()}
         </div>
         <button type="button" class="moderator-user-count__refresh" data-refresh-admin-user-count ${state.adminUserCountLoading ? "disabled" : ""}>${state.adminUserCountLoading ? "Opdaterer&hellip;" : "Opdater opt&aelig;lling"}</button>
       </section>
@@ -20926,10 +20944,23 @@ function renderModeratorPage() {
     renderModeratorPage();
   }));
   container.querySelector("[data-refresh-admin-user-count]")?.addEventListener("click", () => fetchAdminUserCount());
+  container.querySelectorAll("[data-admin-user-count-period]").forEach((button) => button.addEventListener("click", () => {
+    const period = button.dataset.adminUserCountPeriod === "month" ? "month" : "week";
+    if (state.adminUserCountHistoryPeriod === period) return;
+    state.adminUserCountHistoryPeriod = period;
+    state.adminUserCountHistory = [];
+    state.adminUserCountHistoryLoadedPeriod = null;
+    state.adminUserCountHistoryError = "";
+    renderModeratorPage();
+    fetchAdminUserCountHistory(period);
+  }));
   bindModeratorSuggestionActions(container);
   window.requestAnimationFrame(revealSuggestionNotificationTarget);
   if (!loaded) fetchPodcastSuggestionsForAdmin();
   if (state.adminUserCountLoadedFor !== state.authUser?.id && !state.adminUserCountLoading && !state.adminUserCountError) fetchAdminUserCount();
+  if (state.adminUserCountHistoryLoadedFor !== state.authUser?.id || state.adminUserCountHistoryLoadedPeriod !== state.adminUserCountHistoryPeriod) {
+    fetchAdminUserCountHistory(state.adminUserCountHistoryPeriod);
+  }
 }
 
 async function fetchAdminUserCount() {
@@ -20956,6 +20987,82 @@ async function fetchAdminUserCount() {
   } finally {
     state.adminUserCountLoading = false;
     if (state.authUser?.id === userId && document.body.classList.contains("page-moderator")) renderModeratorPage();
+  }
+}
+
+function renderAdminUserCountTrend() {
+  if (state.adminUserCountHistoryLoading && !state.adminUserCountHistory.length) {
+    return `<p class="moderator-user-count__trend-note">Henter udvikling&hellip;</p>`;
+  }
+  if (state.adminUserCountHistoryError) {
+    return `<p class="moderator-user-count__trend-note">${escapeHtml(state.adminUserCountHistoryError)}</p>`;
+  }
+
+  const points = state.adminUserCountHistory
+    .map((row) => ({ date: normalizeText(row?.snapshot_date), count: Number(row?.user_count) }))
+    .filter((row) => /^\d{4}-\d{2}-\d{2}$/.test(row.date) && Number.isSafeInteger(row.count) && row.count >= 0)
+    .slice(-12);
+  if (!points.length) {
+    return `<p class="moderator-user-count__trend-note">Målingerne starter i dag og fyldes på automatisk.</p>`;
+  }
+
+  const values = points.map((point) => point.count);
+  const low = Math.min(...values);
+  const high = Math.max(...values);
+  const span = Math.max(1, high - low);
+  const coordinates = points.map((point, index) => ({
+    x: points.length === 1 ? 180 : 18 + (index / (points.length - 1)) * 324,
+    y: 83 - ((point.count - low) / span) * 52,
+    ...point
+  }));
+  const path = coordinates.map((point, index) => `${index ? "L" : "M"}${point.x.toFixed(1)} ${point.y.toFixed(1)}`).join(" ");
+  const firstDate = new Date(`${points[0].date}T12:00:00`);
+  const lastDate = new Date(`${points[points.length - 1].date}T12:00:00`);
+  const dateFormat = state.adminUserCountHistoryPeriod === "month"
+    ? new Intl.DateTimeFormat("da-DK", { month: "short" })
+    : new Intl.DateTimeFormat("da-DK", { day: "numeric", month: "short" });
+  const trend = points[points.length - 1].count - points[0].count;
+  const trendText = points.length < 2
+    ? "Første måling gemt · grafen tegnes løbende"
+    : trend === 0
+      ? "Ingen ændring siden første måling"
+      : `${trend > 0 ? "+" : "−"}${new Intl.NumberFormat("da-DK").format(Math.abs(trend))} siden første måling`;
+
+  return `<svg class="moderator-user-count__chart" viewBox="0 0 360 112" role="img" aria-label="${state.adminUserCountHistoryPeriod === "week" ? "Brugertal pr. uge" : "Brugertal pr. måned"}: ${values.map((value) => new Intl.NumberFormat("da-DK").format(value)).join(", ")}">
+    <path class="moderator-user-count__chart-grid" d="M12 83 H348 M12 57 H348 M12 31 H348" />
+    ${coordinates.length > 1 ? `<path class="moderator-user-count__chart-area" d="${path} L${coordinates.at(-1).x.toFixed(1)} 84 L${coordinates[0].x.toFixed(1)} 84 Z" />` : ""}
+    <path class="moderator-user-count__chart-line" d="${path}" />
+    ${coordinates.map((point) => `<circle class="moderator-user-count__chart-point" cx="${point.x.toFixed(1)}" cy="${point.y.toFixed(1)}" r="3"><title>${dateFormat.format(new Date(`${point.date}T12:00:00`))}: ${new Intl.NumberFormat("da-DK").format(point.count)} brugere</title></circle>`).join("")}
+    <text class="moderator-user-count__chart-label" x="12" y="105">${escapeHtml(dateFormat.format(firstDate))}</text>
+    <text class="moderator-user-count__chart-label" x="348" y="105" text-anchor="end">${escapeHtml(dateFormat.format(lastDate))}</text>
+  </svg><p class="moderator-user-count__trend-note">${escapeHtml(trendText)}</p>`;
+}
+
+async function fetchAdminUserCountHistory(period = state.adminUserCountHistoryPeriod) {
+  if (!isPodcastSuggestionAdmin() || !state.supabase || !state.authUser || state.adminUserCountHistoryLoading) return;
+
+  const userId = state.authUser.id;
+  const requestedPeriod = period === "month" ? "month" : "week";
+  state.adminUserCountHistoryLoading = true;
+  state.adminUserCountHistoryError = "";
+  try {
+    const { data, error } = await state.supabase.rpc("admin_user_count_history", { p_period: requestedPeriod });
+    if (error) throw error;
+    if (state.authUser?.id !== userId) return;
+    state.adminUserCountHistory = (Array.isArray(data) ? data : []).slice(-12);
+    state.adminUserCountHistoryLoadedFor = userId;
+    state.adminUserCountHistoryLoadedPeriod = requestedPeriod;
+  } catch (error) {
+    console.error("Admin user count history fetch failed", error);
+    if (state.authUser?.id === userId) state.adminUserCountHistoryError = "Udviklingen kunne ikke hentes.";
+  } finally {
+    state.adminUserCountHistoryLoading = false;
+    if (state.authUser?.id === userId && document.body.classList.contains("page-moderator")) renderModeratorPage();
+    if (state.authUser?.id === userId
+      && state.adminUserCountHistoryLoadedPeriod !== state.adminUserCountHistoryPeriod
+      && !state.adminUserCountHistoryError) {
+      fetchAdminUserCountHistory(state.adminUserCountHistoryPeriod);
+    }
   }
 }
 
