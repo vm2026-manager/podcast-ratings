@@ -1111,6 +1111,10 @@ const state = {
   adminPodcastSuggestionsLoadedFor: null,
   adminPodcastSuggestionsLoading: false,
   adminPodcastSuggestionsError: "",
+  adminUserCount: null,
+  adminUserCountLoadedFor: null,
+  adminUserCountLoading: false,
+  adminUserCountError: "",
   adminPodcastSuggestionsFeedback: "",
   adminPodcastSuggestionsFeedbackIsError: false,
   adminPodcastSuggestionFilter: "new",
@@ -20209,6 +20213,10 @@ function clearUserScopedState({ clearUi = false } = {}) {
   state.adminPodcastSuggestionsLoadedFor = null;
   state.adminPodcastSuggestionsLoading = false;
   state.adminPodcastSuggestionsError = "";
+  state.adminUserCount = null;
+  state.adminUserCountLoadedFor = null;
+  state.adminUserCountLoading = false;
+  state.adminUserCountError = "";
   state.adminPodcastSuggestionsFeedback = "";
   state.adminPodcastSuggestionsFeedbackIsError = false;
   state.adminPodcastSuggestionFilter = "new";
@@ -20897,6 +20905,13 @@ function renderModeratorPage() {
         <div><p class="profile-eyebrow">Administration</p><h1 id="moderatorPageHeading">Podcastforslag</h1><p>Gennemg&aring; forslag fra brugere og administrer deres status.</p></div>
         <a class="moderator-page__back" href="#profil">&larr; Tilbage til profil</a>
       </header>
+      <section class="moderator-user-count" aria-labelledby="moderatorUserCountHeading" aria-live="polite">
+        <div><p class="profile-eyebrow">Brugeroversigt</p><h2 id="moderatorUserCountHeading">Brugere i alt</h2>
+          ${state.adminUserCountLoading ? `<p class="moderator-user-count__value">Henter&hellip;</p>` : state.adminUserCountError ? `<p class="moderator-user-count__error">${escapeHtml(state.adminUserCountError)}</p>` : state.adminUserCountLoadedFor === state.authUser?.id ? `<p class="moderator-user-count__value">${new Intl.NumberFormat("da-DK").format(state.adminUserCount)} <span>${state.adminUserCount === 1 ? "bruger" : "brugere"}</span></p>` : `<p class="moderator-user-count__value">&mdash;</p>`}
+          <p class="moderator-user-count__note">Registrerede konti p&aring; Podcastlisten.</p>
+        </div>
+        <button type="button" class="moderator-user-count__refresh" data-refresh-admin-user-count ${state.adminUserCountLoading ? "disabled" : ""}>${state.adminUserCountLoading ? "Opdaterer&hellip;" : "Opdater opt&aelig;lling"}</button>
+      </section>
       <div class="moderator-filter-bar" role="group" aria-label="Filtrer podcastforslag">
         ${["new", "all", "approved", "rejected"].map((filter) => `<button type="button" class="moderator-filter${filter === activeFilter ? " is-active" : ""}" data-moderator-filter="${filter}" aria-pressed="${filter === activeFilter}">${escapeHtml(getAdminSuggestionFilterLabel(filter))} <span>${counts[filter]}</span></button>`).join("")}
       </div>
@@ -20910,9 +20925,38 @@ function renderModeratorPage() {
     state.adminPodcastSuggestionsFeedbackIsError = false;
     renderModeratorPage();
   }));
+  container.querySelector("[data-refresh-admin-user-count]")?.addEventListener("click", () => fetchAdminUserCount());
   bindModeratorSuggestionActions(container);
   window.requestAnimationFrame(revealSuggestionNotificationTarget);
   if (!loaded) fetchPodcastSuggestionsForAdmin();
+  if (state.adminUserCountLoadedFor !== state.authUser?.id && !state.adminUserCountLoading && !state.adminUserCountError) fetchAdminUserCount();
+}
+
+async function fetchAdminUserCount() {
+  if (!isPodcastSuggestionAdmin() || !state.supabase || !state.authUser || state.adminUserCountLoading) return;
+
+  const userId = state.authUser.id;
+  state.adminUserCountLoading = true;
+  state.adminUserCountError = "";
+  if (document.body.classList.contains("page-moderator")) renderModeratorPage();
+
+  try {
+    const { data, error } = await state.supabase.rpc("admin_user_count");
+    if (error) throw error;
+    const count = Number(data);
+    if (!Number.isSafeInteger(count) || count < 0) throw new Error("Invalid user count response");
+    if (state.authUser?.id !== userId) return;
+    state.adminUserCount = count;
+    state.adminUserCountLoadedFor = userId;
+  } catch (error) {
+    console.error("Admin user count fetch failed", error);
+    if (state.authUser?.id === userId) {
+      state.adminUserCountError = "Brugertallet kunne ikke hentes. Kontrollér, at Supabase-migrationen er anvendt.";
+    }
+  } finally {
+    state.adminUserCountLoading = false;
+    if (state.authUser?.id === userId && document.body.classList.contains("page-moderator")) renderModeratorPage();
+  }
 }
 
 function createModeratorSuggestionMarkup(suggestion) {
