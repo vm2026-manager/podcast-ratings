@@ -9,7 +9,8 @@
     "16122692743",
     "16122692744",
     "16122692745",
-    "16122692746"
+    "16122692746",
+    "16122692747"
   ],
   "records": [
     {
@@ -33,12 +34,28 @@
       "publisher": "DR",
       "cover": "https://api.dr.dk/podcasts/v1/images/urn:dr:podcast:image:66f271c4b75d19480fa40d01.jpg",
       "description": "Kvinden i Isdalen er et afsnit af DR-podcasten Djævlen i detaljen."
+    },
+    {
+      "discovery_key": "den fjernstyrede bombebil",
+      "podcast_id": "djaevlen-auto-v1-205f0071",
+      "title": "Den fjernstyrede bombebil",
+      "hovedserie": "Djævlen i detaljen",
+      "publisher": "DR",
+      "cover": "https://api.dr.dk/podcasts/v1/images/urn:dr:podcast:image:66f271c4b75d19480fa40d01.jpg",
+      "source_episode_guid": "16122702647",
+      "source_url": "https://www.dr.dk/lyd/special-radio/djaevlen-i-detaljen/djaevlen-i-detaljen-2026/den-fjernstyrede-bombebil-16122692647",
+      "source_description": "En ordre på 16 kilo kemikalier fra en polsk hjemmeside til en lejlighed i Tyskland bliver startskuddet til en intens jagt på tværs af landegrænser. Sporet fører dansk politi og PET til et ganske almindeligt parcelhus i Holbæk, hvor en på overfladen velintegreret familiefar gemmer på automatvåben, bombemanualer og komponenter til at konstruere en kraftig bombe. En bombe, der skulle transporteres ved hjælp af en specialfremstillet fjernstyret bombebil. Medfortæller er Frederik Strand fra Politimuseet, som i anledning af PET's 75-års jubilæum sætter fokus på sagen i en ny udstilling. Vært: Per Lysholt. Gæst: Frederik Strand Tilrettelæggere: Bo Norström Weile og Per Lysholt. Lyddesign: Hjalte Lehmann. Redaktør: Mikkel Clausen. Skriv til detaljen@dr.dk. Produceret for DR af Filt CPH.",
+      "host": "Per Lysholt",
+      "source_host_credit": "Vært: Per Lysholt",
+      "needs_editorial_review": true
     }
   ],
   "processed_full_production_numbers": [
-    "16122692642"
+    "16122692642",
+    "16122692647"
   ],
   "processed_full_guids": [
-    "16122702642"
+    "16122702642",
+    "16122702647"
   ]
 }
