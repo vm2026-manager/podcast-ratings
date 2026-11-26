@@ -3,6 +3,7 @@ import { readFile } from "node:fs/promises";
 import { createRequire } from "node:module";
 import { parseCsv, rowsToObjects } from "./sync-sheet-data.mjs";
 import { partitionSheetPodcastRows, validateCatalogueIntake } from "./catalogue-intake.mjs";
+import { applyManualCatalogueMetadataOverrides } from "./manual-catalogue-metadata.mjs";
 import { dedupeProposedGenres, suggestGenres, suggestSearchTopics } from "./catalogue-quality-rules.mjs";
 
 const require = createRequire(import.meta.url);
@@ -23,13 +24,24 @@ const source = [
 const [candidateRow] = rowsToObjects(parseCsv(source.map((row) => row.map((cell) => "\"" + cell.replaceAll("\"", "\"\"") + "\"").join(",")).join("\n")));
 assert.equal(candidateRow.__sourceRowNumber, 2);
 assert.equal(Object.keys(candidateRow).includes("__sourceRowNumber"), false, "source provenance is not serialized as catalogue metadata");
+const copiedCandidateRow = applyManualCatalogueMetadataOverrides({
+  sheetRows: [candidateRow],
+  publishedRows: [],
+  registry: { schemaVersion: 1, overrides: [] },
+  root: process.cwd()
+})[0];
+assert.equal(copiedCandidateRow.__sourceRowNumber, 2, "manual metadata overrides preserve source row provenance");
+assert.equal(Object.keys(copiedCandidateRow).includes("__sourceRowNumber"), false, "copied provenance stays non-enumerable");
+const sparseRows = rowsToObjects(parseCsv("Titel,Podcast-ID\n\nFørste,first\n\nAnden,second"));
+assert.deepEqual(sparseRows.map((row) => row.__sourceRowNumber), [3, 5], "source row provenance counts blank Sheet rows");
 const published = [{ Titel: "Existing record", "Podcast-ID": "existing-record", catalogue_id: "cat-existing", Genre: "Samfund" }];
-const partition = partitionSheetPodcastRows([candidateRow], published);
+const partition = partitionSheetPodcastRows([copiedCandidateRow], published);
 assert.equal(partition.publishableRows.length, 0);
 assert.equal(partition.intakeRows.length, 1);
 assert.equal(partition.intakeRows[0].title, "Krig");
 assert.equal(partition.intakeRows[0].declaredPodcastId, null);
 assert.equal(partition.intakeRows[0].identityCreated, false);
+assert.equal(partition.intakeRows[0].sourceRowNumber, 2);
 assert.equal(Object.hasOwn(partition.intakeRows[0], "catalogue_id"), false);
 assert.ok(partition.intakeRows[0].issues.some((issue) => issue.code === "missing-podcast-id"));
 assert.ok(partition.intakeRows[0].issues.some((issue) => issue.code === "url-in-description"));

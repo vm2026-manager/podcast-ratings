@@ -91,7 +91,13 @@ export function applyManualCatalogueMetadataOverrides({ sheetRows, publishedRows
     return entry;
   });
 
-  const output = Array.isArray(sheetRows) ? sheetRows.map((row) => ({ ...row })) : [];
+  const output = Array.isArray(sheetRows) ? sheetRows.map((row) => {
+    const copy = { ...row };
+    if (Number.isInteger(row?.__sourceRowNumber)) {
+      Object.defineProperty(copy, "__sourceRowNumber", { value: row.__sourceRowNumber, enumerable: false });
+    }
+    return copy;
+  }) : [];
   for (const entry of verified) {
     const matchingRows = output.filter((row) => normalize(row?.["Podcast-ID"]) === entry.podcastId);
     if (matchingRows.length > 1) {
