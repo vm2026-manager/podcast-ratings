@@ -16,11 +16,11 @@ export function validateCatalogue(source, baseline, slugFromId) {
     if (!slug || slugs.has(slug)) throw new Error(`Podcast slug collision: ${slug}`);
     slugs.add(slug);
     if (!["Titel", "Title"].some((key) => typeof row[key] === "string" && row[key].trim())) {
-      throw new Error(`Missing title: ${id}`);
+      throw new Error(`Missing title/description: ${id}`);
     }
     if (row.needs_editorial_review !== true
         && !["Kort beskrivelse", "Lang beskrivelse"].some((key) => typeof row[key] === "string" && row[key].trim())) {
-      throw new Error(`Missing description: ${id}`);
+      throw new Error(`Missing title/description: ${id}`);
     }
   }
   if (source.rows.filter((row) => row.Genre === "True Crime").length < baseline.trueCrimeCount) throw new Error("Unexpected fall in True Crime count; explicit review required");
