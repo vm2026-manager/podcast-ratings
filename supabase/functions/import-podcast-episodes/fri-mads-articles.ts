@@ -32,7 +32,8 @@ export function parseFriMadsArticleSidecar(content: string, config: FeedConfig, 
   episodes: PodcastEpisodeRow[];
   errors: Array<{ index: number; errors: string[] }>;
   warnings: Array<{ index: number; warning: string }>;
-  eligibility: { activeRateableEpisodes: number; excludedEntries: number; episodeFeatureEnabled: boolean };
+  eligibility: { totalParsedEntries: number; activeRateableEpisodes: number; excludedEntries: number; episodeFeatureEnabled: boolean };
+  imported_at: string;
 } {
   const fail = (message: string): never => { throw new Error(message); };
   let sidecar: any;
@@ -122,6 +123,7 @@ export function parseFriMadsArticleSidecar(content: string, config: FeedConfig, 
     episodes,
     errors: [],
     warnings: [],
-    eligibility: { activeRateableEpisodes: episodes.length, excludedEntries: 0, episodeFeatureEnabled: episodes.length >= 2 }
+    eligibility: { totalParsedEntries: sidecar.items.length, activeRateableEpisodes: episodes.length, excludedEntries: 0, episodeFeatureEnabled: episodes.length >= 2 },
+    imported_at: _now
   };
 }

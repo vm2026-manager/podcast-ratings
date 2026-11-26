@@ -278,6 +278,7 @@ export function mergeSheetFeedConfigs(
     const exactIdentity = matching?.count === 1 &&
       rowIndexes.normalizedPodcastIds.get(normalizeKey(config.podcast_key)) === 1 &&
       show?.showId === config.podimo_show_id && row?.catalogue_id === config.podimo_catalogue_id &&
+      typeof config.podimo_catalogue_id === "string" &&
       rowIndexes.catalogueIds.get(config.podimo_catalogue_id) === 1 && !competingFeedOwner &&
       String(row?.Link ?? "").trim() === config.podimo_show_url &&
       String(row?.Titel ?? "").trim() === config.expected_rss_channel_title &&

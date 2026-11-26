@@ -1139,14 +1139,21 @@ export async function fetchAutoVerifiedRssText(url: string, timeoutMs = AUTO_RSS
   }
 }
 
-export async function fetchFeedText(url: string, timeoutMs = FEED_TIMEOUT_MS): Promise<string> {
+export async function fetchFeedText(
+  url: string,
+  timeoutMs = FEED_TIMEOUT_MS,
+  headers?: HeadersInit
+): Promise<string> {
   const maxAttempts = 2;
   for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), timeoutMs);
     let retryableTransportFailure = false;
     try {
-      const response = await fetch(url, { signal: controller.signal });
+      const response = await fetch(url, {
+        signal: controller.signal,
+        ...(headers ? { headers } : {})
+      });
       if (!response.ok) {
         const retryableStatus = response.status === 408 || response.status === 429 || response.status >= 500;
         if (retryableStatus && attempt < maxAttempts) {
@@ -1172,6 +1179,15 @@ export async function fetchFeedText(url: string, timeoutMs = FEED_TIMEOUT_MS): P
     if (retryableTransportFailure) await new Promise((resolve) => setTimeout(resolve, 250));
   }
   throw new Error("Feed fetch failed after retry");
+}
+
+const DR_LYD_PAGE_HEADERS = {
+  Accept: "text/html,application/xhtml+xml",
+  "User-Agent": "Podcastlisten Episode Importer (+https://podcastlisten.dk)"
+};
+
+export function fetchDrLydPageText(url: string, timeoutMs = FEED_TIMEOUT_MS): Promise<string> {
+  return fetchFeedText(url, timeoutMs, DR_LYD_PAGE_HEADERS);
 }
 
 export const PODIMO_PAGE_SIZE = 100;
@@ -1251,7 +1267,11 @@ export async function runEpisodeImport(options: {
       );
     } else {
       const fetcher = options.fetchText || (config.auto_verified_rss ? fetchAutoVerifiedRssText : fetchFeedText);
-      const content = await fetcher(config.feed_url);
+      const content = options.fetchText
+        ? await options.fetchText(config.feed_url)
+        : config.format === "dr_lyd_next_data"
+          ? await fetchDrLydPageText(config.feed_url)
+          : await fetcher(config.feed_url);
       if (config.format === "fri_mads_article_json") {
         mapped = parseFriMadsArticleSidecar(content, config, now());
       } else if (config.format === "apple_podcasts_html") {
