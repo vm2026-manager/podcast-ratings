@@ -17,7 +17,7 @@ const appSource = await readFile(path.join(root, "app.js"), "utf8");
 const indexSource = await readFile(path.join(root, "index.html"), "utf8");
 const styleSource = await readFile(path.join(root, "style.css"), "utf8");
 assert.equal(catalogue.rows.length, catalogue.count, "The catalogue wrapper count matches its source rows");
-assert.match(indexSource, /app\.js\?v=20261118-issue97-ranking-status-cleanup[^"]*issue96-live-search-v1=1/u);
+assert.match(indexSource, /app\.js\?v=20261118-issue97-ranking-status-cleanup[^"]*issue96-live-search-v1=1[^"]*issue101-decimal-comma-search-v1=1/u);
 assert.match(appSource, /const CANONICAL_GENRES = window\.PODCAST_CANONICAL_GENRES;/u);
 assert.match(indexSource, /canonical-genres\.js\?v=/u);
 assert.ok(indexSource.indexOf("canonical-genres.js") < indexSource.indexOf("app.js"), "shared genre definition loads before the app");
@@ -490,6 +490,8 @@ try {
   assert.ok(shortNumberResults.every((title) => title.split(" ").includes("1")), `A one-digit query matches only a complete numeric title word: ${JSON.stringify(shortNumberResults)}`);
   assert.ok(!shortNumberResults.some((title) => title.split(" ").some((token) => /^\d+$/u.test(token) && token !== "1")), `A one-digit query does not match a longer number: ${JSON.stringify(shortNumberResults)}`);
 
+  const decimalNumberNormalization = await page.evaluate(() => normalizeSearchValue("1,6 kilo coke"));
+  assert.equal(decimalNumberNormalization, "16 kilo coke", "decimal commas stay inside one numeric token");
   await page.setViewportSize({ width: 320, height: 844 });
   await page.goto(`http://127.0.0.1:${address.port}/#ranglister`, { waitUntil: "domcontentloaded" });
   await page.waitForFunction(() => state.podcasts?.length > 0);
