@@ -211,6 +211,7 @@ function parseCsv(text) {
   let currentRow = [];
   let currentCell = "";
   let insideQuotes = false;
+  let sourceRowNumber = 1;
 
   const normalizedText = String(text ?? "")
     .replace(/^\uFEFF/, "")
@@ -242,11 +243,13 @@ function parseCsv(text) {
       currentRow.push(currentCell);
 
       if (currentRow.some((cell) => normalizeText(cell) !== "")) {
+        Object.defineProperty(currentRow, "__sourceRowNumber", { value: sourceRowNumber, enumerable: false });
         rows.push(currentRow);
       }
 
       currentRow = [];
       currentCell = "";
+      sourceRowNumber += 1;
       continue;
     }
 
@@ -256,6 +259,7 @@ function parseCsv(text) {
   currentRow.push(currentCell);
 
   if (currentRow.some((cell) => normalizeText(cell) !== "")) {
+    Object.defineProperty(currentRow, "__sourceRowNumber", { value: sourceRowNumber, enumerable: false });
     rows.push(currentRow);
   }
 
@@ -277,7 +281,10 @@ function rowsToObjects(rows) {
       headers.forEach((header, index) => {
         item[header] = normalizeText(row[index] || "");
       });
-      Object.defineProperty(item, "__sourceRowNumber", { value: sourceIndex + 2, enumerable: false });
+      Object.defineProperty(item, "__sourceRowNumber", {
+        value: Number.isInteger(row?.__sourceRowNumber) ? row.__sourceRowNumber : sourceIndex + 2,
+        enumerable: false
+      });
 
       return item;
     })
@@ -388,9 +395,9 @@ function parseEnglishFlag(value, title) {
   const normalizedValue = normalizeText(value);
   if (!normalizedValue) return false;
 
-  if (normalizedValue.toLocaleLowerCase("da-DK") === "x") {
-    return true;
-  }
+  const normalizedFlag = normalizedValue.toLocaleLowerCase("da-DK");
+  if (["x", "ja", "yes", "true"].includes(normalizedFlag)) return true;
+  if (["nej", "no", "false"].includes(normalizedFlag)) return false;
 
   throw new Error(
     `Ugyldig værdi i Engelsk${formatEditorialRowLabel(title)}: ${JSON.stringify(normalizedValue)}.`

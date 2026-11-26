@@ -1,11 +1,18 @@
 import assert from "node:assert/strict";
-import { applyEditorialAccessMetadata, mapAccessType, validateAccessEvidenceUrl } from "./sync-sheet-data.mjs";
+import { applyEditorialAccessMetadata, mapAccessType, parseEnglishFlag, validateAccessEvidenceUrl } from "./sync-sheet-data.mjs";
 
 assert.equal(mapAccessType(""), "free", "blank access defaults to free");
 assert.equal(mapAccessType("Gratis"), "free");
 assert.equal(mapAccessType("Delvist"), "paid");
 assert.equal(mapAccessType("Betalt"), "paid");
 assert.equal(mapAccessType("Betaling"), "paid");
+
+assert.equal(parseEnglishFlag("x"), true);
+assert.equal(parseEnglishFlag("Ja"), true);
+assert.equal(parseEnglishFlag("Yes"), true);
+assert.equal(parseEnglishFlag("Nej"), false);
+assert.equal(parseEnglishFlag(""), false);
+assert.throws(() => parseEnglishFlag("måske", "Eksempel"), /Ugyldig værdi i Engelsk/);
 
 const warnings = [];
 const originalWarn = console.warn;
