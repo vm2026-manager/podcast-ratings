@@ -240,8 +240,8 @@ export const FEED_CONFIGS: FeedConfigMap = {
     enabled: false
   },
   [BAKSPEJL_FEED_KEY]: { podcast_key: BAKSPEJL_IMPORT_LABEL, source: BAKSPEJL_SOURCE, feed_url: BAKSPEJL_FEED_URL, routes: [], enabled: false },
-  // DR's public RSS includes only teasers for many recent episodes. The full
-  // episodes have public title, duration, date and permalink in DR Lyd.
+  // DR's RSS carries full episodes but can lag the newest DR Lyd releases.
+  // Use the official page to get current full-episode metadata when available.
   // Only catalogue-approved destination series are ever imported.
   [DJAEVLEN_LYD_FULL_FEED_KEY]: {
     podcast_key: DJAEVLEN_IMPORT_LABEL,

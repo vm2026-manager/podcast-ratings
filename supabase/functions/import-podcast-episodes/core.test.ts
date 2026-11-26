@@ -1,8 +1,29 @@
 import { assertEquals } from "https://deno.land/std@0.224.0/assert/mod.ts";
-import { runEpisodeImport, runEpisodeImports, selectAppleFeedKeys, selectNormalFeedKeys, selectNormalFeedShard, validateImportRequest, type ImportRepository, type PodcastEpisodeRow } from "./core.ts";
+import { fetchDrLydPageText, runEpisodeImport, runEpisodeImports, selectAppleFeedKeys, selectNormalFeedKeys, selectNormalFeedShard, validateImportRequest, type ImportRepository, type PodcastEpisodeRow } from "./core.ts";
 import { FEED_CONFIGS, type FeedConfigMap } from "./feed-config.ts";
 
 const RSS = "<rss><channel><title>Test</title><item><guid>episode-1</guid><title>Episode</title></item></channel></rss>";
+
+Deno.test("DR Lyd page fetch identifies the importer with a transparent HTML request", async () => {
+  const originalFetch = globalThis.fetch;
+  let observedUrl = "";
+  const observedHeaders: Headers[] = [];
+  globalThis.fetch = (async (input: RequestInfo | URL, init?: RequestInit) => {
+    observedUrl = String(input);
+    observedHeaders.push(new Headers(init?.headers));
+    return new Response("public DR page", { status: 200 });
+  }) as typeof fetch;
+
+  try {
+    assertEquals(await fetchDrLydPageText("https://www.dr.dk/lyd/special-radio/genstart-2642056922000"), "public DR page");
+    assertEquals(observedUrl, "https://www.dr.dk/lyd/special-radio/genstart-2642056922000");
+    assertEquals(observedHeaders.length, 1);
+    assertEquals(observedHeaders[0].get("accept"), "text/html,application/xhtml+xml");
+    assertEquals(observedHeaders[0].get("user-agent"), "Podcastlisten Episode Importer (+https://podcastlisten.dk)");
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
 
 Deno.test("normal all-feed shards are sorted, complete, disjoint, and exclude Apple HTML feeds", () => {
   const feedConfigs: FeedConfigMap = {
