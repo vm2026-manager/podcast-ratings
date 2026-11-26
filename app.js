@@ -1568,6 +1568,7 @@ function createCatalogueId({ title, host, publisher, link, feedUrl }) {
 function normalizeSearchValue(value) {
   return String(value || "")
     .toLowerCase()
+    .replace(/(?<=\d)[,.](?=\d)/gu, "")
     .replace(/æ/g, "xdanishaeqx")
     .replace(/ø/g, "xdanishoeqx")
     .replace(/å/g, "xdanishaaqx")
