@@ -44,3 +44,47 @@ For `politik for viderekomne med søs og huxi`, the latest read-only audit found
 The existing adapter-specific regressions remain authoritative: RSS source verification and idempotency (`test-rss-feed-verification.mjs`), Apple HTML parser (`apple-podcasts.test.ts`), Podimo show identity/routing (`test-two-podimo-show-imports.mjs`, `test-podimo-grebet-routing.mjs`, `test-sidste-nedtaelling-podimo.mjs`), DR Lyd metadata/routing tests, Radio4 staging/routing tests, and manual-sheet episode tests. `test-episode-import-lifecycle.mjs` adds cross-adapter coverage for exact IDs, activation blockers, deployment evidence gaps, duplicate/collision failures, and one-episode frontend rendering. The full `critical-regression-gate.mjs` is required before every commit and push.
 
 The Fri Mads adapter adds no cron, polling loop, broad backfill, production episode write, migration, rating write, article scraper, or media download. Its code-owned feed config participates only when the existing importer code is deployed and its ordinary schedule runs; those are separate production activation stages.
+
+## Failure handling and operations
+
+The shared feed fetcher makes at most one additional request after a network
+failure, timeout, HTTP 408, HTTP 429, or HTTP 5xx, with a short fixed delay.
+Permanent HTTP 4xx responses such as 403 and 404 are not retried. Read-only
+PostgREST identity lookups retry `PGRST303` once; writes are never retried by
+this policy. Failed PostgREST operations retain a safe error code or HTTP
+status in the import-run error message.
+
+Each Edge invocation logs a compact `[episode-import] feed issues` record when
+any feed is partial or failed. It includes the source, Podcast-ID, error and
+routing counts, but omits episode titles and GUIDs. Use that record with the
+exact `episode_import_runs` rows to distinguish transient service failures
+from source changes, routing gaps, and identity-review blockers. Repeated
+permanent source errors require a verified feed or provider change; the
+importer does not silently disable a feed or weaken identity checks.
+
+## Verified source issues (2026-11-26)
+
+The `hvis_du_vil_vide_mere` OmnyContent playlist returned HTTP 200 but only one
+item. Its publisher's canonical Omny RSS endpoint returned 684 items with the
+expected show identity, so the static feed now points to that canonical URL.
+The change is code-only and takes effect after an approved deployment.
+
+Other observed production issues need separate source or operational follow-up:
+
+- DR Lyd page feeds returned HTTP 403 from the Edge importer. The DR RSS is not
+  a safe automatic substitute because the importer uses the publisher page's
+  serialized episode data to avoid importing teaser-only RSS entries. Verify a
+  supported endpoint or resolve the Edge egress access with DR before changing
+  adapters.
+- Hvepsereden's catalogue feed returned HTTP 404. The official source identity
+  could not be verified, so do not substitute a similarly named or successor
+  show without catalogue-owner confirmation.
+- Mediano unmatched titles and known-no-destination routes are routing review
+  items. Routes without an exact catalogue destination intentionally remain
+  inactive; approve only mappings backed by the canonical Podcast-ID.
+- Podimo's historical transition guard rejected an unreviewed episode. Keep
+  this fail-closed until its exact show/episode identity is reviewed.
+- Fri Mads and My Favorite Murder had existing-episode lookup failures. The
+  importer now preserves safe PostgREST error codes on reads, but the specific
+  production cause cannot be determined until the code is deployed and a new
+  run records the code. No database changes or writes are part of this fix.

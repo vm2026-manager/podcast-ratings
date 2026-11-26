@@ -1140,20 +1140,38 @@ export async function fetchAutoVerifiedRssText(url: string, timeoutMs = AUTO_RSS
 }
 
 export async function fetchFeedText(url: string, timeoutMs = FEED_TIMEOUT_MS): Promise<string> {
-  const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), timeoutMs);
-  try {
-    const response = await fetch(url, { signal: controller.signal });
-    if (!response.ok) throw new Error(`Feed fetch failed: ${response.status}`);
-    return await response.text();
-  } catch (error) {
-    if (error instanceof DOMException && error.name === "AbortError") {
-      throw new Error("Feed fetch timed out");
+  const maxAttempts = 2;
+  for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), timeoutMs);
+    let retryableTransportFailure = false;
+    try {
+      const response = await fetch(url, { signal: controller.signal });
+      if (!response.ok) {
+        const retryableStatus = response.status === 408 || response.status === 429 || response.status >= 500;
+        if (retryableStatus && attempt < maxAttempts) {
+          await response.body?.cancel();
+          await new Promise((resolve) => setTimeout(resolve, 250));
+          continue;
+        }
+        throw new Error(`Feed fetch failed: ${response.status}`);
+      }
+      return await response.text();
+    } catch (error) {
+      retryableTransportFailure = error instanceof TypeError ||
+        (error instanceof DOMException && error.name === "AbortError");
+      if (!retryableTransportFailure || attempt === maxAttempts) {
+        if (error instanceof DOMException && error.name === "AbortError") {
+          throw new Error("Feed fetch timed out");
+        }
+        throw error;
+      }
+    } finally {
+      clearTimeout(timer);
     }
-    throw error;
-  } finally {
-    clearTimeout(timer);
+    if (retryableTransportFailure) await new Promise((resolve) => setTimeout(resolve, 250));
   }
+  throw new Error("Feed fetch failed after retry");
 }
 
 export const PODIMO_PAGE_SIZE = 100;

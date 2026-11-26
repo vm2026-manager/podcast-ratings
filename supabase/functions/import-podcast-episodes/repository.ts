@@ -4,7 +4,32 @@ import { BATCH_SIZE, chunk, type ImportRepository, type PodcastEpisodeRow } from
 // for a 200-item PostgREST filter to exceed the gateway request-target limit.
 // Preserve every URL and every historical identity check; only chunk size changes.
 const CROSS_SOURCE_EPISODE_URL_BATCH_SIZE = 20;
-const AUTO_FEED_IDENTITY_PGRST303_RETRIES = 1;
+const POSTGREST_PGRST303_RETRIES = 1;
+
+type PostgrestReadResult = {
+  data: any;
+  error: { code?: string; status?: number } | null;
+};
+
+async function readWithPgrst303Retry(request: () => PromiseLike<PostgrestReadResult>) {
+  let result: PostgrestReadResult | null = null;
+  for (let attempt = 0; attempt <= POSTGREST_PGRST303_RETRIES; attempt += 1) {
+    result = await request();
+    // This transient JWT claims parsing error has occurred at the PostgREST
+    // boundary. Retry only this read-only error once; writes remain fail-closed.
+    if (result?.error?.code !== "PGRST303" || attempt === POSTGREST_PGRST303_RETRIES) break;
+  }
+  return result || { data: null, error: { code: "unknown" } };
+}
+
+function postgrestFailure(message: string, error: { code?: string; status?: number } | null) {
+  const code = typeof error?.code === "string" && /^[A-Z0-9_]+$/i.test(error.code)
+    ? ` (${error.code})`
+    : typeof error?.status === "number" && Number.isInteger(error.status)
+      ? ` (HTTP ${error.status})`
+    : "";
+  return new Error(`${message}${code}`);
+}
 
 const SELECT_FIELDS = [
   "id",
@@ -31,31 +56,31 @@ export function createSupabaseImportRepository(client: any): ImportRepository {
         .insert(input)
         .select("id")
         .single();
-      if (error) throw new Error("Import log insert failed");
+      if (error) throw postgrestFailure("Import log insert failed", error);
       return { id: data.id };
     },
 
     async loadExistingEpisodes(source: string, externalGuids: string[], episodeUrls: string[] = [], additionalSources: string[] = [], podcastKeys: string[] = [], globalUrlLookup = false) {
       const rows: PodcastEpisodeRow[] = [];
       for (const guidBatch of chunk(externalGuids, BATCH_SIZE)) {
-        const { data, error } = await client
+        const { data, error } = await readWithPgrst303Retry(() => client
           .from("podcast_episodes")
           .select(SELECT_FIELDS)
           .eq("source", source)
-          .in("external_guid", guidBatch);
-        if (error) throw new Error("Existing episode select failed");
+          .in("external_guid", guidBatch));
+        if (error) throw postgrestFailure("Existing episode select failed", error);
         rows.push(...(data || []));
       }
       // Supplemental sources are deduplicated only against their explicitly
       // configured primary sources, through exact canonical URL equality.
       if (episodeUrls.length && additionalSources.length) {
         for (const urlBatch of chunk(episodeUrls, CROSS_SOURCE_EPISODE_URL_BATCH_SIZE)) {
-          const { data, error } = await client
+          const { data, error } = await readWithPgrst303Retry(() => client
             .from("podcast_episodes")
             .select(SELECT_FIELDS)
             .in("source", additionalSources)
-            .in("episode_url", urlBatch);
-          if (error) throw new Error("Cross-source episode select failed");
+            .in("episode_url", urlBatch));
+          if (error) throw postgrestFailure("Cross-source episode select failed", error);
           rows.push(...(data || []));
         }
       }
@@ -63,11 +88,11 @@ export function createSupabaseImportRepository(client: any): ImportRepository {
       // check without enumerating or guessing provider identities.
       if (episodeUrls.length && globalUrlLookup) {
         for (const urlBatch of chunk(episodeUrls, CROSS_SOURCE_EPISODE_URL_BATCH_SIZE)) {
-          const { data, error } = await client
+          const { data, error } = await readWithPgrst303Retry(() => client
             .from("podcast_episodes")
             .select(SELECT_FIELDS)
-            .in("episode_url", urlBatch);
-          if (error) throw new Error("Global canonical episode URL identity check failed");
+            .in("episode_url", urlBatch));
+          if (error) throw postgrestFailure("Global canonical episode URL identity check failed", error);
           rows.push(...(data || []));
         }
       }
@@ -75,12 +100,12 @@ export function createSupabaseImportRepository(client: any): ImportRepository {
       // site feed. Load only the routed parent keys so core can apply its
       // exact title + publication-date identity check without fuzzy matching.
       if (podcastKeys.length && additionalSources.length) {
-        const { data, error } = await client
+        const { data, error } = await readWithPgrst303Retry(() => client
           .from("podcast_episodes")
           .select(SELECT_FIELDS)
           .in("source", additionalSources)
-          .in("podcast_key", podcastKeys);
-        if (error) throw new Error("Cross-source episode identity select failed");
+          .in("podcast_key", podcastKeys));
+        if (error) throw postgrestFailure("Cross-source episode identity select failed", error);
         rows.push(...(data || []));
       }
 
@@ -90,24 +115,24 @@ export function createSupabaseImportRepository(client: any): ImportRepository {
       if (podcastKeys.length) {
         const mappedEpisodeIds = new Set<string>();
         for (const keyBatch of chunk([...new Set(podcastKeys)], BATCH_SIZE)) {
-          const { data: mappings, error: mappingError } = await client
+          const { data: mappings, error: mappingError } = await readWithPgrst303Retry(() => client
             .from("manual_catalogue_episode_map")
             .select("episode_id")
             .in("podcast_key", keyBatch)
-            .eq("is_active", true);
-          if (mappingError) throw new Error("Manual catalogue mapping select failed");
+            .eq("is_active", true));
+          if (mappingError) throw postgrestFailure("Manual catalogue mapping select failed", mappingError);
           (mappings || []).forEach((mapping: { episode_id?: string | null } | null) => {
             if (mapping?.episode_id) mappedEpisodeIds.add(mapping.episode_id);
           });
         }
 
         for (const idBatch of chunk([...mappedEpisodeIds], BATCH_SIZE)) {
-          const { data, error } = await client
+          const { data, error } = await readWithPgrst303Retry(() => client
             .from("podcast_episodes")
             .select(SELECT_FIELDS)
             .in("id", idBatch)
-            .eq("is_active", true);
-          if (error) throw new Error("Manual catalogue episode select failed");
+            .eq("is_active", true));
+          if (error) throw postgrestFailure("Manual catalogue episode select failed", error);
           rows.push(...(data || []).map((row: PodcastEpisodeRow) => ({
             ...row,
             metadata: {
@@ -138,17 +163,9 @@ export function createSupabaseImportRepository(client: any): ImportRepository {
     async loadAutoFeedIdentityInventory(podcastKey: string) {
       const episodes: PodcastEpisodeRow[] = [];
       for (let offset = 0; ; offset += BATCH_SIZE) {
-        let result: { data: PodcastEpisodeRow[] | null; error: { code?: string } | null } | null = null;
-        for (let attempt = 0; attempt <= AUTO_FEED_IDENTITY_PGRST303_RETRIES; attempt += 1) {
-          result = await client.from("podcast_episodes").select(SELECT_FIELDS)
-            .eq("podcast_key", podcastKey).order("id").range(offset, offset + BATCH_SIZE - 1);
-          // PGRST303 is JWT claims validation/parsing at the PostgREST
-          // boundary. Retry only this exact read-only identity inventory once;
-          // any second failure, other error, or all writes still fail closed.
-          if (result?.error?.code !== "PGRST303" || attempt === AUTO_FEED_IDENTITY_PGRST303_RETRIES) break;
-        }
-        const { data, error } = result || { data: null, error: { code: "unknown" } };
-        if (error || !Array.isArray(data)) throw new Error("Automatic RSS podcast identity inventory failed");
+        const { data, error } = await readWithPgrst303Retry(() => client.from("podcast_episodes").select(SELECT_FIELDS)
+          .eq("podcast_key", podcastKey).order("id").range(offset, offset + BATCH_SIZE - 1));
+        if (error || !Array.isArray(data)) throw postgrestFailure("Automatic RSS podcast identity inventory failed", error);
         episodes.push(...data);
         if (data.length < BATCH_SIZE) break;
       }
@@ -173,7 +190,7 @@ export function createSupabaseImportRepository(client: any): ImportRepository {
       const { error } = await client
         .from("podcast_episodes")
         .upsert(rows, { onConflict: "source,external_guid" });
-      if (error) throw new Error("Episode batch upsert failed");
+      if (error) throw postgrestFailure("Episode batch upsert failed", error);
     },
 
     async loadPodcastEpisodes(podcastKey: string) {
@@ -201,7 +218,7 @@ export function createSupabaseImportRepository(client: any): ImportRepository {
 
     async updateImportRun(id: string, input) {
       const { error } = await client.from("episode_import_runs").update(input).eq("id", id);
-      if (error) throw new Error("Import log update failed");
+      if (error) throw postgrestFailure("Import log update failed", error);
     }
   };
 }

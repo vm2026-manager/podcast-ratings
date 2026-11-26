@@ -10,6 +10,45 @@ function env(name: string): string {
   return value;
 }
 
+function feedIssueLog(summary: any) {
+  const feeds = Array.isArray(summary?.feeds) ? summary.feeds : [summary];
+  const issueFeeds = feeds.filter((feed: any) => feed?.status !== "success").map((feed: any) => {
+    const details = feed?.details && typeof feed.details === "object" ? feed.details : {};
+    const routing = details.routing && typeof details.routing === "object" ? details.routing : null;
+    const routingCounts = routing ? Object.fromEntries([
+      "routed_count",
+      "ambiguous_count",
+      "unmatched_count",
+      "routing_conflict_count",
+      "known_no_destination_count",
+      "cross_source_url_conflict_count",
+      "cross_source_url_duplicate_count",
+      "cross_source_identity_duplicate_count"
+    ].filter((key) => typeof routing[key] === "number").map((key) => [key, routing[key]])) : undefined;
+
+    return {
+      source: feed.source,
+      podcast_key: feed.podcast_key,
+      status: feed.status,
+      error: feed.error || details.error_message || null,
+      error_count: feed.error_count || 0,
+      warning_count: details.warning_count || 0,
+      invalid_item_count: details.invalid_item_count || 0,
+      health_warning: details.health_warning || null,
+      ...(routingCounts ? { routing: routingCounts } : {})
+    };
+  });
+
+  return issueFeeds.length ? {
+    status: summary.status,
+    feed_count: summary.feed_count || issueFeeds.length,
+    successful_feed_count: summary.successful_feed_count,
+    partial_feed_count: summary.partial_feed_count,
+    failed_feed_count: summary.failed_feed_count,
+    feeds: issueFeeds
+  } : null;
+}
+
 Deno.serve(async (request) => {
   const validation = await validateImportRequest(request, Deno.env.get("EPISODE_IMPORT_SECRET") ?? null);
   if (!validation.ok) return jsonResponse(validation.body, validation.status);
@@ -56,6 +95,8 @@ Deno.serve(async (request) => {
           feedKeys: selectAppleFeedKeys(runtimeFeeds.configs)
         })
       : await runEpisodeImport({ feedKey: validation.feed, repository, feedConfigs: runtimeFeeds.configs });
+    const feedIssues = feedIssueLog(summary);
+    if (feedIssues) console.warn("[episode-import] feed issues", JSON.stringify(feedIssues));
     const status = summary.status === "failed" ? 500 : summary.status === "partial" ? 207 : 200;
     return jsonResponse({
       ...summary,
