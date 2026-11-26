@@ -1,5 +1,5 @@
 import { assertEquals } from "https://deno.land/std@0.224.0/assert/mod.ts";
-import { fetchDrLydPageText, runEpisodeImport, runEpisodeImports, selectAppleFeedKeys, selectNormalFeedKeys, selectNormalFeedShard, validateImportRequest, type ImportRepository, type PodcastEpisodeRow } from "./core.ts";
+import { fetchDrLydPageText, fetchDrRadioApiEpisodes, runEpisodeImport, runEpisodeImports, selectAppleFeedKeys, selectNormalFeedKeys, selectNormalFeedShard, validateImportRequest, type ImportRepository, type PodcastEpisodeRow } from "./core.ts";
 import { FEED_CONFIGS, type FeedConfigMap } from "./feed-config.ts";
 
 const RSS = "<rss><channel><title>Test</title><item><guid>episode-1</guid><title>Episode</title></item></channel></rss>";
@@ -20,6 +20,87 @@ Deno.test("DR Lyd page fetch identifies the importer with a transparent HTML req
     assertEquals(observedHeaders.length, 1);
     assertEquals(observedHeaders[0].get("accept"), "text/html,application/xhtml+xml");
     assertEquals(observedHeaders[0].get("user-agent"), "Podcastlisten Episode Importer (+https://podcastlisten.dk)");
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
+
+Deno.test("official DR radio API fallback keeps the same episode identity and only runs after page 403", async () => {
+  const originalFetch = globalThis.fetch;
+  const requests: Array<{ url: string; headers: Headers }> = [];
+  const writes: PodcastEpisodeRow[][] = [];
+  const finalized: Array<Record<string, unknown>> = [];
+  const apiEpisodes = [
+    { id: "urn:dr:radio:episode:test-1", learnId: "learn-1", productionNumber: "11802650279", title: "Seneste Genstart", description: "Beskrivelse", startTime: "2026-11-26T03:00:00+01:00", durationMilliseconds: 2400000, presentationUrl: "https://www.dr.dk/lyd/special-radio/genstart-2642056922000/seneste-genstart" },
+    { id: "urn:dr:radio:episode:test-2", learnId: "learn-2", productionNumber: "11802650278", title: "Genstart dagen før", description: "Beskrivelse", startTime: "2026-11-25T03:00:00+01:00", durationMilliseconds: 2400000, presentationUrl: "https://www.dr.dk/lyd/special-radio/genstart-2642056922000/genstart-dagen-foer" }
+  ];
+  globalThis.fetch = (async (input: RequestInfo | URL, init?: RequestInit) => {
+    requests.push({ url: String(input), headers: new Headers(init?.headers) });
+    return requests.length === 1
+      ? new Response("forbidden", { status: 403 })
+      : Response.json({ totalSize: apiEpisodes.length, items: apiEpisodes });
+  }) as typeof fetch;
+
+  try {
+    const repository: ImportRepository = {
+      createImportRun: async () => ({ id: "genstart-api-run" }),
+      loadExistingEpisodes: async () => [],
+      upsertEpisodes: async (episodes) => { writes.push(episodes); },
+      updateImportRun: async (_id, input) => { finalized.push(input); }
+    };
+    const result = await runEpisodeImport({
+      feedKey: "genstart",
+      repository,
+      feedConfigs: {
+        genstart: {
+          podcast_key: "genstart", source: "dr_genstart_rss", format: "dr_lyd_next_data",
+          feed_url: "https://www.dr.dk/lyd/special-radio/genstart-2642056922000",
+          dr_radio_api_url: "https://api.dr.dk/radio/v2/series/genstart-2642056922000/episodes?limit=50"
+        }
+      },
+      now: () => "2026-11-26T04:00:00.000Z"
+    });
+
+    assertEquals(result.status, "success");
+    assertEquals(result.fetched_count, 2);
+    assertEquals(result.inserted_count, 2);
+    assertEquals(writes.flat().map(({ external_guid, source, podcast_key }) => ({ external_guid, source, podcast_key })), [
+      { external_guid: "11802660279", source: "dr_genstart_rss", podcast_key: "genstart" },
+      { external_guid: "11802660278", source: "dr_genstart_rss", podcast_key: "genstart" }
+    ]);
+    assertEquals(result.details?.dr_radio_api_fallback_used, true);
+    assertEquals(requests.map(({ url }) => url), [
+      "https://www.dr.dk/lyd/special-radio/genstart-2642056922000",
+      "https://api.dr.dk/radio/v2/series/genstart-2642056922000/episodes?limit=50"
+    ]);
+    assertEquals(requests[0].headers.get("accept"), "text/html,application/xhtml+xml");
+    assertEquals(requests[1].headers.get("accept"), "application/json");
+    assertEquals(requests[1].headers.has("x-apikey"), true);
+    assertEquals(finalized[0].status, "success");
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
+
+Deno.test("DR radio API fallback is fail-closed when its response has no episode items", async () => {
+  const originalFetch = globalThis.fetch;
+  const writes: PodcastEpisodeRow[][] = [];
+  globalThis.fetch = (async () => new Response("forbidden", { status: 403 })) as typeof fetch;
+  try {
+    const repository: ImportRepository = {
+      createImportRun: async () => ({ id: "genstart-api-failed-run" }),
+      loadExistingEpisodes: async () => [],
+      upsertEpisodes: async (episodes) => { writes.push(episodes); },
+      updateImportRun: async () => undefined
+    };
+    const result = await runEpisodeImport({
+      feedKey: "genstart", repository,
+      feedConfigs: { genstart: { podcast_key: "genstart", source: "dr_genstart_rss", format: "dr_lyd_next_data", feed_url: "https://www.dr.dk/lyd/special-radio/genstart-2642056922000", dr_radio_api_url: "https://api.dr.dk/radio/v2/series/genstart-2642056922000/episodes?limit=50" } },
+      now: () => "2026-11-26T04:00:00.000Z"
+    });
+    assertEquals(result.status, "failed");
+    assertEquals(result.error, "DR radio API fetch failed: 403");
+    assertEquals(writes, []);
   } finally {
     globalThis.fetch = originalFetch;
   }

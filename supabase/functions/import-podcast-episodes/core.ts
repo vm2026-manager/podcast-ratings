@@ -1186,8 +1186,40 @@ const DR_LYD_PAGE_HEADERS = {
   "User-Agent": "Podcastlisten Episode Importer (+https://podcastlisten.dk)"
 };
 
+// DR ships this public client key to browsers that use its own radio API.
+const DR_RADIO_PUBLIC_API_KEY = "6Wkh8s98Afx1ZAaTT4FuWODTmvWGDPpR";
+
 export function fetchDrLydPageText(url: string, timeoutMs = FEED_TIMEOUT_MS): Promise<string> {
   return fetchFeedText(url, timeoutMs, DR_LYD_PAGE_HEADERS);
+}
+
+export async function fetchDrRadioApiEpisodes(url: string, timeoutMs = FEED_TIMEOUT_MS): Promise<unknown[]> {
+  const parsed = new URL(url);
+  if (parsed.protocol !== "https:" || parsed.hostname !== "api.dr.dk" || parsed.username || parsed.password) {
+    throw new Error("DR radio API URL is not an approved DR endpoint");
+  }
+
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    const response = await fetch(url, {
+      signal: controller.signal,
+      headers: {
+        Accept: "application/json",
+        "User-Agent": "Podcastlisten Episode Importer (+https://podcastlisten.dk)",
+        "x-apikey": DR_RADIO_PUBLIC_API_KEY
+      }
+    });
+    if (!response.ok) throw new Error(`DR radio API fetch failed: ${response.status}`);
+    const payload = await response.json() as { items?: unknown };
+    if (!payload || !Array.isArray(payload.items)) throw new Error("Invalid DR radio API response: missing items");
+    return payload.items;
+  } catch (error) {
+    if (error instanceof DOMException && error.name === "AbortError") throw new Error("DR radio API fetch timed out");
+    throw error;
+  } finally {
+    clearTimeout(timer);
+  }
 }
 
 export const PODIMO_PAGE_SIZE = 100;
@@ -1259,19 +1291,28 @@ export async function runEpisodeImport(options: {
 
   try {
     let mapped: ReturnType<typeof mapPodimoEpisodes>;
+    let drRadioApiFallbackUsed = false;
     if (config.format === "podimo_graphql") {
       mapped = mapPodimoEpisodes(
         parsePodimoEpisodes(await (options.fetchPodimo || fetchPodimoEpisodes)(config)),
         config,
         now()
       );
+    } else if (config.format === "dr_lyd_next_data" && !options.fetchText) {
+      try {
+        mapped = mapDrLydEpisodes(parseDrLydEpisodes(await fetchDrLydPageText(config.feed_url)), config, now());
+      } catch (error) {
+        const isForbidden = error instanceof Error && error.message === "Feed fetch failed: 403";
+        if (!isForbidden || !config.dr_radio_api_url) throw error;
+        const apiEpisodes = await fetchDrRadioApiEpisodes(config.dr_radio_api_url);
+        mapped = mapDrLydEpisodes(apiEpisodes, config, now());
+        drRadioApiFallbackUsed = true;
+      }
     } else {
       const fetcher = options.fetchText || (config.auto_verified_rss ? fetchAutoVerifiedRssText : fetchFeedText);
       const content = options.fetchText
         ? await options.fetchText(config.feed_url)
-        : config.format === "dr_lyd_next_data"
-          ? await fetchDrLydPageText(config.feed_url)
-          : await fetcher(config.feed_url);
+        : await fetcher(config.feed_url);
       if (config.format === "fri_mads_article_json") {
         mapped = parseFriMadsArticleSidecar(content, config, now());
       } else if (config.format === "apple_podcasts_html") {
@@ -1575,6 +1616,7 @@ export async function runEpisodeImport(options: {
         feed: options.feedKey,
         feed_url: config.feed_url,
         feed_format: config.format || "rss",
+        ...(config.format === "dr_lyd_next_data" ? { dr_radio_api_fallback_used: drRadioApiFallbackUsed } : {}),
         batch_count: batches.length,
         ...(config.rss_publication_boundary ? {
           boundary_excluded_count: "boundary_excluded_count" in mapped ? mapped.boundary_excluded_count : 0
