@@ -619,7 +619,8 @@ export const FEED_CONFIGS: FeedConfigMap = {
   "hvis_du_vil_vide_mere": {
     podcast_key: "hvis du vil vide mere",
     source: "omny_hvis_du_vil_vide_mere_rss",
-    feed_url: "https://www.omnycontent.com/d/playlist/414edbb4-4b91-4960-8650-ad4000dbc027/d2ccda6d-5d3f-49a5-93b3-b1c000a80c9b/f383b6b9-68d4-4aba-ac9c-b1c000a9c06e/podcast.rss"
+    // The old OmnyContent playlist is stale; use the publisher's canonical show RSS.
+    feed_url: "https://omny.fm/shows/hvis-du-vil-vide-mere/playlists/podcast.rss"
   },
 
   "loegn_og_morfin": {
