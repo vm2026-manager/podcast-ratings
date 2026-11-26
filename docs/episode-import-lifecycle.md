@@ -71,14 +71,18 @@ The change is code-only and takes effect after an approved deployment.
 
 Other observed production issues need separate source or operational follow-up:
 
-- DR Lyd page feeds returned HTTP 403 from the Edge importer. A read-only check
-  found the public Genstart RSS has full audio items, but it lagged the three
-  newest releases visible on the official DR Lyd page and its latest `pubDate`
-  did not match the episode's original publication date. It is not a safe sole
-  source for current Genstart imports. The page request now sends an explicit,
-  transparent importer User-Agent and HTML Accept header; verify the next
-  scheduled Edge run. If DR still returns 403, its access policy/Edge egress
-  needs resolution with DR; do not disguise the client or import guessed data.
+- DR Lyd page feeds returned HTTP 403 from the Edge importer. The Genstart
+  adapter now uses DR's official public radio API only as a fallback after that
+  exact page-fetch status. It passes API items through the existing DR Lyd
+  mapper, preserving `source`, `podcast_key`, external GUIDs, and episode UUIDs.
+  A read-only comparison found all 50 newest API items matched the page items
+  exactly across GUID, title, description, publication date, duration, URL,
+  active state, and metadata. Genstart's public RSS is not a safe sole
+  replacement: it lagged those newest releases and its latest `pubDate` differed
+  from the original publication date. The fallback is limited to Genstart and
+  HTTP 403; API errors, timeouts, malformed data, and all other page errors
+  fail closed without writing episode rows. The next approved Edge deployment
+  and import will establish whether Edge egress can reach the API.
 - Hvepsereden's catalogue feed returned HTTP 404. The official source identity
   could not be verified, so do not substitute a similarly named or successor
   show without catalogue-owner confirmation.

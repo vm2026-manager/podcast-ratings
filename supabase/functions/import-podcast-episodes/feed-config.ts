@@ -48,6 +48,9 @@ export type FeedConfig = {
   podcast_key: string;
   source: string;
   feed_url: string;
+  // Optional official DR radio API fallback for a page adapter when DR Lyd
+  // returns an explicit access denial. This is code-owned, never Sheet input.
+  dr_radio_api_url?: string;
   format?: FeedFormat;
   // Only code-owned configs and the frozen approved Sheet-feed baseline are
   // scheduled. A metadata-only new/changed feed is kept disabled until reviewed.
@@ -330,7 +333,8 @@ export const FEED_CONFIGS: FeedConfigMap = {
     podcast_key: "genstart",
     source: "dr_genstart_rss",
     format: "dr_lyd_next_data",
-    feed_url: "https://www.dr.dk/lyd/special-radio/genstart-2642056922000"
+    feed_url: "https://www.dr.dk/lyd/special-radio/genstart-2642056922000",
+    dr_radio_api_url: "https://api.dr.dk/radio/v2/series/genstart-2642056922000/episodes?limit=50"
   },
 
   "dobbeltliv_dr_rss": {
