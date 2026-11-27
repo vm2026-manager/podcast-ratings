@@ -74,7 +74,7 @@ assert.equal(discovered.report.created.every((record) => record.episodes.every((
 assert.equal(discovered.report.created.every((record) => record.episodes.every((episode) => /^[0-9a-f-]{36}$/iu.test(episode.guid))), true);
 
 const merged = mergeAutoDiscoveredRadioIIIIRows(existingGuests, discovered.registry);
-assert.equal(merged.length, 64);
+assert.equal(merged.length, existingGuests.length + discovered.report.created.length);
 assert.deepEqual(merged.slice(0, existingGuests.length), existingGuests);
 assert.equal(merged.some((row) => row.Titel === RADIO_IIII_MAIN_SERIES && row.Hovedserie === ""), false);
 assert.equal(merged.every((row) => row.Titel === RADIO_IIII_MAIN_SERIES || row.Hovedserie === RADIO_IIII_MAIN_SERIES), true);
