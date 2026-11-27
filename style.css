@@ -8744,6 +8744,15 @@ body:not(.page-ranglister) .content-shell {
   line-height: 1.62;
 }
 
+body.page-forside #pageIntroPanel .home-featured__surface.home-featured__surface--white-review :is(
+  .home-featured__score-number,
+  .home-featured__review,
+  .home-featured__review-date
+) {
+  color: #fff !important;
+  text-shadow: 0 1px 2px rgba(30, 24, 20, 0.9), 0 0 4px rgba(30, 24, 20, 0.65);
+}
+
 .home-featured__link {
   display: inline-flex;
 }

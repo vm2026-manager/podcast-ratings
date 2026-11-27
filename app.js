@@ -18062,9 +18062,10 @@ function renderHomeFeatured(container, { forceSingle = false, featuredIndex = st
   const previousCoverCacheVersion = getPodcastCoverRevision(previousPodcast);
   const nextCoverCacheVersion = getPodcastCoverRevision(nextPodcast);
   const featuredPodcastKey = podcast ? getPodcastKey(podcast) : "";
+  const whiteReviewClass = review.podcastId === "dod i paradis" ? " home-featured__surface--white-review" : "";
 
   container.innerHTML = `
-    <div class="home-featured__surface">
+    <div class="home-featured__surface${whiteReviewClass}">
     <button class="home-featured__preview home-featured__preview--previous" type="button" data-home-featured-prev aria-label="Forrige anbefaling">
       <img class="home-featured__preview-image home-featured__preview-image--previous" alt="" loading="lazy" />
     </button>

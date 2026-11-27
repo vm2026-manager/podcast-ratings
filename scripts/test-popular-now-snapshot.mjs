@@ -255,7 +255,10 @@ try {
       `${width}px search retains keyboard focus`);
 
     const firstNode = await page.locator(`#podcastGrid ${selector}`).first().evaluateHandle((element) => element);
-    const scrollY = await page.evaluate(() => scrollY);
+    // Let the mobile search focus handler finish scrolling before measuring the expansion.
+    const scrollY = await page.evaluate(() => new Promise((resolve) => {
+      requestAnimationFrame(() => requestAnimationFrame(() => resolve(window.scrollY)));
+    }));
     const loadMore = page.locator(".load-more-button");
     assert.equal(await loadMore.isVisible(), true, `${width}px exposes Vis flere for the remaining snapshot`);
     await loadMore.evaluate((button) => button.click());
