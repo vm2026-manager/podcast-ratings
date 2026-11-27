@@ -63,3 +63,26 @@ Read-only production checks found `public.episode_identity_history` has RLS off,
 `protect_podcast_episode_identity()`; `podcast_episodes_set_updated_at` is the
 other user trigger. The RLS draft remains separate and must not be deployed
 without explicit production approval.
+
+## Isolated RLS verification and baseline status
+
+The RLS PR adds a one-shot GitHub Actions job using an ephemeral PostgreSQL 16
+service and a test-only password. It applies only the version-controlled RLS
+migration to synthetic fixture tables, verifies that `anon` and
+`authenticated` cannot read or write the history table, confirms administrative
+access, snapshots episode/rating trigger definitions, and checks that a
+synthetic rated episode's UUID and score remain protected. The transaction is
+rolled back. The workflow has no Supabase token, database password, or other
+production secret. This verifies the RLS migration contract, not the full
+application schema or the historical production trigger implementation.
+
+A canonical fresh-database baseline is still **not established**. The active
+repository migrations do not create the foundational `podcast_episodes` and
+`episode_ratings` tables, and historical migration SQL includes data-changing
+work that cannot be replayed blindly. The isolated PostgreSQL fixture must not
+be described as a full Supabase migration replay. Completing the baseline
+requires reviewed, schema-only bootstrap sources for the missing foundation,
+explicit separation of schema DDL from historical data operations, and a clean
+Supabase CLI replay of the complete resulting migration path in a disposable
+environment. Until that succeeds, PR #335 remains draft and no production
+rollout is safe.
