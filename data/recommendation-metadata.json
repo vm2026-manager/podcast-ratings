@@ -2,8 +2,8 @@
   "version": 1,
   "source": {
     "path": "data/podcasts.json",
-    "generatedAt": "2026-11-23T08:04:49.915Z",
-    "count": 1383,
+    "generatedAt": "2026-11-27T09:02:19.798Z",
+    "count": 1525,
     "topicAliases": "config/recommendation-topic-aliases.json",
     "topicAliasVersion": 1,
     "genreMapping": "config/recommendation-genre-mapping.json",
@@ -11,54 +11,54 @@
     "stableIdMethod": "frontend-normalized-title",
     "recommendationIdMethod": "metadata-fingerprint-sha256-128-v1"
   },
-  "count": 1383,
+  "count": 1525,
   "summary": {
-    "podcasts": 1383,
-    "validPrimaryGenres": 1361,
-    "invalidPrimaryGenres": 22,
-    "genreEligibleBeforeMapping": 1130,
-    "genreEligibleAfterMapping": 1361,
-    "recommendationMetadataEligibleBeforeMapping": 1127,
-    "recommendationMetadataEligibleAfterMapping": 1358,
-    "primaryGenreMappingNative": 1130,
+    "podcasts": 1525,
+    "validPrimaryGenres": 1501,
+    "invalidPrimaryGenres": 24,
+    "genreEligibleBeforeMapping": 1270,
+    "genreEligibleAfterMapping": 1501,
+    "recommendationMetadataEligibleBeforeMapping": 1267,
+    "recommendationMetadataEligibleAfterMapping": 1498,
+    "primaryGenreMappingNative": 1270,
     "primaryGenreMappingCapitalization": 101,
     "primaryGenreMappingSpelling": 0,
     "primaryGenreMappingDirect": 130,
     "primaryGenreMappingConditionalDefault": 0,
-    "primaryGenreMappingUnmapped": 22,
-    "uniqueUnmappedPrimaryGenres": 13,
+    "primaryGenreMappingUnmapped": 24,
+    "uniqueUnmappedPrimaryGenres": 14,
     "conditionalGenreReviews": 0,
-    "withSecondaryGenre": 1141,
+    "withSecondaryGenre": 1281,
     "withTertiaryGenre": 0,
-    "withRawTopics": 1380,
-    "withCanonicalTopics": 1380,
-    "topicEligible": 1380,
-    "genreEligible": 1361,
-    "recommendationMetadataEligible": 1358,
+    "withRawTopics": 1520,
+    "withCanonicalTopics": 1520,
+    "topicEligible": 1520,
+    "genreEligible": 1501,
+    "recommendationMetadataEligible": 1498,
     "approvedAliases": 17,
-    "podcastsWithAliasApplied": 101,
-    "rawTopicOccurrences": 5235,
-    "rawUniqueTopicForms": 3156,
-    "canonicalTopicOccurrences": 5235,
-    "canonicalUniqueTopics": 2894,
-    "normalizedTopicIdentities": 2894,
-    "topicVariantGroups": 261,
-    "topicCollisionGroups": 244,
+    "podcastsWithAliasApplied": 102,
+    "rawTopicOccurrences": 5836,
+    "rawUniqueTopicForms": 3430,
+    "canonicalTopicOccurrences": 5836,
+    "canonicalUniqueTopics": 3155,
+    "normalizedTopicIdentities": 3155,
+    "topicVariantGroups": 274,
+    "topicCollisionGroups": 257,
     "approvedAliasTopicGroups": 17,
-    "safeTopicCollisionGroups": 244,
+    "safeTopicCollisionGroups": 257,
     "unsafeTopicCollisionGroups": 0,
-    "podcastsAffectedByTopicNormalization": 397,
+    "podcastsAffectedByTopicNormalization": 423,
     "withinPodcastTopicDuplicatesRemoved": 0,
-    "canonicalTopicsUsedOnce": 2112,
-    "canonicalTopicsAtLeastThree": 393,
-    "canonicalTopicsAtLeastFive": 177,
-    "canonicalTopicsAtLeastTen": 55,
-    "possibleStandaloneRows": 363,
+    "canonicalTopicsUsedOnce": 2281,
+    "canonicalTopicsAtLeastThree": 442,
+    "canonicalTopicsAtLeastFive": 205,
+    "canonicalTopicsAtLeastTen": 60,
+    "possibleStandaloneRows": 414,
     "topicKeyCollisions": 0,
-    "uniqueExistingIds": 1375,
+    "uniqueExistingIds": 1517,
     "duplicateStableIdValues": 8,
     "podcastsSharingStableId": 16,
-    "uniqueRecommendationIds": 1383,
+    "uniqueRecommendationIds": 1525,
     "recommendationIdCollisions": 0,
     "exactDuplicateGroups": 1,
     "likelyDuplicateGroups": 2,
@@ -716,7 +716,7 @@
       "topicsCanonical": [
         "Nabokonflikter",
         "boligforeninger",
-        "Chikane",
+        "chikane",
         "retssager"
       ],
       "topicKeys": [
@@ -2782,6 +2782,45 @@
       "metadataIssues": []
     },
     {
+      "id": "død i paradis",
+      "recommendationId": "rec-doed-i-paradis-1d7a1d555fdbbc42bdd49f0cfe0dc69c",
+      "recommendationIdentityBasis": "title+link",
+      "identityDuplicateGroup": "",
+      "title": "Død i paradis",
+      "mainSeries": "Radiofortællinger",
+      "primaryGenreRaw": "Dokumentar",
+      "primaryGenre": "Dokumentar",
+      "primaryGenreValid": true,
+      "primaryGenreMappingType": "native",
+      "primaryGenreMappingSource": "Dokumentar",
+      "primaryGenreNeedsReview": false,
+      "primaryGenreReviewReason": "",
+      "secondaryGenre": "Historie",
+      "secondaryGenreValid": true,
+      "topicsRaw": [
+        "Tsunamien i 2004",
+        "Thailand",
+        "naturkatastrofer",
+        "overlevelse"
+      ],
+      "topicsCanonical": [
+        "Tsunamien i 2004",
+        "Thailand",
+        "naturkatastrofer",
+        "overlevelse"
+      ],
+      "topicKeys": [
+        "tsunamien-i-2004",
+        "thailand",
+        "naturkatastrofer",
+        "overlevelse"
+      ],
+      "topicEligible": true,
+      "genreEligible": true,
+      "recommendationMetadataEligible": true,
+      "metadataIssues": []
+    },
+    {
       "id": "borgen unplugged",
       "recommendationId": "rec-borgen-unplugged-d1cd8cda9eddb13e3793fabcd2acb5fa",
       "recommendationIdentityBasis": "title+link",
@@ -3744,7 +3783,7 @@
         "retsopgøret"
       ],
       "topicsCanonical": [
-        "Besættelsen",
+        "besættelsen",
         "Gestapo",
         "nazistisk kollaboration",
         "retsopgøret"
@@ -8728,7 +8767,7 @@
         "salsamiljø"
       ],
       "topicsCanonical": [
-        "Chikane",
+        "chikane",
         "tilhold",
         "konflikt",
         "Stalking",
@@ -11508,7 +11547,7 @@
         "kollaboration"
       ],
       "topicsCanonical": [
-        "Besættelsen",
+        "besættelsen",
         "modstandsbevægelsen",
         "kollaboration"
       ],
@@ -11807,7 +11846,7 @@
       ],
       "topicsCanonical": [
         "Identitetsforveksling",
-        "Dobbeltgængere"
+        "dobbeltgængere"
       ],
       "topicKeys": [
         "identitetsforveksling",
@@ -16645,7 +16684,7 @@
         "musikmiljøer"
       ],
       "topicsCanonical": [
-        "Natteliv",
+        "natteliv",
         "klubkultur",
         "musikmiljøer"
       ],
@@ -19983,7 +20022,7 @@
         "identitet"
       ],
       "topicsCanonical": [
-        "Dobbeltgængere",
+        "dobbeltgængere",
         "ansigtsgenkendelse",
         "identitet"
       ],
@@ -21672,7 +21711,7 @@
         "børn og teenagere"
       ],
       "topicsCanonical": [
-        "Forældreskab",
+        "forældreskab",
         "familieliv",
         "Børnepsykologi",
         "opdragelse",
@@ -22183,7 +22222,7 @@
       ],
       "topicsCanonical": [
         "bøger",
-        "Litteratur",
+        "litteratur",
         "boganbefalinger",
         "læsning",
         "litteratursamtaler"
@@ -22655,7 +22694,7 @@
         "sportsdata",
         "præstationsanalyse",
         "teknologi",
-        "Fodbold",
+        "fodbold",
         "eliteidræt"
       ],
       "topicKeys": [
@@ -23409,7 +23448,7 @@
         "kulturhistorie",
         "idéhistorie",
         "filosofi",
-        "Litteratur",
+        "litteratur",
         "samfund"
       ],
       "topicKeys": [
@@ -23789,7 +23828,7 @@
       ],
       "topicsCanonical": [
         "Nazisme i Danmark",
-        "Besættelsen",
+        "besættelsen",
         "danske nazister",
         "Højreekstremisme"
       ],
@@ -25569,7 +25608,7 @@
         "kulturdebat",
         "samtidstendenser",
         "medier",
-        "Kunst"
+        "kunst"
       ],
       "topicKeys": [
         "kulturdebat",
@@ -25761,7 +25800,7 @@
         "kunstnerportrætter"
       ],
       "topicsCanonical": [
-        "Kunst",
+        "kunst",
         "kulturliv",
         "kulturinstitutioner",
         "kunstnerportrætter"
@@ -26615,7 +26654,7 @@
         "store sportsbegivenheder"
       ],
       "topicsCanonical": [
-        "Fodbold",
+        "fodbold",
         "sportsnyheder",
         "sportsdebat",
         "store sportsbegivenheder"
@@ -27746,7 +27785,7 @@
         "musik"
       ],
       "topicsCanonical": [
-        "Meditation",
+        "meditation",
         "mental balance",
         "afslapning",
         "musik"
@@ -27863,7 +27902,7 @@
         "psykologi"
       ],
       "topicsCanonical": [
-        "Skam",
+        "skam",
         "opvækst",
         "selvbillede",
         "psykologi"
@@ -28098,7 +28137,7 @@
       ],
       "topicsCanonical": [
         "Dansk modstandskamp",
-        "Besættelsen",
+        "besættelsen",
         "Knud Christensen",
         "Anden Verdenskrig"
       ],
@@ -28643,7 +28682,7 @@
         "interne magtkampe"
       ],
       "topicsCanonical": [
-        "Mafia",
+        "mafia",
         "organiseret kriminalitet",
         "mafiabosser",
         "interne magtkampe"
@@ -31761,7 +31800,7 @@
       "topicsCanonical": [
         "Børnepsykologi",
         "pædagogik",
-        "Forældreskab",
+        "forældreskab",
         "børn og unge"
       ],
       "topicKeys": [
@@ -34043,7 +34082,7 @@
         "efterkrigstiden"
       ],
       "topicsCanonical": [
-        "Besættelsen",
+        "besættelsen",
         "befrielsen",
         "modstandskampen",
         "efterkrigstiden"
@@ -35085,7 +35124,7 @@
       "topicsCanonical": [
         "Monica Wichfeld",
         "modstandskampen",
-        "Besættelsen",
+        "besættelsen",
         "dødsdomme"
       ],
       "topicKeys": [
@@ -37847,7 +37886,7 @@
       ],
       "topicsCanonical": [
         "Harlem",
-        "Mafia",
+        "mafia",
         "FBI",
         "organiseret kriminalitet"
       ],
@@ -43274,7 +43313,7 @@
         "litteraturkritik"
       ],
       "topicsCanonical": [
-        "Litteratur",
+        "litteratur",
         "bøger",
         "forfattere",
         "litteraturkritik"
@@ -43313,7 +43352,7 @@
         "samfund"
       ],
       "topicsCanonical": [
-        "Litteratur",
+        "litteratur",
         "bøger",
         "idéhistorie",
         "samfund"
@@ -43547,7 +43586,7 @@
         "kultur"
       ],
       "topicsCanonical": [
-        "Fortællinger",
+        "fortællinger",
         "offentlighed",
         "medier",
         "kultur"
@@ -44012,7 +44051,7 @@
         "læsning"
       ],
       "topicsCanonical": [
-        "Litteratur",
+        "litteratur",
         "bogklub",
         "forfatterskaber",
         "læsning"
@@ -44207,7 +44246,7 @@
         "avatar-terapi"
       ],
       "topicsCanonical": [
-        "Stemmehøring",
+        "stemmehøring",
         "psykisk sygdom",
         "psykiatri",
         "avatar-terapi"
@@ -47263,7 +47302,7 @@
         "politiets prioritering"
       ],
       "topicsCanonical": [
-        "Politi",
+        "politi",
         "sagsvask",
         "retssikkerhed",
         "politiets prioritering"
@@ -48949,45 +48988,6 @@
         "skoletrivsel",
         "drikkevand",
         "lokalsamfund"
-      ],
-      "topicEligible": true,
-      "genreEligible": true,
-      "recommendationMetadataEligible": true,
-      "metadataIssues": []
-    },
-    {
-      "id": "død i paradis",
-      "recommendationId": "rec-doed-i-paradis-1d7a1d555fdbbc42bdd49f0cfe0dc69c",
-      "recommendationIdentityBasis": "title+link",
-      "identityDuplicateGroup": "",
-      "title": "Død i paradis",
-      "mainSeries": "Radiofortællinger",
-      "primaryGenreRaw": "Dokumentar",
-      "primaryGenre": "Dokumentar",
-      "primaryGenreValid": true,
-      "primaryGenreMappingType": "native",
-      "primaryGenreMappingSource": "Dokumentar",
-      "primaryGenreNeedsReview": false,
-      "primaryGenreReviewReason": "",
-      "secondaryGenre": "Historie",
-      "secondaryGenreValid": true,
-      "topicsRaw": [
-        "Tsunamien i 2004",
-        "Thailand",
-        "naturkatastrofer",
-        "overlevelse"
-      ],
-      "topicsCanonical": [
-        "Tsunamien i 2004",
-        "Thailand",
-        "naturkatastrofer",
-        "overlevelse"
-      ],
-      "topicKeys": [
-        "tsunamien-i-2004",
-        "thailand",
-        "naturkatastrofer",
-        "overlevelse"
       ],
       "topicEligible": true,
       "genreEligible": true,
@@ -51150,7 +51150,7 @@
         "for tidligt fødte",
         "neonatalafdeling",
         "Rigshospitalet",
-        "Forældreskab",
+        "forældreskab",
         "spædbørn"
       ],
       "topicKeys": [
@@ -51271,7 +51271,7 @@
         "børn"
       ],
       "topicsCanonical": [
-        "Forældreskab",
+        "forældreskab",
         "familieliv",
         "graviditet",
         "børn"
@@ -51400,7 +51400,7 @@
         "Sex",
         "dating",
         "lyst",
-        "Skam",
+        "skam",
         "grænser",
         "intimitet",
         "Jomfruernes Ø"
@@ -53067,6 +53067,5591 @@
       "metadataIssues": []
     },
     {
+      "id": "stemmer fra den kolde krig",
+      "recommendationId": "rec-stemmer-fra-den-kolde-krig-ed1fba9826fad33937603d52dad6e37e",
+      "recommendationIdentityBasis": "title+link",
+      "identityDuplicateGroup": "",
+      "title": "Stemmer fra Den Kolde Krig",
+      "mainSeries": "",
+      "primaryGenreRaw": "Historie",
+      "primaryGenre": "Historie",
+      "primaryGenreValid": true,
+      "primaryGenreMappingType": "native",
+      "primaryGenreMappingSource": "Historie",
+      "primaryGenreNeedsReview": false,
+      "primaryGenreReviewReason": "",
+      "secondaryGenre": "Krig",
+      "secondaryGenreValid": true,
+      "topicsRaw": [
+        "Den Kolde Krig",
+        "Stevnsfort",
+        "Østersøen",
+        "NATO",
+        "kystforsvar",
+        "militærberedskab",
+        "HAWK",
+        "veteraner"
+      ],
+      "topicsCanonical": [
+        "Den kolde krig",
+        "Stevnsfort",
+        "Østersøen",
+        "NATO",
+        "kystforsvar",
+        "militærberedskab",
+        "HAWK",
+        "veteraner"
+      ],
+      "topicKeys": [
+        "den-kolde-krig",
+        "stevnsfort",
+        "oestersoeen",
+        "nato",
+        "kystforsvar",
+        "militaerberedskab",
+        "hawk",
+        "veteraner"
+      ],
+      "topicEligible": true,
+      "genreEligible": true,
+      "recommendationMetadataEligible": true,
+      "metadataIssues": []
+    },
+    {
+      "id": "den kolde krig josefine marina blom skylvad",
+      "recommendationId": "rec-den-kolde-krig-josefine-marina-blom-skylvad-07c749714be29c558b91f9c48897fe91",
+      "recommendationIdentityBasis": "title+link",
+      "identityDuplicateGroup": "",
+      "title": "Den kolde krig – Josefine Marina Blom Skylvad",
+      "mainSeries": "",
+      "primaryGenreRaw": "Historie",
+      "primaryGenre": "Historie",
+      "primaryGenreValid": true,
+      "primaryGenreMappingType": "native",
+      "primaryGenreMappingSource": "Historie",
+      "primaryGenreNeedsReview": false,
+      "primaryGenreReviewReason": "",
+      "secondaryGenre": "Politik",
+      "secondaryGenreValid": true,
+      "topicsRaw": [
+        "Den Kolde Krig",
+        "Tysklands deling",
+        "Berlinmuren",
+        "Cubakrisen",
+        "Danmark",
+        "øst-vest-konflikten"
+      ],
+      "topicsCanonical": [
+        "Den kolde krig",
+        "Tysklands deling",
+        "Berlinmuren",
+        "Cubakrisen",
+        "Danmark",
+        "øst-vest-konflikten"
+      ],
+      "topicKeys": [
+        "den-kolde-krig",
+        "tysklands-deling",
+        "berlinmuren",
+        "cubakrisen",
+        "danmark",
+        "oest-vest-konflikten"
+      ],
+      "topicEligible": true,
+      "genreEligible": true,
+      "recommendationMetadataEligible": true,
+      "metadataIssues": []
+    },
+    {
+      "id": "lyden af den kolde krig",
+      "recommendationId": "rec-lyden-af-den-kolde-krig-c515a8c9b69c3c054d8fb6b5b0dd731d",
+      "recommendationIdentityBasis": "title+link",
+      "identityDuplicateGroup": "",
+      "title": "Lyden af den kolde krig",
+      "mainSeries": "Lyden af Langeland",
+      "primaryGenreRaw": "Historie",
+      "primaryGenre": "Historie",
+      "primaryGenreValid": true,
+      "primaryGenreMappingType": "native",
+      "primaryGenreMappingSource": "Historie",
+      "primaryGenreNeedsReview": false,
+      "primaryGenreReviewReason": "",
+      "secondaryGenre": "Samfund",
+      "secondaryGenreValid": true,
+      "topicsRaw": [
+        "Den Kolde Krig",
+        "Langelands Museum",
+        "Leif Davidsen",
+        "Moskva",
+        "Polen",
+        "Berlinmuren",
+        "Jerntæppet"
+      ],
+      "topicsCanonical": [
+        "Den kolde krig",
+        "Langelands Museum",
+        "Leif Davidsen",
+        "Moskva",
+        "Polen",
+        "Berlinmuren",
+        "Jerntæppet"
+      ],
+      "topicKeys": [
+        "den-kolde-krig",
+        "langelands-museum",
+        "leif-davidsen",
+        "moskva",
+        "polen",
+        "berlinmuren",
+        "jerntaeppet"
+      ],
+      "topicEligible": true,
+      "genreEligible": true,
+      "recommendationMetadataEligible": true,
+      "metadataIssues": []
+    },
+    {
+      "id": "den kolde krig podimo",
+      "recommendationId": "rec-den-kolde-krig-podimo-0c2597146079833edfcddf83923a36ac",
+      "recommendationIdentityBasis": "title+link",
+      "identityDuplicateGroup": "",
+      "title": "Den kolde krig – Podimo",
+      "mainSeries": "",
+      "primaryGenreRaw": "Historie",
+      "primaryGenre": "Historie",
+      "primaryGenreValid": true,
+      "primaryGenreMappingType": "native",
+      "primaryGenreMappingSource": "Historie",
+      "primaryGenreNeedsReview": false,
+      "primaryGenreReviewReason": "",
+      "secondaryGenre": "Politik",
+      "secondaryGenreValid": true,
+      "topicsRaw": [
+        "Den Kolde Krig",
+        "Jerntæppet",
+        "Sovjetunionen",
+        "Berlinmuren",
+        "kommunisme",
+        "politisk historie",
+        "erindringer"
+      ],
+      "topicsCanonical": [
+        "Den kolde krig",
+        "Jerntæppet",
+        "Sovjetunionen",
+        "Berlinmuren",
+        "kommunisme",
+        "politisk historie",
+        "erindringer"
+      ],
+      "topicKeys": [
+        "den-kolde-krig",
+        "jerntaeppet",
+        "sovjetunionen",
+        "berlinmuren",
+        "kommunisme",
+        "politisk-historie",
+        "erindringer"
+      ],
+      "topicEligible": true,
+      "genreEligible": true,
+      "recommendationMetadataEligible": true,
+      "metadataIssues": []
+    },
+    {
+      "id": "helt ærligt mor",
+      "recommendationId": "rec-helt-aerligt-mor-313663cc33e1c9c804cc7d25ae8b5671",
+      "recommendationIdentityBasis": "title+link",
+      "identityDuplicateGroup": "",
+      "title": "Helt Ærligt Mor",
+      "mainSeries": "",
+      "primaryGenreRaw": "Samfund",
+      "primaryGenre": "Samfund",
+      "primaryGenreValid": true,
+      "primaryGenreMappingType": "native",
+      "primaryGenreMappingSource": "Samfund",
+      "primaryGenreNeedsReview": false,
+      "primaryGenreReviewReason": "",
+      "secondaryGenre": "Underholdning",
+      "secondaryGenreValid": true,
+      "topicsRaw": [
+        "Moderskab",
+        "graviditet",
+        "barsel",
+        "fødsel",
+        "familieliv",
+        "forventningspres",
+        "kvindeliv"
+      ],
+      "topicsCanonical": [
+        "Moderskab",
+        "graviditet",
+        "barsel",
+        "Fødsel",
+        "familieliv",
+        "forventningspres",
+        "kvindeliv"
+      ],
+      "topicKeys": [
+        "moderskab",
+        "graviditet",
+        "barsel",
+        "foedsel",
+        "familieliv",
+        "forventningspres",
+        "kvindeliv"
+      ],
+      "topicEligible": true,
+      "genreEligible": true,
+      "recommendationMetadataEligible": true,
+      "metadataIssues": []
+    },
+    {
+      "id": "fødselsberetninger",
+      "recommendationId": "rec-foedselsberetninger-c050d4e8825190d2f158e651161725e4",
+      "recommendationIdentityBasis": "title+link",
+      "identityDuplicateGroup": "",
+      "title": "Fødselsberetninger",
+      "mainSeries": "",
+      "primaryGenreRaw": "Dokumentar",
+      "primaryGenre": "Dokumentar",
+      "primaryGenreValid": true,
+      "primaryGenreMappingType": "native",
+      "primaryGenreMappingSource": "Dokumentar",
+      "primaryGenreNeedsReview": false,
+      "primaryGenreReviewReason": "",
+      "secondaryGenre": "Samfund",
+      "secondaryGenreValid": true,
+      "topicsRaw": [
+        "Fødsel",
+        "graviditet",
+        "fødselsoplevelser",
+        "jordemødre",
+        "barsel",
+        "mødre",
+        "fødselsforløb"
+      ],
+      "topicsCanonical": [
+        "Fødsel",
+        "graviditet",
+        "fødselsoplevelser",
+        "jordemødre",
+        "barsel",
+        "mødre",
+        "fødselsforløb"
+      ],
+      "topicKeys": [
+        "foedsel",
+        "graviditet",
+        "foedselsoplevelser",
+        "jordemoedre",
+        "barsel",
+        "moedre",
+        "foedselsforloeb"
+      ],
+      "topicEligible": true,
+      "genreEligible": true,
+      "recommendationMetadataEligible": true,
+      "metadataIssues": []
+    },
+    {
+      "id": "platformen podcast",
+      "recommendationId": "rec-platformen-podcast-f9b18cd29d248c9bab236e34e54cbe19",
+      "recommendationIdentityBasis": "title+link",
+      "identityDuplicateGroup": "",
+      "title": "Platformen Podcast",
+      "mainSeries": "",
+      "primaryGenreRaw": "Samfund",
+      "primaryGenre": "Samfund",
+      "primaryGenreValid": true,
+      "primaryGenreMappingType": "native",
+      "primaryGenreMappingSource": "Samfund",
+      "primaryGenreNeedsReview": false,
+      "primaryGenreReviewReason": "",
+      "secondaryGenre": "Underholdning",
+      "secondaryGenreValid": true,
+      "topicsRaw": [
+        "Samfundsdebat",
+        "dansk politik",
+        "iværksætteri",
+        "teknologi",
+        "religion",
+        "medier",
+        "personlige fortællinger",
+        "interviews"
+      ],
+      "topicsCanonical": [
+        "samfundsdebat",
+        "Dansk politik",
+        "iværksætteri",
+        "teknologi",
+        "religion",
+        "medier",
+        "personlige fortællinger",
+        "interviews"
+      ],
+      "topicKeys": [
+        "samfundsdebat",
+        "dansk-politik",
+        "ivaerksaetteri",
+        "teknologi",
+        "religion",
+        "medier",
+        "personlige-fortaellinger",
+        "interviews"
+      ],
+      "topicEligible": true,
+      "genreEligible": true,
+      "recommendationMetadataEligible": true,
+      "metadataIssues": [
+        "topic_alias_applied"
+      ]
+    },
+    {
+      "id": "nar 2 bliver til 3",
+      "recommendationId": "rec-naar-2-bliver-til-3-f63a1d4c684260eae6b7a5a6ec724d15",
+      "recommendationIdentityBasis": "title+link",
+      "identityDuplicateGroup": "",
+      "title": "Når 2 bliver til 3",
+      "mainSeries": "",
+      "primaryGenreRaw": "Samfund",
+      "primaryGenre": "Samfund",
+      "primaryGenreValid": true,
+      "primaryGenreMappingType": "native",
+      "primaryGenreMappingSource": "Samfund",
+      "primaryGenreNeedsReview": false,
+      "primaryGenreReviewReason": "",
+      "secondaryGenre": "Viden",
+      "secondaryGenreValid": true,
+      "topicsRaw": [
+        "Parforhold",
+        "småbørnsfamilier",
+        "forældreskab",
+        "barsel",
+        "kærlighed",
+        "konflikthåndtering",
+        "relationer"
+      ],
+      "topicsCanonical": [
+        "parforhold",
+        "småbørnsfamilier",
+        "forældreskab",
+        "barsel",
+        "kærlighed",
+        "konflikthåndtering",
+        "relationer"
+      ],
+      "topicKeys": [
+        "parforhold",
+        "smaaboernsfamilier",
+        "foraeldreskab",
+        "barsel",
+        "kaerlighed",
+        "konflikthaandtering",
+        "relationer"
+      ],
+      "topicEligible": true,
+      "genreEligible": true,
+      "recommendationMetadataEligible": true,
+      "metadataIssues": []
+    },
+    {
+      "id": "jegermor",
+      "recommendationId": "rec-jegermor-fe53b851983f74409c21b9df7ac1ee78",
+      "recommendationIdentityBasis": "title+link",
+      "identityDuplicateGroup": "",
+      "title": "Jegermor",
+      "mainSeries": "",
+      "primaryGenreRaw": "Samfund",
+      "primaryGenre": "Samfund",
+      "primaryGenreValid": true,
+      "primaryGenreMappingType": "native",
+      "primaryGenreMappingSource": "Samfund",
+      "primaryGenreNeedsReview": false,
+      "primaryGenreReviewReason": "",
+      "secondaryGenre": "Viden",
+      "secondaryGenreValid": true,
+      "topicsRaw": [
+        "Moderskab",
+        "barsel",
+        "efterfødselsreaktioner",
+        "mødrefællesskab",
+        "ensomhed",
+        "skam",
+        "familieliv"
+      ],
+      "topicsCanonical": [
+        "Moderskab",
+        "barsel",
+        "efterfødselsreaktioner",
+        "mødrefællesskab",
+        "ensomhed",
+        "skam",
+        "familieliv"
+      ],
+      "topicKeys": [
+        "moderskab",
+        "barsel",
+        "efterfoedselsreaktioner",
+        "moedrefaellesskab",
+        "ensomhed",
+        "skam",
+        "familieliv"
+      ],
+      "topicEligible": true,
+      "genreEligible": true,
+      "recommendationMetadataEligible": true,
+      "metadataIssues": []
+    },
+    {
+      "id": "not by accident",
+      "recommendationId": "rec-not-by-accident-0822a490e60a9795bb1017bf7882127f",
+      "recommendationIdentityBasis": "title+link",
+      "identityDuplicateGroup": "",
+      "title": "Not By Accident",
+      "mainSeries": "",
+      "primaryGenreRaw": "Dokumentar",
+      "primaryGenre": "Dokumentar",
+      "primaryGenreValid": true,
+      "primaryGenreMappingType": "native",
+      "primaryGenreMappingSource": "Dokumentar",
+      "primaryGenreNeedsReview": false,
+      "primaryGenreReviewReason": "",
+      "secondaryGenre": "Samfund",
+      "secondaryGenreValid": true,
+      "topicsRaw": [
+        "Solomor",
+        "selvvalgt enlig mor",
+        "fertilitet",
+        "graviditet",
+        "forældreskab",
+        "familiedannelse",
+        "Australien"
+      ],
+      "topicsCanonical": [
+        "Solomor",
+        "selvvalgt enlig mor",
+        "fertilitet",
+        "graviditet",
+        "forældreskab",
+        "familiedannelse",
+        "Australien"
+      ],
+      "topicKeys": [
+        "solomor",
+        "selvvalgt-enlig-mor",
+        "fertilitet",
+        "graviditet",
+        "foraeldreskab",
+        "familiedannelse",
+        "australien"
+      ],
+      "topicEligible": true,
+      "genreEligible": true,
+      "recommendationMetadataEligible": true,
+      "metadataIssues": []
+    },
+    {
+      "id": "duer og dæmoner",
+      "recommendationId": "rec-duer-og-daemoner-b9be0a9f445e13961ec6f1720a0bc6eb",
+      "recommendationIdentityBasis": "title+link",
+      "identityDuplicateGroup": "",
+      "title": "Duer og dæmoner",
+      "mainSeries": "Radiofortællinger",
+      "primaryGenreRaw": "Samfund",
+      "primaryGenre": "Samfund",
+      "primaryGenreValid": true,
+      "primaryGenreMappingType": "native",
+      "primaryGenreMappingSource": "Samfund",
+      "primaryGenreNeedsReview": false,
+      "primaryGenreReviewReason": "",
+      "secondaryGenre": "Dokumentar",
+      "secondaryGenreValid": true,
+      "topicsRaw": [
+        "brevdueforening",
+        "fællesskab",
+        "trivsel",
+        "ensomhed"
+      ],
+      "topicsCanonical": [
+        "brevdueforening",
+        "fællesskab",
+        "trivsel",
+        "ensomhed"
+      ],
+      "topicKeys": [
+        "brevdueforening",
+        "faellesskab",
+        "trivsel",
+        "ensomhed"
+      ],
+      "topicEligible": true,
+      "genreEligible": true,
+      "recommendationMetadataEligible": true,
+      "metadataIssues": []
+    },
+    {
+      "id": "lort pa foden",
+      "recommendationId": "rec-lort-paa-foden-578481bd3ed77b5deb8e688f46bb7a71",
+      "recommendationIdentityBasis": "title+link",
+      "identityDuplicateGroup": "",
+      "title": "Lort på Foden",
+      "mainSeries": "Radiofortællinger",
+      "primaryGenreRaw": "True Crime",
+      "primaryGenre": "True Crime",
+      "primaryGenreValid": true,
+      "primaryGenreMappingType": "native",
+      "primaryGenreMappingSource": "True Crime",
+      "primaryGenreNeedsReview": false,
+      "primaryGenreReviewReason": "",
+      "secondaryGenre": "Dokumentar",
+      "secondaryGenreValid": true,
+      "topicsRaw": [
+        "Peter Brandes",
+        "kriminalsag",
+        "1998",
+        "efterforskning"
+      ],
+      "topicsCanonical": [
+        "Peter Brandes",
+        "kriminalsag",
+        "1998",
+        "efterforskning"
+      ],
+      "topicKeys": [
+        "peter-brandes",
+        "kriminalsag",
+        "1998",
+        "efterforskning"
+      ],
+      "topicEligible": true,
+      "genreEligible": true,
+      "recommendationMetadataEligible": true,
+      "metadataIssues": []
+    },
+    {
+      "id": "hear my sex",
+      "recommendationId": "rec-hear-my-sex-96a5ad38e4b191d659303abc60850cef",
+      "recommendationIdentityBasis": "title+link",
+      "identityDuplicateGroup": "",
+      "title": "Hear My Sex",
+      "mainSeries": "Radiofortællinger",
+      "primaryGenreRaw": "Samfund",
+      "primaryGenre": "Samfund",
+      "primaryGenreValid": true,
+      "primaryGenreMappingType": "native",
+      "primaryGenreMappingSource": "Samfund",
+      "primaryGenreNeedsReview": false,
+      "primaryGenreReviewReason": "",
+      "secondaryGenre": "Dokumentar",
+      "secondaryGenreValid": true,
+      "topicsRaw": [
+        "hippierejse",
+        "Indien",
+        "kulturmøder",
+        "rejseminder"
+      ],
+      "topicsCanonical": [
+        "hippierejse",
+        "Indien",
+        "kulturmøder",
+        "rejseminder"
+      ],
+      "topicKeys": [
+        "hippierejse",
+        "indien",
+        "kulturmoeder",
+        "rejseminder"
+      ],
+      "topicEligible": true,
+      "genreEligible": true,
+      "recommendationMetadataEligible": true,
+      "metadataIssues": []
+    },
+    {
+      "id": "reddet af izmail",
+      "recommendationId": "rec-reddet-af-izmail-82b97b9552f7b1ac96eb388908d46797",
+      "recommendationIdentityBasis": "title+link",
+      "identityDuplicateGroup": "",
+      "title": "Reddet af Izmail",
+      "mainSeries": "Radiofortællinger",
+      "primaryGenreRaw": "Samfund",
+      "primaryGenre": "Samfund",
+      "primaryGenreValid": true,
+      "primaryGenreMappingType": "native",
+      "primaryGenreMappingSource": "Samfund",
+      "primaryGenreNeedsReview": false,
+      "primaryGenreReviewReason": "",
+      "secondaryGenre": "Dokumentar",
+      "secondaryGenreValid": true,
+      "topicsRaw": [
+        "rejser",
+        "uheld",
+        "tilfældigheder",
+        "hjælp"
+      ],
+      "topicsCanonical": [
+        "rejser",
+        "uheld",
+        "tilfældigheder",
+        "hjælp"
+      ],
+      "topicKeys": [
+        "rejser",
+        "uheld",
+        "tilfaeldigheder",
+        "hjaelp"
+      ],
+      "topicEligible": true,
+      "genreEligible": true,
+      "recommendationMetadataEligible": true,
+      "metadataIssues": []
+    },
+    {
+      "id": "fugledrengen",
+      "recommendationId": "rec-fugledrengen-b2a965be8f38e8483e88f699d9373b58",
+      "recommendationIdentityBasis": "title+link",
+      "identityDuplicateGroup": "",
+      "title": "Fugledrengen",
+      "mainSeries": "Radiofortællinger",
+      "primaryGenreRaw": "Samfund",
+      "primaryGenre": "Samfund",
+      "primaryGenreValid": true,
+      "primaryGenreMappingType": "native",
+      "primaryGenreMappingSource": "Samfund",
+      "primaryGenreNeedsReview": false,
+      "primaryGenreReviewReason": "",
+      "secondaryGenre": "Dokumentar",
+      "secondaryGenreValid": true,
+      "topicsRaw": [
+        "blindhed",
+        "fugle",
+        "fuglestemmer",
+        "barndom"
+      ],
+      "topicsCanonical": [
+        "blindhed",
+        "fugle",
+        "fuglestemmer",
+        "barndom"
+      ],
+      "topicKeys": [
+        "blindhed",
+        "fugle",
+        "fuglestemmer",
+        "barndom"
+      ],
+      "topicEligible": true,
+      "genreEligible": true,
+      "recommendationMetadataEligible": true,
+      "metadataIssues": []
+    },
+    {
+      "id": "mand uden barndom",
+      "recommendationId": "rec-mand-uden-barndom-3699656e60cbd4b65fc9af8a69e8e2bc",
+      "recommendationIdentityBasis": "title+link",
+      "identityDuplicateGroup": "",
+      "title": "Mand uden barndom",
+      "mainSeries": "Radiofortællinger",
+      "primaryGenreRaw": "Samfund",
+      "primaryGenre": "Samfund",
+      "primaryGenreValid": true,
+      "primaryGenreMappingType": "native",
+      "primaryGenreMappingSource": "Samfund",
+      "primaryGenreNeedsReview": false,
+      "primaryGenreReviewReason": "",
+      "secondaryGenre": "Dokumentar",
+      "secondaryGenreValid": true,
+      "topicsRaw": [
+        "hukommelse",
+        "barndom",
+        "familie",
+        "fotografier"
+      ],
+      "topicsCanonical": [
+        "hukommelse",
+        "barndom",
+        "familie",
+        "fotografier"
+      ],
+      "topicKeys": [
+        "hukommelse",
+        "barndom",
+        "familie",
+        "fotografier"
+      ],
+      "topicEligible": true,
+      "genreEligible": true,
+      "recommendationMetadataEligible": true,
+      "metadataIssues": []
+    },
+    {
+      "id": "børn af 70 erne",
+      "recommendationId": "rec-boern-af-70-erne-5c96436f06bb7eae6b9682d954f180f6",
+      "recommendationIdentityBasis": "title+link",
+      "identityDuplicateGroup": "",
+      "title": "Børn af 70'erne",
+      "mainSeries": "Radiofortællinger",
+      "primaryGenreRaw": "Historie",
+      "primaryGenre": "Historie",
+      "primaryGenreValid": true,
+      "primaryGenreMappingType": "native",
+      "primaryGenreMappingSource": "Historie",
+      "primaryGenreNeedsReview": false,
+      "primaryGenreReviewReason": "",
+      "secondaryGenre": "Dokumentar",
+      "secondaryGenreValid": true,
+      "topicsRaw": [
+        "1970'erne",
+        "opvækst",
+        "frihed",
+        "venstrefløj",
+        "familie"
+      ],
+      "topicsCanonical": [
+        "1970'erne",
+        "opvækst",
+        "frihed",
+        "venstrefløj",
+        "familie"
+      ],
+      "topicKeys": [
+        "1970-erne",
+        "opvaekst",
+        "frihed",
+        "venstrefloej",
+        "familie"
+      ],
+      "topicEligible": true,
+      "genreEligible": true,
+      "recommendationMetadataEligible": true,
+      "metadataIssues": []
+    },
+    {
+      "id": "kassevognen",
+      "recommendationId": "rec-kassevognen-f1f99fe91131136ebe3c0af948c18674",
+      "recommendationIdentityBasis": "title+link",
+      "identityDuplicateGroup": "",
+      "title": "Kassevognen",
+      "mainSeries": "Radiofortællinger",
+      "primaryGenreRaw": "True Crime",
+      "primaryGenre": "True Crime",
+      "primaryGenreValid": true,
+      "primaryGenreMappingType": "native",
+      "primaryGenreMappingSource": "True Crime",
+      "primaryGenreNeedsReview": false,
+      "primaryGenreReviewReason": "",
+      "secondaryGenre": "Dokumentar",
+      "secondaryGenreValid": true,
+      "topicsRaw": [
+        "forsikring",
+        "biler",
+        "svindel",
+        "ungdom"
+      ],
+      "topicsCanonical": [
+        "forsikring",
+        "Biler",
+        "Svindel",
+        "ungdom"
+      ],
+      "topicKeys": [
+        "forsikring",
+        "biler",
+        "svindel",
+        "ungdom"
+      ],
+      "topicEligible": true,
+      "genreEligible": true,
+      "recommendationMetadataEligible": true,
+      "metadataIssues": []
+    },
+    {
+      "id": "klovn til begravelse",
+      "recommendationId": "rec-klovn-til-begravelse-254edb0220c56441e68738dfabf5241f",
+      "recommendationIdentityBasis": "title+link",
+      "identityDuplicateGroup": "",
+      "title": "Klovn til begravelse",
+      "mainSeries": "Radiofortællinger",
+      "primaryGenreRaw": "Samfund",
+      "primaryGenre": "Samfund",
+      "primaryGenreValid": true,
+      "primaryGenreMappingType": "native",
+      "primaryGenreMappingSource": "Samfund",
+      "primaryGenreNeedsReview": false,
+      "primaryGenreReviewReason": "",
+      "secondaryGenre": "Dokumentar",
+      "secondaryGenreValid": true,
+      "topicsRaw": [
+        "hospitalsklovn",
+        "børnekræft",
+        "sorg",
+        "død"
+      ],
+      "topicsCanonical": [
+        "hospitalsklovn",
+        "børnekræft",
+        "sorg",
+        "død"
+      ],
+      "topicKeys": [
+        "hospitalsklovn",
+        "boernekraeft",
+        "sorg",
+        "doed"
+      ],
+      "topicEligible": true,
+      "genreEligible": true,
+      "recommendationMetadataEligible": true,
+      "metadataIssues": []
+    },
+    {
+      "id": "latexmanden",
+      "recommendationId": "rec-latexmanden-9ab66617b66e764b8f3c3252eb22049a",
+      "recommendationIdentityBasis": "title+link",
+      "identityDuplicateGroup": "",
+      "title": "Latexmanden",
+      "mainSeries": "Radiofortællinger",
+      "primaryGenreRaw": "Dokumentar",
+      "primaryGenre": "Dokumentar",
+      "primaryGenreValid": true,
+      "primaryGenreMappingType": "native",
+      "primaryGenreMappingSource": "Dokumentar",
+      "primaryGenreNeedsReview": false,
+      "primaryGenreReviewReason": "",
+      "secondaryGenre": "Samfund",
+      "secondaryGenreValid": true,
+      "topicsRaw": [
+        "Tisvilde",
+        "utryghed",
+        "lokalsamfund",
+        "erindringer"
+      ],
+      "topicsCanonical": [
+        "Tisvilde",
+        "utryghed",
+        "lokalsamfund",
+        "erindringer"
+      ],
+      "topicKeys": [
+        "tisvilde",
+        "utryghed",
+        "lokalsamfund",
+        "erindringer"
+      ],
+      "topicEligible": true,
+      "genreEligible": true,
+      "recommendationMetadataEligible": true,
+      "metadataIssues": []
+    },
+    {
+      "id": "philips landskampe",
+      "recommendationId": "rec-philips-landskampe-8378e248a16191d9a8d9dbfa9183b01a",
+      "recommendationIdentityBasis": "title+link",
+      "identityDuplicateGroup": "",
+      "title": "Philips Landskampe",
+      "mainSeries": "Radiofortællinger",
+      "primaryGenreRaw": "Sport",
+      "primaryGenre": "Sport",
+      "primaryGenreValid": true,
+      "primaryGenreMappingType": "native",
+      "primaryGenreMappingSource": "Sport",
+      "primaryGenreNeedsReview": false,
+      "primaryGenreReviewReason": "",
+      "secondaryGenre": "Dokumentar",
+      "secondaryGenreValid": true,
+      "topicsRaw": [
+        "fodbold",
+        "landshold",
+        "drømme",
+        "identitet"
+      ],
+      "topicsCanonical": [
+        "fodbold",
+        "landshold",
+        "drømme",
+        "identitet"
+      ],
+      "topicKeys": [
+        "fodbold",
+        "landshold",
+        "droemme",
+        "identitet"
+      ],
+      "topicEligible": true,
+      "genreEligible": true,
+      "recommendationMetadataEligible": true,
+      "metadataIssues": []
+    },
+    {
+      "id": "afmagt",
+      "recommendationId": "rec-afmagt-248fd320802ced1b17f8e459651e70d3",
+      "recommendationIdentityBasis": "title+link",
+      "identityDuplicateGroup": "",
+      "title": "Afmagt",
+      "mainSeries": "Radiofortællinger",
+      "primaryGenreRaw": "True Crime",
+      "primaryGenre": "True Crime",
+      "primaryGenreValid": true,
+      "primaryGenreMappingType": "native",
+      "primaryGenreMappingSource": "True Crime",
+      "primaryGenreNeedsReview": false,
+      "primaryGenreReviewReason": "",
+      "secondaryGenre": "Dokumentar",
+      "secondaryGenreValid": true,
+      "topicsRaw": [
+        "kidnapning",
+        "hvidvask",
+        "pengemuldyr",
+        "tvang"
+      ],
+      "topicsCanonical": [
+        "Kidnapning",
+        "hvidvask",
+        "pengemuldyr",
+        "tvang"
+      ],
+      "topicKeys": [
+        "kidnapning",
+        "hvidvask",
+        "pengemuldyr",
+        "tvang"
+      ],
+      "topicEligible": true,
+      "genreEligible": true,
+      "recommendationMetadataEligible": true,
+      "metadataIssues": []
+    },
+    {
+      "id": "helt ud over kanten",
+      "recommendationId": "rec-helt-ud-over-kanten-547fa08cb0b2eebe6ee22e9c1ac62168",
+      "recommendationIdentityBasis": "title+link",
+      "identityDuplicateGroup": "",
+      "title": "Helt ud over kanten",
+      "mainSeries": "Radiofortællinger",
+      "primaryGenreRaw": "Samfund",
+      "primaryGenre": "Samfund",
+      "primaryGenreValid": true,
+      "primaryGenreMappingType": "native",
+      "primaryGenreMappingSource": "Samfund",
+      "primaryGenreNeedsReview": false,
+      "primaryGenreReviewReason": "",
+      "secondaryGenre": "Dokumentar",
+      "secondaryGenreValid": true,
+      "topicsRaw": [
+        "ungdom",
+        "rusmidler",
+        "risikoadfærd",
+        "afhængighed"
+      ],
+      "topicsCanonical": [
+        "ungdom",
+        "rusmidler",
+        "risikoadfærd",
+        "afhængighed"
+      ],
+      "topicKeys": [
+        "ungdom",
+        "rusmidler",
+        "risikoadfaerd",
+        "afhaengighed"
+      ],
+      "topicEligible": true,
+      "genreEligible": true,
+      "recommendationMetadataEligible": true,
+      "metadataIssues": []
+    },
+    {
+      "id": "allans møde med sig selv i 1600 tallet",
+      "recommendationId": "rec-allans-moede-med-sig-selv-i-1600-tallet-4c22100738ca62e953a578ed78ff58a1",
+      "recommendationIdentityBasis": "title+link",
+      "identityDuplicateGroup": "",
+      "title": "Allans møde med sig selv i 1600-tallet",
+      "mainSeries": "Radiofortællinger",
+      "primaryGenreRaw": "Samfund",
+      "primaryGenre": "Samfund",
+      "primaryGenreValid": true,
+      "primaryGenreMappingType": "native",
+      "primaryGenreMappingSource": "Samfund",
+      "primaryGenreNeedsReview": false,
+      "primaryGenreReviewReason": "",
+      "secondaryGenre": "Dokumentar",
+      "secondaryGenreValid": true,
+      "topicsRaw": [
+        "ayahuasca",
+        "reinkarnation",
+        "identitet",
+        "1600-tallet"
+      ],
+      "topicsCanonical": [
+        "ayahuasca",
+        "reinkarnation",
+        "identitet",
+        "1600-tallet"
+      ],
+      "topicKeys": [
+        "ayahuasca",
+        "reinkarnation",
+        "identitet",
+        "1600-tallet"
+      ],
+      "topicEligible": true,
+      "genreEligible": true,
+      "recommendationMetadataEligible": true,
+      "metadataIssues": []
+    },
+    {
+      "id": "har du husket din orange vest",
+      "recommendationId": "rec-har-du-husket-din-orange-vest-b42544416fc1dcaba0936d48b3d68942",
+      "recommendationIdentityBasis": "title+link",
+      "identityDuplicateGroup": "",
+      "title": "Har du husket din orange vest?",
+      "mainSeries": "Radiofortællinger",
+      "primaryGenreRaw": "Samfund",
+      "primaryGenre": "Samfund",
+      "primaryGenreValid": true,
+      "primaryGenreMappingType": "native",
+      "primaryGenreMappingSource": "Samfund",
+      "primaryGenreNeedsReview": false,
+      "primaryGenreReviewReason": "",
+      "secondaryGenre": "Dokumentar",
+      "secondaryGenreValid": true,
+      "topicsRaw": [
+        "Bolivia",
+        "familie",
+        "bryllup",
+        "kulturmøde"
+      ],
+      "topicsCanonical": [
+        "Bolivia",
+        "familie",
+        "bryllup",
+        "kulturmøde"
+      ],
+      "topicKeys": [
+        "bolivia",
+        "familie",
+        "bryllup",
+        "kulturmoede"
+      ],
+      "topicEligible": true,
+      "genreEligible": true,
+      "recommendationMetadataEligible": true,
+      "metadataIssues": []
+    },
+    {
+      "id": "en kamp om ordet",
+      "recommendationId": "rec-en-kamp-om-ordet-3ec05bd55caa72c940486fe6a097d6ac",
+      "recommendationIdentityBasis": "title+link",
+      "identityDuplicateGroup": "",
+      "title": "En kamp om ordet",
+      "mainSeries": "Radiofortællinger",
+      "primaryGenreRaw": "Viden",
+      "primaryGenre": "Viden",
+      "primaryGenreValid": true,
+      "primaryGenreMappingType": "native",
+      "primaryGenreMappingSource": "Viden",
+      "primaryGenreNeedsReview": false,
+      "primaryGenreReviewReason": "",
+      "secondaryGenre": "Dokumentar",
+      "secondaryGenreValid": true,
+      "topicsRaw": [
+        "stemmehøring",
+        "virtual reality",
+        "psykiatri",
+        "forskning"
+      ],
+      "topicsCanonical": [
+        "stemmehøring",
+        "virtual reality",
+        "psykiatri",
+        "forskning"
+      ],
+      "topicKeys": [
+        "stemmehoering",
+        "virtual-reality",
+        "psykiatri",
+        "forskning"
+      ],
+      "topicEligible": true,
+      "genreEligible": true,
+      "recommendationMetadataEligible": true,
+      "metadataIssues": []
+    },
+    {
+      "id": "uskyldige løgne",
+      "recommendationId": "rec-uskyldige-loegne-81fee027ea1dbdc2b72ca7b7190bca18",
+      "recommendationIdentityBasis": "title+link",
+      "identityDuplicateGroup": "",
+      "title": "Uskyldige løgne?",
+      "mainSeries": "Radiofortællinger",
+      "primaryGenreRaw": "Samfund",
+      "primaryGenre": "Samfund",
+      "primaryGenreValid": true,
+      "primaryGenreMappingType": "native",
+      "primaryGenreMappingSource": "Samfund",
+      "primaryGenreNeedsReview": false,
+      "primaryGenreReviewReason": "",
+      "secondaryGenre": "Dokumentar",
+      "secondaryGenreValid": true,
+      "topicsRaw": [
+        "fobi",
+        "mus",
+        "frygt",
+        "rygter"
+      ],
+      "topicsCanonical": [
+        "fobi",
+        "mus",
+        "frygt",
+        "rygter"
+      ],
+      "topicKeys": [
+        "fobi",
+        "mus",
+        "frygt",
+        "rygter"
+      ],
+      "topicEligible": true,
+      "genreEligible": true,
+      "recommendationMetadataEligible": true,
+      "metadataIssues": []
+    },
+    {
+      "id": "kunst røg og afbrændt hud",
+      "recommendationId": "rec-kunst-roeg-og-afbraendt-hud-84bbdfc499b4414fc2df96d57dda5f56",
+      "recommendationIdentityBasis": "title+link",
+      "identityDuplicateGroup": "",
+      "title": "Kunst, røg og afbrændt hud",
+      "mainSeries": "Radiofortællinger",
+      "primaryGenreRaw": "Dokumentar",
+      "primaryGenre": "Dokumentar",
+      "primaryGenreValid": true,
+      "primaryGenreMappingType": "native",
+      "primaryGenreMappingSource": "Dokumentar",
+      "primaryGenreNeedsReview": false,
+      "primaryGenreReviewReason": "",
+      "secondaryGenre": "Samfund",
+      "secondaryGenreValid": true,
+      "topicsRaw": [
+        "kunst",
+        "ambitioner",
+        "ulykke",
+        "Brønshøj"
+      ],
+      "topicsCanonical": [
+        "kunst",
+        "ambitioner",
+        "ulykke",
+        "Brønshøj"
+      ],
+      "topicKeys": [
+        "kunst",
+        "ambitioner",
+        "ulykke",
+        "broenshoej"
+      ],
+      "topicEligible": true,
+      "genreEligible": true,
+      "recommendationMetadataEligible": true,
+      "metadataIssues": []
+    },
+    {
+      "id": "sauna efter lukketid",
+      "recommendationId": "rec-sauna-efter-lukketid-43d2be551de51646bf70e5027bbf2979",
+      "recommendationIdentityBasis": "title+link",
+      "identityDuplicateGroup": "",
+      "title": "Sauna efter lukketid",
+      "mainSeries": "Radiofortællinger",
+      "primaryGenreRaw": "Dokumentar",
+      "primaryGenre": "Dokumentar",
+      "primaryGenreValid": true,
+      "primaryGenreMappingType": "native",
+      "primaryGenreMappingSource": "Dokumentar",
+      "primaryGenreNeedsReview": false,
+      "primaryGenreReviewReason": "",
+      "secondaryGenre": "Samfund",
+      "secondaryGenreValid": true,
+      "topicsRaw": [
+        "vinterbadning",
+        "sauna",
+        "kolleger",
+        "drama"
+      ],
+      "topicsCanonical": [
+        "vinterbadning",
+        "sauna",
+        "kolleger",
+        "drama"
+      ],
+      "topicKeys": [
+        "vinterbadning",
+        "sauna",
+        "kolleger",
+        "drama"
+      ],
+      "topicEligible": true,
+      "genreEligible": true,
+      "recommendationMetadataEligible": true,
+      "metadataIssues": []
+    },
+    {
+      "id": "et pinligt lift",
+      "recommendationId": "rec-et-pinligt-lift-bcfc85760afb5e2cfe68cb462515416a",
+      "recommendationIdentityBasis": "title+link",
+      "identityDuplicateGroup": "",
+      "title": "Et pinligt lift",
+      "mainSeries": "Radiofortællinger",
+      "primaryGenreRaw": "Samfund",
+      "primaryGenre": "Samfund",
+      "primaryGenreValid": true,
+      "primaryGenreMappingType": "native",
+      "primaryGenreMappingSource": "Samfund",
+      "primaryGenreNeedsReview": false,
+      "primaryGenreReviewReason": "",
+      "secondaryGenre": "Dokumentar",
+      "secondaryGenreValid": true,
+      "topicsRaw": [
+        "lift",
+        "fremmede",
+        "samtale",
+        "misforståelser"
+      ],
+      "topicsCanonical": [
+        "lift",
+        "fremmede",
+        "samtale",
+        "misforståelser"
+      ],
+      "topicKeys": [
+        "lift",
+        "fremmede",
+        "samtale",
+        "misforstaaelser"
+      ],
+      "topicEligible": true,
+      "genreEligible": true,
+      "recommendationMetadataEligible": true,
+      "metadataIssues": []
+    },
+    {
+      "id": "spøgelser",
+      "recommendationId": "rec-spoegelser-44a02a0972acae09946e5a3bf211618c",
+      "recommendationIdentityBasis": "title+link",
+      "identityDuplicateGroup": "",
+      "title": "Spøgelser",
+      "mainSeries": "Radiofortællinger",
+      "primaryGenreRaw": "Dokumentar",
+      "primaryGenre": "Dokumentar",
+      "primaryGenreValid": true,
+      "primaryGenreMappingType": "native",
+      "primaryGenreMappingSource": "Dokumentar",
+      "primaryGenreNeedsReview": false,
+      "primaryGenreReviewReason": "",
+      "secondaryGenre": "Samfund",
+      "secondaryGenreValid": true,
+      "topicsRaw": [
+        "Tønder",
+        "ugeavis",
+        "overnaturlige oplevelser",
+        "skepsis"
+      ],
+      "topicsCanonical": [
+        "Tønder",
+        "ugeavis",
+        "overnaturlige oplevelser",
+        "skepsis"
+      ],
+      "topicKeys": [
+        "toender",
+        "ugeavis",
+        "overnaturlige-oplevelser",
+        "skepsis"
+      ],
+      "topicEligible": true,
+      "genreEligible": true,
+      "recommendationMetadataEligible": true,
+      "metadataIssues": []
+    },
+    {
+      "id": "en over næsen",
+      "recommendationId": "rec-en-over-naesen-79f5d798eb653b34e78f545d65fc1050",
+      "recommendationIdentityBasis": "title+link",
+      "identityDuplicateGroup": "",
+      "title": "Én over næsen",
+      "mainSeries": "Radiofortællinger",
+      "primaryGenreRaw": "Samfund",
+      "primaryGenre": "Samfund",
+      "primaryGenreValid": true,
+      "primaryGenreMappingType": "native",
+      "primaryGenreMappingSource": "Samfund",
+      "primaryGenreNeedsReview": false,
+      "primaryGenreReviewReason": "",
+      "secondaryGenre": "Dokumentar",
+      "secondaryGenreValid": true,
+      "topicsRaw": [
+        "Californien",
+        "teater",
+        "kulturmøder",
+        "konflikt"
+      ],
+      "topicsCanonical": [
+        "Californien",
+        "teater",
+        "kulturmøder",
+        "konflikt"
+      ],
+      "topicKeys": [
+        "californien",
+        "teater",
+        "kulturmoeder",
+        "konflikt"
+      ],
+      "topicEligible": true,
+      "genreEligible": true,
+      "recommendationMetadataEligible": true,
+      "metadataIssues": []
+    },
+    {
+      "id": "violas mareridt i bombay",
+      "recommendationId": "rec-violas-mareridt-i-bombay-2940e739ea58d8f0a0c798c0d5883dd5",
+      "recommendationIdentityBasis": "title+link",
+      "identityDuplicateGroup": "",
+      "title": "Violas mareridt i Bombay",
+      "mainSeries": "Radiofortællinger",
+      "primaryGenreRaw": "Dokumentar",
+      "primaryGenre": "Dokumentar",
+      "primaryGenreValid": true,
+      "primaryGenreMappingType": "native",
+      "primaryGenreMappingSource": "Dokumentar",
+      "primaryGenreNeedsReview": false,
+      "primaryGenreReviewReason": "",
+      "secondaryGenre": "True Crime",
+      "secondaryGenreValid": true,
+      "topicsRaw": [
+        "Mumbai",
+        "terrorangreb",
+        "Indien",
+        "rejser"
+      ],
+      "topicsCanonical": [
+        "Mumbai",
+        "terrorangreb",
+        "Indien",
+        "rejser"
+      ],
+      "topicKeys": [
+        "mumbai",
+        "terrorangreb",
+        "indien",
+        "rejser"
+      ],
+      "topicEligible": true,
+      "genreEligible": true,
+      "recommendationMetadataEligible": true,
+      "metadataIssues": []
+    },
+    {
+      "id": "daniel i paradisets have",
+      "recommendationId": "rec-daniel-i-paradisets-have-54f526f3b65caebfd34a0cb5c7dba26c",
+      "recommendationIdentityBasis": "title+link",
+      "identityDuplicateGroup": "",
+      "title": "Daniel i paradisets have",
+      "mainSeries": "Radiofortællinger",
+      "primaryGenreRaw": "Samfund",
+      "primaryGenre": "Samfund",
+      "primaryGenreValid": true,
+      "primaryGenreMappingType": "native",
+      "primaryGenreMappingSource": "Samfund",
+      "primaryGenreNeedsReview": false,
+      "primaryGenreReviewReason": "",
+      "secondaryGenre": "Dokumentar",
+      "secondaryGenreValid": true,
+      "topicsRaw": [
+        "hjemløshed",
+        "København",
+        "naboskab",
+        "fællesskab"
+      ],
+      "topicsCanonical": [
+        "hjemløshed",
+        "København",
+        "naboskab",
+        "fællesskab"
+      ],
+      "topicKeys": [
+        "hjemloeshed",
+        "koebenhavn",
+        "naboskab",
+        "faellesskab"
+      ],
+      "topicEligible": true,
+      "genreEligible": true,
+      "recommendationMetadataEligible": true,
+      "metadataIssues": []
+    },
+    {
+      "id": "kørekort angstens gave",
+      "recommendationId": "rec-koerekort-angstens-gave-d3cc22cb1a0a4931343f4a79ae864b18",
+      "recommendationIdentityBasis": "title+link",
+      "identityDuplicateGroup": "",
+      "title": "Kørekort, angstens gave",
+      "mainSeries": "Radiofortællinger",
+      "primaryGenreRaw": "Samfund",
+      "primaryGenre": "Samfund",
+      "primaryGenreValid": true,
+      "primaryGenreMappingType": "native",
+      "primaryGenreMappingSource": "Samfund",
+      "primaryGenreNeedsReview": false,
+      "primaryGenreReviewReason": "",
+      "secondaryGenre": "Dokumentar",
+      "secondaryGenreValid": true,
+      "topicsRaw": [
+        "angst",
+        "kørekort",
+        "køreskole",
+        "litteratur"
+      ],
+      "topicsCanonical": [
+        "angst",
+        "kørekort",
+        "køreskole",
+        "litteratur"
+      ],
+      "topicKeys": [
+        "angst",
+        "koerekort",
+        "koereskole",
+        "litteratur"
+      ],
+      "topicEligible": true,
+      "genreEligible": true,
+      "recommendationMetadataEligible": true,
+      "metadataIssues": []
+    },
+    {
+      "id": "nar mor bliver bange",
+      "recommendationId": "rec-naar-mor-bliver-bange-8e3c623baf2ba113f9a162c6069f3fa5",
+      "recommendationIdentityBasis": "title+link",
+      "identityDuplicateGroup": "",
+      "title": "Når mor bliver bange",
+      "mainSeries": "Radiofortællinger",
+      "primaryGenreRaw": "Samfund",
+      "primaryGenre": "Samfund",
+      "primaryGenreValid": true,
+      "primaryGenreMappingType": "native",
+      "primaryGenreMappingSource": "Samfund",
+      "primaryGenreNeedsReview": false,
+      "primaryGenreReviewReason": "",
+      "secondaryGenre": "Dokumentar",
+      "secondaryGenreValid": true,
+      "topicsRaw": [
+        "moderskab",
+        "barndom",
+        "sygdom",
+        "angst"
+      ],
+      "topicsCanonical": [
+        "Moderskab",
+        "barndom",
+        "sygdom",
+        "angst"
+      ],
+      "topicKeys": [
+        "moderskab",
+        "barndom",
+        "sygdom",
+        "angst"
+      ],
+      "topicEligible": true,
+      "genreEligible": true,
+      "recommendationMetadataEligible": true,
+      "metadataIssues": []
+    },
+    {
+      "id": "mathilde kan tale med dyr",
+      "recommendationId": "rec-mathilde-kan-tale-med-dyr-c68d46c4716dcee08d5630683b70dfbb",
+      "recommendationIdentityBasis": "title+link",
+      "identityDuplicateGroup": "",
+      "title": "Mathilde kan tale med dyr",
+      "mainSeries": "Radiofortællinger",
+      "primaryGenreRaw": "Samfund",
+      "primaryGenre": "Samfund",
+      "primaryGenreValid": true,
+      "primaryGenreMappingType": "native",
+      "primaryGenreMappingSource": "Samfund",
+      "primaryGenreNeedsReview": false,
+      "primaryGenreReviewReason": "",
+      "secondaryGenre": "Dokumentar",
+      "secondaryGenreValid": true,
+      "topicsRaw": [
+        "dyr",
+        "telepati",
+        "overbevisninger",
+        "heste"
+      ],
+      "topicsCanonical": [
+        "dyr",
+        "telepati",
+        "overbevisninger",
+        "heste"
+      ],
+      "topicKeys": [
+        "dyr",
+        "telepati",
+        "overbevisninger",
+        "heste"
+      ],
+      "topicEligible": true,
+      "genreEligible": true,
+      "recommendationMetadataEligible": true,
+      "metadataIssues": []
+    },
+    {
+      "id": "john og dæmonerne",
+      "recommendationId": "rec-john-og-daemonerne-7b865960f876fe9e51e9562160c6465f",
+      "recommendationIdentityBasis": "title+link",
+      "identityDuplicateGroup": "",
+      "title": "John og dæmonerne",
+      "mainSeries": "Radiofortællinger",
+      "primaryGenreRaw": "Samfund",
+      "primaryGenre": "Samfund",
+      "primaryGenreValid": true,
+      "primaryGenreMappingType": "native",
+      "primaryGenreMappingSource": "Samfund",
+      "primaryGenreNeedsReview": false,
+      "primaryGenreReviewReason": "",
+      "secondaryGenre": "Dokumentar",
+      "secondaryGenreValid": true,
+      "topicsRaw": [
+        "gaming",
+        "hjemløshed",
+        "tvangsanbringelse",
+        "diskrimination"
+      ],
+      "topicsCanonical": [
+        "gaming",
+        "hjemløshed",
+        "tvangsanbringelse",
+        "diskrimination"
+      ],
+      "topicKeys": [
+        "gaming",
+        "hjemloeshed",
+        "tvangsanbringelse",
+        "diskrimination"
+      ],
+      "topicEligible": true,
+      "genreEligible": true,
+      "recommendationMetadataEligible": true,
+      "metadataIssues": []
+    },
+    {
+      "id": "roser og raseri",
+      "recommendationId": "rec-roser-og-raseri-62b5fd7801ab6dfc04ed8d5b4db0b270",
+      "recommendationIdentityBasis": "title+link",
+      "identityDuplicateGroup": "",
+      "title": "Roser og raseri",
+      "mainSeries": "Radiofortællinger",
+      "primaryGenreRaw": "Samfund",
+      "primaryGenre": "Samfund",
+      "primaryGenreValid": true,
+      "primaryGenreMappingType": "native",
+      "primaryGenreMappingSource": "Samfund",
+      "primaryGenreNeedsReview": false,
+      "primaryGenreReviewReason": "",
+      "secondaryGenre": "Dokumentar",
+      "secondaryGenreValid": true,
+      "topicsRaw": [
+        "vrede",
+        "temperament",
+        "opvækst",
+        "relationer"
+      ],
+      "topicsCanonical": [
+        "vrede",
+        "temperament",
+        "opvækst",
+        "relationer"
+      ],
+      "topicKeys": [
+        "vrede",
+        "temperament",
+        "opvaekst",
+        "relationer"
+      ],
+      "topicEligible": true,
+      "genreEligible": true,
+      "recommendationMetadataEligible": true,
+      "metadataIssues": []
+    },
+    {
+      "id": "farligt blod",
+      "recommendationId": "rec-farligt-blod-b3187bac1e326d595aefb77dbd4a9e64",
+      "recommendationIdentityBasis": "title+link",
+      "identityDuplicateGroup": "",
+      "title": "Farligt Blod",
+      "mainSeries": "Radiofortællinger",
+      "primaryGenreRaw": "Dokumentar",
+      "primaryGenre": "Dokumentar",
+      "primaryGenreValid": true,
+      "primaryGenreMappingType": "native",
+      "primaryGenreMappingSource": "Dokumentar",
+      "primaryGenreNeedsReview": false,
+      "primaryGenreReviewReason": "",
+      "secondaryGenre": "Historie",
+      "secondaryGenreValid": true,
+      "topicsRaw": [
+        "blødersagen",
+        "hiv",
+        "sundhed",
+        "1980'erne"
+      ],
+      "topicsCanonical": [
+        "blødersagen",
+        "HIV",
+        "sundhed",
+        "1980'erne"
+      ],
+      "topicKeys": [
+        "bloedersagen",
+        "hiv",
+        "sundhed",
+        "1980-erne"
+      ],
+      "topicEligible": true,
+      "genreEligible": true,
+      "recommendationMetadataEligible": true,
+      "metadataIssues": []
+    },
+    {
+      "id": "et trip",
+      "recommendationId": "rec-et-trip-ddcd02b50ddb54fae0012abeb265dd62",
+      "recommendationIdentityBasis": "title+link",
+      "identityDuplicateGroup": "",
+      "title": "Et trip",
+      "mainSeries": "Radiofortællinger",
+      "primaryGenreRaw": "Viden",
+      "primaryGenre": "Viden",
+      "primaryGenreValid": true,
+      "primaryGenreMappingType": "native",
+      "primaryGenreMappingSource": "Viden",
+      "primaryGenreNeedsReview": false,
+      "primaryGenreReviewReason": "",
+      "secondaryGenre": "Dokumentar",
+      "secondaryGenreValid": true,
+      "topicsRaw": [
+        "psilocybin",
+        "forskning",
+        "psykedelika",
+        "behandling"
+      ],
+      "topicsCanonical": [
+        "psilocybin",
+        "forskning",
+        "psykedelika",
+        "behandling"
+      ],
+      "topicKeys": [
+        "psilocybin",
+        "forskning",
+        "psykedelika",
+        "behandling"
+      ],
+      "topicEligible": true,
+      "genreEligible": true,
+      "recommendationMetadataEligible": true,
+      "metadataIssues": []
+    },
+    {
+      "id": "hjerteløber",
+      "recommendationId": "rec-hjerteloeber-a7d5ae1695d209d94e3e2b1fa740564a",
+      "recommendationIdentityBasis": "title+link",
+      "identityDuplicateGroup": "",
+      "title": "Hjerteløber",
+      "mainSeries": "Radiofortællinger",
+      "primaryGenreRaw": "Samfund",
+      "primaryGenre": "Samfund",
+      "primaryGenreValid": true,
+      "primaryGenreMappingType": "native",
+      "primaryGenreMappingSource": "Samfund",
+      "primaryGenreNeedsReview": false,
+      "primaryGenreReviewReason": "",
+      "secondaryGenre": "Dokumentar",
+      "secondaryGenreValid": true,
+      "topicsRaw": [
+        "hjertestop",
+        "frivillighed",
+        "førstehjælp",
+        "livsvalg"
+      ],
+      "topicsCanonical": [
+        "hjertestop",
+        "frivillighed",
+        "førstehjælp",
+        "livsvalg"
+      ],
+      "topicKeys": [
+        "hjertestop",
+        "frivillighed",
+        "foerstehjaelp",
+        "livsvalg"
+      ],
+      "topicEligible": true,
+      "genreEligible": true,
+      "recommendationMetadataEligible": true,
+      "metadataIssues": []
+    },
+    {
+      "id": "den skaldede fotograf",
+      "recommendationId": "rec-den-skaldede-fotograf-09b7f7722c20b66378bc8f1e0d300d23",
+      "recommendationIdentityBasis": "title+link",
+      "identityDuplicateGroup": "",
+      "title": "Den skaldede fotograf",
+      "mainSeries": "Radiofortællinger",
+      "primaryGenreRaw": "Samfund",
+      "primaryGenre": "Samfund",
+      "primaryGenreValid": true,
+      "primaryGenreMappingType": "native",
+      "primaryGenreMappingSource": "Samfund",
+      "primaryGenreNeedsReview": false,
+      "primaryGenreReviewReason": "",
+      "secondaryGenre": "Dokumentar",
+      "secondaryGenreValid": true,
+      "topicsRaw": [
+        "hippierejse",
+        "Indien",
+        "1978",
+        "tilfældigheder"
+      ],
+      "topicsCanonical": [
+        "hippierejse",
+        "Indien",
+        "1978",
+        "tilfældigheder"
+      ],
+      "topicKeys": [
+        "hippierejse",
+        "indien",
+        "1978",
+        "tilfaeldigheder"
+      ],
+      "topicEligible": true,
+      "genreEligible": true,
+      "recommendationMetadataEligible": true,
+      "metadataIssues": []
+    },
+    {
+      "id": "min franske røverhistorie",
+      "recommendationId": "rec-min-franske-roeverhistorie-d9d8e04205e10d8e05af0fef263932f7",
+      "recommendationIdentityBasis": "title+link",
+      "identityDuplicateGroup": "",
+      "title": "Min franske røverhistorie",
+      "mainSeries": "Radiofortællinger",
+      "primaryGenreRaw": "Dokumentar",
+      "primaryGenre": "Dokumentar",
+      "primaryGenreValid": true,
+      "primaryGenreMappingType": "native",
+      "primaryGenreMappingSource": "Dokumentar",
+      "primaryGenreNeedsReview": false,
+      "primaryGenreReviewReason": "",
+      "secondaryGenre": "Samfund",
+      "secondaryGenreValid": true,
+      "topicsRaw": [
+        "tyveri",
+        "Frankrig",
+        "familiehistorie",
+        "fortællinger"
+      ],
+      "topicsCanonical": [
+        "tyveri",
+        "Frankrig",
+        "familiehistorie",
+        "fortællinger"
+      ],
+      "topicKeys": [
+        "tyveri",
+        "frankrig",
+        "familiehistorie",
+        "fortaellinger"
+      ],
+      "topicEligible": true,
+      "genreEligible": true,
+      "recommendationMetadataEligible": true,
+      "metadataIssues": []
+    },
+    {
+      "id": "angie pa stranden",
+      "recommendationId": "rec-angie-paa-stranden-3f82b91bf5bbfe4e3c4b460ba5df1998",
+      "recommendationIdentityBasis": "title+link",
+      "identityDuplicateGroup": "",
+      "title": "Angie på stranden",
+      "mainSeries": "Radiofortællinger",
+      "primaryGenreRaw": "Samfund",
+      "primaryGenre": "Samfund",
+      "primaryGenreValid": true,
+      "primaryGenreMappingType": "native",
+      "primaryGenreMappingSource": "Samfund",
+      "primaryGenreNeedsReview": false,
+      "primaryGenreReviewReason": "",
+      "secondaryGenre": "Dokumentar",
+      "secondaryGenreValid": true,
+      "topicsRaw": [
+        "ungdom",
+        "Thailand",
+        "Danmark",
+        "familie",
+        "selvstændighed"
+      ],
+      "topicsCanonical": [
+        "ungdom",
+        "Thailand",
+        "Danmark",
+        "familie",
+        "selvstændighed"
+      ],
+      "topicKeys": [
+        "ungdom",
+        "thailand",
+        "danmark",
+        "familie",
+        "selvstaendighed"
+      ],
+      "topicEligible": true,
+      "genreEligible": true,
+      "recommendationMetadataEligible": true,
+      "metadataIssues": []
+    },
+    {
+      "id": "franske forførelser",
+      "recommendationId": "rec-franske-forfoerelser-49a6e7649e614102332c1b247f1d45ee",
+      "recommendationIdentityBasis": "title+link",
+      "identityDuplicateGroup": "",
+      "title": "Franske forførelser",
+      "mainSeries": "Radiofortællinger",
+      "primaryGenreRaw": "Dokumentar",
+      "primaryGenre": "Dokumentar",
+      "primaryGenreValid": true,
+      "primaryGenreMappingType": "native",
+      "primaryGenreMappingSource": "Dokumentar",
+      "primaryGenreNeedsReview": false,
+      "primaryGenreReviewReason": "",
+      "secondaryGenre": "Samfund",
+      "secondaryGenreValid": true,
+      "topicsRaw": [
+        "Paris",
+        "teater",
+        "identitet",
+        "kærlighed"
+      ],
+      "topicsCanonical": [
+        "Paris",
+        "teater",
+        "identitet",
+        "kærlighed"
+      ],
+      "topicKeys": [
+        "paris",
+        "teater",
+        "identitet",
+        "kaerlighed"
+      ],
+      "topicEligible": true,
+      "genreEligible": true,
+      "recommendationMetadataEligible": true,
+      "metadataIssues": []
+    },
+    {
+      "id": "højlyt",
+      "recommendationId": "rec-hoejlyt-32601ce0f66c5129da3946aa540cc464",
+      "recommendationIdentityBasis": "title+link",
+      "identityDuplicateGroup": "",
+      "title": "Højlyt",
+      "mainSeries": "Radiofortællinger",
+      "primaryGenreRaw": "Underholdning",
+      "primaryGenre": "Underholdning",
+      "primaryGenreValid": true,
+      "primaryGenreMappingType": "native",
+      "primaryGenreMappingSource": "Underholdning",
+      "primaryGenreNeedsReview": false,
+      "primaryGenreReviewReason": "",
+      "secondaryGenre": "Dokumentar",
+      "secondaryGenreValid": true,
+      "topicsRaw": [
+        "højskoler",
+        "podcast",
+        "ungdom",
+        "konkurrence"
+      ],
+      "topicsCanonical": [
+        "højskoler",
+        "podcast",
+        "ungdom",
+        "konkurrence"
+      ],
+      "topicKeys": [
+        "hoejskoler",
+        "podcast",
+        "ungdom",
+        "konkurrence"
+      ],
+      "topicEligible": true,
+      "genreEligible": true,
+      "recommendationMetadataEligible": true,
+      "metadataIssues": []
+    },
+    {
+      "id": "den hvide bus",
+      "recommendationId": "rec-den-hvide-bus-bb2b959733454bb79b9d2ac8eb8c1c7d",
+      "recommendationIdentityBasis": "title+link",
+      "identityDuplicateGroup": "",
+      "title": "Den hvide bus",
+      "mainSeries": "Radiofortællinger",
+      "primaryGenreRaw": "Krig",
+      "primaryGenre": "Krig",
+      "primaryGenreValid": true,
+      "primaryGenreMappingType": "native",
+      "primaryGenreMappingSource": "Krig",
+      "primaryGenreNeedsReview": false,
+      "primaryGenreReviewReason": "",
+      "secondaryGenre": "Dokumentar",
+      "secondaryGenreValid": true,
+      "topicsRaw": [
+        "Ukraine",
+        "flygtninge",
+        "jødisk familiehistorie",
+        "solidaritet"
+      ],
+      "topicsCanonical": [
+        "Ukraine",
+        "flygtninge",
+        "jødisk familiehistorie",
+        "solidaritet"
+      ],
+      "topicKeys": [
+        "ukraine",
+        "flygtninge",
+        "joedisk-familiehistorie",
+        "solidaritet"
+      ],
+      "topicEligible": true,
+      "genreEligible": true,
+      "recommendationMetadataEligible": true,
+      "metadataIssues": []
+    },
+    {
+      "id": "far",
+      "recommendationId": "rec-far-9516ac58e767927edd47913771d17747",
+      "recommendationIdentityBasis": "title+link",
+      "identityDuplicateGroup": "",
+      "title": "Far",
+      "mainSeries": "Radiofortællinger",
+      "primaryGenreRaw": "Samfund",
+      "primaryGenre": "Samfund",
+      "primaryGenreValid": true,
+      "primaryGenreMappingType": "native",
+      "primaryGenreMappingSource": "Samfund",
+      "primaryGenreNeedsReview": false,
+      "primaryGenreReviewReason": "",
+      "secondaryGenre": "Dokumentar",
+      "secondaryGenreValid": true,
+      "topicsRaw": [
+        "hjerneskade",
+        "familie",
+        "keramik",
+        "far og datter"
+      ],
+      "topicsCanonical": [
+        "hjerneskade",
+        "familie",
+        "keramik",
+        "far og datter"
+      ],
+      "topicKeys": [
+        "hjerneskade",
+        "familie",
+        "keramik",
+        "far-og-datter"
+      ],
+      "topicEligible": true,
+      "genreEligible": true,
+      "recommendationMetadataEligible": true,
+      "metadataIssues": []
+    },
+    {
+      "id": "turist i eritrea",
+      "recommendationId": "rec-turist-i-eritrea-bc6459844781d0919a5e8649e6f58167",
+      "recommendationIdentityBasis": "title+link",
+      "identityDuplicateGroup": "",
+      "title": "Turist i Eritrea",
+      "mainSeries": "Radiofortællinger",
+      "primaryGenreRaw": "Politik",
+      "primaryGenre": "Politik",
+      "primaryGenreValid": true,
+      "primaryGenreMappingType": "native",
+      "primaryGenreMappingSource": "Politik",
+      "primaryGenreNeedsReview": false,
+      "primaryGenreReviewReason": "",
+      "secondaryGenre": "Dokumentar",
+      "secondaryGenreValid": true,
+      "topicsRaw": [
+        "Eritrea",
+        "diktatur",
+        "overvågning",
+        "rejser"
+      ],
+      "topicsCanonical": [
+        "Eritrea",
+        "diktatur",
+        "overvågning",
+        "rejser"
+      ],
+      "topicKeys": [
+        "eritrea",
+        "diktatur",
+        "overvaagning",
+        "rejser"
+      ],
+      "topicEligible": true,
+      "genreEligible": true,
+      "recommendationMetadataEligible": true,
+      "metadataIssues": []
+    },
+    {
+      "id": "drengen pa bunden af havet",
+      "recommendationId": "rec-drengen-paa-bunden-af-havet-b0fb36dd48c3ae04b1373523f0503236",
+      "recommendationIdentityBasis": "title+link",
+      "identityDuplicateGroup": "",
+      "title": "Drengen på bunden af havet",
+      "mainSeries": "Radiofortællinger",
+      "primaryGenreRaw": "Dokumentar",
+      "primaryGenre": "Dokumentar",
+      "primaryGenreValid": true,
+      "primaryGenreMappingType": "native",
+      "primaryGenreMappingSource": "Dokumentar",
+      "primaryGenreNeedsReview": false,
+      "primaryGenreReviewReason": "",
+      "secondaryGenre": "Samfund",
+      "secondaryGenreValid": true,
+      "topicsRaw": [
+        "drukneulykke",
+        "Holbæk",
+        "barndom",
+        "nærdødsoplevelse"
+      ],
+      "topicsCanonical": [
+        "drukneulykke",
+        "Holbæk",
+        "barndom",
+        "nærdødsoplevelse"
+      ],
+      "topicKeys": [
+        "drukneulykke",
+        "holbaek",
+        "barndom",
+        "naerdoedsoplevelse"
+      ],
+      "topicEligible": true,
+      "genreEligible": true,
+      "recommendationMetadataEligible": true,
+      "metadataIssues": []
+    },
+    {
+      "id": "mit liv som john",
+      "recommendationId": "rec-mit-liv-som-john-c69ed218a050af101f88940d396ae981",
+      "recommendationIdentityBasis": "title+link",
+      "identityDuplicateGroup": "",
+      "title": "Mit liv som John",
+      "mainSeries": "Radiofortællinger",
+      "primaryGenreRaw": "Dokumentar",
+      "primaryGenre": "Dokumentar",
+      "primaryGenreValid": true,
+      "primaryGenreMappingType": "native",
+      "primaryGenreMappingSource": "Dokumentar",
+      "primaryGenreNeedsReview": false,
+      "primaryGenreReviewReason": "",
+      "secondaryGenre": "Underholdning",
+      "secondaryGenreValid": true,
+      "topicsRaw": [
+        "John Mogensen",
+        "musik",
+        "identitet",
+        "generthed"
+      ],
+      "topicsCanonical": [
+        "John Mogensen",
+        "musik",
+        "identitet",
+        "generthed"
+      ],
+      "topicKeys": [
+        "john-mogensen",
+        "musik",
+        "identitet",
+        "generthed"
+      ],
+      "topicEligible": true,
+      "genreEligible": true,
+      "recommendationMetadataEligible": true,
+      "metadataIssues": []
+    },
+    {
+      "id": "men det ender smukt",
+      "recommendationId": "rec-men-det-ender-smukt-6f52f01260104754831f68f3e3c95b32",
+      "recommendationIdentityBasis": "title+link",
+      "identityDuplicateGroup": "",
+      "title": "Men det ender smukt",
+      "mainSeries": "Radiofortællinger",
+      "primaryGenreRaw": "Samfund",
+      "primaryGenre": "Samfund",
+      "primaryGenreValid": true,
+      "primaryGenreMappingType": "native",
+      "primaryGenreMappingSource": "Samfund",
+      "primaryGenreNeedsReview": false,
+      "primaryGenreReviewReason": "",
+      "secondaryGenre": "Dokumentar",
+      "secondaryGenreValid": true,
+      "topicsRaw": [
+        "død",
+        "vågetjeneste",
+        "sorg",
+        "omsorg"
+      ],
+      "topicsCanonical": [
+        "død",
+        "vågetjeneste",
+        "sorg",
+        "omsorg"
+      ],
+      "topicKeys": [
+        "doed",
+        "vaagetjeneste",
+        "sorg",
+        "omsorg"
+      ],
+      "topicEligible": true,
+      "genreEligible": true,
+      "recommendationMetadataEligible": true,
+      "metadataIssues": []
+    },
+    {
+      "id": "kom ind i kampen mor",
+      "recommendationId": "rec-kom-ind-i-kampen-mor-2f124117136f30e4ff457ae4eb35c4f6",
+      "recommendationIdentityBasis": "title+link",
+      "identityDuplicateGroup": "",
+      "title": "Kom ind i kampen, mor",
+      "mainSeries": "Radiofortællinger",
+      "primaryGenreRaw": "Sport",
+      "primaryGenre": "Sport",
+      "primaryGenreValid": true,
+      "primaryGenreMappingType": "native",
+      "primaryGenreMappingSource": "Sport",
+      "primaryGenreNeedsReview": false,
+      "primaryGenreReviewReason": "",
+      "secondaryGenre": "Dokumentar",
+      "secondaryGenreValid": true,
+      "topicsRaw": [
+        "fodbold",
+        "familie",
+        "moderskab",
+        "fællesskab"
+      ],
+      "topicsCanonical": [
+        "fodbold",
+        "familie",
+        "Moderskab",
+        "fællesskab"
+      ],
+      "topicKeys": [
+        "fodbold",
+        "familie",
+        "moderskab",
+        "faellesskab"
+      ],
+      "topicEligible": true,
+      "genreEligible": true,
+      "recommendationMetadataEligible": true,
+      "metadataIssues": []
+    },
+    {
+      "id": "den danske sangerinde",
+      "recommendationId": "rec-den-danske-sangerinde-349fb9b9d216af6be6101baab028dbc1",
+      "recommendationIdentityBasis": "title+link",
+      "identityDuplicateGroup": "",
+      "title": "Den danske sangerinde",
+      "mainSeries": "Radiofortællinger",
+      "primaryGenreRaw": "Dokumentar",
+      "primaryGenre": "Dokumentar",
+      "primaryGenreValid": true,
+      "primaryGenreMappingType": "native",
+      "primaryGenreMappingSource": "Dokumentar",
+      "primaryGenreNeedsReview": false,
+      "primaryGenreReviewReason": "",
+      "secondaryGenre": "Samfund",
+      "secondaryGenreValid": true,
+      "topicsRaw": [
+        "Cairo",
+        "musik",
+        "kærlighed",
+        "natteliv"
+      ],
+      "topicsCanonical": [
+        "Cairo",
+        "musik",
+        "kærlighed",
+        "natteliv"
+      ],
+      "topicKeys": [
+        "cairo",
+        "musik",
+        "kaerlighed",
+        "natteliv"
+      ],
+      "topicEligible": true,
+      "genreEligible": true,
+      "recommendationMetadataEligible": true,
+      "metadataIssues": []
+    },
+    {
+      "id": "elnas spadom",
+      "recommendationId": "rec-elnas-spaadom-c2e0a711560f6314623cbb3901421c8b",
+      "recommendationIdentityBasis": "title+link",
+      "identityDuplicateGroup": "",
+      "title": "Elnas spådom",
+      "mainSeries": "Radiofortællinger",
+      "primaryGenreRaw": "Samfund",
+      "primaryGenre": "Samfund",
+      "primaryGenreValid": true,
+      "primaryGenreMappingType": "native",
+      "primaryGenreMappingSource": "Samfund",
+      "primaryGenreNeedsReview": false,
+      "primaryGenreReviewReason": "",
+      "secondaryGenre": "Dokumentar",
+      "secondaryGenreValid": true,
+      "topicsRaw": [
+        "clairvoyance",
+        "dødsangst",
+        "psykologi",
+        "forudsigelser"
+      ],
+      "topicsCanonical": [
+        "clairvoyance",
+        "dødsangst",
+        "psykologi",
+        "forudsigelser"
+      ],
+      "topicKeys": [
+        "clairvoyance",
+        "doedsangst",
+        "psykologi",
+        "forudsigelser"
+      ],
+      "topicEligible": true,
+      "genreEligible": true,
+      "recommendationMetadataEligible": true,
+      "metadataIssues": []
+    },
+    {
+      "id": "et liv i stræk",
+      "recommendationId": "rec-et-liv-i-straek-76c046d33ce0c7dc78d6d9b59e857892",
+      "recommendationIdentityBasis": "title+link",
+      "identityDuplicateGroup": "",
+      "title": "Et liv i stræk",
+      "mainSeries": "Radiofortællinger",
+      "primaryGenreRaw": "Historie",
+      "primaryGenre": "Historie",
+      "primaryGenreValid": true,
+      "primaryGenreMappingType": "native",
+      "primaryGenreMappingSource": "Historie",
+      "primaryGenreNeedsReview": false,
+      "primaryGenreReviewReason": "",
+      "secondaryGenre": "Dokumentar",
+      "secondaryGenreValid": true,
+      "topicsRaw": [
+        "barndom",
+        "institution",
+        "behandling",
+        "erindringer"
+      ],
+      "topicsCanonical": [
+        "barndom",
+        "institution",
+        "behandling",
+        "erindringer"
+      ],
+      "topicKeys": [
+        "barndom",
+        "institution",
+        "behandling",
+        "erindringer"
+      ],
+      "topicEligible": true,
+      "genreEligible": true,
+      "recommendationMetadataEligible": true,
+      "metadataIssues": []
+    },
+    {
+      "id": "tiden vi aldrig talte om",
+      "recommendationId": "rec-tiden-vi-aldrig-talte-om-32e4c6f992927fd0cdb4e1d390cd35d3",
+      "recommendationIdentityBasis": "title+link",
+      "identityDuplicateGroup": "",
+      "title": "Tiden vi aldrig talte om",
+      "mainSeries": "Radiofortællinger",
+      "primaryGenreRaw": "Historie",
+      "primaryGenre": "Historie",
+      "primaryGenreValid": true,
+      "primaryGenreMappingType": "native",
+      "primaryGenreMappingSource": "Historie",
+      "primaryGenreNeedsReview": false,
+      "primaryGenreReviewReason": "",
+      "secondaryGenre": "Dokumentar",
+      "secondaryGenreValid": true,
+      "topicsRaw": [
+        "Holocaust",
+        "Theresienstadt",
+        "besættelsen",
+        "erindring"
+      ],
+      "topicsCanonical": [
+        "Holocaust",
+        "Theresienstadt",
+        "besættelsen",
+        "erindring"
+      ],
+      "topicKeys": [
+        "holocaust",
+        "theresienstadt",
+        "besaettelsen",
+        "erindring"
+      ],
+      "topicEligible": true,
+      "genreEligible": true,
+      "recommendationMetadataEligible": true,
+      "metadataIssues": []
+    },
+    {
+      "id": "en abort",
+      "recommendationId": "rec-en-abort-8a0f4f6cba92fa1c687e53dfd3408afa",
+      "recommendationIdentityBasis": "title+link",
+      "identityDuplicateGroup": "",
+      "title": "En abort",
+      "mainSeries": "Radiofortællinger",
+      "primaryGenreRaw": "Samfund",
+      "primaryGenre": "Samfund",
+      "primaryGenreValid": true,
+      "primaryGenreMappingType": "native",
+      "primaryGenreMappingSource": "Samfund",
+      "primaryGenreNeedsReview": false,
+      "primaryGenreReviewReason": "",
+      "secondaryGenre": "Dokumentar",
+      "secondaryGenreValid": true,
+      "topicsRaw": [
+        "abort",
+        "ungdom",
+        "traumer",
+        "eftervirkninger"
+      ],
+      "topicsCanonical": [
+        "Abort",
+        "ungdom",
+        "traumer",
+        "eftervirkninger"
+      ],
+      "topicKeys": [
+        "abort",
+        "ungdom",
+        "traumer",
+        "eftervirkninger"
+      ],
+      "topicEligible": true,
+      "genreEligible": true,
+      "recommendationMetadataEligible": true,
+      "metadataIssues": []
+    },
+    {
+      "id": "kærlighed pa lant tid",
+      "recommendationId": "rec-kaerlighed-paa-laant-tid-6132c8f49fc0c94832acc2711e4cf808",
+      "recommendationIdentityBasis": "title+link",
+      "identityDuplicateGroup": "",
+      "title": "Kærlighed på lånt tid",
+      "mainSeries": "Radiofortællinger",
+      "primaryGenreRaw": "Dokumentar",
+      "primaryGenre": "Dokumentar",
+      "primaryGenreValid": true,
+      "primaryGenreMappingType": "native",
+      "primaryGenreMappingSource": "Dokumentar",
+      "primaryGenreNeedsReview": false,
+      "primaryGenreReviewReason": "",
+      "secondaryGenre": "Samfund",
+      "secondaryGenreValid": true,
+      "topicsRaw": [
+        "hjernetumor",
+        "kærlighed",
+        "familie",
+        "dødelighed"
+      ],
+      "topicsCanonical": [
+        "hjernetumor",
+        "kærlighed",
+        "familie",
+        "dødelighed"
+      ],
+      "topicKeys": [
+        "hjernetumor",
+        "kaerlighed",
+        "familie",
+        "doedelighed"
+      ],
+      "topicEligible": true,
+      "genreEligible": true,
+      "recommendationMetadataEligible": true,
+      "metadataIssues": []
+    },
+    {
+      "id": "mormor ma jeg arve dine guldtænder",
+      "recommendationId": "rec-mormor-maa-jeg-arve-dine-guldtaender-5e344969fd0216348fed2edfcfdc9f83",
+      "recommendationIdentityBasis": "title+link",
+      "identityDuplicateGroup": "",
+      "title": "Mormor, må jeg arve dine guldtænder?",
+      "mainSeries": "Radiofortællinger",
+      "primaryGenreRaw": "Samfund",
+      "primaryGenre": "Samfund",
+      "primaryGenreValid": true,
+      "primaryGenreMappingType": "native",
+      "primaryGenreMappingSource": "Samfund",
+      "primaryGenreNeedsReview": false,
+      "primaryGenreReviewReason": "",
+      "secondaryGenre": "Dokumentar",
+      "secondaryGenreValid": true,
+      "topicsRaw": [
+        "død",
+        "arv",
+        "alderdom",
+        "familie"
+      ],
+      "topicsCanonical": [
+        "død",
+        "arv",
+        "alderdom",
+        "familie"
+      ],
+      "topicKeys": [
+        "doed",
+        "arv",
+        "alderdom",
+        "familie"
+      ],
+      "topicEligible": true,
+      "genreEligible": true,
+      "recommendationMetadataEligible": true,
+      "metadataIssues": []
+    },
+    {
+      "id": "williams død",
+      "recommendationId": "rec-williams-doed-f0efa0f18f1074b2981dad86b5ed6b20",
+      "recommendationIdentityBasis": "title+link",
+      "identityDuplicateGroup": "",
+      "title": "Williams død",
+      "mainSeries": "Radiofortællinger",
+      "primaryGenreRaw": "Dokumentar",
+      "primaryGenre": "Dokumentar",
+      "primaryGenreValid": true,
+      "primaryGenreMappingType": "native",
+      "primaryGenreMappingSource": "Dokumentar",
+      "primaryGenreNeedsReview": false,
+      "primaryGenreReviewReason": "",
+      "secondaryGenre": "Samfund",
+      "secondaryGenreValid": true,
+      "topicsRaw": [
+        "selvmord",
+        "sorg",
+        "familie",
+        "efterladte"
+      ],
+      "topicsCanonical": [
+        "selvmord",
+        "sorg",
+        "familie",
+        "efterladte"
+      ],
+      "topicKeys": [
+        "selvmord",
+        "sorg",
+        "familie",
+        "efterladte"
+      ],
+      "topicEligible": true,
+      "genreEligible": true,
+      "recommendationMetadataEligible": true,
+      "metadataIssues": []
+    },
+    {
+      "id": "jeg vælger mig selv",
+      "recommendationId": "rec-jeg-vaelger-mig-selv-f795dcb6f3c1c8a4c882ff17225c6e03",
+      "recommendationIdentityBasis": "title+link",
+      "identityDuplicateGroup": "",
+      "title": "Jeg vælger mig selv",
+      "mainSeries": "Radiofortællinger",
+      "primaryGenreRaw": "Samfund",
+      "primaryGenre": "Samfund",
+      "primaryGenreValid": true,
+      "primaryGenreMappingType": "native",
+      "primaryGenreMappingSource": "Samfund",
+      "primaryGenreNeedsReview": false,
+      "primaryGenreReviewReason": "",
+      "secondaryGenre": "Dokumentar",
+      "secondaryGenreValid": true,
+      "topicsRaw": [
+        "identitet",
+        "seksualitet",
+        "ungdom",
+        "selvaccept"
+      ],
+      "topicsCanonical": [
+        "identitet",
+        "seksualitet",
+        "ungdom",
+        "selvaccept"
+      ],
+      "topicKeys": [
+        "identitet",
+        "seksualitet",
+        "ungdom",
+        "selvaccept"
+      ],
+      "topicEligible": true,
+      "genreEligible": true,
+      "recommendationMetadataEligible": true,
+      "metadataIssues": []
+    },
+    {
+      "id": "hvordan far jeg en ven",
+      "recommendationId": "rec-hvordan-faar-jeg-en-ven-4fd824865d01c3cce2c9f6948eddf86b",
+      "recommendationIdentityBasis": "title+link",
+      "identityDuplicateGroup": "",
+      "title": "Hvordan får jeg en ven",
+      "mainSeries": "Radiofortællinger",
+      "primaryGenreRaw": "Samfund",
+      "primaryGenre": "Samfund",
+      "primaryGenreValid": true,
+      "primaryGenreMappingType": "native",
+      "primaryGenreMappingSource": "Samfund",
+      "primaryGenreNeedsReview": false,
+      "primaryGenreReviewReason": "",
+      "secondaryGenre": "Dokumentar",
+      "secondaryGenreValid": true,
+      "topicsRaw": [
+        "ensomhed",
+        "venskab",
+        "Djursland",
+        "foreningsliv"
+      ],
+      "topicsCanonical": [
+        "ensomhed",
+        "venskab",
+        "Djursland",
+        "foreningsliv"
+      ],
+      "topicKeys": [
+        "ensomhed",
+        "venskab",
+        "djursland",
+        "foreningsliv"
+      ],
+      "topicEligible": true,
+      "genreEligible": true,
+      "recommendationMetadataEligible": true,
+      "metadataIssues": []
+    },
+    {
+      "id": "moren og barnet",
+      "recommendationId": "rec-moren-og-barnet-1e58c85db51f3d44ceaccabb7ef51954",
+      "recommendationIdentityBasis": "title+link",
+      "identityDuplicateGroup": "",
+      "title": "Moren og barnet",
+      "mainSeries": "Radiofortællinger",
+      "primaryGenreRaw": "Dokumentar",
+      "primaryGenre": "Dokumentar",
+      "primaryGenreValid": true,
+      "primaryGenreMappingType": "native",
+      "primaryGenreMappingSource": "Dokumentar",
+      "primaryGenreNeedsReview": false,
+      "primaryGenreReviewReason": "",
+      "secondaryGenre": "Historie",
+      "secondaryGenreValid": true,
+      "topicsRaw": [
+        "Dea Trier Mørch",
+        "Vinterbørn",
+        "moderskab",
+        "litteratur"
+      ],
+      "topicsCanonical": [
+        "Dea Trier Mørch",
+        "Vinterbørn",
+        "Moderskab",
+        "litteratur"
+      ],
+      "topicKeys": [
+        "dea-trier-moerch",
+        "vinterboern",
+        "moderskab",
+        "litteratur"
+      ],
+      "topicEligible": true,
+      "genreEligible": true,
+      "recommendationMetadataEligible": true,
+      "metadataIssues": []
+    },
+    {
+      "id": "kolonien radiofortællinger",
+      "recommendationId": "rec-kolonien-radiofortaellinger-d7157c41269a605d5eac5d14580659e8",
+      "recommendationIdentityBasis": "title+link",
+      "identityDuplicateGroup": "",
+      "title": "Kolonien – Radiofortællinger",
+      "mainSeries": "Radiofortællinger",
+      "primaryGenreRaw": "Historie",
+      "primaryGenre": "Historie",
+      "primaryGenreValid": true,
+      "primaryGenreMappingType": "native",
+      "primaryGenreMappingSource": "Historie",
+      "primaryGenreNeedsReview": false,
+      "primaryGenreReviewReason": "",
+      "secondaryGenre": "Dokumentar",
+      "secondaryGenreValid": true,
+      "topicsRaw": [
+        "Småland",
+        "kollektiv",
+        "1969",
+        "friskole",
+        "frihed"
+      ],
+      "topicsCanonical": [
+        "Småland",
+        "kollektiv",
+        "1969",
+        "friskole",
+        "frihed"
+      ],
+      "topicKeys": [
+        "smaaland",
+        "kollektiv",
+        "1969",
+        "friskole",
+        "frihed"
+      ],
+      "topicEligible": true,
+      "genreEligible": true,
+      "recommendationMetadataEligible": true,
+      "metadataIssues": []
+    },
+    {
+      "id": "cafe liberation 1989",
+      "recommendationId": "rec-cafe-liberation-1989-f641f003696ce3b24102c219e3d6b003",
+      "recommendationIdentityBasis": "title+link",
+      "identityDuplicateGroup": "",
+      "title": "Café Liberation, 1989",
+      "mainSeries": "Radiofortællinger",
+      "primaryGenreRaw": "Historie",
+      "primaryGenre": "Historie",
+      "primaryGenreValid": true,
+      "primaryGenreMappingType": "native",
+      "primaryGenreMappingSource": "Historie",
+      "primaryGenreNeedsReview": false,
+      "primaryGenreReviewReason": "",
+      "secondaryGenre": "Dokumentar",
+      "secondaryGenreValid": true,
+      "topicsRaw": [
+        "1989",
+        "café",
+        "erindring",
+        "samtidshistorie"
+      ],
+      "topicsCanonical": [
+        "1989",
+        "café",
+        "erindring",
+        "samtidshistorie"
+      ],
+      "topicKeys": [
+        "1989",
+        "cafe",
+        "erindring",
+        "samtidshistorie"
+      ],
+      "topicEligible": true,
+      "genreEligible": true,
+      "recommendationMetadataEligible": true,
+      "metadataIssues": []
+    },
+    {
+      "id": "de andres blik",
+      "recommendationId": "rec-de-andres-blik-dd3fc60b1b818abb484dd12480ec4662",
+      "recommendationIdentityBasis": "title+link",
+      "identityDuplicateGroup": "",
+      "title": "De andres blik",
+      "mainSeries": "Radiofortællinger",
+      "primaryGenreRaw": "Historie",
+      "primaryGenre": "Historie",
+      "primaryGenreValid": true,
+      "primaryGenreMappingType": "native",
+      "primaryGenreMappingSource": "Historie",
+      "primaryGenreNeedsReview": false,
+      "primaryGenreReviewReason": "",
+      "secondaryGenre": "Dokumentar",
+      "secondaryGenreValid": true,
+      "topicsRaw": [
+        "Sprogø",
+        "kvindeanstalt",
+        "1930'erne",
+        "social kontrol"
+      ],
+      "topicsCanonical": [
+        "Sprogø",
+        "kvindeanstalt",
+        "1930'erne",
+        "social kontrol"
+      ],
+      "topicKeys": [
+        "sprogoe",
+        "kvindeanstalt",
+        "1930-erne",
+        "social-kontrol"
+      ],
+      "topicEligible": true,
+      "genreEligible": true,
+      "recommendationMetadataEligible": true,
+      "metadataIssues": []
+    },
+    {
+      "id": "nye lyster",
+      "recommendationId": "rec-nye-lyster-1fc3968947c05ed6d23adea3d6fe7c7f",
+      "recommendationIdentityBasis": "title+link",
+      "identityDuplicateGroup": "",
+      "title": "Nye lyster",
+      "mainSeries": "Radiofortællinger",
+      "primaryGenreRaw": "Samfund",
+      "primaryGenre": "Samfund",
+      "primaryGenreValid": true,
+      "primaryGenreMappingType": "native",
+      "primaryGenreMappingSource": "Samfund",
+      "primaryGenreNeedsReview": false,
+      "primaryGenreReviewReason": "",
+      "secondaryGenre": "Dokumentar",
+      "secondaryGenreValid": true,
+      "topicsRaw": [
+        "parforhold",
+        "seksualitet",
+        "lyst",
+        "selvforståelse"
+      ],
+      "topicsCanonical": [
+        "parforhold",
+        "seksualitet",
+        "lyst",
+        "selvforståelse"
+      ],
+      "topicKeys": [
+        "parforhold",
+        "seksualitet",
+        "lyst",
+        "selvforstaaelse"
+      ],
+      "topicEligible": true,
+      "genreEligible": true,
+      "recommendationMetadataEligible": true,
+      "metadataIssues": []
+    },
+    {
+      "id": "nar frie børn leger bedst",
+      "recommendationId": "rec-naar-frie-boern-leger-bedst-05c7d38a461a24d5a3068e1e59b109bb",
+      "recommendationIdentityBasis": "title+link",
+      "identityDuplicateGroup": "",
+      "title": "Når frie børn leger bedst",
+      "mainSeries": "Radiofortællinger",
+      "primaryGenreRaw": "Historie",
+      "primaryGenre": "Historie",
+      "primaryGenreValid": true,
+      "primaryGenreMappingType": "native",
+      "primaryGenreMappingSource": "Historie",
+      "primaryGenreNeedsReview": false,
+      "primaryGenreReviewReason": "",
+      "secondaryGenre": "Dokumentar",
+      "secondaryGenreValid": true,
+      "topicsRaw": [
+        "Børnemagt",
+        "Christiania",
+        "1970'erne",
+        "børnehjem",
+        "frihed"
+      ],
+      "topicsCanonical": [
+        "Børnemagt",
+        "Christiania",
+        "1970'erne",
+        "børnehjem",
+        "frihed"
+      ],
+      "topicKeys": [
+        "boernemagt",
+        "christiania",
+        "1970-erne",
+        "boernehjem",
+        "frihed"
+      ],
+      "topicEligible": true,
+      "genreEligible": true,
+      "recommendationMetadataEligible": true,
+      "metadataIssues": []
+    },
+    {
+      "id": "den første fest",
+      "recommendationId": "rec-den-foerste-fest-d5a4fb7c4d047b1b22bd75c71b7f49fb",
+      "recommendationIdentityBasis": "title+link",
+      "identityDuplicateGroup": "",
+      "title": "Den første fest",
+      "mainSeries": "Radiofortællinger",
+      "primaryGenreRaw": "Samfund",
+      "primaryGenre": "Samfund",
+      "primaryGenreValid": true,
+      "primaryGenreMappingType": "native",
+      "primaryGenreMappingSource": "Samfund",
+      "primaryGenreNeedsReview": false,
+      "primaryGenreReviewReason": "",
+      "secondaryGenre": "Dokumentar",
+      "secondaryGenreValid": true,
+      "topicsRaw": [
+        "ungdom",
+        "alkohol",
+        "fest",
+        "forventninger"
+      ],
+      "topicsCanonical": [
+        "ungdom",
+        "alkohol",
+        "fest",
+        "forventninger"
+      ],
+      "topicKeys": [
+        "ungdom",
+        "alkohol",
+        "fest",
+        "forventninger"
+      ],
+      "topicEligible": true,
+      "genreEligible": true,
+      "recommendationMetadataEligible": true,
+      "metadataIssues": []
+    },
+    {
+      "id": "med beduiner i førersædet",
+      "recommendationId": "rec-med-beduiner-i-foerersaedet-13d9e0ae01058485d85dbb4863aa4c09",
+      "recommendationIdentityBasis": "title+link",
+      "identityDuplicateGroup": "",
+      "title": "Med beduiner i førersædet",
+      "mainSeries": "Radiofortællinger",
+      "primaryGenreRaw": "Samfund",
+      "primaryGenre": "Samfund",
+      "primaryGenreValid": true,
+      "primaryGenreMappingType": "native",
+      "primaryGenreMappingSource": "Samfund",
+      "primaryGenreNeedsReview": false,
+      "primaryGenreReviewReason": "",
+      "secondaryGenre": "Dokumentar",
+      "secondaryGenreValid": true,
+      "topicsRaw": [
+        "Jordan",
+        "beduiner",
+        "gæstfrihed",
+        "kulturmøder"
+      ],
+      "topicsCanonical": [
+        "Jordan",
+        "beduiner",
+        "gæstfrihed",
+        "kulturmøder"
+      ],
+      "topicKeys": [
+        "jordan",
+        "beduiner",
+        "gaestfrihed",
+        "kulturmoeder"
+      ],
+      "topicEligible": true,
+      "genreEligible": true,
+      "recommendationMetadataEligible": true,
+      "metadataIssues": []
+    },
+    {
+      "id": "jernmanden",
+      "recommendationId": "rec-jernmanden-51da1ae19acf30d4498c99548946fafb",
+      "recommendationIdentityBasis": "title+link",
+      "identityDuplicateGroup": "",
+      "title": "Jernmanden",
+      "mainSeries": "Radiofortællinger",
+      "primaryGenreRaw": "Sport",
+      "primaryGenre": "Sport",
+      "primaryGenreValid": true,
+      "primaryGenreMappingType": "native",
+      "primaryGenreMappingSource": "Sport",
+      "primaryGenreNeedsReview": false,
+      "primaryGenreReviewReason": "",
+      "secondaryGenre": "Dokumentar",
+      "secondaryGenreValid": true,
+      "topicsRaw": [
+        "Ironman",
+        "udholdenhed",
+        "eliteidræt",
+        "parforhold"
+      ],
+      "topicsCanonical": [
+        "Ironman",
+        "udholdenhed",
+        "eliteidræt",
+        "parforhold"
+      ],
+      "topicKeys": [
+        "ironman",
+        "udholdenhed",
+        "eliteidraet",
+        "parforhold"
+      ],
+      "topicEligible": true,
+      "genreEligible": true,
+      "recommendationMetadataEligible": true,
+      "metadataIssues": []
+    },
+    {
+      "id": "mig og anja",
+      "recommendationId": "rec-mig-og-anja-30e5d8cac33ff9d64c7e18c3d410b541",
+      "recommendationIdentityBasis": "title+link",
+      "identityDuplicateGroup": "",
+      "title": "Mig og Anja",
+      "mainSeries": "Radiofortællinger",
+      "primaryGenreRaw": "Dokumentar",
+      "primaryGenre": "Dokumentar",
+      "primaryGenreValid": true,
+      "primaryGenreMappingType": "native",
+      "primaryGenreMappingSource": "Dokumentar",
+      "primaryGenreNeedsReview": false,
+      "primaryGenreReviewReason": "",
+      "secondaryGenre": "Samfund",
+      "secondaryGenreValid": true,
+      "topicsRaw": [
+        "venskab",
+        "rejser",
+        "røveri",
+        "livsfare"
+      ],
+      "topicsCanonical": [
+        "venskab",
+        "rejser",
+        "røveri",
+        "livsfare"
+      ],
+      "topicKeys": [
+        "venskab",
+        "rejser",
+        "roeveri",
+        "livsfare"
+      ],
+      "topicEligible": true,
+      "genreEligible": true,
+      "recommendationMetadataEligible": true,
+      "metadataIssues": []
+    },
+    {
+      "id": "aborigier og krokodiller",
+      "recommendationId": "rec-aborigier-og-krokodiller-572da0f59a9497690e2fdf61fe69d244",
+      "recommendationIdentityBasis": "title+link",
+      "identityDuplicateGroup": "",
+      "title": "Aborigier og krokodiller",
+      "mainSeries": "Radiofortællinger",
+      "primaryGenreRaw": "Samfund",
+      "primaryGenre": "Samfund",
+      "primaryGenreValid": true,
+      "primaryGenreMappingType": "native",
+      "primaryGenreMappingSource": "Samfund",
+      "primaryGenreNeedsReview": false,
+      "primaryGenreReviewReason": "",
+      "secondaryGenre": "Dokumentar",
+      "secondaryGenreValid": true,
+      "topicsRaw": [
+        "Australien",
+        "rejser",
+        "kulturmøder",
+        "natur"
+      ],
+      "topicsCanonical": [
+        "Australien",
+        "rejser",
+        "kulturmøder",
+        "natur"
+      ],
+      "topicKeys": [
+        "australien",
+        "rejser",
+        "kulturmoeder",
+        "natur"
+      ],
+      "topicEligible": true,
+      "genreEligible": true,
+      "recommendationMetadataEligible": true,
+      "metadataIssues": []
+    },
+    {
+      "id": "hunden hashen og hende",
+      "recommendationId": "rec-hunden-hashen-og-hende-51ece23fe6159e08cf45c992babdab51",
+      "recommendationIdentityBasis": "title+link",
+      "identityDuplicateGroup": "",
+      "title": "Hunden, hashen og hende",
+      "mainSeries": "Radiofortællinger",
+      "primaryGenreRaw": "Samfund",
+      "primaryGenre": "Samfund",
+      "primaryGenreValid": true,
+      "primaryGenreMappingType": "native",
+      "primaryGenreMappingSource": "Samfund",
+      "primaryGenreNeedsReview": false,
+      "primaryGenreReviewReason": "",
+      "secondaryGenre": "Dokumentar",
+      "secondaryGenreValid": true,
+      "topicsRaw": [
+        "hash",
+        "afhængighed",
+        "højskole",
+        "hund"
+      ],
+      "topicsCanonical": [
+        "Hash",
+        "afhængighed",
+        "højskole",
+        "hund"
+      ],
+      "topicKeys": [
+        "hash",
+        "afhaengighed",
+        "hoejskole",
+        "hund"
+      ],
+      "topicEligible": true,
+      "genreEligible": true,
+      "recommendationMetadataEligible": true,
+      "metadataIssues": []
+    },
+    {
+      "id": "den hvide boks",
+      "recommendationId": "rec-den-hvide-boks-ad0de5448fcae1dcc5f8b24fd21bc1e0",
+      "recommendationIdentityBasis": "title+link",
+      "identityDuplicateGroup": "",
+      "title": "Den hvide boks",
+      "mainSeries": "Radiofortællinger",
+      "primaryGenreRaw": "Dokumentar",
+      "primaryGenre": "Dokumentar",
+      "primaryGenreValid": true,
+      "primaryGenreMappingType": "native",
+      "primaryGenreMappingSource": "Dokumentar",
+      "primaryGenreNeedsReview": false,
+      "primaryGenreReviewReason": "",
+      "secondaryGenre": "Samfund",
+      "secondaryGenreValid": true,
+      "topicsRaw": [
+        "far og datter",
+        "familiehemmeligheder",
+        "sorg",
+        "forsoning"
+      ],
+      "topicsCanonical": [
+        "far og datter",
+        "familiehemmeligheder",
+        "sorg",
+        "forsoning"
+      ],
+      "topicKeys": [
+        "far-og-datter",
+        "familiehemmeligheder",
+        "sorg",
+        "forsoning"
+      ],
+      "topicEligible": true,
+      "genreEligible": true,
+      "recommendationMetadataEligible": true,
+      "metadataIssues": []
+    },
+    {
+      "id": "meditation og afmagt",
+      "recommendationId": "rec-meditation-og-afmagt-13fa5eea01bf67bd488a8733bcd16ee6",
+      "recommendationIdentityBasis": "title+link",
+      "identityDuplicateGroup": "",
+      "title": "Meditation og afmagt",
+      "mainSeries": "Radiofortællinger",
+      "primaryGenreRaw": "Samfund",
+      "primaryGenre": "Samfund",
+      "primaryGenreValid": true,
+      "primaryGenreMappingType": "native",
+      "primaryGenreMappingSource": "Samfund",
+      "primaryGenreNeedsReview": false,
+      "primaryGenreReviewReason": "",
+      "secondaryGenre": "Dokumentar",
+      "secondaryGenreValid": true,
+      "topicsRaw": [
+        "meditation",
+        "yoga",
+        "selvudvikling",
+        "afmagt"
+      ],
+      "topicsCanonical": [
+        "meditation",
+        "yoga",
+        "selvudvikling",
+        "afmagt"
+      ],
+      "topicKeys": [
+        "meditation",
+        "yoga",
+        "selvudvikling",
+        "afmagt"
+      ],
+      "topicEligible": true,
+      "genreEligible": true,
+      "recommendationMetadataEligible": true,
+      "metadataIssues": []
+    },
+    {
+      "id": "onkel per englen og dæmonerne",
+      "recommendationId": "rec-onkel-per-englen-og-daemonerne-13c6e4319331238591e06cf48cc5bc19",
+      "recommendationIdentityBasis": "title+link",
+      "identityDuplicateGroup": "",
+      "title": "Onkel Per - englen og dæmonerne",
+      "mainSeries": "Radiofortællinger",
+      "primaryGenreRaw": "Dokumentar",
+      "primaryGenre": "Dokumentar",
+      "primaryGenreValid": true,
+      "primaryGenreMappingType": "native",
+      "primaryGenreMappingSource": "Dokumentar",
+      "primaryGenreNeedsReview": false,
+      "primaryGenreReviewReason": "",
+      "secondaryGenre": "Samfund",
+      "secondaryGenreValid": true,
+      "topicsRaw": [
+        "selvmord",
+        "familiehistorie",
+        "erindring",
+        "sorg"
+      ],
+      "topicsCanonical": [
+        "selvmord",
+        "familiehistorie",
+        "erindring",
+        "sorg"
+      ],
+      "topicKeys": [
+        "selvmord",
+        "familiehistorie",
+        "erindring",
+        "sorg"
+      ],
+      "topicEligible": true,
+      "genreEligible": true,
+      "recommendationMetadataEligible": true,
+      "metadataIssues": []
+    },
+    {
+      "id": "gæstfrihed og angst",
+      "recommendationId": "rec-gaestfrihed-og-angst-0af5ae4e68e9e7a885a734e3273d1f8b",
+      "recommendationIdentityBasis": "title+link",
+      "identityDuplicateGroup": "",
+      "title": "Gæstfrihed og angst",
+      "mainSeries": "Radiofortællinger",
+      "primaryGenreRaw": "Samfund",
+      "primaryGenre": "Samfund",
+      "primaryGenreValid": true,
+      "primaryGenreMappingType": "native",
+      "primaryGenreMappingSource": "Samfund",
+      "primaryGenreNeedsReview": false,
+      "primaryGenreReviewReason": "",
+      "secondaryGenre": "Dokumentar",
+      "secondaryGenreValid": true,
+      "topicsRaw": [
+        "rejser",
+        "gæstfrihed",
+        "angst",
+        "tillid"
+      ],
+      "topicsCanonical": [
+        "rejser",
+        "gæstfrihed",
+        "angst",
+        "tillid"
+      ],
+      "topicKeys": [
+        "rejser",
+        "gaestfrihed",
+        "angst",
+        "tillid"
+      ],
+      "topicEligible": true,
+      "genreEligible": true,
+      "recommendationMetadataEligible": true,
+      "metadataIssues": []
+    },
+    {
+      "id": "jesus taler da esperanto",
+      "recommendationId": "rec-jesus-taler-da-esperanto-bfdbb8f9b0389b4b12a6f0863247ac49",
+      "recommendationIdentityBasis": "title+link",
+      "identityDuplicateGroup": "",
+      "title": "Jesus taler da esperanto",
+      "mainSeries": "Radiofortællinger",
+      "primaryGenreRaw": "Samfund",
+      "primaryGenre": "Samfund",
+      "primaryGenreValid": true,
+      "primaryGenreMappingType": "native",
+      "primaryGenreMappingSource": "Samfund",
+      "primaryGenreNeedsReview": false,
+      "primaryGenreReviewReason": "",
+      "secondaryGenre": "Dokumentar",
+      "secondaryGenreValid": true,
+      "topicsRaw": [
+        "depression",
+        "stemmehøring",
+        "meditation",
+        "religion"
+      ],
+      "topicsCanonical": [
+        "depression",
+        "stemmehøring",
+        "meditation",
+        "religion"
+      ],
+      "topicKeys": [
+        "depression",
+        "stemmehoering",
+        "meditation",
+        "religion"
+      ],
+      "topicEligible": true,
+      "genreEligible": true,
+      "recommendationMetadataEligible": true,
+      "metadataIssues": []
+    },
+    {
+      "id": "lukas og de døde",
+      "recommendationId": "rec-lukas-og-de-doede-7b11dbbe54e34b123a86cf93e7b67e64",
+      "recommendationIdentityBasis": "title+link",
+      "identityDuplicateGroup": "",
+      "title": "Lukas og de døde",
+      "mainSeries": "Radiofortællinger",
+      "primaryGenreRaw": "Dokumentar",
+      "primaryGenre": "Dokumentar",
+      "primaryGenreValid": true,
+      "primaryGenreMappingType": "native",
+      "primaryGenreMappingSource": "Dokumentar",
+      "primaryGenreNeedsReview": false,
+      "primaryGenreReviewReason": "",
+      "secondaryGenre": "Samfund",
+      "secondaryGenreValid": true,
+      "topicsRaw": [
+        "barndom",
+        "døde",
+        "familie",
+        "overnaturlige oplevelser"
+      ],
+      "topicsCanonical": [
+        "barndom",
+        "døde",
+        "familie",
+        "overnaturlige oplevelser"
+      ],
+      "topicKeys": [
+        "barndom",
+        "doede",
+        "familie",
+        "overnaturlige-oplevelser"
+      ],
+      "topicEligible": true,
+      "genreEligible": true,
+      "recommendationMetadataEligible": true,
+      "metadataIssues": []
+    },
+    {
+      "id": "fra terrorist til kandidat",
+      "recommendationId": "rec-fra-terrorist-til-kandidat-6de83b3456697d6c72a4ee0c6942d807",
+      "recommendationIdentityBasis": "title+link",
+      "identityDuplicateGroup": "",
+      "title": "Fra terrorist til kandidat",
+      "mainSeries": "Radiofortællinger",
+      "primaryGenreRaw": "Samfund",
+      "primaryGenre": "Samfund",
+      "primaryGenreValid": true,
+      "primaryGenreMappingType": "native",
+      "primaryGenreMappingSource": "Samfund",
+      "primaryGenreNeedsReview": false,
+      "primaryGenreReviewReason": "",
+      "secondaryGenre": "Dokumentar",
+      "secondaryGenreValid": true,
+      "topicsRaw": [
+        "terrormistanke",
+        "uddannelse",
+        "anklage",
+        "retssikkerhed"
+      ],
+      "topicsCanonical": [
+        "terrormistanke",
+        "uddannelse",
+        "anklage",
+        "retssikkerhed"
+      ],
+      "topicKeys": [
+        "terrormistanke",
+        "uddannelse",
+        "anklage",
+        "retssikkerhed"
+      ],
+      "topicEligible": true,
+      "genreEligible": true,
+      "recommendationMetadataEligible": true,
+      "metadataIssues": []
+    },
+    {
+      "id": "man kan da hvad man vil",
+      "recommendationId": "rec-man-kan-da-hvad-man-vil-e57fbbce2723c5fca0d167e6261c3f53",
+      "recommendationIdentityBasis": "title+link",
+      "identityDuplicateGroup": "",
+      "title": "Man kan da, hvad man vil",
+      "mainSeries": "Radiofortællinger",
+      "primaryGenreRaw": "Sport",
+      "primaryGenre": "Sport",
+      "primaryGenreValid": true,
+      "primaryGenreMappingType": "native",
+      "primaryGenreMappingSource": "Sport",
+      "primaryGenreNeedsReview": false,
+      "primaryGenreReviewReason": "",
+      "secondaryGenre": "Dokumentar",
+      "secondaryGenreValid": true,
+      "topicsRaw": [
+        "handicap",
+        "eliteidræt",
+        "viljestyrke",
+        "livsudfordringer"
+      ],
+      "topicsCanonical": [
+        "handicap",
+        "eliteidræt",
+        "viljestyrke",
+        "livsudfordringer"
+      ],
+      "topicKeys": [
+        "handicap",
+        "eliteidraet",
+        "viljestyrke",
+        "livsudfordringer"
+      ],
+      "topicEligible": true,
+      "genreEligible": true,
+      "recommendationMetadataEligible": true,
+      "metadataIssues": []
+    },
+    {
+      "id": "dates der driller",
+      "recommendationId": "rec-dates-der-driller-e1774e1716cc1e9b37691b108464ff13",
+      "recommendationIdentityBasis": "title+link",
+      "identityDuplicateGroup": "",
+      "title": "Dates der driller",
+      "mainSeries": "Radiofortællinger",
+      "primaryGenreRaw": "Underholdning",
+      "primaryGenre": "Underholdning",
+      "primaryGenreValid": true,
+      "primaryGenreMappingType": "native",
+      "primaryGenreMappingSource": "Underholdning",
+      "primaryGenreNeedsReview": false,
+      "primaryGenreReviewReason": "",
+      "secondaryGenre": "Dokumentar",
+      "secondaryGenreValid": true,
+      "topicsRaw": [
+        "dating",
+        "relationer",
+        "pinlige situationer",
+        "møder"
+      ],
+      "topicsCanonical": [
+        "dating",
+        "relationer",
+        "pinlige situationer",
+        "møder"
+      ],
+      "topicKeys": [
+        "dating",
+        "relationer",
+        "pinlige-situationer",
+        "moeder"
+      ],
+      "topicEligible": true,
+      "genreEligible": true,
+      "recommendationMetadataEligible": true,
+      "metadataIssues": []
+    },
+    {
+      "id": "slynglen og syvsoveren",
+      "recommendationId": "rec-slynglen-og-syvsoveren-fe68a332d34b141d86436059ddaad831",
+      "recommendationIdentityBasis": "title+link",
+      "identityDuplicateGroup": "",
+      "title": "Slynglen og syvsoveren",
+      "mainSeries": "Radiofortællinger",
+      "primaryGenreRaw": "Dokumentar",
+      "primaryGenre": "Dokumentar",
+      "primaryGenreValid": true,
+      "primaryGenreMappingType": "native",
+      "primaryGenreMappingSource": "Dokumentar",
+      "primaryGenreNeedsReview": false,
+      "primaryGenreReviewReason": "",
+      "secondaryGenre": "Samfund",
+      "secondaryGenreValid": true,
+      "topicsRaw": [
+        "søvn",
+        "rejser",
+        "overraskelser",
+        "konsekvenser"
+      ],
+      "topicsCanonical": [
+        "søvn",
+        "rejser",
+        "overraskelser",
+        "konsekvenser"
+      ],
+      "topicKeys": [
+        "soevn",
+        "rejser",
+        "overraskelser",
+        "konsekvenser"
+      ],
+      "topicEligible": true,
+      "genreEligible": true,
+      "recommendationMetadataEligible": true,
+      "metadataIssues": []
+    },
+    {
+      "id": "mine dage med murder machine",
+      "recommendationId": "rec-mine-dage-med-murder-machine-1bb93d684b13d8d51ff4e64e56f67182",
+      "recommendationIdentityBasis": "title+link",
+      "identityDuplicateGroup": "",
+      "title": "Mine dage med Murder Machine",
+      "mainSeries": "Radiofortællinger",
+      "primaryGenreRaw": "True Crime",
+      "primaryGenre": "True Crime",
+      "primaryGenreValid": true,
+      "primaryGenreMappingType": "native",
+      "primaryGenreMappingSource": "True Crime",
+      "primaryGenreNeedsReview": false,
+      "primaryGenreReviewReason": "",
+      "secondaryGenre": "Dokumentar",
+      "secondaryGenreValid": true,
+      "topicsRaw": [
+        "mafia",
+        "New York",
+        "Coney Island",
+        "drab"
+      ],
+      "topicsCanonical": [
+        "mafia",
+        "New York",
+        "Coney Island",
+        "drab"
+      ],
+      "topicKeys": [
+        "mafia",
+        "new-york",
+        "coney-island",
+        "drab"
+      ],
+      "topicEligible": true,
+      "genreEligible": true,
+      "recommendationMetadataEligible": true,
+      "metadataIssues": []
+    },
+    {
+      "id": "med røverne i bagagerummet",
+      "recommendationId": "rec-med-roeverne-i-bagagerummet-13c0ee3fe15f086ecd0500dcca670fd0",
+      "recommendationIdentityBasis": "title+link",
+      "identityDuplicateGroup": "",
+      "title": "Med røverne i bagagerummet",
+      "mainSeries": "Radiofortællinger",
+      "primaryGenreRaw": "True Crime",
+      "primaryGenre": "True Crime",
+      "primaryGenreValid": true,
+      "primaryGenreMappingType": "native",
+      "primaryGenreMappingSource": "True Crime",
+      "primaryGenreNeedsReview": false,
+      "primaryGenreReviewReason": "",
+      "secondaryGenre": "Dokumentar",
+      "secondaryGenreValid": true,
+      "topicsRaw": [
+        "Kenya",
+        "Viktoriasøen",
+        "røveri",
+        "ferie"
+      ],
+      "topicsCanonical": [
+        "Kenya",
+        "Viktoriasøen",
+        "røveri",
+        "ferie"
+      ],
+      "topicKeys": [
+        "kenya",
+        "viktoriasoeen",
+        "roeveri",
+        "ferie"
+      ],
+      "topicEligible": true,
+      "genreEligible": true,
+      "recommendationMetadataEligible": true,
+      "metadataIssues": []
+    },
+    {
+      "id": "baby i havsnød",
+      "recommendationId": "rec-baby-i-havsnoed-e9155ca88c017e2ed53ce879a396622f",
+      "recommendationIdentityBasis": "title+link",
+      "identityDuplicateGroup": "",
+      "title": "Baby i havsnød",
+      "mainSeries": "Radiofortællinger",
+      "primaryGenreRaw": "Dokumentar",
+      "primaryGenre": "Dokumentar",
+      "primaryGenreValid": true,
+      "primaryGenreMappingType": "native",
+      "primaryGenreMappingSource": "Dokumentar",
+      "primaryGenreNeedsReview": false,
+      "primaryGenreReviewReason": "",
+      "secondaryGenre": "Samfund",
+      "secondaryGenreValid": true,
+      "topicsRaw": [
+        "Sydøstasien",
+        "havsnød",
+        "spædbarn",
+        "familie"
+      ],
+      "topicsCanonical": [
+        "Sydøstasien",
+        "havsnød",
+        "spædbarn",
+        "familie"
+      ],
+      "topicKeys": [
+        "sydoestasien",
+        "havsnoed",
+        "spaedbarn",
+        "familie"
+      ],
+      "topicEligible": true,
+      "genreEligible": true,
+      "recommendationMetadataEligible": true,
+      "metadataIssues": []
+    },
+    {
+      "id": "søvnen en kampzone",
+      "recommendationId": "rec-soevnen-en-kampzone-38366194fd10c6c574f467ab5d403df5",
+      "recommendationIdentityBasis": "title+link",
+      "identityDuplicateGroup": "",
+      "title": "Søvnen - en kampzone",
+      "mainSeries": "Radiofortællinger",
+      "primaryGenreRaw": "Viden",
+      "primaryGenre": "Viden",
+      "primaryGenreValid": true,
+      "primaryGenreMappingType": "native",
+      "primaryGenreMappingSource": "Viden",
+      "primaryGenreNeedsReview": false,
+      "primaryGenreReviewReason": "",
+      "secondaryGenre": "Dokumentar",
+      "secondaryGenreValid": true,
+      "topicsRaw": [
+        "søvn",
+        "søvnløshed",
+        "søvnproblemer",
+        "hverdag"
+      ],
+      "topicsCanonical": [
+        "søvn",
+        "søvnløshed",
+        "søvnproblemer",
+        "hverdag"
+      ],
+      "topicKeys": [
+        "soevn",
+        "soevnloeshed",
+        "soevnproblemer",
+        "hverdag"
+      ],
+      "topicEligible": true,
+      "genreEligible": true,
+      "recommendationMetadataEligible": true,
+      "metadataIssues": []
+    },
+    {
+      "id": "mistænkt",
+      "recommendationId": "rec-mistaenkt-d1209e2a568004f395cff12990c20f02",
+      "recommendationIdentityBasis": "title+link",
+      "identityDuplicateGroup": "",
+      "title": "Mistænkt",
+      "mainSeries": "Radiofortællinger",
+      "primaryGenreRaw": "Dokumentar",
+      "primaryGenre": "Dokumentar",
+      "primaryGenreValid": true,
+      "primaryGenreMappingType": "native",
+      "primaryGenreMappingSource": "Dokumentar",
+      "primaryGenreNeedsReview": false,
+      "primaryGenreReviewReason": "",
+      "secondaryGenre": "True Crime",
+      "secondaryGenreValid": true,
+      "topicsRaw": [
+        "mistanke",
+        "politi",
+        "terroranklage",
+        "bankrøveri"
+      ],
+      "topicsCanonical": [
+        "mistanke",
+        "politi",
+        "terroranklage",
+        "bankrøveri"
+      ],
+      "topicKeys": [
+        "mistanke",
+        "politi",
+        "terroranklage",
+        "bankroeveri"
+      ],
+      "topicEligible": true,
+      "genreEligible": true,
+      "recommendationMetadataEligible": true,
+      "metadataIssues": []
+    },
+    {
+      "id": "med dæmoner i hælene",
+      "recommendationId": "rec-med-daemoner-i-haelene-ec8fecc527856ed5925083cec8fd8ed0",
+      "recommendationIdentityBasis": "title+link",
+      "identityDuplicateGroup": "",
+      "title": "Med dæmoner i hælene",
+      "mainSeries": "Radiofortællinger",
+      "primaryGenreRaw": "Samfund",
+      "primaryGenre": "Samfund",
+      "primaryGenreValid": true,
+      "primaryGenreMappingType": "native",
+      "primaryGenreMappingSource": "Samfund",
+      "primaryGenreNeedsReview": false,
+      "primaryGenreReviewReason": "",
+      "secondaryGenre": "Dokumentar",
+      "secondaryGenreValid": true,
+      "topicsRaw": [
+        "veteran",
+        "traumer",
+        "maraton",
+        "familie"
+      ],
+      "topicsCanonical": [
+        "veteran",
+        "traumer",
+        "maraton",
+        "familie"
+      ],
+      "topicKeys": [
+        "veteran",
+        "traumer",
+        "maraton",
+        "familie"
+      ],
+      "topicEligible": true,
+      "genreEligible": true,
+      "recommendationMetadataEligible": true,
+      "metadataIssues": []
+    },
+    {
+      "id": "fred cykler og en geværkolbe",
+      "recommendationId": "rec-fred-cykler-og-en-gevaerkolbe-606cc95d82c8e19dd1a9bdd1366fb461",
+      "recommendationIdentityBasis": "title+link",
+      "identityDuplicateGroup": "",
+      "title": "Fred, cykler og en geværkolbe",
+      "mainSeries": "Radiofortællinger",
+      "primaryGenreRaw": "Krig",
+      "primaryGenre": "Krig",
+      "primaryGenreValid": true,
+      "primaryGenreMappingType": "native",
+      "primaryGenreMappingSource": "Krig",
+      "primaryGenreNeedsReview": false,
+      "primaryGenreReviewReason": "",
+      "secondaryGenre": "Dokumentar",
+      "secondaryGenreValid": true,
+      "topicsRaw": [
+        "Vestbredden",
+        "fredsarbejde",
+        "Israel",
+        "Palæstina"
+      ],
+      "topicsCanonical": [
+        "Vestbredden",
+        "fredsarbejde",
+        "Israel",
+        "Palæstina"
+      ],
+      "topicKeys": [
+        "vestbredden",
+        "fredsarbejde",
+        "israel",
+        "palaestina"
+      ],
+      "topicEligible": true,
+      "genreEligible": true,
+      "recommendationMetadataEligible": true,
+      "metadataIssues": []
+    },
+    {
+      "id": "held i uheld uheld i held",
+      "recommendationId": "rec-held-i-uheld-uheld-i-held-e94abed07d80c195233e3132eb598006",
+      "recommendationIdentityBasis": "title+link",
+      "identityDuplicateGroup": "",
+      "title": "Held i uheld - uheld i held",
+      "mainSeries": "Radiofortællinger",
+      "primaryGenreRaw": "Dokumentar",
+      "primaryGenre": "Dokumentar",
+      "primaryGenreValid": true,
+      "primaryGenreMappingType": "native",
+      "primaryGenreMappingSource": "Dokumentar",
+      "primaryGenreNeedsReview": false,
+      "primaryGenreReviewReason": "",
+      "secondaryGenre": "Samfund",
+      "secondaryGenreValid": true,
+      "topicsRaw": [
+        "held",
+        "skæbne",
+        "rejser",
+        "livsfare"
+      ],
+      "topicsCanonical": [
+        "held",
+        "skæbne",
+        "rejser",
+        "livsfare"
+      ],
+      "topicKeys": [
+        "held",
+        "skaebne",
+        "rejser",
+        "livsfare"
+      ],
+      "topicEligible": true,
+      "genreEligible": true,
+      "recommendationMetadataEligible": true,
+      "metadataIssues": []
+    },
+    {
+      "id": "kat ud over alle grænser",
+      "recommendationId": "rec-kat-ud-over-alle-graenser-b14884b762ff5f219f3001e02877ef84",
+      "recommendationIdentityBasis": "title+link",
+      "identityDuplicateGroup": "",
+      "title": "Kat ud over alle grænser",
+      "mainSeries": "Radiofortællinger",
+      "primaryGenreRaw": "Dokumentar",
+      "primaryGenre": "Dokumentar",
+      "primaryGenreValid": true,
+      "primaryGenreMappingType": "native",
+      "primaryGenreMappingSource": "Dokumentar",
+      "primaryGenreNeedsReview": false,
+      "primaryGenreReviewReason": "",
+      "secondaryGenre": "Samfund",
+      "secondaryGenreValid": true,
+      "topicsRaw": [
+        "kat",
+        "USA",
+        "rejser",
+        "kæledyr"
+      ],
+      "topicsCanonical": [
+        "kat",
+        "USA",
+        "rejser",
+        "kæledyr"
+      ],
+      "topicKeys": [
+        "kat",
+        "usa",
+        "rejser",
+        "kaeledyr"
+      ],
+      "topicEligible": true,
+      "genreEligible": true,
+      "recommendationMetadataEligible": true,
+      "metadataIssues": []
+    },
+    {
+      "id": "blaffere og bejlere",
+      "recommendationId": "rec-blaffere-og-bejlere-a834f5c21cb4127b1e40ba0dac860335",
+      "recommendationIdentityBasis": "title+link",
+      "identityDuplicateGroup": "",
+      "title": "Blaffere og bejlere",
+      "mainSeries": "Radiofortællinger",
+      "primaryGenreRaw": "Samfund",
+      "primaryGenre": "Samfund",
+      "primaryGenreValid": true,
+      "primaryGenreMappingType": "native",
+      "primaryGenreMappingSource": "Samfund",
+      "primaryGenreNeedsReview": false,
+      "primaryGenreReviewReason": "",
+      "secondaryGenre": "Dokumentar",
+      "secondaryGenreValid": true,
+      "topicsRaw": [
+        "Nordafrika",
+        "blaffertur",
+        "parforhold",
+        "rejser"
+      ],
+      "topicsCanonical": [
+        "Nordafrika",
+        "blaffertur",
+        "parforhold",
+        "rejser"
+      ],
+      "topicKeys": [
+        "nordafrika",
+        "blaffertur",
+        "parforhold",
+        "rejser"
+      ],
+      "topicEligible": true,
+      "genreEligible": true,
+      "recommendationMetadataEligible": true,
+      "metadataIssues": []
+    },
+    {
+      "id": "sporløs afsporet",
+      "recommendationId": "rec-sporloes-afsporet-e4733e4bafb5424c34c52e932f9f5c03",
+      "recommendationIdentityBasis": "title+link",
+      "identityDuplicateGroup": "",
+      "title": "Sporløs afsporet",
+      "mainSeries": "Radiofortællinger",
+      "primaryGenreRaw": "Dokumentar",
+      "primaryGenre": "Dokumentar",
+      "primaryGenreValid": true,
+      "primaryGenreMappingType": "native",
+      "primaryGenreMappingSource": "Dokumentar",
+      "primaryGenreNeedsReview": false,
+      "primaryGenreReviewReason": "",
+      "secondaryGenre": "Samfund",
+      "secondaryGenreValid": true,
+      "topicsRaw": [
+        "Argentina",
+        "far og datter",
+        "familie",
+        "identitet"
+      ],
+      "topicsCanonical": [
+        "Argentina",
+        "far og datter",
+        "familie",
+        "identitet"
+      ],
+      "topicKeys": [
+        "argentina",
+        "far-og-datter",
+        "familie",
+        "identitet"
+      ],
+      "topicEligible": true,
+      "genreEligible": true,
+      "recommendationMetadataEligible": true,
+      "metadataIssues": []
+    },
+    {
+      "id": "gennemtjekket og gennemhullet",
+      "recommendationId": "rec-gennemtjekket-og-gennemhullet-b0ec39e2c1ba0d74072590684c977ba2",
+      "recommendationIdentityBasis": "title+link",
+      "identityDuplicateGroup": "",
+      "title": "Gennemtjekket og gennemhullet",
+      "mainSeries": "Radiofortællinger",
+      "primaryGenreRaw": "Krig",
+      "primaryGenre": "Krig",
+      "primaryGenreValid": true,
+      "primaryGenreMappingType": "native",
+      "primaryGenreMappingSource": "Krig",
+      "primaryGenreNeedsReview": false,
+      "primaryGenreReviewReason": "",
+      "secondaryGenre": "Dokumentar",
+      "secondaryGenreValid": true,
+      "topicsRaw": [
+        "Afghanistan",
+        "veteran",
+        "Helmand",
+        "krigsskade"
+      ],
+      "topicsCanonical": [
+        "Afghanistan",
+        "veteran",
+        "Helmand",
+        "krigsskade"
+      ],
+      "topicKeys": [
+        "afghanistan",
+        "veteran",
+        "helmand",
+        "krigsskade"
+      ],
+      "topicEligible": true,
+      "genreEligible": true,
+      "recommendationMetadataEligible": true,
+      "metadataIssues": []
+    },
+    {
+      "id": "cykling er en kampsport",
+      "recommendationId": "rec-cykling-er-en-kampsport-81f3b604faf0e4387b434b0d0c7b2a69",
+      "recommendationIdentityBasis": "title+link",
+      "identityDuplicateGroup": "",
+      "title": "Cykling er en kampsport",
+      "mainSeries": "Radiofortællinger",
+      "primaryGenreRaw": "Sport",
+      "primaryGenre": "Sport",
+      "primaryGenreValid": true,
+      "primaryGenreMappingType": "native",
+      "primaryGenreMappingSource": "Sport",
+      "primaryGenreNeedsReview": false,
+      "primaryGenreReviewReason": "",
+      "secondaryGenre": "Dokumentar",
+      "secondaryGenreValid": true,
+      "topicsRaw": [
+        "cykling",
+        "karate",
+        "frygt",
+        "indlæring"
+      ],
+      "topicsCanonical": [
+        "cykling",
+        "karate",
+        "frygt",
+        "indlæring"
+      ],
+      "topicKeys": [
+        "cykling",
+        "karate",
+        "frygt",
+        "indlaering"
+      ],
+      "topicEligible": true,
+      "genreEligible": true,
+      "recommendationMetadataEligible": true,
+      "metadataIssues": []
+    },
+    {
+      "id": "retten til fodbold",
+      "recommendationId": "rec-retten-til-fodbold-379927f4b2ab21894cb93fb9ed3ac7ee",
+      "recommendationIdentityBasis": "title+link",
+      "identityDuplicateGroup": "",
+      "title": "Retten til fodbold",
+      "mainSeries": "Radiofortællinger",
+      "primaryGenreRaw": "Sport",
+      "primaryGenre": "Sport",
+      "primaryGenreValid": true,
+      "primaryGenreMappingType": "native",
+      "primaryGenreMappingSource": "Sport",
+      "primaryGenreNeedsReview": false,
+      "primaryGenreReviewReason": "",
+      "secondaryGenre": "Dokumentar",
+      "secondaryGenreValid": true,
+      "topicsRaw": [
+        "kvindefodbold",
+        "Lone Hansen",
+        "Nadia Nadim",
+        "ligestilling"
+      ],
+      "topicsCanonical": [
+        "Kvindefodbold",
+        "Lone Hansen",
+        "Nadia Nadim",
+        "ligestilling"
+      ],
+      "topicKeys": [
+        "kvindefodbold",
+        "lone-hansen",
+        "nadia-nadim",
+        "ligestilling"
+      ],
+      "topicEligible": true,
+      "genreEligible": true,
+      "recommendationMetadataEligible": true,
+      "metadataIssues": []
+    },
+    {
+      "id": "bortførelsen til iran",
+      "recommendationId": "rec-bortfoerelsen-til-iran-521d029c6f816327077d77bd2c5efd52",
+      "recommendationIdentityBasis": "title+link",
+      "identityDuplicateGroup": "",
+      "title": "Bortførelsen til Iran",
+      "mainSeries": "Radiofortællinger",
+      "primaryGenreRaw": "Dokumentar",
+      "primaryGenre": "Dokumentar",
+      "primaryGenreValid": true,
+      "primaryGenreMappingType": "native",
+      "primaryGenreMappingSource": "Dokumentar",
+      "primaryGenreNeedsReview": false,
+      "primaryGenreReviewReason": "",
+      "secondaryGenre": "Samfund",
+      "secondaryGenreValid": true,
+      "topicsRaw": [
+        "Iran",
+        "bortførelse",
+        "forældreret",
+        "barndom"
+      ],
+      "topicsCanonical": [
+        "Iran",
+        "bortførelse",
+        "forældreret",
+        "barndom"
+      ],
+      "topicKeys": [
+        "iran",
+        "bortfoerelse",
+        "foraeldreret",
+        "barndom"
+      ],
+      "topicEligible": true,
+      "genreEligible": true,
+      "recommendationMetadataEligible": true,
+      "metadataIssues": []
+    },
+    {
+      "id": "connie pakker kufferten",
+      "recommendationId": "rec-connie-pakker-kufferten-cbf53f4f79368e66f7db4757c54b05e7",
+      "recommendationIdentityBasis": "title+link",
+      "identityDuplicateGroup": "",
+      "title": "Connie pakker kufferten",
+      "mainSeries": "Radiofortællinger",
+      "primaryGenreRaw": "Dokumentar",
+      "primaryGenre": "Dokumentar",
+      "primaryGenreValid": true,
+      "primaryGenreMappingType": "native",
+      "primaryGenreMappingSource": "Dokumentar",
+      "primaryGenreNeedsReview": false,
+      "primaryGenreReviewReason": "",
+      "secondaryGenre": "Samfund",
+      "secondaryGenreValid": true,
+      "topicsRaw": [
+        "stewardesse",
+        "luftfart",
+        "showbusiness",
+        "livshistorie"
+      ],
+      "topicsCanonical": [
+        "stewardesse",
+        "luftfart",
+        "showbusiness",
+        "livshistorie"
+      ],
+      "topicKeys": [
+        "stewardesse",
+        "luftfart",
+        "showbusiness",
+        "livshistorie"
+      ],
+      "topicEligible": true,
+      "genreEligible": true,
+      "recommendationMetadataEligible": true,
+      "metadataIssues": []
+    },
+    {
+      "id": "julie og helenes mareridt i afrika",
+      "recommendationId": "rec-julie-og-helenes-mareridt-i-afrika-cae277d2242240a03c75cb449503e6c4",
+      "recommendationIdentityBasis": "title+link",
+      "identityDuplicateGroup": "",
+      "title": "Julie og Helenes mareridt i Afrika",
+      "mainSeries": "Radiofortællinger",
+      "primaryGenreRaw": "Dokumentar",
+      "primaryGenre": "Dokumentar",
+      "primaryGenreValid": true,
+      "primaryGenreMappingType": "native",
+      "primaryGenreMappingSource": "Dokumentar",
+      "primaryGenreNeedsReview": false,
+      "primaryGenreReviewReason": "",
+      "secondaryGenre": "Samfund",
+      "secondaryGenreValid": true,
+      "topicsRaw": [
+        "Rwanda",
+        "Uganda",
+        "venskab",
+        "nytår"
+      ],
+      "topicsCanonical": [
+        "Rwanda",
+        "Uganda",
+        "venskab",
+        "nytår"
+      ],
+      "topicKeys": [
+        "rwanda",
+        "uganda",
+        "venskab",
+        "nytaar"
+      ],
+      "topicEligible": true,
+      "genreEligible": true,
+      "recommendationMetadataEligible": true,
+      "metadataIssues": []
+    },
+    {
+      "id": "en lærerig afstikker",
+      "recommendationId": "rec-en-laererig-afstikker-2fff60e74fe566e26ba55f17d116d9d1",
+      "recommendationIdentityBasis": "title+link",
+      "identityDuplicateGroup": "",
+      "title": "En lærerig afstikker",
+      "mainSeries": "Radiofortællinger",
+      "primaryGenreRaw": "Samfund",
+      "primaryGenre": "Samfund",
+      "primaryGenreValid": true,
+      "primaryGenreMappingType": "native",
+      "primaryGenreMappingSource": "Samfund",
+      "primaryGenreNeedsReview": false,
+      "primaryGenreReviewReason": "",
+      "secondaryGenre": "Dokumentar",
+      "secondaryGenreValid": true,
+      "topicsRaw": [
+        "ungdom",
+        "venner",
+        "natteliv",
+        "livserfaring"
+      ],
+      "topicsCanonical": [
+        "ungdom",
+        "venner",
+        "natteliv",
+        "livserfaring"
+      ],
+      "topicKeys": [
+        "ungdom",
+        "venner",
+        "natteliv",
+        "livserfaring"
+      ],
+      "topicEligible": true,
+      "genreEligible": true,
+      "recommendationMetadataEligible": true,
+      "metadataIssues": []
+    },
+    {
+      "id": "kærlighed og fald",
+      "recommendationId": "rec-kaerlighed-og-fald-a84f5056c2e87ea8d2f1ad46fbc0a6ab",
+      "recommendationIdentityBasis": "title+link",
+      "identityDuplicateGroup": "",
+      "title": "Kærlighed og fald",
+      "mainSeries": "Radiofortællinger",
+      "primaryGenreRaw": "Dokumentar",
+      "primaryGenre": "Dokumentar",
+      "primaryGenreValid": true,
+      "primaryGenreMappingType": "native",
+      "primaryGenreMappingSource": "Dokumentar",
+      "primaryGenreNeedsReview": false,
+      "primaryGenreReviewReason": "",
+      "secondaryGenre": "Samfund",
+      "secondaryGenreValid": true,
+      "topicsRaw": [
+        "kærlighed",
+        "ulykke",
+        "parforhold",
+        "livsændring"
+      ],
+      "topicsCanonical": [
+        "kærlighed",
+        "ulykke",
+        "parforhold",
+        "livsændring"
+      ],
+      "topicKeys": [
+        "kaerlighed",
+        "ulykke",
+        "parforhold",
+        "livsaendring"
+      ],
+      "topicEligible": true,
+      "genreEligible": true,
+      "recommendationMetadataEligible": true,
+      "metadataIssues": []
+    },
+    {
+      "id": "to smørrebrødsdramaer",
+      "recommendationId": "rec-to-smoerrebroedsdramaer-7858816122df354bd6773e57edab216f",
+      "recommendationIdentityBasis": "title+link",
+      "identityDuplicateGroup": "",
+      "title": "To smørrebrødsdramaer",
+      "mainSeries": "Radiofortællinger",
+      "primaryGenreRaw": "Underholdning",
+      "primaryGenre": "Underholdning",
+      "primaryGenreValid": true,
+      "primaryGenreMappingType": "native",
+      "primaryGenreMappingSource": "Underholdning",
+      "primaryGenreNeedsReview": false,
+      "primaryGenreReviewReason": "",
+      "secondaryGenre": "Dokumentar",
+      "secondaryGenreValid": true,
+      "topicsRaw": [
+        "smørrebrød",
+        "New York",
+        "Thailand",
+        "kulturmøder"
+      ],
+      "topicsCanonical": [
+        "smørrebrød",
+        "New York",
+        "Thailand",
+        "kulturmøder"
+      ],
+      "topicKeys": [
+        "smoerrebroed",
+        "new-york",
+        "thailand",
+        "kulturmoeder"
+      ],
+      "topicEligible": true,
+      "genreEligible": true,
+      "recommendationMetadataEligible": true,
+      "metadataIssues": []
+    },
+    {
+      "id": "flugten fra det spanske juletræ",
+      "recommendationId": "rec-flugten-fra-det-spanske-juletrae-de78ebc2965e156494d4a667bbd6a582",
+      "recommendationIdentityBasis": "title+link",
+      "identityDuplicateGroup": "",
+      "title": "Flugten fra det spanske juletræ",
+      "mainSeries": "Radiofortællinger",
+      "primaryGenreRaw": "True Crime",
+      "primaryGenre": "True Crime",
+      "primaryGenreValid": true,
+      "primaryGenreMappingType": "native",
+      "primaryGenreMappingSource": "True Crime",
+      "primaryGenreNeedsReview": false,
+      "primaryGenreReviewReason": "",
+      "secondaryGenre": "Dokumentar",
+      "secondaryGenreValid": true,
+      "topicsRaw": [
+        "Spanien",
+        "politi",
+        "ungdom",
+        "juletræ"
+      ],
+      "topicsCanonical": [
+        "Spanien",
+        "politi",
+        "ungdom",
+        "juletræ"
+      ],
+      "topicKeys": [
+        "spanien",
+        "politi",
+        "ungdom",
+        "juletrae"
+      ],
+      "topicEligible": true,
+      "genreEligible": true,
+      "recommendationMetadataEligible": true,
+      "metadataIssues": []
+    },
+    {
+      "id": "computer og kærligheden pa afveje",
+      "recommendationId": "rec-computer-og-kaerligheden-paa-afveje-99bbc113c5f5cc310e7ef12059a6f621",
+      "recommendationIdentityBasis": "title+link",
+      "identityDuplicateGroup": "",
+      "title": "Computer og kærligheden på afveje",
+      "mainSeries": "Radiofortællinger",
+      "primaryGenreRaw": "Samfund",
+      "primaryGenre": "Samfund",
+      "primaryGenreValid": true,
+      "primaryGenreMappingType": "native",
+      "primaryGenreMappingSource": "Samfund",
+      "primaryGenreNeedsReview": false,
+      "primaryGenreReviewReason": "",
+      "secondaryGenre": "Dokumentar",
+      "secondaryGenreValid": true,
+      "topicsRaw": [
+        "parforhold",
+        "computer",
+        "Ghana",
+        "tilfældigheder"
+      ],
+      "topicsCanonical": [
+        "parforhold",
+        "computer",
+        "Ghana",
+        "tilfældigheder"
+      ],
+      "topicKeys": [
+        "parforhold",
+        "computer",
+        "ghana",
+        "tilfaeldigheder"
+      ],
+      "topicEligible": true,
+      "genreEligible": true,
+      "recommendationMetadataEligible": true,
+      "metadataIssues": []
+    },
+    {
+      "id": "hvad stiller man egentlig op med sin dobbeltgænger",
+      "recommendationId": "rec-hvad-stiller-man-egentlig-op-med-sin-dobbeltgaenger-a82a6861719d7d722d3ad8f544369665",
+      "recommendationIdentityBasis": "title+link",
+      "identityDuplicateGroup": "",
+      "title": "Hvad stiller man egentlig op med sin dobbeltgænger?",
+      "mainSeries": "Radiofortællinger",
+      "primaryGenreRaw": "Underholdning",
+      "primaryGenre": "Underholdning",
+      "primaryGenreValid": true,
+      "primaryGenreMappingType": "native",
+      "primaryGenreMappingSource": "Underholdning",
+      "primaryGenreNeedsReview": false,
+      "primaryGenreReviewReason": "",
+      "secondaryGenre": "Dokumentar",
+      "secondaryGenreValid": true,
+      "topicsRaw": [
+        "dobbeltgængere",
+        "identitet",
+        "udseende",
+        "selvopfattelse"
+      ],
+      "topicsCanonical": [
+        "dobbeltgængere",
+        "identitet",
+        "Udseende",
+        "selvopfattelse"
+      ],
+      "topicKeys": [
+        "dobbeltgaengere",
+        "identitet",
+        "udseende",
+        "selvopfattelse"
+      ],
+      "topicEligible": true,
+      "genreEligible": true,
+      "recommendationMetadataEligible": true,
+      "metadataIssues": []
+    },
+    {
+      "id": "kniven for struben",
+      "recommendationId": "rec-kniven-for-struben-d86a7b4bbf512eef806df4d3c8717058",
+      "recommendationIdentityBasis": "title+link",
+      "identityDuplicateGroup": "",
+      "title": "Kniven for struben",
+      "mainSeries": "Radiofortællinger",
+      "primaryGenreRaw": "True Crime",
+      "primaryGenre": "True Crime",
+      "primaryGenreValid": true,
+      "primaryGenreMappingType": "native",
+      "primaryGenreMappingSource": "True Crime",
+      "primaryGenreNeedsReview": false,
+      "primaryGenreReviewReason": "",
+      "secondaryGenre": "Dokumentar",
+      "secondaryGenreValid": true,
+      "topicsRaw": [
+        "røveri",
+        "trusler",
+        "penge",
+        "frygt"
+      ],
+      "topicsCanonical": [
+        "røveri",
+        "trusler",
+        "penge",
+        "frygt"
+      ],
+      "topicKeys": [
+        "roeveri",
+        "trusler",
+        "penge",
+        "frygt"
+      ],
+      "topicEligible": true,
+      "genreEligible": true,
+      "recommendationMetadataEligible": true,
+      "metadataIssues": []
+    },
+    {
+      "id": "hvem er hvem",
+      "recommendationId": "rec-hvem-er-hvem-c3d6566be6b7f338a663e684374a3b21",
+      "recommendationIdentityBasis": "title+link",
+      "identityDuplicateGroup": "",
+      "title": "Hvem er hvem?",
+      "mainSeries": "Radiofortællinger",
+      "primaryGenreRaw": "Underholdning",
+      "primaryGenre": "Underholdning",
+      "primaryGenreValid": true,
+      "primaryGenreMappingType": "native",
+      "primaryGenreMappingSource": "Underholdning",
+      "primaryGenreNeedsReview": false,
+      "primaryGenreReviewReason": "",
+      "secondaryGenre": "Dokumentar",
+      "secondaryGenreValid": true,
+      "topicsRaw": [
+        "enæggede tvillinger",
+        "efterskole",
+        "identitet",
+        "venskab"
+      ],
+      "topicsCanonical": [
+        "enæggede tvillinger",
+        "efterskole",
+        "identitet",
+        "venskab"
+      ],
+      "topicKeys": [
+        "enaeggede-tvillinger",
+        "efterskole",
+        "identitet",
+        "venskab"
+      ],
+      "topicEligible": true,
+      "genreEligible": true,
+      "recommendationMetadataEligible": true,
+      "metadataIssues": []
+    },
+    {
+      "id": "blaffere i knibe",
+      "recommendationId": "rec-blaffere-i-knibe-8d348341f5871e712c7810a1bbfd23d9",
+      "recommendationIdentityBasis": "title+link",
+      "identityDuplicateGroup": "",
+      "title": "Blaffere i knibe",
+      "mainSeries": "Radiofortællinger",
+      "primaryGenreRaw": "Dokumentar",
+      "primaryGenre": "Dokumentar",
+      "primaryGenreValid": true,
+      "primaryGenreMappingType": "native",
+      "primaryGenreMappingSource": "Dokumentar",
+      "primaryGenreNeedsReview": false,
+      "primaryGenreReviewReason": "",
+      "secondaryGenre": "Samfund",
+      "secondaryGenreValid": true,
+      "topicsRaw": [
+        "blaffertur",
+        "Europa",
+        "rejser",
+        "utryghed"
+      ],
+      "topicsCanonical": [
+        "blaffertur",
+        "Europa",
+        "rejser",
+        "utryghed"
+      ],
+      "topicKeys": [
+        "blaffertur",
+        "europa",
+        "rejser",
+        "utryghed"
+      ],
+      "topicEligible": true,
+      "genreEligible": true,
+      "recommendationMetadataEligible": true,
+      "metadataIssues": []
+    },
+    {
+      "id": "meld dig nu",
+      "recommendationId": "rec-meld-dig-nu-28fbf726ca6a261cd0c30c2102b68ecb",
+      "recommendationIdentityBasis": "title+link",
+      "identityDuplicateGroup": "",
+      "title": "Meld dig nu!",
+      "mainSeries": "Radiofortællinger",
+      "primaryGenreRaw": "Dokumentar",
+      "primaryGenre": "Dokumentar",
+      "primaryGenreValid": true,
+      "primaryGenreMappingType": "native",
+      "primaryGenreMappingSource": "Dokumentar",
+      "primaryGenreNeedsReview": false,
+      "primaryGenreReviewReason": "",
+      "secondaryGenre": "True Crime",
+      "secondaryGenreValid": true,
+      "topicsRaw": [
+        "socialt bedrageri",
+        "kunstnere",
+        "relationer",
+        "ansvar"
+      ],
+      "topicsCanonical": [
+        "socialt bedrageri",
+        "kunstnere",
+        "relationer",
+        "ansvar"
+      ],
+      "topicKeys": [
+        "socialt-bedrageri",
+        "kunstnere",
+        "relationer",
+        "ansvar"
+      ],
+      "topicEligible": true,
+      "genreEligible": true,
+      "recommendationMetadataEligible": true,
+      "metadataIssues": []
+    },
+    {
+      "id": "hvor er grænsen og hvad koster det",
+      "recommendationId": "rec-hvor-er-graensen-og-hvad-koster-det-ce4a20ad06ddebdc8c145c48d4430695",
+      "recommendationIdentityBasis": "title+link",
+      "identityDuplicateGroup": "",
+      "title": "Hvor er grænsen - og hvad koster det?",
+      "mainSeries": "Radiofortællinger",
+      "primaryGenreRaw": "Samfund",
+      "primaryGenre": "Samfund",
+      "primaryGenreValid": true,
+      "primaryGenreMappingType": "native",
+      "primaryGenreMappingSource": "Samfund",
+      "primaryGenreNeedsReview": false,
+      "primaryGenreReviewReason": "",
+      "secondaryGenre": "Dokumentar",
+      "secondaryGenreValid": true,
+      "topicsRaw": [
+        "grænsekontrol",
+        "korruption",
+        "Hviderusland",
+        "Ukraine"
+      ],
+      "topicsCanonical": [
+        "grænsekontrol",
+        "korruption",
+        "Hviderusland",
+        "Ukraine"
+      ],
+      "topicKeys": [
+        "graensekontrol",
+        "korruption",
+        "hviderusland",
+        "ukraine"
+      ],
+      "topicEligible": true,
+      "genreEligible": true,
+      "recommendationMetadataEligible": true,
+      "metadataIssues": []
+    },
+    {
+      "id": "angst og mod pa grænsen",
+      "recommendationId": "rec-angst-og-mod-paa-graensen-671dd439cadaa5189018bd112cdfbe31",
+      "recommendationIdentityBasis": "title+link",
+      "identityDuplicateGroup": "",
+      "title": "Angst og mod på grænsen",
+      "mainSeries": "Radiofortællinger",
+      "primaryGenreRaw": "Samfund",
+      "primaryGenre": "Samfund",
+      "primaryGenreValid": true,
+      "primaryGenreMappingType": "native",
+      "primaryGenreMappingSource": "Samfund",
+      "primaryGenreNeedsReview": false,
+      "primaryGenreReviewReason": "",
+      "secondaryGenre": "Dokumentar",
+      "secondaryGenreValid": true,
+      "topicsRaw": [
+        "grænsekontrol",
+        "Kirgisistan",
+        "Colombia",
+        "rejser"
+      ],
+      "topicsCanonical": [
+        "grænsekontrol",
+        "Kirgisistan",
+        "Colombia",
+        "rejser"
+      ],
+      "topicKeys": [
+        "graensekontrol",
+        "kirgisistan",
+        "colombia",
+        "rejser"
+      ],
+      "topicEligible": true,
+      "genreEligible": true,
+      "recommendationMetadataEligible": true,
+      "metadataIssues": []
+    },
+    {
+      "id": "panik pa grænsen",
+      "recommendationId": "rec-panik-paa-graensen-de700020431542d89f6f6a5c2a1d015b",
+      "recommendationIdentityBasis": "title+link",
+      "identityDuplicateGroup": "",
+      "title": "Panik på grænsen",
+      "mainSeries": "Radiofortællinger",
+      "primaryGenreRaw": "Samfund",
+      "primaryGenre": "Samfund",
+      "primaryGenreValid": true,
+      "primaryGenreMappingType": "native",
+      "primaryGenreMappingSource": "Samfund",
+      "primaryGenreNeedsReview": false,
+      "primaryGenreReviewReason": "",
+      "secondaryGenre": "Dokumentar",
+      "secondaryGenreValid": true,
+      "topicsRaw": [
+        "grænsekontrol",
+        "USA",
+        "Afghanistan",
+        "myndigheder"
+      ],
+      "topicsCanonical": [
+        "grænsekontrol",
+        "USA",
+        "Afghanistan",
+        "myndigheder"
+      ],
+      "topicKeys": [
+        "graensekontrol",
+        "usa",
+        "afghanistan",
+        "myndigheder"
+      ],
+      "topicEligible": true,
+      "genreEligible": true,
+      "recommendationMetadataEligible": true,
+      "metadataIssues": []
+    },
+    {
+      "id": "lig pa bordet",
+      "recommendationId": "rec-lig-paa-bordet-1c73484136c78c48a6d4254addd583d1",
+      "recommendationIdentityBasis": "title+link",
+      "identityDuplicateGroup": "",
+      "title": "Lig på bordet",
+      "mainSeries": "Radiofortællinger",
+      "primaryGenreRaw": "Dokumentar",
+      "primaryGenre": "Dokumentar",
+      "primaryGenreValid": true,
+      "primaryGenreMappingType": "native",
+      "primaryGenreMappingSource": "Dokumentar",
+      "primaryGenreNeedsReview": false,
+      "primaryGenreReviewReason": "",
+      "secondaryGenre": "Samfund",
+      "secondaryGenreValid": true,
+      "topicsRaw": [
+        "død",
+        "erindring",
+        "uforklarede oplevelser",
+        "fortællinger"
+      ],
+      "topicsCanonical": [
+        "død",
+        "erindring",
+        "uforklarede oplevelser",
+        "fortællinger"
+      ],
+      "topicKeys": [
+        "doed",
+        "erindring",
+        "uforklarede-oplevelser",
+        "fortaellinger"
+      ],
+      "topicEligible": true,
+      "genreEligible": true,
+      "recommendationMetadataEligible": true,
+      "metadataIssues": []
+    },
+    {
+      "id": "en flygtning fra en anden tid",
+      "recommendationId": "rec-en-flygtning-fra-en-anden-tid-6a3c7417c2ec0108032c36b8bcdae630",
+      "recommendationIdentityBasis": "title+link",
+      "identityDuplicateGroup": "",
+      "title": "En flygtning fra en anden tid",
+      "mainSeries": "Radiofortællinger",
+      "primaryGenreRaw": "Historie",
+      "primaryGenre": "Historie",
+      "primaryGenreValid": true,
+      "primaryGenreMappingType": "native",
+      "primaryGenreMappingSource": "Historie",
+      "primaryGenreNeedsReview": false,
+      "primaryGenreReviewReason": "",
+      "secondaryGenre": "Dokumentar",
+      "secondaryGenreValid": true,
+      "topicsRaw": [
+        "flugt",
+        "erindringer",
+        "alderdom",
+        "flygtninge"
+      ],
+      "topicsCanonical": [
+        "flugt",
+        "erindringer",
+        "alderdom",
+        "flygtninge"
+      ],
+      "topicKeys": [
+        "flugt",
+        "erindringer",
+        "alderdom",
+        "flygtninge"
+      ],
+      "topicEligible": true,
+      "genreEligible": true,
+      "recommendationMetadataEligible": true,
+      "metadataIssues": []
+    },
+    {
+      "id": "pa kant med døden og loven",
+      "recommendationId": "rec-paa-kant-med-doeden-og-loven-074269508b02318b2c79f9e681b6a653",
+      "recommendationIdentityBasis": "title+link",
+      "identityDuplicateGroup": "",
+      "title": "På kant med døden - og loven",
+      "mainSeries": "Radiofortællinger",
+      "primaryGenreRaw": "Samfund",
+      "primaryGenre": "Samfund",
+      "primaryGenreValid": true,
+      "primaryGenreMappingType": "native",
+      "primaryGenreMappingSource": "Samfund",
+      "primaryGenreNeedsReview": false,
+      "primaryGenreReviewReason": "",
+      "secondaryGenre": "Dokumentar",
+      "secondaryGenreValid": true,
+      "topicsRaw": [
+        "aktiv dødshjælp",
+        "familie",
+        "etik",
+        "dødelighed"
+      ],
+      "topicsCanonical": [
+        "aktiv dødshjælp",
+        "familie",
+        "etik",
+        "dødelighed"
+      ],
+      "topicKeys": [
+        "aktiv-doedshjaelp",
+        "familie",
+        "etik",
+        "doedelighed"
+      ],
+      "topicEligible": true,
+      "genreEligible": true,
+      "recommendationMetadataEligible": true,
+      "metadataIssues": []
+    },
+    {
+      "id": "eventyr forlis og mageæg",
+      "recommendationId": "rec-eventyr-forlis-og-maageaeg-ebf1676e109f9150650e055ac9fafab8",
+      "recommendationIdentityBasis": "title+link",
+      "identityDuplicateGroup": "",
+      "title": "Eventyr, forlis & mågeæg",
+      "mainSeries": "Radiofortællinger",
+      "primaryGenreRaw": "Dokumentar",
+      "primaryGenre": "Dokumentar",
+      "primaryGenreValid": true,
+      "primaryGenreMappingType": "native",
+      "primaryGenreMappingSource": "Dokumentar",
+      "primaryGenreNeedsReview": false,
+      "primaryGenreReviewReason": "",
+      "secondaryGenre": "Samfund",
+      "secondaryGenreValid": true,
+      "topicsRaw": [
+        "Anholt",
+        "forlis",
+        "venskab",
+        "hav"
+      ],
+      "topicsCanonical": [
+        "Anholt",
+        "forlis",
+        "venskab",
+        "hav"
+      ],
+      "topicKeys": [
+        "anholt",
+        "forlis",
+        "venskab",
+        "hav"
+      ],
+      "topicEligible": true,
+      "genreEligible": true,
+      "recommendationMetadataEligible": true,
+      "metadataIssues": []
+    },
+    {
+      "id": "den amerikanske invasion af vore drømme",
+      "recommendationId": "rec-den-amerikanske-invasion-af-vore-droemme-9a230a619e807a49423b9693fd7c3f8e",
+      "recommendationIdentityBasis": "title+link",
+      "identityDuplicateGroup": "",
+      "title": "Den amerikanske invasion af vore drømme",
+      "mainSeries": "Radiofortællinger",
+      "primaryGenreRaw": "Samfund",
+      "primaryGenre": "Samfund",
+      "primaryGenreValid": true,
+      "primaryGenreMappingType": "native",
+      "primaryGenreMappingSource": "Samfund",
+      "primaryGenreNeedsReview": false,
+      "primaryGenreReviewReason": "",
+      "secondaryGenre": "Dokumentar",
+      "secondaryGenreValid": true,
+      "topicsRaw": [
+        "USA",
+        "politik",
+        "drømme",
+        "medier"
+      ],
+      "topicsCanonical": [
+        "USA",
+        "politik",
+        "drømme",
+        "medier"
+      ],
+      "topicKeys": [
+        "usa",
+        "politik",
+        "droemme",
+        "medier"
+      ],
+      "topicEligible": true,
+      "genreEligible": true,
+      "recommendationMetadataEligible": true,
+      "metadataIssues": []
+    },
+    {
+      "id": "erotisk rejse ind i den amerikanske drøm",
+      "recommendationId": "rec-erotisk-rejse-ind-i-den-amerikanske-droem-e3d223c3c8493128df81a58f2db9b46c",
+      "recommendationIdentityBasis": "title+link",
+      "identityDuplicateGroup": "",
+      "title": "Erotisk rejse ind i den amerikanske drøm",
+      "mainSeries": "Radiofortællinger",
+      "primaryGenreRaw": "Samfund",
+      "primaryGenre": "Samfund",
+      "primaryGenreValid": true,
+      "primaryGenreMappingType": "native",
+      "primaryGenreMappingSource": "Samfund",
+      "primaryGenreNeedsReview": false,
+      "primaryGenreReviewReason": "",
+      "secondaryGenre": "Dokumentar",
+      "secondaryGenreValid": true,
+      "topicsRaw": [
+        "USA",
+        "blaffertur",
+        "kærlighed",
+        "frihed"
+      ],
+      "topicsCanonical": [
+        "USA",
+        "blaffertur",
+        "kærlighed",
+        "frihed"
+      ],
+      "topicKeys": [
+        "usa",
+        "blaffertur",
+        "kaerlighed",
+        "frihed"
+      ],
+      "topicEligible": true,
+      "genreEligible": true,
+      "recommendationMetadataEligible": true,
+      "metadataIssues": []
+    },
+    {
+      "id": "forkert nummer rigtig kærlighed",
+      "recommendationId": "rec-forkert-nummer-rigtig-kaerlighed-19f6451362545211553cee8e7a26887d",
+      "recommendationIdentityBasis": "title+link",
+      "identityDuplicateGroup": "",
+      "title": "Forkert nummer - rigtig kærlighed",
+      "mainSeries": "Radiofortællinger",
+      "primaryGenreRaw": "Samfund",
+      "primaryGenre": "Samfund",
+      "primaryGenreValid": true,
+      "primaryGenreMappingType": "native",
+      "primaryGenreMappingSource": "Samfund",
+      "primaryGenreNeedsReview": false,
+      "primaryGenreReviewReason": "",
+      "secondaryGenre": "Dokumentar",
+      "secondaryGenreValid": true,
+      "topicsRaw": [
+        "Roskilde Festival",
+        "telefon",
+        "kærlighed",
+        "tilfældigheder"
+      ],
+      "topicsCanonical": [
+        "Roskilde Festival",
+        "telefon",
+        "kærlighed",
+        "tilfældigheder"
+      ],
+      "topicKeys": [
+        "roskilde-festival",
+        "telefon",
+        "kaerlighed",
+        "tilfaeldigheder"
+      ],
+      "topicEligible": true,
+      "genreEligible": true,
+      "recommendationMetadataEligible": true,
+      "metadataIssues": []
+    },
+    {
+      "id": "asperger indtager hollywood",
+      "recommendationId": "rec-asperger-indtager-hollywood-e3bd835e26cbca096cedaf749805c7b9",
+      "recommendationIdentityBasis": "title+link",
+      "identityDuplicateGroup": "",
+      "title": "Asperger indtager Hollywood",
+      "mainSeries": "Radiofortællinger",
+      "primaryGenreRaw": "Dokumentar",
+      "primaryGenre": "Dokumentar",
+      "primaryGenreValid": true,
+      "primaryGenreMappingType": "native",
+      "primaryGenreMappingSource": "Dokumentar",
+      "primaryGenreNeedsReview": false,
+      "primaryGenreReviewReason": "",
+      "secondaryGenre": "Samfund",
+      "secondaryGenreValid": true,
+      "topicsRaw": [
+        "autisme",
+        "Hollywood",
+        "familie",
+        "ambitioner"
+      ],
+      "topicsCanonical": [
+        "autisme",
+        "Hollywood",
+        "familie",
+        "ambitioner"
+      ],
+      "topicKeys": [
+        "autisme",
+        "hollywood",
+        "familie",
+        "ambitioner"
+      ],
+      "topicEligible": true,
+      "genreEligible": true,
+      "recommendationMetadataEligible": true,
+      "metadataIssues": []
+    },
+    {
+      "id": "en verden fuld af parykker",
+      "recommendationId": "rec-en-verden-fuld-af-parykker-c772fcceb32d73b9823b89de2c84221a",
+      "recommendationIdentityBasis": "title+link",
+      "identityDuplicateGroup": "",
+      "title": "En verden fuld af parykker",
+      "mainSeries": "Radiofortællinger",
+      "primaryGenreRaw": "Samfund",
+      "primaryGenre": "Samfund",
+      "primaryGenreValid": true,
+      "primaryGenreMappingType": "native",
+      "primaryGenreMappingSource": "Samfund",
+      "primaryGenreNeedsReview": false,
+      "primaryGenreReviewReason": "",
+      "secondaryGenre": "Dokumentar",
+      "secondaryGenreValid": true,
+      "topicsRaw": [
+        "hårtab",
+        "parykker",
+        "identitet",
+        "fællesskab"
+      ],
+      "topicsCanonical": [
+        "hårtab",
+        "parykker",
+        "identitet",
+        "fællesskab"
+      ],
+      "topicKeys": [
+        "haartab",
+        "parykker",
+        "identitet",
+        "faellesskab"
+      ],
+      "topicEligible": true,
+      "genreEligible": true,
+      "recommendationMetadataEligible": true,
+      "metadataIssues": []
+    },
+    {
+      "id": "klaverøvelse med dissonans",
+      "recommendationId": "rec-klaveroevelse-med-dissonans-def773e52b894ae2f0cdd9e15a8df9e8",
+      "recommendationIdentityBasis": "title+link",
+      "identityDuplicateGroup": "",
+      "title": "Klaverøvelse med dissonans",
+      "mainSeries": "Radiofortællinger",
+      "primaryGenreRaw": "Dokumentar",
+      "primaryGenre": "Dokumentar",
+      "primaryGenreValid": true,
+      "primaryGenreMappingType": "native",
+      "primaryGenreMappingSource": "Dokumentar",
+      "primaryGenreNeedsReview": false,
+      "primaryGenreReviewReason": "",
+      "secondaryGenre": "Samfund",
+      "secondaryGenreValid": true,
+      "topicsRaw": [
+        "musik",
+        "naboer",
+        "Nørrebro",
+        "klaver"
+      ],
+      "topicsCanonical": [
+        "musik",
+        "naboer",
+        "Nørrebro",
+        "klaver"
+      ],
+      "topicKeys": [
+        "musik",
+        "naboer",
+        "noerrebro",
+        "klaver"
+      ],
+      "topicEligible": true,
+      "genreEligible": true,
+      "recommendationMetadataEligible": true,
+      "metadataIssues": []
+    },
+    {
+      "id": "i krig pa cykel",
+      "recommendationId": "rec-i-krig-paa-cykel-4865316cb3586a6959d8122861ce64ed",
+      "recommendationIdentityBasis": "title+link",
+      "identityDuplicateGroup": "",
+      "title": "I krig på cykel",
+      "mainSeries": "Radiofortællinger",
+      "primaryGenreRaw": "Krig",
+      "primaryGenre": "Krig",
+      "primaryGenreValid": true,
+      "primaryGenreMappingType": "native",
+      "primaryGenreMappingSource": "Krig",
+      "primaryGenreNeedsReview": false,
+      "primaryGenreReviewReason": "",
+      "secondaryGenre": "Dokumentar",
+      "secondaryGenreValid": true,
+      "topicsRaw": [
+        "9. april 1940",
+        "besættelsen",
+        "cykelkompagnier",
+        "Danmark"
+      ],
+      "topicsCanonical": [
+        "9. april 1940",
+        "besættelsen",
+        "cykelkompagnier",
+        "Danmark"
+      ],
+      "topicKeys": [
+        "9-april-1940",
+        "besaettelsen",
+        "cykelkompagnier",
+        "danmark"
+      ],
+      "topicEligible": true,
+      "genreEligible": true,
+      "recommendationMetadataEligible": true,
+      "metadataIssues": []
+    },
+    {
+      "id": "miss serial killer",
+      "recommendationId": "rec-miss-serial-killer-ad8a30614aa33b24542b1cbbff1765b8",
+      "recommendationIdentityBasis": "title+link",
+      "identityDuplicateGroup": "",
+      "title": "Miss Serial Killer",
+      "mainSeries": "Radiofortællinger",
+      "primaryGenreRaw": "Dokumentar",
+      "primaryGenre": "Dokumentar",
+      "primaryGenreValid": true,
+      "primaryGenreMappingType": "native",
+      "primaryGenreMappingSource": "Dokumentar",
+      "primaryGenreNeedsReview": false,
+      "primaryGenreReviewReason": "",
+      "secondaryGenre": "True Crime",
+      "secondaryGenreValid": true,
+      "topicsRaw": [
+        "USA",
+        "New York",
+        "rejser",
+        "tyveri"
+      ],
+      "topicsCanonical": [
+        "USA",
+        "New York",
+        "rejser",
+        "tyveri"
+      ],
+      "topicKeys": [
+        "usa",
+        "new-york",
+        "rejser",
+        "tyveri"
+      ],
+      "topicEligible": true,
+      "genreEligible": true,
+      "recommendationMetadataEligible": true,
+      "metadataIssues": []
+    },
+    {
+      "id": "lennon pa loftet freden og millionerne",
+      "recommendationId": "rec-lennon-paa-loftet-freden-og-millionerne-50be44127c1ef3b4b41b5f2e64040de9",
+      "recommendationIdentityBasis": "title+link",
+      "identityDuplicateGroup": "",
+      "title": "Lennon, på loftet, freden og millionerne",
+      "mainSeries": "Radiofortællinger",
+      "primaryGenreRaw": "Historie",
+      "primaryGenre": "Historie",
+      "primaryGenreValid": true,
+      "primaryGenreMappingType": "native",
+      "primaryGenreMappingSource": "Historie",
+      "primaryGenreNeedsReview": false,
+      "primaryGenreReviewReason": "",
+      "secondaryGenre": "Dokumentar",
+      "secondaryGenreValid": true,
+      "topicsRaw": [
+        "John Lennon",
+        "Yoko Ono",
+        "Thy",
+        "1970",
+        "kassettebånd"
+      ],
+      "topicsCanonical": [
+        "John Lennon",
+        "Yoko Ono",
+        "Thy",
+        "1970",
+        "kassettebånd"
+      ],
+      "topicKeys": [
+        "john-lennon",
+        "yoko-ono",
+        "thy",
+        "1970",
+        "kassettebaand"
+      ],
+      "topicEligible": true,
+      "genreEligible": true,
+      "recommendationMetadataEligible": true,
+      "metadataIssues": []
+    },
+    {
+      "id": "nar jeg hører en kat dø",
+      "recommendationId": "rec-naar-jeg-hoerer-en-kat-doe-08cb1cf0738736c122db7904400a17e8",
+      "recommendationIdentityBasis": "title+link",
+      "identityDuplicateGroup": "",
+      "title": "Når jeg hører en kat dø",
+      "mainSeries": "Radiofortællinger",
+      "primaryGenreRaw": "Dokumentar",
+      "primaryGenre": "Dokumentar",
+      "primaryGenreValid": true,
+      "primaryGenreMappingType": "native",
+      "primaryGenreMappingSource": "Dokumentar",
+      "primaryGenreNeedsReview": false,
+      "primaryGenreReviewReason": "",
+      "secondaryGenre": "Samfund",
+      "secondaryGenreValid": true,
+      "topicsRaw": [
+        "dyrelyde",
+        "kæledyr",
+        "frygt",
+        "lyd"
+      ],
+      "topicsCanonical": [
+        "dyrelyde",
+        "kæledyr",
+        "frygt",
+        "lyd"
+      ],
+      "topicKeys": [
+        "dyrelyde",
+        "kaeledyr",
+        "frygt",
+        "lyd"
+      ],
+      "topicEligible": true,
+      "genreEligible": true,
+      "recommendationMetadataEligible": true,
+      "metadataIssues": []
+    },
+    {
+      "id": "1 6 kilo coke",
+      "recommendationId": "rec-1-6-kilo-coke-67873fcbc832964298d4faf6487f6c6d",
+      "recommendationIdentityBasis": "title+link",
+      "identityDuplicateGroup": "",
+      "title": "1,6 kilo coke",
+      "mainSeries": "Radiofortællinger",
+      "primaryGenreRaw": "True Crime",
+      "primaryGenre": "True Crime",
+      "primaryGenreValid": true,
+      "primaryGenreMappingType": "native",
+      "primaryGenreMappingSource": "True Crime",
+      "primaryGenreNeedsReview": false,
+      "primaryGenreReviewReason": "",
+      "secondaryGenre": "Dokumentar",
+      "secondaryGenreValid": true,
+      "topicsRaw": [
+        "kokain",
+        "narkohandel",
+        "fængsel",
+        "kriminalitet"
+      ],
+      "topicsCanonical": [
+        "kokain",
+        "narkohandel",
+        "fængsel",
+        "kriminalitet"
+      ],
+      "topicKeys": [
+        "kokain",
+        "narkohandel",
+        "faengsel",
+        "kriminalitet"
+      ],
+      "topicEligible": true,
+      "genreEligible": true,
+      "recommendationMetadataEligible": true,
+      "metadataIssues": []
+    },
+    {
+      "id": "flyskræk",
+      "recommendationId": "rec-flyskraek-db1b488be3edaa1b53a18ff0d6805fcf",
+      "recommendationIdentityBasis": "title+link",
+      "identityDuplicateGroup": "",
+      "title": "Flyskræk",
+      "mainSeries": "Radiofortællinger",
+      "primaryGenreRaw": "Samfund",
+      "primaryGenre": "Samfund",
+      "primaryGenreValid": true,
+      "primaryGenreMappingType": "native",
+      "primaryGenreMappingSource": "Samfund",
+      "primaryGenreNeedsReview": false,
+      "primaryGenreReviewReason": "",
+      "secondaryGenre": "Dokumentar",
+      "secondaryGenreValid": true,
+      "topicsRaw": [
+        "flyskræk",
+        "turbulens",
+        "rejser",
+        "angst"
+      ],
+      "topicsCanonical": [
+        "flyskræk",
+        "turbulens",
+        "rejser",
+        "angst"
+      ],
+      "topicKeys": [
+        "flyskraek",
+        "turbulens",
+        "rejser",
+        "angst"
+      ],
+      "topicEligible": true,
+      "genreEligible": true,
+      "recommendationMetadataEligible": true,
+      "metadataIssues": []
+    },
+    {
+      "id": "ind og ud af troen",
+      "recommendationId": "rec-ind-og-ud-af-troen-f1a7e9b83cf1a5dd6ecf52cb4bf2251f",
+      "recommendationIdentityBasis": "title+link",
+      "identityDuplicateGroup": "",
+      "title": "Ind og ud af troen",
+      "mainSeries": "Radiofortællinger",
+      "primaryGenreRaw": "Samfund",
+      "primaryGenre": "Samfund",
+      "primaryGenreValid": true,
+      "primaryGenreMappingType": "native",
+      "primaryGenreMappingSource": "Samfund",
+      "primaryGenreNeedsReview": false,
+      "primaryGenreReviewReason": "",
+      "secondaryGenre": "Dokumentar",
+      "secondaryGenreValid": true,
+      "topicsRaw": [
+        "religion",
+        "ateisme",
+        "tro",
+        "konversion"
+      ],
+      "topicsCanonical": [
+        "religion",
+        "ateisme",
+        "Tro",
+        "konversion"
+      ],
+      "topicKeys": [
+        "religion",
+        "ateisme",
+        "tro",
+        "konversion"
+      ],
+      "topicEligible": true,
+      "genreEligible": true,
+      "recommendationMetadataEligible": true,
+      "metadataIssues": []
+    },
+    {
+      "id": "ved grænsen til stalking",
+      "recommendationId": "rec-ved-graensen-til-stalking-b38f09c37745a3ecd8858f7a4d66fcdb",
+      "recommendationIdentityBasis": "title+link",
+      "identityDuplicateGroup": "",
+      "title": "Ved grænsen til stalking",
+      "mainSeries": "Radiofortællinger",
+      "primaryGenreRaw": "True Crime",
+      "primaryGenre": "True Crime",
+      "primaryGenreValid": true,
+      "primaryGenreMappingType": "native",
+      "primaryGenreMappingSource": "True Crime",
+      "primaryGenreNeedsReview": false,
+      "primaryGenreReviewReason": "",
+      "secondaryGenre": "Dokumentar",
+      "secondaryGenreValid": true,
+      "topicsRaw": [
+        "stalking",
+        "chikane",
+        "grænser",
+        "relationer"
+      ],
+      "topicsCanonical": [
+        "Stalking",
+        "chikane",
+        "grænser",
+        "relationer"
+      ],
+      "topicKeys": [
+        "stalking",
+        "chikane",
+        "graenser",
+        "relationer"
+      ],
+      "topicEligible": true,
+      "genreEligible": true,
+      "recommendationMetadataEligible": true,
+      "metadataIssues": []
+    },
+    {
+      "id": "prisen for et bedre liv",
+      "recommendationId": "rec-prisen-for-et-bedre-liv-8a72bfd91b75f76af10d3065a0cabb17",
+      "recommendationIdentityBasis": "title+link",
+      "identityDuplicateGroup": "",
+      "title": "Prisen for et bedre liv",
+      "mainSeries": "Radiofortællinger",
+      "primaryGenreRaw": "Samfund",
+      "primaryGenre": "Samfund",
+      "primaryGenreValid": true,
+      "primaryGenreMappingType": "native",
+      "primaryGenreMappingSource": "Samfund",
+      "primaryGenreNeedsReview": false,
+      "primaryGenreReviewReason": "",
+      "secondaryGenre": "Dokumentar",
+      "secondaryGenreValid": true,
+      "topicsRaw": [
+        "flugt",
+        "Polen",
+        "religion",
+        "livsvalg"
+      ],
+      "topicsCanonical": [
+        "flugt",
+        "Polen",
+        "religion",
+        "livsvalg"
+      ],
+      "topicKeys": [
+        "flugt",
+        "polen",
+        "religion",
+        "livsvalg"
+      ],
+      "topicEligible": true,
+      "genreEligible": true,
+      "recommendationMetadataEligible": true,
+      "metadataIssues": []
+    },
+    {
+      "id": "møder med døden",
+      "recommendationId": "rec-moeder-med-doeden-4a4b665f34a980770c3d0108966b7303",
+      "recommendationIdentityBasis": "title+link",
+      "identityDuplicateGroup": "",
+      "title": "Møder med døden",
+      "mainSeries": "Radiofortællinger",
+      "primaryGenreRaw": "Dokumentar",
+      "primaryGenre": "Dokumentar",
+      "primaryGenreValid": true,
+      "primaryGenreMappingType": "native",
+      "primaryGenreMappingSource": "Dokumentar",
+      "primaryGenreNeedsReview": false,
+      "primaryGenreReviewReason": "",
+      "secondaryGenre": "Samfund",
+      "secondaryGenreValid": true,
+      "topicsRaw": [
+        "nærdødsoplevelse",
+        "dødsangst",
+        "livssyn",
+        "erindringer"
+      ],
+      "topicsCanonical": [
+        "nærdødsoplevelse",
+        "dødsangst",
+        "livssyn",
+        "erindringer"
+      ],
+      "topicKeys": [
+        "naerdoedsoplevelse",
+        "doedsangst",
+        "livssyn",
+        "erindringer"
+      ],
+      "topicEligible": true,
+      "genreEligible": true,
+      "recommendationMetadataEligible": true,
+      "metadataIssues": []
+    },
+    {
+      "id": "kunsten at vælge et andet menneske fra",
+      "recommendationId": "rec-kunsten-at-vaelge-et-andet-menneske-fra-1458eba20e640ffe52219cc8054241c0",
+      "recommendationIdentityBasis": "title+link",
+      "identityDuplicateGroup": "",
+      "title": "Kunsten at vælge et andet menneske fra",
+      "mainSeries": "Radiofortællinger",
+      "primaryGenreRaw": "Samfund",
+      "primaryGenre": "Samfund",
+      "primaryGenreValid": true,
+      "primaryGenreMappingType": "native",
+      "primaryGenreMappingSource": "Samfund",
+      "primaryGenreNeedsReview": false,
+      "primaryGenreReviewReason": "",
+      "secondaryGenre": "Dokumentar",
+      "secondaryGenreValid": true,
+      "topicsRaw": [
+        "familie",
+        "far og datter",
+        "skyld",
+        "relationer"
+      ],
+      "topicsCanonical": [
+        "familie",
+        "far og datter",
+        "skyld",
+        "relationer"
+      ],
+      "topicKeys": [
+        "familie",
+        "far-og-datter",
+        "skyld",
+        "relationer"
+      ],
+      "topicEligible": true,
+      "genreEligible": true,
+      "recommendationMetadataEligible": true,
+      "metadataIssues": []
+    },
+    {
+      "id": "lykkelige ulykker",
+      "recommendationId": "rec-lykkelige-ulykker-896a82f75ca6cefc5c7cb0d5a93dc67a",
+      "recommendationIdentityBasis": "title+link",
+      "identityDuplicateGroup": "",
+      "title": "Lykkelige ulykker",
+      "mainSeries": "Radiofortællinger",
+      "primaryGenreRaw": "Dokumentar",
+      "primaryGenre": "Dokumentar",
+      "primaryGenreValid": true,
+      "primaryGenreMappingType": "native",
+      "primaryGenreMappingSource": "Dokumentar",
+      "primaryGenreNeedsReview": false,
+      "primaryGenreReviewReason": "",
+      "secondaryGenre": "Samfund",
+      "secondaryGenreValid": true,
+      "topicsRaw": [
+        "ulykker",
+        "arbejdsliv",
+        "rehabilitering",
+        "musik"
+      ],
+      "topicsCanonical": [
+        "ulykker",
+        "arbejdsliv",
+        "rehabilitering",
+        "musik"
+      ],
+      "topicKeys": [
+        "ulykker",
+        "arbejdsliv",
+        "rehabilitering",
+        "musik"
+      ],
+      "topicEligible": true,
+      "genreEligible": true,
+      "recommendationMetadataEligible": true,
+      "metadataIssues": []
+    },
+    {
+      "id": "pa røven i new york",
+      "recommendationId": "rec-paa-roeven-i-new-york-a22a1936c0dd8c399e63046a45279235",
+      "recommendationIdentityBasis": "title+link",
+      "identityDuplicateGroup": "",
+      "title": "På røven i New York",
+      "mainSeries": "Radiofortællinger",
+      "primaryGenreRaw": "Dokumentar",
+      "primaryGenre": "Dokumentar",
+      "primaryGenreValid": true,
+      "primaryGenreMappingType": "native",
+      "primaryGenreMappingSource": "Dokumentar",
+      "primaryGenreNeedsReview": false,
+      "primaryGenreReviewReason": "",
+      "secondaryGenre": "Samfund",
+      "secondaryGenreValid": true,
+      "topicsRaw": [
+        "New York",
+        "musik",
+        "dans",
+        "økonomi",
+        "1980'erne"
+      ],
+      "topicsCanonical": [
+        "New York",
+        "musik",
+        "dans",
+        "økonomi",
+        "1980'erne"
+      ],
+      "topicKeys": [
+        "new-york",
+        "musik",
+        "dans",
+        "oekonomi",
+        "1980-erne"
+      ],
+      "topicEligible": true,
+      "genreEligible": true,
+      "recommendationMetadataEligible": true,
+      "metadataIssues": []
+    },
+    {
+      "id": "musikkens historier",
+      "recommendationId": "rec-musikkens-historier-82aa6fdd16f15c5574113fdf3bced8be",
+      "recommendationIdentityBasis": "title+link",
+      "identityDuplicateGroup": "",
+      "title": "Musikkens historier",
+      "mainSeries": "",
+      "primaryGenreRaw": "Dokumentar",
+      "primaryGenre": "Dokumentar",
+      "primaryGenreValid": true,
+      "primaryGenreMappingType": "native",
+      "primaryGenreMappingSource": "Dokumentar",
+      "primaryGenreNeedsReview": false,
+      "primaryGenreReviewReason": "",
+      "secondaryGenre": "Historie",
+      "secondaryGenreValid": true,
+      "topicsRaw": [
+        "Kristian Leth",
+        "Bruno Mars",
+        "Uptown Funk",
+        "Hildegard af Bingen",
+        "Kronos Quartet",
+        "black metal",
+        "musikhistorie",
+        "originalitet"
+      ],
+      "topicsCanonical": [
+        "Kristian Leth",
+        "Bruno Mars",
+        "Uptown Funk",
+        "Hildegard af Bingen",
+        "Kronos Quartet",
+        "black metal",
+        "musikhistorie",
+        "originalitet"
+      ],
+      "topicKeys": [
+        "kristian-leth",
+        "bruno-mars",
+        "uptown-funk",
+        "hildegard-af-bingen",
+        "kronos-quartet",
+        "black-metal",
+        "musikhistorie",
+        "originalitet"
+      ],
+      "topicEligible": true,
+      "genreEligible": true,
+      "recommendationMetadataEligible": true,
+      "metadataIssues": []
+    },
+    {
       "id": "flashback",
       "recommendationId": "rec-flashback-545f50668f4e47cb6c758313bd6b76c7",
       "recommendationIdentityBasis": "title+link",
@@ -53186,6 +58771,33 @@
       "metadataIssues": []
     },
     {
+      "id": "den fjernstyrede bombebil",
+      "recommendationId": "rec-den-fjernstyrede-bombebil-f154ba517e1851fc7e416cf54a9ea62f",
+      "recommendationIdentityBasis": "title+link",
+      "identityDuplicateGroup": "",
+      "title": "Den fjernstyrede bombebil",
+      "mainSeries": "Djævlen i detaljen",
+      "primaryGenreRaw": "",
+      "primaryGenre": "",
+      "primaryGenreValid": false,
+      "primaryGenreMappingType": "unmapped",
+      "primaryGenreMappingSource": "",
+      "primaryGenreNeedsReview": true,
+      "primaryGenreReviewReason": "unmapped_primary_genre",
+      "secondaryGenre": "",
+      "secondaryGenreValid": true,
+      "topicsRaw": [],
+      "topicsCanonical": [],
+      "topicKeys": [],
+      "topicEligible": false,
+      "genreEligible": false,
+      "recommendationMetadataEligible": false,
+      "metadataIssues": [
+        "invalid_primary_genre",
+        "missing_topics"
+      ]
+    },
+    {
       "id": "den spanske borgerkrig",
       "recommendationId": "rec-den-spanske-borgerkrig-5cc25237496c999b7a9819f11983108a",
       "recommendationIdentityBasis": "title+link",
@@ -53229,6 +58841,33 @@
       "genreEligible": true,
       "recommendationMetadataEligible": true,
       "metadataIssues": []
+    },
+    {
+      "id": "satellitstatens opstand",
+      "recommendationId": "rec-satellitstatens-opstand-f578fb29007127b8a6965b648fcaa497",
+      "recommendationIdentityBasis": "title+mainSeries+publisher+hosts+year+episodes",
+      "identityDuplicateGroup": "",
+      "title": "Satellitstatens opstand",
+      "mainSeries": "Bakspejl",
+      "primaryGenreRaw": "",
+      "primaryGenre": "",
+      "primaryGenreValid": false,
+      "primaryGenreMappingType": "unmapped",
+      "primaryGenreMappingSource": "",
+      "primaryGenreNeedsReview": true,
+      "primaryGenreReviewReason": "unmapped_primary_genre",
+      "secondaryGenre": "",
+      "secondaryGenreValid": true,
+      "topicsRaw": [],
+      "topicsCanonical": [],
+      "topicKeys": [],
+      "topicEligible": false,
+      "genreEligible": false,
+      "recommendationMetadataEligible": false,
+      "metadataIssues": [
+        "invalid_primary_genre",
+        "missing_topics"
+      ]
     },
     {
       "id": "macias",
