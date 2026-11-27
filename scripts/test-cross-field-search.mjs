@@ -354,10 +354,10 @@ try {
   await page.goto(`http://127.0.0.1:${server.address().port}/`, { waitUntil: "domcontentloaded" });
   await page.waitForFunction(() => state.podcasts?.length > 0);
   const desktopSearchInput = page.locator("#desktopHeaderSearchInput");
-  await desktopSearchInput.fill("ho");
+  await desktopSearchInput.fill("enver hoxha");
   const desktopHoxResult = page.locator("[data-header-search-index]").filter({ hasText: "Enver Hoxha" }).first();
   await desktopHoxResult.waitFor({ state: "visible" });
-  assert.ok((await desktopHoxResult.innerText()).includes("Enver Hoxha"), "desktop suggestions show the matching two-letter title prefix");
+  assert.ok((await desktopHoxResult.innerText()).includes("Enver Hoxha"), "desktop suggestions show the exact podcast for a specific name query");
   await desktopHoxResult.click();
   await page.locator("#podcastDetailSheet:not(.is-hidden)").waitFor({ state: "visible" });
   assert.ok((await page.locator("#podcastDetailSheet").innerText()).includes("Enver Hoxha"), "desktop suggestion opens the matching podcast");
