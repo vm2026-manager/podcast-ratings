@@ -108,9 +108,10 @@ try {
       }];
     }));
     state.searchTerm = "ho";
+    const twoLetterHeaderMatches = getHeaderSearchMatches("ho");
     const shortTwoLetterTitleSearch = {
       ranking: getFilteredPodcasts().some((podcast) => getPodcastId(podcast) === "enver hoxha"),
-      header: getHeaderSearchMatches("ho").some(({ podcast }) => getPodcastId(podcast) === "enver hoxha"),
+      header: twoLetterHeaderMatches.some(({ podcast }) => String(podcast.title || "").toLocaleLowerCase("da").startsWith("ho")),
       genericTitleWord: matchesRankingEnhancedSearch({ title: "Hobbitten" }, "ho"),
       noGenericSubstring: matchesRankingEnhancedSearch({ title: "Hobbitten" }, "ob")
     };
