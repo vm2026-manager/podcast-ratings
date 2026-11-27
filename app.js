@@ -20501,8 +20501,9 @@ function createProfileSuggestionCardElement(suggestion) {
 
   const statusLabel = getSuggestionStatusLabel(suggestion.status);
   const submittedDate = formatDate(suggestion.created_at);
-  const linkMarkup = suggestion.podcast_url
-    ? `<a href="${escapeHtml(suggestion.podcast_url)}" target="_blank" rel="noopener noreferrer">Podcastlink</a>`
+  const safePodcastUrl = normalizeSuggestionUrl(suggestion.podcast_url);
+  const linkMarkup = safePodcastUrl
+    ? `<a href="${escapeHtml(safePodcastUrl)}" target="_blank" rel="noopener noreferrer">Podcastlink</a>`
     : "";
   const platformMarkup = suggestion.platform
     ? `<p><strong>Platform:</strong> ${escapeHtml(suggestion.platform)}</p>`
@@ -20754,8 +20755,9 @@ function renderAdminPodcastSuggestionsSectionContent(container = document) {
       const savedNote = state.adminPodcastSuggestionNoteDrafts.has(suggestion.id)
         ? state.adminPodcastSuggestionNoteDrafts.get(suggestion.id)
         : suggestion.admin_note || "";
-      const linkMarkup = suggestion.podcast_url
-        ? `<a href="${escapeHtml(suggestion.podcast_url)}" target="_blank" rel="noopener noreferrer">Åbn podcastlink</a>`
+      const safePodcastUrl = normalizeSuggestionUrl(suggestion.podcast_url);
+      const linkMarkup = safePodcastUrl
+        ? `<a href="${escapeHtml(safePodcastUrl)}" target="_blank" rel="noopener noreferrer">Åbn podcastlink</a>`
         : "";
       const platformMarkup = suggestion.platform
         ? `<p><strong>Platform:</strong> ${escapeHtml(suggestion.platform)}</p>`
@@ -23169,7 +23171,8 @@ function normalizeSuggestionUrl(value) {
   if (!raw) return "";
 
   try {
-    return new URL(raw).href;
+    const url = new URL(raw);
+    return url.protocol === "https:" || url.protocol === "http:" ? url.href : null;
   } catch {
     return null;
   }
