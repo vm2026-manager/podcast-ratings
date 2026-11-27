@@ -581,8 +581,8 @@ try {
   assert.equal(await page.locator("#mobileHomeSearchOverlay").getAttribute("aria-hidden"), "true");
   await page.locator("[data-home-podcast-search-input]").focus();
   await page.locator("#mobileHomeSearchOverlayInput").waitFor({ state: "visible" });
-  await page.locator("#mobileHomeSearchOverlayInput").fill("ho");
-  await page.waitForFunction(() => getHeaderSearchMatches("ho").some(({ podcast }) => getPodcastId(podcast) === "enver hoxha"));
+  await page.locator("#mobileHomeSearchOverlayInput").fill("enver hoxha");
+  await page.waitForFunction(() => getHeaderSearchMatches("enver hoxha").some(({ podcast }) => getPodcastId(podcast) === "enver hoxha"));
   const mobileHoxResult = page.locator('[data-mobile-home-search-index]').filter({ hasText: "Enver Hoxha" }).first();
   await mobileHoxResult.waitFor({ state: "visible" });
   assert.ok((await mobileHoxResult.innerText()).includes("Enver Hoxha"), "mobile overlay shows the matching podcast title");
