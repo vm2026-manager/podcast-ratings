@@ -6413,6 +6413,10 @@ body.page-ranglister #clearFilterButton[hidden] {
   gap: 20px;
 }
 
+body.page-ranglister #podcastGrid {
+  overflow-anchor: none;
+}
+
 .podcast-card {
   position: relative;
   min-height: 412px;
