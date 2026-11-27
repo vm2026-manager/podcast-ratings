@@ -27,6 +27,12 @@ The production cron inventory read on 2026-11-14 contained six enabled `all-epis
 
 The exact Podimo GraphQL config uses `Podcast-ID=styr på historien`, Podimo show UUID `3717c2b0-c85f-43bb-8a28-a992018f14de`, catalogue ID `catalogue-v1-4a74e834`, and official show URL `https://podimo.com/dk/shows/styr-pa-historien`. Runtime activation requires the current catalogue to contain one row matching all four identities, including the `open.podimo.com/podcast/<UUID>` feed. A different `kampen om historien` row cannot receive these episodes. The adapter imports episode metadata only; audio URLs are null. The regular 12-hour shard schedule is the existing run path. Edge deployment and the first production import remain separate approval steps.
 
+### Det, vi taler om (Radio IIII to Podimo)
+
+Keep `Podcast-ID=det vi taler om` and `catalogue-v1-578ffa32` across the provider change. The historical `radio4_det_vi_taler_om_rss` rows retain their episode UUIDs, source and GUIDs. The archive migration blocks deletion, identity changes, deactivation and loss of rateability for that exact source and podcast key, including episodes with no ratings. Episode ratings stay linked through the existing episode UUID foreign key.
+
+The 27 November 2026 review of Podimo show UUID `b5be9b1f-e7ae-4990-bcc9-625623348c01` found earlier episodes and a 41-second return announcement. Verify the first full release and its immutable episode identity before activating an additional import source. Review any overlapping history against the existing archive and hold back unresolved identities. Take a recoverable snapshot of both tables and compare the historical episode and rating fingerprints before and after the approved cutover. The frontend loads active episodes by the podcast key across sources. [Podimo show page](https://podimo.com/dk/shows/det-vi-taler-om)
+
 ## Why `verified` can still mean “not imported”
 
 1. Catalogue verification records identity evidence and is published through the normal Sheets-to-GitHub PR. It does not deploy Edge code.
