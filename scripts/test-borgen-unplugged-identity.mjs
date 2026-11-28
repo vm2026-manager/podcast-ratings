@@ -69,7 +69,7 @@ try {
         if (id) url.searchParams.set("podcast", id);
         url.hash = hash;
         await page.goto(url.href, { waitUntil: "domcontentloaded" });
-        await page.waitForFunction((ids) => ids.every((key) => state.podcastById[key]), [oldId, currentId]);
+        await page.waitForFunction((ids) => typeof state !== "undefined" && ids.every((key) => state.podcastById[key]), [oldId, currentId]);
       };
       async function checkWidth(label) {
         const layout = await page.evaluate(() => ({

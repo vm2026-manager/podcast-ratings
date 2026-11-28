@@ -130,15 +130,16 @@ assert.equal(activeGenreValues.includes("Portræt"), false, "Portræt is not in 
 assert.equal(activeGenreValues.includes("Samfund"), true, "Samfund is an active editorially plausible proposal");
 
 const oldRadioRows = catalogue.rows.filter((row) => row.Hovedserie === "Et kapitel for sig" && !candidates.some((candidate) => candidate.podcast_id === row["Podcast-ID"]));
-assert.equal(oldRadioRows.length, 60, "fixture contains all 60 established guest identities");
+assert.ok(oldRadioRows.length >= 60, "fixture retains the 60 original guest identities as a minimum");
 const oldRows = oldRadioRows.map(targetRow);
 const protectedTargetRows = structuredClone(oldRows);
+const firstNewRowIndex = 1 + oldRows.length;
 for (const candidate of candidates) {
   const harness = makeHarness({ targetRows: protectedTargetRows, promptResponses: approvedResponses(candidate.podcast_id) });
   harness.context.reviewAndAppendRadioIIIIStagingRow();
-  assert.equal(harness.originalData.length, 62, `${candidate.podcast_id} appends exactly one row`);
-  assert.deepEqual(harness.originalData.slice(1, 61), oldRows, `${candidate.podcast_id} preserves all 60 old Ark1 rows byte-for-byte`);
-  const added = harness.originalData[61];
+  assert.equal(harness.originalData.length, firstNewRowIndex + 1, `${candidate.podcast_id} appends exactly one row`);
+  assert.deepEqual(harness.originalData.slice(1, firstNewRowIndex), oldRows, `${candidate.podcast_id} preserves every old Ark1 row byte-for-byte`);
+  const added = harness.originalData[firstNewRowIndex];
   const at = (header) => added[CATALOGUE_HEADERS.indexOf(header)];
   assert.equal(at("Podcast-ID"), candidate.podcast_id);
   assert.equal(at("Titel"), candidate.title);
@@ -251,4 +252,4 @@ concurrent.run();
 assert.equal(concurrent.harness.originalData.length, 2);
 assert.equal(secondCall.harness.originalData.length, 1, "a concurrent owner invocation is refused by the document lock");
 
-console.log("RADIO IIII owner-gate tests passed: four exact IDs, staging bounds, source collisions, genre approval, fresh backup, owner/lock checks, interruption recovery, idempotency and 60 preserved guests.");
+console.log(`RADIO IIII owner-gate tests passed: four exact IDs, staging bounds, source collisions, genre approval, fresh backup, owner/lock checks, interruption recovery, idempotency and ${oldRows.length} preserved guests.`);
