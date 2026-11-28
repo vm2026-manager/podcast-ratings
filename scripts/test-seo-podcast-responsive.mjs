@@ -85,6 +85,7 @@ try {
     if (width === 1440) {
       await page.goto(`${origin}/`, { waitUntil: "domcontentloaded" });
       await page.locator('.site-nav__link[href="#ranglister"]').first().click();
+      await page.locator('[data-ranking-source="mads"]').click();
       const desktopPilotLink = page.locator('a.desktop-ranking-title-link[href="/podcast/kapret/"]');
       await desktopPilotLink.waitFor({ state: "visible" });
       assert.equal(await desktopPilotLink.textContent().then((text) => text.trim()), "Kapret");
